@@ -1,5 +1,8 @@
 package com.vaadin.demo.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Person {
 
   private String firstName;

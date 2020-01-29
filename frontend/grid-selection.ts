@@ -1,18 +1,10 @@
 import '@vaadin/vaadin-grid/all-imports';
 import { LitElement, html, property, customElement } from 'lit-element';
+import people from './data/people.json';
 
 @customElement('grid-selection')
 export class BasicGrid extends LitElement {
-  @property() items: any;
-
-  firstUpdated() {
-    fetch('https://demo.vaadin.com/demo-data/1.0/people?count=200')
-      .then(res => res.json())
-      .then(json => {
-        this.items = json.result;
-        this.requestUpdate();
-      });
-  }
+  @property() items = people;
 
   render() {
     return html`
