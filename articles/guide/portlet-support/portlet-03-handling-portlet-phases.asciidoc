@@ -1,0 +1,234 @@
+---
+title: Handling Portlet Phases
+order: 3
+layout: page
+---
+
+= Handling Portlet Phases
+
+Portlet specification deals with requests and responses; portlets receive render requests, action requests, resource requests, and more.
+This request-centric approach is not immediately compatible with the types of applications you build with Vaadin - modern, dynamic applications.
+So in order to operate seamlessly in the portlet environment, Vaadin Portlet support offers both the means to hook into these state changes as well as shorthands to perform portlet tasks in a more idiomatic Vaadin way.
+
+== Portlet Requests and Phases
+
+The portlet model operates on https://portals.apache.org/pluto/v301/portlet-api.html[phases] which do not mesh naturally with Vaadin.
+Normally, the phase request contain data that the user might be interested in but since it makes little sense for a Vaadin Portlet to handle such requests, listeners were introduced.
+In this section we take a look at different listeners, which allows Vaadin Portlets to hook into the different phases while operating within the UI thread of their Vaadin application.
+
+=== The Portlet View
+
+As described in <<portlet-02-creating-vaadin-portlets#,Creating Vaadin Portlets>>, the Vaadin Portlet consists of two parts: a class extending `VaadinPortlet` and a portlet view class extending Vaadin `Component`.
+The portlet view is the Vaadin component defining the UI of your portlet.
+Any `Component` subclass can be used as the base class for the portlet view.
+
+The portlet view is instantiated automatically from the actual type parameter passed to `VaadinPortlet` when subclassed into your own portlet class.
+This means that the portlet view class must have a parameterless constructor.
+When a Vaadin Portlet is rendered the first time, a new view instance is created, and each portlet instance on a portal page gets its own view instance for each browser window in which the page is open.
+The server-side instances are preserved when the page is refreshed, e.g. due to a portal-triggered render event or when manually reloaded in the browser by the user.
+This means that the client-side gets automatically repopulated with the state (similar to how views in servlet-based Vaadin applications behave when annotated with <<../advanced/tutorial-preserving-state-on-refresh#,`@PreserveOnRefresh`>>).
+
+=== Listeners
+
+Vaadin Portlet support offers various listeners which allows implementing view component to react to updates from the portal.
+To add a listener, your view should first implement `PortletView`.
+Then in `PortletView.onPortletViewContextInit`, you have access to `PortletViewContext` which allows you to add the listeners you need.
+
+The available listeners are:
+
+- `PortletModeListener`
+- `WindowStateListener`
+- `PortletEventListener` (part of the <<portlet-04-inter-portlet-communication#,Inter-Portlet Communication>>)
+
+Next, we will have a look at the listeners which enable the view component react to changes to the portlet's state.
+
+==== `PortletModeListener`
+
+Portlets can operate in different modes.
+The standard modes in the portlet specification are `View`, `Edit`, and `Help`.
+User of the portlet can change these modes using the controls on the portlet window, or through the portlet API.
+
+React to changes to the portlet mode by adding a `PortletModeListener` to `PortletViewContext` class:
+
+[source,java]
+----
+public class MyPortletView extends Div implements PortletView {
+    @Override
+    public void onPortletViewContextInit(PortletViewContext context) {
+        context.addPortletModeChangeListener(event -> showHelpText(event.isHelpMode()));
+    }
+}
+----
+
+The type of `event` object is `PortletModeEvent` which contains information like the portlet mode, the previous portlet mode, and helpful shorthands for accessing the most commonly needed properties.
+
+==== `WindowStateListener`
+
+A portlet window have different sizes, or window states.
+The standard states in the portlet specification are `Normal`, `Maximized`, and `Minimized`.
+User of the portlet can change these states using the controls on the portlet window, or through the portlet API.
+
+React to changes to the window states by adding a `WindowStateListener` to `PortletViewContext` class:
+
+[source,java]
+----
+public class MyPortletView extends Div implements PortletView {
+    @Override
+    public void onPortletViewContextInit(PortletViewContext context) {
+        context.addWindowStateChangeListener(event -> showDetailsField(event.isMaximized()));
+    }
+}
+----
+
+The type of `event` object is `WindowStateEvent` which contains the information about the window state and helpful shorthands for accessing the most commonly needed properties.
+
+==== Listeners Invocation Order
+
+In some cases, you may want to have a component class with several listeners.
+Vaadin Portlet support calls each listener only once per portlet request and in the following order.
+
+1. `PortletModeListener`
+2. `WindowStateListener`
+3. `EventListener`
+
+=== Changing the Portlet States from Java
+
+In addition to handling the different state changes originating from the client-side, you can also invoke the same changes from the Java code.
+This is done by using the API provided by the `VaadinPortlet`, or calling the same methods on your own portlet class extending `VaadinPortlet`.
+
+You can change the portlet mode of the portlet by calling:
+
+[source,java]
+----
+// for the current portlet that is processing requests
+context.setPortletMode(PortletMode.EDIT);
+----
+
+Similarly, portlet window state can be changed by calling:
+
+[source,java]
+----
+// for the current portlet that is processing requests
+context.setWindowState(WindowState.MAXIMIZED);
+----
+
+=== Example of a Vaadin Portlet Reacting to and Changing States
+
+This is a full example with two class, `MyPortlet` (a portlet class) extending `VaadinPortlet` and `MyView` extending `Div` (a view class).
+The view class implements `PortletView`.
+
+`MyView` reacts to the status changes by updating the text of a `Paragraph`, informing the user whether the portlet mode or the window state changed.
+The example also shows how the developer can change portlet mode and window state from the Java code.
+The view contains two buttons.
+One with "Maximize" text changes the window state of the portlet to `MAXIMIZED`, and the other with "Show help" text sets the portlet mode to `HELP`.
+
+.MyPortlet.java
+[source,java]
+----
+public class MyPortlet extends VaadinPortlet<MyView> {
+
+}
+----
+
+.MyView.java
+[source,java]
+----
+public class MyView extends Div implements PortletView {
+
+    private Paragraph stateInformation;
+
+    @Override
+    public void onPortletViewContextInit(PortletViewContext context) {
+        context.addWindowStateChangeListener(event -> stateInformation
+                .setText("Window state changed to " + event.getWindowState()));
+        context.addPortletModeChangeListener(event -> stateInformation
+                .setText("Portlet mode changed to " + event.getPortletMode()));
+        
+        stateInformation = new Paragraph("Use the portlet controls or the "
+                + "buttons below to change the portlet's state!");
+
+        Button maximizeButton = new Button("Maximize", event -> context.setWindowState(WindowState.MAXIMIZED));
+
+        Button helpButton = new Button("Show help", event -> context.setPortletMode(PortletMode.HELP));
+
+        add(stateInformation, maximizeButton, helpButton);
+    }
+}
+----
+
+=== Using Handler interfaces
+
+There is another way to listen to changes in window state and portlet mode.
+In this way, instead of `PortletView`, your view should implement `WindowStateHandler` and/or `PortletModeHandler` interfaces.
+The following example shows how to react to changes to window state using `WindowStateHandler` interface and changes to portlet mode using `PortletModeHandler` interface.
+
+[source,java]
+----
+public class MyView extends Div
+        implements PortletModeHandler, WindowStateHandler {
+
+    private Paragraph stateInformation = new Paragraph();
+
+    public MyView() {
+        add(stateInformation);
+    }
+
+    @Override
+    public void portletModeChange(PortletModeEvent event) {
+        stateInformation
+                .setText("Portlet mode changed to " + event.getPortletMode());
+    }
+
+    @Override
+    public void windowStateChange(WindowStateEvent event) {
+        stateInformation
+                .setText("Window state changed to " + event.getWindowState());
+    }
+}
+----
+
+=== Rendering in Minimized Window State
+
+Normally, portlets don't render anything when they are minimized.
+But, in your Vaadin portlets, you can render a minimal output when your portlet is minimized.
+`shouldRenderMinimized` method in `VaadinPortlet` determines whether the portlet supports rendering in minimized state or not.
+It returns `false` by default which means no rendering when minimized.
+So, you need to override it in your portlet class and return `true` instead.
+
+[source,java]
+----
+public class MyPortlet extends VaadinPortlet<MyView> {
+    @Override
+    protected boolean shouldRenderMinimized() {
+        return true;
+    }
+}
+----
+
+In your view class, you can add a `WindowStateListener` to your `PortletViewContext` where you can decide what to render in different window states.
+E.g. in the following view, `minimizedLayout` is rendered when the portlet is minimized.
+Otherwise, `normalLayout` is rendered.
+
+[source,java]
+----
+public class MyView extends Div implements PortletView {
+    private VerticalLayout normalLayout = new VerticalLayout();
+    private VerticalLayout minimizedLayout = new VerticalLayout();
+
+    @Override
+    public void onPortletViewContextInit(PortletViewContext context) {
+        context.addWindowStateChangeListener(this::handleWindowStateChanged);
+
+        // Initialize layouts here
+
+        minimizedLayout.setVisible(false);
+        add(normalLayout, minimizedLayout);
+    }
+
+    private void handleWindowStateChanged(WindowStateEvent event) {
+        boolean isMinimized = WindowState.MINIMIZED.equals(event.getWindowState());
+        minimizedLayout.setVisible(isMinimized);
+        normalLayout.setVisible(!isMinimized);
+    }
+}
+----

@@ -1,0 +1,111 @@
+---
+title: Creating a Custom Theme
+order: 8
+layout: page
+---
+
+= Creating a Custom Theme
+
+If customizing built-in themes is not enough and you want complete control, you can create a completely custom theme from scratch.
+This means that you explicitly define the style sheets for all the components that are used in your application.
+
+[NOTE]
+This approach is not recommended for most applications.
+You should first consider customizing one of the built-in themes.
+See the other articles in this section for instructions how to do that.
+
+You can integrate a custom component theme to be used with the built-in Vaadin components.
+To do this, you need to create a https://vaadin.com/api/platform/com/vaadin/flow/theme/Theme.html[Theme] class that tells Vaadin how to translate the base un-themed component imports into your themed version.
+
+The most important methods are:
+
+* `getBaseUrl`: This should return the part of the import that is used to determine if it is an import that can be changed into a theme import.
+For Vaadin components this is `/src/`.
+
+* `getThemeUrl`: This should return what the base URL part should be changed into to get the correct theme import.
+For Vaadin components this is `/theme/[_themeName_]`.
+
+*Example*: Overriding the `getBaseUrl` and `getThemeUrl` methods in the `MyTheme` class.
+
+.`MyTheme.java`
+[source,java]
+----
+@JsModule("@vaadin/vaadin-lumo-styles/color.js")
+public class MyTheme implements AbstractTheme {
+    @Override
+    public String getBaseUrl() {
+        return "/src/";
+    }
+
+    @Override
+    public String getThemeUrl() {
+        return "/theme/myTheme/";
+    }
+}
+----
+
+If you need more control, you can use the `getHeaderInlineContents()` method that returns a collection of HTML that will be inlined to the `BootstrapPage` body.
+
+*Example*: Using the `getHeaderInlineContents()` method to add a custom style that includes the correct typography styles.
+
+.`MyTheme.java`
+[source,java]
+----
+@Override
+public List<String> getHeaderInlineContents() {
+    return Collections.singletonList("<custom-style>\n"
+      + "<style include=\"lumo-color lumo-typography\">"
+      + "</style>\n"
+      + "</custom-style>");
+}
+----
+
+Your can also support theme variants.
+The Lumo theme, for example, supports both light and dark variants.
+
+To add support for variants:
+
+. Override the `getHtmlAttributes` method in your custom theme class.
++
+*Example*: Overriding the `getHtmlAttributes` method.
++
+[source,java]
+----
+@Override
+public Map<String, String> getHtmlAttributes(
+        String variant) {
+    if ("dark".equals(variant)) {
+       // the <body> element will have the "theme"
+       // attribute set to "dark" when the dark variant
+       // is used
+       return Collections.singletonMap("theme", "dark");
+    }
+    return Collections.emptyMap();
+}
+----
+
+. Create themed `.js` files for all the Vaadin elements in the `/frontend/theme/myTheme/` folder.
++
+*Example*: Modifying  the `vaadin-button` component by adding custom rules to the original Lumo rules in `frontend/theme/myTheme/vaadin-button.js`.
++
+[source,js]
+----
+// Import the non-themed component
+import '@vaadin/vaadin-button/src/vaadin-button.js';
+// Optional: reuse Lumo styles for button
+import '@vaadin/vaadin-button/theme/lumo/vaadin-button-styles.js';
+
+import { registerStyles, css } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+
+// Register your custom CSS rules for vaadin-button
+registerStyles('vaadin-button', css`
+    :host {
+      border-radius: 0;
+    }
+`);
+----
+
+[NOTE]
+You need to provide theme files for all components used in your application.
+Omitted component display without any styles.
+This is because all Vaadin components are imported using the `/src/` path, and it is the responsibility of the theme class to replace the `getBaseUrl()` pattern with an appropriate path to the themed elements (as returned in the `getThemeUrl()`).

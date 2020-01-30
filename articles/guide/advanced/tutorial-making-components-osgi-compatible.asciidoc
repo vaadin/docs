@@ -1,0 +1,140 @@
+---
+title: Making a component add-on OSGi-compatible
+order: 17
+layout: page
+---
+
+= Making a component add-on OSGi-compatible
+
+In order to use a component jar as an OSGi bundle, the manifest file needs to
+have additional headers. The headers describe the bundle and provide additional
+information. Some of the headers are as follows.
+
+- *Bundle-SymbolicName* is the only mandatory header. It specifies a unique
+  identifier for the bundle, based on the reverse domain name convention. e.g.
+  `com.vaadin.flow.component.button`
+- *Bundle-Name* defines a human-readable name. e.g. vaadin-button-flow
+- *Bundle-License* specifies the license information of bundle. e.g.
+  \http://www.apache.org/licenses/LICENSE-2.0
+- *Bundle-ManifestVersion* indicates the OSGi specification to use for reading
+  this bundle. The value 1 indicates OSGi release 3, and the value 2 indicates
+  OSGi release 4 and later.
+- *Bundle-Version* specifies the version of this bundle which consists of up to
+  four parts separated with dots.
+- *Import-Package* declares the imported packages for this bundle.
+- *Export-Package* contains a declaration of exported packages.
+- *Require-Capability* specifies that this bundle requires other bundles to
+  provide a capability e.g. osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+
+After generating the MANIFEST.MF file, manually or using any tool, it should be
+added to the output jar file. This job can be done by configuring
+`maven-jar-plugin` like this:
+
+[source, xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-jar-plugin</artifactId>
+    <configuration>
+        <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+        </archive>
+    </configuration>
+</plugin>
+----
+
+[NOTE]
+Static resources do not work in OSGi environment for now and it is
+required to unpack them in the application project.
+
+== Tools
+
+Although the headers can be added to MANIFEST.MF manually, it is recommended to
+use an automated tool to create them. Here two tools, both maven plugins, are
+briefly introduced.
+
+=== Bnd maven plugin
+
+This plugin generates required manifest entries based on specified instructions
+which are declared in either a file (with default name of bnd.bnd) or the
+plugin `<configuration>` in the pom. The plugin also set default values to some
+headers derived from pom elements. For example, `Bundle-SymbolicName` is set to
+`artifactId`, and `Bundle-Version` is deducted from artifact version. The
+following is an example of the usage of the plugin.
+
+[source, xml]
+----
+<plugin>
+    <groupId>biz.aQute.bnd</groupId>
+    <artifactId>bnd-maven-plugin</artifactId>
+    <executions>
+        <execution>
+            <goals>
+                <goal>bnd-process</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <bnd><![CDATA[
+             -exportcontents: org.example.api,org.example.types
+             -sources: true
+             Private-Package: org.example.internal.*
+             Bundle-Activator: org.foo.myproject.impl.Activator
+             ]]>
+        </bnd>
+    </configuration>
+</plugin>
+----
+
+In this example, the instructions are provided using `<![CDATA[ ]]>` section in
+`bnd` parameter. In addition to the instructions, that start with a minus sign
+('-'), manifest headers (e.g. `Private-Package`) can also be added here.  For
+more information about instructions see
+https://bnd.bndtools.org/chapters/820-instructions.html[Bnd Instruction
+Reference].
+
+For more information about this plugin see
+https://github.com/bndtools/bnd/tree/master/maven/bnd-maven-plugin[bnd-maven-plugin
+documentation on GitHub].
+
+=== Apache Felix Maven Bundle Plugin
+
+This plugin is based on Bnd tool with this change that you can provide headers
+and instructions as nested tags in `<configuration>` section. So, it may be a
+better choice when we want to have instructions in the `pom` file.
+Although the values of the required entries in the manifest file can be set
+manually, this plugin generates reasonable default values for various headers.
+Here is an example on how to use the plugin.
+
+[source, xml]
+----
+<plugin>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>maven-bundle-plugin</artifactId>
+    <extensions>true</extensions>
+    <executions>
+        <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+                <goal>manifest</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <instructions>
+            <_exportcontents>org.example.api,org.example.types</_exportcontents>
+            <_sources>true</_sources>
+            <Private-Package>org.example.internal.*</Private-Package>
+            <Bundle-Activator>org.foo.myproject.impl.Activator</Bundle-Activator>
+        </instructions>
+    </configuration>
+</plugin>
+----
+
+With these instructions, the plugin generates for instance `Bundle-Version`
+deducted from `${pom.version}`, `Bundle-Name` set to `${pom.name}` and
+`Bundle-SymbolicName` computed from `groupId` and `artifactId`. For more
+information see
+http://felix.apache.org/documentation/subprojects/apache-felix-maven-bundle-plugin-bnd.html[Apache
+Felix Maven Bundle Plugin documentation].

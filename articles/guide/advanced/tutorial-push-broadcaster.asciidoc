@@ -1,0 +1,107 @@
+---
+title: Creating Collaborative Views
+order: 8
+layout: page
+---
+
+ifdef::env-github[:outfilesuffix: .asciidoc]
+
+[[push.broadcaster]]
+= Creating Collaborative Views
+
+This section describes to use server push to create a view where changes made by one user is immediately shown to all users.
+See <<tutorial-push-configuration#,Server Push Configuration>> for an overall description on what server push means and how to configure your application to use server push.
+
+Broadcasting messages to be pushed to UIs in other user sessions requires some sort of message-passing mechanism that sends the messages to all UIs that are registered as recipients.
+As processing server requests for different UIs is done concurrently in different threads of the application server, locking the data structures properly is very important to avoid deadlock situations.
+
+[[push.broadcaster.broadcaster]]
+== The Broadcaster
+
+The standard pattern for sending messages to other users is to use a __broadcaster__ singleton that registers recipients and broadcasts messages to them safely.
+To avoid deadlocks, it is recommended that the messages should be sent through a message queue in a separate thread.
+Using a Java `ExecutorService` running a single thread is usually the easiest and safest way.
+The methods in the class are defined as `synchronized` to prevent race conditions.
+
+
+[source, java]
+----
+public class Broadcaster {
+    static Executor executor = Executors.newSingleThreadExecutor();
+
+    static LinkedList<Consumer<String>> listeners = new LinkedList<>();
+
+    public static synchronized Registration register(
+            Consumer<String> listener) {
+        listeners.add(listener);
+
+        return () -> {
+            synchronized (Broadcaster.class) {
+                listeners.remove(listener);
+            }
+        };
+    }
+
+    public static synchronized void broadcast(String message) {
+        for (Consumer<String> listener : listeners) {
+            executor.execute(() -> listener.accept(message));
+        }
+    }
+}
+----
+
+
+[[push.broadcaster.receiving]]
+=== Receiving Broadcasts
+
+The receivers need register a consumer to the broadcaster to receive the broadcasts.
+The registration should be removed when the component is no longer attached.
+When updating the UI in a receiver, it should be done safely by executing the update through the `access()` method of the UI, as described in <<tutorial-push-access#,Asynchronous Updates>>.
+
+[source, java]
+----
+@Push
+@Route("broadcaster")
+public class BroadcasterView extends Div {
+    VerticalLayout messages = new VerticalLayout();
+    Registration broadcasterRegistration;
+
+    // Creating the UI shown separately
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        UI ui = attachEvent.getUI();
+        broadcasterRegistration = Broadcaster.register(newMessage -> {
+            ui.access(() -> messages.add(new Span(newMessage)));
+        });
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        broadcasterRegistration.remove();
+        broadcasterRegistration = null;
+    }
+}
+----
+
+
+[[push.broadcaster.sending]]
+=== Sending Broadcasts
+
+To send broadcasts with a broadcaster singleton, such as the one described above, you would only need to call the `broadcast()` method as follows.
+
+
+[source, java]
+----
+public BroadcasterView() {
+    TextField message = new TextField();
+    Button send = new Button("Send", e -> {
+        Broadcaster.broadcast(message.getValue());
+        message.setValue("");
+    });
+
+    HorizontalLayout sendBar = new HorizontalLayout(message, send);
+
+    add(sendBar, messages);
+}
+----

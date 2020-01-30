@@ -1,0 +1,186 @@
+---
+title: Making Any Component Draggable
+order: 1
+layout: page
+---
+
+= Making Any Component Draggable
+
+With the `DragSource` class you can make any component draggable by the user and
+configure the drag operation. By default the entire component will be made
+draggable, instead of just a small part of it. The `DragSource` class is a
+configuration object for the dragged item and contains static methods for
+configuring the given component instance.
+
+[source, java]
+----
+Div box1 = new Div();
+Div box2 = new Div();
+
+// make box 1 draggable and store reference to the configuration object
+DragSource<Div> box1DragSource = DragSource.create(box1);
+
+// access box 2 drag related configuration object without making it draggable
+DragSource<Div> box2DragSource = DragSource.configure(box2);
+
+// later make box 2 draggable
+box2DragSource.setDraggable(true);
+
+add(box1, box2);
+----
+
+The `DragSource` configuration object doesn't itself store any data, as it is
+just a convenience proxy that allows easily making a component draggable.
+Creating a new `DragSource` instance of a component will not reset any previous
+configuration, but any changes will override previous configuration.
+
+When a component is set draggable on the server side, the `draggable` attribute
+is assigned to its topmost element on the browser, making it draggable. When
+the user starts to drag the component, the root element of the component gets
+the `v-dragged` class name in the browser. This can be used to highlight the
+dragged component to the user.
+
+[source, css]
+----
+.v-dragged.card {
+    outline: 1px dotted hotpink;
+    opacity: 0.5;
+}
+----
+
+== Exposing Drag Source API on your Component
+
+As the `DragSource` is an `interface`, it can also be used as a "mixin interface"
+which gives an easy way to add its API to your custom component. This useful when
+you want to reuse the component in many places for drag operations.
+
+[source, java]
+----
+public class CardComponent extends Div implements DragSource<CardComponent>, HasStyle {
+    public CardComponent() {
+        // all cards will be draggable by default
+        setDraggable(true);
+    }
+    // all DragSource methods have default implementations
+}
+----
+
+[drag.data]
+== Assigning Server Side Data to the Drag Source
+
+It is possible to set any Java object as the server side drag data to the drag
+source. This data will be provided on the `DropEvent` when the drop occurs on a
+valid drop target, if it is inside the same UI (browser window / tab) as the drag
+source component.
+
+[source, java]
+----
+// continuing from the previous example, CardComponent implements DragSource
+CardComponent card1 = new CardComponent();
+CardComponent card2 = new CardComponent();
+
+card1.setDragData("Queen of Hearts");
+card2.setDragData(new Card(11, Land.Spade)); // the data can be any object
+----
+
+The data will not be sent to the browser as it is stored in the component
+instance as server side only data.
+
+[NOTE]
+It is not currently possible to configure the client side drag data, the
+_dataTransfer_ object, from the server side. This will be made available later.
+
+== Drag Start and End Events
+
+The `DragSource` provides a way to react when the user starts and stops dragging
+a component. The `DragStartEvent` is fired once the drag has already been started
+in the browser, which means that you cannot cancel the drag. You must avoid
+doing any heavy processing there synchronously since it will block the user from
+dragging the component further in the browser and hinder UX.
+
+[source, java]
+----
+// continuing from the previous example with CardComponent
+card1.addDragStartListener(event -> {
+    // highlight suitable drop targets in the UI
+    getVisibleCards().forEach(target -> {
+        Card targetCard = target.getCard();
+        if (targetCard.getLand() == ((Card) card1.getDragData()).getLand()
+                && target != card1) {
+            target.addClassName("possible-drop-zone");
+        }
+    }
+});
+----
+
+When the user stops dragging the component by either dropping it or by canceling
+the drag with e.g. the escape key, the `DragEndEvent` is fired. The
+`isSucceful()` method returns `true` if the drop occurred on a drop target that
+accepted the drop, but only for Chrome and Firefox (read the note after the sample).
+
+[source, java]
+----
+card1.addDragEndListener(event -> {
+    getVisibleCards().forEach(target -> target.removeClassName("possible-drop-zone"));
+    // NOTE: The following is always FALSE for Edge, Safari and IE11 !!!
+    if (event.isSuccessful()) {
+        // better to put logic for successful drop into DropEvent for the
+        // DropTarget because of the above
+    }
+});
+----
+
+[NOTE]
+Unfortunately Edge, Safari and IE11 do not report whether the drop occurred
+successfully or not in the `DragEnd` event. You need to take this into account
+if your users will use any of those browsers, and do any logic in the  `DropEvent`
+handler of the `DropTarget` instead. For Chrome and Firefox it works
+properly.
+
+=== The Effect Allowed and Drop Effect
+
+It is possible to customize the `effectAllowed` for the drag source. This will
+have effect on what the browser will visualize to the user and should match what
+is set in the drop target as the `dropEffect`. The `DragEndEvent` reports the
+`dropEffect` for the drop event. The value will be determined in priority order
+by:
+
+* The desired action `dropEffect` set by the drop target
+* The `effectAllowed` set to the drag source
+* The modifier keys the user had pressed and hold when dropping
+
+When the drop effect is `MOVE`, you should move / remove the drag source
+component from its original location. When the drop effect is `NONE`, the drop
+did not occur and `dropEvent.isSuccesful()` will return `false`.
+
+=== Customizing the Draggable Element
+
+You can customize the element that will be made draggable by overriding the
+`getDraggableElement()` method in the `DragSource` interface. This is useful in case the
+whole component should not be draggable, but only a part of it.
+
+[source,java]
+----
+/* NOTE: RouteItem is a made up custom component, not a core Vaadin component. */
+public class DraggableRouteItem extends RouteItem implements DragSource<RouteItem> {
+    private Icon dragHandle = VaadinIcon.MENU.create();
+
+    public DraggableRouteItem(String destination) {
+        super(destination);
+        add(dragHandle);
+    }
+
+    // Instead of allowing the whole item to be draggable, only allow dragging
+    // from the icon.
+    @Override
+    public Element getDraggableElement() {
+        return dragHandle.getElement();
+    }
+}
+----
+
+[NOTE]
+Changing the draggable element will also change the drag image that the browser
+shows under the cursor. There is an API in HTML 5 for setting a custom drag image
+element, but it is not yet available from server side API because it works
+unreliably in some browsers (Edge / Safari).

@@ -1,0 +1,108 @@
+---
+title: Using Vaadin with Spring MVC
+order: 2
+layout: page
+---
+
+= Using Vaadin with Spring MVC
+
+In this section we cover how to use Vaadin with https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html[Spring MVC]. Spring MVC is the original Spring web framework built on the Servlet API. 
+
+[NOTE]
+See <<tutorial-spring-basic#,Using Vaadin with Spring Boot>> to use Vaadin with https://spring.io/projects/spring-boot[Spring Boot]. 
+
+== Registering the Vaadin Serlet
+
+To use Vaadin in your Spring web application you need to register the Vaadin `SpringServlet` as a dispatcher servlet.
+
+*Example*: Registering the `SpringServlet` as a dispatcher servlet.
+
+[source,java]
+----
+public abstract class ExampleWebAppInitializer
+        implements WebApplicationInitializer {
+
+    @Override
+    public void onStartup(ServletContext servletContext)
+            throws ServletException {
+        AnnotationConfigWebApplicationContext context =
+            new AnnotationConfigWebApplicationContext();
+        registerConfiguration(context);
+        servletContext.addListener(
+                new ContextLoaderListener(context));
+
+        ServletRegistration.Dynamic registration =
+            servletContext.addServlet("dispatcher",
+                new SpringServlet(context, true));
+        registration.setLoadOnStartup(1);
+        registration.addMapping("/*");
+    }
+
+    private void registerConfiguration(
+        AnnotationConfigWebApplicationContext context) {
+        // register your configuration classes here
+    }
+}
+----
+
+== Registering Vaadin Scopes
+
+To use <<tutorial-spring-scopes#,Vaadin Spring scopes>> you need to register the `VaadinScopesConfig` configuration class. As an alternative, you can add the `@EnableVaadin` annotation to your configuration class to import `VaadinScopesConfig`.
+
+The https://vaadin.com/directory/component/vaadin-spring/overview[Vaadin Spring add-on] provides the `VaadinMVCWebAppInitializer` class that is an abstract subclass of the `WebApplicationInitializer` class. You can extend this class and provide your configuration classes by implementing the `getConfigurationClasses()` method.
+
+*Example*: Extending `VaadinMVCWebAppInitializer` and implementing the `getConfigurationClasses()` method.
+[source,java]
+----
+public class SampleWebAppInitializer
+        extends VaadinMVCWebAppInitializer {
+
+    @Override
+    protected Collection<Class<?>>
+            getConfigurationClasses() {
+        return Collections.singletonList(
+                SampleConfiguration.class);
+    }
+}
+
+@Configuration
+@ComponentScan
+public class SampleConfiguration {
+}
+----
+* This registers `VaadinScopesConfig` and `VaadinServletConfiguration` automatically.
+
+== Handling URLs
+
+To handle URLs, you need at least one Vaadin component, annotated with `@Route`. See <<tutorial-spring-basic#handling-urls,Handling URLs>> for an `@Route` annotation example. 
+
+== Declaring Dependencies
+
+To use your Spring web application, you need to declare dependencies in your `pom.xml` file to `vaadin-bom` and `spring-web` as follows:
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <version>${vaadin.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-spring</artifactId>
+    </dependency>
+
+    <!-- Spring -->
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-web</artifactId>
+        <version>5.0.2.RELEASE</version>
+    </dependency>
+----

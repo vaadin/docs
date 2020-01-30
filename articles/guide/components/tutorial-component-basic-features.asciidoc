@@ -1,0 +1,122 @@
+---
+title: Component Basic Features
+order: 2
+layout: page
+---
+
+= Component Basic Features
+
+You can use the basic features listed below with all components that extend `com.vaadin.flow.component.Component`.
+
+
+== Id
+
+You can set an `Id` for any component:
+
+* The `Id` is transmitted to the client side as the `id` of the corresponding element.
+* An `Id` must be unique within the page.
+
+Ids can be used to select the element in JavaScript code or CSS rules, for example.
+
+*Example*: Using the `setId` method to set a component `Id`.
+
+[source,java]
+----
+component.setId("my-component");
+----
+
+== Element
+
+Every component is assosiated to a root `Element`.
+
+You can use the `Element` to access low-level functionality using the `component.getElement()` method.
+
+See <<../element-api/tutorial-properties-attributes#,Element Properties and Attributes>> for more.
+
+== Visibility
+
+You can set a component as invisible using the `component.setVisible(false)`) method.
+
+Invisible components:
+
+* Are no longer displayed in the UI.
+
+* Do not receive updates from the client side. Transmission of server-side updates resumes when the component is again made visible.
+
+*Example*: Using the `component.setVisible` method.
+
+[source,java]
+----
+Span label = new Span("My label");
+label.setVisible(false);
+// this is not transmitted to the client side
+label.setText("Changed my label");
+
+Button makeVisible = new Button("Make visible", evt -> {
+    // makes the label visible - only now the
+    // "Changed my label" text is transmitted
+    label.setVisible(true);
+});
+----
+
+[NOTE]
+If you set a container (such as a `Div` or `Vertical/HorizontalLayout`) that has child components as invisible, all inner components also become invisible. No server-side updates are sent to them, and no client updates are received from them. When the container becomes visible again, transmission of updates to the children also resumes.
+
+=== Client-side Consequences of the Invisible Setting
+
+The invisible setting has different consequences, depending on whether the component has been rendered:
+
+* If a component is set as invisible before it is rendered for the first time, the corresponding element in the DOM is not created, but the server-side structure is maintained. When the component is set as visible, the DOM is properly updated.
+
++
+*Example*: Setting an unrendered component as invisible.
++
+[source,java]
+----
+Span label = new Span("My label");
+label.setVisible(false);
+
+Div container = new Div();
+// the label is not transmitted to the client side.
+// The corresponding element will be created in the
+// DOM only when it becomes visible
+container.add(label);
+
+// prints 1 - the server-side structure is preserved
+// no matter if the component is visible or not
+System.out.println("Number of children: "
+        + container.getChildren().collect(
+                Collectors.counting()));
+----
+
+* If a component that has already been rendered is set as invisible, the corresponding element in the DOM is marked with the `hidden` attribute. The component is not removed from the DOM.
+
++
+This is also true for components used in a `PolymerTemplate` mapped by the `@Id` annotation. When set as as invisible, the component is marked with the `hidden` attribute on the client-side. The DOM structure is not altered.
+
++
+*Example*: Setting a rendered component mapped by the `@Id` annotation as invisible.
++
+[source,java]
+----
+@Id("my-component")
+private Component mappedComponent;
+
+// sets the attribute "hidden" of the element on the
+// client-side
+mappedComponent.setVisible(false);
+----
+
+== Enabled
+
+You can disable user interaction with a component using the `component.setEnabled(false)` method on the server. This method:
+
+* Blocks any interaction from the client to the server for the disabled component and its children, and
+* Adds a `disabled` property to the client element/s.
+
+The enabled state of the component cascades to the child components of the element when it is disabled, but it does not override the enabled state of the children. For example, if you have a layout with child A and B, and B is disabled, setting `layout.setEnabled(false)` marks both A and B as disabled. If you later enable the layout by setting `layout.setEnabled(true)`, child B remains disabled, because it was disabled on the component level.
+
+[NOTE]
+Disabling a component in a template is not the same as disabling on the server, because the server does not know about client elements. Any `@Id` bound template components are handled as if they are normal child components, and receive enabled state changes.
+
+See <<tutorial-enabled-state#,Component Enabled State>> for more.

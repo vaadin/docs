@@ -1,0 +1,453 @@
+---
+title: Including Style Sheets
+order: 4
+layout: page
+---
+
+= Including Style Sheets
+
+To customize the built-in themes you need to include custom style sheets in your app. You can include style sheets to the global scope and to components’ local scope (learn more about <<style-scopes#,style scopes>>).
+
+[NOTE]
+The documentation shows how to do things using either Java or JavaScript/HTML. The end result will be identical regardless. Choose the approach you are most comfortable with.
+
+===== Contents
+
+* <<example>>
+* <<global-scope>>
+** <<global-bundled>>
+** <<global-linked>>
+* <<component-local-scope>>
+* <<sharing-style-sheets>>
+** <<creating-shared-styles>>
+** <<using-shared-styles-global>>
+*** <<shared-global-bundled>>
+*** <<shared-global-linked>>
+** <<using-shared-styles-components>>
+** <<lumo-and-material-style-sheets>>
+
+
+=== Example
+
+.`Java`
+[source,java]
+----
+@CssImport("./styles/global.css")
+@CssImport(value = "./styles/text-field.css", themeFor = "vaadin-text-field")
+@StyleSheet("https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css")
+@StyleSheet("context://styles/bootstrap-overrides.css")
+public class StyledApp extends Div {
+}
+----
+
+.`JavaScript`
+[source,javascript]
+----
+import { registerStyles, css } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+
+registerStyles('vaadin-text-field', css`
+  /* Styles which will be included in vaadin-text-field local scope, i.e. contents of styles/text-field.css */
+`);
+----
+
+.`HTML`
+[source,html]
+----
+<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="styles/bootstrap-overrides.css">
+----
+
+
+[TIP]
+====
+To figure out where to put the CSS files in your project, <<../importing-dependencies/tutorial-ways-of-importing#resource-cheat-sheet,see this table>>.
+====
+
+For a comprehensive documentation how static resources are handled, see <<../importing-dependencies/tutorial-ways-of-importing#,Storing and Loading Resources>>
+
+== Global Scope
+
+The global scope is the "classic" way of styling. Styles defined in a global style sheet apply to all elements/components in the main HTML document.
+
+Styles in a global style sheet do not apply to component internals, like the label inside the Text Field component or drag handle inside the Split Layout component. Template-based components and views are also protected from global styles. This means you can safely write global CSS without worrying about breaking component styling and/or behavior.
+
+There are two ways to include global style sheets:
+
+ 1. Bundled style sheets which are loaded together with the app’s frontend bundle
+ 2. Linked style sheets which are not bundled with the app’s frontend bundle but loaded and cached separately by the browser
+
+[[global-bundled]]
+=== Bundled Global Styles
+
+Bundled style sheets are inlined to the application bundle during a production build, together with other client-side resources. Bundling is recommended for styles which change together with the application logic or component implementations, as the browser can cache them as a single, closely related unit.
+
+==== Server-side
+
+For server-side Java, the https://vaadin.com/api/platform/com/vaadin/flow/component/dependency/CssImport.html[`@CssImport`] annotation will handle all the boilerplate for you, you only need to reference a regular CSS file.
+
+[CAUTION]
+The `@CssImport` annotation does not work in Vaadin 14 compatibility mode (Bower and HTML imports).
+
+.`Java`
+[source,java]
+----
+@CssImport("./styles/global.css")
+----
+
+[[global-client-side]]
+==== Client-side
+
+When including style sheets in client-side code, you need to take polyfilled browsers into consideration – namely Internet Explorer 11. Those browsers do not have native style encapsulation via Shadow DOM and require that styles are scoped manually or via polyfills.
+
+One way to scope global styles and prevent them from affecting Polymer-based components in polyfilled browsers is to use the `<custom-style>` element from the Polymer library.
+
+.`HTML`
+[source,html]
+----
+<script type="module">
+  import '@polymer/polymer/lib/elements/custom-style.js';
+</script>
+
+<custom-style>
+  <style>
+    /* The same style rules as in styles/global.css in the above example */
+  </style>
+</custom-style>
+----
+
+[NOTE]
+See the https://polymer-library.polymer-project.org/3.0/api/elements/custom-style[API documentation for `<custom-style>`]
+
+[[global-linked]]
+=== Linked Global Styles
+
+Linked style sheets can be used to include styles without inlining the contents to the application bundle. This allows the browser to load and cache the style sheet separately from the rest of the application. It also allows you to use external style sheets (e.g. different domain, CDN).
+
+[CAUTION]
+The CSS rules in linked style sheets are not protected from overriding component-specific styles in browsers without native style encapsulation (Shadow DOM) – namely Internet Explorer 11. Use bundled styles in cases where this might be an issue, for example when including CSS which is not maintained by you.
+
+.`Java`
+[source,java]
+----
+@StyleSheet("context://styles/global.css")
+@StyleSheet("https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css")
+----
+
+.`HTML`
+[source,html]
+----
+<link rel="stylesheet" type="text/css" href="styles/global.css">
+<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+----
+
+
+== Component (Local) Scope
+
+Component styles are scoped per component and allow you to customize component styles without worrying about side-effects to other parts of your app.
+Component styles are always inlined to the application bundle.
+
+Component scoped style sheets *apply to all instances of the component* across the entire app, and  *need to be registered before the components* which they target are registered and upgraded (before the first instantiation of the component).
+
+The following instructions only apply to components which are internally based on https://github.com/vaadin/vaadin-themable-mixin/[`ThemableMixin`], including all Vaadin components.
+
+.`Java`
+[source,java]
+----
+@CssImport(value = "./styles/text-field.css",
+           themeFor = "vaadin-text-field")
+----
+
+.`JavaScript`
+[source,javascript]
+----
+import { registerStyles, css } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+
+registerStyles('vaadin-text-field', css`
+  /* Styles which will be included in vaadin-text-field local scope,
+     i.e. the same contents as in styles/text-field.css */
+`);
+----
+
+You can use the same style sheet for multiple components simultaneously by providing a space-separated list of component names instead of a single component name. Wildcard element names are supported as well, for example `vaadin-*-overlay`.
+
+.`Java`
+[source,java]
+----
+@CssImport(value = "./styles/shared-overlays.css",
+           themeFor = "vaadin-select-overlay vaadin-combo-box-overlay")
+----
+
+.`JavaScript`
+[source,javascript]
+----
+import { registerStyles, css } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+
+registerStyles('vaadin-select-overlay vaadin-combo-box-overlay', css`
+  /* Styles which will be included in vaadin-select-overlay and vaadin-combo-box-overlay
+     local scopes, i.e. the same CSS as in styles/shared-overlays.css */
+`);
+----
+
+
+[[sharing-style-sheets]]
+== Sharing Style Sheets in Multiple Scopes
+
+You can share a style sheet between the global scope and multiple component scopes and avoid copy-pasting the same CSS in all of them.
+
+One common use case for shared style sheets is to define typographic styles which you want to be applied consistently across the whole app.
+
+[[creating-shared-styles]]
+=== Creating Shared Style Sheets
+
+==== Server-side
+
+Place the shared styles in a separate `.css` file. You make it shareable to other style sheets by using the `@CssImport` annotation and giving it a unique `id`. The style sheet will not be included to any scope unless another style sheet references it with the `id`.
+
+.`styles/shared-typography.css`
+[source,css]
+----
+h1 {
+  font-weight: 300;
+  font-size: 40px;
+}
+
+h2 {
+  font-weight: 300;
+  font-size: 32px;
+}
+
+h3 {
+  font-weight: 400;
+  font-size: 24px;
+}
+----
+
+.`Java`
+[source,java]
+----
+// The style sheet is not yet applied to any scope, but is available to be included
+@CssImport(value = "./styles/shared-typography.css",
+           id = "shared-typography")
+----
+
+==== Client-side
+
+The recommended way of creating shared style sheets is to package CSS in ES modules (in `.js` files) and export them using the `css` tagged template literal.
+
+.`styles/shared-typography.css.js`
+[source,javascript]
+----
+import { css } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+
+export default css`
+  h1 {
+    font-weight: 300;
+    font-size: 40px;
+  }
+
+  h2 {
+    font-weight: 300;
+    font-size: 32px;
+  }
+
+  h3 {
+    font-weight: 400;
+    font-size: 24px;
+  }
+`;
+----
+
+===== Share Style Sheets with Vaadin Components
+
+If you want to share style sheets with existing Vaadin components (instead of with your own components), you need to use the `registerStyles` method and define a `moduleId` for the style sheets.
+
+[WARNING]
+The use of `moduleId` is deprecated and only provided for backwards compatibility with Vaadin components.
+
+[source,javascript]
+----
+import { registerStyles, css } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+
+registerStyles(undefined, css`
+  h1 {
+    font-weight: 300;
+    font-size: 40px;
+  }
+
+  h2 {
+    font-weight: 300;
+    font-size: 32px;
+  }
+
+  h3 {
+    font-weight: 400;
+    font-size: 24px;
+  }
+`, {moduleId: 'shared-typography'});
+----
+
+
+[[using-shared-styles-global]]
+=== Using Shared Style Sheets in Global Scope
+
+==== Server-side
+
+Similarly as before, you can either bundle or link your shared style sheets to the global scope.
+
+[[shared-global-bundled]]
+===== Bundled Shared Styles
+
+To use a shared style sheet in the global scope use the `include` attribute with a <<global-bundled,global style sheet>>.
+
+.`Java`
+[source,java]
+----
+@CssImport(value = "./styles/global.css",
+           include = "shared-typography")
+----
+
+[[shared-global-linked]]
+===== Linked Shared Styles
+
+If you are <<global-linked,linking your global style sheet>> you can use the standard `@import` CSS at-rule inside the global style sheet to include the shared style sheet.
+
+.`styles/global.css`
+[source,css]
+----
+@import "shared-typography.css";
+----
+
+==== Client-side
+
+Import the CSS string from an ES module and append it to a <<global-client-side,global `<custom-style>`>> element.
+
+.`JavaScript`
+[source,html]
+----
+<script type="module">
+  import '@polymer/polymer/lib/elements/custom-style.js';
+
+  import sharedTypography from 'styles/shared-typography.css.js';
+
+  const style = document.createElement('custom-style');
+  style.innerHTML = `<style>
+    ${sharedTypography.toString()}
+  </style>`;
+  document.head.appendChild(style);
+</script>
+----
+
+
+[[using-shared-styles-components]]
+=== Using Shared Style Sheets in Component Scopes
+
+==== Server-side
+
+To use a shared style sheet in a component scope add the `include` attribute to a <<component-local-scope,component scoped style sheet>> annotation.
+
+.`Java`
+[source,java]
+----
+@CssImport(include = "shared-typography",
+           themeFor = "vaadin-confirm-dialog-overlay")
+----
+
+==== Client-side
+
+.`JavaScript`
+[source,javascript]
+----
+import { registerStyles } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+import sharedTypography from 'styles/shared-typography.css.js';
+
+registerStyles('vaadin-confirm-dialog-overlay', sharedTypography);
+----
+
+If you want to share a style sheet with your own custom web components, include it in your component’s template directly.
+
+.`my-view.js`
+[source,javascript]
+----
+import { PolymerElement } from '@polymer/polymer/polymer-element.js';
+import { html } from '@polymer/polymer/lib/utils/html-tag.js';
+import sharedTypography from 'styles/shared-typography.css.js';
+
+class MyView extends PolymerElement {
+  static get template() {
+    return html`
+      ${sharedTypography}
+      <h2>My view title</h2>
+      ...
+    `;
+  }
+  static get is() {
+    return 'my-view';
+  }
+}
+customElements.define(MyView.is, MyView);
+----
+
+
+[[lumo-and-material-style-sheets]]
+=== Using Lumo and Material Style Sheets
+
+The core Lumo and Material theme style sheets are packaged as *deprecated* Polymer style modules (`<dom-module>`) and require a different way to include them in the global and component scopes.
+
+The following examples include the `lumo-color` and `lumo-typography` style sheets. See the <<../../themes/lumo/overview#,Lumo>> and <<../../themes/material/overview#,Material>> theme docs to learn about all the built-in style sheets in both themes.
+
+==== Global Scope
+
+.`Java`
+[source,java]
+----
+@CssImport(include = "lumo-color lumo-typography")
+----
+
+.`JavaScript`
+[source,html]
+----
+<custom-style>
+  <style include="lumo-color lumo-typography"></style>
+</custom-style>
+----
+
+[NOTE]
+See <<global-client-side>> for more information about `<custom-style>`
+
+
+===== Component Scope
+
+To include a Lumo or Material style sheet from the server-side, the component/view needs to extends https://github.com/vaadin/vaadin-themable-mixin/[`ThemableMixin`] (all Vaadin components do).
+
+You can include Lumo and Material style sheets to all Polymer-based components you author in the client-side.
+
+.`Java`
+[source,java]
+----
+@CssImport(include = "lumo-color lumo-typography",
+           themeFor = "my-custom-view vaadin-dialog-overlay")
+----
+
+.`JavaScript`
+[source,javascript]
+----
+import { registerStyles } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+
+// (Deprecated): including Lumo style sheets to components
+// that extend ThemableMixin
+registerStyles('my-custom-view vaadin-dialog-overlay', css`
+  /* Optional styles to be included in my-element local scope */
+`, {include: ['lumo-color', 'lumo-typography']});
+
+// Including Lumo style sheets to a Polymer-based component
+class MyView extends PolymerElement {
+  static get template() {
+    return html`
+      <style include="lumo-color lumo-typography"></style>
+      ...
+    `;
+  }
+  ...
+}
+
+----

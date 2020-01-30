@@ -1,0 +1,131 @@
+---
+title: Using Vaadin Flow with Spring Boot
+order: 1
+layout: page
+---
+
+
+= Using Vaadin with Spring Boot
+
+The https://vaadin.com/directory/component/vaadin-spring/[Vaadin Spring] add-on allows you to use Vaadin with https://spring.io/projects/spring-boot[Spring Boot].
+
+https://spring.io/projects/spring-boot[Spring Boot] speeds up the development process and provides a fast and efficient development environment by emphasising . It is the easiest way to use the Spring framework. 
+
+[NOTE]
+See <<tutorial-spring-basic-mvc#,Using Vaadin with Spring MVC>> to learn how to use Vaadin in more traditional https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html[Spring MVC] web application, without Spring Boot.
+
+The easiest way to create an application with Spring Boot and Vaadin is to start with a template application created by https://vaadin.com/start or https://start.spring.io/, but you can also add required dependencies manually to your project.
+
+== Adding Dependencies
+
+Like many other tech stacks on Spring Boot, Vaadin provides a starter dependency that provide all essential modules and autoconfiguration. Only the `vaadin-spring-boot-starter` dependency is needed, but it is suggested to also declare the vaadin-bom if you need additional Vaadin dependencies. For production builds, it is also suggested to add the vaadin-maven-plugin, that generates the optimized JavaScript packages.
+
+*Example* Vaadin Spring Boot dependencies in `pom.xml`. 
+
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <!-- declare the latest Vaadin version
+                 as a property or directly here -->
+            <version>${vaadin.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>
+            vaadin-spring-boot-starter
+        </artifactId>
+        <version>${vaadin.version}</version>
+    </dependency>
+</dependencies>
+<build>
+    <plugins>
+        <!-- The Spring Boot Maven plugin for easy
+             execution from CLI and packaging -->
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>
+                spring-boot-maven-plugin
+            </artifactId>
+        </plugin>
+
+        <!--
+            Takes care of synchronizing java
+            dependencies and imports in package.json and
+            main.js files. It also creates
+            webpack.config.js if does not exist yet.
+        -->
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>prepare-frontend</goal>
+                        <goal>build-frontend</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+* The `vaadin-bom` dependency in the `dependencyManagement` section declares the versions of modules in current Vaadin release. 
+
+
+== Running Spring Boot applications
+
+Spring Boot applications are executed via traditional main method. If Vaadin Spring dependency is on your classpath, Spring Boot automatically starts a web server and configures Vaadin with Spring. If you created your project via vaadin.com/start or start.spring.io, an application class with the main method is already available for you.
+
+*Example*: `Application` class.
+
+[source,java]
+----
+@SpringBootApplication
+public class Application {
+
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+
+}
+----
+
+* The `@SpringBootApplication` annotation enables Spring Boot under the hood. This includes Spring configuration, component scanning and auto-configuration.
+
+[TIP]
+Follow the instructions on https://docs.spring.io/spring-boot/docs/current/reference/html/howto-traditional-deployment.html[Spring Boot documentation], if you want to deploy your Spring Boot application as a traditional WAR file.
+
+== Add Vaadin view to Spring Boot application
+
+With Vaadin views are defined as Java classes using `@Route` annotation. At the application start the classes are detected and published in a path derived from the class name or defined as a parameter to the annotation. 
+
+*Example*: `MainView` class.
+
+[source,java]
+----
+@Route
+public class MainView extends VerticalLayout {
+
+	public MainView() {
+		add(new Text("Welcome to MainView."));
+	}
+
+}
+----
+[TIP]
+If you don't provide a path parameter, the framework will derive the path from the class name of the class. The derived name will be in lower case, and possible trailing "View" will be removed. Also, `MainView` or `Main` names will be mapped to root (path will be `""`)
+
+== Vaadin Spring Boot examples
+
+https://github.com/vaadin/flow-spring-examples[Vaadin Spring Examples] is an example application that showcases basic usage of Vaadin and Spring Boot. You can use it to test the concepts and features covered in this documentation.

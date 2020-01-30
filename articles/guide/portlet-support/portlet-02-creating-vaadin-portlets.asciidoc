@@ -1,0 +1,258 @@
+---
+title: Creating Vaadin Portlets
+order: 2
+layout: page
+---
+
+= Creating Vaadin Portlets
+
+In this chapter we will learn how to create Vaadin Portlets and how to deploy those portlets to https://portals.apache.org/pluto/index.html[Pluto 3.1 Portal]
+running on an Apache Tomcat 8.0 web server (sometimes simply "Tomcat").
+
+Pluto is a reference implementation for Portlet specification and while good for testing, it should not be used in a production environment.
+
+== Creating a Vaadin Portlet
+
+We have two ways to start the creation of our Vaadin Portlet: starting from scratch or from https://github.com/vaadin/base-starter-flow-portlet[base-starter-flow-portlet] project.
+The starter project contains everything needed to quickly create your own Vaadin Portlet, with the code laid out in advance.
+
+In order to become familiar with setting up a Vaadin Portlet project manually, we will start with a simple Vaadin project and convert it into a Vaadin Portlet project below.
+
+=== Setting up Portlet project
+
+First, download Vaadin base starter from https://vaadin.com/start (select "Plain Java Servlet" as the technology stack) and follow the instructions in the sidebar.
+
+Next, update your pom.xml:
+
+. Update `vaadin-version` property to `14.1-SNAPSHOT` (temporary)
+. Add the following dependencies:
++
+.pom.xml additions
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>flow</artifactId>
+    <version>2.2.0</version>
+    <type>pom</type>
+</dependency>
+----
++
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-portlet</artifactId>
+    <version>1.0.0</version>
+</dependency>
+----
++
+[source,xml]
+----
+<dependency>
+    <groupId>javax.portlet</groupId>
+    <artifactId>portlet-api</artifactId>
+    <version>3.0.1</version>
+    <scope>provided</scope>
+</dependency>
+----
+
+. Add `build-frontend` goal to `vaadin-maven-plugin` as Vaadin Portlet does not work in development mode running webpack-dev-server.
+
+=== Creating the Portlet
+
+In the most basic setup, Vaadin Portlets consist of two classes:
+
+* A **portlet class**, which `extends VaadinPortlet`
+* A portlet **view class**, which `extends Component`
+
+The portlet class acts as the entry point for our Vaadin Portlet application.
+It serves a similar function to a Servlet, but in portlet context.
+
+The view class is any normal Vaadin component, which is displayed as the contents of our Vaadin Portlet.
+You could use an existing component through extension, composition, or as-is.
+Or just create an entirely new component for your Vaadin Portlet.
+`VaadinPortlet` is a generic class and takes the selected view class as a type parameter.
+
+==== Preparing the Classes
+
+Find the `MainView.java` provided with the project and create `MyPortlet.java` in the same folder.
+Inside the file, add the following code:
+
+MyPortlet.java
+[source,java]
+----
+public class MyPortlet extends VaadinPortlet<MainView> {
+
+}
+----
+
+Next, open the `MainView.java`.
+Remove both the `@Route` and `@PWA` annotations - those do not make sense for our portlet.
+
+The final code should look something like this:
+
+.MainView.java
+[source,java]
+----
+public class MainView extends VerticalLayout {
+
+    public MainView() {
+        Button button = new Button("Click me",
+                event -> Notification.show("Clicked!"));
+        add(button);
+    }
+}
+----
+
+When a user clicks on the button, a notification with the text "Clicked!" should appear then the lower left corner of the browser window.
+Your Vaadin Portlet is almost ready to go - we only need to make it ready for deployment.
+
+=== Setting Portlet Deployment Descriptor
+
+In Portlet 3.0 specification portlet deployment descriptor can be configured in two ways:
+
+- portlet.xml (backwards compatible)
+- Annotations (only 3.0)
+
+We will use the portlet.xml to configure our portlet deployment.
+The portlet.xml serves the same purpose as servlet.xml does for servlets.
+
+Create portlet.xml under `{project directory}/src/main/webapp/WEB-INF` and
+add the following contents:
+
+.portlet.xml
+[source,xml]
+----
+<?xml version="1.0"?>
+<portlet-app xmlns="http://xmlns.jcp.org/xml/ns/portlet"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/portlet http://xmlns.jcp.org/xml/ns/portlet/portlet-app_3_0.xsd"
+             version="3.0">
+    <portlet>
+        <portlet-name>my-portlet</portlet-name>
+        <display-name>My Test Portlet</display-name>
+        <portlet-class>com.vaadin.starter.skeleton.MyPortlet</portlet-class>
+        <expiration-cache>0</expiration-cache>
+        <supports>
+            <mime-type>text/html</mime-type>
+            <portlet-mode>view</portlet-mode>
+        </supports>
+        <portlet-info>
+            <title>My Test Portlet - MyPortlet</title>
+            <short-title>My Test Portlet</short-title>
+            <keywords></keywords>
+        </portlet-info>
+    </portlet>
+</portlet-app>
+----
+
+The `<portlet-class>` points to your class extending `VaadinPortlet` with fully qualified name.
+The `<supports>` section contains the portlet modes (`<portlet-mode>` tag) the portlet supports.
+You can learn more about portlet modes for Vaadin Portlet in
+<<portlet-03-handling-portlet-phases#,the next chapter>>
+
+== Deploying your Vaadin Portlet
+
+=== Building Vaadin Portlet
+
+In order to build the portlet we just created, we must add some more configuration to the pom.xml.
+Vaadin Portlet deployments are packaged into two war files.
+One war file contains all the static resources shared by the Vaadin Portlets, and the other war file contains the actual portlets.
+This allows for more complex scenarios where multiple portlets come from separate war files.
+In the future, we will offer tooling to create the asset bundle which fits all the deployed portlet war files.
+
+Add the following plugin configuration to the pom.xml:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-war-plugin</artifactId>
+    <version>3.2.3</version>
+    <configuration>
+        <archive>
+            <manifestEntries>
+                <Implementation-Title>${project.name}</Implementation-Title>
+                <Implementation-Version>${project.version}</Implementation-Version>
+            </manifestEntries>
+        </archive>
+    </configuration>
+    <!-- Generate 2 war archives for portlet. One for the portlet(s) and another for the static files -->
+    <executions>
+        <!-- Generate a static war 'vaadin-portlet-static.war' with all static files -->
+        <execution>
+            <id>static-files</id>
+            <goals>
+                <goal>war</goal>
+            </goals>
+            <configuration>
+                <warName>vaadin-portlet-static</warName>
+                <!-- static files should contain flow-client and all build files generated in VAADIN/ -->
+                <packagingIncludes>WEB-INF/lib/flow-client*.jar,VAADIN/</packagingIncludes>
+
+                <webResources>
+                    <resource>
+                        <!-- this is relative to the pom.xml directory -->
+                        <directory>target/classes/META-INF/</directory>
+                        <!-- Include all files and folders below <directory> -->
+                        <includes>
+                            <include>**</include>
+                        </includes>
+                        <!-- do not include configuration files -->
+                        <excludes>
+                            <exclude>VAADIN/config/**</exclude>
+                        </excludes>
+                    </resource>
+                </webResources>
+            </configuration>
+        </execution>
+        <!-- Generate the portlet war excluding any static build files -->
+        <execution>
+            <id>portlet-war</id>
+            <goals>
+                <goal>war</goal>
+            </goals>
+            <configuration>
+                <primaryArtifact>true</primaryArtifact>
+                <packagingExcludes>WEB-INF/classes/META-INF/VAADIN/build/**,VAADIN/</packagingExcludes>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+Here we build 2 war files one for the application (all portlets in this project) and one
+for the static files needed by the portlets (this contains frontend bundle and client engine)
+
+The static war is built as a portal window can only load a single Vaadin bundle and client engine
+at a time. With this all the portlets on the page can in a simple way use the same static bundle.
+
+==== Configuring static resources
+If you need to change the name of the static assets war (`vaadin-portlet-static` as default), you can do that via `vaadin.portlet.static.resources.mapping` application property.
+For example, if you would like to serve static resources from `vaadin-static-resources.war`, you will need to +
+
+* Rename static war to `vaadin-static-resources` in the pom.xml
+* Pass the value `/vaadin-static-resources/` via the application property to the Vaadin application, i.e. on TomCat web server you would:
+** On *nix-based operating systems, create a file `$CATALINA_BASE/bin/setenv.sh` with the line +
+`JAVA_OPTS="$JAVA_OPTS -Dvaadin.portlet.static.resources.mapping=/vaadin-static-resources/"`
+** On Windows operating systems, create a file `%CATALINA_BASE%\bin\setenv.bat` with the line +
+`set "JAVA_OPTS=%JAVA_OPTS% -Dvaadin.portlet.static.resources.mapping=/vaadin-static-resources/"`
+
+
+=== Deploying Vaadin Portlet
+
+. Run `mvn install` in you project directory.
+. Download https://www.apache.org/dist/portals/pluto/pluto-bundle-3.1.0.zip[Tomcat 8.0 + Pluto 3.1 bundle] and extract it to a location you prefer.
+. Copy both `*.war` files from `{project directory}/target` into `{bundle extract location}/webapps`.
+. Start the web server by
+* Opening a command prompt in the `{bundle extract directory}` folder
+* Running the command `./bin/startup.sh` or `./bin/startup.bat` (unix/windows)
+. Once the web server has started, navigate to http://localhost:8080/pluto/portal
+. Sign in to the Portal
+* Username: pluto
+* Password: pluto
+. Select "Pluto Admin" from the sidebar
+* Under "Portal Pages": Create a new page for your portlet, or select one of the existing pages
+* Under "Portlet Application": Select your package and portlet and click "Add Portlet"
+

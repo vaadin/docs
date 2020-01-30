@@ -1,0 +1,620 @@
+---
+title: Migrating from Vaadin 10–13 to Vaadin 14
+order: 210
+layout: page
+---
+
+= Migrating from Vaadin 10–13 to Vaadin 14
+
+[NOTE]
+This migration documentation has been revised for Vaadin 14.2 release (pnpm support).
+
+For existing Vaadin platform projects (versions 10-13), using most Vaadin 14 new features
+requires just updating the Vaadin version, adding a dependency for compatibility mode, and addressing any API changes in code, which can be backtracked
+from the https://github.com/vaadin/platform/releases[platform release notes].
+
+Vaadin 14 also introduces support for new frontend technologies and tools,
+which change the way the project is built and how frontend dependencies, like
+web components, are integrated. This is the default starting point for new projects
+starting from Vaadin 14, and an optional migration to take for existing projects.
+
+First, this document introduces the new technologies and tooling.
+Second, it gives an overview of the migration path from Platform V10-V13 to V14.
+This is not intended to be a complete change log, but rather a hands-on guide to help resolving issues users
+migrating their applications to V14 will be expected to encounter.
+
+*For Vaadin Java users, many of the changes described here only have effect on what happens on behind the scenes.
+But in case you are using templates / Vaadin Designer or are integrating 3rd party frontend dependencies, you will want to read this document.*
+
+*For component add-on developers, it is recommended to read this document, but
+there are also <<v14-addon-guide#,add-on specific instructions
+available>>.*
+
+== New frontend tooling for Vaadin 14
+
+Since Vaadin 10, the client-side UI components have been built as web components.
+In versions 10 to 13, the web components and their dependencies have been distributed
+using Bower, a package manager for frontend projects. For Vaadin Java projects, the Bower
+dependencies have been packaged into `.jar` files using https://www.webjars.org/[Webjars],
+allowing to use those directly with Maven.
+
+Over time, Bower has been deprecated in favor of better frontend package managers.
+While Bower still works and is maintained, it is lacking support for the latest web standards like https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules[JavaScript modules].
+
+To be able to bring all the latest frontend technologies available to the
+Vaadin users, the frontend technology stack and tooling
+have been renewed in Vaadin 14.
+
+[NOTE]
+The old and the new toolset cannot be used at the same time!
+This means eg. `@HtmlImports` are completely ignored when running the project
+in _npm mode_, and vice versa `@JsModule` is ignored when running the project
+in _Vaadin 13 compatibility mode_.
+
+=== Web Components: ES6 modules instead of HTML Imports
+
+_EcmaScript 6 modules_ (or JS modules) are a feature added to JavaScript as part of
+the ECMAScript 2015 Language Specification. They provide a means for modulizing and
+importing JavaScript code in the browser. Vaadin 14 adds support for JS modules
+as a replacement for HTML imports which was used earlier for building web
+components with the Polymer library. This means that the Polymer version has been
+upgraded from version 2 to version 3 (see https://polymer-library.polymer-project.org/3.0/docs/about_30[here] what's
+new in Polymer 3). In Polymer 3, templates are JavaScript modules that fully
+encapsulate the HTML structure of the component template.
+
+=== Package management: pnpm/npm instead of Bower
+
+Behind the scenes, Vaadin 14 manages front-end dependencies using _pnpm_ (or _npm_ if requested),
+the de-facto standard JavaScript package manager (whereas V13 and older used _Bower_ & webjars).
+Using pnpm/npm means that all JavaScript dependencies will be downloaded to the `node_modules` directory
+in the root of your project and that `package.json` and `pnpm-lock.yaml`/`package-lock.json` files will be
+created to record and resolve the dependencies and their versions respectively.
+
+Since Vaadin Platform 14.2 `pnpm` tool is used by default for package management instead of `npm`.
+This is done transparently for the end user and in case there is a reason to use `npm` instead of `pnpm` you may disable `pnpm` (see <<../advanced/tutorial-all-vaadin-properties#,All Vaadin properties>>  or <<../production/tutorial-production-mode-advanced#,Advanced production mode topics>> sections). `pnpm` tool improves the package management in many ways,
+e.g. it allows to share the same packages between various  projects and avoid downloading them every
+time for every project which also reduce a number of IO operations.
+
+*Do not be alarmed if you are not familiar with these files or the npm way of doing things.
+The invocation of pnpm/npm is fully automated by `vaadin-maven-plugin`; the only
+thing you need to make sure is that _Node.js_ (version 10 or later) and npm
+(version 5.6 or later) are installed.* If they are not installed, the application
+will not be started and there will be a notification about installing Node.js instead.
+
+=== Serving frontend resources with webpack
+
+Another front-end tool utilized by Vaadin 14 behind the scenes is the module bundler _webpack_.
+All dynamic frontend resources in your project (JavaScript modules containing
+components and stylesheets) are now expected to reside in the `frontend`
+directory immediately under the project root, which is inspected by webpack.
+As application is started in development mode, the webpack development server is started automatically
+to handle serving the frontend resources to the browser.
+
+Unlike in Vaadin 10-13, using webpack enables testing your application with Internet Explorer 11
+on development mode. Previously this required a production build to get the frontend resources
+transpiled to IE11 compatible ES5 syntax. The overhead from this transpilation is about 1-2 seconds.
+
+In production mode, webpack is used to create a (transpiled and minified) bundle from
+the resources inside the `frontend` folder. As long as your project file structure
+is as specified in this guide, these steps are fully automated by `vaadin-maven-plugin`.
+
+While basic Vaadin usage requires no knowledge about webpack and how it works,
+for advanced users there is also a possibility to customize the webpack build.
+
+=== Compatibility mode
+
+Existing Vaadin 10-13 projects can update to 14 without migrating
+to the new toolset. The only thing that you need to do is to upgrade your Vaadin
+version to `14.0.0` in your `pom.xml`. No more changes are needed in your
+project. Behind the scenes, everything works just as before with using
+Bower & Webjars, Polymer 2 & Html Imports, and Polymer CLI for the production build.
+This is called _the compatibility mode_ in Vaadin 14.
+
+The compatibility mode is only intended to enable a smoother migration path, and should not
+be used in new projects. The compatibility mode is supported for the full Vaadin
+14 support period, but it will be removed permanently in Vaadin 15.
+
+Compatibility mode can be enabled explicitly by including the `flow-server-compatibility-mode`
+jar. If using Maven, add the following dependency to `pom.xml`:
+
+[source, xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>flow-server-compatibility-mode</artifactId>
+</dependency>
+----
+
+Alternatively, enable compatibility mode by setting the deployment configuration parameter
+`vaadin.compatibilityMode` to `true`. Read more about setting configuration parameters
+ <<../advanced/tutorial-all-vaadin-properties#,here>>.
+
+If using Spring Boot, setting the `vaadin.compatibilityMode` parameter is the mandatory solution
+as the `web-fragment.xml` added by the `flow-server-compatibility-mode` dependency is not read.
+To set the property, you may add the following line to `application.properties`:
+
+[source, text]
+----
+vaadin.compatibilityMode=true
+----
+
+Alternatively, add the property as a JVM parameter to the `spring-boot` plugin when running
+the application via Maven:
+`mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dvaadin.compatibilityMode=true"`
+
+== Migration steps
+
+To use the new toolset, any existing Vaadin projects with client-side Polymer 2
+based web components must migrate these from Polymer 2 syntax to Polymer 3 (see next section)
+before they can run on V14. There is a migration tool available as a part of Maven plugin.
+The goal `migrate-to-p3` converts P2 templates to P3 templates and replaces `@HtmlImport`
+annotations with `@JsModule` annotations, see <<migration-tool#,Migration Tool>> tutorial.
+
+For component add-on projects, there are <<v14-addon-guide#,
+add-on specific migration instructions available>>.
+
+=== 1 - Check prerequisites
+
+[install.npm]
+==== Install npm
+
+Install Node.js (it includes npm) on your development platform of choice if
+you don't already have it. Either download the installer
+(https://nodejs.org/en/download/[https://nodejs.org/en/download/]) or use your
+preferred package management system (Homebrew, dpkg, ...).
+
+==== Miscellaneous
+
+* If you are using Java 9 or newer and `jetty-maven-plugin`, upgrade the
+plugin to version `9.4.15.v20190215` or newer.
+
+* If you are using Spring Boot, note that the minimum required version of
+spring-boot-starter-parent is `2.1.0.RELEASE`.
+
+=== 2 - Update project configuration
+
+==== Update Platform version in `pom.xml`
+
+The first step is to update your maven `pom.xml` configuration file to use the
+latest V14 release. If the Vaadin version is specified in Maven properties,
+change it to the following:
+
+
+[source, xml]
+----
+<properties>
+    ...
+    <vaadin.version>14.0.0</vaadin.version>
+</properties>
+----
+
+[maven.plugin]
+==== Add Vaadin Maven plugin
+
+Next, add the Vaadin Maven plugin to the `<build><plugins>` section of `pom.xml`
+(if your `pom.xml` already included this plugin, update the goals in the
+`<execution><goals>` section):
+
+[source, xml]
+----
+<build>
+    <plugins>
+        ...
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>prepare-frontend</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+The `prepare-frontend` goal checks that Node.js and npm are installed and
+creates or updates `package.json` based on annotations in the project Java code.
+It also creates `webpack.config.js` if it doesn’t exist yet (if needed, you can
+add your own customized webpack configuration to this file, as it will not be
+overwritten by future invocations of `prepare-frontend`).
+
+[NOTE]
+In V14, you need the `vaadin-maven-plugin` also in development mode.
+So, make sure that you declare the plugin with `prepare-frontend` in your default Maven
+profile.
+
+For the production profile plugin you need to have the goal `build-frontend`:
+
+[source, xml]
+----
+<profile>
+    <id>production-mode</id>
+    ...
+    <build>
+        <plugins>
+            ...
+            <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-frontend</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
+----
+
+The goal `build-frontend` invokes pnpm/npm to download and cache the npm packages
+(into directory node_modules) and webpack to process the JavaScript modules.
+
+==== Move contents of src/main/webapp/frontend
+
+In Vaadin 10-13, files related to front-end, such as HTML templates, stylesheets,
+JavaScript files and images are stored in the folder
+`<PROJDIR>/src/main/webapp/frontend`. Depending on the resource type, you may
+need to move some of these resource files to a new `frontend` folder _at the
+root of the project_, i.e., at `<PROJDIR>/frontend`. The following list is a
+rough guide on what to do with each type of resource:
+
+* HTML files containing Polymer templates, should be removed from the
+`<PROJDIR>/src/main/webapp/frontend` once you finish the migration, but in the
+meanwhile, you need them as reference to generate the equivalent JS modules
+under the `<PROJDIR>/frontend` folder as described in the next section.
+* Plain .css files used for global styling: keep them in
+`<PROJDIR>/src/main/webapp/frontend`
+* Custom JavaScript files: move them to `<PROJDIR>/frontend`
+* Images and other static resources: keep them in
+`<PROJDIR>/src/main/webapp/frontend` (or move anywhere else under `webapp`; see
+comments about updating annotations in section 5)
+
+[p2.p3.migration]
+=== 3 - Convert Polymer 2 to Polymer 3
+
+There is a migration tool available which does this conversation. See <<migration-tool#,Migration Tool>> tutorial.
+
+==== Templates
+
+Polymer templates defined in HTML files (extension `.html` ) should be converted
+to new ES6 module format files (extension `.js`) which in the basic case only
+requires the following steps:
+[loweralpha]
+. Change the file extension from `.html` to `.js`.
+. Change the parent class of the element class from `Polymer.Element` to
+`PolymerElement`.
+. Convert HTML imports for ES6 module imports. For example a local file
+
+[source, xml]
+----
+<link rel=import href="foo.html">
+----
+
+becomes
+
+[source, js]
+----
+import './foo.js';
+----
+
+or external import
+
+[source, xml]
+----
+<link rel="import"
+    href="../../../bower_components/vaadin-button/src/vaadin-button.html">
+----
+
+becomes
+
+[source, js]
+----
+import '@vaadin/vaadin-button/src/vaadin-button.js';
+----
+
+To see what’s the scope of the js module, for vaadin components it’s always
+@vaadin and for other components, you can search the name that comes after
+`bower_components` https://www.npmjs.com/search[here] to find the scope.
+
+[NOTE]
+The migration tool converts all vaadin imports using correct scope automatically for you.
+For other js modules you will need to do it manually.
+
+[loweralpha, start=4]
+. Move the template from HTML into a static getter named `template` inside
+the element class which extends `PolymerElement`.
+
+E.g.
+
+[source, xml]
+----
+<template>
+    <vaadin-text-field id="search">
+    </vaadin-text-field>
+    <vaadin-button id="new">New
+    </vaadin-button>
+</template>
+----
+
+becomes
+
+[source, js]
+----
+static get template() {
+    return html`
+        <vaadin-text-field id="search">
+        </vaadin-text-field>
+        <vaadin-button id="new">New
+        </vaadin-button>`;
+}
+----
+
+[loweralpha, start=5]
+. Remove the `<dom-module>` and `<script>` tags.
+
+As a complete example, the following template
+
+[source, xml]
+----
+<link rel="import" href="../../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../../bower_components/vaadin-text-field/src/vaadin-text-field.html">
+<link rel="import" href="../../../bower_components/vaadin-button/src/vaadin-button.html">
+
+<dom-module id="top-bar">
+    <template>
+        <div>
+            <vaadin-text-field id="search">
+            </vaadin-text-field>
+            <vaadin-button id="new">New
+            </vaadin-button>
+        </div>
+    </template>
+
+    <script>
+        class TopBarElement extends Polymer.Element {
+            static get is() {
+                return 'top-bar'
+            }
+        }
+
+        customElements.define(TopBarElement.is, TopBarElement);
+    </script>
+</dom-module>
+----
+
+
+becomes
+
+[source, js]
+----
+import {PolymerElement, html} from '@polymer/polymer/polymer-element.js';
+import '@vaadin/vaadin-button/src/vaadin-button.js';
+import '@vaadin/vaadin-text-field/src/vaadin-text-field.js';
+
+class TopBarElement extends PolymerElement {
+    static get template() {
+        return html`
+            <div>
+                <vaadin-text-field id="search">
+                </vaadin-text-field>
+                <vaadin-button id="new">New
+                </vaadin-button>
+            </div>`;
+    }
+
+    static get is() {
+        return 'top-bar'
+    }
+}
+
+customElements.define(TopBarElement.is, TopBarElement);
+----
+
+==== Styles
+
+Converting `<custom-style>` elements is straightforward. The containing HTML
+file should be converted to a js file and the content of the file, imports
+excluded, should be added to the head of the document in JavaScript code. Any
+import should be converted from `<link>` tag to a javascript import statement
+the same way as for templates. The following example illustrates these steps in
+practice.
+
+Polymer 2:
+
+[source, xml]
+----
+<link rel="import" href="../bower_components/polymer/lib/elements/custom-style.html">
+
+<custom-style>
+    <style>
+        .menu-header {
+            padding: 11px 16px;
+        }
+
+        .menu-bar {
+            padding: 0;
+        }
+    </style>
+</custom-style>
+----
+
+Polymer 3:
+
+[source, js]
+----
+import '@polymer/polymer/lib/elements/custom-style.js';
+const documentContainer = document.createElement('template');
+
+documentContainer.innerHTML = `
+    <custom-style>
+        <style>
+            .menu-header {
+                padding: 11px 16px;
+            }
+
+            .menu-bar {
+                padding: 0;
+            }
+        </style>
+    </custom-style>`;
+
+document.head.appendChild(documentContainer.content);
+----
+
+[NOTE]
+The migration tool takes care about style files and `@StyleSheet` annotations
+converting them into `@JsModule`. But there is `@CssImport` annotation available
+which is more convenient to use instead of `@JsModule` for CSS. The migration tool
+is not able to convert styles using `@CssImport` annotation. This requires manual
+conversation.
+
+==== Polymer modulizer
+
+For more complex cases you can use
+https://polymer-library.polymer-project.org/3.0/docs/upgrade[Polymer 3 upgrade guide].
+You can also use polymer-modulizer tool that is described in the guide. The
+migration tool available with the Vaadin Maven Plugin is internally using the
+polymer-modulizer for migrating the Polymer 2 templates to Polymer 3.
+
+=== 4 - Update Java annotations
+
+The migration tool is able to do this step for you automatically, see <<migration-tool#,Migration Tool>> tutorial.
+
+After converting Polymer templates from HTML to JavaScript modules, every
+`HtmlImport` annotation in Java classes should be changed to a `JsModule`
+annotation. Moreover, you should not use a frontend protocol (`frontend://`)in
+the path of your resources anymore, and add the `./` prefix to the file path.
+E.g.
+
+[source, java]
+----
+@HtmlImport("frontend://my-templates/top-bar.html")
+----
+
+becomes
+
+[source, java]
+----
+@JsModule("./my-templates/top-bar.js")
+----
+
+
+==== WebJars
+If you are developing an application or an add-on which depends on web components from webjars, like below:
+```
+<dependency>
+    <groupId>org.webjars.bowergithub.polymerelements</groupId>
+    <artifactId>paper-slider</artifactId>
+</dependency>
+```
+then the migration tool won't be able to rewrite correctly the `@HtmlImport` annotation
+unless it is a Vaadin web component. In this case the `@HtmlImport` will be replaced by `@JsModule` but you
+should correct the value by yourself since the migration tool is not able to detect the
+scope of the JS module automatically. Here are the steps you need to do for each WebJar in your project:
+
+* Find the npm package of the web component. You should be able to find it via
+one of the following ways.
+** Go to the GitHub repository page of the component and most likely the package
+name is mentioned in the readme file. For the given example, the owner
+name of the component on GitHub is the last part of the groupId which is `polymerelements`,
+So, after adding the name of the component, the address of its GitHub repository
+can be determined as https://github.com/PolymerElements/paper-slider. Then the
+npm package name can be found under installation section in front of `pnpm install` (or `npm install`)
+command. So, the npm package is `@polymer/paper-slider`.
+
+** Search on [npmjs.com](https://www.npmjs.com).
+The name of the web component should be the same.
+The scope of the package should match the groupId of the dependency.
+It can be used to identify the correct npm package if name brings up duplicates.
+For the given example, you can search for `paper-slider` and among the results,
+you can see that one of them has the `@polymer` scope has the best match.
+So, the corresponding npm package is `@polymer/paper-slider`.
+
+* Add `@NpmPackage` annotation to your class. After finding the right npm
+package and choosing the version that you want to use, you should add `@NpmPackage`
+annotation with the package name (as `value` parameter) and package version
+It means that you should add the following annotation
+to your class. In this example
++
+```
+@NpmPackage(value = "@polymer/paper-slider", version = "3.0.1")
+```
+If you want to use the latest minor release of the npm package instead of a
+fixed version, then you should add a caret before the version. E.g. the above
+annotation would become like the following.
++
+```
+@NpmPackage(value = "@polymer/paper-slider", version = "^3.0.1")
+```
++
+For more information about the versioning of npm packages, see [this](https://docs.npmjs.com/files/package.json#dependencies).
+
+* Update the value of `@JsModule` annotation with the correct path which can be
+found on the same page where the npm package is found. For our example, it's
+`@polymer/paper-slider/paper-slider.js`. So, the annotation would be:
++
+```
+@JsModule("@polymer/paper-slider/paper-slider.js")
+```
+
+=== 5 - Remove frontend protocol
+
+Apart from `JsModule` annotations, the `frontend://` protocol should also be
+removed from non-annotation resource accessors in Java code or in JavaScript
+code. For example in V10-V13 to add a PNG file from
+`<PROJDIR>/src/main/webapp/img` folder, you would do as follows:
+
+[source, java]
+----
+String resolvedImage = VaadinServletService.getCurrent()
+    .resolveResource("frontend://img/logo.png",
+    VaadinSession.getCurrent().getBrowser());
+
+Image image = new Image(resolvedImage, "");
+----
+
+In V14, the above becomes:
+
+[source, java]
+----
+String resolvedImage = VaadinServletService.getCurrent()
+    .resolveResource("img/logo.png",
+    VaadinSession.getCurrent().getBrowser());
+
+Image image = new Image(resolvedImage, "");
+----
+
+=== 6 - Build and maintain the V14 project
+
+Test the new configuration by starting the application. How you do this depends
+on your application deployment model. For example, if you are using the Jetty
+maven plugin, run:
+
+`mvn clean jetty:run`
+
+You should see Maven log messages confirming that pnpm/npm is downloading the package
+dependencies and that webpack is emitting `.js` bundles. If there is any error,
+go back and re-check the previous steps.
+
+The following files/folders have been generated in the root of your project:
+
+* `package.json` and `pnpm-lock.yaml`/`package-lock.json`: These files keep track of npm
+packages and pin their versions. You may want to add these to version control,
+in particular, if you added any local package directly with pnpm/npm.
+* `node_modules` directory: pnpm/npm package cache, do not add this to version
+control!
+* `webpack.config.js`: webpack configuration. Include in version control. You
+can add custom webpack configuration to this file.
+* `webpack.generated.js`: Auto-generated webpack configuration imported by
+`webpack.config.js`. Do not add to version control, as it is always overwritten
+by `vaadin-maven-plugin` during execution of the `prepare-frontend` goal.
+
+You now have a fully migrated Vaadin 14 project. Enjoy!
