@@ -8,9 +8,10 @@ This repo is a regular Vaadin application project with additional AsciiDoc artic
 
 - `articles/` – A hierarchy of AsciiDoc files, documenting the use of all Vaadin features
 
+- `frontend/` – TypeScript examples
+
 - `src/` – Java examples
 
-- `frontend/` – TypeScript examples
 
 ## Content requirements
 
