@@ -4,26 +4,25 @@ Documentation and code examples for all Vaadin features.
 
 This repo is a regular Vaadin application project with additional AsciiDoc articles.
 
-## Content structure
+## Content
 
-## `articles/`
-A hierarchy of AsciiDoc files, documenting the use of all Vaadin features.
+- `articles/` – A hierarchy of AsciiDoc files, documenting the use of all Vaadin features
 
-### Content requirements
+- `src/` – Java examples
+
+- `frontend/` – TypeScript examples
+
+## Content requirements
+
+### Articles
 
 All files and folders need to satisfy the following requirements in order for the documentation site to build properly.
 
-#### Foldes need an index
+- **Folders need an index** – All folders needs to contain an `index.asciidoc` file.
 
-Each folder needs to contain an `index.asciidoc` file.
+- **All files need some visible content** – All `.asciidoc` file needs to have at least some content, for example a title.
 
-#### Some content
-
-Each `.asciidoc` file needs to have at least some content, for example a title.
-
-#### Front matter
-
-All `.asciidoc` file needs to have front matter defining the `title` and `order` attributes.
+- **Front matter** – All `.asciidoc` file needs to have front matter defining the `title` and `order` attributes.
 
 For example:
 
@@ -57,19 +56,18 @@ order: 10
 ---
 ```
 
-### Filenames map to URLs
+### Code examples
 
-The folder path defines the URL for the resulting article on the documentation site.
+You should follow Vaadin best practices when creating code examples in the `src` and `frontend` folders.
+
+## Article file names map to URLs
+
+The article path defines the resulting URL on the documentation site.
 
 For example:
 - `articles/intro/index.asciidoc` → `/intro/`
 - `articles/forms/data-binding.asciidoc` → `/forms/data-binding/`
 
-## `src/`
-Contains Java examples. Follow Vaadin best practices.
-
-## `frontend/`
-Contains TypeScript examples. Follow Vaadin best practices.
 
 ## Setup
 
