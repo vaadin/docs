@@ -16,7 +16,7 @@ This repo is a regular Vaadin application project with additional AsciiDoc artic
 
 ### Articles
 
-All files and folders need to satisfy the following requirements in order for the documentation site to build properly.
+All files and folders need to satisfy the following requirements in order for the [documentation site](https://github.com/vaadin/docs-app) to build properly.
 
 - **Folders need an index** – All folders needs to contain an `index.asciidoc` file.
 
@@ -24,37 +24,37 @@ All files and folders need to satisfy the following requirements in order for th
 
 - **Front matter** – All `.asciidoc` file needs to have front matter defining the `title` and `order` attributes.
 
-For example:
+   For example:
 
-```
----
-title: Article Title
-order: 10
----
+   ```
+   ---
+   title: Article Title
+   order: 10
+   ---
 
-= Article Title
-```
+   = Article Title
+   ```
 
-The `title` attribute defines the text which is shown in the navigation.
+   The `title` attribute defines the text which is shown in the navigation.
 
-The `order` defines in which order the page/folder is shown in the navigation. The `index.asciidoc` files are processed differently as with them the `order` property defines the order of the parent folder in relation to its sibling folders.
+   The `order` defines in which order the page/folder is shown in the navigation. The `index.asciidoc` files are processed differently as with them the `order` property defines the order of the parent folder in relation to its sibling folders.
 
-For example, with the following, “Folder B” will be shown before “Folder A” in the navigation:
+   For example, with the following, “Folder B” will be shown before “Folder A” in the navigation:
 
-`articles/folder-a/index.asciidoc`
-```
----
-title: Folder A
-order: 20
----
-```
-`articles/folder-b/index.asciidoc`
-```
----
-title: Folder B
-order: 10
----
-```
+   `articles/folder-a/index.asciidoc`
+   ```
+   ---
+   title: Folder A
+   order: 20
+   ---
+   ```
+   `articles/folder-b/index.asciidoc`
+   ```
+   ---
+   title: Folder B
+   order: 10
+   ---
+   ```
 
 ### Code examples
 
