@@ -1,4 +1,4 @@
-import '@vaadin/vaadin-grid/all-imports';
+import '@vaadin/vaadin-grid/vaadin-grid';
 import { LitElement, html, property, customElement } from 'lit-element';
 import people from './data/people.json';
 
