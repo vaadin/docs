@@ -8,12 +8,14 @@ import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.demo.domain.DataService;
 
 @Route("grid-editor")
 public class GridEditor extends Div {
 
   public GridEditor() {
+    // tag::snippet[]
     Grid<Person> grid = new Grid<>(Person.class);
     List<Person> persons = DataService.getPeople();
     grid.setItems(persons);
@@ -27,7 +29,9 @@ public class GridEditor extends Div {
     grid.addItemDoubleClickListener(e -> {
       editor.editItem(e.getItem());
     });
+    // end::snippet[]
+  }
+
+  public static class GridEditorExporter extends DemoExporter<GridEditor> {
   }
 }
-
-
