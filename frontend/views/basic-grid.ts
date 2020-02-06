@@ -1,6 +1,6 @@
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { LitElement, html, property, customElement } from 'lit-element';
-import people from './data/people.json';
+import { customElement, html, LitElement, property } from 'lit-element';
+import people from '../data/people.json';
 
 @customElement('basic-grid')
 export class BasicGrid extends LitElement {
