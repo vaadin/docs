@@ -1,6 +1,5 @@
 package com.vaadin.demo.views.dashboard;
 
-import com.vaadin.demo.backend.Employee;
 import com.vaadin.flow.server.connect.Endpoint;
 import com.vaadin.flow.server.connect.auth.AnonymousAllowed;
 import com.vaadin.flow.server.connect.exception.VaadinConnectException;

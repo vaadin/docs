@@ -12,51 +12,17 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 // import the remote endpoint
 import * as viewEndpoint from '../../generated/DashboardEndpoint';
 
-// import types used in the endpoint
-// import Employee from '../../generated/com/vaadin/demo/backend/Employee';
-
-// import { VaadinConnectError } from '@vaadin/flow-frontend/Connect';
-
 // utilities to import style modules
 import { CSSModule } from '../../css-utils';
 
 // @ts-ignore
 import styles from './dashboard-view.css';
 
-import client from '../../generated/connect-client.default';
-
-import {
-  MiddlewareContext,
-  MiddlewareNext
-} from '@vaadin/flow-frontend/Connect';
-
-
-client.middlewares = [
-  async (context: MiddlewareContext, next: MiddlewareNext) => {
-    const url = context.request.url.replace('/components/ui-components/grid', '/vaadin');
-    console.log(url);
-    
-    context.request = new Request(url, context.request);
-
-    return await next(context);
-  }
-];
-
 @customElement('dashboard-view')
 export class DashboardViewElement extends LitElement {
   static get styles() {
     return [CSSModule('lumo-typography'), unsafeCSS(styles)];
   }
-
-  private firstName: any;
-
-  private lastName: any;
-
-  private email: any;
-
-  private notes: any;
-
-  // private notification: any;
 
   render() {
     return html`
@@ -117,10 +83,5 @@ export class DashboardViewElement extends LitElement {
     }
   }
 
-  private clearForm() {
-    this.firstName.value = '';
-    this.lastName.value = '';
-    this.email.value = '';
-    this.notes.value = '';
-  }
+  private clearForm() {}
 }
