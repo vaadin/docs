@@ -1,4 +1,4 @@
-package com.vaadin.demo.views.dashboard;
+package com.vaadin.demo;
 
 import com.vaadin.flow.server.connect.Endpoint;
 import com.vaadin.flow.server.connect.auth.AnonymousAllowed;
