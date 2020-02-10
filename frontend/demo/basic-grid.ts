@@ -1,6 +1,10 @@
 import '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/vaadin-checkbox/vaadin-checkbox';
+import '@vaadin/vaadin-button/vaadin-button';
 import { customElement, html, LitElement, property } from 'lit-element';
-import people from '../data/people.json';
+// TODO: Use the shared json file
+import people from '../data/people';
 
 @customElement('basic-grid')
 export class BasicGrid extends LitElement {

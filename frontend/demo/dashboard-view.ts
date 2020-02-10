@@ -1,4 +1,4 @@
-import { customElement, html, LitElement, unsafeCSS } from 'lit-element';
+import { customElement, html, LitElement } from 'lit-element';
 
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-form-layout/vaadin-form-item';
@@ -10,20 +10,10 @@ import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 
 // import the remote endpoint
-import * as viewEndpoint from '../../generated/DashboardEndpoint';
-
-// utilities to import style modules
-import { CSSModule } from '../../css-utils';
-
-// @ts-ignore
-import styles from './dashboard-view.css';
+import * as viewEndpoint from '../generated/DashboardEndpoint';
 
 @customElement('dashboard-view')
 export class DashboardViewElement extends LitElement {
-  static get styles() {
-    return [CSSModule('lumo-typography'), unsafeCSS(styles)];
-  }
-
   render() {
     return html`
       <vaadin-vertical-layout

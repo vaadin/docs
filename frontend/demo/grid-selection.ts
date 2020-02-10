@@ -1,7 +1,8 @@
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-selection-column';
 import { LitElement, html, property, customElement } from 'lit-element';
-import people from '../data/people.json';
+// TODO: Use the shared json file
+import people from '../data/people';
 
 @customElement('grid-selection')
 export class BasicGrid extends LitElement {
