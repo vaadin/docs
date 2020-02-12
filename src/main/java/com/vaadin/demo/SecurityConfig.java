@@ -16,7 +16,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    if (environment.getActiveProfiles().length > 0 && environment.getActiveProfiles()[0] == "dev") {
+    if (environment.getActiveProfiles().length > 0 && "dev".equals(environment.getActiveProfiles()[0])) {
       http.csrf().disable();
     }
   }

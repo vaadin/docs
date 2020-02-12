@@ -28,7 +28,7 @@ public class SpringConfig implements WebMvcConfigurer {
          @Override
          public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
                throws Exception {
-            if (environment.getActiveProfiles().length > 0 && environment.getActiveProfiles()[0] == "dev") {
+            if (environment.getActiveProfiles().length > 0 && "dev".equals(environment.getActiveProfiles()[0])) {
                request.getSession().removeAttribute(VaadinService.getCsrfTokenAttributeName());
             }
             return true;
