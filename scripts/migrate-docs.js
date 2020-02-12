@@ -167,6 +167,7 @@ function migrateDocs() {
     { filter }
   );
   fs.writeFileSync(path.join(__dirname, '../articles/components/ui-components/charts/index.asciidoc'), generateAsciidoc('Charts', 5));
+  generateIndexes(sections.charts.subpages, 'components/ui-components/charts');
 }
 
 Promise.all(clones).then(migrateDocs).catch(migrateDocs);
