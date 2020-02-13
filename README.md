@@ -83,5 +83,6 @@ For example:
 1. Start the server. The examples can be accessed at `http://localhost:8080`:
    ```
    cd docs
-   mvn jetty:run
+   mvn spring-boot:run -Dspring-boot.run.profiles=dev
    ```
+   Use `-Dspring-boot.run.profiles=dev` for development only (it will disable csrf)
