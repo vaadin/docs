@@ -35,6 +35,8 @@ public class ResourcesFilter implements Filter {
           String uri = request.getRequestURI();
           if (uri.endsWith("/")) {
             uri = uri + "index.html";
+          } else if (!uri.contains(".")) {
+            uri = uri + "/index.html";
           }
           filterConfig.getServletContext().getRequestDispatcher(uri).forward(request, response);
         }
