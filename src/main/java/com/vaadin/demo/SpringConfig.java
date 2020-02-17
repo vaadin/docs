@@ -5,9 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.vaadin.flow.server.VaadinService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -19,18 +17,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class SpringConfig implements WebMvcConfigurer {
 
-   @Autowired
-   private Environment environment;
-
    @Override
    public void addInterceptors(InterceptorRegistry registry) {
       registry.addInterceptor(new HandlerInterceptor() {
          @Override
          public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
                throws Exception {
-            if (environment.getActiveProfiles().length > 0 && "dev".equals(environment.getActiveProfiles()[0])) {
-               request.getSession().removeAttribute(VaadinService.getCsrfTokenAttributeName());
-            }
+            request.getSession().removeAttribute(VaadinService.getCsrfTokenAttributeName());
             return true;
          }
       });
