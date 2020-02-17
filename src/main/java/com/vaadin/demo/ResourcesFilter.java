@@ -39,6 +39,8 @@ public class ResourcesFilter implements Filter {
             uri = uri + "/index.html";
           }
           filterConfig.getServletContext().getRequestDispatcher(uri).forward(request, response);
+        } else {
+          chain.doFilter(request, response);
         }
 
     }
