@@ -40,6 +40,6 @@ public class ResourcesFilter implements Filter {
           }
           filterConfig.getServletContext().getRequestDispatcher(uri).forward(request, response);
         }
-        chain.doFilter(req, res);
+
     }
 }
