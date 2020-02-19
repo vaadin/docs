@@ -85,3 +85,24 @@ For example:
    cd docs
    mvn spring-boot:run
    ```
+
+
+## Migrating existing documentation content
+
+Run the following script to migrate existing documentation content from separate repos to this repo, restructure them and add missing metadata.
+
+> Before running the script, you need to [create a personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) in GitHub (with `repo` access) and replace it in the `scripts/migrate-docs.js` file. It is needed to be able to access private repositories (assuming you have access to all of the documentation repos).
+
+```
+npm run migrate-docs
+```
+
+Namely, the following documentation repos are migrated:
+
+- `flow-and-components-documentation/documentation` → `articles/guides`
+- `designer-internal/designer-documentation` → `articles/tools/designer`
+- `testbench/documentation` → `articles/tools/testbench`
+- `multiplatform-runtime-internal/mpr-documentation/documentation` → `articles/tools/mpr`
+- `business-app-starter-flow-docs` → `articles/tools/business-app`
+- `bakery-app-starter-flow-docs` → `articles/tools/bakeryflow`
+- `vaadin-charts-flow/documentation` → `articles/components/ui-components/charts`
