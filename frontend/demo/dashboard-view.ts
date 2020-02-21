@@ -12,6 +12,9 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 // import the remote endpoint
 import * as viewEndpoint from '../generated/DashboardEndpoint';
 
+import client from '../generated/connect-client.default';
+client.prefix = '/connect';
+
 @customElement('dashboard-view')
 export class DashboardViewElement extends LitElement {
   render() {
