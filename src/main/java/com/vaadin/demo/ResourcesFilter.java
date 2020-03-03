@@ -12,10 +12,6 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * TODO: Temporary WebFilter to workaround https://github.com/vaadin/flow/issues/7521
- * Switch to using a @WebServlet instead.
- */
 @WebFilter("/*")
 public class ResourcesFilter implements Filter {
   private FilterConfig filterConfig;
