@@ -1,0 +1,60 @@
+---
+title: Running, building and packaging
+order: 200
+layout: page
+---
+
+= Running, building and packaging.
+
+This page shows how to build and run the application from the command line. For documentation on how to build and run the app using an IDE see the <<using-an-ide#,Using an IDE>> page.
+
+
+== Running the app for the first time
+After downloading and extracting the zip package, it is recommended to run the software once and see that it is working.
+
+You can start up the project from the terminal with the Maven command `mvn spring-boot:run`. You can also use any IDE with Maven integration to run the `spring-boot:run` goal.
+
+== Building the package
+To build the project, the standard `mvn package` command can be used. This will produce a deployable, self-containing `war` file in the target package
+
+== Running the integration tests
+Integration tests are run with the `mvn verify -Pit` command.
+
+UI tests can take a while to run, so the integration tests are in a separate `it` profile, to provide a little bit more flexibility.
+
+Profile `it` downloads chrome driver and adds the following parameters to run integration tests:
+```
+-Dwebdriver.chrome.driver=path_to_driver
+-Dcom.vaadin.testbench.Parameters.runLocally=chrome
+```
+
+To run the tests for firefox you can download link:https://github.com/mozilla/geckodriver/releases[gecko driver] manually and run the same profile with overridden parameters:
+```
+mvn verify -Pit -Dcom.vaadin.testbench.Parameters.runLocally=firefox -Dwebdriver.gecko.driver=path_to_driver
+```
+
+To run tests on multiple browser Selenium hub follow the <<dummy/../../testbench/testbench-running-test-on-multiple-browsers.asciidoc#, Running Tests on Multiple Browsers in a Grid>>.
+
+
+NOTE: `-Dcom.vaadin.testbench.Parameters.runLocally` parameter should not be defined. Otherwise TestBench will run tests locally.
+
+== Building and running on production mode
+
+By default, building and running are made in 'development' mode. This is good while working on the app as the build/start time is shorter, but the app would not work in IE11.
+In order to use production mode, you need to add `-Pproduction` to build/run commands:
+
+build: `mvn package -Pproduction`
+run: `mvn spring-boot:run -Pproduction`
+
+Note that when you switch from one mode to another we should run `mvn clean` before running the other mode.
+
+== Deploying on the application server
+After production WAR file is ready it can be deployed on the web container, e.g. Apache Tomcat, WildFly, Jetty.
+
+NOTE: To run Bakery on WildFly it is needed to update hibernate-validator. Details: https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/
+
+== Development vs. production mode
+
+The default mode when the application is built or started is 'development'. The 'production' mode is turned on by activating the `production` profile when building or starting the app.
+
+In the 'production' mode all frontend resources of the application are passed through the `polymer build` command, which minifies them and outputs two versions: for ES5- and ES6-supporting browsers. That adds extra time to the build process but reduces the total download size for clients and allows running the app in browsers that do not support ES6 (e.g. in Internet Explorer 11).

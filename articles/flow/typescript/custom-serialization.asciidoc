@@ -1,0 +1,163 @@
+---
+title: "Appendix: Customizing Serialization"
+order: 115
+layout: page
+---
+
+= Appendix: Customizing Serialization
+
+When serializing/deserializing data in Java Endpoints, developer might be interested in renaming properties, and 
+excluding certain properties and types.
+
+Omitting properties helps the application avoid putting sensitive data in the wire like password fields.
+Leaving out types helps to simplify the typescript exported classes, and to avoid circular dependencies in the serialzed JSON output.
+
+== Annotations
+
+Vaadin relies on the https://github.com/FasterXML/jackson[Jackson] JSON library to do serialization, thus, it is possible
+to use their https://github.com/FasterXML/jackson-annotations/wiki/Jackson-Annotations[annotations] for renaming properties or excluding data.
+
+=== The @JsonProperty annotation
+
+It is used to define a method as a "setter" or "getter" for a logical property, or to define a field for being serialized and deserialized
+as a specific logical property.
+
+The annotation value indicates the name of the property in the JSON object, by default it takes the java name of the method or field.
+
+[source, java]
+----
+public class Student {
+   @JsonProperty("bookId")
+   private String id;
+   private String name;
+
+   @JsonProperty("name")
+   public void setFirstName(String name) {
+      this.name = name;
+   }
+   
+   @JsonProperty("name")
+   public String getFirstName() {
+      return name;
+   }        
+   
+   @JsonProperty
+   public int getRating() {
+      return StudentRating.getRatingFor(name);
+   }
+}
+----
+
+
+=== The @JsonIgnore annotation
+
+Indicates that the logical property used in serialization and deserialization for the accessor (field, getter or setter) is to be ignored
+
+[source, java]
+----
+@JsonIgnore
+private String category; 
+----
+
+[source, java]
+----
+@JsonIgnore
+public String getCategory() {
+  return category;
+}
+----
+
+[source, java]
+----
+@JsonIgnore
+public void setCategory(String category) {
+   this.category = category;
+} 
+----
+
+=== The @JsonIgnoreProperties annotation
+
+It ignores a set of logical properties in serialization and deserialization. It must be used at class level.
+
+[source, java]
+----
+@JsonIgnoreProperties(value = { "id"}, allowGetters = true)
+public class Product {
+   private String id;
+   private String name;
+
+   ...
+} 
+----
+
+In addition, to the properties passes as the annotation value, the `@JsonIgnoreProperties` annotation accepts the following options
+
+==== allowSetters
+
+For ignored properties allow setting properties when deserializing, but do not list then in serialization.
+
+In the next snippet, _password_ would not be in the payload returned to TypeScript, but TypeScript can set it.
+
+[source, java]
+----
+@JsonIgnoreProperties(value = { "password"}, allowSetters = true)
+public class User {
+   private String name;
+   private String password;
+
+   ...
+} 
+----
+
+==== allowGetters
+
+For the ignored properties list this properties in serialized object but disallow to set it.
+
+It is useful for read-only properties
+
+[source, java]
+----
+@JsonIgnoreProperties(value = { "id"}, allowGetters = true)
+public class Product {
+   private String id;
+   private String name;
+
+   ...
+} 
+----
+
+==== ignoreUnknown
+
+A flag that allows not failing during deserialization when there is a property in the json object that has not any correspondence
+in the Java class.
+
+This is a corner case, and should not be necessary in Vaadin since TypeScript generated API should take care on not passing unknown properties.
+
+
+=== The @JsonIgnoreType annotation
+
+A class level annotation that indicates that all properties of the annotated class
+type will be ignored during serialization and deserialization.
+
+In the following example, the field client in the `Sale` will be omitted in the JSON result.
+
+[source, java]
+----
+@JsonIgnoreType
+public class Client {
+   ...
+}
+
+@JsonIgnoreProperties(value = { "password"}, allowSetters = true)
+public class Sale {
+   private Client client;
+
+   private Product product;
+   private int ammount;
+   private double total;
+
+   ...
+}
+----
+
+

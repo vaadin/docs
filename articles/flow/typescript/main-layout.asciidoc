@@ -1,0 +1,296 @@
+---
+title: Main Layout in TypeScript
+order: 50
+layout: page
+---
+
+ifdef::env-github[:outfilesuffix: .asciidoc]
+
+= Creating Main Layout in TypeScript
+
+Unlike server-side views, which could work with both client- and server-side layouts, client-side views can only be rendered inside client-side layouts. Hence, when using client-side views, it is common to have a client-side main layout.
+
+In this article, we go though typical features of a main layout, and give examples of implementing them in TypeScript using LitElement.
+
+We assume you have a Vaadin 15 application with the client-side routing setup, and have a top-level client-side route with the `main-layout` component. Otherwise, see the <<../v15-migration/upgrading-from-vaadin14,Upgrading from Vaadin 14>> article for the step-by-step setup instructions.
+
+== Prerequisite: export the router instance
+
+The client-side Vaadin Router instance provides helpful APIs for generating links. This is helpful for the menu links covered later in this article.
+
+In your `index.ts`, make sure to export the `router` instance to enable importing it in the client-side views and layouts:
+
+.index.ts
+[source, typescript]
+----
+...
+export const router = new Router(outlet);
+...
+----
+
+== All the features together
+
+Here is an example of a typical client-side main layout. It does the following things:
+
+- Imports Lumo theme global styles
+- Establishes the application layout with `<vaadin-app-layout>`
+- Creates a navigation menu bar with `<vaadin-tabs>`
+- Generates menu links using the `router` instance APIs
+- Has a binding for the selected tab
+
+.main-layout.ts
+[source, typescript]
+----
+import {css, customElement, html, LitElement, property} from 'lit-element';
+import {router} from './index';
+
+// Import global styles of the theme
+import '@vaadin/vaadin-lumo-styles/all-imports';
+
+import '@vaadin/vaadin-app-layout/theme/lumo/vaadin-app-layout';
+import '@vaadin/vaadin-tabs/theme/lumo/vaadin-tab';
+import '@vaadin/vaadin-tabs/theme/lumo/vaadin-tabs';
+
+interface MenuTab {
+  route: string;
+  name: string;
+}
+
+const menuTabs: MenuTab[] = [
+  {route: 'dashboard', name: 'Dashboard'},
+  {route: 'masterdetail', name: 'MasterDetail'},
+];
+
+@customElement('main-layout')
+export class MainLayoutElement extends LitElement {
+  @property({type: Object}) location = router.location;
+
+  static get styles() {
+    return css`
+      :host {
+        display: block;
+        height: 100%;
+      }
+    `;
+  }
+
+  render() {
+    return html`
+      <vaadin-app-layout id="layout">
+        <vaadin-tabs slot="navbar" id="tabs" .selected="${this.getIndexOfSelectedTab()}">
+          ${menuTabs.map(menuTab => html`
+            <vaadin-tab>
+              <a href="${menuTab.route}" tabindex="-1">${menuTab.name}</a>
+            </vaadin-tab>
+          `)}
+        </vaadin-tabs>
+        <slot></slot>
+      </vaadin-app-layout>
+    `;
+  }
+
+  private isCurrentLocation(route: string): boolean {
+    return router.urlForPath(route) === this.location.getUrl();
+  }
+
+  private getIndexOfSelectedTab(): number {
+    const index = menuTabs.findIndex(
+      menuTab => this.isCurrentLocation(menuTab.route)
+    );
+
+    // Select first tab if there is no tab for home in the menu
+    if (index === -1 && this.isCurrentLocation('')) {
+      return 0;
+    }
+
+    return index;
+  }
+}
+----
+
+== Import theme global styles
+
+In Vaadin, themes have some global styles that need to be applied to the page. With server-side main layout in Java, these are automatically applied for convenience. With TypeScript main layout, though, they need to be imported manually to make sure consistent styling between server-side and client-side views.
+
+Make sure to have an import of theme styles in your `main-layout.ts`:
+
+.main-layout.ts
+[source, typescript]
+----
+...
+// Import global styles of the theme
+import '@vaadin/vaadin-lumo-styles/all-imports';
+...
+----
+
+== Establish an application layout
+
+The most prominent feature of the main layout is to define the layout for the application. This could be done using the `<vaadin-app-layout>` component:
+
+.main-layout.ts
+[source, typescript]
+----
+import {css, customElement, html, LitElement} from 'lit-element';
+
+// Import global styles of the theme
+import '@vaadin/vaadin-lumo-styles/all-imports';
+
+import '@vaadin/vaadin-app-layout/theme/lumo/vaadin-app-layout';
+
+@customElement('main-layout')
+export class MainLayoutElement extends LitElement {
+  static get styles() {
+    return css`
+      :host {
+        display: block;
+        height: 100%;
+      }
+    `;
+  }
+
+  render() {
+    return html`
+      <vaadin-app-layout id="layout">
+        <slot></slot>
+      </vaadin-app-layout>
+    `;
+  }
+}
+----
+
+[NOTE]
+Keep the `<slot>` in the main layout template returned from the `render()` method. Vaadin Router adds views as children in the main layout.
+
+== Create navigation menu
+
+The main layout usually contains a navigation bar with the menu. Here we create the navigation bar with the menu using `<vaadin-tabs>`:
+
+.main-layout.ts
+[source, typescript]
+----
+import {css, customElement, html, LitElement} from 'lit-element';
+
+// Import global styles of the theme
+import '@vaadin/vaadin-lumo-styles/all-imports';
+
+import '@vaadin/vaadin-app-layout/theme/lumo/vaadin-app-layout';
+import '@vaadin/vaadin-tabs/theme/lumo/vaadin-tab';
+import '@vaadin/vaadin-tabs/theme/lumo/vaadin-tabs';
+
+@customElement('main-layout')
+export class MainLayoutElement extends LitElement {
+  render() {
+    return html`
+      <vaadin-app-layout id="layout">
+        <vaadin-tabs slot="navbar" id="tabs">
+          <vaadin-tab>
+            <a href="/dashboard">Dashboard</a>
+          </vaadin-tab>
+        </vaadin-tabs>
+        <slot></slot>
+      </vaadin-app-layout>
+    `;
+  }
+}
+----
+
+== Highlighting the active menu link
+
+Vaadin client-side router does not provide link highlighting itself, instead this is done with template bindings and helper methods.
+
+=== When not using `<vaadin-tabs>`
+
+When not using `<vaadin-tabs>`, you can style active links by binding the `active` attribute. In this example, we start by define the `location` property, then add a helper method `isCurrentLocation` for determining active links, and use it in the template binding in `render()`:
+
+.main-layout.ts
+[source, typescript]
+----
+...
+import {router} from './index';
+
+@customElement('main-layout')
+export class MainLayoutElement extends LitElement {
+  // updated automatically from Vaadin Router
+  @property({type: Object}) location = router.location;
+
+  static get styles() {
+    return css`
+      [active] {
+        color: var(--lumo-body-text-color);
+      }
+    `;
+  }
+
+  render() {
+    return html`
+      <a href="${router.urlForPath('dashboard')}"
+          ?active="${this.isCurrentLocation('dashboard')}">
+        Dashboard
+      </a>
+      <slot></slot>
+    `;
+  }
+
+  private isCurrentLocation(route: string): boolean {
+    return router.urlForPath(route) === this.location.getUrl();
+  }
+}
+----
+
+=== Using `<vaadin-tabs>`
+
+When using `<vaadin-tabs>`, we need to bind the `selected` property to the index of selected tab. First, let us extract the links from the template into a TypeScript array, and generate the menu from the array, then we can calculate the index in the array in another helper:
+
+.main-layout.ts
+[source, typescript]
+----
+...
+import {router} from './index';
+
+interface MenuTab {
+  route: string;
+  name: string;
+}
+
+const menuTabs: MenuTab[] = [
+  {route: 'dashboard', name: 'Dashboard'},
+  {route: 'masterdetail', name: 'MasterDetail'},
+];
+
+@customElement('main-layout')
+export class MainLayoutElement extends LitElement {
+  @property({type: Object}) location = router.location;
+
+  render() {
+    return html`
+      <vaadin-app-layout id="layout">
+        <vaadin-tabs slot="navbar" id="tabs" .selected="${this.getIndexOfSelectedTab()}">
+          ${menuTabs.map(menuTab => html`
+            <vaadin-tab>
+              <a href="${router.urlForPath(menuTab.route)}" tabindex="-1">${menuTab.name}</a>
+            </vaadin-tab>
+          `)}
+        </vaadin-tabs>
+        <slot></slot>
+      </vaadin-app-layout>
+    `;
+  }
+
+  private isCurrentLocation(route: string): boolean {
+    return router.urlForPath(route) === this.location.getUrl();
+  }
+
+  private getIndexOfSelectedTab(): number {
+    const index = menuTabs.findIndex(
+      menuTab => this.isCurrentLocation(menuTab.route)
+    );
+
+    // Select first tab if there is no tab for home in the menu
+    if (index === -1 && this.isCurrentLocation('')) {
+      return 0;
+    }
+
+    return index;
+  }
+}
+----

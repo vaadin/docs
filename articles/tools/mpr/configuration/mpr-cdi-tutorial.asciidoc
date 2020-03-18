@@ -1,0 +1,154 @@
+---
+title: Creating V7 and V14 CDI applications side-by-side
+order: 6
+layout: page
+---
+
+= Creating V7 and V14 CDI applications side-by-side
+If you have an application developed using Vaadin 7 and CDI, you have the option
+to keep your legacy code untouched and continue developing new pages with V14.
+
+You will also be able to use CDI beans, e.g. `SessionScoped` beans, in both V14
+and Vaadin 7 parts of your application. The following instructions are
+step-by-step guide on how to adopt this approach.
+
+1. Add Vaadin 14 to your maven dependencies.
++
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <type>pom</type>
+            <scope>import</scope>
+            <version>14.0.0</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-core</artifactId>
+    </dependency>
+</dependencies>
+----
+
+2. Exclude conflicted dependencies between Vaadin 7 and Vaadin 14 which are
+`jsoup` and `atmosphere-runtime` from Vaadin 7 in your `pom.xml`, like shown in
+the following example:
++
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-server</artifactId>
+    <version>${framework.7.version}</version>
+    <exclusions>
+        <exclusion>
+            <groupId>com.vaadin.external.atmosphere</groupId>
+            <artifactId>atmosphere-runtime</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+----
+
+3. Remove dependency of `vaadin-cdi 1.*` and add a dependency to
+`mpr-cdi-v7 1.0.0`.
++
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>mpr-cdi-v7</artifactId>
+    <version>1.0.0.alpha1</version>
+    <!--
+        At the moment mpr-cdi-v7 is in pre-release stage and you need to use
+        the version 1.0.0.alpha1.
+    -->
+</dependency>
+----
++
+[NOTE]
+Since, a pre-release version of a Vaadin product is being used you need to add
+the `vaadin-prereleases` repository to your `pom.xml`, like this:
++
+[source,xml]
+----
+<repositories>
+    <repository>
+        <id>vaadin-prereleases</id>
+        <url>https://maven.vaadin.com/vaadin-prereleases</url>
+    </repository>
+</repositories>
+----
++
+At the moment `mpr-cdi-v7` is in pre-release stage and you may need to use e.g.
+version `1.0.0.alpha1`.
+
+4. Add the `vaadin-cdi` dependency. The versions is not needed as it is defined
+by the `vaadin-bom`.
++
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-cdi</artifactId>
+</dependency>
+----
+
+5. Since the root path of your application is managed by Vaadin 7, you need to
+define the Vaadin 14 servlet manually, and set its url pattern to a value that
+doesn't collide with any of the V7 servlets.
++
+[source,java]
+----
+@WebServlet(name = "Flow Servlet", urlPatterns = {
+        MyFlowServlet.FLOW_SERVLET_ROOT + "/*" })
+public class MyFlowServlet extends CdiVaadinServlet {
+    public static final String FLOW_SERVLET_ROOT = "flow";
+}
+----
+
+6. Now, you can have both Vaadin 7 and Vaadin 14 parts of your application in
+one project. To navigate from Vaadin 7 part to Vaadin 14 part you can simply
+use the following line of code.
++
+[source,java]
+----
+getUI().getPage().setLocation(MyFlowServlet.FLOW_SERVLET_ROOT);
+----
++
+And, to navigate from Vaadin 14 part to a Vaadin 7 view you can for example use
+an `Anchor` like the below code.
++
+[source,java]
+----
+Anchor anchor = new Anchor("/#!home", "Home");
+add(anchor);
+----
+
+7. To have shared data between Vaadin 14 and Vaadin 7 parts, you can use
+`SessionScoped` beans that are shared for both V7 and V14 applications.
++
+[source,java]
+----
+@SessionScoped
+public class SecurityContext implements Serializable {
+    private User currentUser = new User();
+
+    public boolean signIn(String username, String password) {
+        if (username == null || username.isEmpty())
+            return false;
+
+        currentUser.setUsername(username);
+
+        return true;
+    }
+}
+----

@@ -1,0 +1,129 @@
+---
+title: Prepare to add TypeScript views
+order: 3
+layout: page
+---
+
+ifdef::env-github[:outfilesuffix: .asciidoc]
+
+= Prepare to add TypeScript views
+
+One of the highlight features in Vaadin 15 is that it provides possibilities to add pure client-side TypeScript views.
+
+There are some preparation steps to follow to to be able to start using client-side Typescript views:
+
+[TIP]
+You can use JavaScript instead of TypeScript if you prefer.
+JavaScript is supported as well: any `.ts` file can be replaced with a `.js` alternative.
+
+
+== Step 1 - Create `frontend/index.html` and `frontend/index.ts` [[step-1]]
+
+[NOTE]
+These files are necessary only if you want to add <<../typescript/creating-routes#,TypeScript views>> to the app (new in Vaadin 15).
+If you do not plan adding any TypeScript views, migration from Vaadin 14 to Vaadin 15 is done at this point.
+
+You can create the `frontend/index.html` and `frontend/index.ts` files from scratch, but an easier way is to let Vaadin to generate them.
+Run `mvn package` in the console, copy the generated files into to the `./frontend` folder, and customize them as described in the further steps.
+
+[source, bash]
+----
+mvn package
+cp target/index.html target/index.ts frontend
+----
+
+[NOTE]
+To dynamically modify the `index.html` content, you need to replace the deprecated `PageConfigurator` interface with the `AppShellConfigurator` as described in the <<../advanced/tutorial-modifying-the-bootstrap-page#application-shell-configurator,Application Shell Configurator>> section.
+
+== Step 2 - Install link:https://lit-element.polymer-project.org/[LitElement^] [[step-2]]
+
+This step is needed if you want to create TypeScript views using LitElement as a helper library.
+There are other ways to create UI in TypeScript, but they are not covered in this guide.
+
+Run in the console, in the project folder:
+[source,bash]
+----
+npm install --save lit-element
+----
+
+
+== Step 3 - Add a TypeScript page layout [[step-3]]
+
+This step is needed if you want to create a page layout common for several TypeScript views.
+This guide shows how to create a layout with a navigation menu.
+
+.frontend/main-layout.ts
+[source, typescript]
+----
+import {css, customElement, html, LitElement} from 'lit-element';
+
+@customElement('main-layout')
+export class MainLayoutElement extends LitElement {
+
+  static get styles() {
+    return css`
+      :host {
+        display: block;
+        height: 100%;
+      }
+    `;
+  }
+
+  render() {
+    return html`
+      <a href="client-view">Client View</a>
+      <a href="server-view">Server View</a>
+      <slot></slot>
+     `;
+  }
+}
+----
+
+Add the component to the router configuration:
+
+.frontend/index.ts
+[source, typescript]
+----
+import './main-layout';
+...
+
+const routes = [
+    {
+    path: '/',
+    component: 'main-layout',
+    children: [
+      // add you client-side views here, e.g.
+      // {path: 'client-view', component: 'my-client-view'},
+
+      // pass all unmatched paths to server-side
+      ...serverSideRoutes
+    ]
+  }
+];
+----
+
+[NOTE]
+====
+The main layout created in this step is a minimal example. See the <<../typescript/main-layout#, Main Layout in TypeScript>> article for more examples on typical features, such as creating the layout with navigation menu.
+====
+
+
+== Step 4 - Move the existing Java views into the TypeScript page layout [[step-4]]
+
+This step is needed if you want to display your existing Java views in the same page layout with the new TypeScript views.
+In order to move an existing Java view from a parent layout defined in Java into a parent layout defined in TypeScript, you need to change the `@Route()` annotation on the Java view and remove the `layout` property from it:
+
+For example, for a Java view defined in a `DashboardView` class the change would look like this:
+
+.DashboardView.java
+[source, java]
+----
+@Route(value = "dashboard"/*, layout = MainView.class <-- remove this */)
+@RouteAlias(value = ""/*, layout = MainView.class <-- and this */)
+public class DashboardView extends Div {
+    ...
+}
+----
+
+== Step 5 - Add a TypeScript view [[step-5]]
+Continue with the <<../typescript/quick-start-guide#step-3,Quick Start Guide - Step 3>> to see how.

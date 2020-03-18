@@ -1,0 +1,98 @@
+---
+title: Upgrading from Vaadin 14
+order: 0
+layout: page
+---
+
+ifdef::env-github[:outfilesuffix: .asciidoc]
+
+= Upgrading from Vaadin 14
+
+We recommend the following steps to upgrade an existing Vaadin 14 application to Vaadin 15.
+
+* Change the Vaadin version in `pom.xml` (<<upgrading-from-vaadin14#step-1,step 1>>)
+* (for Spring-based apps) Use a compatible version of Spring  (<<upgrading-from-vaadin14#step-2,step 2>>)
+* Migrate the annotations from the `MainLayout / MainView` class
+(<<upgrading-from-vaadin14#step-3,step 3>>)
+
+== Step 1 - Make your project depend on Vaadin 15 [[step-1]]
+
+Edit the `pom.xml` file and change the versions of the Vaadin platform dependency and the Vaadin Maven plugin to Vaadin 15:
+
+.pom.xml
+[source,xml]
+----
+<properties>
+    ...
+    <!-- See the latest version at
+         https://github.com/vaadin/platform/releases -->
+    <vaadin.version>15.0.2</vaadin.version>
+    ...
+</properties>
+
+<dependencyManagement>
+    <dependencies>
+        <!-- add the Vaadin platform to the classpath -->
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <version>${vaadin.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            ...
+        </plugin>
+    </plugins>
+</build>
+----
+
+You can check out these two reference pom files: link:https://github.com/vaadin/skeleton-starter-flow/blob/master/pom.xml[one for a Vanilla Vaadin project], link:https://github.com/vaadin/skeleton-starter-flow-spring/blob/master/pom.xml[the other for a Vaadin Spring project].
+
+[NOTE]
+Vaadin 15 includes several breaking API changes, mainly related to application bootstrapping and the bootstrap page configuration.
+If you see Java deprecation warnings during the build, check the <<migrating-from-vaadin-10-14,Migration>> section in the *Client-side bootstrapping page*.
+
+
+== Step 2 - Update Spring (for Spring-based projects) [[step-2]]
+
+Vaadin works with <<../spring/tutorial-spring-basic#,Spring Boot>> or <<../spring/tutorial-spring-basic-mvc#,Spring MVC>>.
+Vaadin 15 is compatible with Spring 5.2.0 or newer, and Spring Boot 2.2.0 or newer.
+If your application uses an older version of Spring, please update it to a compatible version:
+
+.pom.xml
+[source,xml]
+----
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.2.0.RELEASE</version>
+</parent>
+----
+
+== Step 3 - Migrate the annotations from the `MainLayout / MainView` class [[step-3]]
+
+Several annotations typically placed on the `MainLayout / MainView` class must be moved to a class that implements the `AppShellConfigurator` interface, e.g.,
+
+[source,java]
+----
+@PWA(name = "My Vaadin App", shortName = "my-app")
+public class AppShell implements AppShellConfigurator {
+
+}
+----
+
+see <<../advanced/tutorial-modifying-the-bootstrap-page#java-annotations, set of annotations to modify the Bootstrap page>> for more details.
+
+
+These three steps might be all you need to follow to upgrade from Vaadin 14 to Vaadin 15 if you didn't use the deprecated APIs, in case you use some of those, check <<api-breaking-changes-from-vaadin14, the API breaking changes>> to see how to migrate them.
+
+At this point your app is running on Vaadin 15, and you can start using any of it's link:https://vaadin.com/releases/vaadin-15[new features], including TypeScript views. Follow the <<prepare-to-add-ts-views, getting started with TypeScript views>> guide to see how to add TypeScript views to your existing app. With TypeScript you can add views that work without a constant connection to the server, and have direct access to the native Web platform features, such as Service Workers, File System API, and more.

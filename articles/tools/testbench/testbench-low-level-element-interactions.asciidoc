@@ -1,0 +1,62 @@
+---
+title: Low Level Element Interactions
+order: 60
+layout: page
+---
+
+[[testbench.lowlevelelement]]
+= Low Level Element Interactions
+
+Typically you use the provided, high level element API to interact with components. For the cases where a high level API is not available or does not offer the methods you need, a few helpers are provided.
+
+
+[[testbench.lowlevelelement.properties]]
+== Getting or Setting Properties
+Many interactions with web components can be done by reading or modifying element properties. For this, the following helpers are provided in `TestBenchElement`:
+
+```java
+String getPropertyString(String... propertyNames)
+Boolean getPropertyBoolean(String... propertyNames)
+Integer getPropertyInteger(String... propertyNames)
+Double getPropertyDouble(String... propertyNames)
+Object getProperty(String... propertyNames)
+TestBenchElement getPropertyElement(String... propertyNames)
+List<TestBenchElement> getPropertyElements(String... propertyNames)
+```
+
+These methods are typically meant for creating __page objects__ or TestBench elements but can also be handy as a workaround when a needed method is not available.
+
+Typically you should use the correct `getPropertyXYZ` depending on the type of the property in JavaScript. If you use another type, the value will be converted using standard JavaScript rules (which may or may not give the result you desire).
+
+== Calling Functions
+If you need to call a function on an element, you can use `Object callFunction(String methodName, Object... args)` available in `TestBenchElement`, e.g.
+```java
+divElement.callFunction("setAttribute", "title", "Hello");
+```
+
+
+== Executing JavaScript
+Sometimes the available API does not offer what you are looking for and you want
+to execute a JavaScript snippet to accomplish your task. You can excute any JavaScript snippet using the `executeScript` method available in `TestBenchTestCase` and `TestBenchElement` and add references to elements and other parameters using the `Object... args` parameter. All arguments passed to the
+method are available through the `arguments` array in JavaScript.
+
+For example to return the `offsetHeight` property of an element you could do
+```java
+TestBenchElement element = ...; // find the element somehow
+Long offsetHeight = (Long)executeScript("return arguments[0].offsetHeight", element);
+```
+
+[NOTE]
+The above `executeScript` call would be the same as using `element.getPropertyInteger("offsetHeight");`.
+
+The argument array and the return type support a limited set of types:
+
+* HTML elements are converted to `TestBenchElement` instances
+* Decimal numbers are converted to `Double`
+* Non-decimal numbers are converted to `Integer`
+* Booleans are converted to `Boolean`
+* All other values except arrays are converted to `String`
+* Returned arrays are converted to `List<Object>`, containing types described above
+
+As there is no way to know what type the JavaScript function returns, you always
+need to cast the return value.

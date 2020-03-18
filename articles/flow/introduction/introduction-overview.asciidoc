@@ -1,0 +1,229 @@
+---
+title: Understanding Vaadin
+order: 1
+layout: page
+---
+= Understanding Vaadin
+
+Vaadin connects the Java ecosystem to your web platform. This section provides an overview of the architecture of Vaadin and introduces the key concepts in the framework.
+
+== Vaadin Architecture
+
+Working with front-end web technologies, such as HTML, CSS and JavaScript, can be challenging and time-consuming for Java developers. In Vaadin, all UI elements are componentized into https://www.webcomponents.org/[Web Components]. This makes development easier than ever before, because each element is decoupled and sandboxed.
+
+On the other side, the creation of Java Component UI API on the server side can be difficult for JavaScript developers, thus, Vaadin allows creating TypeScript views on the client-side. In this case, the application can be started without creating a UI instance in the server side,
+which means that applications might be stateless.
+
+TIP: Watch the https://vaadin.com/learn/training/v14-intro[Vaadin 14: Intro] free training video to learn more about the Vaadin framework, basic Vaadin application architecture and how Vaadin components work.
+
+Vaadin includes:
+
+* A type-safe Java UI Component API on the server side that facilitates the use of the Web Components.
+
+* A TypeScript view on the client side using link:https://lit-element.polymer-project.org/[LitElement^] as a helper library.
+
+* Automated bi-directional communication between the server and the browser, that:
+
+** Gives Java developers full access to all modern web enhancements.
+** Makes it easier to connect the UI to data via a robust Java backend, instead of using traditional REST-based communication.
+** Lets you choose either basic HTTP(S) or WebSocket communication protocol for building real-time applications.
+** Provides JavaScript developers full access to the backend from TypeScript by using the Vaadin endpoint.
+* Two-way data binding: when the UI changes on either the client or the server, the changes automatically reflect on the other side.
+
+image:images/v10-architecture.svg[Vaadin 10 Architecture,1200,430]
+
+Vaadin allows you to access browser APIs, Web Components, and even simple DOM elements, directly from the server-side Java,
+or access the Java DTO class and generate the corresponding TypeScript module from the client side. It is not necessary to understand how the client-to-server communication or Web Components work. This leaves you free to focus on creating components that work at a higher-abstraction level.
+
+image:images/dom-to-java.svg[dom-to-java,500,432]
+
+== Building TypeScript views with Components
+
+To build an application using TypeScript view, please follow <<../typescript/intro-to-typescript-in-v15#add-typescript-view, the Adding a TypeScript View tutorial>>.
+
+== Building Java UIs with Components
+
+UI components that are designed to build interactive web apps are the core of Vaadin.
+In addition, Vaadin provides powerful abstraction layers that you can use to create new components.
+
+=== Vaadin Components
+
+The high abstraction layers provided by Vaadin's Java Web Components API allow you to build UIs in an extremely productive way. You do not need any HTML or JavaScript knowledge, and only enough CSS experience to style the look and feel of your app.
+
+*Example*: Using the `TextField` component.
+
+[source,java]
+----
+TextField textField = new TextField();
+// Simple HTML inline text
+Span greeting = new Span("Hello stranger");
+
+textField.addValueChangeListener(event ->
+      greeting.setText("Hello " + event.getValue()));
+
+VerticalLayout layout = new VerticalLayout(
+      textField, greeting);
+----
+
+The API includes prebuilt server-side components and most native HTML elements.
+
+See https://vaadin.com/components/browse[Components], for a full set of available Vaadin components.
+
+=== Creating New Components in Java
+
+On the higher abstraction layers, you can easily create custom components by adapting or combining existing components to meet your requirements.
+
+The light-weight component architecture and the ability to access the DOM and browser APIs from the server side, simplifies component customization. While staying on the server side you can perfect customizations and eliminate bugs, by leveraging Vaadin’s automated communication layer between the browser and the server.
+
+*Example*: Extending `Component` to create a custom component.
+
+[source,java]
+----
+@Tag("my-label")
+public class MyLabel extends Component {
+    public void setText(String text) {
+        getElement().setText(text);
+    }
+
+    public String getText() {
+        return getElement().getText();
+    }
+}
+----
+
+See the tutorials in <<../creating-components/tutorial-component-basic#,Creating Components>> to learn how to build components with a reusable API, and <<../element-api/tutorial-event-listener#,Element API>> to learn how to access and customize the DOM from the server side.
+
+
+=== Integrating a Web Component
+
+Vaadin allows you to create a Java API for any available Web Component and then use the API in your projects.
+
+*Example*: Importing the `game-card` Web Component into the `GameCard` Java class.
+
+[source,java]
+----
+@Tag("game-card")
+@JsModule("./game-card.js")
+public class GameCard extends Component {
+
+}
+----
+
+See the tutorials in <<../web-components/integrating-a-web-component#,Integrating a Web Component>> for more.
+
+You can also find prebuilt Java APIs for Web Components that have been published by the Vaadin Community in the https://vaadin.com/directory/search?framework=Vaadin%2010[Vaadin Directory.]
+
+
+=== Building Components with HTML Templates
+
+Another way to create components is to separate the layout from the UI logic. The best way to do this is to use JavaScript modules and HTML templates together with Java classes. The JavaScript module contain the layout and (if needed) pure client-side logic, while the Java classes takes care of the server-side logic, like event handling.
+
+You can use these components in the same way as any other component in your Java environment. Vaadin does not distinguish between pure Java or HTML/Java combined components.
+
+*Example*: @Id injection in a component.
+[source,js]
+----
+static get template() {
+    return html`
+        <vaadin-vertical-layout>
+            <vaadin-text-field id="textField">
+            </vaadin-text-field>
+            <label id="greeting">Hello stranger</label>
+
+            <input type="color"
+                  on-input="updateFavoriteColor">
+            <label>Favorite color: </label>
+        </vaadin-vertical-layout>`;
+}
+----
+
+[source,java]
+----
+private @Id("textField") TextField textField;
+private @Id("greeting") Label greeting;
+
+// Setting things up in the component's constructor
+textField.addValueChangeListener(event ->
+      greeting.setText("Hello " + event.getValue()));
+
+// Instance method in the component published to the
+// client
+@EventHandler
+private void updateFavoriteColor(
+      @EventData("event.target.value") String color) {
+    getModel().setColorCode(color);
+}
+----
+
+See the tutorials in <<../polymer-templates/tutorial-template-basic#,Creating Polymer Templates>> for more.
+
+
+== Routing and Navigation in Java component using `@Router` annotation
+
+Vaadin provides the `Router` class to structure the navigation of your web app or site into logical parts.
+
+You can use the `@Route` annotation to register navigation targets. You can specify a path, and optionally a parent layout class to display the component.
+
+*Example*: Using the `@Route` annotation.
+
+[source,java]
+----
+// register the component to url/company and show it
+// inside the main layout
+@Route(value = "company", layout = MainLayout.class)
+@Tag("div")
+public class CompanyComponent extends Component {
+}
+
+public class MainLayout extends Div
+        implements RouterLayout {
+}
+----
+
+See the tutorials in <<../routing/tutorial-routing-annotation#,Routing and Navigation>> for more.
+
+
+== How Vaadin Components Work
+
+Vaadin allows Java code to control the DOM in the web browser, with a server-side Java representation of the same DOM tree.
+All changes are automatically synchronized to the real DOM tree in the browser.
+
+The DOM tree is built up from `Element` instances: each instance represents a DOM element in the browser.
+The root of the server-side DOM tree is the `Element` of the `UI` instance. You can access it using the `ui.getElement()` method.
+This element represents the `<body>` tag.
+
+Elements on the server are implemented as flyweight instances.
+This means that you cannot compare elements using the `==` and `!=` operators.
+Instead, you need to use the `element.equals(otherElement)` method to check whether two instances refer to the same DOM element in the browser.
+
+=== Element Hierarchy
+
+A web app is structured as a tree of elements, with the `UI` instance element as the root.
+An element can be added as a child of another element, using methods such as:
+
+* `element.appendChild(Element)` to add an element at the end of a parent's child list, or
+* `element.insertChild(int, Element)` to add an element to any position in a child list.
+
+You can use `element.getParent()` to navigate upwards in the element hierarchy, and `element.getChildren()` to navigate downwards.
+
+
+=== Component Hierarchy
+
+The `Component` class wraps the `Element` and provides a higher level of abstraction. You can obtain the element representation of a component using the `Component.getElement()` method.
+
+The component's element can optionally contain any number of child elements. In addition to the low-level element, the component itself can also support child components, and methods similar to `Component.add(Component... )` are provided for this purpose.
+
+You can navigate through the component's hierarchy using `component.getParent()` to navigate upwards, and `component.getChildren()` to navigate downwards.
+
+The component hierarchy is constructed based on the element hierarchy. Changes in the component hierarchy are reflected in the element hierarchy (but not vice versa).
+
+=== HTML Templates
+
+As an alternative to creating the DOM in Java, you can use HTML templates. In this case, Java is only used for server-side control and interaction with elements, for example via event listeners.
+
+Possible benefits of this approach include:
+
+* A clearer overview of the structure of the component.
+* Improved performance. Because the same template definition is used for all component instances using the same template file, less memory is used on the server and less data needs to be sent to the browser.
+
+*NEXT*: Follow the tutorial to build your first Vaadin application: *https://vaadin.com/tutorials/getting-started-with-flow[Getting started with Vaadin]*

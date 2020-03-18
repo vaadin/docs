@@ -1,0 +1,125 @@
+---
+title: Including Style Sheets
+order: 1
+layout: page
+---
+
+= Including Style Sheets
+
+You can use CSS style sheets to style your application and Web Components. 
+
+There are two ways to include a CSS style sheet in your Java classes. Both have the same effect and you can use whichever suits best.   
+
+. Using the `@StyleSheet` annotation.
++
+*Examples*: Using the `@StyleSheet` annotation to include a style sheet.
++
+[source,java]
+----
+// Relative to Servlet URL
+@StyleSheet("styles.css")
+// Loaded from external location
+@StyleSheet("http://www.example.com/example.css")
+public class MainLayout extends Component {
+  // implementation omitted
+}
+----
+
+* The snippet uses the `@StyleSheet` annotation on a component.
+* The value of the annotation is a URL from which the style sheet loads.
+* The style sheet is loaded when the component displays for the first time in the browser.
+* You can use the annotation multiple times on the same component.
+
+. Using the `addStyleSheet(String url)` method from the `Page` class. 
++
+*Example*: Using the `addStyleSheet(String url)` method to include a style sheet. 
++
+[source,java]
+----
+  public MainLayout(){
+      // Loaded from "/root.css" regardless of how
+      // your application is deployed
+      UI.getCurrent().getPage()
+            .addStyleSheet("/root.css");
+  }
+}
+----
+
+See <<tutorial-ways-of-importing#,Storing and Loading Resources>> for more on storing your resources and configuring advanced resource loading. 
+
+== Using Global Styles
+
+Be cautious when including global styles for your application. If the user's browser does not have native support for Web Components, global styles tend to leak into your Web Components, 
+
+See <<../web-components/integrating-a-web-component#,Integrating a Web Component>> for more, and *Browser support* at https://www.webcomponents.org/[webcomponents.org] for a list of browsers that support Web Components and those that require polyfills. 
+
+Web Component normally uses their own styles that are specifically scoped for each component. If the browser does not support Web Components, the missing functionality is polyfilled, and the Web Component is no longer treated as a scoped unit, but rather as a regular part of the DOM tree. Global styles are applied to it in the same way as any other HTML element.
+
+=== Using JavaScript template
+
+To prevent global styles leaking into the local DOM of Web Components, you can use the `<custom-style>` extension:
+
+. Add an import for Polymer `custom-style.js`, for example `import '@polymer/polymer/lib/elements/custom-style.js';`.
+
+. Add a `<custom-style>` declaration that includes the CSS styles you want to add in the `<head>` element.
++
+*Example*: Adding a `<custom-style>` declaration.
++
+[source,html]
+----
+<custom-style>
+  <style>
+    html {
+      color: red;
+    }
+  </style>
+</custom-style>
+----
+
+If you don't have a natural template for the custom-style declaration, you can create a separate file and import it using the `@JsModule` annotation:
+
+. Put the import and custom styles in the same file. 
++
+*Example*: `shared-styles.js`.
++
+[source,js]
+----
+import '@polymer/polymer/lib/elements/custom-style.js';
+
+const documentContainer = document
+        .createElement('template');
+
+documentContainer.innerHTML = `<custom-style>
+      <style>
+        html {
+          color: red;
+        }
+      </style>
+    </custom-style>`;
+
+document.head.appendChild(documentContainer.content);
+----
+
+. Use the `@JsModule("./shared-styles.js")` annotation in a component class, like your main layout class.
+
+=== Using CssImport
+The new `@CssImport` annotation can be used to load CSS files into the global scope.
+Create a normal CSS file under `{project directory}/frontend/styles` and use the annotation to bundle the CSS into frontend resources.
+
+[source,html]
+----
+html {
+  color: red;
+}
+----
+
+[source,java]
+----
+@CssImport("./styles/custom-styles.css")
+@Route("")
+public class MainLayout extends Component {
+
+}
+----
+
+See <<../theme/theming-crash-course#,Theming Web Components>> and https://polymer-library.polymer-project.org/3.0/api/elements/custom-style[Polymer.CustomStyle] for more.

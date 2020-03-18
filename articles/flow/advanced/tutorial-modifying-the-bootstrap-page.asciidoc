@@ -1,0 +1,179 @@
+---
+title: Modifying the Bootstrap Page at the Runtime
+order: 3
+layout: page
+---
+
+ifdef::env-github[:outfilesuffix: .asciidoc]
+
+= Appendix: Application Shell
+
+=== Abstract [[application-shell]]
+
+The link:https://developers.google.com/web/fundamentals/architecture/app-shell[App Shell Model] tries to make your website faster by loading the 'important' parts of the web page at first causing a good first impression. The key for this, is to deliver the minimal HTML, CSS and JavaScript required to display the user interface during the first visit, and eventually cache it to be used in future revisits.
+
+The _Application Shell_ in Vaadin is also known as _Bootstrap Page_ or simply _index.html_.
+
+=== Modifying the Application Shell
+
+In Vaadin 15+ the user has full control on the `index.html` contents, which can by modified in different ways:
+
+1. In client-side by editing the `frontend/index.html` when the content is static, for instance the `<viewport>` tag.
+2. In server-side for changes that require some dynamic server content or just when Java syntax is preferred, for example making the application installable by enabling the `@PWA` built-in feature.
+- Implement the `AppShellConfigurator` for cases covered by the `AppShellSettings` API, or by annotations.
+- Configure an `IndexHtmlRequestListener` for advanced cases modifying the document structure.
+
+== Customizing the Application Shell Template
+
+By default, during the first request, Vaadin parses the `frontend/index.html` template file and delivers it with a few modifications as described in the <<starting-the-app#default-bootstrap-template-and-entry-point,Default Bootstrap Template>>
+
+This is the best place for customizing the app-shell, for example to put an analytics tag in the page.
+
+.index.html
+[source, xml]
+----
+...
+<head>
+  <title>My App</title>
+</head>
+<body>
+  ...
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-XXXXX-Y', 'auto');
+    ga('send', 'my-app-bootstrap');
+  </script>
+</body>
+----
+
+
+== Customizing the Application Shell during Runtime
+
+=== The `AppShellConfigurator` interface [[application-shell-configurator]]
+
+In Java code, use the `AppShellConfigurator` marker interface rather than editing the `index.html` when adding dynamic content during the bootstrap process.
+
+[NOTE]
+There must be a single application shell for the entire Vaadin application, and therefore there can be at max one class implementing `AppShellConfigurator`.
+
+[NOTE]
+`AppShellConfigurator` is a replacement of the obsolete `PageConfigurator` interface.
+
+==== The `AppShellConfigurator#configurePage` method
+
+Override `configurePage` for adding content to the `index.html` template by calling the following `AppShellSettings` methods:
+
+- `AppShellSettings#setViewport` to set the viewport value, it replaces the viewport present in the `index.html` template.
+- `AppShellSettings#setPageTitle` to set the initial page title, replaces the template title tag.
+- `AppShellSettings#setBodySize` to configure the body width and height values.
+- `AppShellSettings#addMetaTag` to append meta tags to the head.
+- `AppShellSettings#addInlineFromFile` to include content from resource files.
+- `AppShellSettings#addInlineWithContents` to add arbitrary content.
+- `AppShellSettings#addLink` to add links to the head.
+- `AppShellSettings#addFavIcon` to configure the favicon.
+- `AppShellSettings#getLoadingIndicatorConfiguration` for getting and modifying the configuration for the loading indicator.
+- `AppShellSettings#getReconnectDialogConfiguration` for configuring the reconnect dialog.
+- `AppShellSettings#getPushConfiguration` to customize the push mechanism.
+
+[source,java]
+----
+public class AppShell implements AppShellConfigurator {
+
+  @Override
+  public void configurePage(AppShellSettings settings) {
+    settings.setViewport("width=device-width, initial-scale=1");
+    settings.setPageTitle("A cool vaadin app");
+    settings.setBodySize("100vw", "100vh");
+    settings.addMetaTag("author", "bunny");
+    settings.addFavIcon("icon", "icons/icon-192.png", "192x192");
+    settings.addLink("shortcut icon", "icons/favicon.ico");
+
+    settings.addInlineFromFile(
+            TargetElement.BODY,
+            Position.APPEND,
+            "custom.html",
+            Wrapping.AUTOMATIC);
+    settings.addInlineWithContents(Position.PREPEND,
+            "console.log(\"foo\");", Wrapping.JAVASCRIPT);
+
+    settings.getLoadingIndicatorConfiguration()
+            .ifPresent(indicator -> indicator.setApplyDefaultTheme(false));
+    settings.getLoadingIndicatorConfiguration()
+            .ifPresent(indicator -> indicator.setSecondDelay(700000));
+    settings.getPushConfiguration()
+            .ifPresent(push -> push.setPushMode(PushMode.AUTOMATIC));
+    settings.getReconnectDialogConfiguration()
+            .ifPresent(dialog -> dialog.setDialogModal(true));
+  }
+}
+----
+
+==== Java annotations[[java-annotations]]
+
+Vaadin provide a set annotations for modifying the application shell, though, unlike in previous versions, in Vaadin 15 these annotations must be placed in the application shell class.
+
+- `@Viewport` to set the viewport value.
+- `@PageTitle` to set the initial page title.
+- `@BodySize` to configure the body size.
+- `@Meta` to append meta tags to the head.
+- `@Inline` to include content from resource files in the `index.html`.
+- `@PWA` to define application PWA properties.
+- `@Push` to configures server push.
+
+[source,java]
+----
+@Viewport("width=device-width, initial-scale=1")
+@PageTitle("A cool vaadin app")
+@BodySize(height = "100vh", width = "100vw")
+@Meta(name = "author", content = "bunny")
+@Inline(wrapping = Wrapping.AUTOMATIC,
+        position = Position.APPEND,
+        target = TargetElement.BODY,
+        value = "custom.html")
+@PWA(name = "Cool Vaadin App", shortName = "my-app")
+@Push(value = PushMode.MANUAL, transport = Transport.WEBSOCKET)
+public class AppShell implements AppShellConfigurator {
+}
+----
+
+[NOTE]
+Modifications in the  `AppShellConfigurator#configurePage` do have priority over the equivalent annotations.
+
+[NOTE]
+Annotations do not cover all the cases that can be done when overridding the `AppShellConfigurator#configurePage` method
+
+=== The `IndexHtmlRequestListener` interface [[IndexHtmlRequestListener-interface]]
+
+In addition, for advance cases not covered in the previous section, the content can be modified via an `IndexHtmlRequestListener`.
+
+An implementation of the listener should be added via a `ServiceInitEvent` when a `VaadinService` is initialized. Check the <<../advanced/tutorial-service-init-listener#,ServiceInitListener tutorial>> for the details about using Vaadin `ServiceInitListeners`.
+
+The example below changes the body class dynamically:
+
+[source,java]
+----
+public class MyIndexHtmlRequestListener implements
+        IndexHtmlRequestListener {
+
+    @Override
+    public void modifyIndexHtmlResponse(
+            IndexHtmlResponse indexHtmlResponse) {
+
+        Document document = indexHtmlResponse.getDocument();
+        Element body = document.body();
+        body.classNames(computeBodyClassNames());
+    }
+
+    private Set<String> computeBodyClassNames() {
+        // Introduce some logic to dynamically change the body class
+        return Collections.singleton("my-className");
+    }
+}
+----
+
+It can also be provided as a servlet container deployment property with the name `useDeprecatedV14Bootstrapping`.

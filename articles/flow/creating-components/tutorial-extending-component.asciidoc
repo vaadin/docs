@@ -1,0 +1,273 @@
+---
+title: Extending Components
+order: 6
+layout: page
+---
+
+= Extending Components
+
+You can create a new component by extending any existing component.
+
+For most components, there is a client-side component and a corresponding server-side component: 
+
+* *Client-side component*: Contains the HTML, CSS, and JavaScript, and defines a set of properties that determine the behavior of the component on the client side.
+
+* *Server-side component*: Contains Java code that allows for changing of the client-side properties, and manages the component behavior on the server side.
+
+You can extend a component on either the server or client side. Note that these are alternative approaches that are mutually exclusive. 
+
+In this section we demonstrate the two different approaches to achieve the *same changes* to the prebuilt text field component.
+
+== Extending a Component Using the Server-side Approach
+
+Extending a server-side component is useful when you want to add new functionality (as opposed to visual aspects) to an existing component. Suitable examples include automatically processing data, adding default validators, and combining multiple simple components into a field that manages complex data. 
+
+[TIP]
+If your component contains a lot of logic that could easily be done on the client side, consider implementing it as a Web Component and creating a wrapper for it. This approach may offer a better user experience and result in less load on the server.
+
+In this example, we create a `NumericField` component by extending the `TextField` component. The new component contains a default number that the user can change using *+* and *-* controls.
+
+image:images/vaadin-number-field-server-side-extension.png[vaadin-numeric-field]
+
+*Example*: Creating a `NumericField` component by extending the `TextField` component. 
+
+[source,java]
+----
+public class NumericField extends TextField {
+
+    private Button substractBtn;
+    private Button addBtn;
+
+    private static final int DEFAULT_VALUE = 0;
+    private static final int DEFAULT_INCREMENT = 1;
+
+    private int numericValue;
+    private int incrementValue;
+    private int decrementValue;
+
+    public NumericField() {
+        this(DEFAULT_VALUE, DEFAULT_INCREMENT,
+                -DEFAULT_INCREMENT);
+    }
+
+    public NumericField(int value, int incrementValue,
+                        int decrementValue) {
+        setNumericValue(value);
+        this.incrementValue = incrementValue;
+        this.decrementValue = decrementValue;
+
+        setPattern("-?[0-9]*");
+        setPreventInvalidInput(true);
+
+        addChangeListener(event -> {
+            String text = event.getSource().getValue();
+            if (StringUtils.isNumeric(text)) {
+                setNumericValue(Integer.parseInt(text));
+            } else {
+                setNumericValue(DEFAULT_VALUE);
+            }
+        });
+
+        substractBtn = new Button("-", event -> {
+            setNumericValue(numericValue +
+                    decrementValue);
+        });
+
+        addBtn = new Button("+", event -> {
+            setNumericValue(numericValue +
+                    incrementValue);
+        });
+
+        styleBtns();
+
+        addToPrefix(substractBtn);
+        addToSuffix(addBtn);
+    }
+
+    private void styleBtns() {
+        // Note: The same as addThemeVariants
+        substractBtn.getElement()
+                .setAttribute("theme", "icon");
+        addBtn.getElement()
+                .setAttribute("theme", "icon");
+    }
+
+    public void setNumericValue(int value) {
+        numericValue = value;
+        setValue(value + "");
+    }
+
+    // getters and setters
+}
+----
+
+[NOTE]
+As an alternative, you can extend the `Composite` class that has a minimal API. This hides methods available in the more extensive API that is exposed when your custom components extends an implementation of `Component`. 
+
+[NOTE]
+The `Element` API contains methods to update and query various parts of the element, such as the attributes. Every component has a `getElement()` method that allows you to access it. See <<tutorial-component-many-elements#,Creating a Component Using Multiple Elements>> for more.
+
+It may also be necessary to add CSS styles for the new component.
+
+*Example*: Creating `vaadin-numeric-field-theme.html` to customize the appearance of the `vaadin-text-field` component.
+
+[source,js]
+----
+const documentContainer = document
+        .createElement('template');
+
+documentContainer.innerHTML =
+`<dom-module id="vaadin-numeric-field-theme"
+             theme-for="vaadin-text-field">
+    <template>
+        <style>
+            :host(vaadin-text-field)
+                    [part="input-field"] {
+                background-color: #FFFFFF;
+                border: solid 1px #E0E5E8;
+                box-sizing: border-box;
+            }
+
+            :host(vaadin-text-field) [part="value"]{
+                --_lumo-text-field-overflow-mask-image:
+                        none;
+                text-align:center;
+            }
+
+            :host(vaadin-text-field)
+                    [part="input-field"]
+                    ::slotted(vaadin-button) {
+               background-color: transparent !important;
+            }
+        </style>
+    </template>
+</dom-module>`;
+
+document.head.appendChild(documentContainer.content);
+----
+
+[NOTE]
+Remember to import the new styles in the view in which the component is used, by adding `@JsModule("./styles/vaadin-numeric-field-theme.js")`.
+
+See <<../theme/integrating-component-theme#,Integrating Your Own Component Theme>> for more.
+
+== Extending a Component Using the Client-side Approach
+
+Vaadin client-side components are based on https://polymer-library.polymer-project.org/3.0/docs/about_30[Polymer 3] that supports extending existing components. You can use the `extends` property to extend existing Polymer elements.
+
+There are five ways to inherit a template from another Polymer element:
+
+. Inheriting a base class template without modifying it.
+. Overriding a base class template in a child class.
+. Modifying a copy of a superclass template.
+. Extending a base class template in a child class.
+. Providing template-extension points in a base class for content from a child class.
+
+
+=== Extending by Modifying a Copy of a Superclass Template
+
+In this example, we demonstrate how to create a new component by modifying a copy of a superclass template. We build a `NumberFieldElement` by extending `Vaadin.TextFieldElement`. The new component contains a default number that the user can change using *+* and *-* controls.
+
+image:images/vaadin-number-field-client-side-extension.png[vaadin-number-field]
+
+It is important to remember that when a component template is extended, the properties and methods of the parent template become available to the child template. 
+
+[NOTE]
+By default, a child component uses the template of the parent component, unless the child component provides its own template by overriding the static getter method `template`. The parent's template is accessed using `super.template`.
+
+Next, specify the element from which the child component inherits. In this case we specify that  `NumberFieldElement` inherits (including the properties and methods) from `Vaadin.TextFieldElement`:
+
+[source,js]
+----
+import {html} from
+   '@polymer/polymer/lib/utils/html-tag.js';
+import {TextFieldElement} from
+   '@vaadin/vaadin-text-field/src/vaadin-text-field.js';
+
+let memoizedTemplate;
+
+class NumberFieldElement extends TextFieldElement {
+
+    static get template() {
+        if (!memoizedTemplate) {
+            const superTemplate = super.template
+                    .cloneNode(true);
+            const inputField = superTemplate.content
+                .querySelector('[part="input-field"]');
+            const prefixSlot = superTemplate.content
+            .querySelector('[name="prefix"]');
+            const decreaseButton = html`<div
+                part="decrease-button"
+                on-click="_decreaseValue"></div>`;
+            const increaseButton = html`<div
+                part="increase-button"
+                on-click="_increaseValue"></div>`;
+            inputField.insertBefore(
+                decreaseButton.content, prefixSlot);
+            inputField.appendChild(
+                increaseButton.content);
+            memoizedTemplate = html`<style>
+                 [part="decrease-button"]::before {
+                   content: "−";
+                 }
+
+                 [part="increase-button"]::before {
+                   content: "+";
+                 }
+               </style>
+               ${superTemplate}`;
+        }
+        return memoizedTemplate;
+    }
+
+    static get is() {
+        return 'vaadin-number-field';
+    }
+
+    static get properties() {
+        return {
+            decrementValue: {
+              type: Number,
+              value: -1,
+              reflectToAttribue: true,
+              observer: '_decrementChanged'
+            },
+            incrementValue: {
+              type: Number,
+              value: 1,
+              reflectToAttribue: true,
+              observer: '_incrementChanged'
+            }
+
+            // Note: the value is stored in the
+            // TF's value property.
+        };
+    }
+
+    _decreaseValue() {
+        this.__add(this.decrementValue);
+    }
+
+    _increaseValue() {
+        this.__add(this.incrementValue);
+    }
+
+    __add(value) {
+        this.value = parseInt(this.value, 10) + value;
+        this.dispatchEvent(
+            new CustomEvent('change', {bubbles: true}));
+    }
+
+    _valueChanged(newVal, oldVal) {
+        this.value = this.focusElement.value;
+        super._valueChanged(this.value, oldVal);
+    }
+
+    /* ... */
+}
+----
+
+To modify the template we override the `template` static getter. Note that the expression `${super.template}` inserts the base class template into the newly constructed template. The newly constructed template is memoized for further invocations of `template`.
+
+
+See https://polymer-library.polymer-project.org/3.0/docs/devguide/dom-template#inherit[Inherit a template from another Polymer element] in the Polymer documentation for more.

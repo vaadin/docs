@@ -1,0 +1,214 @@
+---
+title: Servlet-Container Authentication
+order: 15
+layout: page
+---
+
+ifdef::env-github[:outfilesuffix: .asciidoc]
+
+= Configuring Servlet-Container Authentication
+
+Servlet containers have different mechanism to create the user `Principal` object and run security checks when authentication is required for secured endpoints.
+
+As a reference, we provide configuration examples custom session based authentication, and two popular containers.
+
+
+== Session Based Authentication
+
+=== Configuring a Custom Servet Filter
+
+For customized authentication, it is needed to implement a custom `HttpServletRequest` to wrap the default one through a `WebFilter`.
+
+In the next example, there is a customized `Principal` object, and it's assumed that this principal is set as a `Session` attribute at some point by the application.
+
+.CustomPrincipal.java
+[source,java]
+----
+public class CustomPrincipal implements Principal {
+    private final String name;
+    private final List<String> roles;
+
+    public CustomPrincipal(String name, String ...roles) {
+        this.name = name;
+        this.roles = Arrays.asList(roles);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isUserInRole(String role) {
+        return roles.contains(role);
+    }
+}
+----
+
+.CustomHttpServletRequest.java
+[source,java]
+----
+public class CustomHttpServletRequest extends HttpServletRequestWrapper {
+    public CustomHttpServletRequest(HttpServletRequest request) {
+        super(request);
+    }
+
+    @Override
+    public Principal getUserPrincipal() {
+        Principal myUser = (Principal) getSession().getAttribute("User");
+        return myUser != null ? myUser : super.getUserPrincipal();
+    }
+
+    @Override
+    public boolean isUserInRole(String role) {
+        return getUserPrincipal() instanceof CustomPrincipal
+                && ((CustomPrincipal) getUserPrincipal()).isUserInRole(role)
+                || super.isUserInRole(role);
+    }
+}
+----
+
+.CustomWebFilter.java
+[source,java]
+----
+@WebFilter("/connect")
+public class CustomWebFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain chain) throws IOException, ServletException {
+
+        chain.doFilter(new CustomHttpServletRequest((HttpServletRequest) request), response);
+    }
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException { }
+
+    @Override
+    public void destroy() { }
+}
+----
+
+=== Configuring a Client Login Form
+
+Create a form able to ask for the username/password pair to the user and send it to the server side. The following snippet shows how to code a login web-component.
+
+.frontend/my-login.ts
+[source,typescript]
+----
+import {LitElement, html, customElement, query} from 'lit-element';
+
+@customElement("my-login")
+export class MyLogin extends LitElement {
+  @query('#username')
+  private username: any;
+  @query('#password')
+  private password: any;
+
+  render() {
+    return html`
+      <input id="username" name="username"></input>
+      <input id="password" name="password" type="password"></input>
+      <button @click=${this.login}>login</button>
+    `;
+  }
+
+  private login() {
+    fetch('/connect/login', {
+      method: 'POST',
+      body: `username=${this.username.value}&password=${this.password.value}`
+    })
+    .then(() => console.log("User Logged-in"));
+  }
+}
+----
+
+Then change the above filter to handle the request and set the appropriate principal object in session.
+
+.CustomWebFilter.java
+[source,java]
+----
+@WebFilter("/connect")
+public class CustomWebFilter implements Filter {
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain chain) throws IOException, ServletException {
+
+        // Check username/password and set the `User` attribute in session
+        if ("foo".equals(request.getParameter("username")) &&
+            "abc123".equals(request.getParameter("password"))) {
+            ((HttpServletRequest) request).getSession()
+                .setAttribute("User", new CustomPrincipal("foo"));
+        }
+
+        // wrap original request with our custom implementation
+        chain.doFilter(new CustomHttpServletRequest((HttpServletRequest) request), response);
+    }
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException { }
+    @Override
+    public void destroy() { }
+}
+----
+
+== Configuring Servlet Containers Authentication
+
+The following sections show how to configure authentication in Jetty and Tomcat servers by using the link:https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication[Basic HTTP authentication] schema.
+
+[NOTE]
+Basic HTTP authentication is considered insecure, for public and production deployments it is recommended to use form-based mechanisms ot client-side certificates. Most servlet containers can be configured to use them.
+
+=== Configuring Jetty
+
+.$JETTY_HOME/etc/jetty-users.properties
+[source,properties]
+----
+test: password1,user
+admin: password2,user,admin
+----
+
+.$JETTY_HOME/etc/jetty.xml
+[source,xml]
+----
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+  <Set name="contextPath">/connect</Set>
+  <Set name="war"><SystemProperty name="jetty.home" default="."/>/webapps/my-app</Set>
+
+  <Get name="securityHandler">
+    <Set name="loginService">
+      <New class="org.eclipse.jetty.security.HashLoginService">
+        <Set name="name">my-app</Set>
+        <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/jetty-users.properties</Set>
+      </New>
+    </Set>
+  </Get>
+</Configure>
+----
+
+[NOTE]
+A 'realm' is a repository of user information. The `HashLoginService` is a simple login service that loads usernames from a Java properties file, whereas `JDBCLoginService` cat read users from a JDBC data-source.
+
+=== Configuring Tomcat
+
+.$CATALINA_HOME/conf/tomcat-users.xml
+[source,xml]
+----
+<tomcat-users>
+  <role rolename="admin" />
+  <role rolename="user" />
+  <user name="test" password="password1" roles="user" />
+  <user name="admin" password="password2" roles="user,admin" />
+</tomcat-users>
+----
+
+.$CATALINA_HOME/conf/server.xml
+[source,xml]
+----
+<Context path="/connect">
+  <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+         resourceName="UserDatabase" />
+</Context>
+----
+
+[NOTE]
+Change the realm implementation if you'd rather have a different user data-source. Provided `UserDatabaseRealm` is able to get users from a JDBC database.
+

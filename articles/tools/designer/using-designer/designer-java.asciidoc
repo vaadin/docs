@@ -1,0 +1,138 @@
+---
+title: Connect to Java
+order: 9
+layout: page
+---
+
+[[designer.java]]
+= Connect to Java
+
+You can connect both components and data between Java and the UI made with Designer.
+In practice, this is accomplished with a Java class that enables
+Vaadin Flow to connect your Java code to the UI. In other words, you access the
+UI defined in a design programmatically through the companion class for the design.
+
+TL;DR To connect a component to Java:
+
+. Make sure you have <<figure.designer.java.connectedcompanionfile, a companion Java class>> with [classname]#@JsModule# and [classname]#@Tag# annotations matching the design.
+. Set the [literal]#id# attribute for the element.
+. Click on the [guilabel]#connect# button for the element in the Outline.
+
+[[designer.java.companion]]
+== The Java Companion File
+
+The Java companion file contains the class that connects
+your Java code to the UI defined in the design. There can be only one companion class
+for a design.
+
+You may have already created the companion file at the time you
+<<../getting-started/designer-getting-started#designer.getting-started.design, created the design>>
+using the new design wizard. If that is the case you are all set. You can start
+<<designer.java.components, connecting components>> and <<designer.java.data, data>>.
+
+There is a companion file status indicator on the top right of the editor toolbar. The connection has
+three states: <<figure.designer.java.nocompanionfile, no connected file>>, <<figure.designer.java.connectedcompanionfile, connected to a java companion file>> or <<figure.designer.java.connectedmultiplecompanionfiles, connected to multiple java files>>.
+
+[[figure.designer.java.nocompanionfile]]
+.Design is not connected to any Java companion file
+image::images/designer-3-no-companion-file.png[width=60%, scaledwidth=100%]
+
+[[figure.designer.java.connectedcompanionfile]]
+.Design is connected to a Java companion file
+image::images/designer-3-connected-companion-file.png[width=60%, scaledwidth=100%]
+
+[[figure.designer.java.connectedmultiplecompanionfiles]]
+.Design is connected to multiple Java companion files
+image::images/designer-3-connected-multiple-companion-files.png[width=60%, scaledwidth=100%]
+
+When you have connected your design with a Java companion file, you can simply navigate to the file by clicking on the connected indicator.
+However, if you do not have a companion file for your design, you need to create one manually.
+Here is a code snippet for a companion file that is a valid starting point for any design. It
+has been written as if it was a companion to an imaginary [filename]#my-design.js#. You have
+to adapt it by providing the correct values for your design to the [classname]#Tag# and
+[classname]#JsModule# annotations. The class names are not relevant for Designer.
+
+[source, java]
+----
+import com.vaadin.flow.templatemodel.TemplateModel;
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.polymertemplate.PolymerTemplate;
+
+@Tag("my-design")
+@JsModule("./src/views/my-design.js")
+public class MyDesign extends PolymerTemplate<MyDesign.MyDesignModel> {
+
+    public MyDesign() {
+        // You can initialise any data required for the connected UI components here.
+    }
+
+    public interface MyDesignModel extends TemplateModel {
+        // Add setters and getters for template properties here.
+    }
+}
+----
+
+In general, any Java class will be picked up by Designer as a companion file for the design, as
+long as the class meets the following requirements:
+
+. It is a descendant of [classname]#com.vaadin.flow.component.Component#
+. It is annotated with
+[classname]#com.vaadin.flow.component.Tag# annotation. The annotation's value matches the design's
+tag in custom element definition (e.g. `customElements.define('my-design', MyDesign)`)
+. The value of the [classname]#com.vaadin.flow.component.dependency.JsModule# annotation matches the design path.
+
+So, if you have a specific need, you can freely customize the
+companion class to match your demands. You can learn more about connecting designs and Java classes in
+<<../../flow/polymer-templates/tutorial-template-basic, Flow documentation>>.
+
+[[designer.java.components]]
+== Connecting Components
+
+Designer helps to connect the components used in the design to Java but before
+that can happen you need three things:
+
+. You need a companion file for the design. See the <<designer.java.companion>> for how to get one.
+. The component you want to connect to Java should have its [classname]#id# property set to a unique value (among all the
+[classname]#id# property values in the same design). If its [classname]#id# is empty, Designer will generate one for you.
+. The project must have Vaadin Flow component integrations as dependencies. Those are needed to correctly set the type of the new field.
+
+When a companion file for the design exists, you can connect components to Java using the [guilabel]#Outline# view. When you
+hover over a component in the Outline and the component has a Java API, a connection button will appear on the same row
+with the component name. By clicking the connection button, you can connect the component to Java. When the component is
+connected, the connection button will stay visible in the outline.
+This is illustrated in the following picture.
+
+[[figure.designer.java.add]]
+.Adding a Field
+image::images/designer-3-export-a-component.png[width=40%, scaledwidth=100%]
+
+NOTE: When you make changes in your Java companion file, it will take a few seconds to update the status of the connection buttons
+in the outline and the connection indicator on the toolbar.
+
+Choosing to add the field in the previous picture will insert the following field to the companion class:
+
+[source, java]
+----
+    @Id("vaadinFormItem")
+    private FormItem vaadinFormItem;
+----
+
+Flow uses the [classname]#@Id# annotation to connect the UI component to the field. The value in the annotation must match the [classname]#id# property of the component in the design. Otherwise, you are free to change the type, name and visibility of the field. Just be careful not to break it for Flow.
+
+Take a look at the Flow documentation to learn more about <<../../flow/polymer-templates/tutorial-template-components, binding components in Flow>>.
+
+You can disconnect a component by clicking the connection button of a connected component. Disconnecting a component will
+erase the corresponding field from the companion class along with its [classname]#@Id# annotation.
+
+You should not have more than one companion class for a design, or more than one field annotated with
+the same [classname]#@Id# value, but if you do, all of them will be shown in the Java checkbox tooltip so that
+you can easily locate them to fix the problem manually.
+
+[[designer.java.data]]
+== Connecting Data
+
+You can also bind data from Java to the UI. Designer provides you with a starting point
+by adding the template model inner class into the companion file when the file is created.
+You can learn more about binding data to designs in <<../../flow/polymer-templates/tutorial-template-bindings, Flow documentation>>.
+

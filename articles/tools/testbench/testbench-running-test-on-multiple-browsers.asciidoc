@@ -1,0 +1,122 @@
+---
+title: Running Tests on Multiple Browsers in a Grid
+order: 130
+layout: page
+---
+
+[[testbench.grid]]
+= Running Tests on Multiple Browsers in a Grid
+
+A distributed test environment ("Test grid") consists of a hub and a number of test nodes. The hub acts as an orchestrator, tracking what browsers are available in the nodes and making sure that a node is only used by one test at a time. The nodes have one or several browsers installed and a node is where the actual test is executed.
+
+When running a test on a hub, the TestBench test asks the hub for a certain browser (based on a list of __capabilities__) instead of launching a local browser. The hub waits until a suitable browser is available on some node, reserves that and redirects the test to that given node. The test is then executed and after it has finished, the node reservation is removed and the node used for another test.
+
+[NOTE]
+When running on a hub, you do not need a local webdriver installed. The webdriver must be installed on the node instead.
+
+[[testbench.grid.test-remote]]
+== Preparing your Tests for Running on a Test Grid
+The tests created previously are setup only to run on a single browser, as a single `ChromeDriver` (or other `WebDriver`) instance is created in a `@Before` method. When running on multiple browsers in parallel, it's easier not to handle the driver instances manually but instead let TestBench handle creation and destruction when needed. To do this, you need to:
+
+1. Extend `ParallelTest` instead of `TestBenchTestCase`. The `ParallelTest` class takes care of creating and destroying driver instances as needed.
+2. Define the grid hub URL using either
+a. `@RunOnHub("hub.testgrid.mydomain.com")` on the test class (or a super class) or the system property `com.vaadin.testbench.Parameters.hubHostname`
+b. Configure Sauce Labs credentials and use Sauce Connect proxy to use Sauce Labs test grid. See <<testbench.grid.sauce-labs>>
+
+A test class extending `ParallelTest` will automatically:
+
+* Execute test methods in parallel on the hub defined using `@RunOnHub` or the corresponding system property
+* Create a suitable webdriver instance
+* Terminate the driver after the test ends
+* Grab a screenshot if the test fails
+* Support running the test locally on only one browser for debugging, using `@RunLocally` or the corresponding system property
+
+[NOTE]
+When changing the super class of the test, you  need to remove any calls to `setDriver(new ChromeDriver())` or similar, and also any `@After` method which does `getDriver().quit()`.
+
+[TIP]
+In almost all cases you want to configure something for all your grid tests so it makes sense to create a common superclass, e.g. `public abstract class AbstractIT extends ParallelTest`. Then you can add a `@RunOnHub` annotation on that class.
+
+[NOTE]
+Up to 50 test methods in any `ParallelTest` class will be executed simultaneously by default. The limit can be set using the `com.vaadin.testbench.Parameters.testsInParallel` system property. If your tests do not work in parallel set the parameter to `1`.
+
+[NOTE]
+When running tests in parallel, you need to ensure that the tests are independent and do not affect each other in any way.
+
+[NOTE]
+You can handle creation and destruction of the webdriver manually also when running on a hub if you do not want to use `ParallelTest` for one reason or another. In this case you should create a `RemoteWebdriver` with the correct hub URL and set suitable `DesiredCapabilities` on the driver.
+
+[[testbench.grid.sauce-labs]]
+== Using Sauce Labs Test Grid
+For using Sauce Labs you will need:
+
+1. Provide valid Sauce Labs credentials as a system property `sauce.user` and `sauce.sauceAccessKey` or environment variables `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY`
+2. Configure pom.xml to have `sauce-connect-plugin` open a tunnel with a tunnel identifier to Sauce Labs test grid
+3. Write your tests as described in <<testbench.grid.test-remote>>
+
+After you have your Sauce Labs credentials you can pass them to your build e.g. `mvn verify -Dsauce.user=<yourusername> -Dsauce.sauceAccessKey=<youraccesskey>`.
+
+
+Sauce Connect plugin opens a tunnel before the integration tests are run and closes it after they are run.
+The plugin needs an identifier for the tunnel. The identifier is passed with `--tunnel-identifier` attribute in `sauce.options` system property e.g. in pom.xml `<sauce.options>--tunnel-identifier ${maven.build.timestamp}</sauce.options>`.
+
+[source,xml]
+----
+<plugins>
+    <plugin>
+        <groupId>com.saucelabs.maven.plugin</groupId>
+        <artifactId>sauce-connect-plugin</artifactId>
+        <version>2.1.23</version>
+        <executions>
+            <!-- Start Sauce Connect prior to running the integration tests -->
+            <execution>
+                <id>start-sauceconnect</id>
+                <phase>pre-integration-test</phase>
+                <goals>
+                    <goal>start-sauceconnect</goal>
+                </goals>
+            </execution>
+            <!-- Stop the Sauce Connect process after the integration tests have
+                finished -->
+            <execution>
+                <id>stop-sauceconnect</id>
+                <phase>post-integration-test</phase>
+                <goals>
+                    <goal>stop-sauceconnect</goal>
+                </goals>
+            </execution>
+        </executions>
+    </plugin>
+</plugins>
+----
+
+[[testbench.grid.test-browsers]]
+== Defining the Browsers to Run Tests On
+You can define the tested browsers and their versions in an environment variable `TESTBENCH_GRID_BROWSERS` or system property `com.vaadin.testbench.Parameters.gridBrowsers` with a comma separated list e.g. `-Dcom.vaadin.testbench.Parameters.gridBrowsers=chrome,firefox,safari-11,safari-9`.
+
+If you don't want to use the environment variable, you can define the configuration in your test class, in a method annotated with `@BrowserConfiguration`. It returns a list of `DesiredCapabilities`, typically describing what platform, os and browser name/version should be used. Typically this is defined in a superclass for the test so that all tests are run on the same browsers, e.g.
+
+```java
+@RunOnHub("hub.testgrid.mydomain.com")
+public abstract class AbstractIT extends ParallelTest {
+
+   @BrowserConfiguration
+   public List<DesiredCapabilities> getBrowserConfiguration() {
+       List<DesiredCapabilities> browsers =
+           new ArrayList<DesiredCapabilities>();
+
+       // Add all the browsers you want to test
+       browsers.add(BrowserUtil.firefox());
+       browsers.add(BrowserUtil.chrome());
+       browsers.add(BrowserUtil.ie11());
+
+       return browsers;
+   }
+}
+```
+
+[NOTE]
+The `BrowserUtil` helper methods create a `DesiredCapability` object which works in many cases. To customize the versions and other values, annotate your test class using `@BrowserFactory(MyBrowserFactory.class)` and implement `MyBrowserFactory` by extending `DefaultBrowserFactory`.
+
+[TIP]
+To run a multi browser test locally, you can use the `com.vaadin.testbench.Parameters.runLocally` system property (or a `@RunLocally` annotation on the test class) to override what browser to run on. The value of the property or annotation should be the browser to run on, e.g. `chrome` or `@RunLocally(Brwoser.CHROME)`. When `RunLocally` is used, any hub configuration is also ignored and a local webdriver is used.

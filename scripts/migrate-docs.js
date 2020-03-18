@@ -64,8 +64,12 @@ function migrateDocs() {
   });
 
   // Cleanup
-  fs.rmdirSync(path.join(__dirname, '../articles/guides'), { recursive: true });
-  fs.rmdirSync(path.join(__dirname, '../articles/tools'), { recursive: true });
+  const guideFolder = 'flow';
+  const guidePath = path.join(__dirname, '../articles', guideFolder);
+  const toolsPath = path.join(__dirname, '../articles/tools');
+
+  fs.rmdirSync(guidePath, { recursive: true });
+  fs.rmdirSync(toolsPath, { recursive: true });
   fs.rmdirSync(path.join(__dirname, '../articles/components/ui-components/charts'), { recursive: true });
 
   // Main index file
@@ -81,82 +85,93 @@ function migrateDocs() {
 
   // Helper function for all copy operations
   function filter(src, dest) {
-    if (src.indexOf('/src') > -1 || src.indexOf('pom.xml') > -1) {
+    if ( src.indexOf('/src') > -1
+      || src.indexOf('pom.xml') > -1
+      || src.indexOf('.git') > -1
+    ) {
       return false;
     }
     return true;
   }
 
   // Guides
-  // flow-and-components-documentation goes to guides
-  fs.mkdirSync(path.join(__dirname, '../articles/guides'));
+  // flow-and-components-documentation
+  fs.mkdirSync(guidePath);
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'flow/documentation'),
-    path.join(__dirname, '../articles/guides'),
+    guidePath,
     { filter }
   );
-  fs.writeFileSync(path.join(__dirname, '../articles/guides/index.asciidoc'), generateAsciidoc('Guides', 1));
-  generateIndexes(sections.flow.subpages, 'guides');
+  // Rename Overview.asciidoc -> index.asciidoc
+  const overviewPath = path.join(__dirname, CACHE_DIR, 'flow/documentation/Overview.asciidoc');
+  index = fs.readFileSync(overviewPath, 'utf8');
+  index = index.replace('---\ntitle: Overview', '---\ntitle: Framework');
+  fs.writeFileSync(
+    path.join(guidePath, 'index.asciidoc'),
+    index
+  );
+  fs.remove(path.join(guidePath, 'Overview.asciidoc'));
+  generateIndexes(sections.flow.subpages, guideFolder);
 
   // TODO workflow should be added to the menu
-  fs.remove(path.join(__dirname, `../articles/guides/workflow`));
+  fs.remove(path.join(__dirname, `../articles/${guideFolder}/workflow`));
 
   // TODO draft content should be in a different branch?
-  fs.remove(path.join(__dirname, `../articles/guides/portlet-support`));
+  fs.remove(path.join(__dirname, `../articles/${guideFolder}/portlet-support`));
 
 
   // Tools
-  fs.mkdirSync(path.join(__dirname, '../articles/tools'));
-  fs.writeFileSync(path.join(__dirname, '../articles/tools/index.asciidoc'), generateAsciidoc('Tools', 3));
+  fs.mkdirSync(toolsPath);
+  fs.writeFileSync(path.join(toolsPath, 'index.asciidoc'), generateAsciidoc('Tools', 3));
 
 
   // designer goes under tools
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'designer/designer-documentation'),
-    path.join(__dirname, '../articles/tools/designer'),
+    path.join(toolsPath, 'designer'),
     { filter }
   );
-  fs.writeFileSync(path.join(__dirname, '../articles/tools/designer/index.asciidoc'), generateAsciidoc('Designer', 1));
+  fs.writeFileSync(path.join(toolsPath, 'designer/index.asciidoc'), generateAsciidoc('Designer', 1));
   generateIndexes(sections.designer.subpages, 'tools/designer');
 
 
   // testbench goes under tools
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'testbench/documentation'),
-    path.join(__dirname, '../articles/tools/testbench'),
+    path.join(toolsPath, 'testbench'),
     { filter }
   );
-  fs.writeFileSync(path.join(__dirname, '../articles/tools/testbench/index.asciidoc'), generateAsciidoc('TestBench', 2));
+  fs.writeFileSync(path.join(toolsPath, 'testbench/index.asciidoc'), generateAsciidoc('TestBench', 2));
   generateIndexes(sections.testbench.subpages, 'tools/testbench');
 
 
   // mpr goes under tools
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'mpr/mpr-documentation/documentation'),
-    path.join(__dirname, '../articles/tools/mpr'),
+    path.join(toolsPath, 'mpr'),
     { filter }
   );
-  fs.writeFileSync(path.join(__dirname, '../articles/tools/mpr/index.asciidoc'), generateAsciidoc('Multiplatform Runtime', 3));
+  fs.writeFileSync(path.join(toolsPath, 'mpr/index.asciidoc'), generateAsciidoc('Multiplatform Runtime', 3));
   generateIndexes(sections.mpr.subpages, 'tools/mpr');
 
 
   // business-app goes under tools
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'business-app'),
-    path.join(__dirname, '../articles/tools/business-app'),
+    path.join(toolsPath, 'business-app'),
     { filter }
   );
-  fs.writeFileSync(path.join(__dirname, '../articles/tools/business-app/index.asciidoc'), generateAsciidoc('Business App Starter', 4));
+  fs.writeFileSync(path.join(toolsPath, 'business-app/index.asciidoc'), generateAsciidoc('Business App Starter', 4));
   generateIndexes(sections['business-app'].subpages, 'tools/business-app');
 
 
   // bakeryflow goes under tools
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'bakeryflow'),
-    path.join(__dirname, '../articles/tools/bakeryflow'),
+    path.join(toolsPath, 'bakeryflow'),
     { filter }
   );
-  fs.writeFileSync(path.join(__dirname, '../articles/tools/bakeryflow/index.asciidoc'), generateAsciidoc('Full Stack App Starter', 4));
+  fs.writeFileSync(path.join(toolsPath, 'bakeryflow/index.asciidoc'), generateAsciidoc('Full Stack App Starter', 4));
   generateIndexes(sections.bakeryflow.subpages, 'tools/bakeryflow');
 
 

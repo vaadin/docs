@@ -1,0 +1,162 @@
+---
+title: Creating a Simple Component Using the Template API
+order: 2
+layout: page
+---
+
+ifdef::env-github[:outfilesuffix: .asciidoc]
+
+= Creating a Simple Component Using the Template API
+
+This guide show you how to write a simple Component using only the `PolymerTemplate` API. For other ways of creating a Component, see:
+
+* <<../creating-components/tutorial-component-basic#,Creating a Simple Component Using the Element API>>
+* <<../creating-components/tutorial-component-many-elements#,Creating a Component Based on Many Elements>>
+* <<../creating-components/tutorial-component-composite#,Creating a Component Using Existing Components>>
+* <<../creating-components/tutorial-component-container#,Creating a Component Which Can Contain Other Components>>
+
+For tutorials about how to use more advanced template features, see:
+
+* <<tutorial-template-components-in-slot#,Using <slot> in PolymerTemplates>>
+* <<tutorial-template-event-handlers#,Handling User Events in a Template>>
+
+This tutorial is based on the https://github.com/vaadin/flow-demo/tree/master/demo-hello-worlds[Hello Worlds technical demo].
+The demo shows three ways of creating a simple view: using Components, using pure Element API and the template approach that we'll show here.
+
+The demo is a simple view where we ask the user to input their name and click a button for a response.
+
+== Client side
+
+First, we need to define a template file with the view structure and imports in `frontend/src/hello-world.js`:
+
+[source,js]
+----
+import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
+import '@polymer/paper-input/paper-input.js';
+
+class HelloWorld extends PolymerElement {
+
+    static get template() {
+        return html`
+            <div>
+                <paper-input id="inputId" value="{{userInput}}"></paper-input>
+                <button id="helloButton" on-click="sayHello">Say hello</button>
+                <div id="greeting">[[greeting]]</div>
+            </div>`;
+    }
+
+    static get is() {
+          return 'hello-world';
+    }
+}
+
+customElements.define(HelloWorld.is, HelloWorld);
+----
+
+This is a JavaScript module describing a Polymer template. All features used in the example are standard Polymer features. If you're unfamiliar with any of them, please refer to https://www.polymer-project.org/3.0/docs/about_30[Polymer project documentation page].
+For clarity and demonstration purposes, this example uses https://github.com/PolymerElements/paper-input[paper-input] component, but you could use e.g. the Vaadin TextField instead.
+
+[NOTE]
+The tag name of the template returned by the function `is()` should contain at least one dash (`-`). For example, `hello-world` is a valid tag name, but `helloworld` is not. The `is()` function defines the name of the HTML tag this module will be used as later.
+
+The template contains both a one-way binding (`\[[greeting]]`) and a two-way binding (`{{userInput}}`). There is also an event handler `sayHello` that is triggered on `helloButton` click. We have not specified the model here, as it will be propagated automatically from the server side.
+
+We've also imported some dependencies:
+
+* The `PolymerElement` from the Polymer library is the required superclass of all Polymer templates.
+* `html` for inline DOM templating.
+* The `paper-input` Polymer component.
+
+
+== Server side
+
+To be able to use this template you need to create a Java class which extends `PolymerTemplate`,
+set its tag name to match the return value of the Polymer template's `is()`-function, and add the `@JsModule` annotation to connect to the template class (`hello-world.js`). You should also declare the dependency of any npm package you are using by adding `@NpmPackage` annotation. In this example we use the paper-input package, so we'll add it's NPM package: `@polymer/paper-input 3.0.2`.
+
+[source,java]
+----
+@Tag("hello-world")
+@NpmPackage(value = "@polymer/paper-input", version = "3.0.2")
+@JsModule("./src/hello-world.js")
+public class HelloWorld extends PolymerTemplate<HelloWorldModel> {
+    private static final String EMPTY_NAME_GREETING = "Please enter your name";
+
+    /**
+     * Creates the hello world template.
+     */
+    public HelloWorld() {
+        setId("template");
+        getModel().setGreeting(EMPTY_NAME_GREETING);
+    }
+
+    @EventHandler
+    private void sayHello() {
+        // Called from the template click handler
+        String userInput = getModel().getUserInput();
+        if (userInput == null || userInput.isEmpty()) {
+            getModel().setGreeting(EMPTY_NAME_GREETING);
+        } else {
+            getModel().setGreeting(String.format("Hello %s!", userInput));
+        }
+    }
+}
+----
+
+Here we have defined a class with the required annotations as well as a an event handler.
+
+We will also need a Model class, like this:
+[source,java]
+----
+/**
+ * Model for the template.
+ */
+public interface HelloWorldModel extends TemplateModel {
+    /**
+     * Gets user input from corresponding template page.
+     *
+     * @return user input string
+     */
+    String getUserInput();
+
+    /**
+     * Sets greeting that is displayed in corresponding template page.
+     *
+     * @param greeting
+     *            greeting string
+     */
+    void setGreeting(String greeting);
+}
+----
+
+=== Connecting Java to JavaScript
+
+In order for the component to be processed correctly, we need to bind a Java class with the template file we created earlier. We do this by specifying `@JsModule` with the path to the JavaScript module relative to the `frontend` folder in the project root. In the above example, `./src/hello-world.js` is the file name of the template file shown earlier, relative to `frontend`.
+
+If needed, multiple JavaScript resources can be imported using the `@JsModule` annotation on the Java class.
+
+=== Defining the Tag
+
+The Tag annotation value should correspond to the value returned by the templates static getter `is`. It makes sure the tag name is the same on the server and the client.
+
+=== Model
+
+A Model describes all properties that are passed to the html template and used on the client side. 
+The model is simple Java interface extending the `TemplateModel` interface and having getter and/or setter methods
+for properties. The Model you want to use needs to be specified when extending the ´PolymerTemplate´ class. You do not need to create a Model object yourself, as Vaadin will handle this for you; you only need to create the interface. The Model instance can be accessed via the `getModel()` method inside the template Java class.
+
+=== Adding Event handlers
+
+The server side class has a method (`sayHello`) annotated with `@EventHandler`. The method is called from the client side, triggered
+by the `helloButton` button. The method name is used to map function calls between the Template and Java files.
+
+== Usage in code
+
+You can now use `HelloWorld` like any other component.
+
+[source,java]
+----
+HelloWorld hello = new HelloWorld();
+
+Div layout = new Div();
+layout.add(hello);
+----

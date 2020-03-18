@@ -1,0 +1,123 @@
+---
+title: Creating a Drop Target
+order: 2
+layout: page
+---
+
+= Creating a Drop Target
+
+With the `DropTarget` class you can make any component a drop target that the user can
+drop things on. When the drop occurs, you can get an event on the server side and
+get the data related to the drag operation when the drag has originated from the
+same UI (browser window/tab). The `DropTarget` class is a configuration object
+for the drop target and contains static methods for configuring the given component
+as a drop target instance.
+
+[source, java]
+----
+VerticalLayout first = new VerticalLayout();
+VerticalLayout second = new VerticalLayout();
+
+// makes first layout an active drop target
+DropTarget<VerticalLayout> dropTarget = DropTarget.create(first);
+
+// provides access to drop target API for second layout,
+// without setting it as an active drop target
+DropTarget<VerticalLayout> dropTarget2 = DropTarget.configure(second);
+// change previously set settings
+dropTarget2.setDropEffect(DropEffect.NONE);
+----
+
+The `DropTarget` configuration object doesn't itself store any data, as it is
+just an API extension that allows easily making any component a drop target.
+Creating a new `DropTarget` instance of a component will not reset any previous
+configuration, but any changes will override previous configuration.
+
+Similarly as with the `DragSource`, the `DropTarget` is a "mixin interface"
+which can be added to any custom component to expose the drop target API for it.
+
+[source, java]
+----
+public class Column extends VerticalLayout implements DropTarget<VerticalLayout> {
+
+    public Column() {
+        // allow drops by default
+        setActive(true);
+    }
+    // all drop target methods have default implementations
+}
+----
+
+== Reacting To Drops
+
+When the user performs a valid drop on the browser, the `DropEvent` is fired.
+You can listen to the event with a `DropListener`. In case the drag originated
+from within the same Vaadin UI, you can get the retrieve the dragged component
+or the assigned business data from the `DropEvent`.
+
+[source, java]
+----
+Div box = new Div();
+box.setWidth("300px");
+box.setHeight("300px");
+
+DropTarget<Div> dropTarget = DropTarget.create(box);
+
+dropTarget.addDropListener(event -> {
+    // move the dragged component to inside the drop target component
+    if (event.getDropEffect() == DropEffect.MOVE) {
+        // the drag source is available only if the dragged component is from
+        // the same UI as the drop target
+        event.getDragSourceComponent().ifPresent(box::add);
+
+        event.getDragData().ifPresent(data -> {
+            // the server side drag data is available if it has been set and the
+            // component was dragged from the same UI as the drop target
+        });
+    }
+});
+----
+
+You can read more about setting the server side drag data from the previous
+chapter about <<drag-source#drag.data,`DragSource`>>. At the moment (in version 14.1)
+there is no way to retrieve any client side drag data from the drop event.
+
+== Controlling the Drop with Drop Effect
+
+The `DropEffect` set to the drop target needs to match the `effectAllowed` set
+for the drag operation in order for the drop to succeed. The drop effect is
+determined in priority order by:
+
+* The desired action `dropEffect` set by the drop target
+* The `effectAllowed` set to the drag source
+* The modifier keys the user had pressed and hold when dropping
+
+This means that not setting a drop effect for a drop target will allow either
+the drag source or the user to determine the drop effect. The possible values
+for the drop effect are: `COPY`, `MOVE`, `LINK` and `NONE`. Setting the drop
+effect to `NONE` means that the drop cannot occur, and thus no `DropEvent` will
+be fired.
+
+[NOTE]
+If the drop effect set to the drop target doesn't match the effectAllowed of the drag source, it
+*does not* prevent drop on Edge and Safari! For FireFox and Chrome the drop is
+prevented when the properties won't match. Edge and Safari allow the drop
+but on `DragEnd` event do not prevent the drop.
+
+== Drop Target Styling
+
+When there is a valid drag over the drop target, the drop target element will
+get the `v-drag-over-target` class name automatically while the dragged object
+stays on top of the drop target. The class name is removed once either the drop
+occurs, is canceled or the object is moved outside the drop target.
+
+[source, css]
+----
+.v-drag-over-target.card {
+    outline: 1px solid lightgreen;
+}
+----
+
+Depending on the desired user experience, it might be good to highlight the possible
+drop targets for a started drag during the `DragStart` event. See and example
+of that in the <<drag-source, `DragSource`>> documentation.
