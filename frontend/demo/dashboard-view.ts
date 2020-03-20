@@ -13,7 +13,8 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 import * as viewEndpoint from '../generated/DashboardEndpoint';
 
 import client from '../generated/connect-client.default';
-client.prefix = '/connect';
+// @ts-ignore
+client.prefix = __VAADIN_CONNECT_PREFIX__;
 
 @customElement('dashboard-view')
 export class DashboardViewElement extends LitElement {
