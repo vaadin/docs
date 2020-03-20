@@ -122,7 +122,7 @@ function migrateDocs() {
 
   // Tools
   fs.mkdirSync(toolsPath);
-  fs.writeFileSync(path.join(toolsPath, 'index.asciidoc'), generateAsciidoc('Tools', 3));
+  fs.writeFileSync(path.join(toolsPath, 'index.asciidoc'), generateAsciidoc('Tools', 3, '= Tools'));
 
 
   // designer goes under tools
@@ -181,7 +181,7 @@ function migrateDocs() {
     path.join(__dirname, '../articles/components/ui-components/charts'),
     { filter }
   );
-  fs.writeFileSync(path.join(__dirname, '../articles/components/ui-components/charts/index.asciidoc'), generateAsciidoc('Charts', 5));
+  fs.writeFileSync(path.join(__dirname, '../articles/components/ui-components/charts/index.asciidoc'), generateAsciidoc('Charts'));
   generateIndexes(sections.charts.subpages, 'components/ui-components/charts');
 }
 
@@ -200,11 +200,10 @@ function generateIndexes(subpages, folder) {
 }
 
 // Helper function for generating a snippet of asciidoc
-function generateAsciidoc(title, order) {
+function generateAsciidoc(title, order, content) {
   return `---
-title: ${title}
-order: ${order}
+title: ${title}${order !== undefined ? `\norder: ${order}` : ''}
 ---
-
+${content !== undefined ? `\n${content}` : ''}
 `;
 }
