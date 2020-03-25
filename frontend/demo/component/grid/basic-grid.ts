@@ -1,5 +1,5 @@
 import { customElement, html, LitElement, property } from 'lit-element';
-import '../../../vaadin-connect-example';
+import '../../../vaadin-connect-example'; // hidden-full-source-line
 import '@vaadin/vaadin-grid/vaadin-grid';
 import people from '../../../data/people.json';
 

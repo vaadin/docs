@@ -5,7 +5,7 @@ import java.util.List;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.DataService;
 
 public class BasicGrid extends Div {
@@ -20,6 +20,6 @@ public class BasicGrid extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<BasicGrid> {
-  }
+  public static class GridEditorExporter extends DemoExporter<BasicGrid> { // hidden-full-source-line
+  } // hidden-full-source-line
 }
