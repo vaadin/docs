@@ -15,7 +15,7 @@ public abstract class DemoExporter<T extends Component> extends WebComponentExpo
       final Class<T> componentClass = (Class<T>) ReflectTools.getGenericInterfaceType(this.getClass(),
           WebComponentExporter.class);
       final String generatedTag = componentClass.getSimpleName().replaceAll("([a-z])([A-Z]+)", "$1-$2").toLowerCase();
-      ReflectTools.setJavaFieldValue(this, WebComponentExporter.class.getDeclaredField("tag"), generatedTag);
+      ReflectTools.setJavaFieldValue(this, WebComponentExporter.class.getDeclaredField("tag"), generatedTag + "-wc");
     } catch (final Exception e) {
       e.printStackTrace();
     }
