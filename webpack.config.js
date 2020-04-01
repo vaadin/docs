@@ -32,7 +32,8 @@ module.exports = merge(flowDefaults, {
           const filtered = original
             .split('\n')
             .filter(row => {
-              if (row.startsWith("import '@vaadin/vaadin")) return false;
+              if (row.startsWith("import '@vaadin")) return false;
+              if (row.startsWith("import '@polymer")) return false;
               if (!row.startsWith('import')) return false;
               return true;
             })
