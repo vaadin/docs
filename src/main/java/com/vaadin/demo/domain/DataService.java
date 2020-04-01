@@ -1,12 +1,12 @@
 package com.vaadin.demo.domain;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.springframework.util.ResourceUtils;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 public class DataService {
 
@@ -14,7 +14,8 @@ public class DataService {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      Person[] array = mapper.readValue(ResourceUtils.getFile("classpath:data/people.json"), Person[].class);
+      Resource peopleResource = new ClassPathResource("data/people.json");
+      Person[] array = mapper.readValue(peopleResource.getInputStream(), Person[].class);
       return Arrays.asList(array);
     } catch (Exception e) {
       e.printStackTrace();
