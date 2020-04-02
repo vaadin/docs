@@ -1,11 +1,12 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement } from 'lit-element';
+import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-accordion/vaadin-accordion';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 
 // tag::snippet[]
+@customElement('accordion-basic')
 export class Example extends LitElement {
   render() {
     return html`
