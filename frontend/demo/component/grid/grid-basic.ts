@@ -6,8 +6,8 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import people from '../../../../src/main/resources/data/people.json';
 
 // tag::snippet[]
-@customElement('basic-grid')
-export class BasicGrid extends LitElement {
+@customElement('grid-basic')
+export class GridBasic extends LitElement {
   @property() items = people;
 
   render() {

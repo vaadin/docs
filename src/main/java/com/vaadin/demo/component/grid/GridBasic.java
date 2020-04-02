@@ -8,9 +8,9 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.DataService;
 
-public class BasicGrid extends Div {
+public class GridBasic extends Div {
 
-  public BasicGrid() {
+  public GridBasic() {
     // tag::snippet[]
     Grid<Person> grid = new Grid<>(Person.class);
     List<Person> people = DataService.getPeople();
@@ -20,6 +20,6 @@ public class BasicGrid extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<BasicGrid> { // hidden-full-source-line
+  public static class GridEditorExporter extends DemoExporter<GridBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }
