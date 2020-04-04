@@ -4,8 +4,10 @@ import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.board.Board;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.dom.Style;
+import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
+@Route("board-basic")
 public class BoardBasic extends Div {
 
   public BoardBasic() {

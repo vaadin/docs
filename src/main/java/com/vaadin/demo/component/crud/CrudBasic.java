@@ -7,12 +7,14 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.router.Route;
 
 import java.util.Arrays;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.Person;
 
+@Route("crud-basic")
 public class CrudBasic extends Div {
 
   public CrudBasic() {

@@ -2,8 +2,10 @@ package com.vaadin.demo.component.combobox;
 
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
+@Route("combo-box-basic")
 public class ComboBoxBasic extends Div {
 
   public ComboBoxBasic() {
