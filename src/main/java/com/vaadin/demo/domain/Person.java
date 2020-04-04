@@ -11,6 +11,8 @@ public class Person {
 
   private String email;
 
+  private Integer id;
+
   public String getFirstName() {
     return firstName;
   }
@@ -33,5 +35,13 @@ public class Person {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public Integer getId() {
+    return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
   }
 }
