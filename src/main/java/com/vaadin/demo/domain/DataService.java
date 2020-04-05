@@ -28,9 +28,23 @@ public class DataService {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      Resource peopleResource = new ClassPathResource("data/states.json");
-      State[] array = mapper.readValue(peopleResource.getInputStream(), State[].class);
+      Resource statesResource = new ClassPathResource("data/states.json");
+      State[] array = mapper.readValue(statesResource.getInputStream(), State[].class);
       return Arrays.asList(array);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return null;
+  }
+
+  public static Templates getTemplates() {
+    ObjectMapper mapper = new ObjectMapper();
+
+    try {
+      Resource templateResource = new ClassPathResource("data/templates.json");
+      Templates templates = mapper.readValue(templateResource.getInputStream(), Templates.class);
+      return templates;
     } catch (Exception e) {
       e.printStackTrace();
     }
