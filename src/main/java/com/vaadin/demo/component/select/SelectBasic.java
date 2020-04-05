@@ -11,8 +11,8 @@ public class SelectBasic extends Div {
   public SelectBasic() {
     // tag::snippet[]
     Select<String> select = new Select<>();
-    select.setItems("London", "New York", "Tokyo");
-    select.setLabel("City");
+    select.setLabel("Membership");
+    select.setItems("Regular", "Premium", "VIP");
 
     add(select);
     // end::snippet[]

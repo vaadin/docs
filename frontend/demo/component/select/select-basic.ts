@@ -13,14 +13,14 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-select
-        label="City"
+        label="Membership"
         .renderer=${(root: HTMLElement) =>
           render(
             html`
               <vaadin-list-box>
-                <vaadin-item>London</vaadin-item>
-                <vaadin-item>New York</vaadin-item>
-                <vaadin-item>Tokyo</vaadin-item>
+                <vaadin-item>Regular</vaadin-item>
+                <vaadin-item>Premium</vaadin-item>
+                <vaadin-item>VIP</vaadin-item>
               </vaadin-list-box>
             `,
             root

@@ -13,6 +13,10 @@ public class Person {
 
   private Integer id;
 
+  private boolean subscriber;
+
+  private String membership;
+
   public String getFirstName() {
     return firstName;
   }
@@ -35,6 +39,22 @@ public class Person {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public boolean isSubscriber() {
+    return subscriber;
+  }
+
+  public void setSubscriber(boolean subscriber) {
+    this.subscriber = subscriber;
+  }
+
+  public String getMembership() {
+    return membership;
+  }
+
+  public void setMembership(String membership) {
+    this.membership = membership;
   }
 
   public Integer getId() {
