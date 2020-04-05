@@ -1,3 +1,5 @@
+import '@vaadin/flow-frontend/dndConnector-es6.js';
+import '@vaadin/flow-frontend/flow-component-renderer.js';
 import client from '../generated/connect-client.default';
 // @ts-ignore
 client.prefix = __VAADIN_CONNECT_PREFIX__;
