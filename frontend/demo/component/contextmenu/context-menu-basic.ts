@@ -7,17 +7,14 @@ import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 // tag::snippet[]
 @customElement('context-menu-basic')
 export class Example extends LitElement {
-  @property() contextMenuitems = [
-    { text: 'Menu Item 1' },
-    { text: 'Menu Item 2' },
-  ];
+  @property() items = [{ text: 'Menu Item 1' }, { text: 'Menu Item 2' }];
 
-  @property() status = '';
+  @property() selectedItem?: { text: string };
 
   render() {
     return html`
       <vaadin-context-menu
-        .items=${this.contextMenuitems}
+        .items=${this.items}
         @item-selected=${this.itemSelected}
       >
         <p>
@@ -26,13 +23,12 @@ export class Example extends LitElement {
         </p>
       </vaadin-context-menu>
 
-      <div>${this.status}</div>
+      <div>Selected: ${this.selectedItem?.text}</div>
     `;
   }
 
   itemSelected(e: CustomEvent) {
-    const item = e.detail.value;
-    this.status = `Selected: ${item.text}`;
+    this.selectedItem = e.detail.value;
   }
 }
 // end::snippet[]

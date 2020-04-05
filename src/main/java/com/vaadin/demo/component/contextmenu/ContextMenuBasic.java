@@ -13,16 +13,17 @@ public class ContextMenuBasic extends Div {
 
   public ContextMenuBasic() {
     // tag::snippet[]
-    Div status = new Div();
+    Text selected = new Text("");
+    Div message = new Div(new Text("Selected: "), selected);
 
     ContextMenu contextMenu = new ContextMenu();
-    contextMenu.addItem("Menu Item 1", e -> status.setText("Selected " + e.getSource().getText()));
-    contextMenu.addItem("Menu Item 2", e -> status.setText("Selected " + e.getSource().getText()));
+    contextMenu.addItem("Menu Item 1", e -> selected.setText(e.getSource().getText()));
+    contextMenu.addItem("Menu Item 2", e -> selected.setText(e.getSource().getText()));
 
     Paragraph target = new Paragraph("Right click (or long touch on mobile) this text to open the context menu.");
     contextMenu.setTarget(target);
 
-    add(contextMenu, target, status);
+    add(contextMenu, target, message);
     // end::snippet[]
   }
 
