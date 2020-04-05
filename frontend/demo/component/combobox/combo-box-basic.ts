@@ -13,7 +13,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-combo-box
-        label="Element"
+        label="State"
         item-label-path="name"
         item-value-path="id"
         .items=${this.items}
