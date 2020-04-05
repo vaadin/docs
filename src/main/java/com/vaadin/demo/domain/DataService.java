@@ -24,4 +24,18 @@ public class DataService {
     return null;
   }
 
+  public static List<State> getStates() {
+    ObjectMapper mapper = new ObjectMapper();
+
+    try {
+      Resource peopleResource = new ClassPathResource("data/states.json");
+      State[] array = mapper.readValue(peopleResource.getInputStream(), State[].class);
+      return Arrays.asList(array);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return null;
+  }
+
 }
