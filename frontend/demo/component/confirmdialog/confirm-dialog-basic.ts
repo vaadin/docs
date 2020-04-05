@@ -12,9 +12,9 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click=${() => (this.dialogOpened = true)}
-        >Open dialog</vaadin-button
-      >
+      <vaadin-button @click=${() => (this.dialogOpened = true)}>
+        Open dialog
+      </vaadin-button>
 
       <vaadin-confirm-dialog
         header="Meeting starting"
