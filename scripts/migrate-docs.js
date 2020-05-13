@@ -1,14 +1,14 @@
-const GITHUB_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+const GITHUB_TOKEN = process.argv[process.argv.length - 1];
 const CACHE_DIR = './.cache';
 
 // Repo name, branch and local directory name
 const repos = [
-  ['vaadin-docs', 'vaadin15'],
+  ['vaadin-docs', 'vaadin17'],
   ['designer-internal', 'master', 'designer'],
   ['vaadin-charts-flow', 'master', 'charts'],
   ['testbench', 'master'],
   ['bakery-app-starter-flow-docs', 'master', 'bakeryflow'],
-  ['flow-and-components-documentation', 'ccdm', 'flow'],
+  ['flow-and-components-documentation', 'master', 'flow'],
   ['multiplatform-runtime-internal', 'master', 'mpr'],
   ['business-app-starter-flow-docs', 'master', 'business-app']
 ];
@@ -39,14 +39,20 @@ repos.forEach(repo => {
   };
 
   console.info(`Cloning ${repoName} (${branch}) into ${localPath}`);
-  const clone = NodeGit.Clone(url, localPath, opts);
-  clone.catch(() => {
-    // Most probably already cloned
-    return NodeGit.Repository.open(localPath);
-  }).then(() => {
-    // console.info(`Finished cloning ${repoName} (${branch})`);
+
+  const clonePromise = new Promise((resolve, reject) => {
+    const clone = NodeGit.Clone(url, localPath, opts);
+    clone.catch((e) => {
+      // Most probably already cloned
+      // return NodeGit.Repository.open(localPath);
+      resolve();
+    }).then(() => {
+      // console.info(`Finished cloning ${repoName} (${branch})`);
+      resolve();
+    });
   });
-  clones.push(clone);
+
+  clones.push(clonePromise);
 });
 
 
@@ -63,17 +69,27 @@ function migrateDocs() {
     json: true
   });
 
-  // Cleanup
-  const guideFolder = 'flow';
-  const guidePath = path.join(__dirname, '../articles', guideFolder);
-  const toolsPath = path.join(__dirname, '../articles/tools');
+  const flowPath = path.join(__dirname, '../articles/flow');
+  const themesPath = path.join(__dirname, '../articles/themes');
+  const designerPath = path.join(__dirname, '../articles/designer');
+  const testbenchPath = path.join(__dirname, '../articles/testbench');
+  const mprPath = path.join(__dirname, '../articles/mpr');
+  const bakeryPath = path.join(__dirname, '../articles/bakeryflow');
+  const basPath = path.join(__dirname, '../articles/business-app');
+  const chartsPath = path.join(__dirname, '../articles/components/ui-components/charts');
 
-  fs.rmdirSync(guidePath, { recursive: true });
-  fs.rmdirSync(toolsPath, { recursive: true });
-  fs.rmdirSync(path.join(__dirname, '../articles/components/ui-components/charts'), { recursive: true });
+  // Cleanup
+  fs.rmdirSync(flowPath, { recursive: true });
+  fs.rmdirSync(themesPath, { recursive: true });
+  fs.rmdirSync(designerPath, { recursive: true });
+  fs.rmdirSync(testbenchPath, { recursive: true });
+  fs.rmdirSync(mprPath, { recursive: true });
+  fs.rmdirSync(bakeryPath, { recursive: true });
+  fs.rmdirSync(basPath, { recursive: true });
+  fs.rmdirSync(chartsPath, { recursive: true });
 
   // Main index file
-  // TODO this should be rewritten more thoroughly because it's missing a lot of styling
+  // TODO the page should be rewritten entirely
   let index = fs.readFileSync(path.join(__dirname, CACHE_DIR, 'vaadin-docs/website/index.html'), 'utf8');
   index = index.replace('---', '---\nroot: true');
   // Remove redirect script
@@ -85,107 +101,161 @@ function migrateDocs() {
 
   // Helper function for all copy operations
   function filter(src, dest) {
-    if ( src.indexOf('/src') > -1
-      || src.indexOf('pom.xml') > -1
-      || src.indexOf('.git') > -1
-    ) {
+    if (src.indexOf('.git') > -1 || src.indexOf('.') === 0) {
       return false;
     }
     return true;
   }
 
-  // Guides
-  // flow-and-components-documentation
-  fs.mkdirSync(guidePath);
+  // Flow/framework
+  fs.mkdirSync(flowPath);
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'flow/documentation'),
-    guidePath,
+    flowPath,
     { filter }
   );
   // Rename Overview.asciidoc -> index.asciidoc
-  const overviewPath = path.join(__dirname, CACHE_DIR, 'flow/documentation/Overview.asciidoc');
+  let overviewPath = path.join(__dirname, CACHE_DIR, 'flow/documentation/Overview.asciidoc');
   index = fs.readFileSync(overviewPath, 'utf8');
   index = index.replace('---\ntitle: Overview', '---\ntitle: Framework');
   fs.writeFileSync(
-    path.join(guidePath, 'index.asciidoc'),
+    path.join(flowPath, 'index.asciidoc'),
     index
   );
-  fs.remove(path.join(guidePath, 'Overview.asciidoc'));
-  generateIndexes(sections.flow.subpages, guideFolder);
-
-  // TODO workflow should be added to the menu
-  fs.remove(path.join(__dirname, `../articles/${guideFolder}/workflow`));
+  fs.remove(path.join(flowPath, 'Overview.asciidoc'));
+  generateIndexes(sections.flow.subpages, 'flow');
 
   // TODO draft content should be in a different branch?
-  fs.remove(path.join(__dirname, `../articles/${guideFolder}/portlet-support`));
+  fs.remove(path.join(flowPath, 'portlet-support'));
 
 
-  // Tools
-  fs.mkdirSync(toolsPath);
-  fs.writeFileSync(path.join(toolsPath, 'index.asciidoc'), generateAsciidoc('Tools', 3, '= Tools'));
+  // Themes and styling
+  fs.mkdirSync(themesPath);
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'flow/documentation-themes'),
+    themesPath,
+    { filter }
+  );
+  // Rename overview.asciidoc -> index.asciidoc
+  overviewPath = path.join(__dirname, CACHE_DIR, 'flow/documentation-themes/themes-and-styling-overview.asciidoc');
+  index = fs.readFileSync(overviewPath, 'utf8');
+  index = index.replace('---\ntitle: Overview\norder: 10', '---\ntitle: Themes and Styling\norder: 3');
+  fs.writeFileSync(
+    path.join(themesPath, 'index.asciidoc'),
+    index
+  );
+  fs.remove(path.join(themesPath, 'themes-and-styling-overview.asciidoc'));
+  generateIndexes(sections.themes.subpages, 'themes');
 
 
-  // designer goes under tools
+  // Designer
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'designer/designer-documentation'),
-    path.join(toolsPath, 'designer'),
+    designerPath,
     { filter }
   );
-  fs.writeFileSync(path.join(toolsPath, 'designer/index.asciidoc'), generateAsciidoc('Designer', 1));
-  generateIndexes(sections.designer.subpages, 'tools/designer');
+  fs.writeFileSync(path.join(designerPath, 'index.asciidoc'), generateAsciidoc('Designer', 4, '= Designer'));
+  generateIndexes(sections.designer.subpages, 'designer');
 
 
-  // testbench goes under tools
+  // TestBench
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'testbench/documentation'),
-    path.join(toolsPath, 'testbench'),
+    testbenchPath,
     { filter }
   );
-  fs.writeFileSync(path.join(toolsPath, 'testbench/index.asciidoc'), generateAsciidoc('TestBench', 2));
+  // Rename overview.asciidoc -> index.asciidoc
+  overviewPath = path.join(__dirname, CACHE_DIR, 'testbench/documentation/testbench-overview.asciidoc');
+  index = fs.readFileSync(overviewPath, 'utf8');
+  index = index.replace('---\ntitle: Overview\norder: 10', '---\ntitle: TestBench\norder: 5');
+  fs.writeFileSync(
+    path.join(testbenchPath, 'index.asciidoc'),
+    index
+  );
+  fs.remove(path.join(testbenchPath, 'testbench-overview.asciidoc'));
   generateIndexes(sections.testbench.subpages, 'tools/testbench');
 
 
-  // mpr goes under tools
-  fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'mpr/mpr-documentation/documentation'),
-    path.join(toolsPath, 'mpr'),
-    { filter }
-  );
-  fs.writeFileSync(path.join(toolsPath, 'mpr/index.asciidoc'), generateAsciidoc('Multiplatform Runtime', 3));
-  generateIndexes(sections.mpr.subpages, 'tools/mpr');
-
-
-  // business-app goes under tools
-  fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'business-app'),
-    path.join(toolsPath, 'business-app'),
-    { filter }
-  );
-  fs.writeFileSync(path.join(toolsPath, 'business-app/index.asciidoc'), generateAsciidoc('Business App Starter', 4));
-  generateIndexes(sections['business-app'].subpages, 'tools/business-app');
-
-
-  // bakeryflow goes under tools
+  // Bakery/full-stack starter
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'bakeryflow'),
-    path.join(toolsPath, 'bakeryflow'),
+    bakeryPath,
     { filter }
   );
-  fs.writeFileSync(path.join(toolsPath, 'bakeryflow/index.asciidoc'), generateAsciidoc('Full Stack App Starter', 4));
-  generateIndexes(sections.bakeryflow.subpages, 'tools/bakeryflow');
+  // Rename overview.asciidoc -> index.asciidoc
+  overviewPath = path.join(__dirname, CACHE_DIR, 'bakeryflow/overview.asciidoc');
+  index = fs.readFileSync(overviewPath, 'utf8');
+  index = index.replace('---\ntitle: Overview\norder: 100', '---\ntitle: Full Stack App Starter\norder: 6');
+  fs.writeFileSync(
+    path.join(bakeryPath, 'index.asciidoc'),
+    index
+  );
+  fs.remove(path.join(bakeryPath, 'overview.asciidoc'));
+  generateIndexes(sections.bakeryflow.subpages, 'bakeryflow');
 
 
-  // charts goes to components
+  // Business app starter
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'business-app'),
+    basPath,
+    { filter }
+  );
+  // Rename overview.asciidoc -> index.asciidoc
+  overviewPath = path.join(__dirname, CACHE_DIR, 'business-app/overview.asciidoc');
+  index = fs.readFileSync(overviewPath, 'utf8');
+  index = index.replace('---\ntitle: Overview\norder: 1', '---\ntitle: Business App Starter\norder: 7');
+  fs.writeFileSync(
+    path.join(basPath, 'index.asciidoc'),
+    index
+  );
+  fs.remove(path.join(basPath, 'overview.asciidoc'));
+  generateIndexes(sections['business-app'].subpages, 'business-app');
+
+
+  // MPR
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'mpr/mpr-documentation/documentation'),
+    mprPath,
+    { filter }
+  );
+  // Rename overview.asciidoc -> index.asciidoc
+  overviewPath = path.join(__dirname, CACHE_DIR, 'mpr/mpr-documentation/documentation/Overview.asciidoc');
+  index = fs.readFileSync(overviewPath, 'utf8');
+  index = index.replace('---\ntitle: Overview\norder: 1', '---\ntitle: Multiplatform Runtime\norder: 8');
+  fs.writeFileSync(
+    path.join(mprPath, 'index.asciidoc'),
+    index
+  );
+  fs.remove(path.join(mprPath, 'Overview.asciidoc'));
+  generateIndexes(sections.mpr.subpages, 'mpr');
+
+
+  // Charts
   fs.copySync(
     path.join(__dirname, CACHE_DIR, 'charts/documentation'),
-    path.join(__dirname, '../articles/components/ui-components/charts'),
+    chartsPath,
     { filter }
   );
-  fs.writeFileSync(path.join(__dirname, '../articles/components/ui-components/charts/index.asciidoc'), generateAsciidoc('Charts'));
+  // Rename overview.asciidoc -> index.asciidoc
+  overviewPath = path.join(__dirname, CACHE_DIR, 'charts/documentation/charts-overview.asciidoc');
+  index = fs.readFileSync(overviewPath, 'utf8');
+  index = index.replace('---\ntitle: Overview\norder: 1', '---\ntitle: Charts');
+  index = index.replace('= Overview', '= Charts');
+  fs.writeFileSync(
+    path.join(chartsPath, 'index.asciidoc'),
+    index
+  );
+  fs.remove(path.join(chartsPath, 'charts-overview.asciidoc'));
   generateIndexes(sections.charts.subpages, 'components/ui-components/charts');
 }
 
-Promise.all(clones).then(migrateDocs).catch(migrateDocs);
+Promise.all(clones)
+  .then(() => {
+    migrateDocs();
+  }).catch(e => {
+    console.log(e);
+    // migrateDocs();
+  });
 
 
 // Helper function for generating index.asciidoc for all sub-folders in a top section
