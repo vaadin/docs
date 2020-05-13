@@ -1,33 +1,28 @@
 ---
-title: Creating a Simple Component Using the Template API
+title: Creating a Simple Component Using the PolymerTemplate API
 order: 2
 layout: page
 ---
 
 ifdef::env-github[:outfilesuffix: .asciidoc]
 
-= Creating a Simple Component Using the Template API
+= Creating a Simple Component Using the PolymerTemplate API
 
-This guide show you how to write a simple Component using only the `PolymerTemplate` API. For other ways of creating a Component, see:
+In this section, we demonstrate how to create a simple component using only the `PolymerTemplate` API.
 
-* <<../creating-components/tutorial-component-basic#,Creating a Simple Component Using the Element API>>
-* <<../creating-components/tutorial-component-many-elements#,Creating a Component Based on Many Elements>>
-* <<../creating-components/tutorial-component-composite#,Creating a Component Using Existing Components>>
-* <<../creating-components/tutorial-component-container#,Creating a Component Which Can Contain Other Components>>
+Our example:
 
-For tutorials about how to use more advanced template features, see:
+* Creates a simple view that allows the user to input their name and click a button for a response.
 
-* <<tutorial-template-components-in-slot#,Using <slot> in PolymerTemplates>>
-* <<tutorial-template-event-handlers#,Handling User Events in a Template>>
+* Uses standard Polymer 3.0 features. See https://www.polymer-project.org/3.0/docs/about_30[Polymer Library 3.0] to learn more.
 
-This tutorial is based on the https://github.com/vaadin/flow-demo/tree/master/demo-hello-worlds[Hello Worlds technical demo].
-The demo shows three ways of creating a simple view: using Components, using pure Element API and the template approach that we'll show here.
 
-The demo is a simple view where we ask the user to input their name and click a button for a response.
 
-== Client side
+== Creating the Template File on the Client Side
 
-First, we need to define a template file with the view structure and imports in `frontend/src/hello-world.js`:
+The first step is to create the Polymer JavaScript template file on the client side in `frontend/src/hello-world.js`. This file contains the view structure.
+
+*Example*: Creating the `hello-world.js` JavaScript Polymer template file.
 
 [source,js]
 ----
@@ -53,25 +48,27 @@ class HelloWorld extends PolymerElement {
 customElements.define(HelloWorld.is, HelloWorld);
 ----
 
-This is a JavaScript module describing a Polymer template. All features used in the example are standard Polymer features. If you're unfamiliar with any of them, please refer to https://www.polymer-project.org/3.0/docs/about_30[Polymer project documentation page].
-For clarity and demonstration purposes, this example uses https://github.com/PolymerElements/paper-input[paper-input] component, but you could use e.g. the Vaadin TextField instead.
+* This is the JavaScript ES6 module that defines a Polymer template.
+* The `is()` function defines the name of the HTML tag that is used to reference this module. The tag name should contain at least one dash (`-`). For example, `hello-world` is a valid tag name, but `helloworld` is not.
+* The template contains two bindings: `\[[greeting]]` is a one-way binding and `{{userInput}}` is a two-way binding.
+* An event handler, `sayHello`, is triggered on a `helloButton` click.
+* No model is specified: it will be propagated automatically from the server side.
+* The imported dependencies are:
+** `PolymerElement` (from the Polymer library): This is the required superclass of all Polymer templates.
+** https://github.com/PolymerElements/paper-input[`paper-input`] Polymer component: You can use any component you like, for example the Vaadin `TextField`.
+** `html` for inline DOM templating.
 
 [NOTE]
-The tag name of the template returned by the function `is()` should contain at least one dash (`-`). For example, `hello-world` is a valid tag name, but `helloworld` is not. The `is()` function defines the name of the HTML tag this module will be used as later.
-
-The template contains both a one-way binding (`\[[greeting]]`) and a two-way binding (`{{userInput}}`). There is also an event handler `sayHello` that is triggered on `helloButton` click. We have not specified the model here, as it will be propagated automatically from the server side.
-
-We've also imported some dependencies:
-
-* The `PolymerElement` from the Polymer library is the required superclass of all Polymer templates.
-* `html` for inline DOM templating.
-* The `paper-input` Polymer component.
+This documentation covers Polymer 3 and npm in Vaadin version 14+ only. Earlier Vaadin versions support Polymer 2, HTML imports, and the Bower package manager. You can still use these components in Vaadin 14, if you work in the special *compatibility mode*. See the https://vaadin.com/docs/v13/flow/polymer-templates/tutorial-template-basic.html[Vaadin 13 documentation] for how to build client-side components with Polymer 2 and HTML imports.
 
 
-== Server side
+== Working on the Server Side
 
-To be able to use this template you need to create a Java class which extends `PolymerTemplate`,
-set its tag name to match the return value of the Polymer template's `is()`-function, and add the `@JsModule` annotation to connect to the template class (`hello-world.js`). You should also declare the dependency of any npm package you are using by adding `@NpmPackage` annotation. In this example we use the paper-input package, so we'll add it's NPM package: `@polymer/paper-input 3.0.2`.
+=== Creating the Java Template Class
+
+To use the client-side JavaScript template on the server side, you need to create an associated Java class that extends the `PolymerTemplate` class.
+
+*Example*: Creating the `HelloWorld` Java template class.
 
 [source,java]
 ----
@@ -101,10 +98,17 @@ public class HelloWorld extends PolymerTemplate<HelloWorldModel> {
     }
 }
 ----
+* The `@Tag` annotation name matches the return value of the `is()` function (static getter) in the JavaScript template. This ensures that the tag name is the same on the server and the client.
+* The `@JsModule` annotation binds the Java class to the `hello-world.js` template class by specifying the relative path to the JavaScript module in the `frontend` folder in the project root. You can import multiple JavaScript resources using the `@JsModule` annotation, if needed.
+* The `@NpmPackage` annotation declares a dependency to the `paper-input` npm package: `@polymer/paper-input 3.0.2`. This annotation can be used to declare a dependency to any npm package.
+* The `@EventHandler` annotation defines the event handler called by the template click hander. Specifically, it defines the `sayHello` method that is called from the client side and triggered by a `helloButton` button click. The method name is used to map function calls between the JavaScript template and the Java class.
 
-Here we have defined a class with the required annotations as well as a an event handler.
+=== Creating a Model Class
 
-We will also need a Model class, like this:
+Our example also needs a model class.
+
+*Example*: Creating the `HelloWorldModel` model class.
+
 [source,java]
 ----
 /**
@@ -128,30 +132,19 @@ public interface HelloWorldModel extends TemplateModel {
 }
 ----
 
-=== Connecting Java to JavaScript
+* The model class describes all properties passed to the `html` template and used on the client side.
+* It is a simple Java interface that:
+** Extends the `TemplateModel` interface.
+** Defines getter and/or setter methods for properties.
+* To use a model, you need to specify it when extending the `PolymerTemplate` class. It is not necessary to create a model object yourself, because Vaadin handles this for you. All you need to do is create the interface.
+* You can access the model instance using the `getModel()` method inside the template Java class.
 
-In order for the component to be processed correctly, we need to bind a Java class with the template file we created earlier. We do this by specifying `@JsModule` with the path to the JavaScript module relative to the `frontend` folder in the project root. In the above example, `./src/hello-world.js` is the file name of the template file shown earlier, relative to `frontend`.
 
-If needed, multiple JavaScript resources can be imported using the `@JsModule` annotation on the Java class.
+== Using the Polymer Template
 
-=== Defining the Tag
+You can now use the `HelloWorld` component in the same way as any other component.
 
-The Tag annotation value should correspond to the value returned by the templates static getter `is`. It makes sure the tag name is the same on the server and the client.
-
-=== Model
-
-A Model describes all properties that are passed to the html template and used on the client side. 
-The model is simple Java interface extending the `TemplateModel` interface and having getter and/or setter methods
-for properties. The Model you want to use needs to be specified when extending the ´PolymerTemplate´ class. You do not need to create a Model object yourself, as Vaadin will handle this for you; you only need to create the interface. The Model instance can be accessed via the `getModel()` method inside the template Java class.
-
-=== Adding Event handlers
-
-The server side class has a method (`sayHello`) annotated with `@EventHandler`. The method is called from the client side, triggered
-by the `helloButton` button. The method name is used to map function calls between the Template and Java files.
-
-== Usage in code
-
-You can now use `HelloWorld` like any other component.
+*Example*: Using the `HelloWorld` component in a Java class.
 
 [source,java]
 ----
@@ -160,3 +153,6 @@ HelloWorld hello = new HelloWorld();
 Div layout = new Div();
 layout.add(hello);
 ----
+
+[NOTE]
+Some browsers, like IE11 and Safari 9, do not support ES modules. To ensure that your component works in these browsers, you can configure this in the `vaadin-maven-plugin` in your `pom.xml`. See  <<../production/tutorial-production-mode-basic#,Taking your Application into Production>> for more.

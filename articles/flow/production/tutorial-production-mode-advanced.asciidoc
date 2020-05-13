@@ -1,32 +1,30 @@
 ---
-title: Advanced production mode topics
-order: 3
+title: Advanced Production Mode Topics
+order: 5
 layout: page
 ---
 
 ifdef::env-github[:outfilesuffix: .asciidoc]
 
-= Advanced production mode topics
+= Advanced Production Mode Topics
 
-== Production mode issues
+== Splitting the Webpack Bundle Into Multiple Chunks
 
-===  After adding the `flow-server-production-mode` dependency the application no longer starts.
-One likely cause of this problem is that the `build-frontend` of the `flow-maven-plugin` was not executed, either because the plugin
-is missing from the `pom.xml` or it is missing configuration. To fix this simply add the `flow-maven-plugin` to your maven `build` block
-(make sure it's visible in your production mode profile), and enable the `build-frontend` goal.
+This is an upcoming feature of a Vaadin Platform 14.x minor release, probably during 2020. You can follow & comment on https://github.com/vaadin/flow/issues/5537 if this is important for you.
 
-== Splitting the Webpack bundle into multiple chunks
 
-This is an upcoming feature for a Vaadin Platform 14.x minor release, probably during 2020. You can follow & comment on https://github.com/vaadin/flow/issues/5537 if this is important for you.
-
-== Plugin goals and goal parameters
+== Plugin Goals and Goal Parameters
 
 Here we describe the maven plugin goals and their usage.
 
 === prepare-frontend
 
-The intention of the goal is to validate whether `node` and `npm` tools are installed. Node.js is needed to run npm for installing
-frontend dependencies and webpack which bundles the frontend files served to client. In case they are missing, an exception is thrown and the build process terminates.
+This goal validates whether the `node` and `npm` tools are installed and not too old (`node` version 10 or later and `npm` version 5.6 or later), and also installs them automatically to the `.vaadin` folder in the user's home directory if they are missing.
+If they are installed globally but too old, there will be an error message suggesting to install newer versions instead.
+Node.js is needed to run npm for installing frontend dependencies and webpack which bundles the frontend files served to client.
+
+[NOTE]
+Automatic installation of Node.js and npm is available since Vaadin 14.2. Older platform versions in the 14 series requires manual installation, either globally or in the project directory using a Maven plugin.
 
 In addition, it visits all resources used by the application and copies them under `node_modules` folder so they are available when `webpack` builds the frontend. It also creates or updates `package.json`, `webpack.config.json` and `webpack.generated.json` files.
 
@@ -48,6 +46,9 @@ In addition, it visits all resources used by the application and copies them und
 
 * *generatedFolder* (default: `${project.build.directory}/frontend/`):
     The folder where Flow will put generated files that will be used by Webpack.
+
+* *require.home.node* (default: `false`):
+   **Available since Vaadin 14.2**. If set to `true`, always prefer Node.js automatically downloaded and installed into the `.vaadin` directory in the user's home.
 
 
 === build-frontend
@@ -74,7 +75,7 @@ and will be used as entry point of the application.
     Whether to generate a bundle from the project frontend sources or not.
 
 * *runNpmInstall* (default: `true`):
-    Whether to run `pnpm install` (or `npm install`, depending on *disablePnpm* parameter value) after updating dependencies.
+    Whether to run `pnpm install` (or `npm install`, depending on *pnpmEnable* parameter value) after updating dependencies.
 
 * *generateEmbeddableWebComponents* (default: `true`):
     Whether to generate embeddable web components from WebComponentExporter inheritors.
@@ -82,8 +83,15 @@ and will be used as entry point of the application.
 * *optimizeBundle* (default: `true`):
     Whether to include only frontend resources used from application entry points (the default) or to include all resources found on the class path.
     Should normally be left to the default, but a value of `false` can be useful for faster production builds or debugging discrepancies between development and production mode.
-    *This feature is available only in Vaadin Platform 14.1 and newer.*
+    *This configuration is available only in Vaadin Platform 14.1 and newer.*
 
-* *disablePnpm* (default: `false`):
-    Whether to use `pnpm` or `npm` tool to handle frontend resources. By default `pnpm`  is used. 
-    *This feature is available only in Vaadin Platform 14.2 and newer.*
+* *pnpmEnable* (default: `false`):
+    Whether to use the _pnpm_ or _npm_ tool to handle frontend resources. By default _npm_ is used.
+    *This configuration is available only in Vaadin 14.2 and newer.*
+
+== Production Mode Troubleshooting
+
+===  After adding the `flow-server-production-mode` dependency, the application no longer starts.
+One likely cause of this problem is that the `build-frontend` of the `flow-maven-plugin` was not executed, either because the plugin is missing from the `pom.xml` or it is missing configuration. 
+To fix this, add the `flow-maven-plugin` to your maven `build` block (make sure it is visible in your production mode profile), and enable the `build-frontend` goal.
+

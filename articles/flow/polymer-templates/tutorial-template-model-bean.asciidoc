@@ -7,13 +7,12 @@ layout: page
 ifdef::env-github[:outfilesuffix: .asciidoc]
 = Using Beans with a PolymerTemplate Model
 
-For an introduction to templates see <<tutorial-template-basic#,Creating A Simple Component Using the Template API>> and template models see <<tutorial-template-bindings#,Binding Model Data in a PolymerTemplate>>.
+Using beans is an easy way to define a model or to reuse existing beans in a model. You can use any bean together with your model, provided it has a public no-argument constructor. See <<tutorial-template-bindings#,Binding Model Data in a PolymerTemplate>> for more.
 
-Using beans in models provides you with an easy way of defining your model or reusing existing beans for the model. You can use any bean together with the model as long as it has a public no-arg constructor.
+A typical use case for using beans in a model is a form that allows the user to edit the content of one or more entities. 
 
-A typical use case would be a form where you want to edit the contents of one or more entities. The template for a form for editing a `Person` bean might for instance look like:
+*Example*: JavaScript Polymer template defining a form to edit the `Person` bean (see below).
 
-.MyForm html template
 [source,js]
 ----
 class MyForm extends PolymerElement {
@@ -46,9 +45,8 @@ class MyForm extends PolymerElement {
 customElements.define(MyForm.is, MyForm);
 ----
 
-If you have a Person bean that looks like:
+*Example*: Java class defining a `Person` bean.
 
-.Person bean
 [source,java]
 ----
 public class Person {
@@ -88,9 +86,8 @@ public class Person {
 }
 ----
 
-You can specify your model to use a Person bean by adding a setter and a getter for it:
+*Example*: Java interface defining a setter and getter for the `Person` bean. 
 
-.FormModel model definition as an interface
 [source,java]
 ----
 public interface FormModel extends TemplateModel {
@@ -99,28 +96,21 @@ public interface FormModel extends TemplateModel {
   Person getPerson();
 }
 ----
+* The `@Exclude` annotation allows you to provide a list of properties you want to exclude. As an alternative, you can use the `@Include` annotation and provide a list of properties that you want import (all other properties are excluded). In this example, `@Include({"firstName","lastName","age"})` is the same as `@Exclude("id")`.
+* The `Person` type can be declared as an interface (you do not need to  declare it as a class): it is not necessary to create its instance and use a setter, uou can simply call `getPerson()` and the model will return an empty proxy object that you can use to set its property directly. 
 
 [TIP]
-You can use the `@Include` annotation and provide a list of properties that you want import
-(all other properties will be excluded) or `@Exclude` for a list you want to exclude. In this specific case the
-`@Include({"firstName","lastName","age"})` would be the same as the shown `@Exclude("id")` annotation.
-
-[TIP]
-You can include and exclude sub bean properties by using the dot-annotation, e.g. `@Exclude("account.password")`.
+You can include and exclude sub-bean properties using the dot annotation, for example, `@Exclude("account.password")`.
 
 [NOTE]
-You don't have to declare the `Person` type as a class. It may be declared as an interface.
-And there is no need to create its instance and use setter. You just may call `getPerson()` and the model
-will return for you an empty proxy object which you can use to set its property directly.
+When setting back-end data directly to the model, you should exclude any bean properties that could lead to circular dependencies. For example, if a `Patient` bean has the `Doctor doctor` property, the `Doctor` bean should not have a property of the type `Patient` (or a generic type for a collection property), as this leads to a circular dependency.
 
-[NOTE]
-When setting backend data directly to the model, you must exclude any bean properties that would lead to circular dependencies.
-For instance, if a `Patient` bean would have a property `Doctor doctor`, the `Doctor` bean must not have a property of type
-`Patient` (or as a generic type for a collection property), as that would lead to a circular dependency.
+== Initializing the Model
 
-In the template you can initialize the model by setting a new person instance to it:
+You can initialize the model by setting a new `person` instance to it in the Java template class.
 
-.Form template class
+*Example*: Polymer Java template class. 
+
 [source,java]
 ----
 public class Form extends PolymerTemplate<FormModel> {
@@ -131,12 +121,15 @@ public class Form extends PolymerTemplate<FormModel> {
 }
 ----
 
-[NOTE]
-If you later on update the `Person person` bean created in the constructor, nothing will happen to the model. The bean values are copied by `setPerson` and the bean is not attached to the model in any way.
+* If you later on update the `Person person` bean created in the constructor, **the model remains unaffected**. The bean values are copied only when the `setPerson` method is called. Thus, the bean is not attached to the model in any way.
 
-To update the values in the model, you can use `getModel().getPerson()` or `getModel().getProxy("person", Person.class)` to get a proxy `Person` object, which is attached to the model. Any changes you do to that proxy object will automatically update the model:
 
-.Form template with an eventHandler for nameChange
+== Updating the Model
+
+To update the values in the model, you can use the `getModel().getPerson()` or `getModel().getProxy("person", Person.class)` methods to get a proxy `Person` object that is attached to the model. Any changes to the proxy object automatically update the model.
+
+*Example*: Using the `@EventHandler` annotation to update the model.
+
 [source,java]
 ----
 public class Form extends PolymerTemplate<FormModel> {
@@ -146,21 +139,20 @@ public class Form extends PolymerTemplate<FormModel> {
     }
 }
 ----
-
-[NOTE]
-Your bean will never be stored as a bean in the model, instead the individual parts of the bean will be stored. No method will ever return the original bean to you.
-
-[NOTE]
-The proxy bean returned by the getter is not meant to be passed on to an `EntityManager` or similar. It is purely meant for updating the values in the model.
+* The individual parts of the bean are stored in the model, not the bean itself. No method that can return the original bean exists. 
+* The proxy bean returned by the getter is not meant to be passed on to an `EntityManager` or similar. Its only purpose is to update the values of the model. 
 
 [WARNING]
-There is at the time of writing no way to get a detached bean from the model.
+There is currently no way to get a detached bean from the model.
 
-When wanting to use model data with an entity manager you need to re-instantiate a new
-entity and set the values using the getters for the item gotten from the model.
+== Using Model Data with an Entity Manager
 
-Note! in the example that we can't send the Person object from the model directly to
-the service as the the object is proxied and only returns data when the getters are used.
+To use model data with an entity manager, you need to re-instantiate a new entity and set the values using the getters for the item received from the model.
+
+[NOTE]
+In the previous example, we cannot send the `Person` object from the model directly to the service, as the object is proxied and only returns data when the getters are used. 
+
+*Example*: Using an entity manager to update the model data.
 
 [source,java]
 ----
@@ -189,4 +181,3 @@ public class OrderForm extends PolymerTemplate<FormModel> {
     }
 }
 ----
-

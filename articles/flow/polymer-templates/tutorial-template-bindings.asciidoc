@@ -10,14 +10,40 @@ subnav:
 ifdef::env-github[:outfilesuffix: .asciidoc]
 = Binding Model Data in a PolymerTemplate
 
-At the core of `PolymerTemplate` is the way model values are bound to different parts of the element tree defined by the template.
-To get started with using templates and learn how to set model values, see <<tutorial-template-basic#,Creating A Simple Component Using the Template API>>.
+The way model values are bound to different parts of the element tree that is defined by the template is at the core of the `PolymerTemplate` API. See <<tutorial-template-basic#,Creating A Simple Component Using the PolymerTemplate API>> for a simple example of how to set model values.
+
+The first three sections below demonstrate how to bind <<binding-text-content,text content>>, <<binding-property-values,property values>>, and <<binding-attribute-values,attribute values>>. The JavaScript template examples in these sections all use the following example Java template and model class
+
+*Example*: `PolymerBindingTemplate` template class.
+
+[source,java]
+----
+@Tag("my-template")
+@JsModule("./com/example/my-template.js")
+public class PolymerBindingTemplate extends PolymerTemplate<BindingModel> {
+
+    public PolymerBindingTemplate() {
+        getModel().setHostProperty("Bound property");
+    }
+}
+----
+*Example*: `BindingModel` model interface.
+
+[source,java]
+----
+public interface BindingModel extends TemplateModel {
+    void setHostProperty(String propertyValue);
+    String getHostProperty();
+}
+----
+
 
 == Binding Text Content
 
-The value of a model property can be used as the text content of an element using `\[[propertyName]]` inside a tag.
+To bind text content in a JavaScript Polymer template, use the `\[[_propertyName_]]` syntax inside a tag. Double square brackets ([[ ]]) indicate a one-way binding.
 
-.Sample HTML Template
+*Example*: Binding text content in a JavaScript Polymer template.
+
 [source,js]
 ----
 class MyTemplate extends PolymerElement {
@@ -30,33 +56,33 @@ class MyTemplate extends PolymerElement {
 customElements.define(MyTemplate.is, MyTemplate);
 ----
 
-For the server-side sample see below: <<server-side-sample,Server-side model sample code>>
-
 == Binding Property Values
 
-You can set an element property value based on a model by using the property name in attribute form (dash-case not camelCase):
+To set an element property value based on a model, use the property name in the attribute format, by using the dash-case format, sometimes referred to as kebab-case, e.g. `my-property-name` (not camelCase `myPropertyName`).
+
+*Example*: Setting an element property based on a model in a JavaScript Polymer template.
 
 [source,js]
 ----
 return html`<my-element my-property="[[hostProperty]]"></my-element>`;
 ----
+* This binds to the target property, `myProperty`, on `<my-element>`.
 
-This example binds to the target property, myProperty on <my-element>.
+Note:
 
-[NOTE]
-`name="\[[binding]]"` defines that the element _property_ named `name` should get it's value
-from the model property named `binding`, whereas `name="binding"` (i.e. without brackets)
-defines that the element _attribute_ named `name` should have the value `binding`
-regardless of any value in the model.
+* `name="\[[binding]]"` defines that the element _property_ named `name` should get it's value from the model property named `binding`.
+* `name="binding"` (without brackets) defines that the element _attribute_ named `name` should have the value `binding`, regardless of any value in the model.
 
-There are a handful of common native element properties that Polymer can't data-bind to directly, because the binding causes issues on one or more browsers and you need to use attribute bindings instead.
-For more information on these properties see: https://www.polymer-project.org/3.0/docs/devguide/data-binding#native-binding[Native properties that don't support property binding]
+Polymer cannot bind certain common native element properties directly, because the binding causes issues on one or more browsers. In these cases, you can use attribute bindings instead. See https://www.polymer-project.org/3.0/docs/devguide/data-binding#native-binding[Native properties that don't support property binding] for more.
+
 
 == Binding Attribute Values
 
-A binding written as `<div something="\[[hostProperty]]"></div>` is bound to the _property_ `something` because the property can typically be changed on the fly while the attribute is often used only for the initial value.
+The binding, `<div something="\[[hostProperty]]"></div>`, is bound to the _property_ `something`, because the property can typically be changed on the fly, while the attribute is typically used only for the initial value.
 
-When you want to explicitly bind to an attribute instead, use the attribute name followed by $:
+To explicitly bind to an attribute, use the attribute name followed by a dollar sign (`$`).
+
+*Example*: Binding to an attribute in an JavaScript Polymer template.
 
 [source,js]
 ----
@@ -70,51 +96,30 @@ or
 return html`<a href$="[[hostProperty]]"></a>`;
 ----
 
-[NOTE]
---
-Text surrounded by double curly bracket {{ }} or double square bracket [[ ]] delimiters identify the host data being bound.
-
-* Double curly brackets support both server-to-client and client-to-server data flow. see <<two-way-binding,Two-way data binding>>.
-
-* Double square brackets are one-way, and support only server-to-client data flow.
---
 
 [[server-side-sample]]
-=== Server-side model sample code
+== Two-way Versus One-way Bindings
 
-Here is the server-side code example for all html templates shown above.
+Text surrounded by double curly bracket {{ }} or double square bracket [[ ]] delimiters identifies the host data that is bound:
 
-.PolymerTemplate class
-[source,java]
-----
-@Tag("my-template")
-@JsModule("./com/example/my-template.js")
-public class PolymerBindingTemplate extends PolymerTemplate<BindingModel> {
+* Double curly brackets ({{ }}) indicate two-way bindings: both server-to-client and client-to-server data flow.
 
-    public PolymerBindingTemplate() {
-        getModel().setHostProperty("Bound property");
-    }
-}
-----
-
-.TemplateModel sample
-[source,java]
-----
-public interface BindingModel extends TemplateModel {
-    void setHostProperty(String propertyValue);
-    String getHostProperty();
-}
-----
+* Double square brackets ([[ ]]) indicate one-way bindings: only server-to-client data flow.
 
 
 [[two-way-binding]]
-== Two-way data binding
+== Creating Two-way Data Bindings
 
-For two-way data binding the data flows in both directions: client-to-server and server-to-client.
+For two-way data binding, data flows in both directions: client-to-server and server-to-client.
 
-To demonstrate the functionality, let's create a TwoWayBindingModel with a couple of different fields like:
+To demonstrate we create:
 
-.Two-way template model
+* A two-way binding model class with a number of fields.
+* A Java template class that sets default values for the model, and adds listeners for `save` and `reset` events.
+* An associated JavaScript Polymer template.
+
+*Example*: `TwoWayBindingModel` with `name`, `accepted` and `size` fields.
+
 [source,java]
 ----
 public interface TwoWayBindingModel extends TemplateModel {
@@ -129,10 +134,8 @@ public interface TwoWayBindingModel extends TemplateModel {
 }
 ----
 
-For the server-side PolymerTemplate we will set some default values to the model values and wire listeners for
-events `save` and `reset` as follows:
+*Example*: `PolymerTwoWayBindingTemplate` Java template class that defines `save` and `reset` event property change listeners, and sets default values for the `name`, `accepted` and `size` fields.
 
-.Two-way binding template
 [source,java]
 ----
 @Tag("two-way-template")
@@ -160,31 +163,28 @@ public class PolymerTwoWayBindingTemplate
 }
 ----
 
-Here we use the `Element::addPropertyChangeListener` method to get immediate
-updates for when the property values change. An alternate way to get notified about changes would be to define an `@EventHandler`
-method on the server side and adding the appropriate event handers in the template.
+* The `Element::addPropertyChangeListener` method gets immediate updates when the property values change. As an alternative, you could define an `@EventHandler` method on the server side and add appropriate event handers in the template.
+* On the client, we use the following methods to bind the model data (see JavaScript template below):
 
-On the client-side we will use different methods to bind the model data:
+** `name` string to an input using:
+*** Native input element.
+*** Polymer element `paper-input`.
 
-.Name string to an input using:
- - Native input element
- - Polymer element `paper-input`
+** `accepted` boolean to a checkbox using:
+*** Native checkbox input.
+*** Polymer element `paper-check-box`.
 
-.Boolean accepted to a checkbox using:
- - Native checkbox input
- - Polymer element `paper-check-box`
-
-.Size string to a select element using:
- - Native select
- - Polymer elements `paper-radio-group` and `paper-radio-button`
+** `size` string to a select element using:
+*** Native select.
+*** Polymer elements `paper-radio-group` and `paper-radio-button`.
 
 
 [NOTE]
 --
-Native elements need to specify a custom change event name in the annotation using the syntax: `target-prop="{{hostProp::target-change-event}}"`. Please see https://www.polymer-project.org/3.0/docs/devguide/data-binding#two-way-native[Two-way binding to a non-Polymer element]
+Native elements need to specify a custom-change event name in the annotation using the `_target-prop_="{{_hostProp_::_target-change-event_}}"` syntax. See https://www.polymer-project.org/3.0/docs/devguide/data-binding#two-way-native[Two-way binding to a non-Polymer element] in the Polymer 3 documentation for more.
 --
 
-.Polymer html template
+*Example*: Polymer JavaScript template.
 [source,js]
 ----
 import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
@@ -262,25 +262,14 @@ class TwoWayBinding extends PolymerElement {
 customElements.define(TwoWayBinding.is, TwoWayBinding);
 ----
 
+* We use two-way bindings for each element.
+* Some elements bind to the same property. For example, when the value for `name` is changed in the `paper-input` element, the new value reflects in both `Input name` and `Change name`.
+* The two input bindings, `Input name` and `Change name`, work in slightly different ways:
+** `Input name` binds using `{{name::input}}` and `Change name` binds using `{{name::change}}`. The  given `target-change-event` lets Polymer know which event to listen to for change notifications.
+** The functional difference is that `::input` updates during typing, and `::change` updates when the value of the field changes, for example an `onBlur` event or Enter key press.
+
 Here's the template representation in the browser:
 
 image:images/two-way-binding-example.png[Template representation]
 
-
-In the template we use two-way bindings for each element and some elements bind to the same property.
-This will show up in a way that for example the value for name is changed in the paper-input element the value will be reflected to both "Input name:" and "Change name".
-
-[NOTE]
---
-The two input bindings "Input name" and "Change name" have a small difference in the way they work.
-
-Input name binds using `{{name::input}}` and Change with `{{name::change}}` the given `target-change-event` lets Polymer know which event
-to listen to for change notification.
-
-The functional difference is that `::input` will update while typed and `::change` when the value for the field changes (so e.g. onBlur event or for enter)
---
-
-[NOTE]
---
-For information on the element `<slot></slot>` see <<tutorial-template-components-in-slot#,Using <slot> in PolymerTemplates>>
---
+For information on the `<slot></slot>` element, see <<tutorial-template-components-in-slot#,Using <slot> in PolymerTemplates>> for more.

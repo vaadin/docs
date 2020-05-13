@@ -6,12 +6,12 @@ layout: page
 
 ifdef::env-github[:outfilesuffix: .asciidoc]
 
-= I18N localization
+= Localization
 
 To use localization and translation strings the application only needs to implement
 `I18NProvider` and define the fully qualified class name in the property `i18n.provider`.
 
-== Defining the i18n provider property
+== Defining the I18n Provider Property
 
 The `i18n.provider` property can be set from the command line as a system property,
 as a Servlet init parameter in the `web.xml` or using the `@WebServlet` annotation.
@@ -65,10 +65,10 @@ Or when using the `web.xml` file:
 You may provide a `I18NProvider` as a bean in case you are using Spring. All you need in this case
 it's just annotate your implementation with `@Component` so it becomes available as a Spring bean.
 Spring add-on will automatically use it in case if it's available. See the class
-https://github.com/vaadin/flow-spring-tutorial/blob/master/src/main/java/org/vaadin/spring/tutorial/SimpleI18NProvider.java[SimpleI18NProvider.java] 
-implemented in the tutorial project as an example. 
+https://github.com/vaadin/flow-spring-tutorial/blob/master/src/main/java/org/vaadin/spring/tutorial/SimpleI18NProvider.java[SimpleI18NProvider.java]
+implemented in the tutorial project as an example.
 
-== Locale selection for new session
+== Locale Selection for New Session
 The initial locale is decided by matching the locales provided by the `I18NProvider`
 against the `Accept-Language` header in the initial response from the client.
 
@@ -77,7 +77,7 @@ will try to match on only language. If neither is found the locale will be set
 to the first 'supported' locale from `I18NProvider.getProvidedLocales()` and if
 that is empty `Locale.getDefault()` will be used.
 
-== Provider sample for translation
+== Provider Sample for Translation
 
 For this example we enable Finnish and English to be used with Finnish being the
 *"default"* that is used if the user client doesn't specify english as an accepted language.
@@ -133,7 +133,7 @@ public class TranslationProvider implements I18NProvider {
 }
 ----
 
-=== Using localization in the application
+=== Using Localization in the Application
 
 Using the internationalization in the application is a combination of using the
 I18NProvider and updating the translations on locale change.
@@ -157,7 +157,7 @@ public class LocaleObserver extends Div implements LocaleChangeObserver {
 }
 ----
 
-==== Using localization without using LocaleChangeObserver
+==== Using Localization without Using LocaleChangeObserver
 
 .I18NProvider without LocaleChangeObserver
 [source,java]
@@ -169,3 +169,146 @@ public class MyLocale extends Div {
     }
 }
 ----
+
+== Supporting Right-to-Left Mode
+
+Vaadin components have support for RTL languages. The components will work
+out-of-the-box on this mode, but to make your application support both LTR and
+RTL modes, a few changes are needed.
+
+On top of the last examples, let's say that your application is now also
+translated into a RTL Language, such as Arabic. Besides <<Provider sample for
+translation, providing the sample for the Arabic translation>>, at your main
+layout you can add a code like such:
+
+[source,java]
+----
+public class MainLayout extends VerticalLayout {
+
+    public MainLayout() {
+        // ...
+        final UI ui = UI.getCurrent();
+        if (ui.getLocale().getLanguage() == "ar") {
+            ui.setDirection(Direction.RIGHT_TO_LEFT);
+        }
+    }
+}
+----
+
+This will work if changing of locale is only based on the `Accept-Language`
+coming from the client, but if user can define their language, for instance,
+at your application's setting page, then you can make your main layout implement
+the `LocaleChangeObserver` interface, so it will receive the changes of locale
+and then you can set the direction based on the locale set:
+
+[source,java]
+----
+public class MainLayout extends VerticalLayout implements LocaleChangeObserver {
+
+    @Override
+    public void localeChange(LocaleChangeEvent event) {
+        if (event.getLocale().getLanguage() == "ar") {
+            event.getUI().setDirection(Direction.RIGHT_TO_LEFT);
+        } else {
+            event.getUI().setDirection(Direction.LEFT_TO_RIGHT);
+        }
+    }
+}
+----
+
+== Frontend Projects
+
+For frontend applications only, to set the RTL mode you can call `document.dir = 'rtl'`.
+
+== Adding RTL Support to Your Custom Elements or Application
+
+If you have your own custom elements or your application has custom styles,
+there are a few steps needed in order to add RTL support to them:
+
+. If your element extends Vaadin's `ElementMixin`, make sure that it depends on
+the version starting from `2.3.0`. If not, you can make the element extends it
+or `DirMixin` only (`DirMixin` is part of the `@vaadin/vaadin-element-mixin`
+package).
+
++
+[source,javascript]
+----
+import { PolymerElement } from '@polymer/polymer/polymer-element.js';
+import { DirMixin } from '@vaadin/vaadin-element-mixin/vaadin-dir-mixin.js';
+
+class MyElement extends DirMixin(PolymerElement) {}
+----
+
++
+The `DirMixin` registers the element to changes on the `dir` attribute at the
+document level and keeps it in sync with the element's `dir` attribute. That's
+helpful to easily check the RTL status in both CSS and JS code.
+
+. Make sure your styles are adjusted properly for the RTL mode.
++
+For example, if you define values for the padding on the `:host`, like:
+
++
+[source,css]
+----
+:host {
+    padding-right: 1em;
+    padding-left: 2em;
+}
+----
++
+You may want to define the proper style for the RTL, like:
++
+[source,css]
+----
+:host([dir="rtl"]) {
+    padding-right: 2em;
+    padding-left: 1em;
+}
+----
++
+You may want to pay attention to declarations such as `padding`, `margin`,
+`text-align`, `float` and `transform` on your styles. In case your custom
+element doesn't have to support old browsers (such as IE11), you can replace
+some properties with *CSS Logical Properties*. The
+https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties[MDN web
+docs] has a full list of CSS Logical Properties and Values available along with
+the browsers support for each property. Flex and Grid containers usually are
+handled well by the browser and don't require extra work. More information can
+be found at this https://rtlstyling.com/posts/rtl-styling/[extensive RTL styling
+guide].
++
+To help adjusting the styles for the RTL mode, you can go to the
+https://rtlcss.com/playground/#[RTL CSS] page. There you can paste your original
+styles and it will generate the code that you can take into usage for your
+element.
+
+. If your element uses icons or unicode symbols to define direction (for
+instance ⬅ for back button) you may need to use the right icons/symbols for RTL.
+
+. If keyboard interaction are used, such as to navigate between items
+with arrow keys, make sure to check if `dir` is `rtl` and use it to define the
+direction of the movement.
++
+[source,javascript]
+----
+// somewhere in your code
+const dirIncrement = this.getAttribute('dir') === 'rtl' ? -1 : 1;
+
+switch (event.key) {
+    // ...
+    case 'ArrowLeft':
+        idx = currentIdx - dirIncrement;
+        break;
+    case 'ArrowRight':
+        idx = currentIdx + dirIncrement;
+        break;
+    // ...
+}
+----
+
+. If your custom element relies on some Javascript calculation for sizing,
+position and/or horizontal scroll, check if it needs some adjustments for RTL.
+
+. If you have visual tests, you may want to add or update the current ones to
+also run in RTL.

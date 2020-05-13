@@ -74,7 +74,11 @@ The event allows you to change the navigation to go to a destination that is dif
 
 This event is typically used to react to special situations, for example if there is no data to show, or if the user does not have appropriate permissions.
 
-This event is delivered to any component instance implementing `BeforeEnterObserver` that is attached to the UI after navigation completes.
+This event is delivered to any component instance implementing `BeforeEnterObserver` that is attached to the UI starting
+from the UI moving through the child components.
+
+[NOTE]
+Components in the chain are instantiated after a parent handles `BeforeEnter` and doesn't <<Rerouting,reroute>> or <<Forward,forward>>
 
 The event is fired:
 
@@ -91,8 +95,9 @@ Rerouting is typically used when there is a need to show completely different in
 
 When the `reroute` method is called:
 
-* The event is not fired by any further listeners or observers.
+* The event is not fired to any further listeners or observers.
 * The method triggers a new navigation phase, based on the new navigation target, and events are fired based on this instead.
+* For <<BeforeEnterEvent,BeforeEnterEvent>>: Child components of the rerouting component are not instantiated.
 
 *Example*: Rerouting when entering a `BlogList` with no results.
 [source,java]
@@ -126,13 +131,20 @@ public class BlogList extends Div
 [NOTE]
 There are several `rerouteTo` overload methods that can be used for different use cases.
 
+[NOTE]
+`rerouteTo` keeps the original URL in the browser's adress bar and doesn't change it to a new URL based on the new target.
+
 === Forward
 
 The `forwardTo` method <<Rerouting,reroutes>> navigation and updates the browser URL.
 
 Forwarding can be used during <<BeforeEnterEvent,BeforeEnter>> and <<BeforeLeaveEvent,BeforeLeave>> lifecycle states to dynamically redirect to a different URL.
 
-Calling `forwardTo` for the event stops propagation of the event to other listeners that have not yet been called. Instead, the method triggers a new navigation phase, based on the new navigation target, and fires new lifecycle events for the new forward navigation target.
+When the `forwardTo` method is called:
+
+* The event is not fired to any further listeners or observers.
+* The method triggers a new navigation phase, based on the new navigation target, and fires new lifecycle events for the new forward navigation target.
+* For <<BeforeEnterEvent,BeforeEnterEvent>>: Child components of the forwarding component are not instantiated.
 
 *Example*: Forwarding when viewing `BlogList` without the required permissions.
 [source,java]
@@ -162,6 +174,10 @@ public class BlogPost extends Div
 ----
 [NOTE]
 `forwardTo` has several overloads that serve different use cases.
+
+[NOTE]
+`forwardTo` changes the URL in the browser's address bar to the URL of the new target.
+The URL of the original target is not kept in the browser history.
 
 == AfterNavigationEvent
 

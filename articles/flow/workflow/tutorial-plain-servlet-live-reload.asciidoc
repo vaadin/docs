@@ -1,0 +1,70 @@
+---
+title: Live Reload in Plain Servlet Applications
+order: 5
+layout: page
+---
+
+= Live Reload in Plain Servlet Applications
+
+During application development the code changes happen frequently. There are multiple tools
+available which speed up the development process and avoid having to manually
+restart the application every time after a change.
+
+Here is a list of some of these tools:
+
+- The https://www.eclipse.org/jetty/documentation/9.4.x/jetty-maven-plugin.html[Jetty Maven plugin]
+with the `scanIntervalSeconds` configuration enabled.
+
+- The commercial https://www.jrebel.com/[JRebel tool] may be used with any Java application including plain servlet applications
+
+- http://hotswapagent.org/[HostSwapAgent] also may be used with any Java applicaiton
+
+HostSwapAgent has issues with existing route target reloading and
+we don't recommend it at the moment for this reason..
+
+== Java modifications that are applied automatically
+
+=== Jetty Maven plugin with `scanInterval`
+
+Jetty Maven Plugin performs complete application restart and as a result any Java code modification
+is applied including changes made to a custom component (`PolymerTemplate` subclasses): add/change/remove.
+
+During those changes the session is not preserved.
+
+[NOTE]
+We recommend you to use Jetty Maven Plugin `9.4.27.v20200227` or a higher version.
+There is a known issue in the previous versions that causes `RouteNotFoundException` when trying to reload Java changes automatically.
+
+=== JRebel
+
+JRebel tool only applies changes in the binaries, as a result:
+- it works faster
+- it doesn't handle properly newly added custom components
+
+JRebel preserves the session.
+
+== Frontend resources modifications
+
+As noted in the previous section it's possible to add a new `PolymerTemplate` class
+to an existing JS template module or add a new JS module (see <<../polymer-templates/tutorial-template-basic#,Creating A Simple Component Using the Template API>>).
+
+=== Jetty Maven plugin with `scanInterval`
+The working scenarios are:
+- add a new CSS import (as a frontend resource and use it in Java via `@CssImport` annotation)
+- add a new frontend JS module file (and use it with a Java class)
+- modify the existing frontend resource (JS module or imported CSS file)
+
+In the latter case webpack dev server cares about changes made in the JS module only.
+
+=== JRebel
+
+JRebel only supports reloading of Java code changes, whereas client resource
+changes are monitored by `webpack-dev-server`. Changes in either are live-reloaded
+independently, meaning that changes to the annotations mapping JS templates or CSS
+files to Java classes require a full server restart to keep the front-end and back-end consistent.
+
+== Changes that requires application restart
+
+All changes described above applied automatically only assuming you don't add
+new dependencies to the project. The modifications which rely anyhow on updated
+classpath dependencies requires the application restart.

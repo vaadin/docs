@@ -34,8 +34,7 @@ List<Person> people = Arrays.asList(
 Grid<Person> grid = new Grid<>();
 grid.setItems(people);
 grid.addColumn(Person::getName).setHeader("Name");
-grid.addColumn(person -> Integer.toString(
-               person.getYearOfBirth()))
+grid.addColumn(Person::getYearOfBirth)
         .setHeader("Year of birth");
 
 layout.add(grid);
@@ -676,9 +675,9 @@ grid.setItems(people);
 
 grid.addColumn(new ComponentRenderer<>(person -> {
     if (person.getGender() == Gender.MALE) {
-        return new Icon(VaadinIcon.MALE);
+        return VaadinIcon.MALE.create();
     } else {
-        return new Icon(VaadinIcon.FEMALE);
+        return VaadinIcon.FEMALE.create();
     }
 })).setHeader("Gender");
 ----
@@ -702,7 +701,7 @@ If the component is the same for every item, you only need to provide the `Suppl
 ----
 grid.addColumn(
     new ComponentRenderer<>(
-            () -> new Icon(VaadinIcon.ARROW_LEFT)));
+             () -> VaadinIcon.ARROW_LEFT.create()));
 ----
 
 You can create complex content for the grid cells by using the component APIs.
@@ -738,6 +737,9 @@ grid.addColumn(new ComponentRenderer<>(person -> {
     return new VerticalLayout(name, buttons);
 })).setHeader("Actions");
 ----
+[NOTE]
+`addComponentColumn` is a shorthand for `addColumn` with a `ComponentRenderer`.
+
 * Editing grid items requires refreshing the grid's `DataProvider`. The reasoning is the same as for <<Handling Events>> above.
 
 See <<../binding-data/tutorial-flow-data-provider#,Data Providers>> for more.
@@ -993,12 +995,12 @@ grid.addColumn(new ComponentRenderer<>(person -> {
 
 The default Lumo theme includes different variations that you can use to style the grid. You can provide one or more variations.
 
-*Example*: Using the `addThemeNames` method to define theme variations for the grid.
+*Example*: Using the `addThemeVariants` method to define theme variations for the grid.
 
 [source, java]
 ----
-grid.addThemeNames("no-border", "no-row-borders",
-        "row-stripes");
+grid.addThemeVariants(GridVariant.LUMO_NO_ROW_BORDERS,
+        GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
 ----
 
 
@@ -1006,7 +1008,7 @@ grid.addThemeNames("no-border", "no-row-borders",
 
 You can use normal CSS styling for the content in the grid cells. While the `Grid` component itself is in the shadow DOM, the actual values (cell contents) are in slots and therefore in the light DOM.
 
-*Example*: Setting the maximum size for images in the grid.
+*Example*: Setting the maximum size for images in the grid cells.
 
 [source, css]
 ----
@@ -1014,11 +1016,11 @@ vaadin-grid vaadin-grid-cell-content img {
     max-height: 4em;
 }
 ----
-* `vaadin-grid-cell-content` is in the light DOM, and the selector `vaadin-grid vaadin-grid-cell-content` points to the grid's cells.
+* `vaadin-grid-cell-content` is in the light DOM, and the selector `vaadin-grid vaadin-grid-cell-content` points to all the grid’s cells.
 
 You can also use a class to apply styles to a specific component instance.
 
-*Example*: Applying rounded borders and centering images in a Grid with "styled" class name.
+*Example*: Applying rounded borders and centering images in a grid with "styled" class name.
 
 [source, css]
 ----
@@ -1029,81 +1031,4 @@ vaadin-grid.styled vaadin-grid-cell-content img {
 }
 ----
 
-=== Styling by Overriding Component Styles
-
-You can use custom styles to style the grid itself. This is achieved by overriding the default grid styling.
-
-*Example*: Overriding component styles with custom styles.
-
-[source, html]
-----
-<dom-module id="custom-grid" theme-for="vaadin-grid">
-  <template>
-    <style>
-      :host(.styled) #table {
-        border-radius: 20px;
-        box-shadow: 0 0 5px rgba(81, 203, 238, 1);
-        border: 1px solid rgba(81, 203, 238, 1);
-      }
-      :host(.styled) #header {
-        border: none;
-        border-bottom: 1px solid rgba(81, 203, 238, 1);
-      }
-      :host(.styled) #header tr {
-        text-align: center;
-        text-shadow: 0 0 3px rgba(81, 203, 238, 1);
-        text-transform: uppercase;
-      }
-    </style>
-  </template>
-</dom-module>
-----
-
-* This sets custom styles for a `vaadin-grid` with a "styled" class. Grid's without this class remain as normal.
-* `theme-for="vaadin-grid"` indicates that it is overriding `vaadin-grid -components` styling.
-* `:host(.styled)` is a selector for `vaadin-grid` that has "styled" as a class. Outside the shadow DOM this is `vaadin-grid.styled`, but because the shadow DOM is boxed in its own DOM, it is selected with `:host([selector])`.
-
-
-=== Styling with CSS Variables
-
-Although the shadow DOM is boxed and usually cannot be altered from the outside, you can use CSS variables to pass information to the shadow DOM. CSS variables pass through all levels of the DOM (light and shadow), and once a variable is set, it is available everywhere in that DOM.
-
-CSS variables only work with components that support them, such as `Grid`.
-
-The following example takes you through the process of styling the grid with text fields of different colors, depending on the user's gender.
-
-. Introduce CSS variable usage for the `TextField` component.
-
-[source, html]
-----
-<dom-module id="custom-text-field"
-        theme-for="vaadin-text-field">
-  <template>
-    <style>
-      .vaadin-text-field-container[part="input-field"] {
-          background-color: var(--custom-text-field-bg,
-                var(--lumo-contrast-10pct));
-      }
-    </style>
-  </template>
-</dom-module>
-----
-
-* This overrides `vaadin-text-field` styles.
-* The only change is the introduction of the `--custom-text-field-bg` variable.
-
-. Change the variable, based on the person's gender.
-
-[source, css]
-----
-.styled .style-female {
-    --custom-text-field-bg: #ff99cc;
-}
-.styled .style-male {
-    --custom-text-field-bg: #99ccff;
-}
-----
-
-* After this change, any text field used with `.styled .style-female/male` will have the specified background color.
-
-* This also applies to composite components that have internal text fields.
+To learn how to customize the styles inside a component’s shadow DOM, see <<../../themes/styling-components#,Styling Components>>.

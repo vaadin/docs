@@ -1,15 +1,19 @@
 ---
-title: Using sub-template from PolymerTemplate
+title: Using sub-template from PolymerTemplate / Using Child Templates in a PolymerTemplate
 order: 10
 layout: page
 ---
 
 ifdef::env-github[:outfilesuffix: .asciidoc]
-= Using sub-template from PolymerTemplate
+= Using Child Templates in a PolymerTemplate
 
-Your template can have references to child templates that are defined in other files, by using their tag name and import. In this case you will need to let the server know to load the child file as well. This is done automatically if you bind the child template in the Java file by using `@Id`, like you would do for any other component.
+A Polymer template can include child Polymer templates that are defined in other files. 
 
-Here is an example of parent HTML template file:
+You can use the tag name and import function to reference the child template. It is also necessary to let the server know how to load the child file. This happens automatically if you bind the child template in the mapped Java template file, using the `@Id` annotation, in the same way as any other Polymer component. 
+
+In this section, we demonstrate how to create a parent Polymer template that includes a child Polymer template.
+
+*Example*: JavaScript Polymer parent template.
 
 [source,js]
 ----
@@ -29,8 +33,10 @@ class ParentTemplate extends PolymerElement {
 
 customElements.define(ParentTemplate.is, ParentTemplate);
 ----
+* The JavaScript template uses a `child-template` element. This is a custom element defined in `child-template.js` (see below).
 
-The Java counterpart defines that `ChildTemplate` should be instantiated for any template element with a matching tag name (i.e. `child-template`).
+
+*Example*: Mapped parent template Java class.  
 
 [source,java]
 ----
@@ -46,27 +52,11 @@ public interface Model extends TemplateModel {
     void setName(String name);
 }
 ----
+* The associated Java template file defines that `ChildTemplate` should be instantiated for any template element with a matching tag name, that is `child-template`.
+* Since the client-side implementation of `child-template` depends on a click handler defined from server-side Java (see below), an instance of `ChildTemplate` must be created on the server to receive the event. The `@Id` annotation mapping ensures that this instance is automatically created and wired to the `<child-template>` element in the parent template.
 
-The HTML template uses a `child-template` element, which is a custom element defined in `ChildTemplate.html`.
-Since the client-side implementation of `child-template` depends on a click handler defined from server-side Java, an instance of `ChildTemplate` must be created on the server to receive the event.
-By using the `@Id` mapping, this instance will automatically be created and hooked up with the `<child-template>` element in the parent template.
 
-Here is the child template Java code:
-
-[source,java]
-----
-@Tag("child-template")
-@JsModule("./com/example/child-template.js")
-public  class ChildTemplate extends PolymerTemplate<TemplateModel> {
-
-    @EventHandler
-    private void handleClick() {
-        System.out.println("Click on Button in the child template");
-    }
-}
-----
-
-And it's HTML template counterpart:
+*Example*: JavaScript Polymer child template.
 
 [source,js]
 ----
@@ -82,9 +72,24 @@ class ChildTemplate extends PolymerElement {
 
 customElements.define(ChildTemplate.is, ChildTemplate);
 ----
+* This template delegates a click handler to the server side.
+* The `handleClick` method is called on the `ChildTemplate` instance (not the `ParentTemplate` instance).
 
-This template delegates a click handler to the server side and the method `handleClick`
-will be called on the `ChildTemplate` instance (not `ParentTemplate` instance).
+
+*Example*: Mapped child template Java class. 
+
+[source,java]
+----
+@Tag("child-template")
+@JsModule("./com/example/child-template.js")
+public  class ChildTemplate extends PolymerTemplate<TemplateModel> {
+
+    @EventHandler
+    private void handleClick() {
+        System.out.println("Click on Button in the child template");
+    }
+}
+----
 
 [NOTE]
-You can detect whether a component is part of a Template by using the `isTemplateMapped` method. See the <<tutorial-component-integration#,Integrating components in a PolymerTemplate>> tutorial for more details.
+You can detect whether a component is part of a `PolymerTemplate` using the `isTemplateMapped` method. See the <<tutorial-component-integration#,Detecting PolymerTemplate Mapping in Components>> for more.

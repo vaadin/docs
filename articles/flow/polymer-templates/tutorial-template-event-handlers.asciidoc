@@ -5,13 +5,15 @@ layout: page
 ---
 
 ifdef::env-github[:outfilesuffix: .asciidoc]
+
 = Handling User Events in a PolymerTemplate
 
-== Client Side Event Handlers
-`PolymerTemplate` defines a special syntax `on-_eventname_="methodName"` for attaching client side event handlers to elements.
-(*Note!* that the methodName should be without any arguments and have no parenthesis)
+== Defining Client-side Event Handlers
 
-To wire an event to a `PolymerElement` method you can write a template as:
+`PolymerTemplate` defines special syntax to attach client-side event handlers to elements. Use the `on-_eventname_="_methodName_"` syntax to define the handler. Note that the method name should not have any arguments or parenthesis.
+
+*Example*: Defining an event handler in the `EventhandlerDemo` JavaScript Polymer template. 
+
 [source,js]
 ----
 class EventhandlerDemo extends PolymerElement {
@@ -29,13 +31,17 @@ class EventhandlerDemo extends PolymerElement {
 customElements.define(XCustom.is, XCustom);
 ----
 
-Clicking on the `<button>` will now show an alert in the browser.
-You can listen to any event using the `on-_eventname_` syntax, it does not matter if it is a built-in browser event or a custom event from e.g. a web component. The available events are typically listed in the components API description.
+* This defines a `<button>` click that displays an alert in the browser.
 
-== Server-Side Event Handlers
-To handle a DOM event in a template on the server side you can create a method with the event name and annotate it with `@EventHandler`.
+You can use the `on-_eventname_` syntax to listen to both built-in browser events and custom events, for example from a Web Component. You can typically find the available events in the component documentation.
 
-So to listen to the `handleClick` event on the server you could have the template as:
+
+== Handling Events on the Server side
+
+You can use the `@EventHandler` annotation to handle DOM events defined in a Polymer template.
+
+*Example*: Defining the `handleClick` method in a JavaScript Polymer template. 
+
 [source,js]
 ----
 class EventHandler extends PolymerElement {
@@ -47,7 +53,8 @@ class EventHandler extends PolymerElement {
 customElements.define(EventHandler.is, EventHandler);
 ----
 
-And define the server class as:
+*Example*: Using the `@EventHandler` annotation to reference the `handleClick` method.
+
 [source,java]
 ----
 @Tag("event-handler")
@@ -60,15 +67,18 @@ public class EventHandlerPolymerTemplate extends PolymerTemplate<TemplateModel> 
     }
 }
 ----
+* When you add the `@EventHandler` annotation on the `handleClick()` method, Vaadin automatically connects the handler to the client-side event .
 
-The framework will wire up the client-side event when you've added the `@EventHandler` annotation on the method `handleClick()`.
+
 [NOTE]
-If you add both client and server side event listeners, the client side handlers will be called before the server side handlers.
+If you add both client and server-side event listeners, the client-side handlers are called before the server-side handlers.
 
-=== Adding Event Data to server-side event
 
-An event can also include additional information about what has happened, e.g. which mouse button was used for a click event.
-When you use the `@EventHandler` annotation, each method parameter should have an `@EventData` annotation that tells the framework what data to send from the browser. You can send any serializeable value present in the client side event object; the available data depends on the type of event.
+=== Adding Event Data to Server-side Events
+
+An event can include additional information about what occurred, for example the mouse button used for a click event. When you use the `@EventHandler` annotation, you can define an `@EventData` annotation for each method parameter. This annotation tells Vaadin which data to send from the browser. Any serializeable value present in the client-side event object can be sent. The available data depends on the specific event type.
+
+*Example*: Defining the `handleClick` method in a JavaScript Polymer template. 
 
 [source,js]
 ----
@@ -78,7 +88,8 @@ static get template() {
 }
 ----
 
-To get some extra data on event type and element tag name the server class definition could be built like:
+*Example*: Using the `@EventData` annotation to get get additional data in the Java template class. 
+
 [source,java]
 ----
 @Tag("event-handler")
@@ -96,16 +107,17 @@ public class EventDataHandlerPolymerTemplate extends PolymerTemplate<TemplateMod
     }
 }
 ----
-
-The client then parses the event data and sends the extra information back to the server for `event.type`, `event.srcElement.tagName` and the `event.offset[X/Y]`.
+* The client parses the event data and sends the additional information back to the server for `event.type`, `event.srcElement.tagName` and `event.offset[X/Y]`.
 
 [NOTE]
-The server will throw an exception if the `EventData` can not be converted to given format.
-for instance you could get the exception `java.lang.ClassCastException: Cannot cast elemental.json.impl.JreJsonNumber to elemental.json.JsonObject`
-Also the client might throw exceptions if the value given for `EventData` can not be executed or converted to Json.
+If the `EventData` cannot be converted to the given format, the server could throw an exception, for example `java.lang.ClassCastException: Cannot cast elemental.json.impl.JreJsonNumber to elemental.json.JsonObject`. The client could also throw exceptions if the value given for `EventData` cannot be executed or converted to JSON.
 
-There is a shorthand for getting a Model specific item as an object in your event handler. To be able to use it you
-should define your model (see <<tutorial-template-model-bean#,Using Beans with a PolymerTemplate Model>>) in the template class.
+
+=== Using the Template Repeater to Get Model-specific Event Data
+
+You can use the https://polymer-library.polymer-project.org/3.0/docs/devguide/templates#dom-repeat>[`<dom-repeat>` helper element] to get model-specific items as objects in your event handler, provided you use beans to define your template model class. See <<tutorial-template-model-bean#,Using Beans with a PolymerTemplate Model>>) for more.
+
+*Example*: Creating the `ModelItemHandlerPolymerTemplate` template and model class.
 
 [source,java]
 ----
@@ -143,10 +155,9 @@ public class ModelItemHandlerPolymerTemplate
     }
 }
 ----
+* You can now handle click events on the server with the `Message` parameter type.
 
-Now you can use the template repeater (dom-repeat) (see <<tutorial-template-list-bindings#,Using List of Items in a PolymerTemplate with template repeater>>) and
-handle click events on the server side with `Message` as the parameter type.
-
+*Example*: Using the `<dom-repeat>` (template repeater) in a JavaScript Polymer template. 
 
 [source,js]
 ----
@@ -161,22 +172,19 @@ class ModelItemHandler extends PolymerElement {
 }
 customElements.define(ModelItemHandler.is, ModelItemHandler);
 ----
-
-The method `handleClick` will be called in the server side with the data identified by `event.model.item` once the item is clicked.
+* When the item is clicked, the `handleClick` method is called on the server side and the data is identified by `event.model.item`.
 
 [NOTE]
-You can use the annotation `@ModelItem` with any value provided as a data path.
-By default the data path is `event.model.item`. But your data type should be declared somehow via the model definition (it should be referenced from the model).
+You can use the `@ModelItem` annotation with any value provided as a data path.
+By default, the data path is `event.model.item`, but you should declare your data type in some manmer via the model definition, so that it can be referenced from the model.
 
-=== Modifying Model Items before events
+=== Modifying Model Items Before Events
 
-Please note that `@ModelItem` is just a convenience way of model data access. The argument which you
-receive in your event handler callback is the *model data* from the server side which you may access directly via your model instance.
-It means that the server doesn't update the model item anyhow from the client. So if you create a custom event on the client side
-with data that you want to send to the server as a model item it will be completely ignored by the server-side and the current model
-data will be used instead. You always should keep your model in sync on the server and client-sides, by correctly updating it.
+The `@ModelItem` annotation is only a convenience way of accessing model data. The argument you receive in your event handler callback is the *model data* from the server side that you can access directly via your model instance. This means that the server does not update the model item on the client in any way. Therefore, if you create a custom event on the client side with data that you want to send to the server as a model item, it is ignored completely on the server side and the current model data is used instead. You should always keep your model in sync on the server and client, by updating it correctly.
 
-So if you have the following model definition and the event handler method:
+To clearly demonstrate the point, the following example demonstrates the incorrect way to update the model.
+
+*Example*: `UserInfo` model and event handler definition.
 
 [source,java]
 ----
@@ -202,7 +210,7 @@ So if you have the following model definition and the event handler method:
     }
 ----
 
-Then the client side code below won't update the name of the `UserInfo` bean instance.
+*Example*: JavaScript Polymer template that DOES NOT update the name of the `UserInfo` bean instance.
 
 [source,js]
 ----
@@ -225,33 +233,26 @@ class ContactHandler extends PolymerElement {
 }
 customElements.define(ContactHandler.is, ContactHandler);
 ----
+* This example results in the server-side model and the client being out of sync because client-side model is not updated correctly.
+* To correctly update sub properties in Polymer, replace `this.userInfo.name = this.$.name.value` with `this.set("userInfo.name", this.$.name.value)`. 
+* However, in this case the server-side model is updated automatically for you and there is no need to send this custom event at all. You can simply notify the server in some manner about the click event, for example via
+`this.$server` and a `@ClientCallable` method. See <<tutorial-template-basic#,Creating a Simple Component Using the PolymerTemplate API>>) for how to get the model value directly from the server-side model.
 
-In this example the server-side model becomes desynchronized with the client side because client side model is updated incorrectly.
-The line `this.userInfo.name = this.$.name.value` should be replaced to `this.set("userInfo.name", this.$.name.value)`. That's
-the correct way to update sub-properties in Polymer. But in this case the server-side model will be updated automatically for
-you and there is no need to send this custom event at all. You may just notify somehow the server about the click event (e.g. via
-`this.$server` and a `@ClientCallable` method, see <<tutorial-template-basic#,Creating A Simple Component Using the Template API>>) and get the model value directly from the server-side model.
 
-=== Other ways of calling the server
+=== Additional Ways to Call the Server
 
-Another way to call a server side method is the `@ClientCallable` annotation which allows a Java method to be called from the client side code using the notation `this.$server.serverMethodName(args)`.
-It can be used anywhere in your client-side Polymer class implementation.
-You can pass your own arguments to this method, as long as their types match the method declaration on the server side.
-For more info, please see <<../element-api/client-server-rpc#clientcallable-annotation,@ClientCallable annotation>>.  
+There are two additional ways to call the server:
 
-You can also define `PropertyChangeListeners` when working with templates.
-For more info, please see <<../components/tutorial-enabled-state#enabling-property-changes,Enabling Property Changes>>.
+* Use the `@ClientCallable` annotation: This annotation allows a Java method to be called from client-side code, using the `this.$server._serverMethodName(args)_` notation. You can use this anywhere in your client-side Polymer class implementation. You can pass your own arguments to the method, as long as the types match the server-side method declaration. See <<../element-api/client-server-rpc#clientcallable-annotation,@ClientCallable Annotation>> for more.  
 
-=== Receiving "after server update" event
+* You can also define `PropertyChangeListeners` when working with templates. See  <<../components/tutorial-enabled-state#enabling-property-changes,Enabling Property Changes>> for more.
 
-In some cases you may want to execute some client-side logic after the component
-is updated from the server during a roundtrip.
-E.g. the component constructor is called on the client side but
-this component doesn't yet have data from the server side. So it's too early
-to do anything with the component at this stage.
-In this case you can use the method `afterServerUpdate`. If this method is defined
-for the component it will be called each time after the component is updated
-from the server side, allowing you to configure the component with all data available.
+
+=== Receiving Events After Server Update
+
+In some cases, you may want to execute client-side logic after a component is updated from the server (during a round trip). For example, the component constructor is called on the client side, but it is too early to do anything with the component at this stage, because the component does not yet have data from the server side. In these circumstances, you can use the `afterServerUpdate` method. When this method is defined for the component, it is called each time the component is updated from the server side, allowing you to configure the component with all available data.
+
+*Example*: Using the `afterServerUpdate` method in a JavaScript Polymer template. 
 
 [source,js]
 ----
@@ -277,4 +278,3 @@ class MyComponent extends PolymerElement {
 
 customElements.define(MyComponent.is, MyComponent);
 ----
-

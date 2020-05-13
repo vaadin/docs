@@ -6,21 +6,30 @@ layout: page
 
 = Integrating a Web Component
 
-Web Components are a collection of web standards allowing you to create new HTML tags with custom name, reusability and full encapsulation on styles & markup. To understand more about what Web Components are, visit <<introduction-to-webcomponents#,Introduction to Web Components>>.
+Web Components are a collection of web standards that allow you to create new HTML tags with custom names. Web Components can be reused and provide full encapsulation of styles and markup. See <<introduction-to-webcomponents#,Introduction to Web Components>> for more.
 
-To be able to use a web component from Flow you need two things: to load the HTML/JS/CSS files needed by the component and a Java API used to configure the component and to listen to events from it.
+To be able to use a Web Component in Vaadin you need:
 
-The client-side files for a web component, typically JS module files, are available using https://www.npmjs.com/[npm]. Flow 2.0 and above comes with npm support. It will automatically install and use npm packages and serve the static files to the browser.
+* To load the HTML/JS/CSS files needed by the component (see instructions below). 
+* A Java API to configure the component and listen to events from it. See <<creating-java-api-for-a-web-component#,Creating a Java API for a Web Component>> for more. 
 
-Since Vaadin Platform 14.2 `pnpm` tool is used for package management instead of `npm`. This is done transparently for the end
-user and in case there is a reason to use `npm` instead of `pnpm` you may disable `pnpm` (see <<../advanced/tutorial-all-vaadin-properties#,All Vaadin properties>>  or <<../production/tutorial-production-mode-advanced#,Advanced production mode topics>> sections). `pnpm` tool improves the package management in many ways, e.g. it allows to share the same packages between various 
-projects and avoid downloading them every time for every project which also reduce a number of IO operations.  
+The Web Component's client-side files (typically JavaScript module files) are available using https://www.npmjs.com/[npm]. Vaadin 14 and above (Flow 2.0 +) supports npm and automatically installs and uses npm packages, and serves the static files to the browser.
 
-== Step 1. Integrating a JS module with Vaadin
+Since Vaadin 14.2 the _pnpm_ tool is used for package management instead of _npm_. This is done transparently. In case there is a reason to use npm instead of pnpm, you may disable pnpm
+(see <<../advanced/tutorial-all-vaadin-properties#,All Vaadin properties>>  or <<../production/tutorial-production-mode-advanced#,Advanced production mode topics>> sections).
+pnpm improves the package management in many ways, e.g. it allows to share the same packages between various
+projects and avoid downloading them every time for every project which also reduces the number of IO operations.
 
-While you can start from scratch and do all the things manually, it's easiest to start with the component project available at https://vaadin.com/start/lts/component. This will give you a project with Flow dependencies, npm import for the selected component and a stub Java class for your web component integration. It also contains a Maven profile which will handle all things needed to deploy it to Vaadin Directory.
+== Integrating a JS Module into Vaadin
 
-As an example, if you create a starter project for https://github.com/PolymerElements/paper-slider, following annotations are attached to the server-side component:
+While you can start from scratch and do it all manually, the easiest way is to use the https://vaadin.com/start/lts/component[Vaadin Add-on Starter]. This gives you:
+
+* A project with all the necessary dependencies. 
+* An npm import for the selected component. 
+* A stub component Java class for your Web Component integration. 
+* A Maven profile that handles everything necessary to deploy the component to Vaadin Directory.
+
+*Example*: Annotations in the Java component class for a starter project for the https://github.com/PolymerElements/paper-slider[paper-slider] Web Component.
 
 [source, java]
 ----
@@ -29,19 +38,26 @@ As an example, if you create a starter project for https://github.com/PolymerEle
             version = "3.0.1")
 @JsModule("@polymer/paper-slider/paper-slider.js")
 ----
+* The `@Tag` annotation defines the name of the HTML element. 
+* The `@JSModule` and `@NpmPackage` annotations define the import of the JavaScript module. 
 
-The name of the HTML element is defined using `@Tag("paper-slider")` and the JS import for the component is defined using `@JsModule("@polymer/paper-slider/paper-slider.js")` and `@NpmPackage(value = "@polymer/paper-slider", version = "3.0.1")`.
 
-If your component requires in-project front-end files, for example JavaScript modules, add them to the `src/main/resources/META-INF/frontend` directory so that they are packaged in the component jar if you choose to make an add-on of your component. A local JavaScript module should be loaded with a `@JsModule` annotation as follows:
 
+== Adding Front-end Files
+
+If your component requires in-project front-end files, for example additional JavaScript modules, add them to the `src/main/resources/META-INF/frontend` directory so that they are packaged in the component JAR if you choose to make an add-on of your component. 
+
+*Example*: Using the `@JsModule` annotation to add a local JavaScript module.
 [source, java]
 ----
 @JsModule("./my-local-module.js")
 ----
 
-The `vaadin-maven-plugin` will automatically install the npm package in `node_modules` and import the JS module file into the document provided to the browser when running  `mvn clean install`. Moreover, if the Jetty webserver is run from Maven (using `mvn jetty:run`), your project's source code is monitored for changes to these types of annotations. So any change to `@NpmPackage` or `@JsModule` annotations will trigger installation of the referenced packages and hot deployment of your app including the new JS module imports.
+When running  `mvn clean install`, the `vaadin-maven-plugin` automatically installs the npm package in `node_modules` and imports the JavaScript module file into the document provided to the browser. In addition, if  you run the Jetty web server from Maven (using `mvn jetty:run`), your project's source code is monitored for changes to these types of annotations: any change to `@NpmPackage` or `@JsModule` annotations triggers installation of the referenced packages and hot deployment of your app, including the new JS module imports.
 
-The main test/demo Java class `src/test/java/…/DemoView.java`
+=== Understanding the Project Files
+
+The project includes the `DemoView` component class at `src/test/java/…/DemoView.java`.
 
 [source, java]
 ----
@@ -49,46 +65,45 @@ The main test/demo Java class `src/test/java/…/DemoView.java`
 public class DemoView extends VerticalLayout {
 ----
 
-The project is set up in a slightly unconventional way so it can be a single-module Maven project. The test folder is used for a test/demo application in addition to actual test files. When you run
 
-[source, sh]
-----
-mvn jetty:run
-----
+The project set up is slightly unconventional in order to allow it to be a single-module Maven project: it uses the `test` folder for both the demo application and for the actual test files. When you run `mvn jetty:run` in the project, it deploys `DemoView` and displays it at http://localhost:8080.
 
-in the project, it will deploy `DemoView` and show it at http://localhost:8080
 
-Now you are set to create the Java API, for more details see <<creating-java-api-for-a-web-component#,Creating Java API for a Web Component>>
+Your project is now set up and you can  go ahead and create the Java API. See <<creating-java-api-for-a-web-component#,Creating a Java API for a Web Component>> for how to do this.
 
 [NOTE]
-Some web components will not show any UI when they are just added as empty tags to the page. If the demo view is empty, inspect first the browser browser console to verify that all files were found (no 404s) and then check if the component is correctly configured.
+Some Web Components do not show a UI when they are added to the page as empty tags. If the demo view is empty, use the browser console to verify that all files were found (no 404 errors) and then check if the component is correctly  configured. See <<debugging-a-web-component-integration#,Debugging a Web Component Integration>> for more. 
 
 [NOTE]
-While the project setup is easy to use for development/testing, it does not allow you to easily produce a demo war file for deployment. It's usually better to create a separate project (or convert the project into a multi-module project) for this as the "demo" files included in the addon itself tend to be test UIs whereas a demo should be aimed at the end user.
-
-[NOTE]
-If you want to make your component OSGi compatible refer to the
-<<../advanced/tutorial-making-components-osgi-compatible#,Making a component
-add-on OSGi-compatible>> document.
+While the project setup is easy to use for development and testing, it does not allow you to easily produce a demo WAR file for deployment. It is usually better to create a separate project (or convert the project into a multi-module project) for this purpose. The demo files included in the starter, are intended as test UIs, whereas your result should be aimed at the end user.
 
 [IMPORTANT]
-If the project you are using is configured as a multi-module
-project (the base project is an older version or you have done manual
-conversion), the source monitoring will not work and changes to the component
-are not automatically reflected to your demo application!
+If your project is configured as a multi-module project, for example because the base project is an older version or you have manually converted it, source monitoring does not work and changes to the component are not automatically reflected to your demo application.
 
-== Step 3. Deploying the Add-on to Vaadin Directory
+== Deploying the Add-on to the Vaadin Directory
 
-When you are satisfied with the API, you can make the add-on available to the world by deploying it into Vaadin Directory. You can create the Directory compatible add-on package using
+When you are satisfied with the API, you can make the add-on available to everyone by deploying it to the https://vaadin.com/directory[Vaadin Directory]. 
+
+To create a directory-compatible add-on package use:
 
 [source, sh]
 ----
 mvn clean install -Pdirectory
 ----
+* This creates a ZIP file in the `target` directory.
 
-This creates a zip file in the `target` directory.
+To add your add-on to the Vaadin Directory:
 
-Go to https://vaadin.com/directory, log in or register, and upload this zip file. Be sure to write an overview for your add-on to let others know what you can do with it, what browsers it supports etc. Then publish it and others can take your add-on into use by copying the dependency information from the add-on page in the directory.
+. Go to https://vaadin.com/directory.
+. Login or register.
+. Upload the ZIP file. 
+. Write an overview for your add-on to let others know:
+** What it can do.
+** Which browsers are supported
+** Any other relevant information. 
+. Publish your add-on. 
+
+Users can use your add-on by copying the dependency information from the add-on page in the directory.
 
 [NOTE]
-The metadata used by Vaadin Directory is defined in `assembly/MANIFEST.MF`, based on the project's metadata. If you do changes to the project such as removing `<name></name>`, make sure you update the metadata.
+The metadata used by the Vaadin Directory is defined in `assembly/MANIFEST.MF`, based on the project's metadata. If you make changes to the project, for example by removing `<name></name>`, make sure to update the metadata as well.

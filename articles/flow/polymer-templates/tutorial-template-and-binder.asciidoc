@@ -1,17 +1,22 @@
 ---
-title: How to combine templates with binders
+title: Combining PolymerTemplates and Binders
 order: 9
 layout: page
 ---
 
 ifdef::env-github[:outfilesuffix: .asciidoc]
-= How to combine templates with binders
+= Combining PolymerTemplates and Binders
 
-Since the `Binder`is a server-side construct, you can not use it inside templates. But it is still possible to create forms using the Template API and connecting the components to a Binder. This process is almost the same as using binders with declared components. In the following tutorial will take you through each step to create a fully-functioning template-binder view.
+`Binder` is a server-side construct and you can therefore not use it in a Polymer template. It is, however, possible to create a form using the `PolymerTemplate` API and to connect the component to a `Binder`. The process is similar to using binders with declared components. 
 
-The first step is to declare an HTML template as a JavaScript module.
+In this section, we demonstrate how to create a fully-functional template-binder view.
 
-.user-form Polymer Template
+== Creating the Polymer Template Component
+
+The first step is to create the JavaScript Polymer template and its mapped Java class.
+
+*Example*: Creating the `user-form` JavaScript Polymer template.
+
 [source,js]
 ----
 import {PolymerElement, html} from '@polymer/polymer/polymer-element.js';
@@ -43,9 +48,8 @@ class UserForm extends PolymerElement {
 customElements.define(UserForm.is, UserForm);
 ----
 
-And the server side template as:
+*Example*: Creating the mapped `UserForm` Java template class. 
 
-.UserForm.class
 [source,java]
 ----
 @Tag("user-form")
@@ -68,16 +72,21 @@ public class UserForm extends PolymerTemplate < UserForm.FormComponentModel > {
   private FormButtonsBar actionButtons;
 ----
 
-Once the mapping between Java and the Polymer template is done, the process of binding can start.
+== Creating and Linking the Binder
 
-The first step is to declare a binder as a class variable in the UserForm.class:
+Next, we create and link the binder.
 
+We start by declaring the binder as a class variable in the `UserForm` class.
+
+*Example*: Declaring the binder in the `UserForm` class.
 [source,java]
 ----
 private Binder<User> binder;
 ----
 
-After that, we can create `initBinder` method that initializes the binder and links it with the form’s fields:
+Next, we create the `initBinder` method that initializes the binder and links it to the fields in the form. 
+
+*Example*: Creating the `initBinder` method and linking it to the form fields.
 
 [source,java]
 ----
@@ -103,11 +112,11 @@ private void initBinder() {
 }
 ----
 
-[NOTE]
-For more information about binding fields to forms, please refer to
-<<../binding-data/tutorial-flow-components-binder#,Binding Data to Forms>>.
+See <<../binding-data/tutorial-flow-components-binder#,Binding Data to Forms>> for more. 
 
-We can call initBinder inside the constructor of the class:
+We can now call the `initBinder` method inside the constructor of the class.
+
+*Example*: Calling `initBinder` in the `UserForm` class.
 
 [source,java]
 ----
@@ -116,10 +125,12 @@ public UserForm() {
 }
 ----
 
-Once the binding process is working we can declare methods in the *UserForm.java*
-that allows to set and get a user object in the form:
+== Declaring Methods to Get and Set User Objects
 
-.UserForm.class
+Now that the binding process is complete, we can declare methods to get and set user objects in the form. 
+
+*Example*: Declaring methods to set, remove and get `User` beans in the `UserForm` class.
+
 [source,java]
 ----
 /**
@@ -147,21 +158,31 @@ public Optional<User> getBean() {
     return Optional.of(binder.getBean());
 }
 ----
+* An unbuffered binding is used.
 
 [NOTE]
-Notice that a unbuffered binding is used.
-An unbuffered binder keeps a reference to the bean, and every time the user changes any value,
-that value is immediately validated and written to the bean object. On the other hand,
-if the buffered mode is chosen, the changes are not written to the bean until it is explicitly said. See differences between
-<<../binding-data/tutorial-flow-components-binder-load#, buffered and unbuffered binding>>.
+--
+* *Unbuffered* binding: The binder keep a reference to the bean: every time the user changes a value, it is immediately validated and written to the bean object. 
+* *Buffered* binding: Changes are not written to the bean until this is explicitly specified.
+--
+See <<../binding-data/tutorial-flow-components-binder-load#,Loading From and Saving To Business Objects>> for more. 
 
-Now the UserForm component is ready to be used in other parts of our code.
 
-== Main view
+== Using the UserForm Component
 
-The MainView is a template that contains a grid of users and the user-form component of previous steps:
+The `UserForm` component is now ready for use in other parts of your code.
 
-.main-view HTML Template
+
+=== Creating the Main View
+
+First, we create the `MainView` Polymer template component. This component displays a grid of users and our new `UserForm` component. For the grid, we use the Vaadin <<../components/tutorial-flow-grid#,`Grid` component>>
+
+Here is the result.
+
+image:images/template-and-binder-first-result.png[MainView]
+
+*Example*: Creating the `main-view` JavaScript Polymer template.
+
 [source,js]
 ----
 import {PolymerElement, html} from '@polymer/polymer/polymer-element.js';
@@ -187,7 +208,8 @@ class MainView extends PolymerElement {
 customElements.define(MainView.is, MainView);
 ----
 
-.MainView.class
+*Example*: Creating the mapped `MainView` Java template class. 
+
 [source,java]
 ----
 @Tag("main-view")
@@ -204,12 +226,11 @@ public class MainView extends PolymerTemplate<TemplateModel> {
 }
 ----
 
-The result is the following:
+=== Initializing the MainView Component
 
-image:images/template-and-binder-first-result.png[MainView]
+Next, we configure the components and binder, and initialize their listeners in the `MainView` class. 
 
-Once all the components and the user form's binder are created, it is necessary to configure them
-and initialize their listeners in the `MainView.class`.
+*Example*: Initializing the `MainView` component and its component's listeners. 
 
 .MainView.class
 [source,java]
@@ -236,15 +257,12 @@ public MainView() {
 }
 ----
 
-In the initFormListener, the listeners for the buttons SAVE, CANCEL and DELETE need to be implemented:
+=== Implementing Save, Cancel and Delete Listeners
 
-=== Save
+The final step is to implement listeners for the Save, Cancel and Delete buttons in the `initFormListener`.
 
-In the `save` listener, the state of the bean is checked. If it is correct,
-a user object is generated from the userForm.
-The user is saved calling a method of the repository and that item of the grid is refreshed, showing the modifications.
+*Example*: Implementing the `save` listener in the `MainView` class. 
 
-.MainView.class - initFormListeners
 [source,java]
 ----
 formButtonsBar.addSaveListener(saveEvent -> {
@@ -266,16 +284,21 @@ formButtonsBar.addSaveListener(saveEvent -> {
 });
 ----
 
-[NOTE]
-In the case of buffered binding, it would be necessary to call `binder.writeBean()`.
+* The code first checks the state of the bean.
+* If correct, it generates a user object from the `userForm`. 
+* The user is then saved calling a method of the repository.
+* The item in the grid is refreshed to show the changes. 
 
 [NOTE]
-When using unbuffered binding (with the `setBean` method), validation will be triggered automatically on all change events.
-If you use buffered binding (with the `readBean` and `writeBean` methods), validation is only triggered automatically
+For buffered binding, you would need to call `binder.writeBean()`.
 
-=== Cancel
+[NOTE]
+--
+* *Unbuffered* binding: When you use the `setBean` method (unbuffered binding), validation is triggered automatically on all change events.
+* *Buffered* binding: When you use the `readBean` and `writeBean` methods (buffered binding), validation is not triggered automatically.
+--
 
-In the `cancel` listener all the elements of the grid are deselected and the form is emptied.
+*Example*: Implementing the `cancel` listener in the `MainView` class. 
 
 .MainView.initFormListeners
 [source,java]
@@ -284,15 +307,12 @@ formButtonsBar.addCancelListener(cancelEvent -> {
     usersGrid.deselectAll();
 });
 ----
-Notice that the deselection of the grid’s row triggers an event that will remove the bean.
-See `usersGrid.addSelectionListener` implementation.
+* All the elements of the grid are deselected and the form is emptied.
+* Deselection of a row triggers an event that removes the bean. See the `usersGrid.addSelectionListener` implementation in the previous section.
 
-=== Delete
 
-The selected user is selected from the grid and the user is removed calling `UsersRepository.delete`
-and the user(bean) is removed from the UserForm. When a user(bean) is removed, the fields of the UserForm are emptied.
+*Example*: Implementing the `delete` listener in the `MainView` class. 
 
-.MainView.class.initFormListeners
 [source,java]
 ----
 formButtonsBar.addDeleteListener(deleteEvent -> {
@@ -305,11 +325,16 @@ formButtonsBar.addDeleteListener(deleteEvent -> {
     }
 });
 ----
+* The user is selected from the grid, removed calling `UsersRepository.delete`, and the user (bean) is removed from the `UserForm`. 
+* When a user (bean) is removed, the fields of the `UserForm` are cleared.
 
-== Final view
+== Viewing the Final Result
 
-When a row is selected, the form is filled with the information of that user.
-If the save button is clicked the modifications of a user will be saved, and when
-the delete button is clicked the user is deleted from the form and grid.
+Note:
+
+* When you select a row, the user's information displays in the form fields. 
+* When you click *Save*, changes to the user's information are saved.  
+* When you click *Delete*, the user is deleted from the form and the grid.
+
 
 image:images/template-and-binder-second-result.png[MainView]
