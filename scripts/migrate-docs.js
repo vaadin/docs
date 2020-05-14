@@ -59,6 +59,7 @@ repos.forEach(repo => {
 // Bulk of the work, moving folders around and adding metadata
 function migrateDocs() {
   console.log('All clones finished');
+  console.log('Migrating content...');
 
   // Parse the documentation hierarchy metadata
   const docsYml = fs.readFileSync(path.join(__dirname, CACHE_DIR, 'vaadin-docs/website/_data/docs.yml'), 'utf8');
@@ -114,18 +115,10 @@ function migrateDocs() {
     flowPath,
     { filter }
   );
-  // Rename Overview.asciidoc -> index.asciidoc
-  let overviewPath = path.join(__dirname, CACHE_DIR, 'flow/documentation/Overview.asciidoc');
-  index = fs.readFileSync(overviewPath, 'utf8');
-  index = index.replace('---\ntitle: Overview', '---\ntitle: Framework');
-  fs.writeFileSync(
-    path.join(flowPath, 'index.asciidoc'),
-    index
-  );
-  fs.remove(path.join(flowPath, 'Overview.asciidoc'));
+  overviewToIndex(path.join(flowPath, 'Overview.asciidoc'), 'Framework', 1);
   generateIndexes(sections.flow.subpages, 'flow');
 
-  // TODO draft content should be in a different branch?
+  // TODO draft content should be in a different branch (portlet support is not yet available)?
   fs.remove(path.join(flowPath, 'portlet-support'));
 
 
@@ -136,17 +129,9 @@ function migrateDocs() {
     themesPath,
     { filter }
   );
-  // Rename overview.asciidoc -> index.asciidoc
-  overviewPath = path.join(__dirname, CACHE_DIR, 'flow/documentation-themes/themes-and-styling-overview.asciidoc');
-  index = fs.readFileSync(overviewPath, 'utf8');
-  index = index.replace('---\ntitle: Overview\norder: 10', '---\ntitle: Themes and Styling\norder: 3');
-  fs.writeFileSync(
-    path.join(themesPath, 'index.asciidoc'),
-    index
-  );
-  fs.remove(path.join(themesPath, 'themes-and-styling-overview.asciidoc'));
-  generateIndexes(sections.themes.subpages, 'themes');
-
+  overviewToIndex(path.join(themesPath, 'themes-and-styling-overview.asciidoc'), 'Themes and Styling', 3);
+  overviewToIndex(path.join(themesPath, 'lumo/lumo-overview.asciidoc'), 'Lumo');
+  overviewToIndex(path.join(themesPath, 'material/material-overview.asciidoc'), 'Material');
 
   // Designer
   fs.copySync(
@@ -164,15 +149,7 @@ function migrateDocs() {
     testbenchPath,
     { filter }
   );
-  // Rename overview.asciidoc -> index.asciidoc
-  overviewPath = path.join(__dirname, CACHE_DIR, 'testbench/documentation/testbench-overview.asciidoc');
-  index = fs.readFileSync(overviewPath, 'utf8');
-  index = index.replace('---\ntitle: Overview\norder: 10', '---\ntitle: TestBench\norder: 5');
-  fs.writeFileSync(
-    path.join(testbenchPath, 'index.asciidoc'),
-    index
-  );
-  fs.remove(path.join(testbenchPath, 'testbench-overview.asciidoc'));
+  overviewToIndex(path.join(testbenchPath, 'testbench-overview.asciidoc'), 'TestBench', 5);
   generateIndexes(sections.testbench.subpages, 'tools/testbench');
 
 
@@ -182,15 +159,7 @@ function migrateDocs() {
     bakeryPath,
     { filter }
   );
-  // Rename overview.asciidoc -> index.asciidoc
-  overviewPath = path.join(__dirname, CACHE_DIR, 'bakeryflow/overview.asciidoc');
-  index = fs.readFileSync(overviewPath, 'utf8');
-  index = index.replace('---\ntitle: Overview\norder: 100', '---\ntitle: Full Stack App Starter\norder: 6');
-  fs.writeFileSync(
-    path.join(bakeryPath, 'index.asciidoc'),
-    index
-  );
-  fs.remove(path.join(bakeryPath, 'overview.asciidoc'));
+  overviewToIndex(path.join(bakeryPath, 'overview.asciidoc'), 'Full Stack App Starter', 6);
   generateIndexes(sections.bakeryflow.subpages, 'bakeryflow');
 
 
@@ -200,15 +169,7 @@ function migrateDocs() {
     basPath,
     { filter }
   );
-  // Rename overview.asciidoc -> index.asciidoc
-  overviewPath = path.join(__dirname, CACHE_DIR, 'business-app/overview.asciidoc');
-  index = fs.readFileSync(overviewPath, 'utf8');
-  index = index.replace('---\ntitle: Overview\norder: 1', '---\ntitle: Business App Starter\norder: 7');
-  fs.writeFileSync(
-    path.join(basPath, 'index.asciidoc'),
-    index
-  );
-  fs.remove(path.join(basPath, 'overview.asciidoc'));
+  overviewToIndex(path.join(basPath, 'overview.asciidoc'), 'Business App Starter', 7);
   generateIndexes(sections['business-app'].subpages, 'business-app');
 
 
@@ -218,15 +179,7 @@ function migrateDocs() {
     mprPath,
     { filter }
   );
-  // Rename overview.asciidoc -> index.asciidoc
-  overviewPath = path.join(__dirname, CACHE_DIR, 'mpr/mpr-documentation/documentation/Overview.asciidoc');
-  index = fs.readFileSync(overviewPath, 'utf8');
-  index = index.replace('---\ntitle: Overview\norder: 1', '---\ntitle: Multiplatform Runtime\norder: 8');
-  fs.writeFileSync(
-    path.join(mprPath, 'index.asciidoc'),
-    index
-  );
-  fs.remove(path.join(mprPath, 'Overview.asciidoc'));
+  overviewToIndex(path.join(mprPath, 'Overview.asciidoc'), 'Multiplatform Runtime', 8);
   generateIndexes(sections.mpr.subpages, 'mpr');
 
 
@@ -236,25 +189,17 @@ function migrateDocs() {
     chartsPath,
     { filter }
   );
-  // Rename overview.asciidoc -> index.asciidoc
-  overviewPath = path.join(__dirname, CACHE_DIR, 'charts/documentation/charts-overview.asciidoc');
-  index = fs.readFileSync(overviewPath, 'utf8');
-  index = index.replace('---\ntitle: Overview\norder: 1', '---\ntitle: Charts');
-  index = index.replace('= Overview', '= Charts');
-  fs.writeFileSync(
-    path.join(chartsPath, 'index.asciidoc'),
-    index
-  );
-  fs.remove(path.join(chartsPath, 'charts-overview.asciidoc'));
+  overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
   generateIndexes(sections.charts.subpages, 'components/ui-components/charts');
+
+  console.log('Migration finished successfully');
 }
 
 Promise.all(clones)
   .then(() => {
     migrateDocs();
   }).catch(e => {
-    console.log(e);
-    // migrateDocs();
+    console.error(e);
   });
 
 
@@ -276,4 +221,19 @@ title: ${title}${order !== undefined ? `\norder: ${order}` : ''}
 ---
 ${content !== undefined ? `\n${content}` : ''}
 `;
+}
+
+// Helper to rename and rewrite overview pages to index pages
+function overviewToIndex(overviewPath, title, order) {
+  let content = fs.readFileSync(overviewPath, 'utf8')
+    .replace(/^title: Overview/m, 'title: ' + title)
+    .replace(/^= Overview/m, '= ' + title)
+    .replace(/^order: [0-9]+\n/m, order !== undefined ? `order: ${order}\n` : '');
+
+  fs.writeFileSync(
+    path.join(overviewPath, '../index.asciidoc'),
+    content
+  );
+
+  fs.remove(overviewPath);
 }
