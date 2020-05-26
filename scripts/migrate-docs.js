@@ -89,17 +89,6 @@ function migrateDocs() {
   fs.rmdirSync(basPath, { recursive: true });
   fs.rmdirSync(chartsPath, { recursive: true });
 
-  // Main index file
-  // TODO the page should be rewritten entirely
-  let index = fs.readFileSync(path.join(__dirname, CACHE_DIR, 'vaadin-docs/website/index.html'), 'utf8');
-  index = index.replace('---', '---\nroot: true');
-  // Remove redirect script
-  index = index.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, '\n++++\n') + '\n++++';
-  fs.writeFileSync(
-    path.join(__dirname, '../articles/index.asciidoc'),
-    index
-  );
-
   // Helper function for all copy operations
   function filter(src, dest) {
     if (src.indexOf('.git') > -1 || src.indexOf('.') === 0) {
