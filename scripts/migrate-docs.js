@@ -77,7 +77,7 @@ function migrateDocs() {
   const mprPath = path.join(__dirname, '../articles/mpr');
   const bakeryPath = path.join(__dirname, '../articles/bakeryflow');
   const basPath = path.join(__dirname, '../articles/business-app');
-  const chartsPath = path.join(__dirname, '../articles/components/ui-components/charts');
+  const chartsPath = path.join(__dirname, '../articles/design-system/components/charts');
 
   // Cleanup
   fs.rmdirSync(flowPath, { recursive: true });
@@ -179,7 +179,7 @@ function migrateDocs() {
     { filter }
   );
   overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
-  generateIndexes(sections.charts.subpages, 'components/ui-components/charts');
+  generateIndexes(sections.charts.subpages, 'design-system/components/charts');
 
   console.log('Migration finished successfully');
 }
