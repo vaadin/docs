@@ -87,7 +87,7 @@ public class TestTutorialCodeCoverage {
                 new CodeFileChecker(HTML_BLOCK_IDENTIFIER,
                         gatherWebFilesCode("html", HTML_LOCATION, TUTORIAL_BINDER_WITH_TEMPLATES_HTML_LOCATION)),
                 new AsciiDocLinkWithDescriptionChecker("image:",
-                        Pattern.compile("image:(.*?)\\[(.*?)]")),
+                        Pattern.compile("image::?(.*?)\\[(.*?)]")),
                 new AsciiDocLinkWithDescriptionChecker("#,",
                         Pattern.compile("<<(.*?)#,(.*?)>>"),
                         ASCII_DOC_EXTENSION));
