@@ -18,6 +18,7 @@ const fs   = require('fs-extra');
 const path = require('path');
 const yaml = require('js-yaml');
 const NodeGit = require('nodegit');
+const replace = require('replace-in-file');
 
 // Array for Promises
 const clones = [];
@@ -180,6 +181,22 @@ function migrateDocs() {
   );
   overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
   generateIndexes(sections.charts.subpages, 'design-system/components/charts');
+
+  // Remove unnecessary github config lines, which cause the TOC element to be rendered before the page heading
+  const replaceOptions = {
+    files: [
+      path.join(__dirname, '../articles/**/*.asciidoc')
+    ],
+    from: /ifdef::env\-github\[:outfilesuffix: \.asciidoc\]\n/g,
+    to: '',
+  };
+
+  try {
+    let changedFiles = replace.sync(replaceOptions);
+  }
+  catch (error) {
+    console.error('Error occurred:', error);
+  }
 
   console.log('Migration finished successfully');
 }
