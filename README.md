@@ -94,7 +94,8 @@ Run the following script to migrate existing documentation content from separate
 > Before running the script, you need to [create a personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) in GitHub (with `repo` access) and pass it as a command line argument to the script. It is needed to be able to access private repositories (assuming you have access to all of the documentation repos).
 
 ```
-npm run migrate-docs [personal-github-access-token]
+cd scripts
+node migrate-docs.js [personal-github-access-token]
 ```
 
 Namely, the following documentation repos are migrated:
