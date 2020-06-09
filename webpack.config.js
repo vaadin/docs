@@ -16,7 +16,7 @@ const filteredFileNameOfTheFlowGeneratedMainEntryPoint =
 // @ts-ignore
 module.exports = merge(flowDefaults, {
   entry: {
-    bundle: filteredFileNameOfTheFlowGeneratedMainEntryPoint
+    export: filteredFileNameOfTheFlowGeneratedMainEntryPoint
   },
   plugins: [
     function(compiler) {
