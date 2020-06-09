@@ -1,4 +1,5 @@
 const GITHUB_TOKEN = process.argv[process.argv.length - 1];
+console.log(GITHUB_TOKEN)
 const CACHE_DIR = './.cache';
 
 // Repo name, branch and local directory name
@@ -182,17 +183,27 @@ function migrateDocs() {
   overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
   generateIndexes(sections.charts.subpages, 'design-system/components/charts');
 
-  // Remove unnecessary github config lines, which cause the TOC element to be rendered before the page heading
-  const replaceOptions = {
-    files: [
-      path.join(__dirname, '../articles/**/*.asciidoc')
-    ],
-    from: /ifdef::env\-github\[:outfilesuffix: \.asciidoc\]\n/g,
-    to: '',
-  };
 
   try {
+    // Remove unnecessary github config lines, which cause the TOC element to be rendered before the page heading
+    let replaceOptions = {
+      files: [
+        path.join(__dirname, '../articles/**/*.asciidoc')
+      ],
+      from: /ifdef::env\-github\[:outfilesuffix: \.asciidoc\]\n/g,
+      to: '',
+    };
     let changedFiles = replace.sync(replaceOptions);
+
+    // Remove custom TOC elements from themes and styling docs
+    replaceOptions = {
+      files: [
+        path.join(__dirname, '../articles/themes/**/*.asciidoc')
+      ],
+      from: /^:?toc(::\[\]|: macro|-title:|levels:).*\n/gm,
+      to: '',
+    };
+    changedFiles = replace.sync(replaceOptions);
   }
   catch (error) {
     console.error('Error occurred:', error);
