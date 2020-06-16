@@ -106,7 +106,7 @@ function migrateDocs() {
     flowPath,
     { filter }
   );
-  overviewToIndex(path.join(flowPath, 'Overview.asciidoc'), 'Framework', 1);
+  generateTopLevelIndex(flowPath, 'Framework', 1);
   generateIndexes(sections.flow.subpages, 'flow');
 
   // TODO draft content should be in a different branch (portlet support is not yet available)?
@@ -120,9 +120,8 @@ function migrateDocs() {
     themesPath,
     { filter }
   );
-  overviewToIndex(path.join(themesPath, 'themes-and-styling-overview.asciidoc'), 'Themes and Styling', 3);
-  overviewToIndex(path.join(themesPath, 'lumo/lumo-overview.asciidoc'), 'Lumo');
-  overviewToIndex(path.join(themesPath, 'material/material-overview.asciidoc'), 'Material');
+  generateTopLevelIndex(themesPath, 'Themes and Styling', 3);
+  generateIndexes(sections.themes.subpages, 'themes', 110);
 
   // Designer
   fs.copySync(
@@ -130,7 +129,7 @@ function migrateDocs() {
     designerPath,
     { filter }
   );
-  fs.writeFileSync(path.join(designerPath, 'index.asciidoc'), generateAsciidoc('Designer', 4, '= Designer'));
+  generateTopLevelIndex(designerPath, 'Designer', 4);
   generateIndexes(sections.designer.subpages, 'designer');
 
 
@@ -140,7 +139,7 @@ function migrateDocs() {
     testbenchPath,
     { filter }
   );
-  overviewToIndex(path.join(testbenchPath, 'testbench-overview.asciidoc'), 'TestBench', 5);
+  generateTopLevelIndex(testbenchPath, 'TestBench', 5);
   generateIndexes(sections.testbench.subpages, 'tools/testbench');
 
 
@@ -150,7 +149,7 @@ function migrateDocs() {
     bakeryPath,
     { filter }
   );
-  overviewToIndex(path.join(bakeryPath, 'overview.asciidoc'), 'Full Stack App Starter', 6);
+  generateTopLevelIndex(bakeryPath, 'Full Stack App Starter', 6);
   generateIndexes(sections.bakeryflow.subpages, 'bakeryflow');
 
 
@@ -160,7 +159,7 @@ function migrateDocs() {
     basPath,
     { filter }
   );
-  overviewToIndex(path.join(basPath, 'overview.asciidoc'), 'Business App Starter', 7);
+  generateTopLevelIndex(basPath, 'Business App Starter', 7);
   generateIndexes(sections['business-app'].subpages, 'business-app');
 
 
@@ -170,7 +169,7 @@ function migrateDocs() {
     mprPath,
     { filter }
   );
-  overviewToIndex(path.join(mprPath, 'Overview.asciidoc'), 'Multiplatform Runtime', 8);
+  generateTopLevelIndex(mprPath, 'Multiplatform Runtime', 8);
   generateIndexes(sections.mpr.subpages, 'mpr');
 
 
@@ -221,12 +220,12 @@ Promise.all(clones)
 
 
 // Helper function for generating index.asciidoc for all sub-folders in a top section
-function generateIndexes(subpages, folder) {
+function generateIndexes(subpages, folder, orderBase = 2) {
   if (!subpages) return;
   Object.keys(subpages).forEach((section, i) => {
     if (fs.existsSync(path.join(__dirname, `../articles/${folder}/${section}`))) {
       const title = subpages[section].title;
-      fs.writeFileSync(path.join(__dirname, `../articles/${folder}/${section}/index.asciidoc`), generateAsciidoc(title, i + 2));
+      fs.writeFileSync(path.join(__dirname, `../articles/${folder}/${section}/index.asciidoc`), generateAsciidoc(title, orderBase + i));
     }
   });
 }
@@ -253,4 +252,13 @@ function overviewToIndex(overviewPath, title, order) {
   );
 
   fs.remove(overviewPath);
+}
+
+function generateTopLevelIndex(folderPath, title, order, adocContent) {
+  let content = generateAsciidoc(title, order, adocContent);
+
+  fs.writeFileSync(
+    path.join(folderPath, 'index.asciidoc'),
+    content
+  );
 }
