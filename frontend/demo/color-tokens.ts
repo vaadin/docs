@@ -25,7 +25,7 @@ export default class DarkModeToggle extends HTMLElement {
       }
 
       requestAnimationFrame(() => {
-        window.dispatchEvent(new CustomEvent('example-imported'));
+        window.dispatchEvent(new CustomEvent('custom-properties-changed'));
       });
     });
   }
