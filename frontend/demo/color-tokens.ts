@@ -29,6 +29,11 @@ export default class DarkModeToggle extends HTMLElement {
       });
     });
   }
+
+  disconnectedCallback() {
+    // Avoid affecting colors on other pages such as component examples
+    document.documentElement.removeAttribute('theme');
+  }
 }
 
 customElements.define('dark-mode', DarkModeToggle);
