@@ -80,11 +80,12 @@ For example:
    ```
    git clone https://github.com/vaadin/docs
    ```
-1. Start the server. The examples can be accessed at `http://localhost:8080`:
+1. Start the server:
    ```
    cd docs
    mvn spring-boot:run
    ```
+   Currently there is no UI to browse the examples, and the root path (http://localhost:8080) gives a 404.
 
 
 ## Migrating existing documentation content
