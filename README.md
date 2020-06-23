@@ -107,4 +107,4 @@ Namely, the following documentation repos are migrated:
 - `multiplatform-runtime-internal/mpr-documentation/documentation` → `articles/mpr`
 - `business-app-starter-flow-docs` → `articles/business-app`
 - `bakery-app-starter-flow-docs` → `articles/bakeryflow`
-- `vaadin-charts-flow/documentation` → `articles/components/ui-components/charts`
+- `vaadin-charts-flow/documentation` → `articles/design-system/components/charts`
