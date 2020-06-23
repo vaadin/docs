@@ -85,7 +85,9 @@ For example:
    cd docs
    mvn spring-boot:run
    ```
-   Currently there is no UI to browse the examples, and the root path (http://localhost:8080) gives a 404.
+   The Java server is only needed to serve and run the embeddable Java examples, using Flow’s web component exporter / component embedding feature.
+   
+   Currently there is no UI to browse the examples, and the root path (http://localhost:8080) gives a 404. Use the [docs-app](https://github.com/vaadin/docs-app) documentation viewer application to browse them (the ones which are included in the documentation articles).
 
 
 ## Migrating existing documentation content
