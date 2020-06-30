@@ -1,20 +1,23 @@
-import './design-tokens';
 import { cssFromModule } from '@polymer/polymer/lib/utils/style-gather';
 
-export default class DarkModeToggle extends HTMLElement {
-  constructor() {
-    super();
-    let css = cssFromModule('lumo-color');
-    // Strip everything else than the first [theme~="dark"] selector to avoid global style collisions
-    css = `[theme~="dark"] ${css.split('[theme~="dark"]')[1].split('}')[0]} }`;
-    const style = document.createElement('style');
-    style.innerHTML = css;
-    document.head.appendChild(style);
+export class DarkModeToggle extends HTMLElement {
+  get styleModule() {
+    return '';
   }
 
-  connectedCallback() {
+  parseCss(css: string): string {
+    return css;
+  }
+
+  constructor() {
+    super();
+    let css = cssFromModule(this.styleModule);
+    const style = document.createElement('style');
+    style.innerHTML = this.parseCss(css);
+    document.head.appendChild(style);
+
     this.innerHTML = `
-      <button>Toggle dark palette</button>
+    <button>Toggle dark palette</button>
     `;
 
     this.querySelector('button')?.addEventListener('click', () => {
@@ -35,5 +38,3 @@ export default class DarkModeToggle extends HTMLElement {
     document.documentElement.removeAttribute('theme');
   }
 }
-
-customElements.define('dark-mode', DarkModeToggle);
