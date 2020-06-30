@@ -9,25 +9,30 @@ layout: page
 Live Reload works seamlessly on development mode using HotswapAgent for runtime class and resource redefinition.
 If you want to know more about the features of HotswapAgent, the documentation in the http://hotswapagent.org/[HotswapAgent webpage] is a good resource.
 
-Currently, Live Reload works on HotswapAgent version 1.4.1-SNAPSHOT and newer. Since no versions of the DCEVM JDK are still bundled with these versions, a HotswapAgent override is required by including the newer HotswapAgent versions as a Java agent in your JVM options.
-
-[NOTE]
-HotswapAgent is made to run on IDEs on Debug mode only. If you would like to run HotswapAgent in Run mode an xref:a-runtime-hotswap[additional configuration] is needed.
+We suggest running your Vaadin project with https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases[TravaOpenJDK DCEVM] (JDK for enhanced class redefinition), version 11.0.7+2 or later.
+This JDK bundles HotswapAgent version 1.4.1 with full Live Reload support.
+Setup is in most cases as easy as downloading the JDK and configuring your IDE to use it.
 
 == Step-by-step guide
 
-. Download https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases[DCEVM JDK], unpack it and set `JAVA_HOME` to it's location. Alternatively, you can add the JDK to your IDE.
-. Download https://github.com/HotswapProjects/HotswapAgent/releases[HotswapAgent 1.4.1-SNAPSHOT]
-. Rename the downloaded HotswapAgent JAR to `hotswap-agent.jar`. Move it to the `lib/hotswap` directory of the unpacked DCEVM JDK. When prompted, replace the existing file.
-. When using an IDE, follow setup guides available in http://hotswapagent.org/
-. Depending on your project technology stack, you might have to apply <<Additional configurations>>
-. Debug your Vaadin application in Dev Mode
-. Navigate to any page in your application, edit a Java file in the project, recompile, and the browser will automatically reload
+. Download and unpack the latest version of https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases[DCEVM JDK], add the JDK to your IDE, and set your project / run configuration to use it.
+  Alternatively set `JAVA_HOME` to its location.
+. Depending on your project technology stack, you might have to apply <<Additional configurations>>.
+. Using your IDE's debug command, start the Vaadin application (development deployment mode).
+. Navigate to a view in your application, edit any Java file in the project, recompile, and the browser will automatically reload the page with the changes.
 
-== Additional configurations
+== Additional configuration
 
-* [[a-runtime-hotswap]] If you want to use HotswapAgent in Run mode you must add an additional configuration parameter to the JVM options by adding `-javaagent:<path-to-hotswap-directory>/lib/hotswap/hotswap-agent.jar=autoHotswap=true` or adding the line `autoHotswap=true` to `hotswap-agent.properties`.
-* If you have installed JRebel previously when using IntelliJ IDEA, the `Build project automatically` compiler option should be turned off since it might trigger HotswapAgent reloads without swapping classes properly. The ideal fix for this issue is having a fresh install of IDEA when using HotswapAgent.
-* If you are running HotswapAgent using DCEVM 8 and Netbeans, adding the configuration parameter `autoHotswap=true` might be needed for Live Reload to work. VM configuration for debugging (available at `Project Properties > Actions > Actions: Debug project > Set Properties`) should look like this `Env.MAVEN_OPTS=-XXaltjvm=dcevm -javaagent:<path-to-file>/hotswap-agent-1.4.1-SNAPSHOT.jar=autoHotswap=true` (or add the line `autoHotswap=true` to `hotswap-agent.properties`).
-* When using Jetty as server set `<scanIntervalSeconds>` in your Vaadin application `pom.xml` to `0`
-* The Live Reload quiet time (milliseconds after last Java change before refreshing the browser) and be modifying by setting `vaadin.liveReloadQuietTime` in `hotswap-agent.properties`. The default is 1000 ms.
+* HotswapAgent relies on the IDE to auto-reload compiled classes, which normally occurs automatically in debug mode.
+  To use HotswapAgent in run mode, add the line `autoHotswap=true` to `hotswap-agent.properties`, or add the following JVM parameter: `-javaagent:__<path/to/hotswap-agent.jar>__=autoHotswap=true`.
+* Jetty: ensure automatic restart based on resource scanning is disabled (if using the Jetty Maven plugin, omit or set `<scanIntervalSeconds>` to a value of  `0` or less).
+* The Live Reload quiet time (milliseconds since last Java change before refreshing the browser) can be adjusted by the parameter `vaadin.liveReloadQuietTime` in `hotswap-agent.properties`.
+  The default is 1000 ms. Increase this value if you notice the browser refreshing before modified Java files have been fully compiled.
+* NetBeans: adding the configuration parameter `autoHotswap=true` might be needed for Live Reload to work.
+  Add the line `autoHotswap=true` to `hotswap-agent.properties` in your project's resources folder or set the following debug property (available at `Project Properties > Actions > Actions: Debug project > Set Properties`): `Env.MAVEN_OPTS=-XXaltjvm=dcevm -javaagent:``_<path/to/hotswap-agent.jar>_``=autoHotswap=true`.
+* Intellij IDEA: avoid using the `Build project automatically` and `compiler.automake.allow.when.app.running` options simultaneously, since this may trigger automatic reload before classes are hotswapped properly.
+
+== Current limitations
+* The Vaadin plugin included in the bundled HotswapAgent (1.4.1) does not work with servers that use application classloaders, for instance Wildfly, TomEE or Payara.
+This bug is fixed in a https://github.com/HotswapProjects/HotswapAgent/releases/tag/1.4.2-SNAPSHOT[prerelease version of HotswapAgent].
+To use it, download the JAR and pass the following JVM parameters to replace the bundled HotswapAgent with the corrected version: `-XX:+DisableHotswapAgent -javaagent:__<path/to/hotswap-agent.jar>__`

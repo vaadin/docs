@@ -1,0 +1,192 @@
+---
+title: Adding TS Custom Validators
+order: 4
+layout: page
+---
+
+= Validators in TypeScript
+
+As indicated in the <<tutorial-validation-java#,Java Bean Validators>> article, the easiest way to add validation to your forms is by annotating your Java Beans.
+
+But for special cases, it might be necessary to add custom validators in TS views.
+
+For each model, there is an associated `BinderNode`, which you can add validators to. To get the `BinderNode` of a model, you can use `binder.for(model)`.
+[source, typescript]
+----
+const binderNode = this.binder.for(this.binder.model.name);
+----
+
+The `binder` itself is also the root level `BinderNode`. So Validators can be added to any level of the data structure; hence it's possible to have both field-level and 
+record-level validators.
+
+=== Field-level Validator
+
+A field-level validator is a validator added to a child `BinderNode`, which binds to a UI field. It will be executed either when the field value changes or when the whole form is validated before submitting.
+
+==== Built-in validators
+
+The `@vaadin/form` package provides the following built-in client side validators which are equivalent to the corresponding https://beanvalidation.org/2.0/spec/#builtinconstraints[built-in constraints in the JSR 380 Bean Validation] spec.
+
+. `Email` - The string has to be a well-formed email address.
+. `Null` - Must be `null`
+. `NotNull` - Must not be `null`
+. `NotEmpty` - Must not be `null` nor empty (must have a `length` property, e.g. string or array)
+. `NotBlank` - Must not be `null` and must contain at least one non-whitespace character
+. `AssertTrue` - Must be `true`
+. `AssertFalse` - Must be `false`
+. `Min` - Must be a number whose value must be higher or equal to the specified minimum
+  - Additional options: `{ value: number | string }`
+. `Max` - Must be a number whose value must be lower or equal to the specified maximum
+  - Additional options: `{ value: number | string }`
+. `DecimalMin` - Must be a number whose value must be higher or equal to the specified minimum
+  - Additional options: `{ value: number | string, inclusive: boolean | undefined }`
+. `DecimalMax` - Must be a number whose value must be lower or equal to the specified maximum
+  - Additional options: `{ value: number | string, inclusive: boolean | undefined }`
+. `Negative` - Must be a strictly negative number (i.e. 0 is considered as an invalid value)
+. `NegativeOrZero` - Must be a negative number or 0
+. `Positive` - Must be a strictly positive number (i.e. 0 is considered as an invalid value)
+. `PositiveOrZero` - Must be a positive number or 0
+. `Size` - Size must be between the specified boundaries (included; must have a `length` property, e.g. string or array)
+  - Additional options: `{ min?: number, max?: number }`
+. `Digits` - Must be a number within accepted range
+  - Additional options: `{ integer: number, fraction: number }`
+. `Past` - A date string in the past
+. `PastOrPresent` - A date string in the past or present
+. `Future` - A date string in the future
+. `FutureOrPresent` - A date string in the future or present
+. `Pattern` - Must match the specified regular expression
+  - Additional options: `{ regexp: RegExp | string }`
+
+These are used with `binder.for(myFieldModel).addValidator(validator)` where `validator` is an instance of the chosen built-in validator e.g. `addValidator(new Size({max: 10, message: 'Must be 10 characters or less'}))`.
+
+All of the built-in validators take one constructor parameter which is usually an optional `options` object with a `message?: string` property (which defaults to `'invalid'`), but some validators have additional options or support other argument types instead of the `options` object.
+
+For example the `Min` validator requires a `value: number | string` option which may be given as part of the `options` object or you can pass just the minimum value itself instead of the `options` object (if you don't want to set `message` and leave it as the default `'invalid'`).
+
+[source, typescript]
+----
+import PersonModel from '[.....]/PersonModel';
+import { field, Binder, NotEmpty, Min, Size, Email } from '@vaadin/form';
+
+@customElement('my-demo-view')
+export class MyDemoView extends LitElement {
+  private binder = new Binder(this, PersonModel);
+
+  async firstUpdated(arg: any) {
+    super.firstUpdated(arg);
+
+    const binder = this.binder;
+    const model = binder.model;
+
+    binder.for(model.name).addValidator(new NotEmpty({message: 'Name must not be empty'}));
+    binder.for(model.username).addValidator(new Size({message: 'Username must be between 3 and 15 characters long', min: 3, max: 15}));
+    binder.for(model.age).addValidator(new Min({message: 'Age must be at least 18', value: 18}));
+    binder.for(model.email).addValidator(new Email());
+  }
+
+  render() {
+    const model = this.binder.model;
+    return html`
+      <vaadin-text-field ...="${field(model.name)}" label="Name"></vaadin-text-field>
+      <vaadin-text-field ...="${field(model.username)}" label="Username"></vaadin-text-field>
+      <vaadin-integer-field ...="${field(model.age)}" label="Age"></vaadin-integer-field>
+      <vaadin-email-field ...="${field(model.email)}" label="Email"></vaadin-email-field>
+    `;
+  }
+}
+----
+
+==== Custom validator
+
+In the next snippet, a custom validator is added to a text field.
+When the user types a name that does not start with the character 'B', the field is invalidated, as shown in the image.
+
+image:images/custom-validation-errors-1.gif[Custom Field Validation Error]
+
+[source, typescript]
+----
+import PersonModel from '[.....]/PersonModel';
+import { field, Binder, getModelValidators } from '@vaadin/form';
+
+@customElement('my-demo-view')
+export class MyDemoView extends LitElement {
+  private binder = new Binder(this, PersonModel);
+
+  async firstUpdated(arg: any) {
+    super.firstUpdated(arg);
+
+    this.binder.for(this.binder.model.name).addValidator({
+      message: 'Name must start with letter B',
+      validate: value => value.startsWith('B')
+    });
+  }
+
+  render() {
+    return html`
+      <vaadin-text-field ...="${field(this.binder.model.name)}" label="Name"></vaadin-text-field>
+    `;
+  }
+}
+----
+
+[NOTE]
+Custom validators need to implement the `Validator` interface.
+
+=== Record-level Validator
+
+A record-level validator is a validator added to the `binder`, which is the root level `BinderNode`. 
+One important use case could be cross-field validation, i.e., the validity of a field depends on the value of another field.
+
+One challenge of the record-level validation is to specify where to display the error message when the validation fails.
+This can be achieved in the validator, instead of passing a validation callback to the validator that returns a 
+`boolean` value, you can return a `ValueError` object, inside which you can specify a `property` which would be used to determine where
+to display the validation error message. The value of the `property` is the model that binds to a field.
+
+
+In the following example, a custom validator is added to the binder. When either field changes, the validation is triggered and the
+error message is displayed in the password field as specified in the validator.
+
+image:images/custom-validation-errors-2.gif[Custom Field Validation Error]
+
+[source, typescript]
+----
+import {customElement, LitElement, html} from 'lit-element';
+import { Binder, field} from '@vaadin/form';
+import PersonModel from '[.....]/PersonModel';
+
+@customElement('vaadin-person-view')
+export class VaadinPersonView extends LitElement {
+  private binder = new Binder(this, PersonModel);
+
+  async firstUpdated(arg: any) {
+    super.firstUpdated(arg);
+
+    const password = this.binder.model.password;
+
+    this.binder.addValidator({
+      message: 'Password entries must match',
+      validate(person: Person){
+        if (person.password === person.repeatPassword) {
+          return { property: password, value: person, validator: this };
+        }
+        return;
+      }
+
+    });
+  }
+  render() {
+    return html`
+      <vaadin-password-field label="password"
+        ...="${field(this.binder.model.password)}" ></vaadin-password-field>
+      <vaadin-password-field label="repeat password"
+        ...="${field(this.binder.model.repeatPassword)}" ></vaadin-password-field>
+
+      <vaadin-button @click="${this.submit}">submit</vaadin-button>      
+    `;
+  }
+}
+
+----
+
+
+

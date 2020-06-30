@@ -1,0 +1,344 @@
+---
+title: "Appendix: Client-Side Form Binding Reference"
+order: 100
+layout: page
+---
+
+
+= Client-Side Form Binding Reference
+
+The key concepts behind client-side form binding are: the [methodname]#field()# directive, the [classname]#Model#, the [classname]#Binder# and binder nodes.
+
+== The Field Directive
+
+Client-side form binding in Vaadin works together with LitElement web component library, and its underlying template rendering library `lit-html`.
+
+The [methodname]#field()# directive does the main job of binding the form field components in the template, namely:
+
+- sets the `name` attribute
+- implements two-way binding for the value state
+- sets the `required` (boolean) state
+- sets the `invalid` (boolean) state and the `errorMessage` (string) when the current value is invalid
+
+.Using the field directive
+[source, html]
+----
+<vaadin-text-field
+ label="Full name"
+ ...="${field(model.fullName)}"
+ ></vaadin-text-field>
+----
+
+Depending on the type of the bound component, the field directive selects a strategy, which defines how exactly the states above are applied on the component, for example, which attributes and properties of the element are used.
+
+[NOTE]
+You can find more information on field strategy customization in the <<appendix-web-component-field-strategy#, Appendix: Using a Web Component Field>> article.
+
+The field directive supports Vaadin components and HTML input elements. While Vaadin components have support for all the states, for HTML input elements the `invalid`, `required` and `errorMessage` are not displayed in the bound component. As a workaround, you can bind those manually in the template:
+
+[source, html]
+----
+<label for="fullName">
+  Full name
+  ${binder.for(binder.model.fullName).required ? '*' : ''}
+</label>
+<input id="fullName" ...="${field(binder.model.fullName)}"/><br/>
+${
+  binder.for(binder.model.fullName).invalid
+    ? html`
+      <strong>
+        ${binder.for(binder.model.fullName).errors[0]}
+      </strong>`
+    : ''
+}
+----
+
+[NOTE]:
+====
+See also: <<appendix-vaadin-components#, Appendix: Binding Data to Vaadin Components>>
+====
+
+== The Form Model
+
+A form model describes the structure of the form. It allows referencing individual fields in a type-safe way (an alternative to strings like `'person.firstName'`).
+
+Typically a model is used as an argument for the [methodname]#field()# directive or the [methodname]#binder.for()# method to specify the target form property to create a binding or to access the state. In contrast with string names like `'person.firstName'`, typed form models allow auto-completion and static type checking, which makes creating forms faster and safer.
+
+Vaadin automatically generates Model classes for server-side endpoints from Java beans. Usually there is no need to define models manually.
+
+Technically, every model instance represents either a key of a parent model, or the value of the Binder itself (for example, the form data object).
+
+[NOTE]
+====
+The model classes are not intended to be instantiated manually. Instead, the [classname]#Binder# constructor receives the form model class and takes care of creating model instances.
+====
+
+=== Primitive Models
+
+These are the built-in models that represent the common primitive field types:
+
+|===
+| Type | Value type `T` | Empty value ([methodname]#Model.createEmptyValue()# result)
+
+| [classname]#StringModel# | `string` | `''`
+| [classname]#NumberModel# | `number` | `0`
+| [classname]#BooleanModel#  | `boolean` | `false`
+|===
+
+Primitive models extend [classname]#PrimitiveModel<T>#. Primitive models are leaf nodes of the data structure, that is, they do not have nested field keys.
+
+=== Object Models
+
+Typically, the primitive editable values of the form are grouped in objects. [@classname]#ObjectModel<T># accommodates that. [classname]#ObjectModel<T># is also a common superclass for all the models generated from Java beans.
+
+The subclasses of [classname]#ObjectModel<T># define the type argument constrains and the default type. In addition, the subclasses list all the public properties, following the shape of the described object.
+
+For example, for the following Java bean:
+
+.IdEntity.java
+[source, java]
+----
+public class IdEntity {
+    private String idString;
+
+    public String getIdString() {
+        return idString;
+    }
+
+    public void setIdString(String idString) {
+        this.idString = idString;
+    }
+}
+----
+
+.Person.java
+[source, java]
+----
+import javax.validation.constraints.NotEmpty;
+
+public class Person extends IdEntity {
+    @NotEmpty(message = "Cannot be empty")
+    private String fullName;
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+}
+----
+
+The following TypeScript interfaces are generated for type-checking endpoints:
+
+.IdEntity.ts
+[source, typescript]
+----
+export default interface IdEntity {
+  idString: string;
+}
+----
+
+.Person.ts
+[source, typescript]
+----
+import IdEntity from './IdEnity';
+
+export default interface Person extends IdEntity {
+  fullName: string;
+}
+----
+
+And the following models are generated for client-side form binding:
+
+.IdEntityModel.ts
+[source, typescript]
+----
+import IdEntity from './IdEntity';
+
+export default class IdEntityModel<T extends IdEntity = IdEntity> extends ObjectModel<T> {
+  static createEmptyValue: () => IdEntity;
+  readonly idString = new StringModel(this, 'idString');
+}
+----
+
+.PersonModel.ts
+[source, typescript]
+----
+import IdEntityModel from './IdEntityModel';
+
+import Person from './Person';
+
+export default class PersonModel<T extends Person = Person> extends IdEntityModel<T> {
+  static createEmptyValue: () => Person;
+  readonly fullName = new StringModel(this, 'fullName', new NotEmpty({message: 'Cannot be empty'}));
+}
+----
+
+[IMPORTANT]
+====
+To avoid naming collisions with user-defined object model fields, the built-in models and model superclasses do not have any public instance properties or methods, aside form the [methodname]#toString()# and [methodname]#valueOf()# exceptions inherited from [classname]#AbstractModel<T># (see below).
+====
+
+The properties of object models are intentionally read-only.
+
+=== The Array Model
+
+The [classname]#ArrayModel<T># is used to represent array properties.
+
+The type argument `T` in array models indicates the type of values in the array.
+
+An array model instance contains the item model class reference. The item model is instantiated for every array entry, as necessary.
+
+Array models are iterable, iterating yields binder nodes for entries:
+
+[source, html]
+----
+${repeat(this.binder.model.people, personBinder => html`
+  <div>
+    <vaadin-text-field
+     label="Full name"
+     ...="${field(personBinder.model.fullName)}"
+     ></vaadin-text-field>
+    <strong>Full name:</strong>
+    ${personBinder.value.fullName}
+  </div>
+`)}
+----
+
+The array entries are not available for indexing with bracket notation (`[]`).
+
+=== The Abstract Model Superclass
+
+All models subclass from the [classname]#AbstractModel<T># TypeScript class, where the `T` type argument refers to the value type.
+
+==== The Empty Value Definition
+
+Model classes define an empty value, which is used to initialise `binder.defaultValue` and `binder.value` properties, and also for [methodname]#binder.clear()#.
+
+For that purpose, [classname]#AbstractModel<T>#, as well as every subclass, has a method `static createEmptyValue(): T`, that returns the empty value of the subject model type.
+
+[source, typescript]
+----
+const emptyPerson: Person = PersonModel.createEmptyValue();
+console.log(emptyPerson); // {"fullName": ""}
+----
+
+==== Models in Expressions
+
+As with any JavaScript object, [classname]#AbstractModel<T># has `toString(): string` and `valueOf(): T` instance methods, that are handy for template expressions.
+
+For [classname]#StringModel# in string expressions, the following are equivalent:
+
+[source, typescript]
+----
+html`
+  ${model.fullName.toString()}
+  ${model.fullName.valueOf()}
+  ${model.fullName}
+`;
+----
+
+You can use [classname]#NumberModel# in formulas using [methodname]#valueOf()#:
+
+[source, typescript]
+----
+html`
+  Cost: ${model.quantity.valueOf() * model.price.valueOf()}
+`;
+----
+
+== The Binder
+
+A form binder controls all aspects of a single form. Typically it is used to get and set the form value, access the form model, validate, reset, and submit the form.
+
+The [classname]#Binder# constructor arguments are:
+
+`context: Element`::
+The form view component instance to update.
+`Model: ModelConstructor<T, M>`::
+The constructor (the class reference) of the form model. The [classname]#Binder# instantiates the top-level model and
+`config?: BinderConfiguration<T>`::
+The options object.
+  `onChange?: (oldValue?: T) => void`:::
+  The callback that updates the form view, by default uses `context.requestUpdate()`.
+  `onSubmit?: (value: T) => Promise<T | void>`:::
+  The endpoint for submitting the form data into.
+
+The [classname]#Binder# has the following instance properties:
+
+`model: M`::
+The form model, the top-level model instance created by the [classname]#Binder#.
+`value: T`::
+The current value of the form, two-way bound to the field components.
+`defaultValue: T`::
+The initial value of the form, before any fields are edited by the user.
+`readonly validating: boolean`::
+True when there is an ongoing validation.
+`readonly submitting: boolean`::
+True if the form was submitted, but the submit promise is not resolved yet.
+
+The [classname]#Binder# instance methods are:
+
+`reset(defaultValue?: T): void`::
+Reset the form to the default value. If the argument is given, sets the default value property to the argument value first.
+`clear(): void`::
+Sets the form to empty value, as defined in the Model.
+`getFieldStrategy(element: any): FieldStrategy`::
+Determines and returns the `field` directive strategy for the bound element. Override to customise the binding strategy for a component.
+The [classname]#Binder# extends [classname]#BinderNode#, see the inherited properties and methods below.
+
+== Binder Nodes
+
+The [classnamen]#BinderNode<T, M># class provides the form binding related APIs with respect to a particular model instance.
+
+Structurally, model instances form a tree, in which the object and array models have child nodes of field and array item model instances.
+
+There is a one-to-one mapping from every model instance to the corresponding [classname]#BinderNode# instance. The [classname]#Binder# itself is a [classnamne]#BinderNode# for the top-level form model.
+
+Use the [methodname]#binderNode.for()# method to obtain the binder node related with the model.
+
+The binder nodes have the following properties:
+
+`model: M`::
+The model instance mapped to this binder node.
+`value: T`::
+The current value related to the model, two-way bound to the field components.
+`readonly defaultValue: T`::
+The default value related to the model. Note: this is read-only here, use the top-level `binder.defaultValue` to change.
+`parent: BinderNode<any, AbstractModel<any>> | undefined`::
+The parent node, if this binder node corresponds to a nested model, otherwise `undefined` for the top-level binder.
+`binder: Binder<any, AbstractModel<any>>`::
+The binder for the top-level model.
+`readonly name: string`::
+The name generated from the model structure, used to set the `name` attribute on the field components.
+`readonly required: boolean`::
+True if the value is required to be non-empty. Based on presence of validators, that have `impliesRequired: true` flag.
+`dirty: boolean`::
+True if the current `value` is different from the `defaultValue`.
+`visited: boolean`::
+True if the bound field was ever focused and blurred by the user. The value is set by the `field` directive.
+`validators: ReadonlyArray<Validator<T>>`::
+The array of validators for the model. The default value is defined in the model.
+`readonly ownErrors: ReadonlyArray<ValueError<T>>`::
+The array of validation errors directly related with the model.
+`readonly errors: ReadonlyArray<ValueError<any>>`::
+The combined array of all errors for this node’s model and all its nested models.
+`readonly invalid: boolean`::
+True when the `errors` array is not empty.
+
+The binder node has the following instance methods:
+
+`for<NM extends AbstractModel<any>>(model: NM): BinderNode<ModelType<NM>, NM>`::
+Returns a binder node for the nested model instance.
+`async validate(): Promise<ReadonlyArray<ValueError<any>>>`::
+Runs all validation callbacks potentially affecting this or any nested model. Returns the combined array of all errors as in the `errors` property.
+`addValidator(validator: Validator<T>): void`::
+A helper method to add a validator to the `validators`.
+`appendItem(itemValue?: T): void`::
+A helper method for array models. If the node’s model is an [classname]#ArrayModel<T>#, appends an item to the array, otherwise throws. If the argument is given, the argument value is used for the new item, otherwise an new empty item is created.
+`prependItem(itemValue?: T): void`::
+A helper method for array modes, similar with [methodname]#appendItem()#, but prepends an item to the array.
+`removeItem(): void`::
+A helper method for array item models. If the node’s model **parent model** is an [classname]#ArrayModel<T>#, removes the item the array, otherwise throws.
