@@ -106,7 +106,12 @@ function migrateDocs() {
     flowPath,
     { filter }
   );
-  generateTopLevelIndex(flowPath, 'Framework', 1);
+  generateTopLevelIndex({
+    folderPath: flowPath,
+    title: 'Framework',
+    order: 1,
+    icon: '../_images/flow.svg'
+  });
   generateIndexes(sections.flow.subpages, 'flow');
 
   // TODO draft content should be in a different branch (portlet support is not yet available)?
@@ -120,7 +125,12 @@ function migrateDocs() {
     themesPath,
     { filter }
   );
-  generateTopLevelIndex(themesPath, 'Themes and Styling', 3);
+  generateTopLevelIndex({
+    folderPath: themesPath,
+    title: 'Themes and Styling',
+    order: 3,
+    icon: '../_images/themes.svg'
+  });
   generateIndexes(sections.themes.subpages, 'themes', 110);
 
   // Designer
@@ -129,7 +139,12 @@ function migrateDocs() {
     designerPath,
     { filter }
   );
-  generateTopLevelIndex(designerPath, 'Designer', 4);
+  generateTopLevelIndex({
+    folderPath: designerPath,
+    title: 'Designer',
+    order: 4,
+    icon: '../_images/designer.svg'
+  });
   generateIndexes(sections.designer.subpages, 'designer');
 
 
@@ -139,7 +154,12 @@ function migrateDocs() {
     testbenchPath,
     { filter }
   );
-  generateTopLevelIndex(testbenchPath, 'TestBench', 5);
+  generateTopLevelIndex({
+    folderPath: testbenchPath,
+    title: 'TestBench',
+    order: 5,
+    icon: '../_images/testbench.svg'
+  });
   generateIndexes(sections.testbench.subpages, 'tools/testbench');
 
 
@@ -149,7 +169,12 @@ function migrateDocs() {
     bakeryPath,
     { filter }
   );
-  generateTopLevelIndex(bakeryPath, 'Full Stack App Starter', 6);
+  generateTopLevelIndex({
+    folderPath: bakeryPath,
+    title: 'Full Stack App Starter',
+    order: 6,
+    icon: '../_images/fullstack-starter.svg'
+  });
   generateIndexes(sections.bakeryflow.subpages, 'bakeryflow');
 
 
@@ -159,7 +184,12 @@ function migrateDocs() {
     basPath,
     { filter }
   );
-  generateTopLevelIndex(basPath, 'Business App Starter', 7);
+  generateTopLevelIndex({
+    folderPath: basPath,
+    title: 'Business App Starter',
+    order: 7,
+    icon: '../_images/business-starter.svg'
+  });
   generateIndexes(sections['business-app'].subpages, 'business-app');
 
 
@@ -169,7 +199,12 @@ function migrateDocs() {
     mprPath,
     { filter }
   );
-  generateTopLevelIndex(mprPath, 'Multiplatform Runtime', 8);
+  generateTopLevelIndex({
+    folderPath: mprPath,
+    title: 'Multiplatform Runtime',
+    order: 8,
+    icon: '../_images/mpr.svg'
+  });
   generateIndexes(sections.mpr.subpages, 'mpr');
 
 
@@ -231,9 +266,9 @@ function generateIndexes(subpages, folder, orderBase = 2) {
 }
 
 // Helper function for generating a snippet of asciidoc
-function generateAsciidoc(title, order, content) {
+function generateAsciidoc(title, order, icon, content) {
   return `---
-title: ${title}${order !== undefined ? `\norder: ${order}` : ''}
+title: ${title}${order !== undefined ? `\norder: ${order}` : ''}${icon !== undefined ? `\nicon: image:${icon}[opts=inline]` : ''}
 ---
 ${content !== undefined ? `\n${content}` : ''}
 `;
@@ -254,11 +289,12 @@ function overviewToIndex(overviewPath, title, order) {
   fs.remove(overviewPath);
 }
 
-function generateTopLevelIndex(folderPath, title, order, adocContent) {
-  let content = generateAsciidoc(title, order, adocContent);
+function generateTopLevelIndex(props) {
+  const {folderPath, title, order, content, icon} = props;
+  let adocContent = generateAsciidoc(title, order, icon, content);
 
   fs.writeFileSync(
     path.join(folderPath, 'index.asciidoc'),
-    content
+    adocContent
   );
 }
