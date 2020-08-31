@@ -48,6 +48,8 @@ public class Person implements Serializable {
     public enum Gender {
         MALE, FEMALE;
     }
+    
+    public Person() {}
 
     public Person(String string, int yearOfBirth) {
         this.yearOfBirth = yearOfBirth;
