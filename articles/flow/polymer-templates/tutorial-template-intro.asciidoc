@@ -1,42 +1,58 @@
 ---
-title: Using Templates from Server-side Java Code
+title: Using Polymer Templates from Server-side Java Code
 order: 1
 layout: page
 ---
 
-= Using Templates from Server-side Java Code
 
-In Vaadin, you have a few different options on how to build your views.
+= Using Polymer Templates from Server-side Java Code
 
-. Build your views purely with Java.
-. Define your layouts of your views declaratively and implement the UI logic in Java.
-. Build your views purely client-side with TypeScript and LitElement. Available from Vaadin 15 forward.
+Polymer (HTML) template support in Vaadin allows you to create pre-formatted HTML components (declarative layouts) that can be used from Java in the same way as any other component. Polymer templates give you full control over the appearance (look) of the DOM. You can use any Vaadin component in your design, as well as JavaScript logic, and even CSS. Declarative layouts have many benefits, but there are also disadvantages.
 
-These ways to build views can be mixed and matched within an application. All Vaadin components are available through Java API as well as declaratively in HTML. Choosing the correct way depends on your use case and preferences. This chapter goes through the second option, how to build your UIs declaratively while implementing the logic in Java.
+== When to Use Polymer Templates
 
-== Benefits of Using Templates
+Polymer templates work best:
 
-Separately defining the layout of a view from defining the logic of said view gives a clear and maintainable code. It makes it easier to find how the view is defined and where it is updated. HTML templates are a robust way of defining the UI structure, while Java is a great way to define the logic of the view. 
+* In simple, static views: where the view itself does not change when the data does. 
+* When you need absolute control over the DOM.
+* When you want client-side logic (JavaScript) in your app.
 
-Vaadin has support for two declarative template languages, Polymer and LitElement. The LitElement library is the successor of the Polymer library. Vaadin will support both for the foreseeable future. We recommend choosing LitElement as the template language when deciding to build new templates for your Vaadin applications. It is a future proof, lightweight, and more focused template language.
+For example, a Polymer template is a good choice for a simple login component, because login views are typically simple (with only a few UI controls) and require precise styling. In this instance, it is easier to use a template to build and maintain the view, than to use the Java API. 
 
-Vaadin can refer to and access components in Java defined by a template. Components in the template are given unique ids, and any component with an id can be accessed with Java API to configure logic further. Java-only components like compositions built with Java can be added to a HTML template by giving a layout an id in the template and adding the Java component in Java code.
+Apps or views that require offline functionality are another good example where a template is preferable. Templates allow you to define any logic you like on the client side and to serve the necessay content, without dependency on the server. 
+
+Polymer templates do have certain limitations. See <<known-limitations-of-polymer-templates,Known Limitations of Polymenr Templates>> below for more. 
+
+== When to Use Java Components
+
+The traditional way of building UIs in Vaadin is to use the Java API. This works very well for complex and dynamic UIs where the view structure changes depending on the data that is viewed.
+
+The benefits of using the Java API include:
+
+* `Component` API: This allows you to use inheritance to easily create and modify your own custom components. 
+* `Element` API: This is a lower-level API that gives you more control over the DOM than ever before. 
+* All Java code is completely type-safe: The risk of typos or other inadvertant mistakes is greatly reduced because the code is compiled before use. 
+
+The disadvantage of this approach is that it is harder to get a structural overview of the resulting view from the code. In addition, although modifying the DOM is possible, it is not as easy as simply writing HTML in a template. 
 
 
-For example `<vaadin-button id="my-button">Press me</vaadin-button>` can be accessed with `@Id("my-button") Button button;` in Java.
+== Known Limitations of Polymer Templates
 
-As declarative layouts are a robust and maintainable way for defining views, https://vaadin.com/designer[Vaadin Designer], the visual tool for building UI for Vaadin apps, uses them as its format.
+The `PolymerTemplate` API has intentional limitations that you need to be aware of before chosing to use it. These limitations are by design. The root cause of the limitations is that HTML templates are not processed on the server before being sent to the client. Because templates are not checked on the server:
 
-== Known Limitations of Templates
+* Errors are only detected by the browser, or they show up as incorrect layouting etc.
+* By default, the server is not aware of, nor does it have any information about, the content of the template (for example the attributes used by a component). This means that many getter methods return the incorrect value, because the client never sent them to the server. While it is possible to add synchronization of components, data, and events, it is not available by default. 
 
-The template API has limitations that you need to be aware of before using it.
++
+To understand this behaviour, assume using a `vaadin-grid` in a template, for example. In the template itself, you can configure the `Grid`, add columns and add data. However, if you use the `@Id` annotation to <<tutorial-template-components#,bind the Grid in the associated Java file>>, you will soon run into issues. This is because on the server (in the Java file), the `Grid` object is not aware of anything configured (such as the columns) in the template.
 
-* Currently HTML templates are not processed on the server before being sent to the client. Server side is not aware of the content of the template, like the attributes used by a component. This means that many getter methods return the incorrect value because the client never sent them to the server. We plan to remove this limitation in the near future.
-* You can add components and a DOM to a template structure, but you cannot remove anything present in the original template. However, overriding component properties do work. 
+You can add components and a DOM to a template structure, but you cannot remove anything present in the original template. However, overriding component properties does work. For example, you can add an empty `Grid` to a template, bind it using the `@Id` annotation, and add columns and data from Java code.
 
-== Correctly Separating Structure and Logic
-Strive to only define things that do not change in the template and leave all dynamic parts to Java. In the template you can, for example, have attributes that never change, captions for components like `Button` and `TextField` that always stay the same, or styling for the view. If, for example, a `Button` should change the caption depending on user interaction, then leave it empty in the template and define the intial value in Java.
+Effectively, this means is that you need to make a choice as a developer to either:
 
-With `Grid`, defining columns can feel like a static part, but columns and data go strongly hand in hand. We recommend defining a `vaadin-grid` with static attributes in the template and defining columns and data in Java.
+* Use the Java API for components, or 
+* Put all your UI logic into the templates as JavaScript. 
 
-In the <<tutorial-template-basic#,next chapter>>, you will get a full example with HTML template and Java logic.
+While combining these options is possible, there are severe limitations to what you can do from the server API. 
+
+You can still combine views made with the `PolymerTemplate` API with views created with the `Component` API in your application to reduce your total development effort. In this way you can, for example, create views that work offline with views that do not. 
