@@ -15,26 +15,46 @@
  */
 package com.vaadin.flow.tutorial.databinding;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.dataview.GridDataView;
+import com.vaadin.flow.component.grid.dataview.GridLazyDataView;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.select.data.SelectListDataView;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.*;
-import com.vaadin.flow.data.provider.CallbackDataProvider.CountCallback;
-import com.vaadin.flow.data.provider.CallbackDataProvider.FetchCallback;
+import com.vaadin.flow.data.provider.CallbackDataProvider;
+import com.vaadin.flow.data.provider.Query;
+import com.vaadin.flow.data.provider.QuerySortOrder;
+import com.vaadin.flow.data.provider.SortDirection;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
-import com.vaadin.flow.tutorial.databinding.Person.Department;
-
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 @CodeFor("binding-data/tutorial-flow-data-provider.asciidoc")
 public class DataProviders {
-
-    public static class PersonSort {
-
-    }
 
     public enum Status {
         OK, ERROR;
@@ -45,48 +65,11 @@ public class DataProviders {
     }
 
     public interface PersonService {
-        List<Person> fetch(int offset, int limit,
-                           Optional<Predicate<Person>> predicate);
-
-        int getCount(Optional<Predicate<Person>> predicate);
-
         List<Person> fetchPersons(int offset, int limit);
-
-        List<Person> fetchPersons(int offset, int limit,
-                                  List<PersonSort> sortOrders);
-
         int getPersonCount();
-
-        // @formatter:off
-        PersonSort createSort(
-                String propertyName,
-                boolean descending);
-
-        List<Person> fetchPersons(
-                int offset,
-                int limit,
-                String namePrefix);
-        // @formatter:on
-
-        List<Person> fetchPersons(int offset, int limit, String namePrefix,
-                                  Department department);
-
-        // @formatter:off
-        int getPersonCount(
-                String namePrefix,
-                Department department);
-        // @formatter:on
-
         Person save(Person person);
 
-        Person fetchById(int i);
-    }
-
-    public interface DepartmentService {
-        List<Department> fetch(int offset, int limit,
-                               String filterText);
-
-        int getCount(String filterText);
+        public List<Person> findAll();
     }
 
     public void combobox() {
@@ -95,26 +78,61 @@ public class DataProviders {
 
         // Sets items as a collection
         comboBox.setItems(EnumSet.allOf(Status.class));
+    }
 
-        List<Status> itemsToShow = null;
+    public void comboboxWithPersons() {
+        ComboBox<Person> comboBox = new ComboBox<>();
+        comboBox.setItemLabelGenerator(Person::getFullName);
 
+        // Sets items as a collection
+        List<Person> persons = getPersonService().findAll();
+        comboBox.setItems(persons);
+
+    }
+
+    public void gridWithConfiguredColumns() {
+        // A bean with some fields
+        final class Person implements Serializable {
+            private String name;
+            private String email;
+            private String title;
+            private int yearOfBirth;
+
+            public Person(String name, int yearOfBirth) {
+                this.name = name;
+                this.yearOfBirth = yearOfBirth;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public int getYearOfBirth() {
+                return yearOfBirth;
+            }
+
+            public String getTitle() {
+                return title;
+            }
+
+            // other getters and setters
+        }
+
+        // Show such beans in a Grid
+        Grid<Person> grid = new Grid<>();
         // @formatter:off
-        /*
-        comboBox.setItems(
-                (itemCaption, filterText) -> itemCaption.startsWith(filterText),
-                itemsToShow);
-        */
+        grid.addColumn(Person::getName)
+                .setHeader("Name");
+        grid.addColumn(Person::getYearOfBirth)
+                .setHeader("Year of birth");
         // @formatter:on
     }
 
     public void grid() {
         Grid<Person> grid = new Grid<>();
-        grid.addColumn(Person::getName).setHeader("Name");
-        grid.addColumn(Person::getYearOfBirth)
-                .setHeader("Year of birth");
 
-        // Sets items using varargs
         // @formatter:off
+        // Sets items using vararg beans
         grid.setItems(
                 new Person("George Washington", 1732),
                 new Person("John Adams", 1735),
@@ -123,478 +141,271 @@ public class DataProviders {
         );
         // @formatter:on
 
+        PersonRepository personRepository = repo;
+
+        // Pass all Person objects to a grid from a Spring Data repository object
+        grid.setItems(personRepository.findAll());
+
         grid.addColumn(Person::getName)
                 .setHeader("Name")
-                // Override default natural sorting
+                // Override the default sorting
                 .setComparator(Comparator.comparing(person ->
                         person.getName().toLowerCase()));
+
+        // You get a DataView when setting the items
+        GridListDataView<Person> dataView = grid
+                .setItems(personRepository.findAll());
+
+        // Change the sort order of items collection
+        dataView.setSortOrder(Person::getName, SortDirection.ASCENDING);
+
+        // Add a secondary sort order to the existing sort order
+        dataView.addSortOrder(Person::getTitle, SortDirection.ASCENDING);
+
+        // Remove sorting completely (undoes the settings done above)
+        dataView.removeSorting();
     }
 
-    public void listDataProvider() {
-        List<Person> persons = Collections.emptyList();
-        Button button = new Button();
-
-        // @formatter:off
-        ListDataProvider<Person> dataProvider =
-                DataProvider.ofCollection(persons);
-
-        dataProvider.setSortOrder(Person::getName,
-                SortDirection.ASCENDING);
-
-        Grid<Person> grid = new Grid<>();
-        // The grid shows the persons sorted by name
-        grid.setDataProvider(dataProvider);
-
-        // Makes the combo box show persons in descending order
-        button.addClickListener(event -> {
-            dataProvider.setSortOrder(Person::getName,
-                    SortDirection.DESCENDING);
-        });
-        // @formatter:on
-    }
-
-    public void captionFilter() {
-        List<Person> persons = Collections.emptyList();
-        ComboBox<Department> departmentSelect = new ComboBox<>();
-
-        // @formatter:off
-        ListDataProvider<Person> dataProvider = DataProvider
-                .ofCollection(persons);
-
-        ComboBox<Person> comboBox = new ComboBox<>();
-        comboBox.setDataProvider(dataProvider);
-
-        departmentSelect.addValueChangeListener(event -> {
-            Department selectedDepartment = event.getValue();
-            if (selectedDepartment != null) {
-                dataProvider.setFilterByValue(
-                        Person::getDepartment,
-                        selectedDepartment);
-            } else {
-                dataProvider.clearFilters();
-            }
-        });
-        //@formatter:on
-    }
-
-    public void providerForFilteringDepartment() {
-        DepartmentServiceImpl service = new DepartmentServiceImpl();
-
-        DataProvider<Department, String> dataProvider =
-                createDepartmentDataProvider(service);
-        ComboBox<Department> departmentComboBox =
-                new ComboBox<>();
-        departmentComboBox.setDataProvider(dataProvider);
-
-    }
-
-    public void providerForFilteringEmployee() {
-        ComboBox<Department> departmentComboBox = new ComboBox<>();
-
-        EmployeeServiceImpl service = new EmployeeServiceImpl();
-        ConfigurableFilterDataProvider<Employee, String,
-                Department> employeeDataProvider =
-                getDataProvider(service);
-        ComboBox<Employee> employeeComboBox = new ComboBox<>();
-        employeeComboBox.setDataProvider(employeeDataProvider);
-        departmentComboBox.addValueChangeListener(event -> {
-            employeeDataProvider.setFilter(event.getValue());
-            employeeDataProvider.refreshAll();
-        });
-    }
-
-    public DataProvider<Employee, String> getEmployeeProvider() {
-        return null;
-    }
-
-    public void filterPart() {
-        DataProvider<Employee, String> employeeProvider =
-                getEmployeeProvider();
-
-        TextField searchField = new TextField();
-
-        ConfigurableFilterDataProvider<Employee, Void, String>
-                wrapper = employeeProvider.withConfigurableFilter();
-
-        Grid<Employee> grid = new Grid<>();
-        grid.setDataProvider(wrapper);
-        grid.addColumn(Employee::getName).setHeader("Name");
-
-        searchField.addValueChangeListener(event -> {
-            String filter = event.getValue();
-            if (filter.trim().isEmpty()) {
-                // null disables filtering
-                filter = null;
-            }
-
-            wrapper.setFilter(filter);
-        });
-    }
-
-
-    ConfigurableFilterDataProvider<Employee, String,
-            Department> getDataProvider(EmployeeService service) {
-        DataProvider<Employee, EmployeeFilter> dataProvider =
-                DataProvider.fromFilteringCallbacks(query -> {
-                    // getFilter returns Optional<String>
-                    EmployeeFilter filter = query.getFilter()
-                            .orElse(null);
-                    return service.fetch(query.getOffset(),
-                            query.getLimit(), filter).stream();
-                }, query -> {
-                    EmployeeFilter filter = query.getFilter()
-                            .orElse(null);
-                    return service.getCount(filter);
-                });
-
-        ConfigurableFilterDataProvider<Employee, String,
-                Department> configurableFilterDataProvider =
-                dataProvider.withConfigurableFilter(
-                        (filterText, department) ->
-                                new EmployeeFilter(filterText, department));
-
-        return configurableFilterDataProvider;
-
-    }
-
-
-    DataProvider<Department, String>
-    createDepartmentDataProvider(DepartmentService service)
-    {
-        return DataProvider.fromFilteringCallbacks(query -> {
-            // getFilter returns Optional<String>
-            String filter = query.getFilter().orElse(null);
-            return service.fetch(query.getOffset(),
-                    query.getLimit(), filter).stream();
-        }, query -> {
-            String filter = query.getFilter().orElse(null);
-            return service.getCount(filter);
-        });
-    }
-
-    public void refresh() {
-        List<Person> persons = Collections.emptyList();
-
-        // @formatter:off
-        ListDataProvider<Person> dataProvider =
-                new ListDataProvider<>(persons);
-
-        Button addPersonButton = new Button("Add person",
-                clickEvent -> {
-                    persons.add(new Person("James Monroe",
-                            1758));
-
-                    dataProvider.refreshAll();
-                });
-
-        Button modifyPersonButton = new Button("Modify person",
-                clickEvent -> {
-                    Person personToChange = persons.get(0);
-
-                    personToChange.setName("Changed person");
-
-                    dataProvider.refreshItem(personToChange);
-                });
-        //@formatter:on
-    }
-
-    public void serviceDataProvider() {
-        DataProvider<Person, Void> dataProvider =
-                DataProvider.fromCallbacks(
-                // First callback fetches items based on a query
-                query -> {
-                    // The index of the first item to load
-                    int offset = query.getOffset();
-
-                    // The number of items to load
-                    int limit = query.getLimit();
-
-                    List<Person> persons = getPersonService()
-                            .fetchPersons(offset, limit);
-
-                    return persons.stream();
-                },
-                // Second callback fetches the number of items
-                // for a query
-                query -> getPersonService().getPersonCount());
-
-        Grid<Person> grid = new Grid<>();
-        grid.setDataProvider(dataProvider);
-
-        // Columns are configured in the same way as before
-    }
-
-    public void sorting() {
-        //@formatter:off
-        DataProvider<Person, Void> dataProvider =
-                DataProvider.fromCallbacks(query -> {
-                            List<PersonSort> sortOrders = new ArrayList<>();
-                            for(SortOrder<String> queryOrder :
-                                    query.getSortOrders()) {
-                                PersonSort sort = getPersonService()
-                                        .createSort(
-                                                // The name of the sorted property
-                                                queryOrder.getSorted(),
-                                                // The sort direction for this property
-                                                queryOrder.getDirection() ==
-                                                        SortDirection.DESCENDING);
-                                sortOrders.add(sort);
-                            }
-
-                            return getPersonService().fetchPersons(
-                                    query.getOffset(),
-                                    query.getLimit(),
-                                    sortOrders
-                            ).stream();
-                        },
-
-                        // The number of persons is the same
-                        // regardless of ordering
-                        query -> getPersonService().getPersonCount()
-                );
-
-        //@formatter:on
-    }
-
-    DataProvider<Person, String> getDataProvider(
-            PersonService service) {
-        DataProvider<Person, Predicate<Person>>
-                predicateDataProvider =
-        DataProvider.fromFilteringCallbacks(
-                query -> service.fetch(query.getOffset(),
-                        query.getLimit(),
-                        query.getFilter()).stream(),
-                query -> service.getCount(query.getFilter()));
-
-        DataProvider<Person, String> dataProvider =
-                predicateDataProvider.withConvertedFilter(
-                        text -> (person -> person.getName()
-                                .startsWith(text)));
-
-        return dataProvider;
-    }
-
-    public void gpersonService(PersonService service) {
-        DataProvider<Person, String> dataProvider =
-                getDataProvider(service);
-        ComboBox<Person> comboBox = new ComboBox<>();
-        comboBox.setDataProvider(dataProvider);
-    }
-
-
-    public void refreshItem() {
-        FetchCallback<Person, String> fetchCallback = null;
-        CountCallback<Person, String> sizeCallback = null;
-        PersonService service = null;
-
-        DataProvider<Person, String> allPersonsWithId =
-                new CallbackDataProvider<>(
-                fetchCallback, sizeCallback, Person::getId);
-
-        Grid<Person> persons = new Grid<>();
-        persons.setDataProvider(allPersonsWithId);
-        persons.addColumn(Person::getName).setHeader("Name");
-
-        Button modifyPersonButton = new Button("", event -> {
-            Person personToChange = service.fetchById(128);
-            personToChange.setName("Changed person");
-            Person newInstance = service.save(personToChange);
-            allPersonsWithId.refreshItem(newInstance);
-        });
-
-    }
-
-    public void sortOrderProvider() {
+    public void beanGrid() {
+        // Create a listing component for a bean type
         Grid<Person> grid = new Grid<>(Person.class);
-
-
-        grid.addColumn(person ->
-                person.getName() + " " + person.getLastName())
-                .setHeader("Name")
-                .setSortOrderProvider(
-                // Sort according to last name, then first name
-                direction -> Stream.of(
-                        new QuerySortOrder("lastName", direction),
-                        new QuerySortOrder("firstName", direction)));
-
-        // Will be sortable by the user
-        // When sorting by this column, the query
-        // will have a SortOrder
-        // where getSorted() returns "name"
-        grid.addColumn(Person::getName)
-                .setHeader("Name")
-                .setSortProperty("name");
-
-        // Will not be sortable since no sorting info is given
-        grid.addColumn(Person::getYearOfBirth)
-                .setHeader("Year of birth");
+        grid.setColumns("name", "email", "title");
+        grid.getColumnByKey("name").setHeader("Name");
+        grid.getColumnByKey("email").setHeader("Email");
+        grid.getColumnByKey("title").setHeader("Title");
     }
 
-    private DataProvider<Person, Set<String>> getPersonsProvider() {
-        return null;
+    public void lazyDataBindingToGrid(PersonRepository repository) {
+
+        Grid<Person> grid = new Grid<>();
+
+        grid.setItems(query -> {
+            return repository.findAll( // <1>
+                    PageRequest.of(query.getPage(), // <2>
+                            query.getPageSize()) // <3>
+            ).stream(); // <4>
+        });
+
+        grid.setItems(query -> // <1>
+            getPersonService() // <2>
+                    .fetchPersons(query.getOffset(), query.getLimit()) // <3>
+                    .stream() // <4>
+        );
+
+        grid.setSortableColumns("name", "email");
+        grid.addColumn(person -> person.getTitle())
+                .setHeader("title")
+                .setSortable(true);
+
+        GridLazyDataView<Person> dataView = grid.setItems(query -> { // <1>
+            return getPersonService()
+                    .fetchPersons(query.getOffset(), query.getLimit())
+                    .stream();
+        });
+
+        dataView.setItemCountEstimate(1000); // <2>
+        dataView.setItemCountEstimateIncrease(500); // <3>
+
+        dataView.setItemCountCallback(q -> getPersonService().getPersonCount());
+
     }
 
-    private DataProvider<Person, String> getPersonProvider() {
-        return null;
+    TextField filterTextField = new TextField("Filter by name");
+    Grid<Person> grid;
+    PersonRepository repo;
+
+    public void bindWithSorting() {
+        Grid<Person> grid = new Grid<>(Person.class);
+        grid.setSortableColumns("name", "email"); // <1>
+        grid.addColumn(person -> person.getTitle())
+                .setHeader("Title")
+                .setKey("title").setSortable(true); // <2>
+        grid.setItems(
+                query -> {
+                    Sort springSort = toSpringDataSort(query.getSortOrders()); // <3>
+                    return repo.findAll(
+                            PageRequest.of(
+                                    query.getPage(),
+                                    query.getPageSize(),
+                                    springSort // <4>
+                            )).stream();
+                });
+    }
+
+    /**
+     * A method to convert given Vaadin sort hints to Spring Data specific sort
+     * instructions.
+     *
+     * @param vaadinSortOrders a list of Vaadin QuerySortOrders to convert to
+     * @return the Sort object for Spring Data repositories
+     */
+    public static Sort toSpringDataSort(List<QuerySortOrder> vaadinSortOrders) {
+        return Sort.by(
+                vaadinSortOrders.stream()
+                        .map(sortOrder ->
+                                sortOrder.getDirection() == SortDirection.ASCENDING ?
+                                        Sort.Order.asc(sortOrder.getSorted()) : // <5>
+                                        Sort.Order.desc(sortOrder.getSorted())
+                        )
+                        .collect(Collectors.toList())
+        );
+    }
+
+    public void initFiltering() {
+        filterTextField.setValueChangeMode(ValueChangeMode.LAZY); // <1>
+        filterTextField.addValueChangeListener(e -> listPersonsFilteredByName(e.getValue())); // <2>
+
+    }
+
+    private void listPersonsFilteredByName(String filterString) {
+        String likeFilter = "%" + filterString + "%";// <3>
+        grid.setItems(q -> repo
+                .findByNameLikeIgnoreCase(
+                        likeFilter, // <4>
+                        PageRequest.of(q.getPage(), q.getPageSize()))
+                .stream());
+    }
+
+    private void refreshItem() {
+        Person person = new Person();
+        person.setName("Jorma");
+        person.setEmail("old@gmail.com");
+
+        GridListDataView<Person> gridDataView = grid.setItems(person);
+
+        Button modify = new Button("Modify data", e -> {
+            person.setEmail("new@gmail.com");
+
+            // The component shows the old email until notified of changes
+            gridDataView.refreshItem(person);
+        });
+    }
+
+    private void selectingNextItem() {
+
+        List<Person> allPersons = repo.findAll();
+        GridListDataView<Person> gridDataView = grid.setItems(allPersons);
+
+        Button selectNext = new Button("Next", e -> {
+            grid.asSingleSelect().getOptionalValue().ifPresent(p -> {
+                gridDataView.getNextItem(p).ifPresent(
+                        next -> grid.select(next)
+                );
+            });
+        });
+
+        // Filter Persons younger 20 years
+        gridDataView.setFilter(p -> p.getAge() < 20);
+
+        // Remove filters completely (undoes the settings done above)
+        gridDataView.removeFilters();
+
+    }
+
+    private void selectNext(Grid grid) {
+        Object current = grid.asSingleSelect().getValue();
+        grid.getListDataView().getNextItem(current).ifPresent(next -> {
+            grid.asSingleSelect().setValue(next);
+        });
+
+    }
+
+    private void lazyBindingToComboBox() {
+        ComboBox<Person> cb = new ComboBox<>();
+        cb.setDataProvider((String filter, int offset, int limit) -> {
+            return repo.findByNameLikeIgnoreCase(
+                    "%" + filter + "%", // <1>
+                    PageRequest.of(offset / limit, limit)
+            ).stream();
+        }, filter -> {
+            return (int) repo.countByNameLikeIgnoreCase("%" + filter + "%"); // <2>
+        });
+    }
+
+    private void exportToCsvFile(Grid<Person> grid)
+            throws FileNotFoundException, IOException {
+        GridDataView<Person> dataView = grid.getGenericDataView();
+        FileOutputStream fout = new FileOutputStream(new File("/tmp/export.csv"));
+
+        dataView.getItems().forEach(person -> {
+            try {
+                fout.write((person.getFullName() + ", " + person.getEmail() + "\n").getBytes());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        fout.close();
+    }
+
+    private void mutationMethodsInListDataView() {
+        // The initial data
+        ArrayList<String> items = new ArrayList<>(Arrays.asList("foo", "bar"));
+
+        // Get the data view when binding it to a component
+        Select<String> select = new Select<>();
+        SelectListDataView<String> dataView = select.setItems(items);
+
+        TextField newItemField = new TextField("Add new item");
+        Button addNewItem = new Button("Add", e -> {
+            // Adding through the data view API mutates the data source
+            dataView.addItem(newItemField.getValue());
+        });
+        Button remove = new Button("Remove selected", e-> {
+            // Same for removal
+            dataView.removeItem(select.getValue());
+        });
+
+        // Hook to item count change event
+        dataView.addItemCountChangeListener(e ->
+                Notification.show(" " + e.getItemCount() + " items available"));
+
+        // Request the item count directly
+        Span itemCountSpan = new Span("Total Item Count: " + dataView.getItemCount());
+    }
+
+    public static void listItems(Grid<Person> grid, PersonRepository repository) {
+        grid.setItems(query -> repository.findAll(
+                PageRequest.of(query.getPage(), query.getPageSize())).stream());
+    }
+
+    public void shareDataBindingCode() {
+        PersonDataProvider dataProvider = new PersonDataProvider();
+        Grid<Person> personGrid = new Grid<>();
+
+        personGrid.setItems(dataProvider);
     }
 
     private PersonService getPersonService() {
         return null;
     }
 
-    private DataProvider<Person, Set<String>> getProvider() {
-        return null;
-    }
+    @SpringComponent()
+    @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+    public class PersonGrid extends Grid<Person> {
 
+        public PersonGrid(@Autowired PersonRepository repo) {
+            super(Person.class);
 
-    public class DepartmentServiceImpl implements DepartmentService {
-        List<Department> departments = new ArrayList<>();
+            // Make the lazy binding
+            setItems(q -> repo.findAll(
+                    PageRequest.of(q.getPage(), q.getPageSize())).stream());
 
-        public DepartmentServiceImpl() {
-        }
-
-        @Override
-        public List<Department> fetch(int offset, int limit, String filterText) {
-            List<Department> result = new ArrayList<>();
-            return result;
-        }
-
-        @Override
-        public int getCount(String filterText) {
-            int counter = 0;
-            return counter;
-        }
-    }
-
-    public class EmployeeFilter {
-
-        private String filterText;
-        private Department department;
-
-        public String getFilterText() {
-            return filterText;
-        }
-
-        public void setFilterText(String filterText) {
-            this.filterText = filterText;
-        }
-
-        public Department getDepartment() {
-            return department;
-        }
-
-        public void setDepartment(Department department) {
-            this.department = department;
-        }
-
-        public EmployeeFilter(String filterText,
-                              Department department) {
-
-            this.filterText = filterText;
-            this.department = department;
+            // Make other common/default configuration
+            setColumns("name", "email");
         }
 
     }
 
-    public interface EmployeeService {
-        List<Employee> fetch(int offset, int limit,
-                             EmployeeFilter filter);
+    @SpringComponent
+    public class PersonDataProvider implements CallbackDataProvider.FetchCallback<Person, Void> {
 
-        int getCount(EmployeeFilter filter);
-    }
-
-
-    public class Employee {
-        String name;
-        int yearOfBirth;
-        Department department;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public int getYearOfBirth() {
-            return yearOfBirth;
-        }
-
-        public void setYearOfBirth(int yearOfBirth) {
-            this.yearOfBirth = yearOfBirth;
-        }
-
-
-        public Department getDepartment() {
-            return department;
-        }
-
-        public void setDepartment(Department department) {
-            this.department = department;
-        }
+        @Autowired
+        PersonRepository repo;
 
         @Override
-        public String toString() {
-            return name;
-        }
-
-        public Employee(String name, int yearOfBirth, Department department) {
-
-            this.name = name;
-            this.yearOfBirth = yearOfBirth;
-            this.department = department;
-        }
-
-
-    }
-
-    public class EmployeeServiceImpl implements EmployeeService {
-
-        List<Employee> employees = new ArrayList<>();
-
-        public EmployeeServiceImpl() {
-        }
-
-        @Override
-        public List<Employee> fetch(int offset, int limit, EmployeeFilter filter) {
-            List<Employee> searchList = new ArrayList<>();
-
-            if (filter != null && (filter.getDepartment() != null || filter.getFilterText() != null)) {
-                for (Employee employee : employees) {
-                    if ((filter.getFilterText() == null || employee.getName().contains(filter.getFilterText()))
-                            && Objects.equals(employee.getDepartment(), filter.getDepartment())) {
-                        searchList.add(employee);
-                    }
-                }
-            } else {
-                searchList = employees;
-            }
-
-            List<Employee> result = new ArrayList<>();
-            int count = 0;
-            for (int i = offset; i < offset + limit && i < searchList.size(); i++) {
-                result.add(searchList.get(i));
-            }
-
-            return result;
-        }
-
-        @Override
-        public int getCount(EmployeeFilter filter) {
-            int counter = 0;
-
-            if (filter == null && (filter.getFilterText() == null || filter.getDepartment() == null)) {
-                return employees.size();
-            }
-
-            for (Employee employee : employees) {
-                if (employee.getName().contains(filter.getFilterText())
-                        && Objects.equals(employee.getDepartment(), filter.getDepartment())) {
-                    counter++;
-                }
-            }
-            return counter;
+        public Stream<Person> fetch(Query<Person, Void> query) {
+            return repo.findAll(PageRequest.of(query.getPage(),
+                    query.getPageSize())).stream();
         }
 
     }

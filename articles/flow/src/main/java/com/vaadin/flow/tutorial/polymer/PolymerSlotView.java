@@ -41,20 +41,6 @@ public class PolymerSlotView {
         }
     }
 
-    @Tag("main-layout")
-    @JsModule("./com/example/main-layout.js")
-    public class MainLayout extends PolymerTemplate<TemplateModel>
-            implements RouterLayout {
-    }
-
-    @Route(value = "editor", layout = MainLayout.class)
-    public class Editor extends Div {
-    }
-
-    @ParentLayout(MainLayout.class)
-    public class MenuBar extends Div {
-    }
-
     @Tag("name-element")
     @JsModule("./com/example/name-element.js")
     public class NameElement extends PolymerTemplate<TemplateModel> {
