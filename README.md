@@ -69,8 +69,38 @@ For example:
 - `articles/intro/index.asciidoc` → `/intro/`
 - `articles/forms/data-binding.asciidoc` → `/forms/data-binding/`
 
+## Setup with a Docker image
 
-## Setup
+1. Install Docker Desktop from https://www.docker.com/get-started
+1. Clone this repo:
+   ```
+   git clone https://github.com/vaadin/docs
+   ```
+1. Start up the Docker container (this will take some time on the first run):
+   ```
+   cd docs
+   docker run -p 8000:8000 -v $(pwd):/docs docs-app
+   ```
+1. Open http://localhost:8000, make changes to the articles/code examples and see the changes applied live. Browser refresh might be required in some cases; for example, after code example modifications.
+
+---
+**NOTE**
+
+Since the docs-app image hasn't yet been published to Docker hub, you'll first need to build it yourself:
+
+1. Clone the docs-app repository:
+   ```
+   git clone https://github.com/vaadin/docs-app.git
+   ```
+1. Build the Docker image (this will take some time on the first run):
+   ```
+   cd docs-app
+   docker build -t docs-app .
+   ```
+
+---
+
+## Setup without Docker
 
 1. Install required tools:
    - JDK
@@ -86,7 +116,7 @@ For example:
    mvn spring-boot:run
    ```
    The Java server is only needed to serve and run the embeddable Java examples, using Flow’s web component exporter / component embedding feature.
-   
+
    Currently there is no UI to browse the examples, and the root path (http://localhost:8080) gives a 404. Use the [docs-app](https://github.com/vaadin/docs-app) documentation viewer application to browse them (the ones which are included in the documentation articles).
 
 
