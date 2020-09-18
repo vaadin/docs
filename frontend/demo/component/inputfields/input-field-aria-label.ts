@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/vaadin-text-field';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@polymer/iron-icon';
 
