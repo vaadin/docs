@@ -15,7 +15,7 @@ export class Example extends LitElement {
   static get styles() {
     return css`
       .weak-color {
-        color: var(--lumo-error-color);
+        color: var(--lumo-error-text-color);
       }
       .moderate-color {
         color: #e7c200;
