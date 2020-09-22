@@ -21,7 +21,7 @@ export class Example extends LitElement {
         color: #e7c200;
       }
       .strong-color {
-        color: var(--lumo-success-color);
+        color: var(--lumo-success-text-color);
       }
     `;
   }
