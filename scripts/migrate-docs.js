@@ -72,6 +72,8 @@ function migrateDocs() {
     json: true
   });
 
+  delete sections.elements;
+
   const flowPath = path.join(__dirname, '../articles/flow');
   const themesPath = path.join(__dirname, '../articles/themes');
   const designerPath = path.join(__dirname, '../articles/designer');
@@ -113,6 +115,7 @@ function migrateDocs() {
     icon: '../_images/flow.svg'
   });
   generateIndexes(sections.flow.subpages, 'flow');
+  generateExternalLinks(sections.flow.external, 'flow');
 
   // TODO draft content should be in a different branch (portlet support is not yet available)?
   fs.remove(path.join(flowPath, 'portlet-support'));
@@ -132,6 +135,7 @@ function migrateDocs() {
     icon: '../_images/themes.svg'
   });
   generateIndexes(sections.themes.subpages, 'themes', 110);
+  generateExternalLinks(sections.themes.external, 'themes');
 
   // Designer
   fs.copySync(
@@ -146,6 +150,7 @@ function migrateDocs() {
     icon: '../_images/designer.svg'
   });
   generateIndexes(sections.designer.subpages, 'designer');
+  generateExternalLinks(sections.designer.external, 'designer');
 
 
   // TestBench
@@ -160,7 +165,8 @@ function migrateDocs() {
     order: 5,
     icon: '../_images/testbench.svg'
   });
-  generateIndexes(sections.testbench.subpages, 'tools/testbench');
+  generateIndexes(sections.testbench.subpages, 'testbench');
+  generateExternalLinks(sections.testbench.external, 'testbench');
 
 
   // Bakery/full-stack starter
@@ -176,6 +182,7 @@ function migrateDocs() {
     icon: '../_images/fullstack-starter.svg'
   });
   generateIndexes(sections.bakeryflow.subpages, 'bakeryflow');
+  generateExternalLinks(sections.bakeryflow.external, 'bakeryflow');
 
 
   // Business app starter
@@ -191,6 +198,7 @@ function migrateDocs() {
     icon: '../_images/business-starter.svg'
   });
   generateIndexes(sections['business-app'].subpages, 'business-app');
+  generateExternalLinks(sections['business-app'].external, 'business-app');
 
 
   // MPR
@@ -206,6 +214,7 @@ function migrateDocs() {
     icon: '../_images/mpr.svg'
   });
   generateIndexes(sections.mpr.subpages, 'mpr');
+  generateExternalLinks(sections.mpr.external, 'mpr');
 
 
   // Charts
@@ -216,6 +225,7 @@ function migrateDocs() {
   );
   overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
   generateIndexes(sections.charts.subpages, 'design-system/components/charts');
+  generateExternalLinks(sections.charts.external, 'design-system/components/charts');
 
 
   try {
@@ -242,6 +252,7 @@ function migrateDocs() {
   catch (error) {
     console.error('Error occurred:', error);
   }
+
 
   console.log('Migration finished successfully');
 }
@@ -297,4 +308,19 @@ function generateTopLevelIndex(props) {
     path.join(folderPath, 'index.asciidoc'),
     adocContent
   );
+}
+
+function generateExternalLinks(externals, folder) {
+  if (externals) {
+    Object.keys(externals).forEach((extName, i) => {
+      const external = externals[extName];
+      fs.writeFileSync(
+        path.join(__dirname, `../articles/${folder}/${extName}-external.asciidoc`),
+`---
+title: ${external.title}
+order: ${1000 + i}
+url: ${external.url}
+---`);
+    });
+  }
 }
