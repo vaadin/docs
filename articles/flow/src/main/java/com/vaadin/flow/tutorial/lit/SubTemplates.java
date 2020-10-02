@@ -25,12 +25,12 @@ import com.vaadin.flow.tutorial.annotations.CodeFor;
 public class SubTemplates {
 
     @Tag("child-template")
-    @JsModule("./com/example/child-template.js")
+    @JsModule("./com/example/child-template.ts")
     public class ChildTemplate extends LitTemplate {
     }
 
     @Tag("parent-template")
-    @JsModule("./com/example/parent-template.js")
+    @JsModule("./com/example/parent-template.ts")
     public class ParentTemplate extends LitTemplate {
 
         @Id("childTemplate")

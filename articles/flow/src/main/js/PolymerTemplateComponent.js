@@ -1,4 +1,4 @@
-// tutorial::polymer-templates/tutorial-template-components.asciidoc
+// tutorial::polymer-templates/tutorial-template-mapped-components-limitations.asciidoc
 import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
 
 class MainPage extends PolymerElement {

@@ -1,4 +1,4 @@
-// tutorial::polymer-templates/tutorial-template-components-in-slot.asciidoc
+// tutorial::polymer-templates/tutorial-polymer-template-components-in-slot.asciidoc
 import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
 
 class ComponentContainer extends PolymerElement {
