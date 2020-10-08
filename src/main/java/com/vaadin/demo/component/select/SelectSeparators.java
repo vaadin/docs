@@ -5,32 +5,30 @@ import java.util.List;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
 
-@Route("select-basic")
-public class SelectBasic extends Div {
+@Route("select-separators")
+public class SelectSeparators extends Div {
 
-	public SelectBasic() {
-	
-	class Ordering {
-	    private int id;
-		private String name;
-		public Ordering(int id, String name) {
-		    this.id = id;
-			this.name = name;
-		}
-		public int getId() {
-		    return id;
-		}
-		public String getName() {
-			return name;
-		}
-	}
+  public SelectSeparators() {
+    class Ordering {
+        private int id;
+        private String name;
+        public Ordering(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+        public int getId() {
+            return id;
+        }
+        public String getName() {
+            return name;
+        }
+    }
 
     // tag::snippet[]
-    // Have some data
     List<Ordering> orderings = new ArrayList<Ordering>();
     orderings.add(new Ordering(0, "Most recent first"));
     orderings.add(new Ordering(1, "Rating: high to low"));
@@ -42,15 +40,16 @@ public class SelectBasic extends Div {
     Select<Ordering> select = new Select<>();
     select.setLabel("Sort By");
     select.setItems(orderings);
-    
-    // Select needs to know how to get the item
-    // label from the object type
     select.setItemLabelGenerator(Ordering::getName);
+
+    // Add horizontal rulers after specified items
+    select.addComponents(orderings.get(0), new Hr());
+    select.addComponents(orderings.get(2), new Hr());
 
     add(select);
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<SelectBasic> { // hidden-full-source-line
+  public static class SelectSeparatorsExporter extends DemoExporter<SelectSeparators> { // hidden-full-source-line
   } // hidden-full-source-line
 }

@@ -7,7 +7,7 @@ import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 
-@customElement('select-basic')
+@customElement('select-placeholder')
 export class Example extends LitElement {
   render() {
     return html`
