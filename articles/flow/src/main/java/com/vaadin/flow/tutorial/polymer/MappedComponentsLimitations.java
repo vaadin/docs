@@ -18,19 +18,23 @@ package com.vaadin.flow.tutorial.polymer;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.littemplate.LitTemplate;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.polymertemplate.Id;
 import com.vaadin.flow.component.polymertemplate.PolymerTemplate;
 import com.vaadin.flow.templatemodel.TemplateModel;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
+import com.vaadin.flow.tutorial.webcomponent.Div;
 
 @CodeFor("polymer-templates/tutorial-template-mapped-components-limitations.asciidoc")
 public class MappedComponentsLimitations {
 
     @Tag("main-page")
     @JsModule("./com/example/main-page.js")
-    public class MainPage extends PolymerTemplate<TemplateModel> {
+    public class MainPage extends LitTemplate {
 
         @Id("content")
         private Div content;
@@ -38,6 +42,28 @@ public class MappedComponentsLimitations {
         public void setContent(Component content) {
             this.content.removeAll();
             this.content.add(content);
+        }
+    }
+
+    @Tag("main-layout")
+    @JsModule("./com/example/main-layout.js")
+    public class MainLayout extends LitTemplate {
+
+        @Id("layout")
+        private VerticalLayout layout;
+        @Id("textfield")
+        private TextField textField;
+        @Id("button")
+        private Button button;
+
+        public void onSomeAction() {
+            layout.setEnabled(false);
+
+            System.out.println(textField.isEnabled()); // prints "true"
+            System.out.println(button.isEnabled()); // prints "true"
+            // call explicitly setEnabled(false) to disable a component
+            button.setEnabled(false);
+            System.out.println(button.isEnabled()); // prints "false"
         }
     }
 
