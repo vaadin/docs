@@ -1,0 +1,107 @@
+---
+title: Using Component Templates
+order: 3
+layout: page
+---
+
+
+= Using Component Templates
+
+You can create composite components using templates.
+The templates are JavaScript components containing the HTML code for the template.
+
+== Defining a Template
+
+TO BE DONE
+
+The `@Id` annotation allows you to interact with Polymer templates on the server side. You can use the `@Id` annotation to get a `Component` or `Element` reference for an element defined in a JavaScript Polymer template.
+
+In this section, we demonstrate how to use the `@Id` annotation to reference a JavaScript Polymer template.
+
+[NOTE]
+The `Component` or `Element` must have the same `@Tag` as the actual element that is referenced. This means that you cannot bind a `<span id="content"></span>` to a `@Id("content") Div content`.
+
+*Example*: `MainPage` JavaScript Polymer template file.
+
+[source,js]
+----
+class MainPage extends PolymerElement {
+
+    static get template() {
+        return html`
+            <div id="header">Main page</div>
+            <div id="content"></div>
+            <hr>
+            <div id="footer">
+                <a href="mailto:someone@example.com?Subject=Hello" target="_top">Send Mail</a>
+            </div>`;
+    }
+
+    static get is() {
+          return 'main-page';
+    }
+}
+
+customElements.define(MainPage.is, MainPage);
+----
+* The `html` returns a a placeholder `div` element with a `"content"` identifier.
+* The `div` element is mapped to a `Div` component in the Java code (see below), allowing you to add a `Component` as a child to it.
+
+*Example*: Implementing a method in the `MainPage` class to add a `Component` to the content of a JavaScript Polymer template element.
+
+[source,java]
+----
+@Tag("main-page")
+@JsModule("./com/example/main-page.js")
+public class MainPage extends PolymerTemplate<TemplateModel> {
+
+    @Id("content")
+    private Div content;
+
+    public void setContent(Component content) {
+        this.content.removeAll();
+        this.content.add(content);
+    }
+}
+----
+* The `@Id` annotation maps a component to an element in the JavaScript template on the client with the HTML identifier `"content"`.
+* Vaadin creates a component instance of the declared type automatically and wires it to the template DOM element and the `content` field in the Java class.
+
+[NOTE]
+The declared type used in an `@Id` injection declaration must have a default constructor to be able to instantiate it.
+
+
+[TIP]
+The `@Id` annotation can also be used to inject an `Element` instance instead of a `Component` instance, if you want to use the lower-level `Element` API or there is no suitable HTML component available.
+
+
+*Example*: Calling the `setContent` method to set any `Component` as content for the `MainPage` class.
+
+[source,java]
+----
+MainPage page = new MainPage();
+page.setContent(new Label("Hello!"));
+----
+
+== Limitations of Mapped PolymerTemplate Components
+
+=== Out-of-sync Methods
+
+In the Polymer template class example above, you could additionally map the `div` element with a `"footer"` identifier using the `Div` component and `@Id("footer")` annotation. However, neither the hierarchical structure, nor any attributes or properties, will be available on the server side using the Java API.
+
+The injected `Div` instance does not have a server-side child, even though the `a` (anchor) element is available on the client side. The `getChildren()` method in the injected instance returns an empty `Stream`. Similarly, the `getText()` method of the `Div` instance injected using the `@Id("header")` annotation, returns an empty string.
+
+To summarize:
+
+* Server-side `Component` or `Element` read methods are not always in sync with the client side.
+* You can still use mutation API methods, like `appendChild`, `setProperty` or `setAttribute` from the server side, without issue.
+* Getter methods return values that are set from the server side only.
+
+=== Removing Mapped Elements
+
+A virtually-mapped `Element` is connected to the `ShadowRoot` of the
+`PolymerTemplate`, even if it actually resides deeper in the shadow tree. You cannot remove virtually mapped components from the DOM by removing them on the server side.
+
+
+[NOTE]
+You can detect whether a component is used in a `PolymerTemplate` using the `isTemplateMapped` method. See the <<tutorial-component-integration#,Detecting PolymerTemplate Mappings in Components>> for more.
