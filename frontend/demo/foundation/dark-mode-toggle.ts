@@ -17,7 +17,7 @@ export class DarkModeToggle extends HTMLElement {
     document.head.appendChild(style);
 
     this.innerHTML = `
-    <button>Toggle dark palette</button>
+    <button class="guibutton">Toggle dark palette</button>
     `;
 
     this.querySelector('button')?.addEventListener('click', () => {

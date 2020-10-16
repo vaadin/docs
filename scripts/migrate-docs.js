@@ -75,7 +75,8 @@ function migrateDocs() {
   delete sections.elements;
 
   const flowPath = path.join(__dirname, '../articles/flow');
-  const themesPath = path.join(__dirname, '../articles/themes');
+  // Themes and Styling section has already been restructured
+  // const themesPath = path.join(__dirname, '../articles/themes');
   const designerPath = path.join(__dirname, '../articles/designer');
   const testbenchPath = path.join(__dirname, '../articles/testbench');
   const mprPath = path.join(__dirname, '../articles/mpr');
@@ -122,20 +123,20 @@ function migrateDocs() {
 
 
   // Themes and styling
-  fs.mkdirSync(themesPath);
-  fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'flow/documentation-themes'),
-    themesPath,
-    { filter }
-  );
-  generateTopLevelIndex({
-    folderPath: themesPath,
-    title: 'Themes and Styling',
-    order: 3,
-    icon: '../_images/themes.svg'
-  });
-  generateIndexes(sections.themes.subpages, 'themes', 110);
-  generateExternalLinks(sections.themes.external, 'themes');
+  // fs.mkdirSync(themesPath);
+  // fs.copySync(
+  //   path.join(__dirname, CACHE_DIR, 'flow/documentation-themes'),
+  //   themesPath,
+  //   { filter }
+  // );
+  // generateTopLevelIndex({
+  //   folderPath: themesPath,
+  //   title: 'Theming and Styling',
+  //   order: 3,
+  //   icon: '../_images/themes.svg'
+  // });
+  // generateIndexes(sections.themes.subpages, 'themes', 110);
+  // generateExternalLinks(sections.themes.external, 'themes');
 
   // Designer
   fs.copySync(

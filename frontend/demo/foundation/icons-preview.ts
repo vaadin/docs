@@ -23,6 +23,7 @@ export class IconsPreview extends HTMLElement {
         .docs-icon-preview {
           text-align: center;
           padding-bottom: var(--docs-space-l);
+          line-height: 1;
         }
 
         .docs-icon-preview.hidden {
