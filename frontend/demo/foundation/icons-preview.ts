@@ -48,12 +48,12 @@ export class IconsPreview extends HTMLElement {
           max-width: 20em;
           margin: var(--docs-space-xl) auto;
           font: inherit;
-          font-size: var(--docs-font-size-s);
+          font-size: var(--docs-font-size-m);
           border: 1px solid var(--docs-divider-color-2);
           background: var(--docs-surface-color-1);
           color: var(--docs-body-text-color);
           border-radius: var(--docs-border-radius-m);
-          padding: var(--docs-space-s);
+          padding: var(--docs-space-xs) var(--docs-space-s);
         }
       </style>
 
@@ -74,7 +74,7 @@ export class IconsPreview extends HTMLElement {
     const search = this.querySelector('input');
     search?.addEventListener('input', () => {
       this.querySelectorAll('.docs-icon-preview').forEach(icon => {
-        icon.classList.toggle('hidden', icon.className.indexOf(search.value) === -1);
+        icon.classList.toggle('hidden', icon.className.toLowerCase().indexOf(search.value.toLowerCase()) === -1);
       });
     });
   }
