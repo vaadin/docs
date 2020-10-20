@@ -13,11 +13,31 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-combo-box
-        label="Country"
+        label="Choose doctor"
         item-label-path="country"
         item-value-path="id"
         .items=${this.items}
-      ></vaadin-combo-box>
+        style="width:100%"
+      >
+        <template>
+          <style>
+            :host {
+              --vaadin-combo-box-overlay-width: 400px;
+
+            }
+            .avatar {
+              width: 40px; 
+              border-radius: 100%;
+              float: left;
+              margin-right: 10px;
+            }
+          </style>
+          <img src="https://randomuser.me/api/portraits/women/43.jpg" class="avatar">
+          <b>[[item.country]]</b>
+          <br>
+          [[item.abbreviation]]
+        </template>
+      </vaadin-combo-box>
     `;
   }
 }

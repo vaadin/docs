@@ -17,6 +17,7 @@ export class Example extends LitElement {
         item-label-path="country"
         item-value-path="id"
         .items=${this.items}
+        auto-open-disabled
       ></vaadin-combo-box>
     `;
   }
