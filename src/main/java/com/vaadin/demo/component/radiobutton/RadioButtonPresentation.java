@@ -18,11 +18,11 @@ public class RadioButtonPresentation extends Div {
   private final String IMAGES_PATH = "../../../vaadin/images/";
 
   public RadioButtonPresentation() {
-
+    // tag::snippet[]
     RadioButtonGroup<Card> radioGroup = new RadioButtonGroup<>();
     radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
     radioGroup.setLabel("Payment method");
-    // tag::snippet[]
+
     radioGroup.setItems(DataService.getCards());
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
       Image logo = new Image(IMAGES_PATH + card.getImage(), card.getName());
@@ -32,9 +32,9 @@ public class RadioButtonPresentation extends Div {
 
       return new Div(new FlexLayout(logo, number), new Div(expiryDate));
     }));
-    // end::snippet[]
 
     add(radioGroup);
+    // end::snippet[]
   }
 
   public static class Exporter extends DemoExporter<RadioButtonPresentation> { // hidden-full-source-line

@@ -4,9 +4,9 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 
+import cards from '../../../../src/main/resources/data/cards.json';
 import * as visa from '../../../../src/main/resources/META-INF/resources/vaadin/images/visa.png';
 import * as mastercard from '../../../../src/main/resources/META-INF/resources/vaadin/images/mastercard.png';
-import cards from '../../../../src/main/resources/data/cards.json';
 const IMAGES: { [key: string]: string } = {
   visa,
   mastercard
@@ -17,10 +17,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[]-->
-      <vaadin-radio-group label="Payment method" theme="vertical">
+      <vaadin-radio-group label="Payment method" theme="vertical" value="visa">
         ${cards.map(
           (card) => html`
-            <vaadin-radio-button value="economy">
+            <vaadin-radio-button value=${card.name}>
               <div>
                 <div style="display: flex">
                   <img src=${IMAGES[card.name]} alt=${card.name} style="height: 1em;" />

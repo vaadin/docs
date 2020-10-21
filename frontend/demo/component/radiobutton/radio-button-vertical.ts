@@ -10,9 +10,9 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[]-->
       <vaadin-radio-group label="Status" theme="vertical">
-        <vaadin-radio-button>Pending</vaadin-radio-button>
-        <vaadin-radio-button>Submitted</vaadin-radio-button>
-        <vaadin-radio-button>Confirmed</vaadin-radio-button>
+        <vaadin-radio-button value="pending" checked>Pending</vaadin-radio-button>
+        <vaadin-radio-button value="submitted">Submitted</vaadin-radio-button>
+        <vaadin-radio-button value="confirmed">Confirmed</vaadin-radio-button>
       </vaadin-radio-group>
       <!-- end::snippet[]-->
     `;
