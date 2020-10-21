@@ -6,7 +6,7 @@ import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import countries from '../../../../src/main/resources/data/countries.json';
 
 // tag::snippet[]
-@customElement('combo-box-basic')
+@customElement('combo-box-auto-open')
 export class Example extends LitElement {
   @property() items = countries;
 
@@ -17,6 +17,7 @@ export class Example extends LitElement {
         item-label-path="country"
         item-value-path="id"
         .items=${this.items}
+        auto-open-disabled
       ></vaadin-combo-box>
     `;
   }

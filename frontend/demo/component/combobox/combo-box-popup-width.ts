@@ -6,7 +6,7 @@ import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import countries from '../../../../src/main/resources/data/countries.json';
 
 // tag::snippet[]
-@customElement('combo-box-basic')
+@customElement('combo-box-popup-width')
 export class Example extends LitElement {
   @property() items = countries;
 
