@@ -4,43 +4,39 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 
-// tag::snippet[]
 @customElement('radio-button-presentation')
-export class RadioButtonPresentation extends LitElement {
-
+export class Example extends LitElement {
   render() {
     return html`
-      <vaadin-radio-group
-        label="Travel Class"
-        theme="vertical"
-      >
+      <!-- tag::snippet[]-->
+      <vaadin-radio-group label="Travel Class" theme="vertical">
         <vaadin-radio-button value="economy" checked>
           <b>Broek</b>
-          <br>
+          <br />
           Aarhus, Denmark
         </vaadin-radio-button>
         <vaadin-radio-button value="business">
           <b>Akuchi</b>
-          <br>
+          <br />
           Cologne, Germany
         </vaadin-radio-button>
         <vaadin-radio-button value="firstClass">
-          <b>Wulf</b> 
-          <br>
+          <b>Wulf</b>
+          <br />
           Dhaka, Bangladesh
         </vaadin-radio-button>
         <vaadin-radio-button value="firstClass">
           <b>Sana</b>
-          <br>
+          <br />
           Osaka, Japan
         </vaadin-radio-button>
         <vaadin-radio-button value="firstClass">
           <b>Oikonomou</b>
-          <br>
+          <br />
           Athens, Greece
         </vaadin-radio-button>
       </vaadin-radio-group>
+      <!-- end::snippet[]-->
     `;
   }
 }
-// end::snippet[]
