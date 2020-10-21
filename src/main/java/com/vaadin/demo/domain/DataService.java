@@ -52,4 +52,18 @@ public class DataService {
     return null;
   }
 
+  public static List<Card> getCards() {
+    ObjectMapper mapper = new ObjectMapper();
+
+    try {
+      Resource resource = new ClassPathResource("data/cards.json");
+      Card[] array = mapper.readValue(resource.getInputStream(), Card[].class);
+      return Arrays.asList(array);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return null;
+  }
+
 }
