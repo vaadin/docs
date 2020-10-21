@@ -30,12 +30,12 @@ public class RadioButtonCustomOption extends Div {
     radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
     radioGroup.setLabel("Payment method");
 
-    List<Card> items = new ArrayList<>(DataService.getCards());
-    items.add(null);
-    radioGroup.setItems(items);
+    List<Card> cards = new ArrayList<>(DataService.getCards());
+    cards.add(null);
+    radioGroup.setValue(cards.get(0));
+    radioGroup.setItems(cards);
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
       if (card != null) {
-
         Image logo = new Image(IMAGES_PATH + card.getImage(), card.getName());
         logo.setHeight("1em");
         Text number = new Text(card.getNumber());

@@ -8,6 +8,9 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
+
+import java.util.List;
+
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.Card;
 import com.vaadin.demo.domain.DataService;
@@ -23,7 +26,9 @@ public class RadioButtonPresentation extends Div {
     radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
     radioGroup.setLabel("Payment method");
 
-    radioGroup.setItems(DataService.getCards());
+    List<Card> cards = DataService.getCards();
+    radioGroup.setItems(cards);
+    radioGroup.setValue(cards.get(0));
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
       Image logo = new Image(IMAGES_PATH + card.getImage(), card.getName());
       logo.setHeight("1em");
