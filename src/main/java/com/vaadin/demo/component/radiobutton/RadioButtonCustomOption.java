@@ -32,8 +32,8 @@ public class RadioButtonCustomOption extends Div {
 
     List<Card> cards = new ArrayList<>(DataService.getCards());
     cards.add(null);
-    radioGroup.setValue(cards.get(0));
     radioGroup.setItems(cards);
+    radioGroup.setValue(cards.get(0));
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
       if (card != null) {
         Image logo = new Image(IMAGES_PATH + card.getImage(), card.getName());
