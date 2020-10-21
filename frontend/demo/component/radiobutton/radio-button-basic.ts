@@ -8,13 +8,13 @@ import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 export class Example extends LitElement {
   render() {
     return html`
-      <!-- tag::snippet[]-->
+      <!-- tag::snippet[] -->
       <vaadin-radio-group label="Travel class" theme="vertical">
         <vaadin-radio-button value="economy">Economy</vaadin-radio-button>
         <vaadin-radio-button value="business">Business</vaadin-radio-button>
         <vaadin-radio-button value="firstClass">First Class</vaadin-radio-button>
       </vaadin-radio-group>
-      <!-- end::snippet[]-->
+      <!-- end::snippet[] -->
     `;
   }
 }

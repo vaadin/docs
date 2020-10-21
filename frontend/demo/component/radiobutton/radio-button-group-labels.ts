@@ -10,7 +10,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-vertical-layout>
-        <!-- tag::snippet[]-->
+        <!-- tag::snippet[] -->
         <vaadin-radio-group label="Job title" theme="vertical">
           <vaadin-radio-button value="analyst" checked>Analyst</vaadin-radio-button>
           <vaadin-radio-button value="administrator">Administrator</vaadin-radio-button>
@@ -22,7 +22,7 @@ export class Example extends LitElement {
           <vaadin-radio-button value="humanResources">Human Resources</vaadin-radio-button>
           <vaadin-radio-button value="marketing">Marketing</vaadin-radio-button>
         </vaadin-radio-group>
-        <!-- end::snippet[]-->
+        <!-- end::snippet[] -->
       </vaadin-vertical-layout>
     `;
   }

@@ -21,7 +21,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[]-->
+      <!-- tag::snippet[] -->
       <vaadin-vertical-layout>
         <vaadin-radio-group
           label="Payment method"
@@ -47,7 +47,7 @@ export class Example extends LitElement {
           .hidden=${this.value !== 'other'}
         ></vaadin-text-field>
       </vaadin-vertical-layout>
-      <!-- end::snippet[]-->
+      <!-- end::snippet[] -->
     `;
   }
 }

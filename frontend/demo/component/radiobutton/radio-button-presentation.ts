@@ -16,7 +16,7 @@ const IMAGES: { [key: string]: string } = {
 export class Example extends LitElement {
   render() {
     return html`
-      <!-- tag::snippet[]-->
+      <!-- tag::snippet[] -->
       <vaadin-radio-group label="Payment method" theme="vertical" value="visa">
         ${cards.map(
           (card) => html`
@@ -32,7 +32,7 @@ export class Example extends LitElement {
           `
         )}
       </vaadin-radio-group>
-      <!-- end::snippet[]-->
+      <!-- end::snippet[] -->
     `;
   }
 }
