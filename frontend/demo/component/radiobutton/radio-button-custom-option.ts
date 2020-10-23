@@ -7,8 +7,8 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
 import cards from '../../../../src/main/resources/data/cards.json';
-import * as visa from '../../../../src/main/resources/META-INF/resources/vaadin/images/visa.png';
-import * as mastercard from '../../../../src/main/resources/META-INF/resources/vaadin/images/mastercard.png';
+import * as visa from '../../../images/visa.png';
+import * as mastercard from '../../../images/mastercard.png';
 const IMAGES: { [key: string]: string } = {
   visa,
   mastercard

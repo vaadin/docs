@@ -10,10 +10,13 @@ import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.Card;
@@ -22,7 +25,7 @@ import com.vaadin.demo.domain.DataService;
 @Route("radio-button-custom-option")
 public class RadioButtonCustomOption extends Div {
 
-  private final String IMAGES_PATH = "../../../vaadin/images/";
+  private final String IMAGES_PATH = "frontend/images/";
 
   public RadioButtonCustomOption() {
     // tag::snippet[]
@@ -36,7 +39,15 @@ public class RadioButtonCustomOption extends Div {
     radioGroup.setValue(cards.get(0));
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
       if (card != null) {
-        Image logo = new Image(IMAGES_PATH + card.getImage(), card.getName());
+        StreamResource resource = new StreamResource(card.getImage(), () -> {
+          try {
+            return new FileInputStream(new File(IMAGES_PATH + card.getImage()));
+          } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+          }
+        });
+        Image logo = new Image(resource, card.getName());
         logo.setHeight("1em");
         Text number = new Text(card.getNumber());
 

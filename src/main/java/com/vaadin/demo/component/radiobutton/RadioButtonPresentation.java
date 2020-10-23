@@ -8,7 +8,11 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
@@ -18,7 +22,7 @@ import com.vaadin.demo.domain.DataService;
 @Route("radio-button-custom-item-presentation")
 public class RadioButtonPresentation extends Div {
 
-  private final String IMAGES_PATH = "../../../vaadin/images/";
+  private final String IMAGES_PATH = "frontend/images/";
 
   public RadioButtonPresentation() {
     // tag::snippet[]
@@ -30,7 +34,15 @@ public class RadioButtonPresentation extends Div {
     radioGroup.setItems(cards);
     radioGroup.setValue(cards.get(0));
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
-      Image logo = new Image(IMAGES_PATH + card.getImage(), card.getName());
+      StreamResource resource = new StreamResource(card.getImage(), () -> {
+        try {
+          return new FileInputStream(new File(IMAGES_PATH + card.getImage()));
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+          return null;
+        }
+      });
+      Image logo = new Image(resource, card.getName());
       logo.setHeight("1em");
       Text number = new Text(card.getNumber());
       Text expiryDate = new Text("Expiry date:" + card.getExpiryDate());
