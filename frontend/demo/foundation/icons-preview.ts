@@ -39,7 +39,7 @@ export class IconsPreview extends HTMLElement {
 
         .docs-icon-preview-name {
           display: block;
-          font-size: var(--docs-font-size-xs);
+          font-size: var(--docs-font-size-2xs);
           color: var(--docs-secondary-text-color);
         }
 
