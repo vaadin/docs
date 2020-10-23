@@ -5,7 +5,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
-@Route("checkbox-basic")
+@Route("checkbox-labeling")
 public class CheckboxLabeling extends Div {
 
     public CheckboxLabeling() {
