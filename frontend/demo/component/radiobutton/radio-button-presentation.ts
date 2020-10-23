@@ -4,7 +4,7 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 
-import cards from '../../../../src/main/resources/data/cards.json';
+import cards from '../../../data/cards.json';
 import * as visa from '../../../images/visa.png';
 import * as mastercard from '../../../images/mastercard.png';
 const IMAGES: { [key: string]: string } = {
