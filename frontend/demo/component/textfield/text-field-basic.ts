@@ -6,7 +6,6 @@ import '@vaadin/vaadin-icons/vaadin-icons';
 
 @customElement('text-field-basic')
 export class TextFieldBasic extends LitElement {
-
   render() {
     return html`
       <!-- tag::snippet[] -->

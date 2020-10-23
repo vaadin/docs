@@ -4,8 +4,9 @@ export class IconsPreview extends HTMLElement {
   connectedCallback() {
     const collectionName = this.getAttribute('name');
 
-    const collection = new IronMeta({ type: 'iconset', value: null }).list
-      .find((i: any) => i.name === collectionName);
+    const collection = new IronMeta({ type: 'iconset', value: null }).list.find(
+      (i: any) => i.name === collectionName
+    );
 
     const iconNames = collection.getIconNames().map((name: string) => name.split(':')[1]);
 
@@ -73,8 +74,11 @@ export class IconsPreview extends HTMLElement {
 
     const search = this.querySelector('input');
     search?.addEventListener('input', () => {
-      this.querySelectorAll('.docs-icon-preview').forEach(icon => {
-        icon.classList.toggle('hidden', icon.className.toLowerCase().indexOf(search.value.toLowerCase()) === -1);
+      this.querySelectorAll('.docs-icon-preview').forEach((icon) => {
+        icon.classList.toggle(
+          'hidden',
+          icon.className.toLowerCase().indexOf(search.value.toLowerCase()) === -1
+        );
       });
     });
   }
