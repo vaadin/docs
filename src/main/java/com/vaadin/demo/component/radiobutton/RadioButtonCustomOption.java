@@ -25,7 +25,7 @@ import com.vaadin.demo.domain.DataService;
 @Route("radio-button-custom-option")
 public class RadioButtonCustomOption extends Div {
 
-  private final String IMAGES_PATH = "frontend/images/";
+  private final String IMAGES_PATH = "images/";
 
   public RadioButtonCustomOption() {
     // tag::snippet[]
