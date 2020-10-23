@@ -8,12 +8,13 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
-import java.io.File;
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Base64;
 import java.util.List;
+
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.Card;
 import com.vaadin.demo.domain.DataService;
@@ -21,7 +22,7 @@ import com.vaadin.demo.domain.DataService;
 @Route("radio-button-custom-item-presentation")
 public class RadioButtonPresentation extends Div {
 
-  private final String IMAGES_PATH = "frontend/images/";
+  private final String IMAGES_PATH = "images/";
 
   public RadioButtonPresentation() {
     // tag::snippet[]
@@ -33,16 +34,15 @@ public class RadioButtonPresentation extends Div {
     radioGroup.setItems(cards);
     radioGroup.setValue(cards.get(0));
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
-      String url = "";
-      try {
-        File sourceimage = new File(IMAGES_PATH + card.getImage());
-        byte[] fileContent = Files.readAllBytes(sourceimage.toPath());
-        url = "data:image/png;base64," + Base64.getEncoder().encodeToString(fileContent);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-
-      Image logo = new Image(url, card.getName());
+      StreamResource resource = new StreamResource(card.getImage(), () -> {
+        try {
+          return new ClassPathResource(IMAGES_PATH + card.getImage()).getInputStream();
+        } catch (IOException e) {
+          e.printStackTrace();
+          return null;
+        }
+      });
+      Image logo = new Image(resource, card.getName());
       logo.setHeight("1em");
       Text number = new Text(card.getNumber());
       Text expiryDate = new Text("Expiry date:" + card.getExpiryDate());

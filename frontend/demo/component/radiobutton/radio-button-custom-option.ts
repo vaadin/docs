@@ -6,9 +6,9 @@ import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
-import cards from '../../../data/cards.json';
-import * as visa from '../../../images/visa.png';
-import * as mastercard from '../../../images/mastercard.png';
+import cards from '../../../../src/main/resources/data/cards.json';
+import * as visa from '../../../../src/main/resources/images/visa.png';
+import * as mastercard from '../../../../src/main/resources/images/mastercard.png';
 const IMAGES: { [key: string]: string } = {
   visa,
   mastercard

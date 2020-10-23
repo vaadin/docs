@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 
 import { customElement, html, LitElement, property } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import people from '../../../data/people.json';
+import people from '../../../../src/main/resources/data/people.json';
 
 // tag::snippet[]
 @customElement('grid-basic')

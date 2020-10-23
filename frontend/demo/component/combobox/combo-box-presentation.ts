@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import country from '../../../data/countries.json';
+import country from '../../../../src/main/resources/data/countries.json';
 
 // tag::snippet[]
 @customElement('combo-box-presentation')

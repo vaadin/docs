@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import states from '../../../data/states.json';
+import states from '../../../../src/main/resources/data/states.json';
 
 // tag::snippet[]
 @customElement('combo-box-custom-entry-2')

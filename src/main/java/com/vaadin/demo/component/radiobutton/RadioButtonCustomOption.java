@@ -10,12 +10,12 @@ import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
-import java.io.File;
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
@@ -39,16 +39,15 @@ public class RadioButtonCustomOption extends Div {
     radioGroup.setValue(cards.get(0));
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
       if (card != null) {
-        String url = "";
-        try {
-          File sourceimage = new File(IMAGES_PATH + card.getImage());
-          byte[] fileContent = Files.readAllBytes(sourceimage.toPath());
-          url = "data:image/png;base64," + Base64.getEncoder().encodeToString(fileContent);
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-
-        Image logo = new Image(url, card.getName());
+        StreamResource resource = new StreamResource(card.getImage(), () -> {
+          try {
+            return new ClassPathResource(IMAGES_PATH + card.getImage()).getInputStream();
+          } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+          }
+        });
+        Image logo = new Image(resource, card.getName());
         logo.setHeight("1em");
         Text number = new Text(card.getNumber());
         return new FlexLayout(logo, number);

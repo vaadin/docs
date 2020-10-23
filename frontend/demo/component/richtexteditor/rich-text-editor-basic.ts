@@ -3,7 +3,7 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
 
-import templates from '../../../data/templates.json';
+import templates from '../../../../src/main/resources/data/templates.json';
 
 // tag::snippet[]
 @customElement('rich-text-editor-basic')
