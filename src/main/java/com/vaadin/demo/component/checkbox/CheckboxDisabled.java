@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.checkbox;
 
-import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
@@ -10,10 +11,12 @@ public class CheckboxDisabled extends Div {
 
     public CheckboxDisabled() {
         // tag::snippet[]
-        Checkbox checkbox = new Checkbox();
-        checkbox.setLabel("Enabled");
-
-        add(checkbox);
+        CheckboxGroup<String> disabledCheckGroup = new CheckboxGroup<>();
+        disabledCheckGroup.setLabel("Departments");
+        disabledCheckGroup.setItems("Engineering", "Human Resources", "Marketing", "Operations", "Sales");
+        disabledCheckGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+        disabledCheckGroup.setEnabled(false);
+        add(disabledCheckGroup);
         // end::snippet[]
     }
 
