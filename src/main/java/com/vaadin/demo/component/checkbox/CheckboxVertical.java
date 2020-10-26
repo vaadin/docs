@@ -17,6 +17,6 @@ public class CheckboxVertical extends Div {
         // end::snippet[]
     }
 
-    public static class GridEditorExporter extends DemoExporter<CheckboxVertical> { // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxVertical> { // hidden-full-source-line
     } // hidden-full-source-line
 }

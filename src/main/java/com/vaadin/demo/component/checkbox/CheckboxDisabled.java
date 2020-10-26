@@ -17,6 +17,6 @@ public class CheckboxDisabled extends Div {
         // end::snippet[]
     }
 
-    public static class GridEditorExporter extends DemoExporter<CheckboxDisabled> { // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxDisabled> { // hidden-full-source-line
     } // hidden-full-source-line
 }

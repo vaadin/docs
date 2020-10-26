@@ -21,6 +21,6 @@ public class TextFieldBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<TextFieldBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<TextFieldBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

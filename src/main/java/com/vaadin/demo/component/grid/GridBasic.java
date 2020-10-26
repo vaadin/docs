@@ -22,6 +22,6 @@ public class GridBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<GridBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<GridBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

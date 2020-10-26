@@ -19,6 +19,6 @@ public class RichTextEditorBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<RichTextEditorBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<RichTextEditorBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

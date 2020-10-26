@@ -17,6 +17,6 @@ public class CheckboxEditMultiple extends Div {
         // end::snippet[]
     }
 
-    public static class GridEditorExporter extends DemoExporter<CheckboxEditMultiple> { // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxEditMultiple> { // hidden-full-source-line
     } // hidden-full-source-line
 }

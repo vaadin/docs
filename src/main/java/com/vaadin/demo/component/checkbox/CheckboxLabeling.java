@@ -17,6 +17,6 @@ public class CheckboxLabeling extends Div {
         // end::snippet[]
     }
 
-    public static class GridEditorExporter extends DemoExporter<CheckboxLabeling> { // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxLabeling> { // hidden-full-source-line
     } // hidden-full-source-line
 }

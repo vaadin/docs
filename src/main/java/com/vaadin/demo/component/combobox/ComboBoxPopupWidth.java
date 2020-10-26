@@ -20,6 +20,6 @@ public class ComboBoxPopupWidth extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<ComboBoxPopupWidth> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ComboBoxPopupWidth> { // hidden-full-source-line
   } // hidden-full-source-line
 }

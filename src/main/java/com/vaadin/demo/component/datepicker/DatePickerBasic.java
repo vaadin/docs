@@ -16,6 +16,6 @@ public class DatePickerBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<DatePickerBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<DatePickerBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

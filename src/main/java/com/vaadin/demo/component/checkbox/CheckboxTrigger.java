@@ -17,6 +17,6 @@ public class CheckboxTrigger extends Div {
         // end::snippet[]
     }
 
-    public static class GridEditorExporter extends DemoExporter<CheckboxTrigger> { // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxTrigger> { // hidden-full-source-line
     } // hidden-full-source-line
 }

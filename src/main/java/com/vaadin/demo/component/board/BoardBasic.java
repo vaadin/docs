@@ -46,6 +46,6 @@ public class BoardBasic extends Div {
 
   }
 
-  public static class GridEditorExporter extends DemoExporter<BoardBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<BoardBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

@@ -20,6 +20,6 @@ public class ComboBoxCustomEntry2 extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<ComboBoxCustomEntry2> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ComboBoxCustomEntry2> { // hidden-full-source-line
   } // hidden-full-source-line
 }

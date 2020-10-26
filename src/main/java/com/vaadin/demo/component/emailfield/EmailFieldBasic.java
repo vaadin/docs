@@ -17,6 +17,6 @@ public class EmailFieldBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<EmailFieldBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<EmailFieldBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

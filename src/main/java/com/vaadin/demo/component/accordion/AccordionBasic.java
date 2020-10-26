@@ -34,6 +34,6 @@ public class AccordionBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<AccordionBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<AccordionBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }
