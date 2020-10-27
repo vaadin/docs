@@ -17,6 +17,8 @@ public class Person {
 
   private String membership;
 
+  private String pictureUrl;
+
   public String getFirstName() {
     return firstName;
   }
@@ -55,6 +57,14 @@ public class Person {
 
   public void setMembership(String membership) {
     this.membership = membership;
+  }
+
+  public String getPictureUrl() {
+    return pictureUrl;
+  }
+
+  public void setPictureUrl(String pictureUrl) {
+    this.pictureUrl = pictureUrl;
   }
 
   public Integer getId() {

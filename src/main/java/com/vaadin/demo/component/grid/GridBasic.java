@@ -5,6 +5,7 @@ import java.util.List;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.DataService;
@@ -17,7 +18,17 @@ public class GridBasic extends Div {
     Grid<Person> grid = new Grid<>(Person.class);
     List<Person> people = DataService.getPeople();
     grid.setItems(people);
-    grid.setColumns("firstName", "lastName", "email");
+    grid.removeAllColumns();
+    grid.addColumn(
+        TemplateRenderer.<Person>of("<img style=\"height: 40px\" src=\"[[item.pictureUrl]]\" alt=\"User avatar\" />")
+            .withProperty("pictureUrl", Person::getPictureUrl))
+        .setHeader("Image")
+        .setAutoWidth(true)
+        .setFlexGrow(0);
+    grid.addColumn("firstName");
+    grid.addColumn("lastName");
+    grid.addColumn("email");
+
     add(grid);
     // end::snippet[]
   }
