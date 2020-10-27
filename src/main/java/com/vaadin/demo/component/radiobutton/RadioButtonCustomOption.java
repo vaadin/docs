@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.radiobutton;
 
 import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -23,11 +22,14 @@ import com.vaadin.demo.domain.Card;
 import com.vaadin.demo.domain.DataService;
 
 @Route("radio-button-custom-option")
-public class RadioButtonCustomOption extends Div {
+public class RadioButtonCustomOption extends VerticalLayout {
 
   private final String IMAGES_PATH = "images/";
 
   public RadioButtonCustomOption() {
+    setPadding(false);
+    setSpacing(false);
+
     // tag::snippet[]
     RadioButtonGroup<Card> radioGroup = new RadioButtonGroup<>();
     radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
@@ -60,11 +62,7 @@ public class RadioButtonCustomOption extends Div {
     textField.setVisible(false);
     radioGroup.addValueChangeListener(e -> textField.setVisible(e.getValue() == null));
 
-    VerticalLayout layout = new VerticalLayout();
-    layout.setPadding(false);
-    layout.setSpacing(false);
-    layout.add(radioGroup, textField);
-    add(layout);
+    add(radioGroup, textField);
     // end::snippet[]
   }
 

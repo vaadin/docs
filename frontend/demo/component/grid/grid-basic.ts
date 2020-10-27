@@ -32,7 +32,11 @@ export class GridBasic extends LitElement {
   avatarRenderer(root: HTMLElement, _: HTMLElement, model: GridItemModel) {
     render(
       html`
-        <img style="height: 40px" src=${(model.item as Person).pictureUrl} alt="User avatar" />
+        <img
+          style="height: var(--lumo-size-m)"
+          src=${(model.item as Person).pictureUrl}
+          alt="User avatar"
+        />
       `,
       root
     );

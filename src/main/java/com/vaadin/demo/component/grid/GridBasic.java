@@ -20,7 +20,7 @@ public class GridBasic extends Div {
     grid.setItems(people);
     grid.removeAllColumns();
     grid.addColumn(
-        TemplateRenderer.<Person>of("<img style=\"height: 40px\" src=\"[[item.pictureUrl]]\" alt=\"User avatar\" />")
+        TemplateRenderer.<Person>of("<img style=\"height: var(--lumo-size-m)\" src=\"[[item.pictureUrl]]\" alt=\"User avatar\" />")
             .withProperty("pictureUrl", Person::getPictureUrl))
         .setHeader("Image")
         .setAutoWidth(true)

@@ -9,32 +9,36 @@ import type { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
   @property({ type: Array })
-  private people = getPeople(3);
+  private options = getPeople(3);
 
+  // TODO: Make id natively a string type so mapping can be avoided
   @property({ type: Array })
-  private value: string[] = [String(this.people[0].id), String(this.people[2].id)];
+  private selectedIds: string[] = [String(this.options[0].id), String(this.options[2].id)];
 
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-checkbox
-        .checked=${this.value.length === this.people.length}
-        .indeterminate=${this.value.length > 0 && this.value.length < this.people.length}
+        .checked=${this.selectedIds.length === this.options.length}
+        .indeterminate=${this.selectedIds.length > 0 &&
+        this.selectedIds.length < this.options.length}
         @change=${(e: Event) =>
-          (this.value = (e.target as CheckboxElement).checked
-            ? this.people.map((person) => String(person.id))
+          (this.selectedIds = (e.target as CheckboxElement).checked
+            ? this.options.map((person) => String(person.id))
             : [])}
       >
         Notify users
       </vaadin-checkbox>
+
       <br />
+
       <vaadin-checkbox-group
         label="Users to notify"
         theme="vertical"
-        .value=${this.value}
-        @value-changed=${(e: CustomEvent) => (this.value = e.detail.value)}
+        .value=${this.selectedIds}
+        @value-changed=${(e: CustomEvent) => (this.selectedIds = e.detail.value)}
       >
-        ${this.people.map((person) => {
+        ${this.options.map((person) => {
           return html`<vaadin-checkbox .value=${String(person.id)}>
             ${person.firstName} ${person.lastName}
           </vaadin-checkbox>`;
