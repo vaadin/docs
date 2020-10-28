@@ -6,4 +6,6 @@ export type Person = {
   lastName: string;
 
   pictureUrl: string;
+
+  profession: string;
 };

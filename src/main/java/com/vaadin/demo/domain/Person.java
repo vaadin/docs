@@ -19,6 +19,8 @@ public class Person {
 
   private String pictureUrl;
 
+  private String profession;
+
   public String getFirstName() {
     return firstName;
   }
@@ -65,6 +67,14 @@ public class Person {
 
   public void setPictureUrl(String pictureUrl) {
     this.pictureUrl = pictureUrl;
+  }
+
+  public String getProfession() {
+    return profession;
+  }
+
+  public void setProfession(String profession) {
+    this.profession = profession;
   }
 
   public Integer getId() {

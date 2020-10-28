@@ -7,6 +7,30 @@ const sharp = require('sharp');
 
 const generator = new AvatarGenerator();
 
+const professions = [
+  'Podiatrist',
+  'Pediatrician',
+  'Endocrinologist',
+  'Neurologist',
+  'Rheumatologist',
+  'Allergist',
+  'Psychiatrist',
+  'Nephrologist',
+  'Obstetrician',
+  'Pulmonologist',
+  'Surgeon',
+  'Ophthalmologist',
+  'Oncologist',
+  'Urologist',
+  'Otolaryngologist',
+  'Anesthesiologist',
+  'Dermatologist',
+  'Radiologist',
+  'Gastroenterologist',
+  'Cardiologist',
+  'Orthopedist',
+];
+
 (async () => {
   const peopleString = fs.readFileSync('./people.json', 'utf-8');
   const people = JSON.parse(peopleString);
@@ -23,6 +47,8 @@ const generator = new AvatarGenerator();
     let resizedBase64 = `data:image/jpeg;base64,${resizedImageData}`;
 
     person.pictureUrl = resizedBase64;
+    // var profession = professions[Math.floor(Math.random() * professions.length)];
+    // person.profession = profession;
   }
 
   fs.writeFileSync('./people.json', JSON.stringify(people), 'utf-8');
