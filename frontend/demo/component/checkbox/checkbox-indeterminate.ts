@@ -3,6 +3,7 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from '../../domain/DataService';
 import type { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import { Person } from '../../domain/Person';
@@ -10,46 +11,46 @@ import { Person } from '../../domain/Person';
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
   @property({ type: Array })
-  private options: Person[] = [];
+  private items: Person[] = [];
 
-  // TODO: Make id natively a string type so mapping can be avoided
   @property({ type: Array })
   private selectedIds: string[] = [];
 
   async firstUpdated() {
-    this.options = await getPeople(3);
+    this.items = await getPeople(3);
+    this.selectedIds = [this.items[0].id, this.items[2].id];
   }
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-checkbox
-        .checked=${this.selectedIds.length === this.options.length}
-        .indeterminate=${this.selectedIds.length > 0 &&
-        this.selectedIds.length < this.options.length}
-        @change=${(e: Event) =>
-          (this.selectedIds = (e.target as CheckboxElement).checked
-            ? this.options.map((person) => String(person.id))
-            : [])}
-      >
-        Notify users
-      </vaadin-checkbox>
+      <vaadin-vertical-layout theme="spacing">
+        <!-- tag::snippet[] -->
+        <vaadin-checkbox
+          .checked=${this.selectedIds.length === this.items.length}
+          .indeterminate=${this.selectedIds.length > 0 &&
+          this.selectedIds.length < this.items.length}
+          @change=${(e: Event) =>
+            (this.selectedIds = (e.target as CheckboxElement).checked
+              ? this.items.map((person) => person.id)
+              : [])}
+        >
+          Notify users
+        </vaadin-checkbox>
 
-      <br />
-
-      <vaadin-checkbox-group
-        label="Users to notify"
-        theme="vertical"
-        .value=${this.selectedIds}
-        @value-changed=${(e: CustomEvent) => (this.selectedIds = e.detail.value)}
-      >
-        ${this.options.map((person) => {
-          return html`<vaadin-checkbox .value=${String(person.id)}>
-            ${person.firstName} ${person.lastName}
-          </vaadin-checkbox>`;
-        })}
-      </vaadin-checkbox-group>
-      <!-- end::snippet[] -->
+        <vaadin-checkbox-group
+          label="Users to notify"
+          theme="vertical"
+          .value=${this.selectedIds}
+          @value-changed=${(e: CustomEvent) => (this.selectedIds = e.detail.value)}
+        >
+          ${this.items.map((person) => {
+            return html`<vaadin-checkbox .value=${person.id}>
+              ${person.firstName} ${person.lastName}
+            </vaadin-checkbox>`;
+          })}
+        </vaadin-checkbox-group>
+        <!-- end::snippet[] -->
+      </vaadin-vertical-layout>
     `;
   }
 }
