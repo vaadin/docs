@@ -5,15 +5,18 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 import { html, LitElement, property, customElement } from 'lit-element';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
-import people from '../../../../src/main/resources/data/people.json';
-
-// The examples share the data so let's make a deep clone to avoid side effects in other examples
-const peopleCopy = JSON.parse(JSON.stringify(people));
+import { Person } from '../../domain/Person';
+import { getPeople } from '../../domain/DataService';
 
 // tag::snippet[]
 @customElement('grid-pro-basic')
 export class Example extends LitElement {
-  @property() items = peopleCopy;
+  @property({ type: Array })
+  private items: Person[] = [];
+
+  async firstUpdated() {
+    this.items = await getPeople();
+  }
 
   render() {
     return html`
