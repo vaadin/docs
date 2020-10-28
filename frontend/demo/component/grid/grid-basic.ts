@@ -11,7 +11,12 @@ import { Person } from '../../domain/Person';
 // tag::snippet[]
 @customElement('grid-basic')
 export class GridBasic extends LitElement {
-  @property({ type: Array }) items = getPeople();
+  @property({ type: Array })
+  private items: Person[] = [];
+
+  async firstUpdated() {
+    this.items = await getPeople();
+  }
 
   render() {
     return html`

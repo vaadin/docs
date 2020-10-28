@@ -5,15 +5,20 @@ import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
 import { getPeople } from '../../domain/DataService';
 import type { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
+import { Person } from '../../domain/Person';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
   @property({ type: Array })
-  private options = getPeople(3);
+  private options: Person[] = [];
 
   // TODO: Make id natively a string type so mapping can be avoided
   @property({ type: Array })
-  private selectedIds: string[] = [String(this.options[0].id), String(this.options[2].id)];
+  private selectedIds: string[] = [];
+
+  async firstUpdated() {
+    this.options = await getPeople(3);
+  }
 
   render() {
     return html`
