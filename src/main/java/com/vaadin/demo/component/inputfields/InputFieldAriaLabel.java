@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.textfield;
+package com.vaadin.demo.component.inputfields;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -6,20 +6,20 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
-@Route("text-field-basic")
-public class TextFieldBasic extends Div {
+@Route("input-field-aria-label")
+public class InputFieldAriaLabel extends Div {
 
-  public TextFieldBasic() {
+  public InputFieldAriaLabel() {
     // tag::snippet[]
     TextField textField = new TextField();
-    textField.setLabel("Street Address");
-    textField.setValue("Ruukinkatu 2");
+    textField.getElement().setAttribute("aria-label", "search");
+    textField.setPlaceholder("Search");
     textField.setClearButtonVisible(true);
-    textField.setPrefixComponent(VaadinIcon.MAP_MARKER.create());
+    textField.setPrefixComponent(VaadinIcon.SEARCH.create());
     add(textField);
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<TextFieldBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<InputFieldAriaLabel> { // hidden-full-source-line
   } // hidden-full-source-line
 }
