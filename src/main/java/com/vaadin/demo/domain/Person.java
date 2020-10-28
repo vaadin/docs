@@ -3,6 +3,7 @@ package com.vaadin.demo.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+// tag::snippet[]
 public class Person {
 
   private String firstName;
@@ -87,17 +88,19 @@ public class Person {
 
   @Override
   public int hashCode() {
-      return id;
+    return id;
   }
 
   @Override
   public boolean equals(Object obj) {
-      if (this == obj)
-          return true;
-      if (!(obj instanceof Person)) {
-          return false;
-      }
-      Person other = (Person) obj;
-      return id == other.id;
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof Person)) {
+      return false;
+    }
+    Person other = (Person) obj;
+    return id == other.id;
   }
 }
+// end::snippet[]
