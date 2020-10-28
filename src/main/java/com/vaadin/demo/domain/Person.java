@@ -74,4 +74,20 @@ public class Person {
   public void setId(Integer id) {
     this.id = id;
   }
+
+  @Override
+  public int hashCode() {
+      return id;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+      if (this == obj)
+          return true;
+      if (!(obj instanceof Person)) {
+          return false;
+      }
+      Person other = (Person) obj;
+      return id == other.id;
+  }
 }

@@ -25,6 +25,10 @@ public class DataService {
     return Arrays.asList(getItems(Person[].class, "people.json"));
   }
 
+  public static List<Person> getPeople(int count) {
+    return getPeople().subList(0, count);
+  }
+
   public static List<State> getStates() {
     return Arrays.asList(getItems(State[].class, "states.json"));
   }
