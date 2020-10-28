@@ -11,7 +11,7 @@ public class CheckboxLabeling extends Div {
     public CheckboxLabeling() {
         // tag::snippet[]
         Checkbox checkbox = new Checkbox();
-        checkbox.setLabel("Enabled");
+        checkbox.setLabel("Yes, I agree");
 
         add(checkbox);
         // end::snippet[]
