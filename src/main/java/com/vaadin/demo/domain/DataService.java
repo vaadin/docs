@@ -41,4 +41,8 @@ public class DataService {
     return Arrays.asList(getItems(Card[].class, "cards.json"));
   }
 
+  public static List<Country> getCountries() {
+    return Arrays.asList(getItems(Country[].class, "countries.json"));
+  }
+
 }
