@@ -1,18 +1,19 @@
 import type { Person } from './Person';
 
-let people: Person[];
+const datasetCache: { [key: string]: any[] } = {};
+async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
+  if (!datasetCache[fileName]) {
+    datasetCache[fileName] = (await import('../../../src/main/resources/data/' + fileName)).default;
+  }
+  return datasetCache[fileName].slice(0, count);
+}
 
 export async function getPeople(count?: number): Promise<Person[]> {
-  if (!people) {
-    people = (await import('../../../src/main/resources/data/people.json')).default.map(
-      (person) => {
-        return {
-          ...person,
-          // string id's are more convenient for the TS examples
-          id: String(person.id)
-        };
-      }
-    );
-  }
-  return people.slice(0, count);
+  return (await getDataset<Person>('people.json', count)).map((person) => {
+    return {
+      ...person,
+      // string id's are more convenient for the TS examples
+      id: String(person.id)
+    };
+  });
 }
