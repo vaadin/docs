@@ -49,6 +49,6 @@ public class CrudBasic extends Div {
     return new BinderCrudEditor<>(binder, form);
   }
 
-  public static class GridEditorExporter extends DemoExporter<CrudBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CrudBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

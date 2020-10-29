@@ -18,6 +18,6 @@ public class SelectBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<SelectBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

@@ -4,7 +4,7 @@ import { Router } from '@vaadin/router';
 import './main-layout';
 
 const { serverSideRoutes } = new Flow({
-  imports: () => import('../target/frontend/generated-flow-imports'),
+  imports: () => import('../target/frontend/generated-flow-imports')
 });
 
 const routes = [
@@ -13,9 +13,9 @@ const routes = [
     component: 'main-layout',
     children: [
       // fallback to server-side Flow routes if no client-side route matches
-      ...serverSideRoutes,
-    ],
-  },
+      ...serverSideRoutes
+    ]
+  }
 ];
 
 const router = new Router(document.querySelector('#outlet'));

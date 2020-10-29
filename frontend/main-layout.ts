@@ -30,13 +30,9 @@ export class MainLayoutElement extends LitElement {
   render() {
     return html`
       <vaadin-app-layout id="layout">
-        <vaadin-tabs
-          slot="navbar"
-          id="tabs"
-          .selected="${this.getIndexOfSelectedTab()}"
-        >
+        <vaadin-tabs slot="navbar" id="tabs" .selected="${this.getIndexOfSelectedTab()}">
           ${menuTabs.map(
-            menuTab => html`
+            (menuTab) => html`
               <vaadin-tab>
                 <a href="${menuTab.route}" tabindex="-1">${menuTab.name}</a>
               </vaadin-tab>
@@ -58,9 +54,7 @@ export class MainLayoutElement extends LitElement {
   }
 
   private getIndexOfSelectedTab(): number {
-    const index = menuTabs.findIndex(menuTab =>
-      this.isCurrentLocation(menuTab.route)
-    );
+    const index = menuTabs.findIndex((menuTab) => this.isCurrentLocation(menuTab.route));
 
     // Select first tab if there is no tab for home in the menu
     if (index === -1 && this.isCurrentLocation('')) {

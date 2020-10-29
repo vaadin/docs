@@ -27,6 +27,6 @@ public class ContextMenuBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<ContextMenuBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ContextMenuBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

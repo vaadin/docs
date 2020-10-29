@@ -11,12 +11,12 @@ public class CheckboxBasic extends Div {
   public CheckboxBasic() {
     // tag::snippet[]
     Checkbox checkbox = new Checkbox();
-    checkbox.setLabel("Enabled");
+    checkbox.setLabel("I accept the terms and conditions");
 
     add(checkbox);
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<CheckboxBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CheckboxBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

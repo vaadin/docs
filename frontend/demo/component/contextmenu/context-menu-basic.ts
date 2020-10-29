@@ -13,14 +13,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-context-menu
-        .items=${this.items}
-        @item-selected=${this.itemSelected}
-      >
-        <p>
-          Right click (or long touch on mobile) this text to open the context
-          menu.
-        </p>
+      <vaadin-context-menu .items=${this.items} @item-selected=${this.itemSelected}>
+        <p>Right click (or long touch on mobile) this text to open the context menu.</p>
       </vaadin-context-menu>
 
       <div>Selected: ${this.selectedItem?.text}</div>

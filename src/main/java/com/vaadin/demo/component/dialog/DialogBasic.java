@@ -20,6 +20,6 @@ public class DialogBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<DialogBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<DialogBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }
