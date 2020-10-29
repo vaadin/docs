@@ -20,7 +20,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-combo-box
         label="Country"
-        item-label-path="country"
+        item-label-path="name"
         item-value-path="id"
         .items=${this.items}
       ></vaadin-combo-box>

@@ -14,7 +14,6 @@ public class ComboBoxPresentation extends Div {
 
   // tag::snippet[]
   public ComboBoxPresentation() {
-
     ItemFilter<Person> filter = (person, filterString) -> (person
         .getFirstName() + " " + person.getLastName() + " " + person.getProfession()).toLowerCase().indexOf(filterString.toLowerCase()) > -1;
 
