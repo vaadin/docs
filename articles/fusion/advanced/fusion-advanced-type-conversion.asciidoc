@@ -1,0 +1,289 @@
+---
+title: Type Conversion between Java and TypeScript
+order: 110
+layout: page
+---
+
+= Appendix: Type Conversion between Java and TypeScript
+
+== TypeScript to Java [[from-ts-to-java]]
+
+When calling a Java endpoint method from TypeScript, `ConnectClient` serializes TypeScript call parameters to JSON and sends them to Java backend where they are deserialized into Java types using the https://github.com/FasterXML/jackson[Jackson] JSON processing library. The return value of the Java endpoint method is sent back to TypeScript through the same pipeline in the opposite direction.
+
+The default Vaadin JSON `ObjectMapper` closely follows the https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-json.html#boot-features-json-jackson[Spring Boot auto-configuration] defaults. One notable difference is that in Vaadin, the default object mapper is configured to discover `private` properties. I.e. all the fields, getters, setters or constructors are discoverable even if they are declared as `private`. This is done in order to make serialization / deserialization of custom objects easier.
+
+The visibility level of the default `ObjectMapper` can be configured by setting the `spring.jackson.visibility` property (in https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html[common application properties]). Other properties of the default `ObjectMapper` can be customized by following the https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[Spring Boot documentation] on the subject. Alternatively, the entire `ObjectMapper` can be replaced with a custom one by providing an `ObjectMapper` bean with the qualifier defined in `com.vaadin.connect.VaadinConnectController#VAADIN_ENDPOINT_MAPPER_BEAN_QUALIFIER`.
+
+The default `ObjectMapper` always converts TypeScript values to JSON object before sending them to the backend, so that the values need to be compliant with the JSON specification which only accepts values from the following types: `string`, `number`, `array`, `boolean`, JSON object or `null`. This implies that `NaN` and `Infinity` are non-compliant. If sent, the server will return an error response (`400 Bad Request`). Sending `undefined` parameter from TypeScript results as default values for primitive types, `null` for Java object, or `Optional.empty()` for `Optional`.
+
+The default conversion rules are summarized as follows (the TypeScript compliant values are converted to the corresponding values, otherwise the backend returns an error message):
+
+=== To receive primitive types in Java
+
+**Type `boolean`**:
+
+* TypeScript compliant values:
+** A boolean value: `true` => `true` and `false` => `false`
+
+* Noncompliant values:
+** Any value that is not a valid `boolean` type in TypeScript.
+
+**Type `char`**:
+
+* TypeScript compliant values:
+** A single character string: `'a'` => `'a'`
+
+* Noncompliant values:
+** Any string value that has more than one characters.
+** Any value that is not a valid `string` type in TypeScript.
+
+* UTF-16 and Unicode: Both Java and TypeScript internally use UTF-16 for string encoding. This makes string conversion between backend and frontend trivial. However, using UTF-16 has its limitations and corner cases. Most notably, a string like `"🥑"` might seem like a single-character which can be passed to Java as a `char`. However, both in TypeScript and Java it is actually a two-character string (because the `U+1F951` symbol takes 2 characters in UTF-16: `\uD83E\uDD51`). Thus, it is not a valid value for the Java `char` type.
+
+**Type `byte`**:
+
+* TypeScript compliant values:
+** An integer or decimal number in range of `-129 < X < 256`: `100`, `100.0` and `100.9` => `100`
+
+* Noncompliant values:
+** Any value which is not a number in TypeScript.
+** Any number value which is out of the compliant range.
+
+
+* Overflow number: if TypeScript sends a value which is greater than Java's `Byte.MAX_VALUE` (2^8^ - 1), the bits gets rolled over. For example, sends a value `128` (`Byte.MAX_VALUE + 1`), Java side receives `-128`(`Byte.MIN_VALUE`).
+
+* Underflow number: if Java side expects a `byte` value but TypeScript sends an underflow number, e.g. `-129` (`Byte.MIN_VALUE - 1`), the backend returns an error.
+
+**Type `short`**:
+
+* TypeScript compliant values:
+** An integer or decimal number in range of `-2^16^ < X < 2^16^ - 1`: `100`, `100.0` and `100.9` => `100`
+
+* Noncompliant values:
+** Any value which is not a number in TypeScript.
+** Any number value which is out of the compliant range.
+
+* Overflow and underflow numbers are not accepted for `short`.
+
+**Type `int`**:
+
+* TypeScript compliant values:
+** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
+
+* Noncompliant values:
+** Any value which is not a number in TypeScript.
+
+* Overflow number: if TypeScript sends a value which is greater than Java's `Integer.MAX_VALUE` (2^31^ - 1), the bits gets rolled over. For example, sending a value `2^31^` (`Integer.MAX_VALUE + 1`), Java side receives `-2^31^` (`Integer.MIN_VALUE`).
+
+* Underflow number: it is vice versa with overflow number. Sending `-2^31^ - 1` (`Integer.MIN_VALUE - 1`), Java side gets `2^31^ - 1` (`Integer.MAX_VALUE`).
+
+**Type `long`**:
+
+* TypeScript compliant values:
+** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
+
+* Noncompliant values:
+** Any value which is not a number in TypeScript.
+
+* Overflow and underflow numbers: bits get rolled over when receiving overflow/underflow number i.e. `2^63^` => `-2^63^`, `-2^63^ - 1` => `2^63^ - 1`
+
+**Type `float` and `double`**:
+
+* TypeScript compliant values:
+** An integer or decimal number: `100` and `100.0` => `100.0`, `100.9` => `100.9`
+
+* Noncompliant values:
+** Any value which is not a number in TypeScript.
+
+* Overflow and underflow numbers are converted to `Infinity` and `-Infinity` respectively.
+
+=== To receive boxed primitive types in Java
+
+The conversion works the same as primitive type.
+
+=== To receive a `String` in Java
+
+Any `String` values are kept the same when sent from TypeScript to Java backend.
+
+=== To receive date time types in Java
+**java.util.Date**
+
+* TypeScript compliant values:
+** A string that represents an epoch timestamp in milliseconds: `'1546300800000'` is converted to a `java.util.Date` instance which contains value of the date `2019-01-01T00:00:00.000+0000`.
+
+* Noncompliant values:
+** A non-number string: `'foo'`
+
+**java.time.Instant**
+
+* TypeScript compliant values:
+** A string that represents an epoch timestamp in seconds: `'1546300800'` is converted to a `java.time.Instant` instance which contains value of the `2019-01-01T00:00:00Z`.
+
+* Noncompliant values:
+** A non-number string: `'foo'`
+
+**java.time.LocalDate**
+
+* TypeScript compliant values:
+** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE` format `yyyy-MM-dd`: `'2018-12-16'`, `'2019-01-01'`.
+
+* Noncompliant values:
+** An incorrect format string: `'foo'`
+
+**java.time.LocalDateTime**
+
+* TypeScript compliant values:
+** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE_TIME` format:
+*** With full time: `'2019-01-01T12:34:56'`
+*** Without seconds: `'2019-01-01T12:34'`
+*** With full time and milliseconds: `'2019-01-01T12:34:56.78'`
+
+* Noncompliant values:
+** An incorrect format string: `'foo'`
+
+=== To receive an `Enum` in Java
+
+* TypeScript compliant value:
+** A string with the same name as an enum: assume that we have an <<enum-declaration>>, then sending `"FIRST"` from TypeScript would result an instance of `FIRST` with `value=1` in Java.
+
+.Enum declaration [[enum-declaration]]
+[source, java]
+----
+public enum TestEnum {
+
+  FIRST(1), SECOND(2), THIRD(3);
+
+  private final int value;
+
+  TestEnum(int value) {
+    this.value = value;
+  }
+
+  public int getValue() {
+    return this.value;
+  }
+}
+----
+
+* Noncompliant values:
+** A non-matched string with name of the expected Enum type.
+** Any other types: boolean, object or array.
+
+=== To receive an array in Java
+
+* TypeScript compliant values:
+** An array of items with expected type in Java, for example:
+*** Expected in Java `int[]`: `[1, 2, 3]` => `[1,2,3]`, `[1.9, 2, 3]` => `[1,2,3]`
+*** Expected in Java `String[]`: `["foo","bar"]` => `["foo","bar"]`
+*** Expected in Java `Object[]`: `["foo", 1, null, "bar"]` => `["foo", 1, null, "bar"]`
+
+* Noncompliant values:
+** A non-array input: `"foo"`, `"[1,2,3]"`, `1`
+
+=== To receive a collection in Java
+
+* TypeScript compliant values:
+** An array of items with expected type in Java (or types which can be converted to expected types), for example, if you expected in Java:
+*** `Collection<Integer>`: `[1, 2, 3]` => `[1,2,3]`
+*** `Collection<String>`: `["foo","bar"]` => `["foo","bar"]`
+*** `Set<Integer>`: `[1, 2, 2, 3, 3, 3]` => `[1, 2, 3]`
+
+* Noncompliant values:
+** A non-array input: `"foo"`, `"[1,2,3]"`, `1`
+
+=== To receive a map in Java
+
+* TypeScript compliant value:
+** A TypeScript object with `string` key and value in expected type in Java. For example: the expected type in Java is `Map<String, Integer>`, the compliant object in TypeScript should be in type of `{ [key: string]: number; }`, e.g. `{one: 1, two: 2}`.
+
+* Noncompliant values:
+** Any value from other types.
+
+NOTE: Due to the fact that the TypeScript code is generated from OpenAPI (<<typescript-endpoints-generator#,TypeScript Endpoints Generator>>) and the OpenAPI specification has https://swagger.io/docs/specification/data-models/dictionaries/[a limitation for map type], the map key is always a `string` in TypeScript.
+
+=== To receive a bean in Java
+
+A bean is parsed from the input JSON object which maps the keys of JSON object to the property name of the bean object. You can also use Jackson's annotation to customize your bean object. For more information about the annotations, please have a look at https://github.com/FasterXML/jackson-annotations[Jackson Annotations].
+
+* Example: assume that we have <<bean-example>>, a valid input for the bean looks like
+```
+{
+  "name": "MyBean",
+  "address": "MyAddress",
+  "age": 10,
+  "isAdmin": true,
+  "customProperty": "customValue"
+}
+```
+
+.Bean example [[bean-example]]
+[source, java]
+----
+public class MyBean {
+  public String name;
+  public String address;
+  public int age;
+  public boolean isAdmin;
+  private String customProperty;
+
+  @JsonGetter("customProperty")
+  public String getCustomProperty() {
+    return customProperty;
+  }
+
+  @JsonSetter("customProperty")
+  public void setCustomProperty(String customProperty) {
+    this.customProperty = customProperty;
+  }
+}
+----
+
+== Java to TypeScript
+
+The same object mapper used when converting from <<from-ts-to-java>> deserializes the return values in Java to the corresponding JSON object before sending them to client-side.
+
+Serialization can be customized by using annotations to the object to serialize as described in the <<custom-serialization#,Customizing Serialization>> article.
+
+=== Type `number`
+
+All the Java types which extend `java.lang.Number` are deserialized to `number` in TypeScript. There are a few exceptional cases with extremely large or small numbers. The safe integer range is from `-(2^53^ - 1)` to `2^53^ - 1`. It means only numbers in this range can be represented exactly and correctly compared them (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger[more information about safe integer]).
+
+Practically, not all `long` number in Java can be converted correctly in TypeScript since its range is `-2^63^` to `2^63^ - 1`. The unsafe numbers are rounded using the rules defined in https://en.wikipedia.org/wiki/IEEE_754#Rounding_rules[IEEE-754 standard].
+
+The special values such as `NaN`, `POSITIVE_INFINITY` and `NEGATIVE_INFINITY` are converted into `string` when sent to TypeScript.
+
+=== Type `string`
+
+The primitive type `char`, its boxed type `Character` and `String` in Java are converted to `string` type in TypeScript.
+
+=== Type `boolean`
+
+`boolean` and `Boolean` in Java are converted to `boolean` type when received in TypeScript.
+
+=== Array of items
+
+Normal array types such as `int[]`, `MyBean[]` and all the types which implement or extend `java.lang.Collection` becomes `array` when they are sent to TypeScript.
+
+=== Object
+
+Any kinds of objects in Java are converted to corresponding defined types in TypeScript. For example, if your endpoint methods returns a `MyBean` type, so when you called the method, you will receive an object in type of `MyBean`. In case of the generator can't get information about your bean, it returns an object in `any`.
+
+=== Map
+
+All types which inherit from `java.lang.Map` becomes objects in TypeScript with `string` keys and values in corresponding type. For instance: `Map<String, Integer>` => `{ [key: string]: number; }`.
+
+=== Datetime
+
+By default, the `ObjectMapper` converts Java's date time to a string in TypeScript with the following formats:
+
+* `java.util.Date` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00.000+0000'`
+
+* `java.time.Instant` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00Z'`
+
+* `java.time.LocalDate` of `00:00:00 January 1st, 2019` => `'2019-01-01'`
+
+* `java.time.LocalDateTime` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00'`
+
+
+=== `null`
+
+Returning `null` from Java throws a validation exception to TypeScript unless the return type is `Optional` or the endpoint method is annotated with `@Nullable` (`javax.annotation.Nullable`).

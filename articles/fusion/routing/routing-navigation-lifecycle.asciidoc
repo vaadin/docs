@@ -1,0 +1,69 @@
+---
+title: Navigation Lifecycle
+order: 30
+layout: page
+---
+
+
+== Navigation Lifecycle
+
+The router executes callbacks on each view to check if the navigation must continue, be postponed or redirected. The way to implement navigation controllers differs depending on whether the view is on the client or server side.
+
+=== Vaadin Router navigation lifecycle (client-side views)
+
+When returning an element or Web Component in a client view, developer might implement the following lifecycle interfaces:
+
+- `BeforeEnterObserver`: `onBeforeEnter(location, commands, router)` callback is executed before the outlet container is updated with the new element. At this point, user can cancel the navigation.
+- `AfterEnterObserver`: `onAfterEnter(location, commands, router)` callback is executed after the new element has been attached to the outlet. he difference between this method and `onBeforeEnter` is that when this method is executed, there is no way to abort the navigation.
+- `BeforeLeaveObserver`: `onBeforeLeave(location, commands, router)` callback is executed before the previous element is going to be detached. Navigation can be cancelled at this point.
+- `AfterLeaveObserver`: `onAfterLeave(location, commands, router)` callback is executed before the element is going to be removed from the DOM. When this method is executed, there is no way to abort the navigation.
+
+During the execution of `onBeforeEnter` and `onBeforeLeave` callbacks, user might postpone navigation by returning `commands.prevent()`, but only in `onBeforeEnter`, navigation can be redirected by returning `commands.redirect(path)`.
+
+[NOTE]
+Lifecycle callbacks are asynchronous.
+
+The following snippets show how to cancel navigation in a Web Component:
+
+[source, typescript]
+.my-demo.ts
+----
+import {customElement, LitElement} from 'lit-element';
+import {
+  BeforeEnterObserver,
+  PreventAndRedirectCommands,
+  Router,
+  RouterLocation
+} from '@vaadin/router';
+
+@customElement('my-view')
+class MyView extends LitElement implements BeforeEnterObserver {
+  onBeforeEnter(
+      location: RouterLocation,
+      commands: PreventAndRedirectCommands,
+      router: Router) {
+    if (location.pathname === '/cancel') {
+      return commands.prevent();
+    }
+  }
+}
+----
+
+[source, typescript]
+.index.ts
+----
+import {Router} from '@vaadin/router';
+
+...
+
+export const router = new Router(document.querySelector('#outlet'));
+router.setRoutes([
+  {
+    path: 'view1',
+    component: 'my-view',
+    action: async () => { await import('./views/my-view'); }
+  }
+]);
+----
+
+For more information visit Vaadin Router link:https://vaadin.github.io/vaadin-router/vaadin-router/#/classes/WebComponentInterface[API documentation^].
