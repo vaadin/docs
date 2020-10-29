@@ -3,12 +3,18 @@ import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import countries from '../../../../src/main/resources/data/countries.json';
+import { getCountries } from '../../domain/DataService';
+import { Country } from '../../domain/Country';
 
 // tag::snippet[]
 @customElement('combo-box-filtering-1')
 export class Example extends LitElement {
-  @property() items = countries;
+  @property({ type: Array })
+  private items: Country[] = [];
+
+  async firstUpdated() {
+    this.items = await getCountries();
+  }
 
   render() {
     return html`
