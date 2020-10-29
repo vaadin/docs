@@ -22,7 +22,13 @@ public class DataService {
   }
 
   public static List<Person> getPeople() {
-    return Arrays.asList(getItems(Person[].class, "people.json"));
+    List<Person> people = Arrays.asList(getItems(Person[].class, "people.json"));
+    List<String> peopleImages = Arrays.asList(getItems(String[].class, "peopleImages.json"));
+    for (int index = 0; index < people.size(); index++ ) {
+      String pictureUrl = peopleImages.get(index % peopleImages.size());
+      people.get(index).setPictureUrl(pictureUrl);
+    }
+    return people;
   }
 
   public static List<Person> getPeople(int count) {
