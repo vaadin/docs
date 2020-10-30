@@ -1,29 +1,34 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
-
-import cards from '../../../../src/main/resources/data/cards.json';
-import * as visa from '../../../../src/main/resources/images/visa.png';
-import * as mastercard from '../../../../src/main/resources/images/mastercard.png';
-const IMAGES: { [key: string]: string } = {
-  visa,
-  mastercard
-};
+import { getCards } from '../../domain/DataService';
+import { Card } from '../../domain/Card';
 
 @customElement('radio-button-presentation')
 export class Example extends LitElement {
+  @property()
+  private value?: string;
+
+  @property({ type: Array })
+  private items: Card[] = [];
+
+  async firstUpdated() {
+    this.items = await getCards();
+    this.value = this.items[0].id;
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-radio-group label="Payment method" theme="vertical" value="visa">
-        ${cards.map(
+      <vaadin-radio-group label="Payment method" theme="vertical" .value=${this.value}>
+        ${this.items.map(
           (card) => html`
-            <vaadin-radio-button value=${card.name}>
+            <vaadin-radio-button .value=${card.id}>
               <div>
                 <div style="display: flex">
-                  <img src=${IMAGES[card.name]} alt=${card.name} style="height: 1em;" />
+                  <img src=${card.pictureUrl} alt=${card.name} style="height: 1em;" />
                   ${card.number}
                 </div>
                 <div>Expiry date:${card.expiryDate}</div>

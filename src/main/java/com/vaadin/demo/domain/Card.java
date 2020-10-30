@@ -9,7 +9,7 @@ public class Card {
 
   private String number;
 
-  private String image;
+  private String pictureUrl;
 
   private String expiryDate;
 
@@ -31,12 +31,12 @@ public class Card {
     this.number = number;
   }
 
-  public String getImage() {
-    return image;
+  public String getPictureUrl() {
+    return pictureUrl;
   }
 
-  public void setImage(String image) {
-    this.image = image;
+  public void setPictureUrl(String pictureUrl) {
+    this.pictureUrl = pictureUrl;
   }
 
   public String getExpiryDate() {

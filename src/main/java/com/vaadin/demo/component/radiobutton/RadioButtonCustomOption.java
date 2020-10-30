@@ -9,11 +9,6 @@ import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
-
-import org.springframework.core.io.ClassPathResource;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +18,6 @@ import com.vaadin.demo.domain.DataService;
 
 @Route("radio-button-custom-option")
 public class RadioButtonCustomOption extends VerticalLayout {
-
-  private final String IMAGES_PATH = "images/";
 
   public RadioButtonCustomOption() {
     setPadding(false);
@@ -39,17 +32,10 @@ public class RadioButtonCustomOption extends VerticalLayout {
     cards.add(null);
     radioGroup.setItems(cards);
     radioGroup.setValue(cards.get(0));
+
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
       if (card != null) {
-        StreamResource resource = new StreamResource(card.getImage(), () -> {
-          try {
-            return new ClassPathResource(IMAGES_PATH + card.getImage()).getInputStream();
-          } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-          }
-        });
-        Image logo = new Image(resource, card.getName());
+        Image logo = new Image(card.getPictureUrl(), card.getName());
         logo.setHeight("1em");
         Text number = new Text(card.getNumber());
         return new FlexLayout(logo, number);
