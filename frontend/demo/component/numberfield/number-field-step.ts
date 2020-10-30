@@ -8,7 +8,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-number-field label="Duration (hours)"></vaadin-number-field>
+      <vaadin-number-field
+        label="Duration (hours)"
+        step="0.5"
+        value="12.5"
+        has-controls
+      ></vaadin-number-field>
       <!-- end::snippet[] -->
     `;
   }

@@ -1,16 +1,20 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-text-field/vaadin-number-field';
+import '@vaadin/vaadin-text-field/vaadin-integer-field';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 
 @customElement('number-field-integer')
 export class Example extends LitElement {
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-number-field label="X"></vaadin-number-field>
-      <vaadin-number-field label="Y"></vaadin-number-field>
-      <!-- end::snippet[] -->
+      <vaadin-horizontal-layout theme="spacing">
+        <!-- tag::snippet[] -->
+        <vaadin-integer-field label="X" value="-1284"></vaadin-integer-field>
+
+        <vaadin-integer-field label="Y" value="3910"></vaadin-integer-field>
+        <!-- end::snippet[] -->
+      </vaadin-horizontal-layout>
     `;
   }
 }

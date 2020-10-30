@@ -1,16 +1,44 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-text-field/vaadin-number-field';
+import '@vaadin/vaadin-text-field/vaadin-integer-field';
+import '@vaadin/vaadin-form-layout/vaadin-form-layout';
+import '@vaadin/vaadin-form-layout/vaadin-form-item';
+import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
+
+const layoutSteps: FormLayoutResponsiveStep[] = [
+  {
+    minWidth: 0,
+    columns: 1,
+    labelsPosition: 'aside'
+  }
+];
 
 @customElement('number-field-stepper-controls')
 export class Example extends LitElement {
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-number-field label="Balance" value="200.00"></vaadin-number-field>
-      <vaadin-number-field label="Balance" value="200.00"></vaadin-number-field>
-      <!-- end::snippet[] -->
+      <vaadin-form-layout .responsiveSteps=${layoutSteps}>
+        <vaadin-form-item>
+          <label slot="label">Adults</label>
+          <!-- tag::snippet[] -->
+          <vaadin-integer-field value="2" has-controls min="0" max="9"></vaadin-integer-field>
+          <!-- end::snippet[] -->
+        </vaadin-form-item>
+
+        <vaadin-form-item>
+          <label slot="label">
+            <div>Children</div>
+            <div style="font-size: var(--lumo-font-size-xxs); position: absolute;">Age 2-12</div>
+          </label>
+          <vaadin-integer-field value="2" has-controls min="0" max="9"></vaadin-integer-field>
+        </vaadin-form-item>
+
+        <vaadin-form-item>
+          <label slot="label">Infants</label>
+          <vaadin-integer-field value="1" has-controls min="0" max="9"></vaadin-integer-field>
+        </vaadin-form-item>
+      </vaadin-form-layout>
     `;
   }
 }
