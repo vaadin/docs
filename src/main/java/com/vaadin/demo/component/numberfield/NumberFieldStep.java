@@ -11,6 +11,10 @@ public class NumberFieldStep extends Div {
     public NumberFieldStep() {
         // tag::snippet[]
         NumberField numberField = new NumberField();
+        numberField.setLabel("Duration (hours)");
+        numberField.setStep(0.5);
+        numberField.setValue(12.5);
+        numberField.setHasControls(true);
         add(numberField);
         // end::snippet[]
     }
