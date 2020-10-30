@@ -8,7 +8,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-progress-bar value="0.5"></vaadin-progress-bar>
+      <vaadin-progress-bar min="0" max="100" value="50"></vaadin-progress-bar>
       <!-- end::snippet[] -->
     `;
   }
