@@ -1,8 +1,8 @@
 package com.vaadin.demo.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
 // tag::snippet[]
 public class Country {
 
@@ -10,7 +10,7 @@ public class Country {
 
   private String abbreviation;
 
-  private String id;
+  private Integer id;
 
   public String getName() {
     return name;
@@ -28,17 +28,17 @@ public class Country {
     this.abbreviation = abbreviation;
   }
 
-  public String getId() {
+  public Integer getId() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(Integer id) {
     this.id = id;
   }
 
   @Override
   public int hashCode() {
-    return Integer.parseInt(id);
+    return id;
   }
 
   @Override
@@ -50,7 +50,7 @@ public class Country {
       return false;
     }
     Country other = (Country) obj;
-    return id.equals(other.id);
+    return id == other.id;
   }
 }
 // end::snippet[]

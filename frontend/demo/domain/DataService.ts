@@ -29,9 +29,7 @@ export async function getPeople(count?: number): Promise<Person[]> {
   return (await getDataset<Person>('people.json', count)).map((person, index) => {
     return {
       ...person,
-      pictureUrl: peopleImages[index % peopleImages.length],
-      // string id's are more convenient for the TS examples
-      id: String(person.id)
+      pictureUrl: peopleImages[index % peopleImages.length]
     };
   });
 }
