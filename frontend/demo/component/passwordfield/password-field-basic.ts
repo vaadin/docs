@@ -8,11 +8,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-password-field
-        label="Password"
-        placeholder="Enter password"
-        value="Ex@mplePassw0rd"
-      ></vaadin-password-field>
+      <vaadin-password-field label="Password" value="Ex@mplePassw0rd"></vaadin-password-field>
       <!-- end::snippet[] -->
     `;
   }

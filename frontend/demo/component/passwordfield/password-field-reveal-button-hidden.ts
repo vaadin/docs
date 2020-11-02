@@ -10,7 +10,6 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-password-field
         label="Password"
-        placeholder="Enter password"
         value="Ex@mplePassw0rd"
         reveal-button-hidden
       ></vaadin-password-field>
