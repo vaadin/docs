@@ -9,13 +9,13 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-custom-field
-        label="Generating report, please wait..."
-        helper-text="Process can take upwards of 10 minutes"
-        style="width: 100%"
-      >
+      <div style="font-family: var(--lumo-font-family); color: var(--lumo-secondary-text-color);">
+        <div>Generating report, please wait...</div>
         <vaadin-progress-bar indeterminate></vaadin-progress-bar>
-      </vaadin-custom-field>
+        <div style="font-size: var(--lumo-font-size-xs)">
+          Process can take upwards of 10 minutes
+        </div>
+      </div>
       <!-- end::snippet[] -->
     `;
   }

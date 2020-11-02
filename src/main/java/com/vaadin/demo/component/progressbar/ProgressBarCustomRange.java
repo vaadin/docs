@@ -9,10 +9,18 @@ import com.vaadin.flow.router.Route;
 public class ProgressBarCustomRange extends Div {
 
     public ProgressBarCustomRange() {
+        getStyle().set("font-family", "var(--lumo-font-family)").set("color", "var(--lumo-secondary-text-color)");
+
         // tag::snippet[]
         ProgressBar progressBar = new ProgressBar();
-        progressBar.setValue(0.5);
-        add(progressBar);
+        progressBar.setMin(0);
+        progressBar.setMax(100);
+        progressBar.setValue(50);
+
+        Div progressBarLabel = new Div();
+        progressBarLabel.setText("Processing files (50/100)");
+
+        add(progressBarLabel, progressBar);
         // end::snippet[]
     }
 

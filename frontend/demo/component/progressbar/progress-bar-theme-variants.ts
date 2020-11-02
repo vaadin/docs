@@ -9,31 +9,25 @@ import '@vaadin/vaadin-custom-field/vaadin-custom-field';
 export class Example extends LitElement {
   render() {
     return html`
-      <vaadin-vertical-layout theme="spacing">
+      <vaadin-vertical-layout
+        theme="spacing"
+        style="font-family: var(--lumo-font-family); color: var(--lumo-secondary-text-color);"
+      >
         <!-- tag::snippet[] -->
-        <vaadin-custom-field theme="helper-above-field" style="width: 100%">
-          <div slot="helper" style="display: flex; justify-content: space-between;">
-            <div>Transferring files...</div>
-            <div>60/120</div>
-          </div>
+        <div style="width: 100%;">
+          <div>Transferring files... (60/120)</div>
           <vaadin-progress-bar value="0.5" theme="contrast"></vaadin-progress-bar>
-        </vaadin-custom-field>
+        </div>
 
-        <vaadin-custom-field label="Tasks" theme="helper-above-field" style="width: 100%">
-          <div slot="helper" style="display: flex; justify-content: space-between;">
-            <div>15/20 completed</div>
-            <div>75%</div>
-          </div>
+        <div style="width: 100%;">
+          <div>Tasks (15/20)</div>
           <vaadin-progress-bar value="0.75" theme="success"></vaadin-progress-bar>
-        </vaadin-custom-field>
+        </div>
 
-        <vaadin-custom-field label="Tasks" theme="helper-above-field" style="width: 100%">
-          <div slot="helper" style="display: flex; justify-content: space-between;">
-            <div>4/20 completed</div>
-            <div>20%</div>
-          </div>
+        <div style="width: 100%;">
+          <div>Tasks (4/20)</div>
           <vaadin-progress-bar value="0.2" theme="error"></vaadin-progress-bar>
-        </vaadin-custom-field>
+        </div>
         <!-- end::snippet[] -->
       </vaadin-vertical-layout>
     `;

@@ -9,14 +9,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-custom-field
-        label="Processing files..."
-        helper-text="50/100 completed"
-        theme="helper-above-field"
-        style="width: 100%"
-      >
+      <div style="font-family: var(--lumo-font-family); color: var(--lumo-secondary-text-color);">
+        <div>Processing files (50/100)</div>
         <vaadin-progress-bar min="0" max="100" value="50"></vaadin-progress-bar>
-      </vaadin-custom-field>
+      </div>
       <!-- end::snippet[] -->
     `;
   }

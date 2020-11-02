@@ -9,13 +9,14 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-custom-field theme="helper-above-field" style="width: 100%">
-        <div slot="helper" style="display: flex; justify-content: space-between;">
-          <div>Processing Financials.xlsx...</div>
+      <div style="font-family: var(--lumo-font-family); color: var(--lumo-secondary-text-color);">
+        <div style="display: flex; justify-content: space-between;">
+          <div>Processing Financials.xlsx</div>
           <div>50%</div>
         </div>
+
         <vaadin-progress-bar value="0.5"></vaadin-progress-bar>
-      </vaadin-custom-field>
+      </div>
       <!-- end::snippet[] -->
     `;
   }

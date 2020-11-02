@@ -9,10 +9,20 @@ import com.vaadin.flow.router.Route;
 public class ProgressBarCompletionTime extends Div {
 
     public ProgressBarCompletionTime() {
+        getStyle().set("font-family", "var(--lumo-font-family)").set("color", "var(--lumo-secondary-text-color)");
+
         // tag::snippet[]
         ProgressBar progressBar = new ProgressBar();
-        progressBar.setValue(0.5);
-        add(progressBar);
+        progressBar.setIndeterminate(true);
+
+        Div progressBarLabel = new Div();
+        progressBarLabel.setText("Generating report, please wait...");
+
+        Div progressBarSubLabel = new Div();
+        progressBarSubLabel.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+        progressBarSubLabel.setText("Process can take upwards of 10 minutes");
+
+        add(progressBarLabel, progressBar, progressBarSubLabel);
         // end::snippet[]
     }
 
