@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import { sampleText } from './text-area-sample-text';
+import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 
 @customElement('text-area-height')
@@ -17,7 +17,7 @@ export class Example extends LitElement {
         }
       </style>
 
-      <vaadin-text-area label="Description" value="${sampleText}"></vaadin-text-area>
+      <vaadin-text-area label="Description" value="${loremIpsum}"></vaadin-text-area>
       <!-- end::snippet[] -->
     `;
   }
