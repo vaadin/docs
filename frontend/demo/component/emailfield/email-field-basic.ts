@@ -12,14 +12,15 @@ export class Example extends LitElement {
         <!-- tag::snippet[] -->
         <vaadin-email-field
           label="Email address"
-          name="valid-email"
+          name="email"
           value="julia.scheider@email.com"
           error-message="Please enter a valid email address"
           clear-button-visible
         ></vaadin-email-field>
+
         <vaadin-email-field
           label="Email address"
-          name="invalid-email"
+          name="email"
           value="This is not an email"
           error-message="Please enter a valid email address"
           clear-button-visible

@@ -9,8 +9,8 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-email-field
-        label="Enter your example address"
-        name="example-email"
+        label="Email address"
+        name="email"
         placeholder="username@example.com"
         error-message="Please enter a valid example.com email address"
         clear-button-visible

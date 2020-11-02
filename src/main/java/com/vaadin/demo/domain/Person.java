@@ -1,8 +1,8 @@
 package com.vaadin.demo.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
 // tag::snippet[]
 public class Person {
 

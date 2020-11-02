@@ -1,5 +1,6 @@
 import { Country } from './Country';
-import type { Person } from './Person';
+import { Person } from './Person';
+import { Card } from './Card';
 
 const datasetCache: { [key: string]: any[] } = {};
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
@@ -16,6 +17,10 @@ export async function getCountries(count?: number): Promise<Country[]> {
   return await getDataset<Country>('countries.json', count);
 }
 
+export async function getCards(count?: number): Promise<Card[]> {
+  return await getDataset<Card>('cards.json', count);
+}
+
 let peopleImages: string[];
 export async function getPeople(count?: number): Promise<Person[]> {
   if (!peopleImages) {
@@ -24,9 +29,7 @@ export async function getPeople(count?: number): Promise<Person[]> {
   return (await getDataset<Person>('people.json', count)).map((person, index) => {
     return {
       ...person,
-      pictureUrl: peopleImages[index % peopleImages.length],
-      // string id's are more convenient for the TS examples
-      id: String(person.id)
+      pictureUrl: peopleImages[index % peopleImages.length]
     };
   });
 }

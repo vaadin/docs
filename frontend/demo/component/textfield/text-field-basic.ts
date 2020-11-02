@@ -6,7 +6,7 @@ import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon/iron-icon';
 
 @customElement('text-field-basic')
-export class TextFieldBasic extends LitElement {
+export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->

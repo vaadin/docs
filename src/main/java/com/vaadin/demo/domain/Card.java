@@ -1,15 +1,16 @@
 package com.vaadin.demo.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
+// tag::snippet[]
 public class Card {
 
   private String name;
 
   private String number;
 
-  private String image;
+  private String pictureUrl;
 
   private String expiryDate;
 
@@ -31,12 +32,12 @@ public class Card {
     this.number = number;
   }
 
-  public String getImage() {
-    return image;
+  public String getPictureUrl() {
+    return pictureUrl;
   }
 
-  public void setImage(String image) {
-    this.image = image;
+  public void setPictureUrl(String pictureUrl) {
+    this.pictureUrl = pictureUrl;
   }
 
   public String getExpiryDate() {
@@ -54,4 +55,22 @@ public class Card {
   public void setId(Integer id) {
     this.id = id;
   }
+
+  @Override
+  public int hashCode() {
+    return id;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof Card)) {
+      return false;
+    }
+    Card other = (Card) obj;
+    return id == other.id;
+  }
 }
+// end::snippet[]
