@@ -6,6 +6,7 @@ import { DateTimePicker } from '@vaadin/vaadin-date-time-picker/vaadin-date-time
 
 @customElement('date-time-picker-week-numbers')
 export class Example extends LitElement {
+  // tag::snippet[]
   @query('vaadin-date-time-picker')
   private dateTimePicker?: DateTimePicker;
 
@@ -18,12 +19,11 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-date-time-picker
         label="Meeting date and time"
         show-week-numbers
       ></vaadin-date-time-picker>
-      <!-- end::snippet[] -->
     `;
   }
+  // end::snippet[]
 }
