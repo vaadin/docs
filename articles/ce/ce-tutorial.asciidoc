@@ -1,0 +1,171 @@
+---
+title: Tutorial
+order: 2
+layout: page
+---
+
+[[ce.tutorial]]
+== Getting Started with Collaboration Engine
+:sectnums:
+
+This tutorial shows basic steps to set up Collaboration Engine in your Vaadin project
+and add the following collaboration features to a simple form:
+
+* Users can see the avatars of all the users who are currently present in the app
+* When someone enters a new value to a field, it will be propagated to all users
+* Users can see who is currently editing each field (a feature referred to as field highlight)
+
+[[ce.tutorial.setup]]
+=== Prepare the Application
+
+==== Set Up a Vaadin Project
+Download a new Vaadin 14 project from https://start.vaadin.com/?preset=lts.
+
+[[ce.tutorial.install]]
+==== Install Collaboration Engine
+Collaboration Engine is provided by Vaadin upon request. https://vaadin.com/collaboration[Contact Vaadin] to get access to the package and instructions on how to install it.
+
+[[ce.tutorial.push]]
+==== Enable Server Push
+
+Add `@Push` annotation on top of your root layout.
+This enables the server to propagate updates between clients in real time.
+By default, when creating a new project from start.vaadin.com,
+the root layout is `MainView.java`.
+
+[source, java]
+----
+@Push
+public class MainView extends AppLayout {
+----
+
+[[ce.tutorial.add-collaborative-feature]]
+=== Add Collaboration Features
+This tutorial will build a form where the users can edit the name and
+date of birth of a person. Let's start by adding the `Person` bean class.
+
+[source, java]
+----
+public class Person {
+    private String name;
+    private LocalDate dateOfBirth;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+}
+----
+
+==== Create a Simple View
+
+To start writing the actual application, create a view with a text field
+and a date picker but not yet any collaborative functionality.
+
+[source, java]
+----
+@Route(value = "", layout = MainView.class)
+public class TutorialView extends VerticalLayout {
+
+    public TutorialView() {
+        TextField nameField = new TextField("Name");
+        DatePicker dateOfBirthField = new DatePicker("Date of birth");
+        add(nameField, dateOfBirthField);
+    }
+}
+----
+
+==== Provide User Information
+
+The `UserInfo` class represents an end user of a collaborative application.
+It has properties such as `name` and `image`, which will be used to display
+information of who is currently present in the view or editing a field.
+
+The user id should be the unique identifier of the currently logged in user.
+For this tutorial we've replaced the user-based id with an id based on the UI instance. This allows simulating multiple users by opening the view in multiple browser tabs.
+
+[source, java]
+----
+// TODO: In a real application, use the user id of the logged in user instead
+String userId = System.identityHashCode(UI.getCurrent()) + "";
+UserInfo localUser = new UserInfo(userId, "User " + userId);
+----
+The name will be displayed to other users when editing a field, and
+the user's avatar will contain the abbreviation of the name (as we don't
+provide a user image in this example).
+
+NOTE: `UserInfo` also has a `colorIndex` property. It defines which color will be
+used in the user's avatar as well as in the field highlight when editing a field.
+This property is generated automatically, so we don't have to set it explicitly.
+
+==== Add User Avatars
+
+To display the avatars of all users who are currently in the application,
+create a `CollaborationAvatarGroup` component.
+
+[source, java]
+----
+CollaborationAvatarGroup avatarGroup = new CollaborationAvatarGroup(
+        localUser, "tutorial");
+addComponentAsFirst(avatarGroup);
+----
+
+First of all, the components needs our local users information (the `UserInfo`
+object which we created earlier), to know how to render the user's avatar.
+
+As a second constructor argument, the component needs a topic id.
+A topic can be compared to a chat room - it has an id that is unique in the context of the application. Participating members will receive all updates made to any topic that they're participating in.
+Topic ids are freeform strings that the developer may choose, like "app" or "contract-126-address". In our case, there's only one topic to work on, so we can use any hardcoded topic id.
+
+NOTE: If we'd expand our application so that there would be a view for editing person entities, we'd need to have unique topic ids for each entity.
+For example, we could have a topic id "person/123", where "123" would be unique to each person.
+In that case the same `CollaborationAvatarGroup` component could be reused for editing different persons by changing the topic with the `setTopic` method.
+
+==== Add Field Collaboration
+
+To enable collaboration with the text field and date picker components, we'll use a class called
+`CollaborationBinder`. It extends the functionality of the `Binder` class, which
+binds values between Java beans and Vaadin field components.
+Visit https://vaadin.com/docs/v14/flow/binding-data/tutorial-flow-components-binder.html[the Vaadin docs site] to learn more about the binder.
+
+To initialize a collaboration binder, we need to provide the type that will be
+edited, as well as the local user's information.
+After initializing, we use the regular binder methods to bind
+the person object's name property to our text field component,
+and the date of birth property to our date picker component.
+
+Finally, we set the topic to connect to (the same as for `CollaborationAvatarGroup`)
+and a supplier for the initial bean value that will populate the
+fields when the first user connects to the topic. The supplier could load the
+editable item from a backend, but in this example we populate the fields with an empty
+`Person` object.
+
+[source, java]
+----
+CollaborationBinder<Person> binder = new CollaborationBinder<>(
+        Person.class, localUser);
+binder.forField(nameField).bind("name");
+binder.forField(dateOfBirthField).bind("dateOfBirth");
+binder.setTopic("tutorial", () -> new Person());
+----
+
+This piece of code takes care of propagating the field values among users,
+as well as displaying the currently focused user with the field highlight.
+
+[[ce.tutorial.run]]
+=== Run the Application
+* Follow instructions in the application's `README.md` file to start the application.
+* Open http://localhost:8080/ in multiple browser tabs and test the app: notice the avatars,
+focus the fields and notice the field highlight, enter new values and notice how the fields
+update in the other tabs
