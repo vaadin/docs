@@ -10,7 +10,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-date-time-picker
         label="Message received"
-        value="15:45:08"
+        value="2020-06-12T15:45:08"
         step="1"
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->

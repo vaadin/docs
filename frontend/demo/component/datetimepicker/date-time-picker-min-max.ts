@@ -3,17 +3,30 @@ import '../../init'; // hidden-full-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 
+// NOTE: Use a date utility library for more fluent DX
+const date = new Date();
+date.setMilliseconds(0);
+date.setSeconds(0);
+date.setMinutes(0);
+const minValue = date.toISOString().slice(0, -1);
+
+date.setDate(date.getDate() + 7);
+const initialValue = date.toISOString().slice(0, -1);
+
+date.setDate(date.getDate() + 53);
+const maxValue = date.toISOString().slice(0, -1);
+
 @customElement('date-time-picker-min-max')
 export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-date-time-picker
-        label="Appointment time"
-        value="08:30"
-        min="08:00"
-        max="16:00"
-        .step=${60 * 30}
+        label="Appointment date and time"
+        helper-text="Must be within 60 days from today"
+        .value=${initialValue}
+        .min=${minValue}
+        .max=${maxValue}
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->
     `;

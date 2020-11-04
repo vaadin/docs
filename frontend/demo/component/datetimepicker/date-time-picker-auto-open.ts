@@ -9,9 +9,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-date-time-picker
-        label="Alarm"
-        value="05:30"
-        .step=${60 * 30}
+        label="Meeting date and time"
         auto-open-disabled
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->
