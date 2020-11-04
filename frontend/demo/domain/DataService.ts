@@ -1,5 +1,5 @@
 import { Country } from './Country';
-import { Person } from './Person';
+import Person from '../../generated/com/vaadin/demo/domain/Person';
 import { Card } from './Card';
 
 const datasetCache: { [key: string]: any[] } = {};

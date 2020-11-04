@@ -3,8 +3,8 @@ import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import { Person } from '../../domain/Person';
 import { getPeople } from '../../domain/DataService';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('combo-box-placeholder')
 export class Example extends LitElement {

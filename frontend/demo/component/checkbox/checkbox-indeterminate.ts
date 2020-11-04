@@ -6,7 +6,7 @@ import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from '../../domain/DataService';
 import type { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import { Person } from '../../domain/Person';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   async firstUpdated() {
     this.items = await getPeople(3);
-    this.selectedIds = [this.items[0].id, this.items[2].id];
+    this.selectedIds = [String(this.items[0].id), String(this.items[2].id)];
   }
 
   render() {
@@ -31,7 +31,7 @@ export class Example extends LitElement {
           this.selectedIds.length < this.items.length}
           @change=${(e: Event) =>
             (this.selectedIds = (e.target as CheckboxElement).checked
-              ? this.items.map((person) => person.id)
+              ? this.items.map((person) => String(person.id))
               : [])}
         >
           Notify users
@@ -44,7 +44,7 @@ export class Example extends LitElement {
           @value-changed=${(e: CustomEvent) => (this.selectedIds = e.detail.value)}
         >
           ${this.items.map((person) => {
-            return html`<vaadin-checkbox .value=${person.id}>
+            return html`<vaadin-checkbox .value=${String(person.id)}>
               ${person.firstName} ${person.lastName}
             </vaadin-checkbox>`;
           })}

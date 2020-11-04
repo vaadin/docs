@@ -5,8 +5,8 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 import { html, LitElement, property, customElement } from 'lit-element';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
-import { Person } from '../../domain/Person';
 import { getPeople } from '../../domain/DataService';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 @customElement('grid-pro-basic')
