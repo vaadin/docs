@@ -1,5 +1,4 @@
 const GITHUB_TOKEN = process.argv[process.argv.length - 1];
-console.log(GITHUB_TOKEN)
 const CACHE_DIR = './.cache';
 
 // Repo name, branch and local directory name
