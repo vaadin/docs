@@ -37,7 +37,7 @@ public class RadioButtonCustomOption extends VerticalLayout {
       if (card != null) {
         Image logo = new Image(card.getPictureUrl(), card.getName());
         logo.setHeight("1em");
-        Text number = new Text(card.getNumber());
+        Text number = new Text(card.getAccountNumber());
         return new FlexLayout(logo, number);
       } else {
         return new Text("Other");

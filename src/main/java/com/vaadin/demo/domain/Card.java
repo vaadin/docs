@@ -8,7 +8,7 @@ public class Card {
 
   private String name;
 
-  private String number;
+  private String accountNumber;
 
   private String pictureUrl;
 
@@ -24,12 +24,12 @@ public class Card {
     this.name = name;
   }
 
-  public String getNumber() {
-    return number;
+  public String getAccountNumber() {
+    return accountNumber;
   }
 
-  public void setNumber(String number) {
-    this.number = number;
+  public void setAccountNumber(String accountNumber) {
+    this.accountNumber = accountNumber;
   }
 
   public String getPictureUrl() {

@@ -6,7 +6,7 @@ import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getCards } from '../../domain/DataService';
-import { Card } from '../../domain/Card';
+import Card from '../../../generated/com/vaadin/demo/domain/Card';
 
 @customElement('radio-button-custom-option')
 export class Example extends LitElement {
@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   async firstUpdated() {
     this.items = await getCards();
-    this.value = this.items[0].id;
+    this.value = String(this.items[0].id);
   }
 
   render() {
@@ -33,10 +33,10 @@ export class Example extends LitElement {
         >
           ${this.items.map(
             (card) => html`
-              <vaadin-radio-button .value=${card.id}>
+              <vaadin-radio-button .value=${String(card.id)}>
                 <div style="display: flex">
                   <img src=${card.pictureUrl} alt=${card.name} style="height: 1em;" />
-                  ${card.number}
+                  ${card.accountNumber}
                 </div>
               </vaadin-radio-button>
             `
