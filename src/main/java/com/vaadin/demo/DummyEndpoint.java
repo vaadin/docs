@@ -1,5 +1,6 @@
 package com.vaadin.demo;
 
+import com.vaadin.demo.domain.Appointment;
 import com.vaadin.demo.domain.Card;
 import com.vaadin.demo.domain.Country;
 import com.vaadin.demo.domain.Person;
@@ -16,6 +17,10 @@ public class DummyEndpoint {
     }
 
     public void saveCountry(Country country) {
+
+    }
+
+    public void saveAppointment(Appointment appointment) {
 
     }
 

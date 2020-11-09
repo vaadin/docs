@@ -1,14 +1,24 @@
 package com.vaadin.demo.domain;
 
+import java.time.LocalTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
 
 @JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
 // tag::snippet[]
 public class Appointment {
 
-
+  private LocalTime start;
 
   private Integer id;
+
+  public LocalTime getStart() {
+    return start;
+  }
+
+  public void setStart(LocalTime start) {
+    this.start = start;
+  }
 
   public Integer getId() {
     return id;
