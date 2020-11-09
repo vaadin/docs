@@ -4,16 +4,10 @@
 >
 > This repository is currently work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts of the Vaadin platform.
 
-Documentation and code examples for all Vaadin features.
-
-This repository is a standard Vaadin application project with additional AsciiDoc articles.
-
-## Content
-
-Files not explicitly listed below are from the standard Vaadin project setup.
+Documentation and code examples for Vaadin. Files not explicitly listed below are from the standard Vaadin project setup.
 
 ### `articles`
-A hierarchy of AsciiDoc (either `.asciidoc` or `.adoc`) files, documenting the use of all Vaadin features
+A hierarchy of AsciiDoc (either `.asciidoc` or `.adoc`) files, documenting the use of all Vaadin features.
 
 ### `frontend`
 Fusion/TypeScript examples, which are included as rendered examples in the documentation.
@@ -22,7 +16,7 @@ Fusion/TypeScript examples, which are included as rendered examples in the docum
 Flow/Java examples, which are included as rendered examples in the documentation.
 
 ### `scripts`
-Interim content migration scripts, which will be removed when the
+Project related scripts (tests, validation builds, preview deployment, etc).
 
 
 ## Content requirements
@@ -55,7 +49,7 @@ order: 10
 
 ### Code examples
 
-You should follow Vaadin best practices when creating code examples in the `src` and `frontend` folders.
+Follow Vaadin best practices when creating code examples in the `src` and `frontend` folders.
 
 
 ## Section and article ordering
