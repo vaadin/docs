@@ -42,7 +42,6 @@ public class NumberFieldStepperControls extends FormLayout {
         infantsField.setHasControls(true);
         infantsField.setMin(0);
         infantsField.setMax(9);
-        // end::snippet[]
         addFormItem(infantsField, "Infants");
     }
 
