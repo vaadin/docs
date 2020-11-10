@@ -16,6 +16,7 @@ public class TimePickerMinMax extends Div {
         // tag::snippet[]
         TimePicker timePicker = new TimePicker();
         timePicker.setLabel("Appointment time");
+        timePicker.setHelperText("Open 8:00-16:00");
         timePicker.setStep(Duration.ofMinutes(30));
         timePicker.setValue(LocalTime.of(8, 30));
         timePicker.setMinTime(LocalTime.of(8, 0));

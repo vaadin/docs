@@ -10,6 +10,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-time-picker
         label="Appointment time"
+        helper-text="Open 8:00-16:00"
         value="08:30"
         min="08:00"
         max="16:00"
