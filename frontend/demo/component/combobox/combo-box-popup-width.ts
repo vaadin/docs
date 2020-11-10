@@ -6,7 +6,6 @@ import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { Person } from '../../domain/Person';
 import { getPeople } from '../../domain/DataService';
 
-// tag::snippet[]
 @customElement('combo-box-popup-width')
 export class Example extends LitElement {
   @property({ type: Array })
@@ -23,14 +22,15 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-combo-box
+        style="--vaadin-combo-box-overlay-width: 350px"
         label="Employee"
         item-label-path="displayName"
         item-value-path="id"
-        .items=${this.items}
-        style="--vaadin-combo-box-overlay-width: 350px"
+        .items="${this.items}"
       ></vaadin-combo-box>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]
