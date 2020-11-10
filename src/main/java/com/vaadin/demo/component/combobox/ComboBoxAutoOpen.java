@@ -14,10 +14,10 @@ public class ComboBoxAutoOpen extends Div {
     // tag::snippet[]
     ComboBox<Country> comboBox = new ComboBox<>("Country");
     comboBox.setAutoOpen(false);
-    comboBox.setItems(DataService.getCountries());
-    comboBox.setItemLabelGenerator(Country::getName);
     add(comboBox);
     // end::snippet[]
+    comboBox.setItems(DataService.getCountries());
+    comboBox.setItemLabelGenerator(Country::getName);
   }
 
   public static class Exporter extends DemoExporter<ComboBoxAutoOpen> { // hidden-full-source-line

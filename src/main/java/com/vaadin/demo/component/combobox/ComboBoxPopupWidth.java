@@ -12,16 +12,16 @@ import com.vaadin.demo.domain.Person;
 public class ComboBoxPopupWidth extends Div {
 
   public ComboBoxPopupWidth() {
-    ItemFilter<Person> filter = (person, filterString) -> (person.getProfession() + " " +person
-    .getFirstName() + " " + person.getLastName()).toLowerCase().indexOf(filterString.toLowerCase()) > -1;
-
     // tag::snippet[]
     ComboBox<Person> comboBox = new ComboBox<>("Employee");
-    comboBox.setItems(filter, DataService.getPeople());
-    comboBox.setItemLabelGenerator(person -> person.getProfession() + " " + person.getFirstName() + " " + person.getLastName());
     comboBox.getStyle().set("--vaadin-combo-box-overlay-width", "350px");
     add(comboBox);
     // end::snippet[]
+
+    ItemFilter<Person> filter = (person, filterString) -> (person.getProfession() + " " +person
+    .getFirstName() + " " + person.getLastName()).toLowerCase().indexOf(filterString.toLowerCase()) > -1;
+    comboBox.setItems(filter, DataService.getPeople());
+    comboBox.setItemLabelGenerator(person -> person.getProfession() + " " + person.getFirstName() + " " + person.getLastName());
   }
 
   public static class Exporter extends DemoExporter<ComboBoxPopupWidth> { // hidden-full-source-line

@@ -25,8 +25,8 @@ export class Example extends LitElement {
         label="Country"
         item-label-path="name"
         item-value-path="id"
-        .filteredItems=${this.filteredItems}
-        @filter-changed=${this.filterChanged}
+        .filteredItems="${this.filteredItems}"
+        @filter-changed="${this.filterChanged}"
       ></vaadin-combo-box>
     `;
   }
