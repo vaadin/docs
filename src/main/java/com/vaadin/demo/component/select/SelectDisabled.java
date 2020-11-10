@@ -45,7 +45,7 @@ public class SelectDisabled extends Div {
         Select<SizeInStock> select = new Select<>();
         select.setLabel("Size");
         select.setItems(sizes);
-        select.setValue(sizes.get(0));
+        select.setValue(sizes.get(4)); // XL
         select.setItemLabelGenerator(SizeInStock::getLabelWithNotes);
 
         // Disable items out of stock
