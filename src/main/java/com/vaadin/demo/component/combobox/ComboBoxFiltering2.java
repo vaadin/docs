@@ -13,14 +13,13 @@ public class ComboBoxFiltering2 extends Div {
 
   public ComboBoxFiltering2() {
     // tag::snippet[]
-    ComboBox<Country> comboBox = new ComboBox<>("Country");
-
     ItemFilter<Country> filter = (country, filterString) -> country.getName().toLowerCase().startsWith(filterString.toLowerCase());
-    comboBox.setItems(filter, DataService.getCountries());
 
+    ComboBox<Country> comboBox = new ComboBox<>("Country");
+    comboBox.setItems(filter, DataService.getCountries());
+    comboBox.setItemLabelGenerator(Country::getName);
     add(comboBox);
     // end::snippet[]
-    comboBox.setItemLabelGenerator(Country::getName);
   }
 
   public static class Exporter extends DemoExporter<ComboBoxFiltering2> { // hidden-full-source-line

@@ -4,6 +4,7 @@ import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 
+// tag::snippet[]
 @customElement('combo-box-custom-entry-1')
 export class Example extends LitElement {
   @property({ type: Array })
@@ -11,14 +12,13 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-combo-box
-        allow-custom-value
         label="State"
         helper-text="Select or type a browser"
-        .items="${this.items}"
+        .items=${this.items}
+        allow-custom-value
       ></vaadin-combo-box>
-      <!-- end::snippet[] -->
     `;
   }
 }
+// end::snippet[]

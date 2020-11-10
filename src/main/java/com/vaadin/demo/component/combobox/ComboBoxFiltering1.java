@@ -13,10 +13,10 @@ public class ComboBoxFiltering1 extends Div {
   public ComboBoxFiltering1() {
     // tag::snippet[]
     ComboBox<Country> comboBox = new ComboBox<>("Country");
-    add(comboBox);
-    // end::snippet[]
     comboBox.setItems(DataService.getCountries());
     comboBox.setItemLabelGenerator(Country::getName);
+    add(comboBox);
+    // end::snippet[]
   }
 
   public static class Exporter extends DemoExporter<ComboBoxFiltering1> { // hidden-full-source-line

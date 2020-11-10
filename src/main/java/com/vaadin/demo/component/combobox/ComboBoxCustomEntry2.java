@@ -18,6 +18,8 @@ public class ComboBoxCustomEntry2 extends Div {
   public ComboBoxCustomEntry2() {
     // tag::snippet[]
     ComboBox<String> comboBox = new ComboBox<>("Browser");
+    comboBox.setItems(items);
+    comboBox.setHelperText("Select or type a browser");
     comboBox.setAllowCustomValue(true);
     comboBox.addCustomValueSetListener(e -> {
       String customValue = e.getDetail();
@@ -27,8 +29,6 @@ public class ComboBoxCustomEntry2 extends Div {
     });
     add(comboBox);
     // end::snippet[]
-    comboBox.setItems(items);
-    comboBox.setHelperText("Select or type a browser");
   }
 
   public static class Exporter extends DemoExporter<ComboBoxCustomEntry2> { // hidden-full-source-line

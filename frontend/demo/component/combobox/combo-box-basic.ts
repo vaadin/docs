@@ -6,6 +6,7 @@ import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { Country } from '../../domain/Country';
 import { getCountries } from '../../domain/DataService';
 
+// tag::snippet[]
 @customElement('combo-box-basic')
 export class Example extends LitElement {
   @property({ type: Array })
@@ -17,14 +18,13 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-combo-box
         label="Country"
         item-label-path="name"
         item-value-path="id"
-        .items="${this.items}"
+        .items=${this.items}
       ></vaadin-combo-box>
-      <!-- end::snippet[] -->
     `;
   }
 }
+// end::snippet[]

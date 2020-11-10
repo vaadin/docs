@@ -6,6 +6,7 @@ import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { Person } from '../../domain/Person';
 import { getPeople } from '../../domain/DataService';
 
+// tag::snippet[]
 @customElement('combo-box-placeholder')
 export class Example extends LitElement {
   @property({ type: Array })
@@ -15,22 +16,22 @@ export class Example extends LitElement {
     this.items = (await getPeople()).map((person) => {
       return {
         ...person,
-        displayName: `${person.firstName} ${person.lastName}`
+        displayName: `${person.profession} ${person.firstName} ${person.lastName}`
       };
     });
   }
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-combo-box
-        placeholder="Select employee"
         label="Employee"
+        placeholder="Select employee"
         item-label-path="displayName"
         item-value-path="id"
-        .items="${this.items}"
+        .items=${this.items}
+        style="--vaadin-combo-box-overlay-width: 350px"
       ></vaadin-combo-box>
-      <!-- end::snippet[] -->
     `;
   }
 }
+// end::snippet[]

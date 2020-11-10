@@ -11,11 +11,11 @@ public class ComboBoxCustomEntry1 extends Div {
   public ComboBoxCustomEntry1() {
     // tag::snippet[]
     ComboBox<String> comboBox = new ComboBox<>("Browser");
+    comboBox.setItems("Chrome", "Edge", "Firefox", "Safari");
+    comboBox.setHelperText("Select or type a browser");
     comboBox.setAllowCustomValue(true);
     add(comboBox);
     // end::snippet[]
-    comboBox.setItems("Chrome", "Edge", "Firefox", "Safari");
-    comboBox.setHelperText("Select or type a browser");
   }
 
   public static class Exporter extends DemoExporter<ComboBoxCustomEntry1> { // hidden-full-source-line
