@@ -12,10 +12,13 @@ export class Example extends LitElement {
   private binder = new Binder(this, AppointmentModel);
 
   firstUpdated() {
-    this.binder.for(this.binder.model.start).addValidator({
+    this.binder.for(this.binder.model.startTime).addValidator({
       message: 'The selected time is not available',
-      validate: (start: string) => {
-        return (start >= '08:00' && start <= '12:00') || (start >= '13:00' && start <= '16:00');
+      validate: (startTime: string) => {
+        return (
+          (startTime >= '08:00' && startTime <= '12:00') ||
+          (startTime >= '13:00' && startTime <= '16:00')
+        );
       }
     });
   }
@@ -28,7 +31,7 @@ export class Example extends LitElement {
         min="08:00"
         max="16:00"
         .step=${60 * 30}
-        ...="${field(this.binder.model.start)}"
+        ...="${field(this.binder.model.startTime)}"
       ></vaadin-time-picker>
     `;
   }

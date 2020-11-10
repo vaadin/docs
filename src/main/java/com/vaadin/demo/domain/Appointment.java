@@ -1,5 +1,6 @@
 package com.vaadin.demo.domain;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
@@ -8,16 +9,26 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-sou
 // tag::snippet[]
 public class Appointment {
 
-  private LocalTime start;
+  private LocalTime startTime;
+
+  private LocalDateTime startDateTime;
 
   private Integer id;
 
-  public LocalTime getStart() {
-    return start;
+  public LocalTime getStartTime() {
+    return startTime;
   }
 
-  public void setStart(LocalTime start) {
-    this.start = start;
+  public void setStartTime(LocalTime startTime) {
+    this.startTime = startTime;
+  }
+
+  public LocalDateTime getStartDateTime() {
+    return startDateTime;
+  }
+
+  public void setStartDateTime(LocalDateTime startDateTime) {
+    this.startDateTime = startDateTime;
   }
 
   public Integer getId() {

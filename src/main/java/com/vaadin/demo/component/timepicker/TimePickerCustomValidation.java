@@ -16,7 +16,6 @@ public class TimePickerCustomValidation extends Div {
 
     public TimePickerCustomValidation() {
         // tag::snippet[]
-
         TimePicker timePicker = new TimePicker();
         timePicker.setLabel("Appointment time");
         timePicker.setHelperText("Open 8:00-12:00, 13:00-16:00");
@@ -26,12 +25,11 @@ public class TimePickerCustomValidation extends Div {
         add(timePicker);
 
         Binder<Appointment> binder = new Binder<>(Appointment.class);
-        binder.forField(timePicker).withValidator(start -> {
-            return !(LocalTime.of(8, 0).isAfter(start)
-                    || (LocalTime.of(12, 0).isBefore(start) && LocalTime.of(13, 0).isAfter(start))
-                    || LocalTime.of(16, 0).isBefore(start));
-        }, "The selected time is not available").bind(Appointment::getStart, Appointment::setStart);
-
+        binder.forField(timePicker).withValidator(startTime -> {
+            return !(LocalTime.of(8, 0).isAfter(startTime)
+                    || (LocalTime.of(12, 0).isBefore(startTime) && LocalTime.of(13, 0).isAfter(startTime))
+                    || LocalTime.of(16, 0).isBefore(startTime));
+        }, "The selected time is not available").bind(Appointment::getStartTime, Appointment::setStartTime);
         // end::snippet[]
     }
 
