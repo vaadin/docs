@@ -1,12 +1,10 @@
 ---
-title: PolymerTemplate, Mapped Components Limitations
-order: 19
+title: Mapped Components Limitations
+order: 9
 layout: page
 ---
 
-=  PolymerTemplate, Mapped Components Limitations
-
-*Usage of polymer based templates is deprecated since Vaadin 18 and we recommend using Lit based templates instead.*
+=  Mapped Components Limitations
 
 == Out-of-sync Methods
 
@@ -14,9 +12,9 @@ layout: page
 
 [source,js]
 ----
-class MainPage extends PolymerElement {
+class MainPage extends LitElement {
 
-    static get template() {
+    render() {
         return html`
             <div id="header">Main page</div>
             <div id="content"></div>
@@ -25,13 +23,9 @@ class MainPage extends PolymerElement {
                 <a href="mailto:someone@example.com?Subject=Hello" target="_top">Send Mail</a>
             </div>`;
     }
-
-    static get is() {
-          return 'main-page';
-    }
 }
 
-customElements.define(MainPage.is, MainPage);
+customElements.define("main-page", MainPage);
 ----
 
 *Example*: Mapped Java template class.
@@ -40,7 +34,7 @@ customElements.define(MainPage.is, MainPage);
 ----
 @Tag("main-page")
 @JsModule("./com/example/main-page.js")
-public class MainPage extends PolymerTemplate<TemplateModel> {
+public class MainPage extends LitTemplate {
 
     @Id("content")
     private Div content;
@@ -52,7 +46,7 @@ public class MainPage extends PolymerTemplate<TemplateModel> {
 }
 ----
 
-In the Polymer template class example above, you could additionally map the `div` element with a `"footer"` identifier using the `Div` component and `@Id("footer")` annotation. However, neither the hierarchical structure, nor any attributes or properties, will be available on the server side using the Java API.
+In the template class example above, you could additionally map the `div` element with a `"footer"` identifier using the `Div` component and `@Id("footer")` annotation. However, the hierarchical structure will not be available on the server side using the Java API.
 
 The injected `Div` instance does not have a server-side child, even though the `a` (anchor) element is available on the client side. The `getChildren()` method in the injected instance returns an empty `Stream`. Similarly, the `getText()` method of the `Div` instance injected using the `@Id("header")` annotation, returns an empty string.
 
@@ -62,14 +56,109 @@ To summarize:
 * You can still use mutation API methods, like `appendChild`, `setProperty` or `setAttribute` from the server side, without issue.
 * Getter methods return values that are set from the server side only.
 
+== Enabled State
+
+Since hierarchical structure in the template is not reflected on the server side
+the `setEnabled` method called on `@Id` injected component doesn't disable any other
+`@Id` injected component even though such component may be a descendant in the shadow DOM
+(see also <<../components/tutorial-enabled-state#, Component Enabled State>>).
+
+*Example*: Disable `@Id` injected component.
+
+[source,java]
+----
+@Tag("main-layout")
+@JsModule("./com/example/main-layout.js")
+public class MainLayout extends LitTemplate {
+
+    @Id("layout")
+    private VerticalLayout layout;
+    @Id("textfield")
+    private TextField textField;
+    @Id("button")
+    private Button button;
+
+    public void onSomeAction() {
+        layout.setEnabled(false);
+
+        System.out.println(textField.isEnabled()); // prints "true"
+        System.out.println(button.isEnabled()); // prints "true"
+        // call explicitly setEnabled(false) to disable a component
+        button.setEnabled(false);
+        System.out.println(button.isEnabled()); // prints "false"
+    }
+}
+----
+
+[source,js]
+----
+class MainLayout extends LitElement {
+
+    render() {
+        return html`
+           <div>
+             <vaadin-vertical-layout id="layout">
+               <vaadin-text-field id="textfield"></vaadin-text-field>
+               <vaadin-button id="button"></vaadin-button>
+             </vaadin-vertical-layout>
+            </div>`;
+    }
+}
+
+customElements.define("main-layout", MainLayout);
+----
+
+== Template disabled attribute
+
+LitTemplate doesn't support using the `disabled` attribute for an id-mapped component and throws an `IllegalAttributeException` with information on where it is used.
+Id-mapped components should always be disabled from the server side using the `setEnabled(false)` method.
+
+*Faulty sample*
+
+[source,js]
+----
+class MainLayout extends LitElement {
+ render() {
+   return html`
+       <div>
+         <vaadin-button id="button" disabled></vaadin-button>
+       </div>
+     `;
+ }
+}
+
+customElements.define("main-layout", MainLayout);
+----
+
+[source,java]
+----
+@Tag("main-layout")
+@JsModule("./com/example/main-layout.js")
+public class MainLayout extends LitTemplate {
+
+   @Id("button")
+   private Button button;
+}
+----
+
+This throws an `IllegalAttributeException` with the message:
+
+```
+Lit template 'com.example.MainLayout' injected element 'vaadin-button' with id 'button' uses the disabled attribute.
+Mapped components should instead be disabled using the 'setEnabled(false)' method on the server side.
+```
+
+[NOTE]
+PolymerTemplate will not throw for using the `disabled` attribute, but only store it as a property for the element leaving the element as enabled on the server side.
+
 == Removing Mapped Elements
 
 A virtually-mapped `Element` is connected to the `ShadowRoot` of the
-`PolymerTemplate`, even if it actually resides deeper in the shadow tree. You cannot remove virtually mapped components from the DOM by removing them on the server side.
+`LitTemplate`, even if it actually resides deeper in the shadow tree. You cannot remove virtually mapped components from the DOM by removing them on the server side.
 
 
 [NOTE]
-You can detect whether a component is used in a `PolymerTemplate` using the `isTemplateMapped` method. See the <<tutorial-component-integration#,PolymerTemplate, Detecting Component Mappings>> for more.
+You can detect whether a component is used in a `LitTemplate` using the `isTemplateMapped` method. See the <<tutorial-component-integration#, Detecting Component Mappings>> for more.
 
 [NOTE]
-The same limitations apply to Lit template class.
+The same limitations apply to Polymer template class.

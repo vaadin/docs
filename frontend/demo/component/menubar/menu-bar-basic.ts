@@ -15,23 +15,22 @@ export class Example extends LitElement {
         { text: 'Users', children: [{ text: 'List' }, { text: 'Add' }] },
         {
           text: 'Billing',
-          children: [{ text: 'Invoices' }, { text: 'Balance Events' }],
-        },
-      ],
+          children: [{ text: 'Invoices' }, { text: 'Balance Events' }]
+        }
+      ]
     },
     {
       text: 'Account',
-      children: [{ text: 'Edit Profile' }, { text: 'Privacy Settings' }],
+      children: [{ text: 'Edit Profile' }, { text: 'Privacy Settings' }]
     },
-    { text: 'Sign Out' },
+    { text: 'Sign Out' }
   ];
 
   @property() selectedItem?: { text: string };
 
   render() {
     return html`
-      <vaadin-menu-bar .items=${this.items} @item-selected=${this.itemSelected}>
-      </vaadin-menu-bar>
+      <vaadin-menu-bar .items=${this.items} @item-selected=${this.itemSelected}> </vaadin-menu-bar>
 
       <div>Selected: ${this.selectedItem?.text}</div>
     `;

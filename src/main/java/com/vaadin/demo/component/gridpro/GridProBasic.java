@@ -37,6 +37,6 @@ public class GridProBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<GridProBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<GridProBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

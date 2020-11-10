@@ -40,6 +40,6 @@ public class MenuBarBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<MenuBarBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<MenuBarBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

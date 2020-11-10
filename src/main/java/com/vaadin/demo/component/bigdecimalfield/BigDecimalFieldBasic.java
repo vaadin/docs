@@ -15,6 +15,6 @@ public class BigDecimalFieldBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<BigDecimalFieldBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<BigDecimalFieldBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }

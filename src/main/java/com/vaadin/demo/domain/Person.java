@@ -1,8 +1,9 @@
 package com.vaadin.demo.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
+// tag::snippet[]
 public class Person {
 
   private String firstName;
@@ -16,6 +17,10 @@ public class Person {
   private boolean subscriber;
 
   private String membership;
+
+  private String pictureUrl;
+
+  private String profession;
 
   public String getFirstName() {
     return firstName;
@@ -57,6 +62,22 @@ public class Person {
     this.membership = membership;
   }
 
+  public String getPictureUrl() {
+    return pictureUrl;
+  }
+
+  public void setPictureUrl(String pictureUrl) {
+    this.pictureUrl = pictureUrl;
+  }
+
+  public String getProfession() {
+    return profession;
+  }
+
+  public void setProfession(String profession) {
+    this.profession = profession;
+  }
+
   public Integer getId() {
     return id;
   }
@@ -64,4 +85,22 @@ public class Person {
   public void setId(Integer id) {
     this.id = id;
   }
+
+  @Override
+  public int hashCode() {
+    return id;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof Person)) {
+      return false;
+    }
+    Person other = (Person) obj;
+    return id == other.id;
+  }
 }
+// end::snippet[]

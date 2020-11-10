@@ -1,25 +1,23 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, css } from 'lit-element';
-import { sampleText } from './text-area-sample-text';
+import { html, LitElement, customElement } from 'lit-element';
+import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 
 @customElement('text-area-height')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      vaadin-text-area {
-        width: 100%;
-        min-height: 50px;
-        max-height: 100px;
-      }
-    `;
-  }
-
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-text-area label="Description" value="${sampleText}"></vaadin-text-area>
+      <style>
+        vaadin-text-area {
+          width: 100%;
+          min-height: 100px;
+          max-height: 150px;
+        }
+      </style>
+
+      <vaadin-text-area label="Description" value="${loremIpsum}"></vaadin-text-area>
       <!-- end::snippet[] -->
     `;
   }

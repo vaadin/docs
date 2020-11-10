@@ -17,13 +17,10 @@ export class Example extends LitElement {
         aria-label="simple"
         .opened=${this.dialogOpened}
         .renderer="${this.dialogRenderer}"
-        @opened-changed=${(e: CustomEvent) =>
-          (this.dialogOpened = e.detail.value)}
+        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
       ></vaadin-dialog>
 
-      <vaadin-button @click=${() => (this.dialogOpened = true)}>
-        Show dialog
-      </vaadin-button>
+      <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
     `;
   }
 
@@ -31,8 +28,8 @@ export class Example extends LitElement {
     render(
       html`
         <div>
-          This simple dialog will close by pressing the Esc key, or by a mouse
-          click anywhere outside the dialog area
+          This simple dialog will close by pressing the Esc key, or by a mouse click anywhere
+          outside the dialog area
         </div>
       `,
       root

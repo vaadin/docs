@@ -1,8 +1,8 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property, css } from 'lit-element';
+import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-password-field';
-import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
 
 enum StrengthText {
@@ -23,18 +23,6 @@ export class Example extends LitElement {
   @property() strengthColor: StrengthColor = StrengthColor.weak;
   pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$';
 
-  static get styles() {
-    return css`
-      .note {
-        color: var(--lumo-primary-text-color);
-        background-color: var(--lumo-primary-color-10pct);
-        border-radius: var(--lumo-border-radius);
-        margin-bottom: 0;
-        padding: var(--lumo-space-s);
-      }
-    `;
-  }
-
   render() {
     return html`
       <!-- tag::snippet[] -->
@@ -45,18 +33,14 @@ export class Example extends LitElement {
         error-message="Not a valid password"
       >
         <iron-icon
-          icon="lumo:checkmark"
+          icon="vaadin:check"
           slot="suffix"
-          style="color:${StrengthColor.strong}"
+          style="color: var(--lumo-success-color)"
           ?hidden="${this.strengthText !== StrengthText.strong}"
         ></iron-icon>
         <div slot="helper">
           Password strength:
           <span style="color:${this.strengthColor}">${this.strengthText}</span>
-          <p class="note">
-            A password must be at least 8 characters. It has to have at least one letter and one
-            digit.
-          </p>
         </div>
       </vaadin-password-field>
       <!-- end::snippet[] -->

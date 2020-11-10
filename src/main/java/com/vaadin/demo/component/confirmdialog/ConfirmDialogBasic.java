@@ -26,6 +26,6 @@ public class ConfirmDialogBasic extends Div {
     // end::snippet[]
   }
 
-  public static class GridEditorExporter extends DemoExporter<ConfirmDialogBasic> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ConfirmDialogBasic> { // hidden-full-source-line
   } // hidden-full-source-line
 }
