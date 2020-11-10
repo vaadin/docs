@@ -14,29 +14,33 @@ export class Example extends LitElement {
 
   firstUpdated() {
     this.binder.for(this.binder.model.startDateTime).addValidator({
+      message: 'The selected day of week is not available',
+      validate: (startDateTime: string) => {
+        const date = new Date(startDateTime);
+        const validWeekDay = date.getDay() >= 1 && date.getDay() <= 5;
+        return validWeekDay;
+      }
+    });
+    this.binder.for(this.binder.model.startDateTime).addValidator({
       message: 'The selected time is not available',
       validate: (startDateTime: string) => {
         const time = startDateTime.split('T')[1];
         const validTime =
           (time >= '08:00' && time <= '12:00') || (time >= '13:00' && time <= '16:00');
-
-        const date = new Date(startDateTime);
-        const validWeekDay = date.getDay() >= 1 && date.getDay() <= 5;
-
-        return validTime && validWeekDay;
+        return validTime;
       }
     });
   }
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-date-time-picker
         label="Appointment date and time"
         helper-text="Open Mondays-Fridays, 8:00-12:00, 13:00-16:00"
+        .step="${60 * 30}"
         ...="${field(this.binder.model.startDateTime)}"
       ></vaadin-date-time-picker>
-      <!-- end::snippet[] -->
     `;
   }
+  // end::snippet[]
 }

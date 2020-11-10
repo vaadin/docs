@@ -24,16 +24,15 @@ public class DateTimePickerCustomValidation extends Div {
 
         Binder<Appointment> binder = new Binder<>(Appointment.class);
         binder.forField(dateTimePicker).withValidator(startDateTime -> {
+            boolean validWeekDay = startDateTime.getDayOfWeek().getValue() >= 1
+                    && startDateTime.getDayOfWeek().getValue() <= 5;
+            return validWeekDay;
+        }, "The selected day of week is not available").withValidator(startDateTime -> {
             LocalTime startTime = LocalTime.of(startDateTime.getHour(), startDateTime.getMinute());
-
             boolean validTime = !(LocalTime.of(8, 0).isAfter(startTime)
                     || (LocalTime.of(12, 0).isBefore(startTime) && LocalTime.of(13, 0).isAfter(startTime))
                     || LocalTime.of(16, 0).isBefore(startTime));
-
-            boolean validWeekDay = startDateTime.getDayOfWeek().getValue() >= 1
-                    && startDateTime.getDayOfWeek().getValue() <= 5;
-            return validTime && validWeekDay;
-
+            return validTime;
         }, "The selected time is not available").bind(Appointment::getStartDateTime, Appointment::setStartDateTime);
         // end::snippet[]
     }
