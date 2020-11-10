@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.domain.Ordering;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.select.Select;
@@ -13,21 +14,6 @@ import com.vaadin.flow.router.Route;
 public class SelectSeparators extends Div {
 
   public SelectSeparators() {
-    class Ordering {
-        private int id;
-        private String name;
-        public Ordering(int id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-        public int getId() {
-            return id;
-        }
-        public String getName() {
-            return name;
-        }
-    }
-
     // tag::snippet[]
     List<Ordering> orderings = new ArrayList<Ordering>();
     orderings.add(new Ordering(0, "Most recent first"));
@@ -38,8 +24,9 @@ public class SelectSeparators extends Div {
 
     // Create a Select component with the data
     Select<Ordering> select = new Select<>();
-    select.setLabel("Sort By");
+    select.setLabel("Sort by");
     select.setItems(orderings);
+    select.setValue(orderings.get(0));
     select.setItemLabelGenerator(Ordering::getName);
 
     // Add horizontal rulers after specified items

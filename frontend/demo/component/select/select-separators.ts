@@ -14,6 +14,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-select
         label="Sort by"
+        value="Most recent first"
         .renderer=${(root: HTMLElement) =>
           render(
             html`

@@ -9,21 +9,21 @@ import com.vaadin.flow.router.Route;
 @Route("select-placeholder")
 public class SelectPlaceholder extends Div {
 
-  public SelectPlaceholder() {
-    // tag::snippet[]
-    Select<String> select = new Select<>();
-    select.setLabel("Sort By");
-    select.setPlaceholder("Select Criterion");
-    select.setItems("Most recent first",
-    		"Rating: high to low",
-    		"Rating: low to high",
-    		"Price: high to low",
-    		"Price: low to high");
+    public SelectPlaceholder() {
+        // tag::snippet[]
+        Select<String> select = new Select<>();
+        select.setLabel("Sort by");
+        select.setPlaceholder("Select criterion");
+        select.setItems("Most recent first",
+                "Rating: high to low",
+                "Rating: low to high",
+                "Price: high to low",
+                "Price: low to high");
 
-    add(select);
-    // end::snippet[]
-  }
+        add(select);
+        // end::snippet[]
+    }
 
-  public static class SelectPlaceholderExporter extends DemoExporter<SelectPlaceholder> { // hidden-full-source-line
-  } // hidden-full-source-line
+    public static class SelectPlaceholderExporter extends DemoExporter<SelectPlaceholder> { // hidden-full-source-line
+    } // hidden-full-source-line
 }

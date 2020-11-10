@@ -14,7 +14,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-select
         label="Sort by"
-        placeholder="Select a Criterion"
+        placeholder="Select a criterion"
         .renderer=${(root: HTMLElement) =>
           render(
             html`
