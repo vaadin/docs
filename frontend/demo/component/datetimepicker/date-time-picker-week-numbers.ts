@@ -1,4 +1,6 @@
 import '../../init'; // hidden-full-source-line
+import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
+import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-line
 
 import { customElement, html, LitElement, query } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
