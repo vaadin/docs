@@ -3,8 +3,8 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, property } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
-import { Person } from '../../domain/Person';
 import { getPeople } from '../../domain/DataService';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 @customElement('crud-basic')

@@ -6,7 +6,7 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from '../../domain/DataService';
 import { render, html } from 'lit-html';
-import { Person } from '../../domain/Person';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 @customElement('grid-basic')
