@@ -30,7 +30,7 @@ export class Example extends LitElement {
       <!-- tag::combobox[] -->
       <vaadin-combo-box
         label="Choose doctor"
-        .itemLabelPath="displayName"
+        .itemLabelPath="${'displayName'}"
         .filteredItems="${this.filteredItems}"
         .renderer="${this.renderer}"
         style="--vaadin-combo-box-overlay-width: 16em"
