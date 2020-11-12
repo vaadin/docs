@@ -43,3 +43,11 @@ In order to run all the same checks as are run for pull request, you need to ins
 - The `Google` folder from https://github.com/errata-ai/Google
 - The `Microsoft` folder from https://github.com/errata-ai/Microsoft
 - The `write-good` folder from https://github.com/errata-ai/write-good
+
+If you need to disable certain checks for a piece of content, you can use the following in AsciiDoc:
+
+```asciidoc
+pass:[<!-- vale Vale.Terms = NO -->]
+This content will not produce errors or warnings for the Vale.Terms checks.
+pass:[<!-- vale Vale.Terms = YES -->]
+```
