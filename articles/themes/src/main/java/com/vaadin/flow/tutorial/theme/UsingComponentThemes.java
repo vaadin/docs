@@ -42,14 +42,14 @@ public class UsingComponentThemes {
 
     // tag::lumo[]
     @Route(value = "")
-    @Theme("theme-name")
+    @Theme(themeClass = Lumo.class)
     public class LumoApplication extends Div {
     }
     // end::lumo[]
 
     // tag::material[]
     @Route(value = "")
-    @Theme(value = Material.class)
+    @Theme(themeClass = Material.class)
     public class MaterialApplication extends Div {
     }
     // end::material[]
