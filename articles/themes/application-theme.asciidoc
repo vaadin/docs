@@ -1,0 +1,104 @@
+---
+title: Application Theme
+order: 25
+layout: page
+---
+
+= Application Theme
+ifdef::web[]
+endif::web[]
+
+Application Theme is the standard way to organize themes in a Vaadin application, making it easier to switch between themes and allow packaging a theme to reuse in other Vaadin applications.
+
+== Define application themes
+
+Figure 1 illutrates the contents of a theme:
+
+.Contents of an application theme
+image::images/content-of-application-theme.png[width="70%"]
+
+
+=== Theme folder
+Application themes are placed under the `frontend/theme/` folder. This location is fixed.
+Each theme is in a separate folder, the folder name is also the theme name.
+
+=== Components styles
+Vaadin component-specific style sheets are placed under the `components` folder. The file name must match the component name that you want to style. See <<styling-components#,Styling Components>>.
+
+=== Static resourses
+You can create folders for static resources, such as images or fonts. When using in a style sheet, the resource location is relative to `frontend/theme/` folder.
+
+For example, in Figure 1, `global.css` file can have `background: url("theme/my-theme/images/bg.jpg");`
+
+=== Global styles
+Application-specific styling across application views and application-specific components are defined in CSS files under the theme folder.
+
+For example, <<css-custom-properties#,CSS custom properties>> or `@font-face` can be defined in a `global.css` file. See <<styling-applications#,Styling Applications>>.
+
+=== Theme configuration
+==== Assets
+Assets like fonts and images from an npm dependency can be used in the theme after mapping them from the dependency to local URIs. That can be done by adding an `assets` block in `theme.json`.
+[source, JSON]
+----
+"assets": {
+  "@foo/bar": {
+    "images/**": "foobar/images"
+  }
+}
+----
+A style sheet in the theme can use the assests using the local path defined in `theme.json`.
+[source, CSS]
+----
+background-image: url('foobar/images/logo.svg');
+----
+==== Extend an application theme
+An application theme can extend another one by adding a `parent` property to theme.json.
+For example, to extend a theme called "acme-base":
+[source, JSON]
+----
+{
+  "parent": "acme-base"
+}
+----
+
+==== Use at-rules for components in non-Vaadin applications
+To make at-rules work for components embeded into non-Vaadin applications (e.g. <<../flow/embedding-flow-applications/tutorial-webcomponent-intro,WebComponentExporter>>), add a file called `document.css` to the theme folder, and write at-rules there.
+
+Css in this file is applied to the document root rather than the page body or shadow root, in order to support at-rules that don't work inside shadow roots.
+
+At-rules in npm dependencies are declared in `theme.json` using `documentCss` property:
+[source, JSON]
+----
+{
+  "documentCss": ["@foo/bar.css"]
+}
+----
+
+== Use application themes
+
+In server-side views (Java), use the [classname]#@Theme# annotation to apply an application theme.
+The annotation must be set for the <<../flow/routing/tutorial-routing-annotation#,root navigation>> class or the <<../flow/routing/tutorial-router-layout#,router layout>> defined in the [classname]#@Route# annotation.
+Otherwise an exception is thrown on startup.
+[source, java]
+----
+include::src/main/java/com/vaadin/flow/tutorial/theme/UsingComponentThemes.java[tags=lumo, indent=0, group=Java]
+----
+
+A theme variant can also be applied.
+[source, java]
+----
+include::src/main/java/com/vaadin/flow/tutorial/theme/UsingComponentThemes.java[tags=lumo-dark, indent=0, group=Java]
+----
+See <<theme-variants#global-variants>>.
+
+NOTE: Any changes to theme folder contents (add/remove files, file modifications) are automatically picked up by webpack. If a running app has live reload available, you can wait for it to reload the changes, otherwise, you can manually refresh the browser.
+
+== Application Theme as dependency
+=== Create a theme dependency
+. Create a separate project with the theme folder inside `src/main/resources/META-INF/resources/theme/`
+. Put the theme assets into the theme folder
+. Build the project into a JAR file
+
+=== Apply theme to app project
+. Add the theme JAR as a dependency in a Vaadin app project
+. Apply the theme with the `@Theme` annotation

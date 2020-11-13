@@ -42,7 +42,7 @@ public class UsingComponentThemes {
 
     // tag::lumo[]
     @Route(value = "")
-    @Theme(value = Lumo.class)
+    @Theme("theme-name")
     public class LumoApplication extends Div {
     }
     // end::lumo[]
@@ -56,11 +56,11 @@ public class UsingComponentThemes {
     //
 
     @Route(value = "")
-    @Theme(MyTheme.class)
+    @Theme("my-theme")
     public class MyApplication extends Div {
     }
 
-    @Theme(MyTheme.class)
+    @Theme("my-theme")
     public class MainLayout extends Div implements RouterLayout {
     }
 
@@ -80,13 +80,13 @@ public class UsingComponentThemes {
     // end::notheme[]
 
     @Route(value = "")
-    @Theme(value = MyTheme.class, variant = "large")
+    @Theme(value = "my-theme", variant = "large")
     public class LargeThemedApplication extends Div {
     }
 
     @Route(value = "")
     // tag::lumo-dark[]
-    @Theme(value = Lumo.class, variant = Lumo.DARK)
+    @Theme(value = "my-theme", variant = Lumo.DARK)
     // end::lumo-dark[]
     public class DarkApplication extends Div {
     }
