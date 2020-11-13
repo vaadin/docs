@@ -4,85 +4,50 @@
 >
 > This repository is currently work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts of the Vaadin platform.
 
-Documentation and code examples for Vaadin. Files not explicitly listed below are from the standard Vaadin project setup.
+Documentation and code examples for Vaadin.
+
+## Contents
+
+Files not explicitly listed below are from the standard Vaadin project setup.
 
 ### `articles`
-A hierarchy of AsciiDoc (either `.asciidoc` or `.adoc`) files, documenting the use of all Vaadin features.
-
-### `frontend`
-Fusion/TypeScript examples, which are included as rendered examples in the documentation.
-
-### `src`
-Flow/Java examples, which are included as rendered examples in the documentation.
-
-### `scripts`
-Project related scripts (tests, validation builds, preview deployment, etc).
-
-
-## Content requirements
-
-In order to work with the documentation site generator, the content has certain requirements.
-
-### Articles
-
-All files and folders inside the `articles` folder need to satisfy the following requirements:
-
-#### Folders need an index
-Folders need to contain an `index.asciidoc` or `index.adoc` file, which defines the title and optional order of the section
-
-#### Articles need visible content
-AsciiDoc files need to have at least some content, for example a heading in order for them to become visible in the documentation
-
-#### Front matter
-AsciiDoc files need to have front matter defining the `title` attribute. The `title` attribute defines the text which is shown in the navigation (including breadcrumb). The `order` attribute is optional, but recommended.
-
-#### Example:
-```
----
-title: Article Title
-order: 10
----
-
-= Article Title
-```
-
-
-### Code examples
-
-Follow Vaadin best practices when creating code examples in the `src` and `frontend` folders.
-
-
-## Section and article ordering
-
-The `order` front matter attribute defines in which order the article/section is shown in the navigation.
-
-Articles/sections without order are shown after ordered ones, in alphabetical order based on the title (or file/folder name if not specified).
-
-### Section ordering
-
-With sections (aka folders), the `order` property in the index file inside the section defines the order of the section in relation to its sibling sections.
-
-For example, with the following, “Folder B” will be shown before “Folder A” in the navigation:
-
-`articles/folder-a/index.asciidoc`
-```
----
-title: Folder A
-order: 20
----
-```
-`articles/folder-b/index.asciidoc`
-```
----
-title: Folder B
-order: 10
----
-```
-
-## URL mapping
-
-The file path defines the resulting URL on the documentation site.
+A hierarchy of AsciiDoc (either `.asciidoc` or `.adoc`) files, documenting the use of all Vaadin features. The file path defines the resulting URL on the documentation site.
 
 For example:
 - `articles/intro/index.asciidoc` → `/intro/`
 - `articles/forms/data-binding.asciidoc` → `/forms/data-binding/`
+
+See [Authoring articles](AUTHORING.md) to learn how to write documentation articles.
+
+### `frontend`
+Fusion/TypeScript examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples.
+
+### `src`
+Flow/Java examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples.
+
+### `scripts`
+Project related scripts (tests, validation builds, preview deployment, etc).
+
+### `.github`
+Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about).
+
+## Writing style guidelines (Vale setup)
+
+To run the writing guideline checks locally, follow the [Vale CLI installation instructions](https://docs.errata.ai/vale/install), and install the Vale plugin/extension for your preferred editor:
+
+- VS Code: [vale-vscode](https://github.com/errata-ai/vale-vscode)
+- Atom: [atomic-vale](https://github.com/TimKam/atomic-vale)
+
+In order to run all the same checks as are run for pull request, you need to install all the style libraries locally under `.github/styles` (next to the already existing `Vaadin` and `Vocab` folders):
+
+- The `Google` folder from https://github.com/errata-ai/Google
+- The `Microsoft` folder from https://github.com/errata-ai/Microsoft
+- The `write-good` folder from https://github.com/errata-ai/write-good
+
+If you need to disable certain checks for a piece of content, you can use the following in AsciiDoc:
+
+```asciidoc
+pass:[<!-- vale Vale.Terms = NO -->]
+This content will not produce errors or warnings for the Vale.Terms checks.
+pass:[<!-- vale Vale.Terms = YES -->]
+```
