@@ -7,23 +7,23 @@ import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 
-@customElement('select-basic')
+@customElement('select-disabled')
 export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-select
-        value="Most recent first"
-        label="Sort by"
+        label="Size"
+        value="XL"
         .renderer=${(root: HTMLElement) =>
           render(
             html`
               <vaadin-list-box>
-                <vaadin-item>Most recent first</vaadin-item>
-                <vaadin-item>Rating: high to low</vaadin-item>
-                <vaadin-item>Rating: low to high</vaadin-item>
-                <vaadin-item>Price: high to low</vaadin-item>
-                <vaadin-item>Price: low to high</vaadin-item>
+                <vaadin-item disabled>XS (out of stock)</vaadin-item>
+                <vaadin-item>S</vaadin-item>
+                <vaadin-item>M</vaadin-item>
+                <vaadin-item>L</vaadin-item>
+                <vaadin-item>XL</vaadin-item>
               </vaadin-list-box>
             `,
             root

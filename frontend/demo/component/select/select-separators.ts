@@ -7,7 +7,7 @@ import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 
-@customElement('select-basic')
+@customElement('select-separators')
 export class Example extends LitElement {
   render() {
     return html`
@@ -20,8 +20,10 @@ export class Example extends LitElement {
             html`
               <vaadin-list-box>
                 <vaadin-item>Most recent first</vaadin-item>
+                <hr>
                 <vaadin-item>Rating: high to low</vaadin-item>
                 <vaadin-item>Rating: low to high</vaadin-item>
+                <hr>
                 <vaadin-item>Price: high to low</vaadin-item>
                 <vaadin-item>Price: low to high</vaadin-item>
               </vaadin-list-box>
