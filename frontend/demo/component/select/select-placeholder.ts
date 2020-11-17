@@ -13,7 +13,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-select
-        label="Sort by"
+        label="Size"
         .renderer=${(root: HTMLElement) =>
           render(
             html`
@@ -28,7 +28,7 @@ export class Example extends LitElement {
             root
           )}
       ></vaadin-select>
-      <!-- tag::snippet[] -->
+      <!-- end::snippet[] -->
     `;
   }
 }

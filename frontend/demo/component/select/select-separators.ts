@@ -31,7 +31,7 @@ export class Example extends LitElement {
             root
           )}
       ></vaadin-select>
-      <!-- tag::snippet[] -->
+      <!-- end::snippet[] -->
     `;
   }
 }
