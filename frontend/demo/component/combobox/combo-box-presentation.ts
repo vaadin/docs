@@ -48,9 +48,6 @@ export class Example extends LitElement {
   }
 
   // tag::renderer[]
-
-  // ...
-
   // NOTE
   // We are using inline styles here to keep the example simple.
   // We recommend placing CSS in a separate style sheet and
@@ -73,5 +70,5 @@ export class Example extends LitElement {
       root
     );
   }
+  // end::renderer[]
 }
-// end::renderer[]
