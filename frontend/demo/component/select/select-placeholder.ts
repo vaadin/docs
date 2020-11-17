@@ -14,15 +14,16 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-select
         label="Size"
+        placeholder="Select size"
         .renderer=${(root: HTMLElement) =>
           render(
             html`
-              <vaadin-list-box placeholder="Select size">
-                <vaadin-item>XS</vaadin-item>
-                <vaadin-item>S</vaadin-item>
-                <vaadin-item>M</vaadin-item>
-                <vaadin-item>L</vaadin-item>
-                <vaadin-item>XL</vaadin-item>
+              <vaadin-list-box>
+                <vaadin-item value="xs">XS</vaadin-item>
+                <vaadin-item value="s">S</vaadin-item>
+                <vaadin-item value="m">M</vaadin-item>
+                <vaadin-item value="l">L</vaadin-item>
+                <vaadin-item value="xl">XL</vaadin-item>
               </vaadin-list-box>
             `,
             root

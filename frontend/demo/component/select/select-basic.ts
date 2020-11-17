@@ -13,17 +13,17 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-select
-        value="Most recent first"
+        value="recent"
         label="Sort by"
         .renderer=${(root: HTMLElement) =>
           render(
             html`
               <vaadin-list-box>
-                <vaadin-item>Most recent first</vaadin-item>
-                <vaadin-item>Rating: high to low</vaadin-item>
-                <vaadin-item>Rating: low to high</vaadin-item>
-                <vaadin-item>Price: high to low</vaadin-item>
-                <vaadin-item>Price: low to high</vaadin-item>
+                <vaadin-item value="recent">Most recent first</vaadin-item>
+                <vaadin-item value="rating-desc">Rating: high to low</vaadin-item>
+                <vaadin-item value="rating-asc">Rating: low to high</vaadin-item>
+                <vaadin-item value="price-desc">Price: high to low</vaadin-item>
+                <vaadin-item value="price-asc">Price: low to high</vaadin-item>
               </vaadin-list-box>
             `,
             root

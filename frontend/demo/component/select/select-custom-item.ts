@@ -41,7 +41,7 @@ export class Example extends LitElement {
         <vaadin-list-box>
           ${this.people.map(
             (person) => html`
-              <vaadin-item>
+              <vaadin-item value="${person.id}">
                 <!--
                   NOTE
                   We are using inline styles here to keep the example simple.
