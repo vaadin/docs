@@ -9,7 +9,7 @@ import '@vaadin/vaadin-item/vaadin-item';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
-@customElement('select-custom-item')
+@customElement('select-presentation')
 export class Example extends LitElement {
   @property({ type: Array })
   private people: Person[] = [];

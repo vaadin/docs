@@ -9,12 +9,12 @@ import com.vaadin.flow.router.Route;
 
 import java.util.List;
 
-@Route("select-custom-item")
-public class SelectCustomItem extends Div {
+@Route("select-presentation")
+public class SelectPresentation extends Div {
 
   private List<Person> items = DataService.getPeople(5);
 
-  public SelectCustomItem() {
+  public SelectPresentation() {
     // tag::snippet[]
     Select<Person> select = new Select<>();
     select.setLabel("Choose doctor");
@@ -24,6 +24,6 @@ public class SelectCustomItem extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectCustomItem> { // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectPresentation> { // hidden-full-source-line
   } // hidden-full-source-line
 }
