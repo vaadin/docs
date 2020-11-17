@@ -33,7 +33,7 @@ Files related to linting the articles against the writing style guidelines with 
 
 ## Writing style guidelines (Vale setup)
 
-To run the writing guideline checks locally, follow the [Vale CLI installation instructions](https://docs.errata.ai/vale/install), and install the Vale plugin/extension for your preferred editor:
+To run the writing guideline checks locally, you need to install [Asciidoctor](https://asciidoctor.org/#installation) and [Vale](https://docs.errata.ai/vale/install), and install the Vale plugin/extension for your preferred editor:
 
 - VS Code: [vale-vscode](https://github.com/errata-ai/vale-vscode)
 - Atom: [atomic-vale](https://github.com/TimKam/atomic-vale)
@@ -43,6 +43,8 @@ In order to run all the same checks as are run for pull request, you need to ins
 - The `Google` folder from https://github.com/errata-ai/Google
 - The `Microsoft` folder from https://github.com/errata-ai/Microsoft
 - The `write-good` folder from https://github.com/errata-ai/write-good
+
+To manually check an article, run `vale path/to/article.asciidoc` in the terminal.
 
 If you need to disable certain checks for a piece of content, you can use the following in AsciiDoc:
 
