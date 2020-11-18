@@ -8,7 +8,9 @@ import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 @customElement('date-picker-basic')
 export class Example extends LitElement {
   render() {
-    return html` <vaadin-date-picker label="Birthday"></vaadin-date-picker> `;
+    return html`
+      <vaadin-date-picker label="Birthday"></vaadin-date-picker>
+    `;
   }
 }
 // end::snippet[]

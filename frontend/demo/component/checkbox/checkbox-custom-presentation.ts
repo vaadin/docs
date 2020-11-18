@@ -16,19 +16,23 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`<vaadin-checkbox-group label="Invitees" theme="vertical">
-      ${this.items.map((person) => {
-        return html`<vaadin-checkbox .value=${String(person.id)}>
-          <div style="display: flex;">
-            <img style="height: 2em" src=${person.pictureUrl} alt="User avatar" />
-            <div>
-              ${person.firstName} ${person.lastName}
-              <div>${person.profession}</div>
-            </div>
-          </div>
-        </vaadin-checkbox>`;
-      })}
-    </vaadin-checkbox-group>`;
+    return html`
+      <vaadin-checkbox-group label="Invitees" theme="vertical">
+        ${this.items.map(person => {
+          return html`
+            <vaadin-checkbox .value=${String(person.id)}>
+              <div style="display: flex;">
+                <img style="height: 2em" src=${person.pictureUrl} alt="User avatar" />
+                <div>
+                  ${person.firstName} ${person.lastName}
+                  <div>${person.profession}</div>
+                </div>
+              </div>
+            </vaadin-checkbox>
+          `;
+        })}
+      </vaadin-checkbox-group>
+    `;
   }
 }
 // end::snippet[]

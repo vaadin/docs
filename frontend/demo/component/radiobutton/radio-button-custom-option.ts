@@ -32,7 +32,7 @@ export class Example extends LitElement {
           @value-changed=${(e: CustomEvent) => (this.value = e.detail.value)}
         >
           ${this.items.map(
-            (card) => html`
+            card => html`
               <vaadin-radio-button .value=${String(card.id)}>
                 <div style="display: flex">
                   <img src=${card.pictureUrl} alt=${card.name} style="height: 1em;" />

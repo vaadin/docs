@@ -7,7 +7,9 @@ import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 @customElement('checkbox-edit-multiple')
 export class Example extends LitElement {
   render() {
-    return html`<vaadin-checkbox>Enabled</vaadin-checkbox>`;
+    return html`
+      <vaadin-checkbox>Enabled</vaadin-checkbox>
+    `;
   }
 }
 // end::snippet[]

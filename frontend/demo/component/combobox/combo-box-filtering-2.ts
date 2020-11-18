@@ -33,7 +33,7 @@ export class Example extends LitElement {
 
   private filterChanged(e: CustomEvent) {
     const filter = e.detail.value as string;
-    this.filteredItems = this.allItems.filter((country) => {
+    this.filteredItems = this.allItems.filter(country => {
       return country.name.toLowerCase().startsWith(filter.toLowerCase());
     });
   }

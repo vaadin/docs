@@ -7,7 +7,7 @@ async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
   if (!datasetCache[fileName]) {
     datasetCache[fileName] = (await import('../../../src/main/resources/data/' + fileName)).default;
   }
-  return datasetCache[fileName].slice(0, count).map((item) => {
+  return datasetCache[fileName].slice(0, count).map(item => {
     // Create deep clones to avoid sharing the same item instances between examples
     return { ...item };
   });

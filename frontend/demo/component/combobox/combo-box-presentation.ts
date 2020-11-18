@@ -17,7 +17,7 @@ export class Example extends LitElement {
   private filteredItems: Person[] = [];
 
   async firstUpdated() {
-    this.allItems = this.filteredItems = (await getPeople()).map((person) => {
+    this.allItems = this.filteredItems = (await getPeople()).map(person => {
       return {
         ...person,
         displayName: `${person.firstName} ${person.lastName}`
@@ -58,10 +58,16 @@ export class Example extends LitElement {
     render(
       html`
         <div style="display: flex;">
-          <img style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);" src=${person.pictureUrl} alt="Portrait of ${person.firstName} ${person.lastName}" />
+          <img
+            style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
+            src=${person.pictureUrl}
+            alt="Portrait of ${person.firstName} ${person.lastName}"
+          />
           <div>
             ${person.firstName} ${person.lastName}
-            <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
+            <div
+              style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+            >
               ${person.profession}
             </div>
           </div>

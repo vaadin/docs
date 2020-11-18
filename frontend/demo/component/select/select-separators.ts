@@ -20,10 +20,10 @@ export class Example extends LitElement {
             html`
               <vaadin-list-box>
                 <vaadin-item value="recent">Most recent first</vaadin-item>
-                <hr>
+                <hr />
                 <vaadin-item value="rating-desc">Rating: high to low</vaadin-item>
                 <vaadin-item value="rating-asc">Rating: low to high</vaadin-item>
-                <hr>
+                <hr />
                 <vaadin-item value="price-desc">Price: high to low</vaadin-item>
                 <vaadin-item value="price-asc">Price: low to high</vaadin-item>
               </vaadin-list-box>

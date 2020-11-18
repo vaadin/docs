@@ -4,7 +4,9 @@ import '@vaadin/vaadin-button/vaadin-button';
 @customElement('routing-basic')
 export class RoutingBasic extends LitElement {
   render() {
-    return html` <vaadin-button @click=${this.onClick}>Read More</vaadin-button> `;
+    return html`
+      <vaadin-button @click=${this.onClick}>Read More</vaadin-button>
+    `;
   }
 
   onClick() {

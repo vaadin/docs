@@ -74,7 +74,7 @@ export class IconsPreview extends HTMLElement {
 
     const search = this.querySelector('input');
     search?.addEventListener('input', () => {
-      this.querySelectorAll('.docs-icon-preview').forEach((icon) => {
+      this.querySelectorAll('.docs-icon-preview').forEach(icon => {
         icon.classList.toggle(
           'hidden',
           icon.className.toLowerCase().indexOf(search.value.toLowerCase()) === -1

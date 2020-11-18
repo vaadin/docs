@@ -17,7 +17,9 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html` <vaadin-crud include="firstName, lastName" .items=${this.items}></vaadin-crud> `;
+    return html`
+      <vaadin-crud include="firstName, lastName" .items=${this.items}></vaadin-crud>
+    `;
   }
 }
 // end::snippet[]
