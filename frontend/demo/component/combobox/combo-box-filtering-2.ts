@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { getCountries } from '../../domain/DataService';
 import Country from '../../../generated/com/vaadin/demo/domain/Country';
@@ -9,10 +9,10 @@ import Country from '../../../generated/com/vaadin/demo/domain/Country';
 // tag::snippet[]
 @customElement('combo-box-filtering-2')
 export class Example extends LitElement {
-  @property({ type: Array })
+  @internalProperty()
   private allItems: Country[] = [];
 
-  @property({ type: Array })
+  @internalProperty()
   private filteredItems: Country[] = [];
 
   async firstUpdated() {

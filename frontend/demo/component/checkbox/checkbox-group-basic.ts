@@ -1,12 +1,12 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
 
 @customElement('checkbox-group-basic')
 export class Example extends LitElement {
-  @property({ type: Array })
+  @internalProperty()
   private value = ['0', '2'];
 
   render() {

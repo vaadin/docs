@@ -1,14 +1,16 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, property, customElement } from 'lit-element';
+import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-confirm-dialog/vaadin-confirm-dialog';
 
 // tag::snippet[]
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
-  @property() dialogOpened = false;
+  @internalProperty()
+  private dialogOpened = false;
 
-  @property() status = '';
+  @internalProperty()
+  private status = '';
 
   render() {
     return html`

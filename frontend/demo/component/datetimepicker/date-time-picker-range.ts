@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-line
 
-import { customElement, html, LitElement, property } from 'lit-element';
+import { customElement, html, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 
 const initialStartValue = '2020-08-25T20:00';
@@ -10,11 +10,11 @@ const initialEndValue = '2020-09-01T20:00';
 
 @customElement('date-time-picker-range')
 export class Example extends LitElement {
-  @property()
-  startDateTime = initialStartValue;
+  @internalProperty()
+  private startDateTime = initialStartValue;
 
-  @property()
-  endDateTime = initialEndValue;
+  @internalProperty()
+  private endDateTime = initialEndValue;
 
   render() {
     return html`

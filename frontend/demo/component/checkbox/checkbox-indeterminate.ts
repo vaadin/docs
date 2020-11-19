@@ -1,19 +1,19 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from '../../domain/DataService';
-import type { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
+import { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
-  @property({ type: Array })
+  @internalProperty()
   private items: Person[] = [];
 
-  @property({ type: Array })
+  @internalProperty()
   private selectedIds: string[] = [];
 
   async firstUpdated() {
@@ -28,10 +28,10 @@ export class Example extends LitElement {
         <vaadin-checkbox
           .checked=${this.selectedIds.length === this.items.length}
           .indeterminate=${this.selectedIds.length > 0 &&
-          this.selectedIds.length < this.items.length}
+            this.selectedIds.length < this.items.length}
           @change=${(e: Event) =>
             (this.selectedIds = (e.target as CheckboxElement).checked
-              ? this.items.map((person) => String(person.id))
+              ? this.items.map(person => String(person.id))
               : [])}
         >
           Notify users
@@ -43,10 +43,12 @@ export class Example extends LitElement {
           .value=${this.selectedIds}
           @value-changed=${(e: CustomEvent) => (this.selectedIds = e.detail.value)}
         >
-          ${this.items.map((person) => {
-            return html`<vaadin-checkbox .value=${String(person.id)}>
-              ${person.firstName} ${person.lastName}
-            </vaadin-checkbox>`;
+          ${this.items.map(person => {
+            return html`
+              <vaadin-checkbox .value=${String(person.id)}>
+                ${person.firstName} ${person.lastName}
+              </vaadin-checkbox>
+            `;
           })}
         </vaadin-checkbox-group>
         <!-- end::snippet[] -->

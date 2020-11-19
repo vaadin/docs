@@ -1,6 +1,6 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property, css } from 'lit-element';
+import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
 
@@ -9,7 +9,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   private charLimit = 600;
 
-  @property()
+  @internalProperty()
   private text = loremIpsum;
 
   static get styles() {

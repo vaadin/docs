@@ -1,13 +1,13 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 
 @customElement('text-area-basic')
 export class Example extends LitElement {
   private charLimit = 140;
 
-  @property()
+  @internalProperty()
   private text = 'Great job. This is excellent!';
 
   render() {

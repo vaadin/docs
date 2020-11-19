@@ -1,9 +1,9 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, property } from 'lit-element';
+import { customElement, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from '../../domain/DataService';
 import { render, html } from 'lit-html';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
@@ -11,7 +11,7 @@ import Person from '../../../generated/com/vaadin/demo/domain/Person';
 // tag::snippet[]
 @customElement('grid-basic')
 export class GridBasic extends LitElement {
-  @property({ type: Array })
+  @internalProperty()
   private items: Person[] = [];
 
   async firstUpdated() {

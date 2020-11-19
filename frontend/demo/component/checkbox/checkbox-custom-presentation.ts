@@ -1,6 +1,6 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
@@ -8,7 +8,7 @@ import Person from '../../../generated/com/vaadin/demo/domain/Person';
 // tag::snippet[]
 @customElement('checkbox-custom-presentation')
 export class Example extends LitElement {
-  @property({ type: Array })
+  @internalProperty()
   private items: Person[] = [];
 
   async firstUpdated() {

@@ -1,12 +1,13 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, property, customElement } from 'lit-element';
+import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
 
 // tag::snippet[]
 @customElement('button-basic')
 export class Example extends LitElement {
-  @property() clickedText = '';
+  @internalProperty()
+  private clickedText = '';
 
   render() {
     return html`

@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/selectConnector.js'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property, query } from 'lit-element';
+import { html, LitElement, customElement, internalProperty, query } from 'lit-element';
 import { render } from 'lit-html';
 import { SelectElement } from '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
@@ -11,7 +11,7 @@ import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('select-presentation')
 export class Example extends LitElement {
-  @property({ type: Array })
+  @internalProperty()
   private people: Person[] = [];
 
   @query('vaadin-select')

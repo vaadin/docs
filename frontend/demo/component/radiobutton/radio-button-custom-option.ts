@@ -1,6 +1,6 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
@@ -10,10 +10,10 @@ import Card from '../../../generated/com/vaadin/demo/domain/Card';
 
 @customElement('radio-button-custom-option')
 export class Example extends LitElement {
-  @property()
+  @internalProperty()
   private value?: string;
 
-  @property({ type: Array })
+  @internalProperty()
   private items: Card[] = [];
 
   async firstUpdated() {

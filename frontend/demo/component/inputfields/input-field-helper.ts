@@ -1,6 +1,6 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, property } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-password-field';
@@ -21,9 +21,9 @@ enum StrengthColor {
 
 @customElement('input-field-helper')
 export class Example extends LitElement {
-  @property()
+  @internalProperty()
   private strengthText: StrengthText = StrengthText.weak;
-  @property()
+  @internalProperty()
   private strengthColor: StrengthColor = StrengthColor.weak;
 
   render() {

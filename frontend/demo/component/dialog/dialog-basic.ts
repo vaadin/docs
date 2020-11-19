@@ -1,6 +1,6 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, property, customElement } from 'lit-element';
+import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';
 
 import '@vaadin/vaadin-dialog/vaadin-dialog';
@@ -9,7 +9,8 @@ import '@vaadin/vaadin-button/vaadin-button';
 // tag::snippet[]
 @customElement('dialog-basic')
 export class Example extends LitElement {
-  @property() dialogOpened = false;
+  @internalProperty()
+  private dialogOpened = false;
 
   render() {
     return html`
