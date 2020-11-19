@@ -19,6 +19,7 @@ export class IconsPreview extends HTMLElement {
           overflow: auto;
           border: 1px solid var(--docs-divider-color-1);
           border-radius: var(--docs-border-radius-l);
+          margin: 2rem 0;
         }
 
         .docs-icon-preview {
