@@ -22,7 +22,7 @@ import java.time.LocalDate;
 public class ScrollerBasic extends Div {
 
   public ScrollerBasic() {
-    setWidth("50%");
+    setWidth("calc(var(--lumo-size-l) * 8)");
     getStyle().set("font-family", "var(--lumo-font-family)");
     getStyle().set("border", "1px solid var(--lumo-contrast-20pct)");
 

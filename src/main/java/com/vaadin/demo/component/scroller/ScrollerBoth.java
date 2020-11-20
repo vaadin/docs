@@ -18,7 +18,7 @@ public class ScrollerBoth extends Div {
   public ScrollerBoth() {
     // tag::snippet[]
     Scroller scroller = new Scroller();
-    scroller.setWidth("300px");
+    scroller.setWidthFull();
     scroller.setHeight("300px");
 
     StreamResource imageResource = new StreamResource("scroller-both-img+.png",

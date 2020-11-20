@@ -2,11 +2,11 @@ package com.vaadin.demo.component.scroller;
 
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.router.Route;
 
@@ -32,25 +32,22 @@ public class ScrollerMobile extends Div {
     Button auditBtn = new Button("Audit");
     auditBtn.setIcon(new Icon(VaadinIcon.CLIPBOARD_CHECK));
     auditBtn.setHeight("100px");
-    auditBtn.getStyle().set("margin", "2px");
 
     Button reportBtn = new Button("Report");
     reportBtn.setIcon(new Icon(VaadinIcon.BOOK_DOLLAR));
     reportBtn.setHeight("100px");
-    auditBtn.getStyle().set("margin", "2px");
 
     Button dashboardBtn = new Button("Dashboard");
     dashboardBtn.setIcon(new Icon(VaadinIcon.LINE_CHART));
     dashboardBtn.setHeight("100px");
-    auditBtn.getStyle().set("margin", "2px");
 
     Button invoiceBtn = new Button("Invoice");
     invoiceBtn.setIcon(new Icon(VaadinIcon.INVOICE));
     invoiceBtn.setHeight("100px");
-    auditBtn.getStyle().set("margin", "2px");
 
-    Div container = new Div();
-    container.setWidth("450px");
+    HorizontalLayout container = new HorizontalLayout();
+    container.setWidth("max-content");
+    container.setSpacing(true);
 
     container.add(auditBtn, reportBtn, dashboardBtn, invoiceBtn);
 
