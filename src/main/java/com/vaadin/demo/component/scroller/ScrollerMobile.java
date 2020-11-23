@@ -14,8 +14,6 @@ import com.vaadin.flow.router.Route;
 public class ScrollerMobile extends Div {
 
   public ScrollerMobile() {
-    setWidth("300px");
-
     // Header
     Paragraph header = new Paragraph("Create new...");
     header.getStyle().set("font-family", "var(--lumo-font-family)");
@@ -27,7 +25,7 @@ public class ScrollerMobile extends Div {
     scroller.setScrollDirection(Scroller.ScrollDirection.HORIZONTAL);
 
     scroller.setWidth("300px");
-    scroller.getStyle().set("padding", "var(--lumo-space-m)");
+    scroller.setMaxWidth("100%");
 
     Button auditBtn = new Button("Audit");
     auditBtn.setIcon(new Icon(VaadinIcon.CLIPBOARD_CHECK));
@@ -47,7 +45,9 @@ public class ScrollerMobile extends Div {
 
     HorizontalLayout container = new HorizontalLayout();
     container.setWidth("max-content");
+
     container.setSpacing(true);
+    container.setMargin(true);
 
     container.add(auditBtn, reportBtn, dashboardBtn, invoiceBtn);
 

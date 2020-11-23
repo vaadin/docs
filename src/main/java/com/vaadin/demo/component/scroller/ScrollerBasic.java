@@ -23,6 +23,8 @@ public class ScrollerBasic extends Div {
 
   public ScrollerBasic() {
     setWidth("calc(var(--lumo-size-l) * 8)");
+    setMaxWidth("100%");
+
     getStyle().set("font-family", "var(--lumo-font-family)");
     getStyle().set("border", "1px solid var(--lumo-contrast-20pct)");
 

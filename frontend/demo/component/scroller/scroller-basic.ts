@@ -17,6 +17,7 @@ export class Example extends LitElement {
         width: calc(var(--lumo-size-l) * 8);
         font-family: var(--lumo-font-family);
         border: 1px solid var(--lumo-contrast-20pct);
+        max-width: 100%;
       }
 
       #header {

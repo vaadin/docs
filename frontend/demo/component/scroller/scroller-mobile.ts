@@ -23,11 +23,8 @@ export class Example extends LitElement {
       <p id="header">Create new...</p>
 
       <!-- tag::snippet[] -->
-      <vaadin-scroller
-        scroll-direction="horizontal"
-        style="width: 300px; padding: var(--lumo-space-m);"
-      >
-        <vaadin-horizontal-layout theme="spacing" style="width: max-content;">
+      <vaadin-scroller scroll-direction="horizontal" style="width: 300px; max-width: 100%;">
+        <vaadin-horizontal-layout theme="spacing margin" style="width: max-content;">
           <vaadin-button style="height: 100px;">
             <iron-icon icon="vaadin:clipboard-check" slot="prefix"></iron-icon>
             Audit
