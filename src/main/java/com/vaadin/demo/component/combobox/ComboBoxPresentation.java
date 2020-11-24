@@ -27,9 +27,6 @@ public class ComboBoxPresentation extends Div {
   }
 
   // tag::renderer[]
-
-  // ...
-
   // NOTE
   // We are using inline styles here to keep the example simple.
   // We recommend placing CSS in a separate style sheet and to
