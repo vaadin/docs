@@ -40,6 +40,12 @@ public class UsingComponentThemes {
     public class DefaultLumoApplication extends Div {
     }
 
+    // tag::apptheme[]
+    @Theme("my-theme")
+    public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+    }
+    // end::apptheme[]
+
     // tag::lumo[]
     @Route(value = "")
     @Theme(themeClass = Lumo.class)
@@ -80,13 +86,13 @@ public class UsingComponentThemes {
     // end::notheme[]
 
     @Route(value = "")
-    @Theme(value = "my-theme", variant = "large")
+    @Theme(themeClass = Lumo.class, variant = "large")
     public class LargeThemedApplication extends Div {
     }
 
     @Route(value = "")
     // tag::lumo-dark[]
-    @Theme(value = "my-theme", variant = Lumo.DARK)
+    @Theme(themeClass = Lumo.class, variant = Lumo.DARK)
     // end::lumo-dark[]
     public class DarkApplication extends Div {
     }
