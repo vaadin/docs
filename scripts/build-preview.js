@@ -41,7 +41,7 @@ clonePromise.then(() => {
   execSync('npm i', { cwd: './docs-app', stdio: 'inherit' });
 
   console.log('Prepare content...');
-  execSync('./scripts/mvnw -e vaadin:prepare-frontend vaadin:build-frontend', { cwd: '../', stdio: 'inherit' });
+  execSync('./scripts/mvnw compile vaadin:prepare-frontend vaadin:build-frontend', { cwd: '../', stdio: 'inherit' });
 
   console.log('Building documentation site...');
   execSync('DOCS_CONTENT_ROOT=../../ npx gatsby build --prefix-paths', { cwd: './docs-app', stdio: 'inherit' });
