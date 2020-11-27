@@ -1,6 +1,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const NodeGit = require('nodegit');
+const fs   = require('fs-extra');
 
 if (!process.env.GITHUB_TOKEN) {
   console.error('GITHUB_TOKEN not provided as an environment property');
@@ -20,6 +21,9 @@ const opts = {
     }
   }
 };
+
+// Cleanup
+fs.rmdirSync(localPath, { recursive: true });
 
 console.info('Cloning docs-app...');
 
