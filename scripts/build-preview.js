@@ -30,17 +30,13 @@ console.info('Cloning docs-app...');
 const clonePromise = new Promise((resolve, reject) => {
   const clone = NodeGit.Clone(url, localPath, opts);
   clone.catch((e) => {
-    // Most probably already cloned
-    resolve();
+    reject(e);
   }).then(() => {
-    // console.info(`Finished cloning ${repoName} (${branch})`);
     resolve();
   });
 });
 
 clonePromise.then(() => {
-  // console.log('Finished cloning docs-app');
-
   console.log('Installing docs-app dependencies...');
   execSync('npm i', { cwd: './docs-app', stdio: 'inherit' });
 
