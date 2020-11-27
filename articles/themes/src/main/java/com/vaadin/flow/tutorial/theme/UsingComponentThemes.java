@@ -40,27 +40,33 @@ public class UsingComponentThemes {
     public class DefaultLumoApplication extends Div {
     }
 
+    // tag::apptheme[]
+    @Theme("my-theme")
+    public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+    }
+    // end::apptheme[]
+
     // tag::lumo[]
     @Route(value = "")
-    @Theme(value = Lumo.class)
+    @Theme(themeClass = Lumo.class)
     public class LumoApplication extends Div {
     }
     // end::lumo[]
 
     // tag::material[]
     @Route(value = "")
-    @Theme(value = Material.class)
+    @Theme(themeClass = Material.class)
     public class MaterialApplication extends Div {
     }
     // end::material[]
     //
 
     @Route(value = "")
-    @Theme(MyTheme.class)
+    @Theme("my-theme")
     public class MyApplication extends Div {
     }
 
-    @Theme(MyTheme.class)
+    @Theme("my-theme")
     public class MainLayout extends Div implements RouterLayout {
     }
 
@@ -80,13 +86,13 @@ public class UsingComponentThemes {
     // end::notheme[]
 
     @Route(value = "")
-    @Theme(value = MyTheme.class, variant = "large")
+    @Theme(themeClass = Lumo.class, variant = "large")
     public class LargeThemedApplication extends Div {
     }
 
     @Route(value = "")
     // tag::lumo-dark[]
-    @Theme(value = Lumo.class, variant = Lumo.DARK)
+    @Theme(themeClass = Lumo.class, variant = Lumo.DARK)
     // end::lumo-dark[]
     public class DarkApplication extends Div {
     }
