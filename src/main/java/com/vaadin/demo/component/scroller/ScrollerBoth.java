@@ -19,7 +19,7 @@ public class ScrollerBoth extends Div {
     StreamResource imageResource = new StreamResource("reindeer+.jpg",
             () -> getClass().getResourceAsStream("/images/reindeer.jpg"));
 
-    Image img = new Image(imageResource, "Application");
+    Image img = new Image(imageResource, "A reindeer walking on a snowy lake shore at dusk");
     scroller.setContent(img);
 
     add(scroller);

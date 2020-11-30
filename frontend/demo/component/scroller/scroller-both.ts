@@ -17,7 +17,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-scroller style="height: 300px; width: 100%;">
-        <img src="${img}" alt="Application" />
+        <img src="${img}" alt="A reindeer walking on a snowy lake shore at dusk" />
       </vaadin-scroller>
       <!-- end::snippet[] -->
     `;
