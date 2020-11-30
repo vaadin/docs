@@ -9,7 +9,7 @@ import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
-import * as img from '../../../../src/main/resources/images/scroller-both-img.png';
+import * as img from '../../../../src/main/resources/images/reindeer.jpg';
 
 @customElement('scroller-basic')
 export class Example extends LitElement {
