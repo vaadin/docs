@@ -15,3 +15,7 @@ window.Vaadin.Flow = window.Vaadin.Flow || {};
 
 // @ts-ignore Workaround a Vaadin issue
 AppointmentModel.createEmptyValue = () => Appointment;
+
+document.body.style.setProperty('--docs-example-render-font-family', 'var(--lumo-font-family)');
+document.body.style.setProperty('--docs-example-render-color', 'var(--lumo-body-text-color)');
+document.body.style.setProperty('--docs-example-render-background-color', 'var(--lumo-base-color)');
