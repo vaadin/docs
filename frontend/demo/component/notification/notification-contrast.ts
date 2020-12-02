@@ -13,10 +13,10 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click="${this.open}" theme="success primary">Try it</vaadin-button>
+      <vaadin-button @click="${this.open}" theme="contrast primary">Try it</vaadin-button>
 
       <!-- tag::snippet[] -->
-      <vaadin-notification theme="success"></vaadin-notification>
+      <vaadin-notification theme="contrast"></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
@@ -27,7 +27,7 @@ export class Example extends LitElement {
       this.notification.renderer = (root: HTMLElement) =>
         render(
           html`
-            Application submitted!
+            5 tasks deleted
 
             <vaadin-button
               theme="tertiary-inline"

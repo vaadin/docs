@@ -13,34 +13,33 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click="${this.open}" theme="success primary">Try it</vaadin-button>
+      <vaadin-button @click=${this.open}>Try it</vaadin-button>
 
       <!-- tag::snippet[] -->
-      <vaadin-notification theme="success"></vaadin-notification>
+      <vaadin-notification
+        .renderer="${(root: HTMLElement) =>
+          render(
+            html`
+              Financial report generated
+
+              <vaadin-button
+                theme="tertiary-inline"
+                @click="${this.close.bind(this)}"
+                aria-label="Close"
+              >
+                <iron-icon icon="lumo:cross"></iron-icon>
+              </vaadin-button>
+            `,
+            root
+          )}"
+        position="middle"
+      ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
 
   firstUpdated() {
     this.notification = this.shadowRoot?.querySelector('vaadin-notification');
-    if (this.notification) {
-      this.notification.renderer = (root: HTMLElement) =>
-        render(
-          html`
-            Application submitted!
-
-            <vaadin-button
-              theme="tertiary-inline"
-              @click="${this.close.bind(this)}"
-              aria-label="Close"
-            >
-              <iron-icon icon="lumo:cross"></iron-icon>
-            </vaadin-button>
-          `,
-          root
-        );
-      this.notification.position = 'middle';
-    }
   }
 
   open() {

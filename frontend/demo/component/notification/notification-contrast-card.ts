@@ -8,8 +8,8 @@ import '@vaadin/vaadin-lumo-styles/icons';
 export class Example extends LitElement {
   render() {
     return html`
-      <vaadin-notification-card theme="success" style="justify-content: center;">
-        Application submitted!
+      <vaadin-notification-card theme="contrast" style="justify-content: center;">
+        5 tasks deleted
         <vaadin-button theme="tertiary-inline">
           <iron-icon icon="lumo:cross"></iron-icon>
         </vaadin-button>

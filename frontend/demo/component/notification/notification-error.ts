@@ -1,35 +1,53 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import '@vaadin/vaadin-notification/vaadin-notification';
+import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-lumo-styles/icons';
 import { render } from 'lit-html';
 
-@customElement('notification-error')
+@customElement('notification-basic')
 export class Example extends LitElement {
   @internalProperty()
-  private opened = true;
+  private notification: NotificationElement | null | undefined;
 
   render() {
     return html`
+      <vaadin-button @click="${this.open}" theme="error primary">Try it</vaadin-button>
+
       <!-- tag::snippet[] -->
-      <vaadin-notification
-        theme="error"
-        .opened=${this.opened}
-        position="bottom-stretch"
-        duration="0"
-        .renderer=${(root: HTMLElement) =>
-          render(
-            html`
-              <div style="display: flex; justify-content: space-between; width:100%;">
-                <span>Failed to generate report</span
-                ><span @click=${() => (this.opened = false)}>X</span>
-              </div>
-            `,
-            root
-          )}
-      >
-      </vaadin-notification>
+      <vaadin-notification theme="error"></vaadin-notification>
       <!-- end::snippet[] -->
     `;
+  }
+
+  firstUpdated() {
+    this.notification = this.shadowRoot?.querySelector('vaadin-notification');
+    if (this.notification) {
+      this.notification.renderer = (root: HTMLElement) =>
+        render(
+          html`
+            Failed to generate report
+
+            <vaadin-button
+              theme="tertiary-inline"
+              @click="${this.close.bind(this)}"
+              aria-label="Close"
+            >
+              <iron-icon icon="lumo:cross"></iron-icon>
+            </vaadin-button>
+          `,
+          root
+        );
+      this.notification.position = 'middle';
+    }
+  }
+
+  open() {
+    this.notification?.open();
+  }
+
+  close() {
+    this.notification?.close();
   }
 }
