@@ -6,41 +6,40 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import { render } from 'lit-html';
 
-@customElement('notification-success')
+@customElement('notification-link')
 export class Example extends LitElement {
   @internalProperty()
   private notification: NotificationElement | null | undefined;
 
   render() {
     return html`
-      <vaadin-button @click="${this.open}">Try it</vaadin-button>
+      <vaadin-button @click=${this.open}>Try it</vaadin-button>
 
       <!-- tag::snippet[] -->
-      <vaadin-notification theme="success"></vaadin-notification>
+      <vaadin-notification
+        .renderer="${(root: HTMLElement) =>
+          render(
+            html`
+              <div>Jason Bailey mentioned you in <a href="#">Project Q4</a></div>
+
+              <vaadin-button
+                theme="tertiary-inline"
+                @click="${this.close.bind(this)}"
+                aria-label="Close"
+              >
+                <iron-icon icon="lumo:cross"></iron-icon>
+              </vaadin-button>
+            `,
+            root
+          )}"
+        position="middle"
+      ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
 
   firstUpdated() {
     this.notification = this.shadowRoot?.querySelector('vaadin-notification');
-    if (this.notification) {
-      this.notification.renderer = (root: HTMLElement) =>
-        render(
-          html`
-            Application submitted!
-
-            <vaadin-button
-              theme="tertiary-inline"
-              @click="${this.close.bind(this)}"
-              aria-label="Close"
-            >
-              <iron-icon icon="lumo:cross"></iron-icon>
-            </vaadin-button>
-          `,
-          root
-        );
-      this.notification.position = 'middle';
-    }
   }
 
   open() {

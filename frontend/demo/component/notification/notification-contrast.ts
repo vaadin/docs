@@ -13,7 +13,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click="${this.open}" theme="contrast primary">Try it</vaadin-button>
+      <vaadin-button @click="${this.open}">Try it</vaadin-button>
 
       <!-- tag::snippet[] -->
       <vaadin-notification theme="contrast"></vaadin-notification>

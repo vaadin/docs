@@ -6,17 +6,17 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import { render } from 'lit-html';
 
-@customElement('notification-success')
+@customElement('notification-undo')
 export class Example extends LitElement {
   @internalProperty()
   private notification: NotificationElement | null | undefined;
 
   render() {
     return html`
-      <vaadin-button @click="${this.open}">Try it</vaadin-button>
+      <vaadin-button @click="${this.open}" theme="contrast primary">Try it</vaadin-button>
 
       <!-- tag::snippet[] -->
-      <vaadin-notification theme="success"></vaadin-notification>
+      <vaadin-notification theme="contrast"></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
@@ -27,7 +27,7 @@ export class Example extends LitElement {
       this.notification.renderer = (root: HTMLElement) =>
         render(
           html`
-            Application submitted!
+            5 tasks deleted
 
             <vaadin-button
               theme="tertiary-inline"
