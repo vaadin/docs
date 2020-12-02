@@ -11,6 +11,7 @@ import { render } from 'lit-html';
 
 @customElement('notification-position')
 export class Example extends LitElement {
+  // tag::snippet[]
   render() {
     return html`
       <vaadin-button @click=${this.show.bind(this, 'top-stretch')}>top-stretch</vaadin-button>
@@ -47,7 +48,13 @@ export class Example extends LitElement {
 
     this.shadowRoot?.appendChild(notification);
     notification.open();
+
+    // Remember to clean up the element from the DOM if you are not reusing the same notification
+    notification.addEventListener('opened-changed', () => {
+      this.shadowRoot?.removeChild(notification);
+    });
   }
+  // end::snippet[]
 
   static styles = css`
     :host {
