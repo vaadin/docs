@@ -1,43 +1,36 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, css } from 'lit-element';
-import { registerStyles } from '@vaadin/vaadin-themable-mixin/register-styles';
+import { unsafeCSS } from '@vaadin/vaadin-themable-mixin/register-styles';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
+import '@vaadin/vaadin-lumo-styles/badge.js';
 
 @customElement('tabs-badges')
 export class Example extends LitElement {
-  constructor() {
-    registerStyles(
-      'vaadin-tab',
+  static get styles() {
+    return [
+      // Workaround for applying `lumo-badge` styles
+      unsafeCSS(
+        document.head.querySelector('dom-module#lumo-badge')?.querySelector('template')?.content
+          .firstElementChild?.textContent
+      ),
       css`
-        ::slotted(span[theme='badge']) {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          box-sizing: border-box;
-          padding: 0.4em calc(0.5em + var(--lumo-border-radius-s) / 4);
-          color: var(--lumo-primary-text-color);
-          background-color: var(--lumo-primary-color-10pct);
-          border-radius: var(--lumo-border-radius-s);
-          font-family: var(--lumo-font-family);
-          font-size: var(--lumo-font-size-s);
-          line-height: 1;
-          font-weight: 500;
-          text-transform: initial;
-          letter-spacing: initial;
-          min-width: calc(var(--lumo-line-height-xs) * 1em + 0.45em);
+        span[theme~='badge'] {
           margin-left: var(--lumo-space-xs);
         }
       `
-    );
-
-    super();
-    //TODO(yuriy): Fix badges styles, should load styles before first example
+    ];
   }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
+      <!--
+        NOTE
+        It is required to import lumo-badge style sheets to the project
+        so those will be applied to the spans with "badge" theme.
+        Please take a look onto lumo/lumo-overview.
+      -->
       <vaadin-tabs>
         <vaadin-tab>
           Open
