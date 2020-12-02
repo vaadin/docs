@@ -6,7 +6,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import { render } from 'lit-html';
 
-@customElement('notification-basic')
+@customElement('notification-error')
 export class Example extends LitElement {
   @internalProperty()
   private notification: NotificationElement | null | undefined;
