@@ -1,10 +1,10 @@
 import '../../init'; // hidden-full-source-line
 
+import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
-import { render } from 'lit-html';
+import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
 
 @customElement('notification-basic')
 export class Example extends LitElement {
@@ -13,15 +13,14 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click=${this.open}>Try it</vaadin-button>
+      <vaadin-button @click="${this.open}">Try it</vaadin-button>
 
       <!-- tag::snippet[] -->
       <vaadin-notification
         .renderer="${(root: HTMLElement) =>
           render(
             html`
-              Financial report generated
-
+              <div>Financial report generated</div>
               <vaadin-button
                 theme="tertiary-inline"
                 @click="${this.close.bind(this)}"

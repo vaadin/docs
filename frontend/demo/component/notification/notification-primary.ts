@@ -1,10 +1,10 @@
 import '../../init'; // hidden-full-source-line
 
+import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
-import { render } from 'lit-html';
+import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
 
 @customElement('notification-primary')
 export class Example extends LitElement {
@@ -27,8 +27,7 @@ export class Example extends LitElement {
       this.notification.renderer = (root: HTMLElement) =>
         render(
           html`
-            New project plan available
-
+            <div>New project plan available</div>
             <vaadin-button
               theme="tertiary-inline"
               @click="${this.close.bind(this)}"

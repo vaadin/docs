@@ -1,39 +1,42 @@
 import '../../init'; // hidden-full-source-line
 
+import { render } from 'lit-html';
 import { html, LitElement, customElement, css } from 'lit-element';
+import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-lumo-styles/icons';
 import {
   NotificationElement,
   NotificationPosition
 } from '@vaadin/vaadin-notification/vaadin-notification';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-lumo-styles/icons';
-import { render } from 'lit-html';
 
 @customElement('notification-position')
 export class Example extends LitElement {
   // tag::snippet[]
   render() {
     return html`
-      <vaadin-button @click=${this.show.bind(this, 'top-stretch')}>top-stretch</vaadin-button>
-      <vaadin-button @click=${this.show.bind(this, 'top-start')}>top-start</vaadin-button>
-      <vaadin-button @click=${this.show.bind(this, 'top-center')}>top-center</vaadin-button>
-      <vaadin-button @click=${this.show.bind(this, 'top-end')}>top-end</vaadin-button>
-      <vaadin-button @click=${this.show.bind(this, 'middle')}>middle</vaadin-button>
-      <vaadin-button @click=${this.show.bind(this, 'bottom-start')}>bottom-start</vaadin-button>
-      <vaadin-button @click=${this.show.bind(this, 'bottom-center')}>bottom-center</vaadin-button>
-      <vaadin-button @click=${this.show.bind(this, 'bottom-end')}>bottom-end</vaadin-button>
-      <vaadin-button @click=${this.show.bind(this, 'bottom-stretch')}>bottom-stretch</vaadin-button>
+      <vaadin-button @click="${this.show}">top-stretch</vaadin-button>
+      <vaadin-button @click="${this.show}">top-start</vaadin-button>
+      <vaadin-button @click="${this.show}">top-center</vaadin-button>
+      <vaadin-button @click="${this.show}">top-end</vaadin-button>
+      <vaadin-button @click="${this.show}">middle</vaadin-button>
+      <vaadin-button @click="${this.show}">bottom-start</vaadin-button>
+      <vaadin-button @click="${this.show}">bottom-center</vaadin-button>
+      <vaadin-button @click="${this.show}">bottom-end</vaadin-button>
+      <vaadin-button @click="${this.show}">bottom-stretch</vaadin-button>
     `;
   }
 
-  show(position: NotificationPosition) {
+  show(e: MouseEvent) {
+    // Use the button label as the location
+    const position = (e.composedPath()[2] as HTMLElement).textContent as NotificationPosition;
+
     const notification = new NotificationElement();
     notification.position = position;
 
     notification.renderer = (root: HTMLElement) => {
       render(
         html`
-          ${position}
+          <div>${position}</div>
           <vaadin-button
             theme="tertiary-inline"
             @click="${notification.close.bind(notification)}"
@@ -46,12 +49,13 @@ export class Example extends LitElement {
       );
     };
 
-    this.shadowRoot?.appendChild(notification);
+    document.body.appendChild(notification);
     notification.open();
 
-    // Remember to clean up the element from the DOM if you are not reusing the same notification
+    // Remember to clean up the element from the DOM
+    // if you are not reusing the same notification
     notification.addEventListener('opened-changed', () => {
-      this.shadowRoot?.removeChild(notification);
+      document.body.removeChild(notification);
     });
   }
   // end::snippet[]

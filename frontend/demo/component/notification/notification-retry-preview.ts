@@ -1,16 +1,16 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement } from 'lit-element';
-import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-notification/vaadin-notification';
 
 export class Example extends LitElement {
   render() {
     return html`
       <vaadin-notification-card theme="error" style="justify-content: center;">
-        Failed to generate report
-        <span style="width: 2em"></span>
+        <div>Failed to generate report</div>
+        <div style="width: 2em"></div>
         <vaadin-button theme="tertiary-inline">Retry</vaadin-button>
         <vaadin-button theme="tertiary-inline">
           <iron-icon icon="lumo:cross"></iron-icon>
