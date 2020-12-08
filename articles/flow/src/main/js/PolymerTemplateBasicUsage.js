@@ -1,4 +1,4 @@
-// tutorial::polymer-templates/tutorial-polymer-template-basic.asciidoc
+// tutorial::polymer-templates/tutorial-template-basic.asciidoc
 import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
 import '@polymer/paper-input/paper-input.js';
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2020 Vaadin Ltd.
+ * Copyright 2000-2017 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -17,7 +17,6 @@ package com.vaadin.flow.tutorial.components;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.IronIcon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
 
@@ -33,7 +32,7 @@ public class IconBasic {
     }
 
     public void customCollection() {
-        IronIcon icon = new IronIcon("lumo", "clock");
+        Icon icon = new Icon("lumo", "clock");
         new Button("Clock", icon);
     }
 }

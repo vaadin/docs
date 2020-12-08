@@ -27,14 +27,10 @@ public class PaperSlider extends AbstractSinglePropertyField<PaperSlider, Intege
     }
 
     public void setPin(boolean pin) {
-        getElement().setProperty("pin", pin);
         pinProperty.set(this, pin);
     }
 
     public boolean isPin() {
-        if ( true ) {
-            return getElement().getProperty("pin", false);
-        }
         return pinProperty.get(this);
     }
 
@@ -47,9 +43,9 @@ public class PaperSlider extends AbstractSinglePropertyField<PaperSlider, Intege
     }
     @DomEvent("click")
     public static class ClickEvent extends ComponentEvent<PaperSlider> {
-
+    
         private int x, y;
-
+    
         public ClickEvent(PaperSlider source,
                           boolean fromClient,
                           @EventData("event.offsetX") int x,
@@ -58,15 +54,15 @@ public class PaperSlider extends AbstractSinglePropertyField<PaperSlider, Intege
             this.x = x;
             this.y = y;
         }
-
+        
         public int getX() {
             return x;
         }
-
+        
         public int getY() {
             return y;
         }
-
+        
     }
 }
 //@formatter:on

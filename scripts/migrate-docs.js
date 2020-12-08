@@ -3,14 +3,15 @@ const CACHE_DIR = './.cache';
 
 // Repo name, branch and local directory name
 const repos = [
-  ['vaadin-docs', 'vaadin17'],
+  ['vaadin-docs', 'vaadin14'],
   ['designer-internal', 'master', 'designer'],
-  ['vaadin-charts-flow', 'master', 'charts'],
+  ['vaadin-charts-flow', '7.1', 'charts'],
   ['testbench', 'master'],
-  ['bakery-app-starter-flow-docs', 'master', 'bakeryflow'],
-  ['flow-and-components-documentation', 'master', 'flow'],
+  ['bakery-app-starter-flow-docs', 'v14', 'bakeryflow'],
+  ['flow-and-components-documentation', 'V14.3', 'flow'],
   ['multiplatform-runtime-internal', 'master', 'mpr'],
-  ['business-app-starter-flow-docs', 'master', 'business-app']
+  ['business-app-starter-flow-docs', 'master', 'business-app'],
+  ['collaboration-engine-internal', '2.0', 'ce']
 ];
 
 
@@ -74,14 +75,14 @@ function migrateDocs() {
   delete sections.elements;
 
   const flowPath = path.join(__dirname, '../articles/flow');
-  // Themes and Styling section has already been restructured
-  // const themesPath = path.join(__dirname, '../articles/themes');
+  const themesPath = path.join(__dirname, '../articles/themes');
   const designerPath = path.join(__dirname, '../articles/designer');
   const testbenchPath = path.join(__dirname, '../articles/testbench');
   const mprPath = path.join(__dirname, '../articles/mpr');
   const bakeryPath = path.join(__dirname, '../articles/bakeryflow');
   const basPath = path.join(__dirname, '../articles/business-app');
-  const chartsPath = path.join(__dirname, '../articles/design-system/components/charts');
+  const chartsPath = path.join(__dirname, '../articles/charts');
+  const cePath = path.join(__dirname, '../articles/ce');
 
   // Cleanup
   fs.rmdirSync(flowPath, { recursive: true });
@@ -92,6 +93,7 @@ function migrateDocs() {
   fs.rmdirSync(bakeryPath, { recursive: true });
   fs.rmdirSync(basPath, { recursive: true });
   fs.rmdirSync(chartsPath, { recursive: true });
+  fs.rmdirSync(cePath, { recursive: true });
 
   // Helper function for all copy operations
   function filter(src, dest) {
@@ -111,7 +113,7 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: flowPath,
     title: 'Framework',
-    order: 1,
+    order: 10,
     icon: '../_images/flow.svg'
   });
   generateIndexes(sections.flow.subpages, 'flow');
@@ -122,20 +124,20 @@ function migrateDocs() {
 
 
   // Themes and styling
-  // fs.mkdirSync(themesPath);
-  // fs.copySync(
-  //   path.join(__dirname, CACHE_DIR, 'flow/documentation-themes'),
-  //   themesPath,
-  //   { filter }
-  // );
-  // generateTopLevelIndex({
-  //   folderPath: themesPath,
-  //   title: 'Theming and Styling',
-  //   order: 3,
-  //   icon: '../_images/themes.svg'
-  // });
-  // generateIndexes(sections.themes.subpages, 'themes', 110);
-  // generateExternalLinks(sections.themes.external, 'themes');
+  fs.mkdirSync(themesPath);
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'flow/documentation-themes'),
+    themesPath,
+    { filter }
+  );
+  generateTopLevelIndex({
+    folderPath: themesPath,
+    title: 'Theming and Styling',
+    order: 30,
+    icon: '../_images/themes.svg'
+  });
+  generateIndexes(sections.themes.subpages, 'themes', 110);
+  generateExternalLinks(sections.themes.external, 'themes');
 
   // Designer
   fs.copySync(
@@ -146,11 +148,44 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: designerPath,
     title: 'Designer',
-    order: 4,
+    order: 40,
     icon: '../_images/designer.svg'
   });
   generateIndexes(sections.designer.subpages, 'designer');
   generateExternalLinks(sections.designer.external, 'designer');
+
+
+  // Collaboration Engine
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'ce/collaboration-engine-documentation'),
+    cePath,
+    { filter }
+  );
+  generateTopLevelIndex({
+    folderPath: cePath,
+    title: 'Collaboration Engine',
+    order: 50,
+    icon: '../_images/ce.svg'
+  });
+  generateIndexes(sections.designer.subpages, 'ce');
+  generateExternalLinks(sections.designer.external, 'ce');
+
+
+  // Charts
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'charts/documentation'),
+    chartsPath,
+    { filter }
+  );
+  generateTopLevelIndex({
+    folderPath: chartsPath,
+    title: 'Charts',
+    order: 60,
+    icon: '../_images/charts.svg'
+  });
+  // overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
+  generateIndexes(sections.charts.subpages, 'charts');
+  generateExternalLinks(sections.charts.external, 'charts');
 
 
   // TestBench
@@ -162,8 +197,8 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: testbenchPath,
     title: 'TestBench',
-    order: 5,
-    icon: '../_images/testbench.svg'
+    order: 70,
+    icon: '../_images/testbenchicon.svg'
   });
   generateIndexes(sections.testbench.subpages, 'testbench');
   generateExternalLinks(sections.testbench.external, 'testbench');
@@ -177,9 +212,9 @@ function migrateDocs() {
   );
   generateTopLevelIndex({
     folderPath: bakeryPath,
-    title: 'Full Stack App Starter',
-    order: 6,
-    icon: '../_images/fullstack-starter.svg'
+    title: 'Bakery App Starter',
+    order: 80,
+    icon: '../_images/bakery-starter.svg'
   });
   generateIndexes(sections.bakeryflow.subpages, 'bakeryflow');
   generateExternalLinks(sections.bakeryflow.external, 'bakeryflow');
@@ -194,7 +229,7 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: basPath,
     title: 'Business App Starter',
-    order: 7,
+    order: 90,
     icon: '../_images/business-starter.svg'
   });
   generateIndexes(sections['business-app'].subpages, 'business-app');
@@ -210,22 +245,11 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: mprPath,
     title: 'Multiplatform Runtime',
-    order: 8,
+    order: 100,
     icon: '../_images/mpr.svg'
   });
   generateIndexes(sections.mpr.subpages, 'mpr');
   generateExternalLinks(sections.mpr.external, 'mpr');
-
-
-  // Charts
-  fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'charts/documentation'),
-    chartsPath,
-    { filter }
-  );
-  overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
-  generateIndexes(sections.charts.subpages, 'design-system/components/charts');
-  generateExternalLinks(sections.charts.external, 'design-system/components/charts');
 
 
   try {

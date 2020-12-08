@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2020 Vaadin Ltd.
+ * Copyright 2000-2017 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -27,7 +27,7 @@ import com.vaadin.flow.router.RouterLayout;
 import com.vaadin.flow.templatemodel.TemplateModel;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
 
-@CodeFor("polymer-templates/tutorial-polymer-template-components-in-slot.asciidoc")
+@CodeFor("polymer-templates/tutorial-template-components-in-slot.asciidoc")
 public class PolymerSlotView {
     @Tag("component-container")
     @JsModule("./com/example/component-container.js")
@@ -39,6 +39,20 @@ public class PolymerSlotView {
 
             getElement().appendChild(label, button);
         }
+    }
+
+    @Tag("main-layout")
+    @JsModule("./com/example/main-layout.js")
+    public class MainLayout extends PolymerTemplate<TemplateModel>
+            implements RouterLayout {
+    }
+
+    @Route(value = "editor", layout = MainLayout.class)
+    public class Editor extends Div {
+    }
+
+    @ParentLayout(MainLayout.class)
+    public class MenuBar extends Div {
     }
 
     @Tag("name-element")

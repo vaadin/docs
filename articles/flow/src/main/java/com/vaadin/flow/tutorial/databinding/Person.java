@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2020 Vaadin Ltd.
+ * Copyright 2000-2017 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -48,8 +48,6 @@ public class Person implements Serializable {
     public enum Gender {
         MALE, FEMALE;
     }
-    
-    public Person() {}
 
     public Person(String string, int yearOfBirth) {
         this.yearOfBirth = yearOfBirth;

@@ -19,6 +19,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
@@ -30,6 +31,7 @@ public class Importing {
     @Tag("div")
     @JsModule("./src/my-module.js")
     @JavaScript("/js/script.js")
+    @HtmlImport("/html/htmlimport.html")
     static class CustomComponent extends Component
             implements HasText {
         // implementation omitted
@@ -37,7 +39,10 @@ public class Importing {
     //@formatter:on
 
     private void addDependencies() {
-        UI.getCurrent().getPage().addJavaScript("/js/script.js");
+        UI.getCurrent().getPage()
+                .addHtmlImport("/html/htmlimport.html");
+        UI.getCurrent().getPage()
+                .addJavaScript("/js/script.js");
         // external JavaScript module
         UI.getCurrent().getPage()
                 .addJsModule("https://unpkg.com/lodash@4.17.15");

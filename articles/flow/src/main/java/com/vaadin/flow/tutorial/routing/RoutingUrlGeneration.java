@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2020 Vaadin Ltd.
+ * Copyright 2000-2017 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -15,7 +15,6 @@
  */
 package com.vaadin.flow.tutorial.routing;
 
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.BeforeEvent;
@@ -48,7 +47,8 @@ public class RoutingUrlGeneration {
             implements HasUrlParameter<String> {
 
         @Override
-        public void setParameter(BeforeEvent event, String parameter) {
+        public void setParameter(BeforeEvent event,
+                String parameter) {
             setText(String.format("Hello, %s!", parameter));
         }
     }

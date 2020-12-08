@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2020 Vaadin Ltd.
+ * Copyright 2000-2017 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,7 +16,9 @@
 package com.vaadin.flow.tutorial.theme;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -40,34 +42,29 @@ public class UsingComponentThemes {
     public class DefaultLumoApplication extends Div {
     }
 
-    // tag::apptheme[]
-    @Theme("my-theme")
-    public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
-    }
-    // end::apptheme[]
-
     // tag::lumo[]
     @Route(value = "")
-    @Theme(themeClass = Lumo.class)
+    @Theme(value = Lumo.class)
     public class LumoApplication extends Div {
     }
     // end::lumo[]
 
     // tag::material[]
     @Route(value = "")
-    @Theme(themeClass = Material.class)
+    @Theme(value = Material.class)
     public class MaterialApplication extends Div {
     }
     // end::material[]
     //
 
     @Route(value = "")
-    @Theme("my-theme")
+    @Theme(MyTheme.class)
     public class MyApplication extends Div {
     }
 
-    @Theme("my-theme")
-    public class MainLayout extends Div implements RouterLayout {
+    @Theme(MyTheme.class)
+    public class MainLayout extends Div
+            implements RouterLayout {
     }
 
     @Route(value = "", layout = MainLayout.class)
@@ -86,13 +83,13 @@ public class UsingComponentThemes {
     // end::notheme[]
 
     @Route(value = "")
-    @Theme(themeClass = Lumo.class, variant = "large")
+    @Theme(value = MyTheme.class, variant = "large")
     public class LargeThemedApplication extends Div {
     }
 
     @Route(value = "")
     // tag::lumo-dark[]
-    @Theme(themeClass = Lumo.class, variant = Lumo.DARK)
+    @Theme(value = Lumo.class, variant = Lumo.DARK)
     // end::lumo-dark[]
     public class DarkApplication extends Div {
     }
@@ -107,10 +104,8 @@ public class UsingComponentThemes {
     public class Button extends Component {
         public Button(String string) {
         }
-
         public void addThemeVariants(ButtonVariant... vars) {
         }
-
         public List<String> getThemeNames() {
             return null;
         }
@@ -138,7 +133,8 @@ public class UsingComponentThemes {
         String oldValue = button.getElement().getAttribute(themeAttributeName);
         String variantsToAdd = "primary small";
         button.getElement().setAttribute(themeAttributeName,
-                oldValue == null || oldValue.isEmpty() ? variantsToAdd
+                oldValue == null || oldValue.isEmpty() ?
+                        variantsToAdd
                         : ' ' + variantsToAdd);
         // end::themed-button3[]
     }

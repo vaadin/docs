@@ -8,7 +8,7 @@ layout: page
 == Storing Resources
 
 === Static frontend resources for Webpack bundling (14 npm mode)
-In Vaadin 14, static resources that are bundled using Webpack and referenced via `@JavaScript`, `@JsModule`, and `@CssImport` annotations should be placed under `{project directory}/frontend`.
+In Vaadin 14, static resources that are bundled using Webpack and referenced via `@JavaScript`, `@JsModule`, and `CssImport` annotations should be placed under `{project directory}/frontend`.
 This includes normal JavaScript files, Polymer 3 template files, and CSS files.
 When importing files using these annotations, prefix the path with `./`, which signifies the `frontend/` directory.
 For example, a CSS file `my-custom.css` under `{project directory}/frontend/styles/my-custom.css` would be referenced `@CssImport("./styles/my-custom.css")`.
@@ -16,9 +16,9 @@ For example, a CSS file `my-custom.css` under `{project directory}/frontend/styl
 If the `./` prefix is missing from a `@JsModule` annotation, the import is treated as a reference to an npm module under `node_modules/` folder.
 
 === Static resources
-This section covers static resource locations for resources that should not be bundled by Webpack.
+This section covers static resource locations when in either compatibility mode or using resources that should not be bundled by Webpack.
 
-You can place your resource files (CSS style sheets and JavaScript files, and other static resources) in any folder in your WAR file, except `/VAADIN`, which is reserved for internal framework use.
+You can place your resource files (CSS style sheets, JavaScript and HTML files, and other static resources) in any folder in your WAR file, except `/VAADIN`, which is reserved for internal framework use.
 
 `VaadinServlet` handles static resource requests, if you have mapped it to `/*`.
 If not, the servlet container takes care of static resource requests.
@@ -37,12 +37,15 @@ When you configure an element, for example setting the `src` attribute for an `<
 * Use an absolute URL, for example `/myapp/images/logo.png`.
 * Deploy your static resources in a directory that matches your servlet path, for example `/myservlet/`.
 
-== Advanced configuration of CSS, JavaScript
+== Advanced configuration of CSS, JavaScript and HTML imports
 
 As discussed in <<../../themes/importing-style-sheets#,Importing Style Sheets>> and <<tutorial-importing#,Importing JavaScript>>, you can import client-side dependencies or resource files using:
 
-* Annotations (`@JavaScript`, `@JsModule`, `@CssImport` and `@StyleSheet`), and
-* Methods provided by the `Page` class (`addJavaScript`, `addJsModule` and `addStyleSheet`).
+* Annotations (`@JavaScript`, `@JsModule`, `@CssImport`, `@StyleSheet`, and `@HtmlImport`), and
+* Methods provided by the `Page` class (`addJavaScript`, `addJsModule`, `addStyleSheet`, and `addHtmlImport`).
+
+[NOTE]
+`@HtmlImport` and `addHtmlImport` work only in compatibility mode and while `@StyleSheet` does work as before, `@CssImport` may be a better fit.
 
 Sometimes the way client-side resources are loaded to the browser affects the functionality of the application.
 Vaadin Flow provides advanced methods to configure the loading of these resources.
@@ -99,6 +102,7 @@ All annotations and methods in the `Page` class without explicit `LoadMode` para
 The `LoadMode` can be given as a parameter for the annotations or you can use the following methods in the `Page` class:
 
 * `addStyleSheet(String url, LoadMode loadMode)`
+* `addHtmlImport(String url, LoadMode loadMode)`
 * `addJavaScript(String url, LoadMode loadMode)`
 
 
@@ -128,6 +132,9 @@ Assume a component uses additional JavaScript animation, `/js/animation.js`, tha
 [source,java]
 ----
 @Tag("div")
+// same as @HtmlImport("/html/layout.html",
+//                     loadMode = LoadMode.EAGER)
+@HtmlImport("/html/layout.html")
 @StyleSheet(value = "/css/big_style_file.css",
         loadMode = LoadMode.INLINE)
 @JavaScript(value = "/js/animation.js",
@@ -142,6 +149,8 @@ public class MainLayout extends Component {
 [source,java]
 ----
   public MainLayout() {
+      UI.getCurrent().getPage().addHtmlImport(
+            "/html/layout.html", LoadMode.EAGER);
       UI.getCurrent().getPage().addStyleSheet(
             "/css/big_style_file.css", LoadMode.INLINE);
       UI.getCurrent().getPage().addJavaScript(
@@ -150,6 +159,8 @@ public class MainLayout extends Component {
 }
 ----
 +
+** In the examples, `/html/layout.html` is loaded and injected before creating the client-side structure for the `MainLayout` component, regardless of the availability of the `/js/animation.js` script.
+
 
 * Dependencies with the same load mode are guaranteed to load in the order defined in the component. This is true for all load modes.
 
@@ -207,6 +218,49 @@ public class MainLayout extends Component {
 |`/src/main/resources/META-INF/resources/img/flower.jpg`
 |===
 
+=== Vaadin 10-13, Vaadin 14 in compatibility mode
+
+.Non-Spring projects
+|===
+|File type |Import |File location
+
+|CSS files
+|`@StyleSheet("css/styles.css")`<<foot-2,[2]>>
+|`/src/main/webapp/frontend/css/styles.css`
+
+|Polymer templates, custom-style and dom-module styles
+|`@HtmlImport("src/template.html")`
+|`/src/main/webapp/frontend/src/template.html`
+
+|JavaScript
+|`@JavaScript("js/script.js")`<<foot-3,[3]>>
+|`/src/main/webapp/frontend/js/script.js`
+
+|Static files, e.g. images
+|`new Image("img/flower.jpg", "A flower")`
+|`/src/main/webapp/img/flower.jpg`
+|===
+
+.Spring projects and add-ons
+|===
+|File type |Import |File location
+
+|CSS files
+|`@StyleSheet("css/styles.css")`<<foot-2,[2]>>
+|`/src/main/resources/META-INF/resources/frontend/css/styles.css`
+
+|Polymer templates, custom-style and dom-module styles
+|`@HtmlImport("src/template.html")`
+|`/src/main/resources/META-INF/resources/frontend/src/template.html`
+
+|JavaScript
+|`@JavaScript("js/script.js")`<<foot-3,[3]>>
+|`/src/main/resources/META-INF/resources/frontend/js/script.js`
+
+|Static files, e.g. images
+|`new Image("img/flower.jpg", "A flower")`
+|`/src/main/resources/META-INF/resources/img/flower.jpg`
+|===
 
 === Footnotes
 
@@ -214,3 +268,9 @@ public class MainLayout extends Component {
 . The `@JsModule` and `@CssImport` annotations can also be used for importing from an npm package.
 In this case, the path is defined as `@JsModule("@polymer/paper-input")` or `@CssImport("some-package/style.css")`.
 Paths referring to the local frontend directory should be prefixed with `./`.
+[[foot-2]]
+. The `@StyleSheet` annotation can also be used in Vaadin 14 with npm.
+The same paths as in V10-V13 can be used, including the `context://` protocol `@StyleSheet("context://style.css")`, which resolves the path relative to the context path of the web application, like other static files.
+Styles included this way may cause issues with web components.
+[[foot-3]]
+. The `@JavaScript` annotation can also be used in Vaadin 14 with npm. The V14 `/frontend` folder should then be used.

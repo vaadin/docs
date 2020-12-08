@@ -1,0 +1,413 @@
+++++
+<script inline>
+    function getContentPreviewClass(additionalDefaultContent) {
+      return class extends Polymer.Element {
+
+        static get properties() {
+          return {
+            hidesource: {
+              type: Boolean,
+              reflectToAttribute: true
+            },
+
+            raw: {
+              type: Boolean,
+              value: false,
+              reflectToAttribute: true,
+              observer: '_updateContent'
+            },
+
+            shadyDisclaimer: {
+              type: Boolean,
+              value: false,
+              reflectToAttribute: true
+            }
+          }
+        }
+
+        static get template() {
+
+          return Polymer.html`
+            <style>
+              :host {
+                display: block;
+              }
+
+              #preview {
+                display: flex;
+                border-radius: var(--lumo-border-radius-m);
+                overflow: hidden;
+                align-items: flex-end;
+                position: relative;
+                z-index: 0;
+              }
+
+              :host(:not([hidesource])) #preview {
+                padding: 1.2rem;
+                margin-bottom: calc(-1.5rem - 4px);
+                border: 1px solid var(--color-aluminium);
+                border-radius: 4px;
+              }
+
+              :host(.block) #preview {
+                display: block;
+              }
+
+              :host(.background-shade) #preview {
+                background-color: var(--lumo-shade-5pct);
+              }
+
+              #source {
+                z-index: 1;
+                position: relative;
+              }
+
+              /* Content styles */
+              .color-swatch {
+                display: inline-block;
+                width: 0.75em;
+                height: 0.75em;
+                border-radius: 50%;
+                box-shadow: 0 0 0 1px var(--lumo-shade-20pct);
+                margin-right: 0.2em;
+              }
+
+              #preview > span:not(.color-swatch):not([class^="size"]):not([class^="space"]):not([theme~="badge"]):not(.font-icon) {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 3.5em;
+                font-size: var(--lumo-font-size-s);
+                font-weight: 500;
+              }
+
+              .custom-properties {
+                font-size: var(--lumo-font-size-s);
+                border-left: 4px solid var(--lumo-shade-10pct);
+                background-color: var(--lumo-shade-5pct);
+                padding: 1em 2em;
+                margin: 0;
+              }
+
+              .box {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+                color: var(--lumo-secondary-text-color);
+                width: var(--lumo-size-xl);
+                height: var(--lumo-size-xl);
+                margin: var(--lumo-space-xl);
+                border-radius: var(--lumo-border-radius-m);
+                background-color: var(--lumo-tint-5pct);
+              }
+
+              .radius {
+                background-color: var(--lumo-contrast-20pct);
+              }
+
+              span[class^="space"],
+              span[class^="size"] {
+                background-color: var(--lumo-contrast-10pct);
+                display: flex;
+                flex: none;
+                align-items: center;
+                justify-content: center;
+                margin: 0.25rem;
+                font-size: var(--lumo-font-size-xs);
+                color: var(--lumo-secondary-text-color);
+                background-clip: content-box;
+                position: relative;
+                font-weight: 600;
+                box-sizing: content-box;
+              }
+
+              /* Weaker selector since these should be overridable by Sizing demo */
+              [class^="space"],
+              [class^="size"] {
+                width: 2rem;
+                height: 2rem;
+              }
+
+              span[class^="space"] {
+                background-color: var(--lumo-base-color);
+              }
+
+              span[class^="space"]::before {
+                content: "";
+                position: absolute;
+                z-index: -1;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                background-color: var(--lumo-contrast-10pct);
+              }
+
+              #preview h2 {
+                border: none;
+              }
+            </style>
+
+            ${additionalDefaultContent}
+
+
+            <div id="preview"></div>
+
+            <div id="shady-disclaimer" class="admonitionblock note" hidden="[[_shouldHideShadyDisclaimer(shadyDisclaimer)]]" style="margin-bottom: -1rem">
+              <p>
+                The demo above might appear differently on browsers without native shadow DOM support due to leaking unscoped styles from the host environment.
+                This isn't an issue with Vaadin applications in general. Sorry for the inconvenience.
+              </p>
+            </div>
+
+            <div id="source" hidden="[[hidesource]]">
+              <slot></slot>
+            </div>
+          `;
+        }
+
+        _updateContent(raw) {
+          this.$.preview.innerHTML = raw ? this.innerHTML : this.textContent;
+          // Edge shady CSS workaround to make the dynamically included custom-style styles to affect example content elements
+          // Removing custom-style tags from the content isn't an option as that would make any selectors within the contained style tags global on shady
+
+          Array.from(this.$.preview.querySelectorAll('*')).forEach(element => {
+            element.classList.remove('style-scope');
+          });
+        }
+
+        _shouldHideShadyDisclaimer(shadyDisclaimer) {
+          return !shadyDisclaimer || Polymer.Settings.useShadow;
+        }
+      };
+    };
+
+    const lumoIconClass = class extends Polymer.Element {
+      static get template() {
+        return Polymer.html`
+          <style>
+            :host {
+              display: inline-flex;
+              flex-direction: column;
+              align-items: center;
+              cursor: pointer;
+              position: relative;
+              border-radius: var(--lumo-border-radius-m);
+            }
+            :host(:hover:not(:focus)) {
+              background-color: var(--lumo-contrast-5pct);
+            }
+            :host(:focus) {
+              z-index: 1;
+              outline: none;
+              box-shadow: 0 0 0 2px var(--lumo-primary-color-50pct);
+              cursor: default;
+            }
+            .samples > div {
+              display: flex;
+              align-items: center;
+            }
+            iron-icon.s {
+              --iron-icon-width: var(--lumo-icon-size-s);
+              --iron-icon-height: var(--lumo-icon-size-s);
+              margin: 8px;
+            }
+            iron-icon.m {
+              --iron-icon-width: var(--lumo-icon-size-m);
+              --iron-icon-height: var(--lumo-icon-size-m);
+              margin: 6px;
+            }
+            iron-icon.l {
+              --iron-icon-width: var(--lumo-icon-size-l);
+              --iron-icon-height: var(--lumo-icon-size-l);
+              margin: 4px;
+            }
+            .samples > .font-icon span {
+              font-family: lumo-icons;
+              line-height: 1;
+            }
+            span.s {
+              font-size: var(--lumo-icon-size-s);
+              margin: 8px;
+            }
+            span.m {
+              font-size: var(--lumo-icon-size-m);
+              margin: 6px;
+            }
+            span.l {
+              font-size: var(--lumo-icon-size-l);
+              margin: 4px;
+            }
+            :host([format="font"]) .svg,
+            :host([format="svg"]) .font-icon {
+              display: none;
+            }
+            h4 {
+              text-transform: capitalize;
+              margin: -0.5em 0 0.5em;
+              font-size: var(--lumo-font-size-xs);
+              font-weight: 400;
+              color: var(--lumo-secondary-text-color);
+            }
+            .code {
+              font-size: var(--lumo-font-size-xs);
+              line-height: var(--lumo-line-height-xs);
+              position: absolute;
+              left: 0;
+              top: 100%;
+              opacity: 0;
+              background-color: var(--lumo-base-color);
+              background-image: linear-gradient(var(--lumo-contrast-5pct), var(--lumo-contrast-5pct));
+              pointer-events: none;
+              border-radius: var(--lumo-border-radius-m);
+              padding: 0.5em 0.75em;
+              margin: 0.4em 0;
+              min-width: 100%;
+              box-sizing: border-box;
+              box-shadow: var(--lumo-box-shadow-s);
+              transition: opacity 120ms;
+            }
+            :host(:focus) .code {
+              opacity: 1;
+              pointer-events: auto;
+            }
+          </style>
+          <div class="samples">
+            <div class="svg">
+              <iron-icon icon="lumo:[[name]]" class="l"></iron-icon>
+              <iron-icon icon="lumo:[[name]]" class="m"></iron-icon>
+              <iron-icon icon="lumo:[[name]]" class="s"></iron-icon>
+              <div class="code">
+                &lt;iron-icon icon="<b>lumo:[[name]]</b>"&gt;&lt;/iron-icon&gt;
+              </div>
+            </div>
+            <div class="font-icon">
+              <span class$="[[name]] l"></span>
+              <span class$="[[name]] m"></span>
+              <span class$="[[name]] s"></span>
+              <div class="code">
+                content: <b>var(--lumo-icons-[[name]])</b>;
+              </div>
+            </div>
+          </div>
+          <h4>[[formatName(name)]]</h4>
+        `;
+      }
+
+      static get properties() {
+        return {
+          name: String
+        };
+      }
+
+      ready() {
+        super.ready();
+        this.setAttribute('tabindex', 0);
+        const style = document.createElement('style');
+        style.innerHTML = `.${this.name}::before {content: var(--lumo-icons-${this.name})}`;
+        this.shadowRoot.appendChild(style);
+      }
+
+      formatName(name) {
+        return name.replace('-', ' ');
+      }
+    };
+
+    const lumoIconsViewerClass = class extends Polymer.Element {
+      static get properties() {
+        return {
+          format: {
+            type: String,
+            value: 'svg'
+          },
+
+          icons: {
+            type: Array,
+            value: () => {
+              const iconsets = new Polymer.IronMeta({type: 'iconset'}).list.filter(i => i.name == 'lumo');
+              return iconsets[0].getIconNames().map((name) => name.split(':')[1]);
+            }
+          }
+        };
+      }
+
+      static get template() {
+        return Polymer.html`
+          <style>
+            .lumo-icons {
+              display: flex;
+              flex-wrap: wrap;
+              margin: 0 -1em;
+            }
+            .lumo-icons lumo-icon {
+              flex: auto;
+              margin: 1em;
+            }
+          </style>
+
+          <p theme="font-size-s">
+            <select value="{{format::change}}">
+              <option value="svg">SVG</option>
+              <option value="font">Font</option>
+            </select>
+
+            (Click/focus an icon to view details)
+          </p>
+
+          <div class="lumo-icons">
+            <dom-repeat id="lumo-icons" items="[[icons]]">
+              <template>
+                <lumo-icon name="[[item]]" format$="{{format}}"></lumo-icon>
+              </template>
+            </dom-repeat>
+          </div>
+        `;
+      }
+    };
+
+    function ensureDefined(is, clazz) {
+      if (!customElements.get(is)) {
+        customElements.define(is, clazz);
+      }
+    }
+
+    function ensureRegistered(url, module) {
+      if (Polymer.DomModule.prototype.modules[module]) {
+        return Promise.resolve();
+      } else {
+        return fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+
+            const domModule = div.querySelector(`#${module}`);
+            domModule && domModule.register();
+
+            Array.from(div.querySelectorAll('custom-style'))
+              .forEach(customStyle => document.body.appendChild(customStyle));
+          });
+      }
+    }
+
+    ensureDefined('lumo-icon', lumoIconClass);
+    ensureDefined('lumo-icons-viewer', lumoIconsViewerClass);
+
+    Promise.all([
+      ensureRegistered('frontend/bower_components/vaadin-lumo-styles/badge.html', 'lumo-badge'),
+      ensureRegistered('frontend/bower_components/vaadin-lumo-styles/color.html', 'lumo-color'),
+      ensureRegistered('frontend/bower_components/vaadin-lumo-styles/typography.html', 'lumo-typography')
+    ]).finally(() =>
+      ensureDefined('content-preview', getContentPreviewClass(Polymer.html`<style include="lumo-typography lumo-color lumo-badge"></style>`))
+    );
+
+    Promise.all([
+      ensureRegistered('frontend/bower_components/vaadin-material-styles/color.html', 'material-color-light'),
+      ensureRegistered('frontend/bower_components/vaadin-material-styles/typography.html', 'material-typography'),
+    ]).finally(() =>
+      ensureDefined('content-preview-md', getContentPreviewClass(Polymer.html`<style include="material-typography material-color-light"></style>`))
+    );
+</script>
+++++

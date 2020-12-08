@@ -38,7 +38,8 @@ public class SimpleDatePicker
     private void setupProperty(String name, String event) {
         Element element = getElement();
 
-        element.addPropertyChangeListener(name, event,
+        element.synchronizeProperty(name, event);
+        element.addPropertyChangeListener(name,
                 this::propertyUpdated);
     }
 

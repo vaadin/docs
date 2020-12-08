@@ -1,10 +1,10 @@
-# Vaadin documentation
+# Vaadin 14 documentation
 
 > **NOTICE**
 >
 > This repository is currently work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts of the Vaadin platform.
 
-Documentation and code examples for Vaadin.
+Documentation and code examples for Vaadin 14 (LTS)
 
 ## Contents
 
@@ -19,11 +19,11 @@ For example:
 
 See [Authoring articles](AUTHORING.md) to learn how to write documentation articles.
 
-### `frontend`
+<!-- ### `frontend`
 Fusion/TypeScript examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples.
 
 ### `src`
-Flow/Java examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples.
+Flow/Java examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples. -->
 
 ### `scripts`
 Project related scripts (tests, validation builds, preview deployment, etc).

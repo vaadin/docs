@@ -10,10 +10,9 @@ import com.vaadin.flow.tutorial.annotations.CodeFor;
 
 @CodeFor("web-components/integrating-a-web-component.asciidoc")
 public class IntegrateWC {
-    @Tag("mwc-slider")
-    @NpmPackage(value = "@material/mwc-slider",
-            version = "0.18.0")
-    @JsModule("@material/mwc-slider/mwc-slider.js")
+    @Tag("paper-slider")
+    @NpmPackage(value = "@polymer/paper-slider", version = "3.0.1")
+    @JsModule("@polymer/paper-slider/paper-slider.js")
     public class PaperSlider extends Component {
     }
 

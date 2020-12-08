@@ -3,25 +3,25 @@ import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-lin
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-time-picker/vaadin-time-picker';
-import { Binder, field } from '@vaadin/form';
-import AppointmentModel from '../../../generated/com/vaadin/demo/domain/AppointmentModel';
+// import { Binder, field } from '@vaadin/form';
+// import AppointmentModel from '../../../generated/com/vaadin/demo/domain/AppointmentModel';
 
 @customElement('time-picker-custom-validation')
 export class Example extends LitElement {
   // tag::snippet[]
-  private binder = new Binder(this, AppointmentModel);
+  // private binder = new Binder(this, AppointmentModel);
 
-  firstUpdated() {
-    this.binder.for(this.binder.model.startTime).addValidator({
-      message: 'The selected time is not available',
-      validate: (startTime: string) => {
-        return (
-          (startTime >= '08:00' && startTime <= '12:00') ||
-          (startTime >= '13:00' && startTime <= '16:00')
-        );
-      }
-    });
-  }
+  // firstUpdated() {
+  //   this.binder.for(this.binder.model.startTime).addValidator({
+  //     message: 'The selected time is not available',
+  //     validate: (startTime: string) => {
+  //       return (
+  //         (startTime >= '08:00' && startTime <= '12:00') ||
+  //         (startTime >= '13:00' && startTime <= '16:00')
+  //       );
+  //     }
+  //   });
+  // }
 
   render() {
     return html`
@@ -31,7 +31,7 @@ export class Example extends LitElement {
         min="08:00"
         max="16:00"
         .step=${60 * 30}
-        ...="${field(this.binder.model.startTime)}"
+        ...="$ {field(this.binder.model.startTime)}"
       ></vaadin-time-picker>
     `;
   }

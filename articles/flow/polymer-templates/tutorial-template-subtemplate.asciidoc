@@ -1,74 +1,94 @@
 ---
-title: Using sub-templates
-order: 5
+title: Using sub-template from PolymerTemplate / Using Child Templates in a PolymerTemplate
+order: 10
 layout: page
 ---
 
-= Using sub-templates
+= Using Child Templates in a PolymerTemplate
 
-A client-side template can include child templates that are defined in other files. LitElement template is used in the examples below, but Polymer templates are also supported.
+A Polymer template can include child Polymer templates that are defined in other files. 
 
-You can use the tag name and import function to reference the child template. It is also necessary to let the server know how to load the child file. This happens automatically if you bind the child template in the mapped Java template file, using the `@Id` annotation, in the same way as any other component.
+You can use the tag name and import function to reference the child template. It is also necessary to let the server know how to load the child file. This happens automatically if you bind the child template in the mapped Java template file, using the `@Id` annotation, in the same way as any other Polymer component. 
 
-In this section, we demonstrate how to create a parent LitElement template that includes a child LitElement template.
+In this section, we demonstrate how to create a parent Polymer template that includes a child Polymer template.
 
-*Example*: TypeScript LitElement parent template.
+*Example*: JavaScript Polymer parent template.
 
 [source,js]
 ----
-import {LitElement, html} from 'lit-element';
+import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
 import 'child-template.js';
 
-class ParentTemplate extends LitElement {
-
-    render() {
+class ParentTemplate extends PolymerElement {
+    static get template() {
         return html`
             <div>Parent Template</div>
+            <div>[[name]]</div>
             <child-template id="childTemplate"></child-template>`;
     }
+
+    static get is() { return 'parent-template' }
 }
 
-customElements.define('parent-template', ParentTemplate);
+customElements.define(ParentTemplate.is, ParentTemplate);
 ----
-* The TypeScript LitElement uses a `child-template` element. This is a custom element defined in `child-template.ts` (see below).
+* The JavaScript template uses a `child-template` element. This is a custom element defined in `child-template.js` (see below).
+
 
 *Example*: Mapped parent template Java class.  
 
 [source,java]
 ----
 @Tag("parent-template")
-@JsModule("./com/example/parent-template.ts")
-public class ParentTemplate extends LitTemplate {
+@JsModule("./com/example/parent-template.js")
+public class ParentTemplate extends PolymerTemplate<Model> {
 
     @Id("childTemplate")
     private ChildTemplate child;
 }
+
+public interface Model extends TemplateModel {
+    void setName(String name);
+}
 ----
 * The associated Java template file defines that `ChildTemplate` should be instantiated for any template element with a matching tag name, that is `child-template`.
-* Instance of `ChildTemplate` must be created on the server. The `@Id` annotation mapping ensures that this instance is automatically created and wired to the `<child-template>` element in the parent template.
+* Since the client-side implementation of `child-template` depends on a click handler defined from server-side Java (see below), an instance of `ChildTemplate` must be created on the server to receive the event. The `@Id` annotation mapping ensures that this instance is automatically created and wired to the `<child-template>` element in the parent template.
 
-*Example*: TypeScript LitElement child template.
+
+*Example*: JavaScript Polymer child template.
 
 [source,js]
 ----
-import {LitElement, html} from 'lit-element';
+import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
 
-class ChildTemplate extends LitElement {
-
-    render() {
-        return html`<button>Child Template</button>`;
+class ChildTemplate extends PolymerElement {
+    static get template() {
+        return html`<button on-click="handleClick">Child Template</button>`;
     }
+
+    static get is() { return 'child-template' }
 }
 
-customElements.define('child-template', ChildTemplate);
+customElements.define(ChildTemplate.is, ChildTemplate);
 ----
+* This template delegates a click handler to the server side.
+* The `handleClick` method is called on the `ChildTemplate` instance (not the `ParentTemplate` instance).
+
 
 *Example*: Mapped child template Java class. 
 
 [source,java]
 ----
 @Tag("child-template")
-@JsModule("./com/example/child-template.ts")
-public  class ChildTemplate extends LitTemplate {
+@JsModule("./com/example/child-template.js")
+public  class ChildTemplate extends PolymerTemplate<TemplateModel> {
+
+    @EventHandler
+    private void handleClick() {
+        System.out.println("Click on Button in the child template");
+    }
 }
 ----
+
+[NOTE]
+You can detect whether a component is part of a `PolymerTemplate` using the `isTemplateMapped` method. See the <<tutorial-component-integration#,Detecting PolymerTemplate Mapping in Components>> for more.

@@ -29,9 +29,7 @@ class CodeFileChecker implements TutorialLineChecker {
     public Collection<String> verifyTutorialLine(Path tutorialPath,
                                                  String tutorialName, String line, int lineNumber) {
         Optional<String> validationResult = Optional.empty();
-        if ("...".equals(line.trim())) {
-            // NOP, used to inform the user that there are more code there
-        } else if (blockStarted) {
+        if (blockStarted) {
             validationResult = validateBlockStart(tutorialName, line, lineNumber);
         } else if (inBlock) {
             validationResult = validateBlockLine(tutorialName, line, lineNumber);

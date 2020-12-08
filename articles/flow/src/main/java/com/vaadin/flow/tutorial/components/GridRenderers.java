@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2020 Vaadin Ltd.
+ * Copyright 2000-2017 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -15,10 +15,21 @@
  */
 package com.vaadin.flow.tutorial.components;
 
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Year;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -33,16 +44,6 @@ import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.function.SerializableBiConsumer;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
 import com.vaadin.flow.tutorial.databinding.Person.Gender;
-
-import java.text.NumberFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Year;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
 
 @CodeFor("components/tutorial-flow-grid.asciidoc")
 public class GridRenderers {
@@ -148,9 +149,9 @@ public class GridRenderers {
 
         grid.addColumn(new ComponentRenderer<>(person -> {
             if (person.getGender() == Gender.MALE) {
-                return VaadinIcon.MALE.create();
+                return new Icon(VaadinIcon.MALE);
             } else {
-                return VaadinIcon.FEMALE.create();
+                return new Icon(VaadinIcon.FEMALE);
             }
         })).setHeader("Gender");
 
@@ -162,7 +163,7 @@ public class GridRenderers {
 
         grid.addColumn(
                 new ComponentRenderer<>(
-                        () -> VaadinIcon.ARROW_LEFT.create()));
+                        () -> new Icon(VaadinIcon.ARROW_LEFT)));
 
         grid.addColumn(new ComponentRenderer<>(person -> {
 

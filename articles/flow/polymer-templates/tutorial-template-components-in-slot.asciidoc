@@ -1,33 +1,35 @@
 ---
-title: Dynamically Adding Server-side Components to Templates
-order: 6
+title: Using the <slot> Element in a Polymer Template
+order: 11
 layout: page
 ---
 
-= Dynamically Adding Server-side Components to Templates
 
-A client-side template cannot render child templates created using the `Component` or `Element` API, because it uses the shadow DOM that renders the *shadow tree*, instead of the element's children that are in the light DOM.
+= Using the <slot> Element in a PolymerTemplate
+
+A Polymer template cannot render child templates created using the `Component` or `Element` API, because `PolymerTemplate` uses the shadow DOM that renders the *shadow tree*, instead of the element's children that are in the light DOM. 
 
 To overcome this, you can add a `<slot>` element to mark the place where the light DOM elements should be rendered.
 
-== Using the <slot> Element
-
-*Example*: `<slot>` element in a TypeScript LitElement template.
+*Example*: `<slot>` element in a JavaScript Polymer template.
 
 [source,js]
 ----
-import {LitElement, html} from 'lit-element';
+import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
 
-class ComponentContainer extends LitElement {
-    get render() {
+class ComponentContainer extends PolymerElement {
+    static get template() {
         return html`
             <div>
                 <slot></slot>
             </div>`;
     }
-}
 
-customElements.define('component-container', ComponentContainer);
+    static get is() {
+        return 'component-container';
+    }
+}
+customElements.define(ComponentContainer.is, ComponentContainer);
 ----
 
 *Example*: Mapped Java template class.
@@ -35,8 +37,8 @@ customElements.define('component-container', ComponentContainer);
 [source,java]
 ----
 @Tag("component-container")
-@JsModule("./com/example/component-container.ts")
-public class ComponentContainer extends LitTemplate {
+@JsModule("./com/example/component-container.js")
+public class ComponentContainer extends PolymerTemplate<TemplateModel> {
 
     public ComponentContainer() {
         Element label = ElementFactory.createLabel("Main layout header");
@@ -47,15 +49,18 @@ public class ComponentContainer extends LitTemplate {
 }
 
 ----
-* Without the `<slot>` tag in the LitElement template, the `label` and `button` would not be visible to the user, even though they can be located in the DOM.
+* Without the `<slot>` tag in the JavaScript template, the `label` and `button` would not be visible to the user, even though they can be located in the DOM.
 * You can add multiple components that will display in the slot when added to a template element with an open `<slot></slot>`.
-* You can remove any element from a `<slot>`. It will work as expected and no longer display in the main element.
+
+[NOTE]
+You can remove any element from a `<slot>`. It will work as expected and no longer display in the main element.
+
 
 == Using Default Content in the <slot> Element
 
 The `<slot>` tag can contain default content that is displayed only if nothing else is set from the light DOM.
 
-*Example*: `<slot>` element with default content in a client-side template.
+*Example*: `<slot>` element with default content in a JavaScript Polymer template.
 
 [source,js]
 ----
@@ -65,11 +70,12 @@ The `<slot>` tag can contain default content that is displayed only if nothing e
 ----
 * 'No components added' displays initially, and is replaced when at least one child element is added.
 
+
 == Naming <slot> Elements
 
 You can name `<slot>` elements using the `name` attribute to ensure that only wanted content is added to a particular slot.
 
-*Example* Using the `name` attribute in the `<slot>` element in a client-side template.
+*Example* Using the `name` attribute in the `<slot>` element in a JavaScript Polymer template.
 
 [source,js]
 ----
@@ -79,13 +85,15 @@ You can name `<slot>` elements using the `name` attribute to ensure that only wa
     <slot>No content given!</slot>
 </div>
 ----
+
 * A `<label slot="title">Main header</label>` element, for example, will now NOT be positioned in the default "No content given!" slot, but rather in the `<h1><slot name="title">...` slot.
+
 
 == Nesting <slot> Elements
 
 You can also nest named slots inside the main slot.
 
-*Example*: Nested slot elements in a client-side template.
+*Example*: Nested slot elements in a JavaScript Polymer template.
 
 [source,js]
 ----
@@ -93,19 +101,21 @@ You can also nest named slots inside the main slot.
     <slot name="firstName"></slot>, <slot name="lastName"></slot>
 </slot>
 ----
+
 * The slot shows data for the light DOM `<slot="firstName">` and `<slot="lastName">` elements, if no `<slot="fullName">` element is available. If you add an element to the `<slot="fullName">` slot, it overrides and replaces the `firstName and lastName` data.
+
 
 == Adding Multiple <slot> Elements
 
 The default slot and any named slot can contain multiple elements.
 
-*Example*: Defining multiple elements for the default slot and multiple named slots in a TypeScript LitElement template.
+*Example*: Defining multiple elements for the default slot and multiple named slots.
 
 [source,java]
 ----
 @Tag("name-element")
-@JsModule("./com/example/name-element.ts")
-public class NameElement extends LitTemplate {
+@JsModule("./com/example/name-element.js")
+public class NameElement extends PolymerTemplate<TemplateModel> {
     public NameElement() {
         Element firstName = ElementFactory.createSpan("Jack");
         Element middleName = ElementFactory.createSpan(" James");
@@ -119,3 +129,66 @@ public class NameElement extends LitTemplate {
     }
 }
 ----
+
+
+=== Using a PolymerTemplate as a Parent Layout
+
+A `PolymerTemplate` can be used as a parent layout, by using the `<slot>` in the position where the child view should be displayed.
+
+*Example*: JavaScript Polymer template showing the actual view, `MainLayout`, below a heading and menu.
+
+[source,js]
+----
+import {PolymerElement,html} from '@polymer/polymer/polymer-element.js';
+
+class MainLayout extends PolymerElement {
+    static get template() {
+        return html`
+            <h1>Site title</h1>
+            <div class="menu">...</div>
+
+            <!-- child content comes here -->
+            <slot></slot>
+        `;
+    }
+
+    static get is() {
+        return 'main-layout'
+    }
+}
+customElements.define(MainLayout.is, MainLayout);
+----
+
+To use this template file, you need a basic Java template class that is mapped to the JavaScript template file (using the `@JsModule` annotation) and that implements the `RouterLayout` interface.
+
+*Example*: Mapped Java template class that imports the JavaScript template and implements `RouterLayout`.
+
+[source,java]
+----
+@Tag("main-layout")
+@JsModule("./com/example/main-layout.js")
+public class MainLayout extends PolymerTemplate<TemplateModel> 
+        implements RouterLayout {
+}
+----
+* The `showRouterLayoutContent(HasElement)` method in the `RouterLayout` interface has a default implementation. This makes it unnecessary to write additional code, but you can override and re-implement it, if necessary.
+
+You can now use `MainLayout` as a parent layout using the `@Route` or `@ParentLayout` annotations.
+
+*Example*: Using the `layout` parameter in the `@Route` annotation to mark `MainLayout` as the parent layout.
+
+[source,java]
+----
+@Route(value="editor", layout=MainLayout.class)
+public class Editor extends Div {
+}
+
+@ParentLayout(MainLayout.class)
+public class MenuBar extends Div {
+}
+----
+
+See the following resources for related information:
+
+* <<../routing/tutorial-router-layout#,Router Layouts and Nested Router Targets>> for more about parent views.
+* <<tutorial-template-basic#,Creating A Simple Component Using the PolymerTemplate API>> for general information about the `PolymerTemplate` API.

@@ -48,16 +48,6 @@ form.setEnabled(false);
 System.out.println(name.isEnabled()); // prints false
 ----
 
-[NOTE]
-Server-side components mapped via `@Id` do not inherit the template element hierarchy.
-As a consequence, disabling a mapped component does not disable other mapped components
-whose elements are children of the disabled component's element in the template.
-See <<../polymer-templates/tutorial-template-mapped-components-limitations#, Mapped Components Limitations>> for details.
-
-[NOTE]
-LitTemplate doesn't support `disabled` attribute on `@Id` mapped components.
-See <<../polymer-templates/tutorial-template-mapped-components-limitations#, Mapped Components Limitations>> for details.
-
 == Implicitly Enabled and Disabled Components
 
 When an implicitly disabled component is detached from a disabled container, it is automatically enabled again. Similarly, if an enabled component is attached to a disabled container, it is automatically implicitly disabled.
@@ -101,7 +91,7 @@ However, it is sometimes necessary for complex (composite) components to remain 
 
 You can override the default disabled behavior by enabling certain RPC-client-side calls that would normally be blocked for disabled components.
 
-The first way to do this is by providing the the property tha should be synchronized to the server in the `addPropertyChangeListener` call.
+The first way to do this is to use the `synchronizeProperty` method with the `DisabledUpdateMode.ALWAYS` argument value.
 
 *Example*: This Polymer template component controls its own enabled state via the checkbox. The checkbox is never disabled, and it enables and disables the component.
 
@@ -126,7 +116,10 @@ public class RegistrationForm
     private Element enable;
 
     public RegistrationForm() {
-        enable.addPropertyChangeListener("checked", "checked-changed",
+        enable.synchronizeProperty("checked",
+                "checked-changed",
+                DisabledUpdateMode.ALWAYS);
+        enable.addPropertyChangeListener("checked",
                 this::handleEnabled);
         setEnabled(false);
     }
@@ -180,7 +173,8 @@ customElements.define(RegistrationForm.is,
 ----
 
 * The checkbox is implicitly disabled if the template (which is its parent) is disabled. As a result, no RPC is allowed for the checkbox.
-* The `addPropertyChangeListener` method (with the extra "checked-changed" argument) is used to synchronize the `checked` property.
+* The `synchronizeProperty` method (with extra arguments) is used to synchronize the `checked` property.
+** The argument, `DisabledUpdateMode.ALWAYS`, is an enum value that allows updates for this property, even if the element is disabled.
 
 * The folowing RPC communications are blocked for the disabled element:
 ** Property changes.

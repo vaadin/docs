@@ -5,19 +5,19 @@ layout: page
 ---
 
 
-= Switch between NPM and PNPM
+= Switch between npm and pnpm
 
-Starting from Vaadin 16 _pnpm_ (AKA _performant npm_) tool is used as the default frontend package manager instead of _npm_. The benefit of `pnpm` is that it uses a shared repository, which allows reducing the build time. 
+Starting from Vaadin 14.2 _pnpm_ (AKA _performant npm_) tool is available for managing frontend dependencies as a faster alternative to _npm_, which is still the default tool. The benefit of pnpm is that it uses a shared repository for all projects in a system which allows to reduce packages download time. Npm will download all dependencies again for every project.
 
-If `pnpm` is not installed globally the framework will install it locally using npm.
+If pnpm is not installed globally the framework will install it once to `{home_folder}/.vaadin`.
 The `package-lock.json` file which is used by npm is incompatible with pnpm and it's
-removed automatically if `pnpm` is used. `pnpm` uses `pnpm-lock.yaml`
+removed automatically if pnpm is used. pnpm uses `pnpm-lock.yaml`
 file instead of `package-lock.json`. This means that any custom dependency configurations
 should go to `pnpm-lock.yaml`.
 
-It's still possible to use `npm` : to switch to `npm` you can use the `vaadin.pnpm.enable` system property set to `false`. 
+To switch between npm and pnpm you can use the `vaadin.pnpm.enable` system property - setting it to `true` switches to pnpm.
 
-For a Spring Boot based project, you can put `vaadin.pnpm.enable = false` into the `application.properties` files
+For a Spring Boot based project, you can put `vaadin.pnpm.enable = true` into the `application.properties` file.
 
 For a plain Java or a JavaEE based project, you can use Servlet 3.0 @WebServlet annotation:
 [source,java]
@@ -59,24 +59,51 @@ or use the traditional `web.xml` file
 
 To read more about how to set properties, see the <<tutorial-flow-runtime-configuration#, Application runtime configuration documentation>>.
 
-Alternatively, the property can be also set to the `vaadin-maven-plugin`, using `pnpmEnable`.
-Note that this only works for production mode.
+Alternatively, the property can be also set to the `vaadin-maven-plugin`, using `pnpmEnable`. Note that you need to add it for each plugin definition.
 
 [source,xml]
 ----
-<plugin>
-    <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-maven-plugin</artifactId>
-    <version>${project.version}</version>
-    <executions>
-        <execution>
-            <goals>
-                <goal>build-frontend</goal>
-            </goals>
-        </execution>
-    </executions>
-    <configuration>
-        <pnpmEnable>false</pnpmEnable>
-    </configuration>
-</plugin>
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>prepare-frontend</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <pnpmEnable>true</pnpmEnable>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+<profiles>
+    <profile>
+        <id>production</id>
+        <!-- Skipping unrelated production build configuration... -->
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>build-frontend</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <pnpmEnable>true</pnpmEnable>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+    </profile>
+</profiles>
 ----

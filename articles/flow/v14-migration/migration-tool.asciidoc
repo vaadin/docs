@@ -1,0 +1,156 @@
+---
+title: Migration Tool for Polymer Templates
+order: 1
+layout: page
+---
+
+= Migration Tool for Polymer Templates
+
+[NOTE]
+There are currently some issues in running the migration tool on Windows. The error output refers to "bower install failing" or "git not being available on path". As a workaround, use the https://docs.microsoft.com/en-us/windows/wsl/install-win10[Windows Linux Subsystem] and run the tool there instead.
+
+Several steps are required to migrate your project to Vaadin 14 from Vaadin 13, 
+see <<v14-migration-guide#,Vaadin 14 Migration Guide>> tutorial. To help with the migration,
+the Vaadin 14 migration tool can update Polymer 2 HTML templates in an existing Vaadin 13
+project into Polymer 3 JavaScript modules.
+
+The Vaadin 14 migration tool is available in two forms: as a goal in `vaadin-maven-plugin` (for
+Maven-based projects), and as a standalone jar (for other project setups)
+
+== Migrating a Maven Project
+
+The plugin's `migrate-to-p3` goal automates two steps:
+
+* it uses resources directory (by default it is `src/main/webapp`) to locate
+Polymer 2 templates HTML files, converts them into Polymer 3 format and moves them
+into `frontend` folder inside your project root directory.
+* it finds all Java class declarations annotated with `@HtmlImport` and `@StyleSheet` 
+in the project source files and rewrites annotation to `@JsModule` annotation along with path 
+(`value` parameter) update.
+
+This goal can be executed from command line with
+
+```
+mvn vaadin:migrate-to-p3
+```
+
+or with most IDEs from a list of configured Maven plugin goals for a project.
+The template migration tool is also available as a <<standalone,Java executable>> for non-Maven projects.
+
+
+[NOTE]
+The migration tool takes care about style files and `@StyleSheet` annotations
+converting them into `@JsModule`. But there is `@CssImport` annotation available
+which is more convenient to use instead of `@JsModule` for CSS. The migration tool
+is not able to convert styles using `@CssImport` annotation. This requires manual
+conversation.
+
+The migration tool doesn't preserve HTML comments from your original template files.
+Important HTML comments should therefore be manually transferred to the converted P3 files.
+To facilitate this, use the *keepOriginal* parameter to prevent removal of the 
+original template files (by default these are removed). 
+See *keepOriginal* parameter description below.
+
+=== Goal parameters
+
+Here we describe the Maven plugin goal's parameters. These can be configured in the `<configuration>`
+section inside the ``vaadin-maven-plugin``'s `<plugin>` tag.
+
+* *resources* (default: `${project.basedir}/src/main/webapp`):
+    List of folder paths that should be used to locate the P2 resources to convert 
+    them into P3 modules. It's configured in the pom file via `<resources>` 
+    parent element and `<resource>` child elements inside it. 
+    
+* *migrateFolder* (default: `${project.build.directory}/migration`):
+    A temporary directory which is used internally to store copies of the resource 
+    files and their conversation to P3. The result files will be moved to the final destination from it.
+    
+* *frontendDirectory* (default: `${project.basedir}/frontend`):
+    The resulting directory which will contain converted resource files.
+    
+* *keepOriginal* (default: `false`):
+    Whether to keep original resource files or not. By default the converted 
+    resource files will be removed.
+    
+* *ignoreModulizerErrors* (default: `true`):
+    Whether the Maven build should fail if modulizer internal tool returns non zero exit status.
+    Even if Modulizer exists with error it doesn't mean that conversation wasn't done. 
+    So by default the Maven build won't fail even though there were errors.
+
+* *annotationsRewrite* (default: `ALWAYS`):
+    Defines a strategy to rewrite `@HtmlImport`/`@StyleSheet` annotations in Java source files.
+    There are three values available: 
+    ** `ALWAY` means rewrite annotations regardless of resource conversation status
+    ** `SKIP`  means skip annotations rewrite
+    ** `SKIP_ON_ERROR` means rewrite only if there are no errors during resource conversation
+
+[[standalone]]
+== Migrating a Project Using the Standalone Tool
+
+The standalone migration tool can be used to migrate projects that do not use Maven. It performs the
+same tasks as the Maven plugin, but requires more parameters since fewer assumptions can be made
+about the project structure.
+
+The standalone migration tool is distributed as a separate `.jar` file, which can be downloaded from
+Maven central:
+https://repo.maven.apache.org/maven2/com/vaadin/flow-migration/
+
+You should download the jar file named `flow-migration-<VERSION>-standalone.jar`, where `<VERSION>` is
+synchronized with Flow release versions. We recommend to to always download the latest version of the
+migration tool.
+
+You can run the jar on the command line (`java -jar flow-migration-<VERSION>-standalone.jar` followed
+by the list of parameters and values). The tool requires the following mandatory parameters (path
+values are absolute, or resolved relative to current working directory if not starting with `/`) unless
+explicitly specified to be relative to `baseDir`:
+
+* `-b,--baseDir <arg>`:
+Base project directory. Normally it is the root of the files to migrate.
+
+* `-c,--classesDir <arg>`:
+Compiled classes directory. Java classes have to be compiled into this directory to be able to apply migration.
+
+* `-d,--depUrls <arg>`:
+Comma-separated classpath URLs. The URLs should include all dependencies for the project such as jars or
+filesystem paths to binary classes.
+
+* `-src,--sourceDirs <arg>`:
+Comma-separated java source directories. The root package directory (e.g. `com`) should exist in this directory.
+
+In addition, the tool supports the following optional parameters:
+
+* `-ars,--annRewrite <arg>`:
+Java annotation rewrite strategy (see above for details). Legal values are
+`ALWAYS`, `SKIP_ON_ERROR` and `SKIP`.
+
+* `-ko,--keepOriginal`:
+See description of *keepOriginal* above.
+
+* `-md,--migrationDir <arg>`:
+See description of *migrateFolder* above.
+
+* `-res,--resourcesDirs <arg>`:
+See description of *resources* above.
+
+* `-se,--stopOnError`:
+Whether migration should stop execution with error if Modulizer has exited with non-zero
+status.
+
+* `-t,--targetDir <arg>`:
+See description of *frontendDirectory* above.
+
+=== Example
+
+To convert a project in directory `/tmp/myproject`, containing Java sources in `/tmp/myproject/src/main/java` and
+compiled Java classes in `/tmp/myproject/target/classes` with default options:
+```
+java -jar flow-migration-<VERSION>-standalone.jar \
+  -b /tmp/myproject
+  -src /tmp/myproject/src/main/java
+  -c /tmp/myproject/target/classes
+  -d file:///tmp/flow-server-2.0.8.jar
+```
+
+Note that `flow-server` is a minimal dependency required for  `-d` (as the standalone
+migration tool is agnostic of the project setup, it needs to be instructed where to find
+the classes that the project depends on, including the Vaadin classes).

@@ -1,0 +1,364 @@
+---
+title: Vaadin OSGi Support
+order: 1
+layout: page
+---
+
+[[osgi.basic]]
+= Vaadin OSGi Support
+
+Vaadin applications can be deployed on an OSGi compatible servlet container.
+
+An OSGi application typically consists of multiple bundles that can be deployed separately. 
+
+To deploy Vaadin applications as OSGi bundles, static resources must be published using the appropriate APIs.
+
+The application is typically packaged as a JAR file, and needs to have a valid OSGi bundle manifest which can be created e.g. by the `bnd-maven-plugin` or Apache Felix `maven-bundle-plugin`. All the dependencies of the application should be available as OSGi bundles.
+
+[[osgi.servlet.maven]]
+== Minimal Vaadin Project For OSGi
+Vaadin application for OSGi should be a valid bundle, i.e. it should be packaged as a `.jar` file, and it should have a proper OSGi manifest inside.
+The easiest way to convert regular maven-based Vaadin application into a valid OSGi bundle consists of five steps:
+
+* Change packaging type to `jar` in your `pom.xml`:
+[source, xml]
+----
+    <packaging>jar</packaging>
+----
+* Change the scope for all vaadin dependencies from default to `provided`, like this:
+
+[source, xml]
+----
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-core</artifactId>
+        <scope>provided</scope>
+    </dependency>
+----
+* Add OSGi-related dependencies to the project
+
+[source, xml]
+----
+    <groupId>com.vaadin</groupId>
+        <artifactId>flow-osgi</artifactId>
+        <version>${flow.version}</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>osgi.core</artifactId>
+        <version>6.0.0</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>osgi.annotation</artifactId>
+        <version>6.0.1</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>osgi.cmpn</artifactId>
+        <version>6.0.0</version>
+        <scope>provided</scope>
+    </dependency>
+----
+* Setup necessary plugins for building the project:
+
+[source, xml]
+----
+ <build>
+    <plugins>
+        <plugin>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>bnd-maven-plugin</artifactId>
+            <version>3.3.0</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>bnd-process</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>3.0.2</version>
+            <configuration>
+                <archive>
+                    <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                </archive>
+            </configuration>
+        </plugin>
+        ...
+    </plugins>
+</build>
+----
+* Add bundle script (`bnd.bnd`) into the project root folder:
+
+[source, text]
+----
+Bundle-Name: ${project.name}
+Bundle-Version: ${project.version}
+Bundle-SymbolicName: ${project.groupId}.${project.artifactId}
+Export-Package: com.example.osgi.myapplication
+Import-Package: *
+Vaadin-OSGi-Extender: true
+----
+
+[NOTE]
+The last line in the manifest tells Vaadin OSGi integration to scan all classes
+in the bundle and discover routes.
+
+[[osgi.servlet]]
+== Publishing a Servlet With OSGi
+
+It's a developer responsibility to register a `VaadinServlet` in the servlet container (inside OSGi container).
+There are many ways to do it. One way is to use HTTP Whiteboard specification.
+
+[source,java]
+----
+@Component(immediate = true)
+public class VaadinServletRegistration {
+
+    private static class FixedVaadinServlet extends VaadinServlet {
+        @Override
+        public void init(ServletConfig servletConfig) throws ServletException {
+            super.init(servletConfig);
+
+            getService().setClassLoader(getClass().getClassLoader());
+        }
+        
+		@Override
+		protected DeploymentConfiguration createDeploymentConfiguration(Properties initParameters) {
+			// npm mode is not currently supported
+			initParameters.setProperty("compatibilityMode", "true");
+			return super.createDeploymentConfiguration(initParameters);
+		}        
+    }
+
+    @Activate
+    void activate(BundleContext ctx) {
+        Hashtable<String, Object> properties = new Hashtable<>();
+        properties.put(
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED,
+                true);
+        properties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN,
+                "/*");
+        ctx.registerService(Servlet.class, new FixedVaadinServlet(),
+                properties);
+    }
+
+} 
+----
+
+[NOTE]
+`FixedVaadinServlet` class is used here as a workaround for the 
+https://github.com/vaadin/flow/issues/4367[Classloader bug]. Once it's fixed there will be no need in it.
+
+[NOTE]
+When you have more than one bundle created by Vaadin, note that you should not
+have multiple ‍‍‍`VaadinServlet` registrations with the same servlet pattern. So,
+you should either use a unique pattern for each bundle or create `VaadinServlet`
+in only one bundle. In the latter case, keep in mind that for the other bundles
+to work, it is required that the bundle containing the servlet is active.
+
+[[osgi.resources]]
+== Publishing Static Resources With OSGi
+
+If your project has resources which are supposed to be available as static
+web resources then you should register them.
+In case you are using standalone servlet container you are usually using a 
+`webapp` folder which is configured to be a static web resources folder for the web server.
+But there is no any dedicated `webapp` folder for OSGi bundles.
+Instead you should register your resource via the way provided by Vaadin OSGi
+integration. To do that implement either `OsgiVaadinStaticResource` or 
+`OsgiVaadinContributor` as an OSGi service.
+Here the resource packaged in the jar file with `/META-INF/resources/frontend/my-component.html`
+is registered to be available by URL `"http://localhost:8080/frontend/my-component.html"`:
+
+[source, java]
+----
+@Component
+public class MyComponentResource implements OsgiVaadinStaticResource {
+
+    public String getPath(){
+        return "/META-INF/resources/frontend/my-component.html";
+    }
+    
+    public String getAlias(){
+        return "/frontend/my-component.html";
+    }
+
+}
+----
+
+
+[[osgi.vaadin.extender]]
+== Classes discovering
+
+Vaadin discovers a number of classes to delegate them some functionality.
+E.g. classes annotated with `@Route` annotation are used in the routing 
+functionality (see <<../routing/tutorial-routing-annotation#,Defining Routes with @Route>>).
+There are many other cases which requires classes discovering functionality (see also
+<<../routing/tutorial-routing-exception-handling#,Router Exception Handling>>,
+<<../pwa/tutorial-pwa-pwa-with-flow#,Creating PWA with Flow>>).
+It doesn't happen out of the box in OSGi container for every bundle.
+To avoid scanning all classes in all bundles Vaadin uses `Vaadin-OSGi-Extender` 
+manifest header as a marker for those bundles that needs to be scanned.
+So if you have a bundle which contains routes or other classes whose 
+functionality relies on inheritance or annotation presence you should mark 
+this bundle using `Vaadin-OSGi-Extender` manifest header (so normally every Vaadin
+application bundle should have this manifest header otherwise routes declared in this
+bundle won't be discovered):
+
+[source, text]
+----
+....
+Export-Package: com.example.osgi.myapplication
+Import-Package: *
+Vaadin-OSGi-Extender: true
+....
+----
+
+[[osgi.deploy]]
+== Deployment to OSGi container.
+
+In order to have your application running under OSGi container, you need to have 
+Vaadin Flow bundles deployed, and then the application bundle can be deployed and started.
+Please note that there are many transitive dependencies which are also need to be deployed.
+Bundle won't be activated if all its dependencies are not deployed and activated
+(it might be that some OSGi containers may deploy transitive dependencies 
+along with the bundle deployment).
+Here is a minimal list of required Vaadin Flow bundles:
+
+* `flow-server-X.Y.Z.jar`
+* `flow-client-X.Y.Z.jar`
+* `flow-html-components-X.Y.Z.jar`
+* `flow-data-X.Y.Z.jar`
+* `flow-osgi-X.Y.Z.jar`
+
+This is not a full list of all required bundles. The full list is too long
+and may vary due to transitive dependencies.
+Here are some of the required external dependencies (the versions are omitted):
+
+* `jsoup`
+* `gentyref-x.y.z.vaadin1.jar`
+* `gwt-elemental-x.y.z.vaadin2.jar`
+* `ph-css`
+* ....
+
+Please note that some of the dependencies are repackaged by Vaadin because
+original jars are not OSGi compatible (like `gwt-elemental`).
+Other dependencies require some OSGi features which needs to be deployed at 
+runtime but they don't depend on them during compilation.
+This is the case with `ph-css` bundle. It depends on `ph-commons` (which 
+should be deployed also of course) but the latter bundle requires `ServiceLoader` 
+OSGi implementation. You will need to deploy the bundle which contains
+this implementation suitable for your OSGi container.
+Also Vaadin OSGi support uses OSGi Compendium API (which allows registering an OSGi
+service using declarative services annotations). If your OSGI container doesn't have it 
+out of the box, you have to deploy an implementation bundle to support the Compendium API.
+
+[NOTE]
+There exists an OSGi base starter project that is ready to use and it declares
+all bundles which needs to be deployed to the OSGi container as provided dependencies 
+in the dedicated profile.
+Those bundles are copied into the specific folder using `maven-dependency-plugin` and auto-deployed from there.
+As a result all required bundles are deployed to the OSGi container.
+See https://github.com/vaadin/base-starter-flow-osgi.
+
+In your project you will most likely want to use some ready-made Vaadin components like Vaadin Button.
+In this case you should deploy `vaadin-button-flow` bundle as a dependency.
+Please note that all Vaadin Flow components are OSGi compatible bundles but they
+depend on webjars with the client side web component resources which are not
+OSGi compatible unfortunately. See the next section about this topic.
+ 
+[[osgi.web.components]]
+== Make webjar resource working in OSGi.
+
+Normally every Flow component has a client side part which is distributed as a webjar.
+Webjars contain only web resources and they are not OSGi compatible. It means
+that webjar is not a bundle and cannot be deployed to an OSGi container.
+As a result you won't get Flow component working without additional setup.
+We suggest a solution for repackaging webjar resources into the application bundle.
+Here is the code snippet of the project configuration which we use to 
+repackage the webjars:
+
+[source, xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-dependency-plugin</artifactId>
+    <executions>
+        <execution>
+            <id>unpack-dependencies</id>
+            <phase>generate-resources</phase>
+            <goals>
+                <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+                <includes>**/webjars/**</includes>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+<plugin>
+    <artifactId>maven-antrun-plugin</artifactId>
+    <version>1.7</version>
+    <executions>
+        <execution>
+            <id>copy-frontend</id>
+            <phase>generate-resources</phase>
+            <configuration>
+                <tasks>
+                    <mkdir
+                        dir="${project.build.directory}/generated-resources/frontend/bower_components"></mkdir>
+                    <copy
+                        todir="${project.build.directory}/generated-resources/frontend/bower_components">
+                        <fileset
+                            dir="${project.build.directory}/dependency/META-INF/resources/webjars/" />
+                    </copy>
+                </tasks>
+            </configuration>
+            <goals>
+                <goal>run</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+<plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>build-helper-maven-plugin</artifactId>
+    <version>3.0.0</version>
+    <executions>
+        <execution>
+            <id>add-resource</id>
+            <phase>generate-resources</phase>
+            <goals>
+                <goal>add-resource</goal>
+            </goals>
+            <configuration>
+                <resources>
+                    <resource>
+                        <directory>${project.build.directory}/generated-resources</directory>
+                        <targetPath></targetPath>
+                    </resource>
+                </resources>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+This code snippet unpacks all dependencies and extracts `webjars` folder from them.
+Then it copies the resulting resources to the dedicated folder to create 
+the appropriate structure for them and the folder is added as a resource folder.
+In the result the folder will be packaged in the jar archive and the resources
+will be available in the jar bundle starting from the archive root. It makes
+them automatically available as web resources. 
+
+[TIP]
+This is done in our OSGi base starter project https://github.com/vaadin/base-starter-flow-osgi. 
+You may check out the code.
