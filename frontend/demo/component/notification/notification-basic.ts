@@ -31,7 +31,7 @@ export class Example extends LitElement {
             `,
             root
           )}"
-        position="middle"
+        position="top-end"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;

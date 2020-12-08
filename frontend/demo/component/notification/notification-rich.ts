@@ -14,7 +14,6 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-notification
-        duration="100000"
         .renderer="${(root: HTMLElement) =>
           render(
             html`
@@ -33,7 +32,7 @@ export class Example extends LitElement {
             root
           )}"
         theme="success"
-        position="middle"
+        position="bottom-start"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -55,7 +54,7 @@ export class Example extends LitElement {
             root
           )}"
         theme="error"
-        position="middle"
+        position="bottom-start"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -74,7 +73,7 @@ export class Example extends LitElement {
             `,
             root
           )}"
-        position="middle"
+        position="bottom-start"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -100,7 +99,7 @@ export class Example extends LitElement {
             `,
             root
           )}"
-        position="middle"
+        position="bottom-start"
       ></vaadin-notification>
       <!-- end::snippet[] -->
 

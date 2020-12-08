@@ -42,7 +42,8 @@ export class Example extends LitElement {
           `,
           root
         );
-      this.notification.position = 'middle';
+      this.notification.position = 'bottom-start';
+      this.notification.duration = 10000;
     }
   }
 

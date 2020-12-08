@@ -34,7 +34,7 @@ export class Example2 extends LitElement {
   // tag::snippet[]
   render() {
     return html`
-      <vaadin-context-menu open-on="click">
+      <vaadin-context-menu open-on="click" .renderer="${this.menuRenderer}">
         <vaadin-button aria-label="notifications" theme="tertiary">
           <iron-icon icon="lumo:bell"></iron-icon>
           <span class="badge" theme="badge error primary small pill">4</span>
@@ -43,17 +43,12 @@ export class Example2 extends LitElement {
     `;
   }
 
-  firstUpdated() {
-    const menu = this.shadowRoot?.querySelector('vaadin-context-menu');
-    if (menu) {
-      menu.renderer = (root: HTMLElement) =>
-        render(
-          html`
-            <div style="padding: var(--lumo-space-l);">Show notifications here</div>
-          `,
-          root
-        );
-    }
-    // end::snippet[]
-  }
+  menuRenderer = (root: HTMLElement) =>
+    render(
+      html`
+        <div style="padding: var(--lumo-space-l);">Show notifications here</div>
+      `,
+      root
+    );
+  // end::snippet[]
 }

@@ -36,7 +36,8 @@ export class Example extends LitElement {
             root
           )}"
         theme="error"
-        position="middle"
+        position="bottom-start"
+        duration="0"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;

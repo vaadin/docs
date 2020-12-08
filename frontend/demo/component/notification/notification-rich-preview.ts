@@ -25,6 +25,7 @@ export class Example extends LitElement {
     .warning,
     vaadin-avatar {
       margin-right: var(--lumo-space-m);
+      flex: none;
     }
 
     b {

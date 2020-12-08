@@ -38,7 +38,7 @@ export class Example extends LitElement {
           `,
           root
         );
-      this.notification.position = 'middle';
+      this.notification.position = 'top-end';
     }
   }
 
