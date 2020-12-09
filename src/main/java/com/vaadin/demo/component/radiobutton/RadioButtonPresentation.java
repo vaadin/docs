@@ -3,7 +3,8 @@ package com.vaadin.demo.component.radiobutton;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -29,10 +30,10 @@ public class RadioButtonPresentation extends Div {
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
       Image logo = new Image(card.getPictureUrl(), card.getName());
       logo.setHeight("1em");
-      Text number = new Text(card.getAccountNumber());
+      Span number = new Span(new Text(card.getAccountNumber()));
       Text expiryDate = new Text("Expiry date:" + card.getExpiryDate());
 
-      return new Div(new FlexLayout(logo, number), new Div(expiryDate));
+      return new Div(new HorizontalLayout(logo, number), new Div(expiryDate));
     }));
 
     add(radioGroup);

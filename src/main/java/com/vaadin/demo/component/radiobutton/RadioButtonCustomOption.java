@@ -2,7 +2,8 @@ package com.vaadin.demo.component.radiobutton;
 
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
@@ -41,8 +42,8 @@ public class RadioButtonCustomOption extends VerticalLayout {
       } else {
         Image logo = new Image(card.getPictureUrl(), card.getName());
         logo.setHeight("1em");
-        Text number = new Text(card.getAccountNumber());
-        return new FlexLayout(logo, number);
+        Span number = new Span(new Text(card.getAccountNumber()));
+        return new HorizontalLayout(logo, number);
       }
     }));
 
