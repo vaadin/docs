@@ -30,7 +30,8 @@ All listing components in Vaadin have a number of overloaded `setItems()` method
 Items can be basic objects, such as strings or numbers, or POJOs, such as DTOs or JPA entities, from your domain model.
 The easiest way is to provide a `List` of objects to be shown in such a component.
 
-If the number of items is large and reserves a lot of memory, `Grid` and `ComboBox` allow you to do a lazy data binding using callbacks to fetch only the required set of items from the back-end.
+If the number of items is large and reserves a lot of memory, `Grid` and
+ `ComboBox` allow you to do a lazy data binding using callbacks to fetch only the required set of items from the back end.
 
 == Configuring How Items Are Displayed
 
@@ -131,8 +132,8 @@ grid.setItems(personRepository.findAll());
 == Lazy Data Binding Using Callbacks
 
 Using callback methods is a more advanced way to bind data to components.
-This way, only the required portion of the data is loaded from your backend to the server memory.
-This approach is harder to implement and provides fewer features out of the box, but can save a lot of resources in the backend and the UI server.
+This way, only the required portion of the data is loaded from your back end to the server memory.
+This approach is harder to implement and provides fewer features out of the box, but can save a lot of resources in the back end and the UI server.
 The component gives a query object as a parameter to your callback methods, where you can check that what part of the data set is needed.
 
 Currently, only `Grid` and `ComboBox` properly support lazy data binding.
@@ -149,12 +150,12 @@ grid.setItems(query -> // <1>
 ----
 <1> To create a lazy binding, use an overloaded version of the `setItems()` method that uses a callback instead of passing data directly to the component.
 <2> Typically, you call your service layer from the callback, as is done here.
-<3> Use the query object's parameters to limit the data you pass from the backend to the component.
+<3> Use the query object's parameters to limit the data you pass from the back end to the component.
 <4> The callbacks return the data as a `Stream`.
-In this example, the backend returns a `List`, so we need to convert it to a `Stream`.
+In this example, the back end returns a `List`, so we need to convert it to a `Stream`.
 
-The example above works well with JDBC backends, where you can request a set of rows from a given index.
-Vaadin calls your data binding call in paged manner, so it is possible to bind also to "paging backends", such as Spring Data based solutions.
+The example above works well with JDBC back ends, where you can request a set of rows from a given index.
+Vaadin calls your data binding call in paged manner, so it is possible to bind also to "paging back ends", such as Spring Data based solutions.
 
 For example, to do lazy data-binding from a Spring Data Repository to `Grid`:
 
@@ -176,11 +177,11 @@ grid.setItems(query -> {
 [[data-binding.data-provider.lazy-sorting]]
 === Sorting with Lazy Data Binding
 
-For efficient lazy data-binding, sorting needs to be done already in the backend.
+For efficient lazy data-binding, sorting needs to be done already in the back end.
 By default, `Grid` makes all columns appear sortable in the UI.
 You need to manually declare which columns are actually sortable.
 Otherwise, the UI may indicate that some columns are sortable, but nothing happens if you try to sort them.
-With lazy data binding, you need to pass the hints that `Grid` provides in the `Query` object to your backend logic.
+With lazy data binding, you need to pass the hints that `Grid` provides in the `Query` object to your back end logic.
 
 For example, to enable sortable lazy data-binding to a Spring Data repository:
 
@@ -226,17 +227,17 @@ public static Sort toSpringDataSort(List<QuerySortOrder> vaadinSortOrders) {
 <1> If you are using property name based column definition, `Grid` columns can be made sortable by their property names.
 The `setSortableColumns()` method makes columns with given identifiers sortable and all other non-sortable.
 <2> Alternatively, define a key to your columns, which will be passed to the callback, and define the column to be sortable.
-<3> In the callback, you need to convert the Vaadin specific sort information to whatever your backend understands.
+<3> In the callback, you need to convert the Vaadin specific sort information to whatever your back end understands.
 In this example, we are using Spring Data and using a separate method to convert the values.
 The method body is shown below.
 Note that the conversion becomes simpler if you only want to support sorting based on a single property.
 Vaadin Grid supports sorting based on multiple columns.
-<4> Here the backend compatible sort information is passed to our backend call.
+<4> Here the back end compatible sort information is passed to our back end call.
 <5> The `getSorted()` method in `QuerySortOrder` returns the columns property name or a key you have assigned to the column.
 
 === Filtering with Lazy Data Binding
 
-Note that, for the lazy data to be efficient, filtering needs to be done in the backend.
+Note that, for the lazy data to be efficient, filtering needs to be done in the back end.
 For example, if you provide a text field to limit the results shown in a `Grid`, you need to make your callbacks handle the filter.
 
 For example, to handle filterable lazy data binding to a Spring Data
@@ -260,10 +261,10 @@ private void listPersonsFilteredByName(String filterString) {
 ----
 
 <1> The lazy data binding mode is optimal for filtering purposes.
-Queries to the backend are only done when a user makes a small pause while typing.
+Queries to the back end are only done when a user makes a small pause while typing.
 <2> When a value change event occurs, you should reset the data binding to use the new filter.
-<3> The example backend uses SQL behind the scenes, so `%` is appended to the beginning and to the end to match anywhere in the text.
-<4> Pass the filter to your backend in the binding.
+<3> The example back end uses SQL behind the scenes, so `%` is appended to the beginning and to the end to match anywhere in the text.
+<4> Pass the filter to your back end in the binding.
 
 You can combine both filtering and sorting in your data binding callbacks.
 
@@ -272,28 +273,53 @@ The lazy loaded binding in `ComboBox` is always filtered by the string typed
 in by the end user.
 Initially, when there is no filter input yet, the filter is an empty string.
 
-// TODO change this into data view style once the changes are in ComboBox
+*The `ComboBox` examples below use the new data API available since Vaadin 18 where the item count query is not needed for fetching items.*
 
-`ComboBox` currently uses the old data provider naming convention.
-Also, the count of total matches is currently required.
+For example, you can handle filterable lazy data binding to a Spring Data repository as follows:
 
-For example, you can handle filterable lazy data binding to a Spring Data
-repository as follows:
+[source, java]
+ ----
+ ComboBox<Person> cb = new ComboBox<>();
+ cb.setItems(
+         query -> repo.findByNameLikeIgnoreCase(
+                 // Add `%` marks to filter for an SQL "LIKE" query
+                 "%" + query.getFilter().orElse("") + "%",
+                 PageRequest.of(query.getPage(), query.getPageSize()))
+                 .stream()
+ );
+ ----
+
+ The above example uses a fetch callback for lazy loading items, and the `ComboBox` will fetch more items as the user scrolls the dropdown, until there are no more items returned.
+ In case it is desired to have the dropdown's scrollbar reflect the exact number of items matching the filter, an optional item count callback can be used as shown in the example below:
+
+[source, java]
+----
+cb.setItems(
+         query -> repo.findByNameLikeIgnoreCase(
+                 "%" + query.getFilter().orElse("") + "%",
+                 PageRequest.of(query.getPage(), query.getPageSize()))
+                 .stream(),
+         query -> (int) repo.countByNameLikeIgnoreCase(
+                 "%" + query.getFilter().orElse("") + "%"));
+----
+
+In case the filtering of items should be done with another type than a string, you can provide a filter converter with the fetch callback to get the type of the filter right for the fetch query:
 
 [source, java]
 ----
 ComboBox<Person> cb = new ComboBox<>();
-cb.setDataProvider((String filter, int offset, int limit) -> {
-    return repo.findByNameLikeIgnoreCase(
-            "%" + filter + "%", // <1>
-            PageRequest.of(offset / limit, limit)
-    ).stream();
-}, filter -> {
-    return (int) repo.countByNameLikeIgnoreCase("%" + filter + "%"); // <2>
-});
+cb.setPattern("\\d+");
+cb.setPreventInvalidInput(true);
+cb.setItemsWithFilterConverter(
+     query -> getPersonService()
+             .fetchPersonsByAge(query.getFilter().orElse(null), // <1>
+                     query.getOffset(), query.getLimit())
+             .stream(),
+     textFilter -> textFilter.isEmpty() ? null // <2>
+             : Integer.parseInt(textFilter));
 ----
-<1> Add `%` marks to filter for an SQL "LIKE" query.
-<2> The total amount of items matching the filter is required.
+<1> Query object contains the filter of type returned by given converter.
+<2> The second callback is used to convert the combo box's text client-side filter into the appropriate value, used by back end.
 
 === Improving Scrolling Behaviour
 
@@ -324,11 +350,11 @@ It can be configured directly or saved for later adjustments.
 increases the user experience.
 Users can, for example, scroll directly to the end of the result set.
 <3> You can also configure how `Grid` adjusts its estimate of available rows.
-With this configuration, if the backend returns an item for index 1000, the scrollbar is adjusted as if there were 1500 items in the `Grid`.
+With this configuration, if the back end returns an item for index 1000, the scrollbar is adjusted as if there were 1500 items in the `Grid`.
 
 A count callback has to be provided to get similar user experience as when
 assigning data directly.
-Note that in many backends, counting the number of results can be a heavy operation.
+Note that in many back ends, counting the number of results can be a heavy operation.
 
 [source, java]
 ----
@@ -342,7 +368,8 @@ For example, add-ons or generic helpers might want to do something with the data
 For such a purposes, the supertype of data views can be accessed with the `getGenericDataView()` method.
 
 [CAUTION]
-Calling certain methods in data views can be an expensive operation. Especially with lazy data binding, calling for example `grid.getGenericDataView().getItems()` will cause the whole data set to be loaded from the backend.
+Calling certain methods in data views can be an expensive operation.
+ Especially with lazy data binding, calling for example `grid.getGenericDataView().getItems()` will cause the whole data set to be loaded from the back end.
 
 For example, you can export persons listed in a `Grid` to a CSV file as follows:
 
@@ -392,7 +419,7 @@ Editing the item elsewhere does not automatically update the UI in a listing com
 An easy way to refresh the component's content is to call `setItems()` again with the fresh data.
 Alternatively, you can use more fine-grained APIs in the `DataView` to update just a portion of the dataset.
 
-For example, you can modify the field(s) of a displayed item and notify
+For example, you can modify one or more fields of a displayed item and notify
 `Grid` about the updates to the item through the `DataView::refreshItem`. This
 would modify only one particular item, not the whole data set.
 
@@ -546,7 +573,7 @@ public static void listItems(Grid<Person> grid, PersonRepository repository) {
 ----
 
 You can create a separate data provider class.
-The following example uses only the `FetchCallBack`, but you can also implement a full data provider by, for example, extending `AbstractBackEndDataProvider`.
+The following example uses only the `FetchCallBack`, but you can also implement a full data provider by, for example, extending `Abstractback endDataProvider`.
 
 [source, java]
 ----
