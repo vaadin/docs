@@ -20,22 +20,20 @@ export class Example extends LitElement {
     return html`
       <vaadin-form-layout .responsiveSteps=${layoutSteps}>
         <vaadin-form-item>
-          <label slot="label">Revenue</label>
+          <label slot="label">Left</label>
+          <vaadin-text-field value="value"></vaadin-text-field>
+        </vaadin-form-item>
+
+        <vaadin-form-item>
+          <label slot="label">Center</label>
+          <vaadin-text-field value="value" theme="align-center"></vaadin-text-field>
+        </vaadin-form-item>
+
+        <vaadin-form-item>
+          <label slot="label">Right</label>
           <!-- tag::snippet[] -->
-          <vaadin-text-field value="8800" theme="align-right"></vaadin-text-field>
+          <vaadin-text-field value="value" theme="align-right"></vaadin-text-field>
           <!-- end::snippet[] -->
-        </vaadin-form-item>
-
-        <vaadin-form-item>
-          <label slot="label">
-            <div>Deduction</div>
-          </label>
-          <vaadin-text-field value="500" theme="align-right"></vaadin-text-field>
-        </vaadin-form-item>
-
-        <vaadin-form-item>
-          <label slot="label">Other</label>
-          <vaadin-text-field value="1000" theme="align-right"></vaadin-text-field>
         </vaadin-form-item>
       </vaadin-form-layout>
     `;
