@@ -24,18 +24,16 @@ export class Example extends LitElement {
     this.select?.render();
   }
 
-  private boundSelectRenderer = this.selectRenderer.bind(this);
-
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-select label="Choose doctor" .renderer=${this.boundSelectRenderer}></vaadin-select>
+      <vaadin-select label="Choose doctor" .renderer=${this.renderer}></vaadin-select>
       <!-- end::snippet[] -->
     `;
   }
 
   // tag::renderer[]
-  selectRenderer(root: HTMLElement) {
+  private renderer = (root: HTMLElement) => {
     render(
       html`
         <vaadin-list-box>
@@ -70,6 +68,6 @@ export class Example extends LitElement {
       `,
       root
     );
-  }
+  };
   // end::renderer[]
 }
