@@ -1,6 +1,4 @@
 import { css, customElement, html, LitElement, property } from 'lit-element';
-
-// @ts-ignore: 'Router' is declared but its value is never used
 import { Router } from '@vaadin/router';
 
 import '@vaadin/vaadin-app-layout/theme/lumo/vaadin-app-layout';

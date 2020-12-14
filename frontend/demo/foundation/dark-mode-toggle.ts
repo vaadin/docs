@@ -11,7 +11,7 @@ export class DarkModeToggle extends HTMLElement {
 
   constructor() {
     super();
-    let css = cssFromModule(this.styleModule);
+    const css = cssFromModule(this.styleModule);
     const style = document.createElement('style');
     style.innerHTML = this.parseCss(css);
     document.head.appendChild(style);
