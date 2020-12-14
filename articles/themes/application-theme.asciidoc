@@ -118,15 +118,60 @@ See <<theme-variants#global-variants>>.
 NOTE: Any changes to theme folder contents (add/remove files, file modifications) are automatically picked up by webpack.
 If a running app has live reload available, you can wait for it to reload the changes, otherwise, you can manually refresh the browser.
 
-== Application Theme as a Dependency
+== Creating a Reusable Application Theme
 
-=== Create a Theme Dependency
+Application theme can be packaged and reused in multiple applications. A reusable theme is a jar file containing only the
+theme files and an optional `dependency.java` file with `NpmPackage` declarations for npm packages required by the theme.
 
-- Create a separate project with the theme folder inside `src/main/resources/META-INF/resources/themes/`
-- Put the theme assets into the theme folder
-- Build the project into a JAR file
+=== Creating the theme jar
 
-=== Apply Theme to Application Project
+1. Create a new maven project with
+`mvn archetype:generate -DgroupId=com.example -DartifactId=reusable -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.4 -DinteractiveMode=false`
 
-- Add the theme JAR as a dependency in a Vaadin app project
-- Apply the theme with the `@Theme` annotation
+2. Remove `src/test` as well as `App.java` from `src/main/java/`.
+
+3. Update the pom.xml
+- add the vaadin version property
++
+```
+<vaadin.version>19.0.0</vaadin.version>
+```
+- add dependency management:
++
+[source, pom]
+----
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-bom</artifactId>
+      <version>${vaadin.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+----
+- update dependencies to contain only the dependency
++
+[source, pom]
+----
+<dependency>
+  <groupId>com.vaadin</groupId>
+  <artifactId>vaadin</artifactId>
+  <scope>provided</scope>
+</dependency>
+----
+
+4. Create the folders `src/main/resources/META-INF/resources/themes/` and the reusable theme folder
+
+5. Add the theme assets to the theme folder.
+
+6. If the theme uses npm assets, add `Dependencies.java` with `@NpmPackage` annotations.
+
+7. Execute `mvn install`to create the theme jar.
+
+=== Using the Theme in Application Projects
+
+1. Add the theme JAR as a dependency in a Vaadin app project
+2. Apply the theme with the `@Theme` annotation
