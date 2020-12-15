@@ -15,7 +15,7 @@ export class Example extends LitElement {
       <vaadin-combo-box
         allow-custom-value
         @custom-value-set="${(e: CustomEvent) => (this.items = [...this.items, e.detail])}"
-        label="State"
+        label="Browser"
         helper-text="Select or type a browser"
         .items="${this.items}"
       ></vaadin-combo-box>
