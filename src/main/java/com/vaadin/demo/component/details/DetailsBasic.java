@@ -20,7 +20,7 @@ public class DetailsBasic extends Div {
     content.setSpacing(false);
     content.setPadding(false);
 
-    Details details = new Details("Contact Information", content);
+    Details details = new Details("Contact information", content);
     details.setOpened(true);
 
     add(details);

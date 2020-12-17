@@ -38,15 +38,17 @@ export class Example extends LitElement {
           slot="summary"
           style="justify-content: space-between; width: 100%;"
         >
-          <span>Contact Information</span>
+          <span>Contact information</span>
 
-          <div style="color: var(--lumo-error-text-color)">
+          <vaadin-horizontal-layout
+            style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
+          >
             <iron-icon
               icon="vaadin:exclamation-circle"
               style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s);"
             ></iron-icon>
             <span>2 errors</span>
-          </div>
+          </vaadin-horizontal-layout>
         </vaadin-horizontal-layout>
 
         <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">

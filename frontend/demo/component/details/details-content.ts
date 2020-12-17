@@ -23,7 +23,7 @@ export class Example extends LitElement {
         <vaadin-vertical-layout>
           <a href="#">Dashboard</a>
           <a href="#">Reports</a>
-          <a href="#">Data Sources</a>
+          <a href="#">Data sources</a>
         </vaadin-vertical-layout>
       </vaadin-details>
 

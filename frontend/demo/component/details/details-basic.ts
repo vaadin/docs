@@ -10,7 +10,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-details opened>
-        <div slot="summary">Contact Information</div>
+        <div slot="summary">Contact information</div>
 
         <vaadin-vertical-layout>
           <span>Sophia Williams</span>

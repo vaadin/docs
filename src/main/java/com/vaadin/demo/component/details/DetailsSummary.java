@@ -28,13 +28,15 @@ public class DetailsSummary extends Div {
     icon.getStyle().set(ElementConstants.STYLE_WIDTH, "var(--lumo-icon-size-s)");
     icon.getStyle().set(ElementConstants.STYLE_HEIGHT, "var(--lumo-icon-size-s)");
     
-    Div errorBadge = new Div(
+    HorizontalLayout errorBadge = new HorizontalLayout(
       icon,
       new Span(" 2 errors")
     );
+    errorBadge.setSpacing(false);
     errorBadge.getStyle().set(ElementConstants.STYLE_COLOR, "var(--lumo-error-text-color)");
+    errorBadge.getStyle().set("margin-left", "var(--lumo-space-s)");
 
-    summary.add(new Text("Contact Information"), errorBadge);
+    summary.add(new Text("Contact information"), errorBadge);
 
     FormLayout content = new FormLayout();
     content.setResponsiveSteps(

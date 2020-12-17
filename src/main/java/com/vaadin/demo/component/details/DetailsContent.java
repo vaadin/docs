@@ -17,7 +17,7 @@ public class DetailsContent extends Div {
     Details analyticsDetails = createDetails("Analytics",
       createStyledAnchor("#", "Dashboard"),
       createStyledAnchor("#", "Reports"),
-      createStyledAnchor("#", "Data Sources")
+      createStyledAnchor("#", "Data sources")
     );
 
     Details customersDetails = createDetails("Customers",
@@ -38,7 +38,7 @@ public class DetailsContent extends Div {
   private Details createDetails(String summary, Anchor ...anchors) {
     Details details = new Details(summary, createContent(anchors));
     details.setOpened(true);
-    
+
     return details;
   }
 
