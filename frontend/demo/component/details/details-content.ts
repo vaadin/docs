@@ -19,21 +19,26 @@ export class Example extends LitElement {
     return html`
       <vaadin-details opened>
         <div slot="summary">Analytics</div>
+
         <vaadin-vertical-layout>
           <a href="#">Dashboard</a>
           <a href="#">Reports</a>
           <a href="#">Data Sources</a>
         </vaadin-vertical-layout>
       </vaadin-details>
+
       <vaadin-details opened>
         <div slot="summary">Customers</div>
+
         <vaadin-vertical-layout>
           <a href="#">Accounts</a>
           <a href="#">Contacts</a>
         </vaadin-vertical-layout>
       </vaadin-details>
+
       <vaadin-details opened>
         <div slot="summary">Finances</div>
+
         <vaadin-vertical-layout>
           <a href="#">Invoices</a>
           <a href="#">Transactions</a>

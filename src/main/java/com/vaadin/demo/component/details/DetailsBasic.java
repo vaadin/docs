@@ -12,16 +12,15 @@ public class DetailsBasic extends Div {
 
   public DetailsBasic() {
     // tag::snippet[]
-    VerticalLayout content = new VerticalLayout(
-      new Span("Sophia Williams"),
-      new Span("sophia.williams@company.com"),
-      new Span("(501) 555-9128")
-    );
+    Span name = new Span("Sophia Williams");
+    Span email = new Span("sophia.williams@company.com");
+    Span phone = new Span("(501) 555-9128");
+    
+    VerticalLayout content = new VerticalLayout(name, email, phone);
     content.setSpacing(false);
     content.setPadding(false);
 
-    Details details = new Details("Contact Information",
-        content);
+    Details details = new Details("Contact Information", content);
     details.setOpened(true);
 
     add(details);

@@ -39,6 +39,7 @@ export class Example extends LitElement {
           style="justify-content: space-between; width: 100%;"
         >
           <span>Contact Information</span>
+
           <div style="color: var(--lumo-error-text-color)">
             <iron-icon
               icon="vaadin:exclamation-circle"
@@ -47,14 +48,18 @@ export class Example extends LitElement {
             <span>2 errors</span>
           </div>
         </vaadin-horizontal-layout>
+
         <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
           <vaadin-text-field
             label="Address"
             value="4027 Amber Lake Canyon"
             colspan="2"
           ></vaadin-text-field>
+
           <vaadin-text-field label="ZIP code" required></vaadin-text-field>
+
           <vaadin-text-field label="City" required></vaadin-text-field>
+
           <vaadin-combo-box
             label="Country"
             item-label-path="name"

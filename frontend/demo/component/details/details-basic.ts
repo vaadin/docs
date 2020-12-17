@@ -11,6 +11,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-details opened>
         <div slot="summary">Contact Information</div>
+
         <vaadin-vertical-layout>
           <span>Sophia Williams</span>
           <span>sophia.williams@company.com</span>

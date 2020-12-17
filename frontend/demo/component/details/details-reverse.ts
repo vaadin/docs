@@ -10,6 +10,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-details opened theme="reverse">
         <div slot="summary">Members (8)</div>
+
         <ul>
           <li>Blake Martin</li>
           <li>Caroline Clark</li>
