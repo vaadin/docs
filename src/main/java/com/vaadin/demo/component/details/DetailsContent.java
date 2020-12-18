@@ -53,7 +53,7 @@ public class DetailsContent extends Div {
 
   private Anchor createStyledAnchor(String href, String text) {
     Anchor anchor = new Anchor(href, text);
-    anchor.getStyle().set(ElementConstants.STYLE_COLOR, "var(--lumo-primary-color)");
+    anchor.getStyle().set(ElementConstants.STYLE_COLOR, "var(--lumo-primary-text-color)");
     anchor.getStyle().set("text-decoration", "none");
 
     return anchor;
