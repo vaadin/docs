@@ -11,7 +11,7 @@ export class Example extends LitElement {
     return css`
       a {
         text-decoration: none;
-        color: var(--lumo-primary-color);
+        color: var(--lumo-primary-text-color);
       }
     `;
   }
