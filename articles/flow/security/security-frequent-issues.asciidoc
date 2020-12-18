@@ -1,0 +1,68 @@
+---
+title: Frequently Reported Issues
+order: 100
+layout: page
+---
+
+
+= Frequently Reported Issues (False Positives)
+
+From time to time, Vaadin users perform security tests on the framework and report issues they find.
+Most of the time the issues are false positives.
+In the following is a list of commonly reported false positives and why they are false.
+
+== Content-Security-Policy (CSP) set to unsafe values
+
+The settings `script-src 'unsafe-inline' 'unsafe-eval'` and `style-src 'unsafe-inline'` are required during Vaadin application start, i.e. bootstrap process. The bootstrap process that starts the application loads the widgetset, which is the client side engine part of the application (precompiled javascript logic for e.g. the communication protocol, DOM control, Buttons, Layouts, etc; not application code). The widgetset is a static resource. After being loaded, the client side engine needs to be started using `JavaScript.eval()`.
+
+As such, these settings are architectural limitations in Vaadin so that the framework can start its client side engine in the browser.
+
+Reported as: Missing or insecure “Content-Security-Policy” header
+
+== v-curdate and v-wn reported as CSRF tokens
+
+These values are not used as CSRF tokens, and they are not processed in a way that would let an attacker compromise the application state.
+
+Vaadin uses its own CSRF scheme, see above.
+
+Cross-Site Request Forgery (CSRF) when fetching static resources
+
+Many tools report a CSRF vulnerability when Vaadin fetches static resources. These requests can not change app state. Here is a list of resources that are safe to fetch without a CSRF token:
+
+- Widgetset files (such as `AppWidgetset.nocache.js`)
+- `vaadinBootstrap.js`
+- `vaadin-bundle-(hash).cache.js`
+- `vaadin-flow-bundle-(hash).cache.html`
+- `client-(hash).cache.js`
+- `frontend-es[56]/bower_components/webcomponentsjs/*`
+- `VAADIN/build/webcomponentsjs/*`
+
+== Authentication bypass when fetching static resources
+
+As with above, some tools mis-represent getting static resources, especially client engine javascript files (see listing above). These files should not be behind authentication, as they are necessary for the app to start even before the user has authenticated.
+
+Reported as: Authentication Bypass Using HTTP Verb Tampering
+
+== Temporary File Download
+
+Some tools mark downloading the vaadinBootstrap.js file as an issue; this file is a required part of starting the application, and is a static resource.
+
+== Oracle Log File Information Disclosure
+
+Some tools that check for this do not check the content of the response, only the response status. Vaadin does not send server log files to the client, even though the response status is set to 200.
+
+== Content type incorrectly stated
+
+This happens when Vaadin sends user events to the server and receives JSON data back. The response content type is text/plain, even though the response is JavaScript. This is done because some older Portlet vendors do not treat javascript responses correctly, hence the client side would receive incoherent instructions. The data returned from the server is never treated as a script on the client, so there is no security risk here.
+
+== Open redirection - DOM based
+
+This issue is reported because `vaadinBootstrap.js` indeed opens a new HTTP request. This is done to fetch the initial application state (on first request to an app URL, Vaadin replies with the bootstrap file; that in turn loads the theme, widgetset, and app state).
+
+The way this request is done can not be used by an attacker to modify the application state, hence this is a false positive.
+
+== Enabling X-Frame-Options
+
+The X-Frame-Options are a way for web pages or apps to tell the browser that they should not be run inside frames (inside another page). This is done to try to ensure that these sites are not wrapped in malicious pages where attackers can intercept user actions.
+
+Vaadin does not automatically set the `X-Frame-Options` HTTP header, because many times apps should run inside frames. Developers can set this header either in their server options or by using the Java Servlet API (using e.g. the Vaadin BootstrapListener or creating a Servlet Filter).
