@@ -1,0 +1,131 @@
+---
+title: Appendix: Image Fields in Client-Side Forms
+order: 110
+layout: page
+---
+
+ifdef::env-github[:outfilesuffix: .asciidoc]
+
+== Submitting Images in Client-Side Forms
+
+A common requirement is a form field that allows the user to upload an image.
+For instance, an application may let users customize their avatars. This
+tutorial shows how this can be implemented for client-side forms using the
+`vaadin-upload` component for local file selection (or drag and drop), but
+postponing the actual server upload until the form is submitted.
+
+The tutorial app provides editing of a contact card. It  assumes a server-side
+bean where the image is stored as a Base64-encoded string in the `avatarBase64`
+field:
+
+.Contact.java
+[source, java]
+----
+/**
+ * Contact card with base64-encoded image
+ */
+public class Contact {
+    // ...
+
+    public String getAvatarBase64() {
+        // ...
+    }
+
+    public void setAvatarBase64(String avatarBase64) {
+        // ...
+    }
+}
+----
+
+It also assumes that the server exposes an endpoint for saving updated `Contact`
+instances:
+
+.ContactEndpoint.java
+[source, java]
+----
+@Endpoint
+public class ServiceEndpoint {
+    // ...
+
+  public void saveContact(Contact contact) {
+        // ...
+  }
+}
+----
+
+
+We can then create a client-side form binding the `avatarBase64` instance to a
+`vaadin-upload` component as follows:
+
+.contact-form.ts
+[source, typescript]
+----
+import { customElement, html, LitElement, property } from 'lit-element';
+
+import '@vaadin/vaadin-text-field';
+import '@vaadin/vaadin-upload';
+import '@vaadin/vaadin-button';
+
+import Contact from '../../generated/com/example/Contact';
+import ContactModel from '../../generated/com/example/ContactModel';
+import { saveContact } from '../../generated/ServiceEndpoint';
+
+import { Binder } from '@vaadin/form';
+
+//@ts-ignore
+import { readAsDataURL } from "promise-file-reader";
+
+@customElement('contact-form')
+export class ContactForm extends LitElement {
+
+  private binder = new Binder(this, ContactModel);
+
+  @property({ type: Object })
+  set contact(value: Contact){
+    this.binder.read(value);
+  }
+  render() {
+    return html`
+      <img src="${this.binder.model.avatarBase64}" alt="contact's avatar"/>
+
+      <vaadin-upload capture="camera" accept="image/*" max-files="1"
+        @upload-before=${async (e: CustomEvent) => {
+          const file = e.detail.file;
+          e.preventDefault();
+          let base64Image = await readAsDataURL(file);
+          this.binder.for(this.binder.model.avatarBase64).value = base64Image;
+        }}
+      ></vaadin-upload>
+
+      <vaadin-button @click=${this.save}">Save</vaadin-button>
+    `;
+  }
+
+  async save() {
+      await this.binder.submitTo(saveContact);
+  }
+}
+----
+
+In the above code, the custom `upload-before` listener prevents `vaadin-upload`
+from uploading the received file to the server, instead reading it into a
+Base64-encoded string and updating form field `avatarBase64` via the binder.
+The small https://www.npmjs.com/package/promise-file-reader[`promise-file-reader`]
+library wrapping  `FileReader` inside a promise is used here in order to handle
+the result synchronously.
+
+Only when the form changes get submitted to the `saveContact` endpoint
+(the statement `this.binder.submitTo(saveContact)` in the `save` method), will
+the image string be sent to the server. The server-side endpoint implementation
+can then choose to recode the image for more efficiently storage if necessary.
+
+Vaadin Fusion supports offline for submission by caching the for contents and
+deferring the upload until the application is back online. As this feature
+works with any form field type, it also supports offline image upload. See
+<<../pwa/tutorial-offline-form-submission#,Offline Form Submission>> for more
+information.
+
+The advantage of using the string type is simplicity; you can use the built-in
+serialization mechanism of Fusion's form binder and endpoints. Please note that
+this approach is not suitable for very large files (where a streamed upload may
+be more appropriate).
