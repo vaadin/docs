@@ -12,7 +12,7 @@ public class TabsNavigationDesktopHorizontal extends AppLayout {
 
   public TabsNavigationDesktopHorizontal() {
     // tag::snippet[]
-    Tab dashboards = new Tab(new Anchor("","Dashboards"));
+    Tab dashboards = new Tab(new Anchor("","Dashboard"));
     Tab orders = new Tab(new Anchor("", "Orders"));
     Tab customers = new Tab(new Anchor("", "Customers"));
     Tab products = new Tab(new Anchor("", "Products"));

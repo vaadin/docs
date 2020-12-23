@@ -36,7 +36,7 @@ export class Example extends LitElement {
         <vaadin-tabs slot="navbar" style="max-width: 100%;">
           <vaadin-tab>
             <a tabindex="-1" target="_self">
-              Dashboards
+              Dashboard
             </a>
           </vaadin-tab>
           <vaadin-tab>

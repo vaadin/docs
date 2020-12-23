@@ -18,7 +18,7 @@ public class TabsNavigationMobile extends AppLayout {
 
   public TabsNavigationMobile() {
     // tag::snippet[]
-    Tab dashboards = new Tab(new Icon(VaadinIcon.DASHBOARD), new Span("Dashboards"));
+    Tab dashboards = new Tab(new Icon(VaadinIcon.DASHBOARD), new Span("Dashboard"));
     dashboards.addThemeVariants(TabVariant.LUMO_ICON_ON_TOP);
 
     Tab orders = new Tab(new Icon(VaadinIcon.RECORDS), new Span("Orders"));
