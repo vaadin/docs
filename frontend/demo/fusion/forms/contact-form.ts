@@ -1,6 +1,5 @@
 import { customElement, html, LitElement, property } from 'lit-element';
 
-import '@vaadin/vaadin-text-field';
 import '@vaadin/vaadin-upload';
 import '@vaadin/vaadin-button';
 
@@ -10,7 +9,6 @@ import { saveContact } from '../../../generated/ContactEndpoint';
 
 import { Binder } from '@vaadin/form';
 
-//@ts-ignore
 import { readAsDataURL } from 'promise-file-reader';
 
 @customElement('contact-form')
@@ -36,6 +34,8 @@ export class ContactForm extends LitElement {
           this.binder.for(this.binder.model.avatarBase64).value = base64Image;
         }}
       ></vaadin-upload>
+
+      <!-- other form fields -->
 
       <vaadin-button @click="${this.save}">Save</vaadin-button>
     `;
