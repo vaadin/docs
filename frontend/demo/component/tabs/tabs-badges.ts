@@ -15,7 +15,7 @@ export class Example extends LitElement {
       ),
       css`
         span[theme~='badge'] {
-          margin-left: var(--lumo-space-xs);
+          margin-inline-start: var(--lumo-space-xs);
         }
       `
     ];
@@ -25,23 +25,20 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <!--
-        NOTE
-        It is required to import lumo-badge style sheets to the project
-        so those will be applied to the spans with "badge" theme.
-        Please take a look onto lumo/lumo-overview.
+        NOTE: You need import the 'lumo-badge' style sheets to use theme="badge"
       -->
       <vaadin-tabs>
         <vaadin-tab>
           Open
-          <span theme="badge">24</span>
+          <span theme="badge small">24</span>
         </vaadin-tab>
         <vaadin-tab>
           Completed
-          <span theme="badge">439</span>
+          <span theme="badge small">439</span>
         </vaadin-tab>
         <vaadin-tab>
           Cancelled
-          <span theme="badge">5</span>
+          <span theme="badge small">5</span>
         </vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->
