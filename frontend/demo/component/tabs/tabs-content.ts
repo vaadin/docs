@@ -6,10 +6,10 @@ import '@vaadin/vaadin-tabs/vaadin-tabs';
 @customElement('tabs-content')
 export class Example extends LitElement {
   @internalProperty()
-  private content: String = '';
+  private content = '';
 
   @internalProperty()
-  private pages: Array<String> = ['Dashboard', 'Payment', 'Shipping'];
+  private pages = ['Dashboard', 'Payment', 'Shipping'];
 
   static get styles() {
     return css`

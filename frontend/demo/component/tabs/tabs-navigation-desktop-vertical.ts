@@ -8,7 +8,7 @@ import '@vaadin/vaadin-tabs/vaadin-tabs';
 @customElement('tabs-navigation-desktop-vertical')
 export class Example extends LitElement {
   @internalProperty()
-  private opened: Boolean = false;
+  private opened = false;
 
   firstUpdated() {
     this.opened = true;
