@@ -25,10 +25,9 @@ public class DetailsFilled extends Div {
       new ListItem("Zoe Wilson")
     );
 
-    Details details = new Details("Members (8)",
-        content);
+    Details details = new Details("Members (8)", content);
     details.setOpened(true);
-    details.setThemeName(DetailsVariant.FILLED.getVariantName());
+    details.addThemeVariants(DetailsVariant.FILLED);
 
     add(details);
     // end::snippet[]

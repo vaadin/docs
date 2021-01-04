@@ -25,10 +25,9 @@ public class DetailsSmall extends Div {
       new ListItem("Zoe Wilson")
     );
 
-    Details details = new Details("Members (8)",
-        content);
+    Details details = new Details("Members (8)", content);
     details.setOpened(true);
-    details.setThemeName(DetailsVariant.SMALL.getVariantName());
+    details.addThemeVariants(DetailsVariant.SMALL);
 
     add(details);
     // end::snippet[]

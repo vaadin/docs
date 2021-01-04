@@ -25,10 +25,9 @@ public class DetailsReverse extends Div {
       new ListItem("Zoe Wilson")
     );
 
-    Details details = new Details("Members (8)",
-        content);
+    Details details = new Details("Members (8)", content);
     details.setOpened(true);
-    details.setThemeName(DetailsVariant.REVERSE.getVariantName());
+    details.addThemeVariants(DetailsVariant.REVERSE);
 
     add(details);
     // end::snippet[]
