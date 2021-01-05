@@ -8,7 +8,7 @@ import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 
-@customElement('select-separators')
+@customElement('select-dividers')
 export class Example extends LitElement {
   render() {
     return html`
