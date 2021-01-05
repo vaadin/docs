@@ -46,7 +46,7 @@ export class Example extends LitElement {
                   We recommend placing CSS in a separate style sheet and
                   encapsulating the styling in a new component.
                 -->
-                <div style="display: flex;">
+                <div style="display: flex; align-items: center;">
                   <img
                     src="${person.pictureUrl}"
                     alt="Portrait of ${person.firstName} ${person.lastName}"
