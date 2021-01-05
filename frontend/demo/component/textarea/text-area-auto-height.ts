@@ -4,7 +4,7 @@ import { html, LitElement, customElement, css } from 'lit-element';
 import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 
-@customElement('text-area-basic')
+@customElement('text-area-auto-height')
 export class Example extends LitElement {
   static get styles() {
     return css`
