@@ -3,7 +3,6 @@
  * This file can be used for manual configuration will not be modified if the flowDefaults constant exists.
  */
 const fs = require('fs');
-const path = require('path');
 const merge = require('webpack-merge');
 const flowDefaults = require('./webpack.generated.js');
 
@@ -14,17 +13,10 @@ const fileNameOfTheFlowGeneratedMainEntryPoint = require('path').resolve(
 const filteredFileNameOfTheFlowGeneratedMainEntryPoint =
   fileNameOfTheFlowGeneratedMainEntryPoint + '-filtered.js';
 
-let nothemePath = path.resolve(__dirname, 'frontend', 'notheme', 'theme-generated.js');
-
 // @ts-ignore
 module.exports = merge(flowDefaults, {
   entry: {
     export: filteredFileNameOfTheFlowGeneratedMainEntryPoint
-  },
-  resolve: {
-    alias: {
-      'themes/theme-generated.js': nothemePath
-    }
   },
   plugins: [
     function(compiler) {

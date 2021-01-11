@@ -4,10 +4,6 @@ import '@vaadin/flow-frontend/flow-component-renderer.js';
 import Appointment from '../generated/com/vaadin/demo/domain/Appointment';
 import AppointmentModel from '../generated/com/vaadin/demo/domain/AppointmentModel';
 import client from '../generated/connect-client.default';
-import { applyTheme } from 'themes/theme-generated.js';
-
-applyTheme(document);
-
 // @ts-ignore
 client.prefix = __VAADIN_CONNECT_PREFIX__;
 
