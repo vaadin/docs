@@ -45,18 +45,19 @@ const hasReusableThemes = fs
 
 const themesPath = hasReusableThemes ? reusableThemesPath : projectThemePath;
 
-module.exports = {
-  plugins: [new ApplicationThemePlugin(themeOptions)],
-  aliases: {
-    themes: themesPath
-  },
-  cssRules: {
-    regex: themeCssRegex,
-    array: [
-      {
-        test: themeCssRegex,
-        use: ['raw-loader', 'extract-loader', 'css-loader']
-      }
-    ]
-  }
+module.exports = function(config) {
+  config.resolve.alias.themes = themesPath;
+  config.plugins.push(new ApplicationThemePlugin(themeOptions));
+
+  // If there are pre-existing rules that affect CSS files,
+  // make them exclude files that match the cssRules.regex pattern
+  config.module.rules
+    .filter(rule => rule.oneOf && rule.oneOf.some(r => r.test.test('style.css')))
+    .forEach(rule => (rule.exclude = themeCssRegex));
+
+  // Add any custom rules from the imported module
+  config.module.rules.push({
+    test: themeCssRegex,
+    use: ['raw-loader', 'extract-loader', 'css-loader']
+  });
 };
