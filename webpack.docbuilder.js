@@ -1,4 +1,3 @@
-
 const { ApplicationThemePlugin } = require('@vaadin/application-theme-plugin');
 
 const path = require('path');
@@ -35,13 +34,16 @@ const themeOptions = {
   projectStaticAssetsOutputFolder
 };
 
-// this matches /themes/my-theme/components/any-component.css
-const themeComponentsCssRegex = /(\\|\/)themes\1[\s\S]*?\/components\/.*\.css/;
+// this matches /themes/my-theme/**/styles.css
+const themeCssRegex = /(\\|\/)flow-frontend(\\|\/)themes\1[\s\S]*?\.css/;
 
-let themesPath = path.resolve(__dirname, 'target/flow-frontend/themes');
-if (!fs.existsSync(themesPath)) {
-  themesPath = path.resolve(__dirname, 'frontend/notheme');
-}
+const projectThemePath = path.resolve(__dirname, 'frontend/themes');
+const reusableThemesPath = path.resolve(__dirname, 'target/flow-frontend/themes');
+const hasReusableThemes = fs
+  .readdirSync(reusableThemesPath)
+  .some(file => !file.includes('theme-generated.js'));
+
+const themesPath = hasReusableThemes ? reusableThemesPath : projectThemePath;
 
 module.exports = {
   plugins: [new ApplicationThemePlugin(themeOptions)],
@@ -49,10 +51,10 @@ module.exports = {
     themes: themesPath
   },
   cssRules: {
-    regex: themeComponentsCssRegex,
+    regex: themeCssRegex,
     array: [
       {
-        test: themeComponentsCssRegex,
+        test: themeCssRegex,
         use: ['raw-loader', 'extract-loader', 'css-loader']
       }
     ]

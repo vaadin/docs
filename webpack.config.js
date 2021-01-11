@@ -14,17 +14,10 @@ const fileNameOfTheFlowGeneratedMainEntryPoint = require('path').resolve(
 const filteredFileNameOfTheFlowGeneratedMainEntryPoint =
   fileNameOfTheFlowGeneratedMainEntryPoint + '-filtered.js';
 
-let nothemePath = path.resolve(__dirname, 'frontend', 'notheme', 'theme-generated.js');
-
 // @ts-ignore
 module.exports = merge(flowDefaults, {
   entry: {
     export: filteredFileNameOfTheFlowGeneratedMainEntryPoint
-  },
-  resolve: {
-    alias: {
-      'themes/theme-generated.js': nothemePath
-    }
   },
   plugins: [
     function(compiler) {
