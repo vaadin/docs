@@ -2,7 +2,8 @@ package com.vaadin.demo.component.radiobutton;
 
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
@@ -29,24 +30,26 @@ public class RadioButtonCustomOption extends VerticalLayout {
     radioGroup.setLabel("Payment method");
 
     List<Card> cards = new ArrayList<>(DataService.getCards());
-    cards.add(null);
+    Card other = new Card();
+    other.setId(-1);
+    cards.add(other);
     radioGroup.setItems(cards);
     radioGroup.setValue(cards.get(0));
 
     radioGroup.setRenderer(new ComponentRenderer<>(card -> {
-      if (card != null) {
+      if (other.equals(card)) {
+        return new Text("Other");
+      } else {
         Image logo = new Image(card.getPictureUrl(), card.getName());
         logo.setHeight("1em");
-        Text number = new Text(card.getAccountNumber());
-        return new FlexLayout(logo, number);
-      } else {
-        return new Text("Other");
+        Span number = new Span(new Text(card.getAccountNumber()));
+        return new HorizontalLayout(logo, number);
       }
     }));
 
     TextField textField = new TextField("Card number");
     textField.setVisible(false);
-    radioGroup.addValueChangeListener(e -> textField.setVisible(e.getValue() == null));
+    radioGroup.addValueChangeListener(e -> textField.setVisible(other.equals(e.getValue())));
 
     add(radioGroup, textField);
     // end::snippet[]

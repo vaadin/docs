@@ -14,7 +14,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-combo-box
         allow-custom-value
-        label="State"
+        label="Browser"
         helper-text="Select or type a browser"
         .items="${this.items}"
       ></vaadin-combo-box>

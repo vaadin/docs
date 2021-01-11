@@ -6,6 +6,7 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
@@ -23,6 +24,7 @@ public class SelectPresentation extends Div {
     select.setLabel("Choose doctor");
     select.setRenderer(new ComponentRenderer<>(person -> {
         FlexLayout wrapper = new FlexLayout();
+        wrapper.setAlignItems(Alignment.CENTER);
 
         // NOTE
         // We are using inline styles here to keep the example simple.

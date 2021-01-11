@@ -13,10 +13,12 @@ export class Example extends LitElement {
   private dateTimePicker?: DateTimePicker;
 
   firstUpdated() {
-    this.dateTimePicker!.i18n = {
-      ...this.dateTimePicker!.i18n,
-      firstDayOfWeek: 1
-    };
+    if (this.dateTimePicker) {
+      this.dateTimePicker.i18n = {
+        ...this.dateTimePicker.i18n,
+        firstDayOfWeek: 1
+      };
+    }
   }
 
   render() {

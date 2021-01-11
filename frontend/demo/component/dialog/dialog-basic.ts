@@ -2,6 +2,7 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';
+import { guard } from 'lit-html/directives/guard';
 
 import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-button/vaadin-button';
@@ -17,24 +18,22 @@ export class Example extends LitElement {
       <vaadin-dialog
         aria-label="simple"
         .opened=${this.dialogOpened}
-        .renderer="${this.dialogRenderer}"
+        .renderer="${guard([], () => (root: HTMLElement) => {
+          render(
+            html`
+              <div>
+                This simple dialog will close by pressing the Esc key, or by a mouse click anywhere
+                outside the dialog area
+              </div>
+            `,
+            root
+          );
+        })}"
         @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
       ></vaadin-dialog>
 
       <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
     `;
-  }
-
-  dialogRenderer(root: HTMLElement) {
-    render(
-      html`
-        <div>
-          This simple dialog will close by pressing the Esc key, or by a mouse click anywhere
-          outside the dialog area
-        </div>
-      `,
-      root
-    );
   }
 }
 // end::snippet[]

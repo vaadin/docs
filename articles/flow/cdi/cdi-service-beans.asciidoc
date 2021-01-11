@@ -1,0 +1,51 @@
+---
+title: Vaadin Service Interfaces as CDI Beans
+order: 5
+layout: page
+---
+
+= Vaadin Service Interfaces as CDI Beans
+
+Some Vaadin service interfaces can be implemented as CDI beans. If you do this, the service interface becomes a managed bean with CDI features, and there is no need to register the implementation in Vaadin.
+
+The https://vaadin.com/directory/component/vaadin-cdi/[Vaadin CDI] add-on references the following interfaces:
+
+* `I18NProvider`.
+* `Instantiator`.
+* `SystemMessagesProvider`.
+* `ErrorHandler`.
+
+To ensure that the beans are recognized, they should be qualified by the `@VaadinServiceEnabled` annotation.
+This is required because this marks the bean which is used as I18N provider by the service.
+If there are any other I18N beans, always the one, which is also used by the service is used.
+
+*Example*: Using the `@VaadinServiceEnabled` annotation to qualify `TestSystemMessagesProvider`.
+
+[source,java]
+----
+@VaadinServiceEnabled
+@VaadinServiceScoped
+public class TestSystemMessagesProvider
+        implements SystemMessagesProvider {
+
+    @Override
+    public SystemMessages getSystemMessages(
+            SystemMessagesInfo systemMessagesInfo) {
+        CustomizedSystemMessages messages =
+                new CustomizedSystemMessages();
+        messages.setInternalErrorMessage(
+                "Sorry, something went wrong :(");
+        return messages;
+    }
+}
+
+@Route
+ public class SampleView extends Div {
+
+     @VaadinServiceEnabled
+     @Inject
+     private TestSystemMessagesProvider messageProvider;
+
+ }
+----
+* The purpose of the `@VaadinServiceScoped` context is to define a context with the lifespan of the Vaadin service. It is not mandatory for this kind of bean, but is recommended because other Vaadin contexts can be problematic. For example there is no guarantee that an active Vaadin session or UI context exists when the add-on looks up any of these beans. It is safe to use standard CDI `@Dependent` and `@ApplicationScoped` contexts.

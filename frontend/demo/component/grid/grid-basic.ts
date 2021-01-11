@@ -34,7 +34,7 @@ export class GridBasic extends LitElement {
     `;
   }
 
-  avatarRenderer(root: HTMLElement, _: HTMLElement, model: GridItemModel) {
+  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
     render(
       html`
         <img
@@ -45,6 +45,6 @@ export class GridBasic extends LitElement {
       `,
       root
     );
-  }
+  };
 }
 // end::snippet[]

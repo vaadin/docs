@@ -5,6 +5,7 @@ import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getCards } from '../../domain/DataService';
 import Card from '../../../generated/com/vaadin/demo/domain/Card';
 
@@ -34,10 +35,10 @@ export class Example extends LitElement {
           ${this.items.map(
             card => html`
               <vaadin-radio-button .value=${String(card.id)}>
-                <div style="display: flex">
+                <vaadin-horizontal-layout theme="spacing">
                   <img src=${card.pictureUrl} alt=${card.name} style="height: 1em;" />
-                  ${card.accountNumber}
-                </div>
+                  <span>${card.accountNumber}</span>
+                </vaadin-horizontal-layout>
               </vaadin-radio-button>
             `
           )}

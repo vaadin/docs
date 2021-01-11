@@ -3,6 +3,7 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getCards } from '../../domain/DataService';
 import Card from '../../../generated/com/vaadin/demo/domain/Card';
 
@@ -27,10 +28,10 @@ export class Example extends LitElement {
           card => html`
             <vaadin-radio-button .value=${String(card.id)}>
               <div>
-                <div style="display: flex">
+                <vaadin-horizontal-layout theme="spacing">
                   <img src=${card.pictureUrl} alt=${card.name} style="height: 1em;" />
-                  ${card.accountNumber}
-                </div>
+                  <span>${card.accountNumber}</span>
+                </vaadin-horizontal-layout>
                 <div>Expiry date:${card.expiryDate}</div>
               </div>
             </vaadin-radio-button>

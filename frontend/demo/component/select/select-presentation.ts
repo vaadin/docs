@@ -24,18 +24,16 @@ export class Example extends LitElement {
     this.select?.render();
   }
 
-  private boundSelectRenderer = this.selectRenderer.bind(this);
-
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-select label="Choose doctor" .renderer=${this.boundSelectRenderer}></vaadin-select>
+      <vaadin-select label="Choose doctor" .renderer=${this.renderer}></vaadin-select>
       <!-- end::snippet[] -->
     `;
   }
 
   // tag::renderer[]
-  selectRenderer(root: HTMLElement) {
+  private renderer = (root: HTMLElement) => {
     render(
       html`
         <vaadin-list-box>
@@ -48,7 +46,7 @@ export class Example extends LitElement {
                   We recommend placing CSS in a separate style sheet and
                   encapsulating the styling in a new component.
                 -->
-                <div style="display: flex;">
+                <div style="display: flex; align-items: center;">
                   <img
                     src="${person.pictureUrl}"
                     alt="Portrait of ${person.firstName} ${person.lastName}"
@@ -70,6 +68,6 @@ export class Example extends LitElement {
       `,
       root
     );
-  }
+  };
   // end::renderer[]
 }

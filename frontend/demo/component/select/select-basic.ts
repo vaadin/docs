@@ -3,6 +3,7 @@ import '@vaadin/flow-frontend/selectConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import { render } from 'lit-html';
+import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
@@ -15,7 +16,7 @@ export class Example extends LitElement {
       <vaadin-select
         value="recent"
         label="Sort by"
-        .renderer=${(root: HTMLElement) =>
+        .renderer=${guard([], () => (root: HTMLElement) =>
           render(
             html`
               <vaadin-list-box>
@@ -27,7 +28,8 @@ export class Example extends LitElement {
               </vaadin-list-box>
             `,
             root
-          )}
+          )
+        )}
       ></vaadin-select>
       <!-- end::snippet[] -->
     `;
