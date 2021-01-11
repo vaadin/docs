@@ -10,9 +10,17 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
 import * as img from '../../../../src/main/resources/images/reindeer.jpg';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('scroller-basic')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->

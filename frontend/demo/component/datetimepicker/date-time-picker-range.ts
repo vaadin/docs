@@ -7,9 +7,17 @@ import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 
 const initialStartValue = '2020-08-25T20:00';
 const initialEndValue = '2020-09-01T20:00';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('date-time-picker-range')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private startDateTime = initialStartValue;
 

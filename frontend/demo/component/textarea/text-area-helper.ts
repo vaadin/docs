@@ -3,9 +3,17 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('text-area-helper-2')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   // tag::snippet[]
   private charLimit = 600;
 

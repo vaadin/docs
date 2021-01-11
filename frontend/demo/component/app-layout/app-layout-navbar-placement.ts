@@ -6,9 +6,17 @@ import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-icons/vaadin-icons';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('app-layout-navbar-placement')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->

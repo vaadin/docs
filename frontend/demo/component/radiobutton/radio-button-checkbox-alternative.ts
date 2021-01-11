@@ -5,9 +5,17 @@ import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('radio-button-checkbox-alternative')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <vaadin-vertical-layout>

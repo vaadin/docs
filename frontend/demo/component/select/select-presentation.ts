@@ -8,9 +8,17 @@ import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('select-presentation')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private people: Person[] = [];
 

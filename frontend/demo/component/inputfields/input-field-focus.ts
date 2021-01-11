@@ -4,9 +4,17 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-password-field';
 import '@vaadin/vaadin-text-field';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('input-field-focus')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   steps = [
     { minWidth: '0', columns: 1 },
     { minWidth: '30em', columns: 2 }

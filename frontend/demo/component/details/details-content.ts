@@ -3,10 +3,18 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-details/vaadin-details';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 @customElement('details-content')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   static get styles() {
     return css`
       a {

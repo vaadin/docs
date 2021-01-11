@@ -7,9 +7,17 @@ import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('select-disabled')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->

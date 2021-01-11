@@ -8,9 +8,17 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getCards } from '../../domain/DataService';
 import Card from '../../../generated/com/vaadin/demo/domain/Card';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('radio-button-custom-option')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private value?: string;
 

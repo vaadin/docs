@@ -3,9 +3,17 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-integer-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('number-field-integer')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <vaadin-horizontal-layout theme="spacing">

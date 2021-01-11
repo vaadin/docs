@@ -7,10 +7,18 @@ import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from '../../domain/DataService';
 import { render, html } from 'lit-html';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 @customElement('grid-basic')
-export class GridBasic extends LitElement {
+export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private items: Person[] = [];
 

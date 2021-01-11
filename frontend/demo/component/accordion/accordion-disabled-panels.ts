@@ -4,10 +4,18 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-accordion/vaadin-accordion';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
+import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 @customElement('accordion-disabled-panels')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <vaadin-accordion>

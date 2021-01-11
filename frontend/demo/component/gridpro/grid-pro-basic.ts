@@ -7,10 +7,18 @@ import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 @customElement('grid-pro-basic')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom application theme to the view.
+    // This is only supported if your app uses a custom theme.
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private items: Person[] = [];
 
