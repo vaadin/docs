@@ -50,12 +50,12 @@ module.exports = function(config) {
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
 
   // If there are pre-existing rules that affect CSS files,
-  // make them exclude files that match the cssRules.regex pattern
+  // make them exclude files that match the themeCssRegex pattern...
   config.module.rules
     .filter(rule => rule.oneOf && rule.oneOf.some(r => r.test.test('style.css')))
     .forEach(rule => (rule.exclude = themeCssRegex));
 
-  // Add any custom rules from the imported module
+  // ...and add a custom rule to handle the CSS files matching the themeCssRegex pattern
   config.module.rules.push({
     test: themeCssRegex,
     use: ['raw-loader', 'extract-loader', 'css-loader']
