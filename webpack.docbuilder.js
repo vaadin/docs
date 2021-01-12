@@ -34,8 +34,8 @@ const themeOptions = {
   projectStaticAssetsOutputFolder
 };
 
-// this matches /themes/my-theme/**/styles.css
-const themeCssRegex = /(\\|\/)flow-frontend(\\|\/)themes\1[\s\S]*?\.css/;
+// this matches css files in the theme
+const themeCssRegex = /(\\|\/).*frontend(\\|\/)themes\1[\s\S]*?\.css/;
 
 const projectThemePath = path.resolve(__dirname, 'frontend/themes');
 const reusableThemesPath = path.resolve(__dirname, 'target/flow-frontend/themes');
