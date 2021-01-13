@@ -2,8 +2,15 @@ import '../../init'; // hidden-full-source-line
 
 import { css, html, internalProperty, LitElement } from 'lit-element';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import { applyTheme } from 'themes/theme-generated.js';
 
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private closing = false;
 

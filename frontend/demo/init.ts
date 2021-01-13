@@ -4,6 +4,13 @@ import '@vaadin/flow-frontend/flow-component-renderer.js';
 import Appointment from '../generated/com/vaadin/demo/domain/Appointment';
 import AppointmentModel from '../generated/com/vaadin/demo/domain/AppointmentModel';
 import client from '../generated/connect-client.default';
+import { applyTheme } from 'themes/theme-generated.js';
+
+// Make sure custom component styles get registered
+const div = document.createElement('div');
+div.attachShadow({ mode: 'open' });
+applyTheme(div.shadowRoot);
+
 // @ts-ignore
 client.prefix = __VAADIN_CONNECT_PREFIX__;
 
