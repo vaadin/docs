@@ -7,8 +7,7 @@ import { applyTheme } from 'themes/theme-generated.js';
 export class Example extends LitElement {
   constructor() {
     super();
-    // Apply custom application theme to the view.
-    // This is only supported if your app uses a custom theme.
+    // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
 
