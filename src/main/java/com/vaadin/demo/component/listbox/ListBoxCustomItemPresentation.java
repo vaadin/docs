@@ -8,7 +8,7 @@ import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 @Route("list-box-custom-item-presentation")
 public class ListBoxCustomItemPresentation extends Div {
 
-    public ListBoxBasic() {
+    public ListBoxCustomItemPresentation() {
         // tag::snippet[]
         ListBox<String> listBox = new ListBox<>();
         listBox.setItems("Show assignee", "Show due date", "Show status");
