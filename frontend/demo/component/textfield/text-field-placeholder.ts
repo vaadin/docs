@@ -4,9 +4,16 @@ import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon/iron-icon';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('text-field-placeholder')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->

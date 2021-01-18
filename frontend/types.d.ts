@@ -7,3 +7,5 @@ declare module '*.jpg' {
   const value: string;
   export = value;
 }
+
+declare module 'themes/theme-generated.js';

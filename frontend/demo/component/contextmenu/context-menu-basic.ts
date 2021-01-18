@@ -3,10 +3,17 @@ import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-li
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 @customElement('context-menu-basic')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private items = [{ text: 'Menu Item 1' }, { text: 'Menu Item 2' }];
 
