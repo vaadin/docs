@@ -14,6 +14,7 @@ import { getCountries } from '../../domain/DataService';
 import { Binder, field } from '@vaadin/form';
 import PersonModel from '../../../generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from '../../../generated/com/vaadin/demo/domain/CardModel';
+import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 
@@ -38,6 +39,12 @@ export class Example extends LitElement {
   async firstUpdated() {
     this.items = await getCountries();
   }
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <vaadin-accordion>

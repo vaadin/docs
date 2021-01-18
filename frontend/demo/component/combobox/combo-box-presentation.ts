@@ -7,9 +7,16 @@ import { getPeople } from '../../domain/DataService';
 import { ComboBoxItemModel } from '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { render } from 'lit-html';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private allItems: Person[] = [];
 

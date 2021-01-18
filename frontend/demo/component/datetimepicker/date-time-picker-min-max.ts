@@ -17,9 +17,16 @@ const initialValue = date.toISOString().slice(0, -1);
 
 date.setDate(date.getDate() + 53);
 const maxValue = date.toISOString().slice(0, -1);
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('date-time-picker-min-max')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->

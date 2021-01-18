@@ -3,9 +3,16 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { render } from 'lit-html';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('notification-error')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private opened = true;
 

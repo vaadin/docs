@@ -4,93 +4,91 @@ order: 170
 layout: page
 ---
 
-== TypeScript Definitions of Components
+= TypeScript Definitions of Components
 
-Vaadin components come with TypeScript definitions helping to use web components in TypeScript views.
+[since:com.vaadin:vaadin@V17]#Vaadin components come with TypeScript definitions# helping to use web components in TypeScript views.
 The type definitions are `d.ts` files generated every time when new release is published to npm.
 
-Support for TypeScript definitions is added in Vaadin 17. In most of cases, it does not require any
-changes to the code. At the same time, using proper types for the web components helps to make the
-client side views more reliable. Depending on the IDE you use, TypeScript definitions can also give
-additional benefits like better code completion and auto import.
+In most of cases, TypeScript support does not require any changes to the code.
+At the same time, using proper types for the web components helps making the client side views more reliable.
+Depending on the IDE you use, TypeScript definitions can also enable better code completion and auto import.
 
 If you are using Visual Studio Code, we recommend to install
 https://marketplace.visualstudio.com/items?itemName=runem.lit-plugin[lit-plugin] which provides
-syntax highlighting and type checking support for LitElement templates. You can also use
+syntax highlighting and type checking support for LitElement templates. 
+You can also use
 https://www.npmjs.com/package/lit-analyzer[lit-analyzer] CLI tool by the same author for type checking.
 
-== Importing type declarations [[importing-type-declarations]]
+== Importing Type Declarations [[importing-type-declarations]]
 
-Every TypeScript definition file exports type declarations, which describe the public API provided
-by the web component. In order to use the type declarations in your client side views, you need to
+Every TypeScript definition file exports type declarations, which describe the public API provided by the web component.
+To use the type declarations in your client side views, you need to
 import them using https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html#type-only-imports-and-exports[type-only import syntax]:
 
-[source, typescript]
+[source, TypeScript]
 ----
 import type { DialogElement } from '@vaadin/vaadin-dialog';
 ----
 
-The type declarations are only used by the TypeScript compiler to statically analyze the code and
-collect information about types. They are removed during `webpack` compilation step and will not end
-up in the resulting JavaScript bundle.
+The type declarations are only used by the TypeScript compiler to statically analyze the code and collect information about types.
+They are removed during `webpack` compilation step and do not end up in the resulting JavaScript bundle.
 
-== Using type declarations [[using-type-declarations]]
+== Using Type Declarations [[using-type-declarations]]
 
-In some cases you might need to get a reference to the web component, and use it to set properties
-or call methods. Below you will find examples of how to improve developer experience in such cases
-by applying proper types.
+In some cases you might need to get a reference to the web component, and use it to set properties or call methods.
+The following examples show how to improve the developer experience in such cases by applying proper types.
 
-=== Query decorator [[query-decorator]]
+=== Query Decorator [[query-decorator]]
 
-The suggested way of storing a reference in LitElement based view is `@query` decorator. When using
-it, you need to provide a correct type for the component you are referring to:
+The suggested way of storing a reference in LitElement based view is `@query` decorator.
+When using it, you need to provide a correct type for the component you are referring to:
 
-[source, typescript]
+[source, TypeScript]
 ----
 @query('#dialog')
 private dialog!: DialogElement;
 ----
 
-Note the `!` sign used in the property declaration. It is a https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#definite-assignment-assertions[definite assignment assertion]
-operator. This way we are telling the TypeScript compiler that `dialog` property is initialized indirectly,
-and therefore it does not need a default value.
+Note the `!` sign used in the property declaration.
+It is a https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#definite-assignment-assertions[definite assignment assertion]
+operator.
+This tells the TypeScript compiler that the `dialog` property is initialized indirectly and does not need a default value.
 
-=== Renderer functions [[renderer-functions]]
+=== Renderer Functions [[renderer-functions]]
 
-Some Vaadin components like Grid and Dialog allow to pass the `<template>` element and then use it
-to stamp the content. This API is not compatible with lit-html, so in LitElement-based views we
-recommend using `renderer` functions instead.
+Some Vaadin components like Grid and Dialog allow to pass the `<template>` element and then use it to stamp the content.
+This API is not compatible with lit-html. Use `renderer` functions in LitElement-based views instead.
 
-Renderer function is a class method that accepts one or several arguments. In order to access them
-without TypeScript warnings, you need to get them properly typed by importing and using
-corresponding type declarations:
+Renderer function is a class method that accepts one or several arguments.
+To access them without TypeScript warnings, you need to get them typed by importing and using the corresponding type declarations:
 
-[source, typescript]
+[source, TypeScript]
 ----
 protected indexRenderer(root: HTMLElement, column: GridColumnElement, model: GridItemModel) {
   render(html`<div>${model.index}</div>`, root);
 }
 ----
 
-Here we use `GridItemModel` type declaration exported by the `@vaadin/vaadin-grid` npm package. It
-is a TypeScript interface describing the properties available on the `model`, including `index`. We
-also use `GridColumnElement` declaration.
+Here we use `GridItemModel` type declaration exported by the `@vaadin/vaadin-grid` npm package.
+It is a TypeScript interface describing the properties available on the `model`, including `index`.
+We also use `GridColumnElement` declaration.
 
 See also the https://vaadin-ts-examples.herokuapp.com/grid-column-renderer[full example] of using
 `renderer` functions on the Grid columns, including some aspects related to making `this` work in
-renderers. There are similar examples for https://vaadin-ts-examples.herokuapp.com/select-renderer[Select],
-https://vaadin-ts-examples.herokuapp.com/dialog-renderer[Dialog], https://vaadin-ts-examples.herokuapp.com/context-menu-renderer[ContextMenu]
+renderers.
+There are similar examples for https://vaadin-ts-examples.herokuapp.com/select-renderer[Select],
+https://vaadin-ts-examples.herokuapp.com/dialog-renderer[Dialog], https://vaadin-ts-examples.herokuapp.com/context-menu-renderer[Context Menu]
 and https://vaadin-ts-examples.herokuapp.com/notification-renderer[Notification] components.
 
-=== Event listeners [[event-listeners]]
+=== Event Listeners [[event-listeners]]
 
-When using event listeners in LitElement-based views, we might want to get the reference to the
-event target and then access its value. One common case for this is handling a `change` event.
+When using event listeners in LitElement-based views, we might want to get the reference to the event target and then access its value.
+One common case for this is handling a `change` event.
 
 While we typically only use one listener per element, the lit-html syntax for binding listeners does
-not let TypeScript know what type of component it is. So we should care about it ourselves:
+not let TypeScript know what type of component it is, so we should care about it ourselves:
 
-[source, typescript]
+[source, TypeScript]
 ----
 render() {
   return html`
@@ -105,19 +103,63 @@ onChange(event: Event) {
 }
 ----
 
-We use `as` syntax, which is a https://www.typescriptlang.org/docs/handbook/basic-types.html#type-assertions[type assertion],
-often called a "type cast". It is a hint for the TypeScript compiler forcing it to use the type that
-we provide. In this case we are confident about the type, but generally type casts should be avoided.
+We use `as` syntax, which is a https://www.typescriptlang.org/docs/handbook/basic-types.html#type-assertions[type assertion], often called a "type cast".
+It is a hint for the TypeScript compiler forcing it to use the type that we provide.
+In this case we are confident about the type, but generally type casts should be avoided.
 
-=== Registering elements [[registering-elements]]
+[role="since:com.vaadin:vaadin@V19"]
+=== Custom Events [[custom-events]]
 
-When creating your own custom elements for using with client side views, you might want to instruct
-TypeScript to use your definitions. This is not strictly required, but sometimes it improves
-developer experience and allows to write less code.
 
-As an example, let's look into using `querySelector` and `querySelectorAll` methods with your own
-custom elements. These methods return `Element`, so the easiest workaround would be probably to use
-a type cast:
+Vaadin components offer the set of type definitions for custom events making it easier to use them in TypeScript.
+In particular, this allows to get proper type for the `detail` property, which has type of `any` by default.
+To use the event types, you need to import them manually:
+
+[source, typescript]
+----
+import type { TextFieldInvalidChanged } from '@vaadin/vaadin-text-field';
+
+render() {
+  return html`
+    <vaadin-text-field @invalid-changed="${this.onInvalidChanged}"></vaadin-text-field>
+  `
+}
+
+onInvalidChanged(event: TextFieldInvalidChanged) {
+  // `detail` is an object with boolean `value` property.
+  console.log(event.detail.value);
+}
+----
+
+Type definitions for custom events are available for these components:
+
+- Checkbox
+- Checkbox Group
+- Combo Box
+- Context Menu
+- CRUD
+- Custom Field
+- Date Picker
+- Date Time Picker
+- Grid
+- Grid Pro
+- List Box
+- Login
+- Menu Bar
+- Rich Text Editor
+- Select
+- Tabs
+- Text Field
+- Time Picker
+- Upload
+
+=== Registering Elements [[registering-elements]]
+
+When creating your own custom elements for using with client side views, you might want to instruct TypeScript to use your definitions.
+This is not mandatory, but in some cases it improves developer experience and allows to write less code.
+
+As an example, let's look into using `querySelector` and `querySelectorAll` methods with your own custom elements.
+These methods return `Element`, so the easiest workaround would be probably to use a type cast:
 
 [source, typescript]
 ----
@@ -127,9 +169,8 @@ items.forEach(item => {
 });
 ----
 
-However, this approach isn't clean, as it requires to write `as ColorItem[]` every time the method
-is called. There is a better alternative: registering a class corresponding to the HTML tag name in
-the built-in `HTMLElementTagNameMap` interface:
+However, this approach isn't clean, as it requires to write `as ColorItem[]` every time the method is called.
+There is a better alternative: registering a class corresponding to the HTML tag name in the built-in `HTMLElementTagNameMap` interface:
 
 [source, typescript]
 ----
@@ -152,51 +193,21 @@ items.forEach(item => {
 });
 ----
 
-The TypeScript definitions for Vaadin components provide these registrations. So you don't have to
-use type casts when using certain DOM methods. Apart from the query methods, this applies to other
-methods, such as `createElement` and `closest`.
+The TypeScript definitions for Vaadin components provide these registrations.
+This allows to avoid writing type casts when using certain DOM methods.
+Apart from the query methods, this applies to other methods, such as `createElement` and `closest`.
 
 == Limitations [[limitations]]
 
-The current implementation of Vaadin components has limitations related to using TypeScript
-definitions. They are partially caused by the fact that the components are written in JavaScript,
+The current implementation of Vaadin components has limitations related to using TypeScript definitions.
+They are partially caused by the fact that the components are written in JavaScript,
 and the `d.ts` files are https://www.npmjs.com/package/@polymer/gen-typescript-declarations[generated]
 from JSDoc comments.
 
-=== Custom events [[custom-events]]
+=== Items Property [[items-property]]
 
-Vaadin components dispatch custom events, such as `value-changed`. These events are different from
-the native DOM events like `click`. Firstly, they have `detail` property, which has type of `any`.
-This means that TypeScript does not have any information about the properties that might exist on
-the `detail` object for the particular custom event.
-
-Another https://github.com/microsoft/TypeScript/issues/28357[problem] affecting developer experience
-is the fact that custom events can not be used in `addEventListener` directly. Attempting to do it
-would result in the TypeScript compilation error *"No overload matches this call"*.
-
-The possible workaround for it would be using another built-in interface called `HTMLElementEventMap`.
-You can add the following code to prevent TypeScript from complaining about incorrect `addEventListener`
-usage:
-
-[source, typescript]
-----
-declare global {
-  interface HTMLElementEventMap {
-    'value-changed': CustomEvent;
-  }
-}
-----
-
-The challenge is that different Vaadin components might use different types for the same `value`
-property. So this is not something we currently support. We consider this an enhancement and not a
-bug. Please see the https://github.com/vaadin/vaadin-core/issues/255[issue] where it is being
-tracked.
-
-=== Items property [[items-property]]
-
-Certain Vaadin components, namely Grid, ComboBox and CRUD, support setting `items` property as an
-array of objects. Typically, when using a component, we know what type of objects we expect, and
-we prefer to only declare it once.
+Certain Vaadin components, namely Grid, Combo Box and CRUD, support setting `items` property as an array of objects.
+Typically, when using a component, we know what type of objects we expect, and we prefer to only declare it once.
 
 In TypeScript, this could be achieved using https://www.typescriptlang.org/docs/handbook/generics.html#generic-types[generic types].
 However, because of the way the components are implemented, we would preferably need to infer the
@@ -213,15 +224,14 @@ nameRenderer(root: HTMLElement, column: GridColumnElement, model: GridItemModel)
 }
 ----
 
-While using type casts is not the best idea in terms of type safety and developer experience, we do
-not have a better option at the moment. So this is the recommended approach for now. Please see the
-https://github.com/vaadin/vaadin-core/issues/256[issue] where this enhancement is being tracked.
+While using type casts is not the best idea in terms of type safety and developer experience, we do not have a better option at the moment.
+In future we will provide a cleaner solution for declarative rendering of such components.
+Please see the https://github.com/vaadin/vaadin-core/issues/256[issue] where this enhancement is being tracked.
 
 ## Examples
 
-We are working on improving our documentation to provide more components examples and recipes in
-TypeScript. While this work is in progress, check out https://vaadin-ts-examples.herokuapp.com[TypeScript Vaadin examples]
-project for live demos of using Vaadin components.
+We are working on improving our documentation to provide more components examples and recipes in TypeScript.
+While this work is in progress, check out https://vaadin-ts-examples.herokuapp.com[TypeScript Vaadin examples] project for live demos of using Vaadin components.
 
 If you would like to request a code example that is missing from the live demos, feel free to
 https://github.com/web-padawan/ts-vaadin-examples/issues[submit an issue] and describe your problem.

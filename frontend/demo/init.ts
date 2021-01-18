@@ -13,6 +13,13 @@ import CardModel from '../generated/com/vaadin/demo/domain/CardModel';
 // @ts-ignore
 import Card from '../generated/com/vaadin/demo/domain/Card';
 import client from '../generated/connect-client.default';
+import { applyTheme } from 'themes/theme-generated.js';
+
+// Make sure custom component styles get registered
+const div = document.createElement('div');
+div.attachShadow({ mode: 'open' });
+applyTheme(div.shadowRoot);
+
 // @ts-ignore
 client.prefix = __VAADIN_CONNECT_PREFIX__;
 

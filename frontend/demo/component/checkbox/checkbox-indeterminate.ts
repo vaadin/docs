@@ -7,9 +7,16 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from '../../domain/DataService';
 import { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private items: Person[] = [];
 

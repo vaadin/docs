@@ -1,73 +1,59 @@
 ---
-title: Licensing and taking app to production
+title: Setting Up for Production
 order: 4
 layout: page
 ---
 
-
 [[ce.production]]
-= Taking your app into production
+= Setting Up for Production
 
-Using Collaboration Engine adds a few extra steps when you <<{articles}/guide/production/production-mode#,take your app to production>>.
+Enabling the production mode is described in <<{articles}/guide/production/production-overview#, Deploying to Production>>.
+Using Collaboration Engine requires some extra steps when you take your application to production.
 
 You need to:
 
-. obtain a license file with an end-user quota,
-. configure where Collaboration Engine files are stored and
-. store the license file in the right location
+. Get a license file with an end-user quota.
+. Configure where Collaboration Engine files are stored.
+. Store the license file in the right location.
+. Implement a `LicenseEventHandler` to be notified when the license needs to be updated.
+
 
 [[ce.production.obtain-license]]
-== Obtain a license file with an end-user quota
+== Obtaining a License File
 
 First, you need to have a subscription with a large enough user limit to meet your needs.
-Vaadin will provide the license file to you.
-If you do not have a license yet, https://vaadin.com/collaboration/#contact[request a license via the web page] to get in contact with Vaadin.
+If you do not yet have a license, https://vaadin.com/collaboration/#contact[request a license through the product page] to get in contact with Vaadin.
 
-The license file name is `ce-license.json`.
-It defines how many unique end-users can use collaborative features per month and the license’s expiration date.
+The name of the license file is `ce-license.json`.
+It defines how many unique end users can use collaborative features per month and when the license expires.
 
 [[ce.production.configure-data-dir]]
-== Configure where Collaboration Engine files are stored
+== Configuring File Storage Location
 
 You need to configure which directory should be used by Collaboration Engine to store files by setting the `vaadin.ce.dataDir` property.
-In version 2.0, the only file that Collaboration Engine uses is the `ce-license.json`, but in upcoming versions the directory will be used to e.g. store automatic usage statistics and topic data.
+In version 2, the only file that Collaboration Engine uses is the `ce-license.json`, but in upcoming versions can use the directory to store automatic usage statistics, topic data, and so forth.
+
 You can configure the directory path by either:
 
 . configuring the data directory in project files or
 . passing it in as a parameter on the server startup.
 
-If both are present, then the server startup parameter will be used.
+If both are present, the server startup parameter is used.
 
-=== Configuring the data directory in project files
+[[ce.production.data-dir-in-project-files]]
+=== Configuring the Data Directory in Project Files
 
 Storing the path into the project files is a good way if you always deploy your application into the same environment and the folder does not change.
-You can provide the path as a system property within a `VaadinServiceInitListener`.
-How you register the listener depends on if you use Spring or not.
+You can set the path as a system property in a `VaadinServiceInitListener`, which runs once on server startup.
 
-==== Spring applications
+==== Spring Applications
 
-If you have a Spring application, you can set `vaadin.ce.dataDir` as a system property in the `main` method.
+If you have a Spring application, you can register a `VaadinServiceInitListener` by implementing the interface and annotating the class as a `@SpringComponent`.
+In the `serviceInit` method, you can then set `vaadin.ce.dataDir` as a system property.
 
-.com.company.myapp.Application.java
+.`com.company.myapp.MyVaadinInitListener.java`
 ```java
-@SpringBootApplication
-public class Application extends SpringBootServletInitializer {
-
-    public static void main(String[] args) {
-        System.setProperty("vaadin.ce.dataDir",
-                "/Users/steve/vaadin/collaboration-engine/");
-        SpringApplication.run(Application.class, args);
-    }
-
-}
-```
-
-==== Other applications
-
-If you have a non-Spring application, you should register a `VaadinServiceInitListener` that sets the system property.
-
-.com.company.myapp.MyVaadinInitListener.java
-```java
+@SpringComponent
 public class MyVaadinInitListener implements VaadinServiceInitListener {
     @Override
     public void serviceInit(ServiceInitEvent event) {
@@ -77,23 +63,29 @@ public class MyVaadinInitListener implements VaadinServiceInitListener {
 }
 ```
 
-To use the listener, you need to register it via Java SPI loading facility.
-You do this by providing a file, `src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener` with a fully-qualified class name to your listener as content, for example, `com.company.myapp.MyVaadinInitListener`.
+==== Other Applications
 
-image:images/service-init-listener.png[The location of the configuration file]
+If you have a non-Spring application, you can implement the `VaadinServiceInitListener` in the same way as seen above, except that you can't use the `@SpringComponent` annotation.
+Instead, you need to register it through the Java Service Provider Interface (SPI) loading facility.
+You can do that by providing a file, `src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener` with a fully qualified class name to your listener as content, for example, `com.company.myapp.MyVaadinInitListener`.
 
-.src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener
+.The location of the configuration file
+image::images/service-init-listener.png[The location of the configuration file]
+
+.`src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener`
 ```
 com.company.myapp.MyVaadinInitListener
 ```
 
-=== Configuring the data directory on server startup
+=== Configuring the Data Directory on Server Startup
 
-As another option, you can pass the data directory as a parameter on server startup.
-This option assumes that you have already a production-ready build available and want to run the package on the server.
+For another way, you can pass the data directory as a parameter on server startup.
+This way assumes that you have already a production-ready build available and want to run the package on the server.
 Read <<{articles}/guide/production/production-mode#,Building in Production Mode>> to learn more about building your application for production.
 
-==== Spring Boot applications
+==== Spring Boot Applications
+
+You can set the data directory with the `vaadin.ce.dataDir` system property for Java, for example as follows on the command line:
 
 ```
 java -Dvaadin.ce.dataDir=/Users/steve/.vaadin/collaboration-engine -jar my-app-1.0-SNAPSHOT.jar
@@ -101,13 +93,14 @@ java -Dvaadin.ce.dataDir=/Users/steve/.vaadin/collaboration-engine -jar my-app-1
 
 Note that the system property should be before the `-jar` parameter.
 
-==== Other servlet containers
+==== Other Servlet Containers
 
-You can pass the data directory parameter in as a context parameter to the servlet container.
-Refer to your servlet container's manual on how to provide it.
-The context parameters that needs to be set is `vaadin.ce.dataDir` and the value should be the directory path.
+You can pass the data directory parameter as a context parameter to the servlet container.
+You should refer to your servlet container's documentation on how to provide it.
+You need to set the `vaadin.ce.dataDir` context parameter.
+The value should be the directory path.
 
-Here is an example on how you would pass the context parameter in when using Jetty.
+For example, you can pass the context parameter to Jetty as follows:
 
 ```
 mvn jetty:run -Dvaadin.ce.dataDir=/Users/steve/vaadin/collaboration-engine/
@@ -115,28 +108,168 @@ mvn jetty:run -Dvaadin.ce.dataDir=/Users/steve/vaadin/collaboration-engine/
 
 See <<{articles}/flow/advanced/flow-runtime-configuration#,Changing the Application Behavior with Runtime Configuration>> for more information.
 
-The directory should be both readable and writable by the operating system user running the Vaadin application.
+The directory should be both readable and writable by the user running the Vaadin application.
 
 [[ce.production.files-to-server]]
-== Store the license file in the right location
+== Placing the License File
 
 After obtaining the license file and the data directory, you need to put the license file in that directory on the server.
-For example, if you configured the folder to be `/Users/steve/vaadin/collaboration-engine/`, then place the license file so that `/Users/steve/vaadin/collaboration-engine/ce-license.json` can be read by the application.
+For example, if you configured the folder to be `/Users/steve/vaadin/collaboration-engine/`, you should place the license file so that the application can read it as `/Users/steve/vaadin/collaboration-engine/ce-license.json`.
 
-Collaboration Engine will use the file to verify you have a proper license.
-The app does not require an internet connection to Vaadin servers to verify the license.
+Collaboration Engine uses the file to verify that you have a proper license.
+The application does not require an internet connection to Vaadin servers to verify the license.
 
-[[ce.production.monthly-quota]]
-== Monthly end-user quota
+== Providing a Data Directory for a Docker Container
 
-Your license includes a quota for how many end-users are supported, for example, a limit of 1.000 end-users.
-Collaboration Engine counts how many end-users use its features during each calendar month.
-The count of end-users will start over on the 1st of each month.
+It is recommended to provide the data directory to a Docker container on runtime by either using a https://docs.docker.com/storage/volumes/[volume] or a https://docs.docker.com/storage/bind-mounts/[bind mount].
+It is not recommended to copy the license file into the container image, as the data directory is erased every time you deploy a new version of your application.
+
+If you are deploying to a cloud provider, you may not have access to the host file system to be able to make use of bind mounts.
+Consult the documentation for your cloud provider to get instructions on how to set up and provide a volume to your application.
+
+While a volume is preferred, if you have access to the host's file system or want to test the Docker image locally, you can do it with a bind mount with the following steps:
+
+. Set up a data directory on the host's file system.
+For example: `/Users/steve/.vaadin/collaboration-engine`.
+. Copy the `ce-license.json` file into the folder above.
+. Pick a suitable folder within your Docker image where the container mounts the host folder.
+For example: `/usr/app/ce`.
+. Configure your `Dockerfile` to start up the server with the `vaadin.ce.dataDir` parameter pointing to the internal folder. For example `CMD java -Dvaadin.ce.dataDir=/usr/app/ce -jar /usr/app/app.jar`
+. Build the Docker image, for example `$ docker build --tag my-app .` in the project directory.
+. Start up the Docker container by giving the `-v` parameter mapping the host folder to the image folder. For example `$ docker run --name=myapp -dp 8080:8080 -v /Users/steve/.vaadin/collaboration-engine:/usr/app/ce myapp`
+
+When using volumes, you would replace the absolute path to the directory with the name of the volume, for example:
+```
+$ docker run --name=myapp -dp 8080:8080 -v myapp-volume:/usr/app/ce myapp
+```
+
+
+[[ce.production.license-events]]
+== Notifications for Updating the License
+
+The licensing model may cause collaborative features to be disabled for some of
+your application's users.
+To avoid this situation, you need to get a new license if your old license is about to expire, or if your user base increases and the number of end-users exceeds the quota for one month.
+
+To know when to update the license, you need to implement a license event handler for Collaboration Engine.
+Collaboration Engine can fire the following types of license events, each at most once during the license's lifecycle:
+
+. the first time when exceeding the end-user quota and entering the grace period (more details in <<ce.production.over-quota>>),
+. when the grace period ends,
+. 30 days before the license expires, and
+. when the license expires.
+
+If you take care of updating the license when events 1 and 3 are fired, the other
+two events shouldn't happen at all.
+
+One potential way to handle the event is to send a message to any existing application monitoring system you might have.
+Another option is to send an email to the relevant people, for example, those who maintain the deployment and those who are responsible of the Collaboration Engine license.
+You need to ensure that your application notices and handles the events.
+
+The listener can be configured in a `VaadinServiceInitListener` in the same way as the `vaadin.ce.dataDir` property,
+if you're setting that property in Java code, as described earlier.
+
+The following example is a Spring project, so the `VaadinServiceInitListener` is registered by adding the `@SpringComponent` annotation.
+If you are not using Spring, you can register the service init listener in the same way as described in <<ce.production.data-dir-in-project-files>>.
+
+```java
+@SpringComponent
+public static class MyVaadinInitListener
+        implements VaadinServiceInitListener {
+
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(MyVaadinInitListener.class);
+
+    @Override
+    public void serviceInit(ServiceInitEvent serviceEvent) {
+        VaadinService service = serviceEvent.getSource();
+
+        LicenseEventHandler licenseEventHandler = licenseEvent -> {
+            switch (licenseEvent.getType()) {
+            case GRACE_PERIOD_STARTED:
+            case LICENSE_EXPIRES_SOON:
+                LOGGER.warn(licenseEvent.getMessage());
+                break;
+            case GRACE_PERIOD_ENDED:
+            case LICENSE_EXPIRED:
+                LOGGER.error(licenseEvent.getMessage());
+                break;
+            }
+            sendEmail(
+                    "Vaadin Collaboration Engine license needs to be updated",
+                    licenseEvent.getMessage());
+        };
+
+        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
+                licenseEventHandler);
+        CollaborationEngine.configure(service, configuration);
+    }
+
+    private void sendEmail(String subject, String content) {
+        // Implement sending an email to relevant people
+    }
+}
+```
+
+In the above example, the license event handler logs the event messages using the SLF4J logging API, and sends an email.
+When it is time to update the license, the message is logged as a warning.
+If the license is not updated in time, the message is logged as an error.
+The default event messages provide information of what has happened, how it affects the application, and what is the recommended action to take.
+
+Below is an example implementation of the `sendEmail()` method.
+It requires the `javax.mail.mail` package as a dependency.
+
+```java
+private void sendEmail(String subject, String content) {
+    // Replace the following information:
+    String from = "sender@gmail.com";
+    String password = "*****"; // Read, for example, from encrypted config file.
+    String to = "receiver@gmail.com";
+    String host = "smtp.gmail.com";
+
+    Properties properties = System.getProperties();
+    properties.put("mail.smtp.host", host);
+    properties.put("mail.smtp.port", "465");
+    properties.put("mail.smtp.ssl.enable", "true");
+    properties.put("mail.smtp.auth", "true");
+
+    Session session = Session.getInstance(properties, new Authenticator() {
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(from, password);
+        }
+    });
+    try {
+        MimeMessage message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(from));
+        message.addRecipient(Message.RecipientType.TO,
+                new InternetAddress(to));
+        message.setSubject(subject);
+        message.setText(content);
+        Transport.send(message);
+    } catch (MessagingException e) {
+        LOGGER.error(e.getMessage(), e);
+    }
+}
+```
+
+.Exception thrown if events are not handled
+NOTE: Collaboration Engine throws an exception in production mode if a configuration has not been defined.
+The purpose is to make sure that your application handles the events,
+and to avoid situation where the license expires by accident.
+
+[[ce.production.quota]]
+== End-User Quota
+
+Your license includes a quota for how many unique end users are supported within a month, for example, a limit of 1.000 end users.
+Collaboration Engine counts how many end users use its features during each calendar month.
+The count of end users starts over on the first day of each month.
 
 [[ce.production.end-user]]
-== Definition of an end-user
+=== Definition of an End User
 
-When you use any Collaboration Engine features, you have to provide a `UserInfo` object with a unique ID.
+When you use any Collaboration Engine features, you have to provide a
+`UserInfo` object with a unique ID.
 
 ```java
 String userId = "steve@example.com";
@@ -151,39 +284,63 @@ Collaboration Engine records the ID of each user that accesses collaborative fea
 Each user ID is counted only once per month.
 
 [[ce.production.over-quota]]
-== What happens if I go over the quota?
+=== Going Over the Quota
 
-When you exceed the limit the first time, nothing will change from the end-user's perspective.
-Collaboration Engine will start a 30 day grace period, during which the quota is ten times bigger.
+When you exceed the limit the first time, nothing changes from the end user's perspective.
+When that happens, Collaboration Engine starts a 30-day grace period, during which time the quota is ten times bigger.
 The grace period gives you time to react to exceeding your limit without impacting your application in any way.
-For example, if you have obtained a license for a 500 end-user quota, your effective quota will be 5.000 end-users during the grace period.
-After 30 days, your effective quota will go back to 500, and you won’t get another grace period until the next billing period.
+For example, if you have obtained a license for a 500 end-user quota, your effective quota is 5.000 end-users during the grace period.
+After 30 days, your effective quota goes back to 500, and you won’t get another grace period until the next billing period.
 
-If the number of monthly users exceeds the 10x quota during the grace period, or the normal quota after the grace period is over, the collaborative features will be disabled for the exceeding users.
-Your app will still continue to work, but `CollaborationAvatarGroup` will only show the user's own avatar, and forms built with `CollaborationBinder` will not show edits made by other end-users.
-The end-users who are registered within the allowed quota will have collaborative features available throughout the month.
+If the number of users in a month exceeds the 10x quota during the grace period, or the normal quota after the grace period is over, the collaborative features are disabled for the exceeding users.
+Your application stills continues to work, but `CollaborationAvatarGroup` only show the user's own avatar, and forms built with `CollaborationBinder` do not show edits made by other end-users.
+The end-users who are registered within the allowed quota have collaborative features available throughout the month.
 
-For example, you have a quota for 500 end-users, you have used your grace period, and 520 end-users have used collaborative features this month.
-The first 500 end-users can collaborate throughout the month. Users 501-520 can use the app, but the app will work like Collaboration Engine would not be in use. They can only see their own presence and edits.
-When the calendar month changes, counting starts over, and the first 500 end-users will again get full access for the whole month.
+Consider, for example, a situation where you have a quota for 500 end-users, you have used your grace period, and 520 end-users have used collaborative features this month.
+The first 500 end users can collaborate throughout the month.
+Users from 501 through 520 can use the application, but it works as if Collaboration Engine was not in use.
+They can only see their own presence and edits.
+When the calendar month changes, counting starts over, and the first 500 end-users again get full access for the whole month.
 
 [[ce.production.when-in-grace]]
-== What should I do when I have entered the grace period?
+=== Entering the Grace Period
 
-It seems that you have a higher demand than expected when obtaining the license.
-We recommend that you get a new license with a higher quota to have collaborative features available for all your users before the grace period expires.
+The engine enters the grace period when you have a higher demand than expected when obtaining the license.
+It is recommended that you get a new license with a higher quota to have collaborative features available for all your users before the grace period expires.
 https://vaadin.com/collaboration/#contact[Contact Vaadin] to get a new license file with a higher quota.
-You can change your quota at any point in time.
-When you replace the license file with the new one, Collaboration Engine will mark your grace period as unused.
-If you exceed your new quota in the future, you will receive a new 30 day grace period.
+You can change your quota at any time.
+When you replace the license file with the new one, Collaboration Engine resets your grace period.
+If you exceed your new quota in the future, you again receive a 30 day grace period.
+
+[[ce.production.request-access]]
+=== Checking for End User Access
+
+You can determine whether a user has access or not by passing a callback to the `requestAccess()` method in the `CollaborationEngine` instance.
+The callback gets an `AccessResponse` instance as parameter.
+You can call its `AccessResponse::hasAccess()` method to find out access.
+You can use the status to adapt the UI according to whether the end-user can use collaborative features.
+
+For example:
+
+```java
+UserInfo userInfo = new UserInfo("steve@example.com", "Steve");
+CollaborationEngine.getInstance().requestAccess(userInfo, response -> {
+    component.setVisible(response.hasAccess());
+});
+```
 
 [[ce.production.restrict-usage]]
-== Can I restrict collaborative features to a subset of my end-users?
+=== Limiting Collaborative Features to Some End Users
 
-Yes. Collaboration Engine will only count those end-users whose `UserInfo` objects are passed to collaborative features. You can limit usage to a subset of your users in two different ways.
+Collaboration Engine only counts those end users towards the quota whose `UserInfo` objects are passed to collaborative features.
 
-. Only use Collaboration Engine in views that you have restricted with user access. For example, if you only use collaborative features in the admin views, only those users who access the admin views will be counted.
-. Check the details of the user before initializing the collaboration features. For example, by checking the role or privileges or the user, you can decide in code if the users should have collaborative features enabled or not.
+You can limit usage to a subset of your users in two different ways:
+
+. Only use Collaboration Engine in views that you have restricted with user access.
+For example, if you only use collaborative features in the admin views, only those users who access the admin views are counted.
+
+. Check the details of the user before initializing the collaboration features.
+For example, by checking the role or privileges or the user, you can decide in code if the users should have collaborative features enabled or not.
 
 An example of how to enable collaboration by checking user permissions:
 ```java

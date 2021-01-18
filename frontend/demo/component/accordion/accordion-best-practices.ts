@@ -9,6 +9,7 @@ import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import Country from '../../../generated/com/vaadin/demo/domain/Country';
 import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import { getCountries } from '../../domain/DataService';
+import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 @customElement('accordion-best-practices')
@@ -38,6 +39,12 @@ export class Example extends LitElement {
       summaryDetails.removeAttribute('hidden');
     }
   }
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <vaadin-accordion>
