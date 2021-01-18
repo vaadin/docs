@@ -5,7 +5,6 @@ import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
@@ -16,19 +15,35 @@ public class AccordionBasic extends Div {
     // tag::snippet[]
     Accordion accordion = new Accordion();
 
-    VerticalLayout personalInformationLayout = new VerticalLayout();
-    personalInformationLayout.add(new TextField("Name"), new TextField("Phone"), new TextField("Email"));
+    Span name = new Span("Sophia Williams");
+    Span email = new Span("sophia.williams@company.com");
+    Span phone = new Span("(501) 555-9128");
+    
+    VerticalLayout personalInformationLayout = new VerticalLayout(name, email, phone);
+    personalInformationLayout.setSpacing(false);
+    personalInformationLayout.setPadding(false);
+
     accordion.add("Personal Information", personalInformationLayout);
 
+    Span street = new Span("4027 Amber Lake Canyon");
+    Span zipCode = new Span("72333-5884 Cozy Nook");
+    Span city = new Span("Arkansas");
+
     VerticalLayout billingAddressLayout = new VerticalLayout();
-    billingAddressLayout.add(new TextField("Address"), new TextField("City"), new TextField("State"),
-        new TextField("Zip Code"));
+    billingAddressLayout.setSpacing(false);
+    billingAddressLayout.setPadding(false);
+    billingAddressLayout.add(street, zipCode, city);
     accordion.add("Billing Address", billingAddressLayout);
 
+    Span cardBrand = new Span("Mastercard");
+    Span cardNumber = new Span("1234 5678 9012 3456");
+    Span expiryDate = new Span("Expires 06/21");
+
     VerticalLayout paymentLayout = new VerticalLayout();
-    paymentLayout.add(new Span("Not yet implemented"));
+    paymentLayout.setSpacing(false);
+    paymentLayout.setPadding(false);
+    paymentLayout.add(cardBrand, cardNumber, expiryDate);
     AccordionPanel billingAddressPanel = accordion.add("Payment", paymentLayout);
-    billingAddressPanel.setEnabled(false);
 
     add(accordion);
     // end::snippet[]

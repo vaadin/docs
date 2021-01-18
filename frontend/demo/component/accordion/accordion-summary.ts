@@ -5,12 +5,15 @@ import '@vaadin/vaadin-accordion/vaadin-accordion';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/vaadin-text-field/vaadin-email-field';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import '@vaadin/vaadin-button/vaadin-button';
 import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout';
 import Country from '../../../generated/com/vaadin/demo/domain/Country';
 import { getCountries } from '../../domain/DataService';
-import { AccordionPanelElement } from '@vaadin/vaadin-accordion/src/vaadin-accordion-panel';
+import { Binder, field } from '@vaadin/form';
+import PersonModel from '../../../generated/com/vaadin/demo/domain/PersonModel';
+import CardModel from '../../../generated/com/vaadin/demo/domain/CardModel';
 
 // tag::snippet[]
 
@@ -25,179 +28,152 @@ export class Example extends LitElement {
   ];
 
   @internalProperty()
-  private person = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    zipCode: '',
-    city: '',
-    country: '',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: ''
-  };
+  private personBinder = new Binder(this, PersonModel);
+
+  @internalProperty()
+  private cardBinder = new Binder(this, CardModel);
+
+  @internalProperty()
+  private openedPanelIndex = 0;
   async firstUpdated() {
     this.items = await getCountries();
-  }
-
-  openChanged(e: CustomEvent) {
-    const isOpened = e.detail.value;
-    const summaryDetails = (e.currentTarget as HTMLElement).querySelector(
-      '[slot=summary] vaadin-vertical-layout'
-    );
-    if (!summaryDetails) {
-      return;
-    }
-    if (isOpened) {
-      summaryDetails.setAttribute('hidden', '');
-    } else {
-      summaryDetails.removeAttribute('hidden');
-    }
-  }
-
-  fieldChanged(e: CustomEvent) {
-    const { name, value }: any = e.target;
-    if (name === 'country') {
-      this.person = { ...this.person, [name]: this.items.find(c => c.id === value)?.name };
-    } else if (name) {
-      this.person = { ...this.person, [name]: value };
-    }
-  }
-
-  openNextPanel(e: CustomEvent) {
-    const parent: HTMLElement | null = (e.target as Element).parentElement;
-    if (!parent) {
-      return;
-    }
-    if (parent.nextElementSibling instanceof AccordionPanelElement) {
-      parent.nextElementSibling.opened = true;
-    } else if (parent instanceof AccordionPanelElement) {
-      parent.opened = false;
-    }
   }
   render() {
     return html`
       <vaadin-accordion>
-        <vaadin-accordion-panel @opened-changed="${this.openChanged}">
+        <vaadin-accordion-panel
+          .opened=${this.openedPanelIndex === 0}
+          @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value ? 0 : -1)}"
+        >
           <div slot="summary">
             Customer details
-            <vaadin-vertical-layout style="font-size: var(--lumo-font-size-s)">
-              <span>${this.person.firstName} ${this.person.lastName}</span>
-              <span>${this.person.email}</span>
-              <span>${this.person.phone}</span>
+            <vaadin-vertical-layout
+              .hidden="${this.openedPanelIndex === 0}"
+              style="font-size: var(--lumo-font-size-s)"
+            >
+              <span>${this.personBinder.value.firstName} ${this.personBinder.value.lastName}</span>
+              <span>${this.personBinder.value.email}</span>
+              <span>${this.personBinder.value.address?.phone}</span>
             </vaadin-vertical-layout>
           </div>
 
           <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
             <vaadin-text-field
               label="First Name"
-              name="firstName"
-              @change=${this.fieldChanged}
               required
+              ...="${field(this.personBinder.model.firstName)}"
             ></vaadin-text-field>
             <vaadin-text-field
               label="Last name"
-              name="lastName"
-              @change=${this.fieldChanged}
+              ...="${field(this.personBinder.model.lastName)}"
               required
             ></vaadin-text-field>
-            <vaadin-text-field
+            <vaadin-email-field
               label="Email address"
-              name="email"
-              @change=${this.fieldChanged}
+              ...="${field(this.personBinder.model.email)}"
               colspan="2"
               required
-            ></vaadin-text-field>
+            ></vaadin-email-field>
             <vaadin-text-field
               label="Phone number"
-              name="phone"
-              @change=${this.fieldChanged}
+              ...="${field(this.personBinder.model.address.phone)}"
               colspan="2"
               required
             ></vaadin-text-field>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click=${this.openNextPanel}>
+          <vaadin-button theme="primary" @click=${() => (this.openedPanelIndex = 1)}>
             Continue
           </vaadin-button>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel @opened-changed="${this.openChanged}">
+        <vaadin-accordion-panel
+          .opened=${this.openedPanelIndex === 1}
+          @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value ? 1 : -1)}"
+        >
           <div slot="summary">
             Billing Address
-            <vaadin-vertical-layout style="font-size: var(--lumo-font-size-s)">
-              <span>${this.person.address}</span>
-              <span>${this.person.zipCode} ${this.person.city}</span>
-              <span>${this.person.country}</span>
+            <vaadin-vertical-layout
+              .hidden="${this.openedPanelIndex === 1}"
+              style="font-size: var(--lumo-font-size-s)"
+            >
+              <span>${this.personBinder.value.address?.street}</span>
+              <span
+                >${this.personBinder.value.address?.zip}
+                ${this.personBinder.value.address?.city}</span
+              >
+
+              <span
+                >${// @ts-ignore Workaround a Binder issue
+                this.personBinder.value.address?.country?.name}</span
+              >
             </vaadin-vertical-layout>
           </div>
 
           <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
             <vaadin-text-field
               label="Address"
-              name="address"
-              @change=${this.fieldChanged}
+              ...="${field(this.personBinder.model.address.street)}"
               colspan="2"
               required
             ></vaadin-text-field>
             <vaadin-text-field
               label="ZIP code"
-              name="zipCode"
-              @change=${this.fieldChanged}
+              ...="${field(this.personBinder.model.address.zip)}"
               required
             ></vaadin-text-field>
             <vaadin-text-field
               label="City"
-              name="city"
-              @change=${this.fieldChanged}
+              ...="${field(this.personBinder.model.address.city)}"
               required
             ></vaadin-text-field>
             <vaadin-combo-box
               label="Country"
-              name="country"
-              @change=${this.fieldChanged}
+              ...="${field(this.personBinder.model.address.country)}"
               item-label-path="name"
               item-value-path="id"
               .items="${this.items}"
             >
             </vaadin-combo-box>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click=${this.openNextPanel}>
+          <vaadin-button theme="primary" @click=${() => (this.openedPanelIndex = 2)}>
             Continue
           </vaadin-button>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel @opened-changed="${this.openChanged}">
+        <vaadin-accordion-panel
+          .opened=${this.openedPanelIndex === 2}
+          @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value ? 2 : -1)}"
+        >
           <div slot="summary">
             Payment
-            <vaadin-vertical-layout style="font-size: var(--lumo-font-size-s)">
-              <span>${this.person.cardNumber}</span>
+            <vaadin-vertical-layout
+              .hidden="${this.openedPanelIndex === 2}"
+              style="font-size: var(--lumo-font-size-s)"
+            >
+              <span>${this.cardBinder.value.accountNumber}</span>
+              <span>${this.cardBinder.value.expiryDate}</span>
             </vaadin-vertical-layout>
           </div>
 
           <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
             <vaadin-text-field
               label="Card number"
-              name="cardNumber"
-              @change=${this.fieldChanged}
+              ...="${field(this.cardBinder.model.accountNumber)}"
               colspan="2"
               required
             ></vaadin-text-field>
             <vaadin-text-field
               label="Expiry date"
-              name="expiryDate"
-              @change=${this.fieldChanged}
+              ...="${field(this.cardBinder.model.expiryDate)}"
               required
             ></vaadin-text-field>
             <vaadin-text-field
               label="CVV"
-              name="cvv"
-              @change=${this.fieldChanged}
+              ...="${field(this.cardBinder.model.cvv)}"
               required
             ></vaadin-text-field>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click=${this.openNextPanel}>
+          <vaadin-button theme="primary" @click=${() => (this.openedPanelIndex = -1)}>
             Finish
           </vaadin-button>
         </vaadin-accordion-panel>
