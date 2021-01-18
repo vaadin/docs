@@ -168,4 +168,16 @@ public class UsingComponentThemes {
             return "/theme/myTheme/";
         }
     }
+
+    public class CustomTheme extends Div {
+        public CustomTheme() {
+            // tag::asset-in-java[]
+            Image snowImg = new Image("themes/my-theme/fortawesome/icons/snowflake.svg", "snow");
+            // end::asset-in-java[]
+            // tag::java-importCss-usage[]
+            Label label = new Label();
+            label.addClassNames("fab", "fa-vaadin");
+            // end::java-importCss-usage[]
+        }
+    }
 }
