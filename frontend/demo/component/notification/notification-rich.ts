@@ -2,6 +2,7 @@ import '../../init'; // hidden-full-source-line
 
 import { render } from 'lit-html';
 import { html, LitElement, customElement } from 'lit-element';
+import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
@@ -14,7 +15,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-notification
-        .renderer="${(root: HTMLElement) =>
+        .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
               <iron-icon icon="lumo:checkmark" class="checkmark"></iron-icon>
@@ -30,13 +31,14 @@ export class Example extends LitElement {
               </vaadin-button>
             `,
             root
-          )}"
+          );
+        })}"
         theme="success"
         position="bottom-start"
       ></vaadin-notification>
 
       <vaadin-notification
-        .renderer="${(root: HTMLElement) =>
+        .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
               <iron-icon icon="vaadin:warning" class="warning"></iron-icon>
@@ -52,13 +54,14 @@ export class Example extends LitElement {
               </vaadin-button>
             `,
             root
-          )}"
+          );
+        })}"
         theme="error"
         position="bottom-start"
       ></vaadin-notification>
 
       <vaadin-notification
-        .renderer="${(root: HTMLElement) =>
+        .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
               <vaadin-avatar name="Jason Bailey"></vaadin-avatar>
@@ -72,12 +75,13 @@ export class Example extends LitElement {
               </vaadin-button>
             `,
             root
-          )}"
+          );
+        })}"
         position="bottom-start"
       ></vaadin-notification>
 
       <vaadin-notification
-        .renderer="${(root: HTMLElement) =>
+        .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
               <iron-icon icon="lumo:checkmark" class="checkmark"></iron-icon>
@@ -98,7 +102,8 @@ export class Example extends LitElement {
               </vaadin-button>
             `,
             root
-          )}"
+          );
+        })}"
         position="bottom-start"
       ></vaadin-notification>
       <!-- end::snippet[] -->

@@ -2,50 +2,46 @@ import '../../init'; // hidden-full-source-line
 
 import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/vaadin-notification/vaadin-notification';
 
 @customElement('notification-basic')
 export class Example extends LitElement {
   @internalProperty()
-  private notification: NotificationElement | null | undefined;
+  private notificationOpen = false;
 
   render() {
     return html`
-      <vaadin-button @click="${this.open}">Try it</vaadin-button>
+      <vaadin-button
+        @click="${() => (this.notificationOpen = true)}"
+        .disabled="${this.notificationOpen}"
+      >
+        Try it
+      </vaadin-button>
 
       <!-- tag::snippet[] -->
       <vaadin-notification
-        .renderer="${(root: HTMLElement) =>
+        .opened="${this.notificationOpen}"
+        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
+        .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
               <div>Financial report generated</div>
               <vaadin-button
                 theme="tertiary-inline"
-                @click="${this.close.bind(this)}"
+                @click="${() => (this.notificationOpen = false)}"
                 aria-label="Close"
               >
                 <iron-icon icon="lumo:cross"></iron-icon>
               </vaadin-button>
             `,
             root
-          )}"
-        position="top-end"
+          );
+        })}"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
-  }
-
-  firstUpdated() {
-    this.notification = this.shadowRoot?.querySelector('vaadin-notification');
-  }
-
-  open() {
-    this.notification?.open();
-  }
-
-  close() {
-    this.notification?.close();
   }
 }

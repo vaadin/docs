@@ -23,7 +23,7 @@ export class Example2 extends LitElement {
           display: inline-block;
         }
 
-        .badge {
+        span[theme~='badge'] {
           position: absolute;
           transform: translate(-40%, -30%);
         }
@@ -37,7 +37,7 @@ export class Example2 extends LitElement {
       <vaadin-context-menu open-on="click" .renderer="${this.menuRenderer}">
         <vaadin-button aria-label="notifications" theme="tertiary">
           <iron-icon icon="lumo:bell"></iron-icon>
-          <span class="badge" theme="badge error primary small pill">4</span>
+          <span theme="badge error primary small pill">4</span>
         </vaadin-button>
       </vaadin-context-menu>
     `;

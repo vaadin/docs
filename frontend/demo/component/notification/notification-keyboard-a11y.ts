@@ -2,13 +2,14 @@ import '../../init'; // hidden-full-source-line
 
 import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/vaadin-notification/vaadin-notification';
 
 @customElement('notification-keyboard-a11y')
 export class Example extends LitElement {
   @internalProperty()
-  private notification: NotificationElement | null | undefined;
+  private notificationOpen = false;
 
   @internalProperty()
   private isMac =
@@ -16,25 +17,35 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click="${this.open}">Try it</vaadin-button>
+      <vaadin-button
+        @click="${() => (this.notificationOpen = true)}"
+        .disabled="${this.notificationOpen}"
+      >
+        Try it
+      </vaadin-button>
 
       <!-- tag::snippet[] -->
       <vaadin-notification
-        .renderer="${(root: HTMLElement) =>
+        .opened="${this.notificationOpen}"
+        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
+        .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
               <div>5 tasks deleted</div>
               <div style="width: 2em"></div>
-              <vaadin-button theme="primary" @click="${this.close.bind(this)}">
+              <vaadin-button theme="primary" @click="${() => (this.notificationOpen = false)}">
                 Undo
-                <!-- Ideally, this should be hidden if the device does not have a physical keyboard -->
-                <span aria-hidden="true"> &nbsp; ${this.isMac ? '⌘' : 'Ctrl-'}Z</span>
+                <!-- Ideally, this should also be hidden if the
+                     device does not have a physical keyboard -->
+                <span aria-hidden="true">
+                  &nbsp; ${this.isMac ? '⌘' : 'Ctrl-'}Z
+                </span>
               </vaadin-button>
             `,
             root
-          )}"
+          );
+        })}"
         theme="contrast"
-        position="bottom-start"
         duration="10000"
       ></vaadin-notification>
       <!-- end::snippet[] -->
@@ -42,23 +53,13 @@ export class Example extends LitElement {
   }
 
   firstUpdated() {
-    this.notification = this.shadowRoot?.querySelector('vaadin-notification');
-
     document.addEventListener('keydown', e => {
-      if (this.notification?.opened && (e.metaKey || e.ctrlKey) && e.key == 'z') {
+      if (this.notificationOpen && (e.metaKey || e.ctrlKey) && e.key == 'z') {
         // Handle your custom undo logic here
         // Avoid triggering the native undo action
         e.preventDefault();
-        this.notification?.close();
+        this.notificationOpen = false;
       }
     });
-  }
-
-  open() {
-    this.notification?.open();
-  }
-
-  close() {
-    this.notification?.close();
   }
 }
