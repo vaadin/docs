@@ -1,0 +1,115 @@
+---
+title: Step 3 -  Running a Spring Boot application with MPR and Flow
+order: 6
+layout: page
+---
+
+= Step 3 -  Running a Spring Boot application with MPR and Flow
+
+[NOTE]
+This step is needed in case your Vaadin 7 or 8 application uses Spring Boot. If it is not the case, go back to the <<step-3-legacy-uis,framework selection>>.
+
+== Updating to the correct Spring version
+
+Update parent `org.springframework.boot:spring-boot-starter-parent` to `2.1.7.RELEASE` or newer.
+
+The dependency `com.vaadin:vaadin-spring-boot-starter` should not have a version defined as it comes from `vaadin-bom`.
+
+[source,xml]
+----
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.1.6.RELEASE</version>
+</parent>
+
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-spring-boot-starter</artifactId>
+</dependency>
+----
+
+[NOTE]
+Also take a look at the <<{articles}/flow/spring/spring-basic#,Using Vaadin with Spring Boot>> tutorial on how Flow integrates with Spring.
+
+== Handling of SpringUI
+
+The `@SpringUI` can be replaced with a `@Route`. For example this UI:
+
+[source,java]
+----
+@SpringUI
+@Theme("valo")
+public class TodoUI extends UI {
+    @Override
+    protected void init(VaadinRequest vaadinRequest) {
+        setContent(new HorizontalLayout());
+    }
+}
+----
+
+Can be replaced with:
+
+[source,java]
+----
+@Route("")
+public class TodoUI extends Div implements HasLegacyComponents {
+    @PostConstruct
+    private void buildLayouts() {
+        setSizeFull();
+        add(new HorizontalLayout());
+    }
+}
+----
+
+[NOTE]
+Annotations in the UI, such as `@Theme` and `@Title` and so on, will be dealt with later on in the tutorial.
+Most of them have similar counterpart in either Flow or MPR.
+
+== Update imports
+
+Then any `com.vaadin.spring.annotation` imports needs to be changed to `com.vaadin.flow.spring.annotation`.
+
+[NOTE]
+The V14 Spring add-on doesn't have a feature comparable with `ViewScope`
+
+== What to do with SpringView
+
+Any `@SpringView` should be updated to a Flow Route by wrapping them as a `MprRouteAdapter<? extends View>`
+or re-writing it to be a Flow Component. See <<step-3-navigator#no-navigator,Upgrading Views to Flow Routes>> for details.
+
+== Things to keep in mind
+* When porting the UI to a flow component, you lose the ability to use UI methods, such as `setErrorHandler`. You can still access those
+by using `UI.getCurrent()`. The method `setContent` is not supported though - you should use the `add` method from your Flow layout instead.
+
+* When running MPR with Spring, the Spring integration is done with Flow (and not anymore with Vaadin 7 or 8), so in some cases you will need to
+import classes from the old `vaadin-spring` project in order to make your MPR project to compile,
+since those classes are not present anymore in the new versions of `vaadin-spring`.
+The source code of `vaadin-spring` can be found on https://github.com/vaadin/spring[GitHub]. Examples of such classes:
+
+** com.vaadin.spring.access.SecuredViewAccessControl;
+** com.vaadin.spring.access.ViewAccessControl;
+** com.vaadin.spring.internal.SpringBeanUtil;
+** com.vaadin.spring.internal.VaadinSpringComponentFactory;
+** com.vaadin.spring.server.SpringVaadinServletService;
+
+* If your routes are defined in a different package than the Spring application itself, you need to annotate your application with `@EnableVaadin`,
+in order to Spring to scan the appropriate folders for beans. For example:
+
+[source,java]
+----
+// Assuming that Application is in a different package than the classes
+// annotated with @Route
+@SpringBootApplication
+@EnableVaadin("com.mycompany.views")
+public class Application extends SpringBootServletInitializer {
+----
+
+== Next step
+
+* <<4-ui-parameters#,Step 4 - Configuring UI parameters -> >>
+
+Or:
+
+* <<step-2-legacy-servlets#,<- Go back to step 2>>
+* <<../Overview#,<- Go back to the overview>>

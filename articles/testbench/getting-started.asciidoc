@@ -1,0 +1,110 @@
+---
+title: Getting Started
+order: 20
+layout: page
+---
+
+[[testbench.quickstart]]
+= Getting Started
+
+[TIP]
+If you just want to test out TestBench and see how tests are run, the easiest way is to clone the example project at https://github.com/vaadin/testbench-demo. The tests are automatically executed on your local Chrome when you run `mvn verify`.
+
+[[testbench.quickstart.dependency]]
+== Setting up your Project
+To start using TestBench in an existing project, you need to add the TestBench dependency (`com.vaadin`/`vaadin-testbench`) with a `test` scope. Assuming you have imported the Vaadin platform BOM and have a Maven project, all you need to do is add:
+[source, xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-testbench</artifactId>
+</dependency>
+----
+The `test` scope and version number is predefined by the Vaadin BOM.
+
+To be able to run tests locally, you might need to install a webdriver for your browser, see  <<dummy/../installing-webdrivers#,Installing Web Drivers>> for more details.
+
+[[testbench.quickstart.create-a-test-class]]
+== Creating a Simple Test
+
+The fundamental parts of any TestBench test are:
+
+1. Create an instance of the browser driver for the browser you want to use
+2. Open the URL containing the application you want to test
+3. Perform test logic and assert that the result was the expected one
+4. Close the driver instance to close the browser
+
+The following test example will perform all the above tasks with the test logic consisting of clicking the first available button and checking the the text of the button changes when clicked. If you are adding this test to your own custom application, it will obviously fail unless you modify it. 
+
+In the Maven world, all test classes live in the `src/test/java` directory. Create a new class called `SimpleIT` in that directory (`IT` stands for *integration test* and Maven will automatically run all `*IT` classes):
+
+[source, java]
+----
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+public class SimpleIT extends TestBenchTestCase {
+
+    @Before
+    public void setup() throws Exception {
+        // Create a new browser instance
+        setDriver(new ChromeDriver());
+        // Open the application
+        getDriver().get("http://localhost:8080/");
+    }
+
+    @Test
+    public void clickButton() {
+        // Find the first button (<vaadin-button>) on the page
+        ButtonElement button = $(ButtonElement.class).first();
+
+        // Click it
+        button.click();
+
+        // Check the the value of the button is "Clicked"
+        Assert.assertEquals("Clicked", button.getText());
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        // close the browser instance when all tests are done
+        getDriver().quit();
+    }
+
+}
+----
+
+This is all you need to verify that the text of the button is "Clicked" after clicking on it.
+
+[NOTE] 
+WebComponents hide their content in the Shadow DOM, that's why elements inside a WebComponent cannot be found without specifying a search context. For example, `$(TestBenchElement.class).id("content").$(LabelElement.class).first()`, which means label should be found inside the element with `id="content"`, which should be found on the page or current context. For writing real tests use the <<dummy/../testbench-maintainable-tests-using-page-objects#,Page or View Objects>>, which will improve code readability.
+
+[TIP]
+Don't place your tests in the root package as in this example. Structure them logically according to your application structure.
+
+== Running Tests
+The server hosting your application needs to be running at the given URL before you launch your test. If the server is already running and the application is deployed, you only need to ensure that the URL in the test is correct.
+
+If you are using the Spring Boot starter at https://vaadin.com/start/lts/project-base, you can launch the application using 
+----
+mvn spring-boot:run
+----
+If you are using a plain Java Servlet starter, you can launch the application using
+----
+mvn jetty:run
+----
+
+You can now launch your test in your IDE (run as JUnit test) or in another terminal:
+----
+mvn verify
+----
+
+You should see a browser window opening, doing something and then closing. If the test fails, put a breakpoint in the `clickButton` method so you can see what happens in the browser before it closes.
+
+[TIP]
+By ending the test name in `IT`, the Maven failsafe plugin will recognize the test as an integration test and is able to automatically start and deploy your application before the test and shut down the server after all tests have been run (tie the server to the `pre-integration-test` and `post-integration-test` phases). See https://github.com/vaadin/testbench-demo for an example.
+
+[TIP]
+Running `mvn test` will only run unit tests (`*Test`) by default while `mvn verify` will also run integration tests (`*IT`)

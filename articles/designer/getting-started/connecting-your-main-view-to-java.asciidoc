@@ -1,0 +1,242 @@
+---
+title: Connecting your Main View to Java
+order: 9
+layout: page
+---
+
+[[designer.connecting.main.view]]
+[#java-connect]
+= Connecting your Main View to Java
+
+When you build a view with Designer, there are two main files for each view:
+
+* `main-view.js`: This is the template file where you lay out the components and define everything that is static.
+* `MainView.java`: This is the Java class that uses the template, adds UI logic, and configures all parts that are dynamic. We refer to this file as the companion file for the template.
+
+When we created the views earlier in the tutorial, we checked the *Create Java Companion file* option in the *New Vaadin 10+ Design* dialog. This is why the `MainView.java` and `ContactForm.java` files were generated automatically. Adding Java code to your views is not visible in the template in Designer, but it is used when you run your application.
+
+For the main view, in the companion file, we need to
+
+. Load data to the grid.
+. Filter data based on the text field.
+. Populate the contact form when the user selects a row in the grid.
+. Enable adding new contacts using the *Add contact* button.
+
+In the contact form, we need to
+
+. Bind fields with a contact object given by the main view.
+. Implement the save, delete and close buttons.
+
+We start with loading data into the grid.
+
+[#java-export-components]
+== Exporting components to Java
+
+First, we export the components which require data or interaction logic to Java. To do this, we need to tell Designer which components should be available from Java code. For the main view, we need the grid to display data, the text field to filter data and the button to add new contacts.
+
+. In Designer, open `main-view.js`.
+. Select the "Filter by name..." text field.
+. In the properties view, go to the attributes panel, find the id attribute and give the text field the "filterText" id. This is what the component will be called in the Java companion file.
+. In the outline, hover over the selected vaadin-text-field and click the icon that appears in the row on the right. This allows you to connect the component to Java and makes the field available from your Java code.
++
+image::images/connect-text-field-to-java.png[Connect the text field to java using the outline.]
+. Repeat this process (steps 2 - 4) for the:
+.. vaadin-button: id attribute = "addContactButton".
+.. vaadin-grid: id attribute = "grid".
+
+All the fields should now be available from your Java code. To check this, either:
+
+. Go back to IntelliJ IDEA.
+. Open the `src/main/java/com.vaadin.tutorial.crm.ui.MainView` class.
+
+.`*MainView.java*`
+[source,java]
+----
+@Tag("main-view")
+@JsModule("./src/views/main-view.js")
+@Route("")
+public class MainView extends PolymerTemplate<MainView.MainViewModel> {
+
+    @Id("filterText") <1>
+    private TextField filterText; <2>
+    @Id("addContactButton")
+    private Button addContactButton; <3>
+    @Id("grid")
+    private Grid grid; <4>
+
+    /**
+     * Creates a new MainView.
+     */
+    public MainView() {
+        // You can initialise any data required for the connected UI components here.
+    }
+
+    /**
+     * This model binds properties between MainView and main-view
+     */
+    public interface MainViewModel extends TemplateModel {
+        // Add setters and getters for template properties here.
+    }
+}
+----
+<1> The fields are now connected to the template in the `@Id("identifier")` annotations.
+<2> The text field uses the `filterText` id.
+<3> The button uses the `addContactButton` id.
+<4> The grid uses the `grid` id.
+
+[#java-data-to-grid]
+== Adding data to the grid
+
+Next, we want to load data from the backend and show it inside grid. The first task is to configure the columns. For each contact we want to show its first name, last name, email and status.
+
+We take advantage of Spring’s dependency injection to get hold of the backend service, by adding it as a parameter in the constructor. Spring passes it in when `MainView` is created.
+
+Modify `MainView` as follows:
+
+.`*MainView.java*`
+[source,java]
+----
+
+public class MainView extends PolymerTemplate<MainView.MainViewModel> {
+
+    @Id("filterText")
+    private TextField filterText;
+    @Id("addContactButton")
+    private Button addContactButton;
+    @Id("grid")
+    private Grid<Contact> grid; <1>
+
+    private ContactService contactService; <2>
+
+    /**
+     * Creates a new MainView.
+     */
+
+    public MainView(ContactService contactService) { <3>
+        this.contactService = contactService; <4>
+        // You can initialise any data required for the connected UI components here.
+        grid.addColumn(Contact::getFirstName).setHeader("First name"); <5>
+        grid.addColumn(Contact::getLastName).setHeader("Last name");
+        grid.addColumn(Contact::getEmail).setHeader("Email");
+        grid.addColumn(Contact::getStatus).setHeader("Status");
+        grid.addColumn(contact -> {  <6>
+            Company company = contact.getCompany();
+            return company == null ? "-" : company.getName();
+        }).setHeader("Company");
+        grid.getColumns().forEach(col -> col.setAutoWidth(true)); <7>
+        updateList();
+    }
+
+    private void updateList() {
+        grid.setItems(contactService.findAll()); <8>
+    }
+
+    /**
+     * This model binds properties between MainView and main-view
+     */
+    public interface MainViewModel extends TemplateModel {
+        // Add setters and getters for template properties here.
+    }
+}
+----
+<1> Adds the bean type as a type parameter to the grid.
+<2> Creates a field for storing the service for future access.
+<3> Spring passes in the service when the view is created.
+<4> The passed reference to the service is stored in the field.
+<5> Adds and configures columns in the grid.
+<6> Creates a custom column for fetching the name of the company the contact works for.
+<7> Configures column sizing: all columns are sized based on their content.
+<8> Fetches items from the service and passes them to the grid.
+
+Next, run the application, or restart if it is already running.
+
+Refresh the `http://localhost:8080/` browser tab. The grid now shows the contacts from the service.
+
+image::images/app-grid-populated.png[Grid configured and populated with items from the service.]
+
+[#java-enable-filtering]
+== Enabling filtering
+
+We would like to filter the grid based on the first name and last name when the user types a value in the filter text field. For this, we need a value-change listener on the text field, and a way to pass the value to the contact service. We also need to add filtering support to the contact service and repository
+
+We start by changing `MainView` as follows:
+
+.`*MainView.java*`
+[source,java]
+----
+public class MainView extends PolymerTemplate<MainView.MainViewModel> {
+
+    // Fields omitted
+    ...
+
+    public MainView(ContactService contactService) {
+        this.contactService = contactService;
+        // You can initialise any data required for the connected UI components here.
+        grid.addColumn(Contact::getFirstName).setHeader("First name");
+        grid.addColumn(Contact::getLastName).setHeader("Last name");
+        grid.addColumn(Contact::getEmail).setHeader("Email");
+        grid.addColumn(Contact::getStatus).setHeader("Status");
+        grid.addColumn(contact -> {
+            Company company = contact.getCompany();
+            return company == null ? "-" : company.getName();
+        }).setHeader("Company");
+        grid.getColumns().forEach(col -> col.setAutoWidth(true));
+
+        updateList();
+
+        filterText.setValueChangeMode(ValueChangeMode.LAZY); <1>
+        filterText.addValueChangeListener(e -> updateList()); <2>
+    }
+
+    private void updateList() {
+        grid.setItems(contactService.findAll(filterText.getValue())); <3>
+    }
+
+    // Template model omitted
+    ...
+}
+----
+
+<1> Puts text field value changes in lazy mode, so that the database is not queried on each keystroke.
+<2> Adds a value-change listener to the text field which tells the grid to update items.
+<3> Passes the value of the text field to the service using the `findAll` method. This will not compile yet because the method does not exist.
+
+Next, we add a `findAll` method that takes a filter String as a parameter to the contact service.
+
+.`*ContactService.java*`
+[source,java]
+----
+public List<Contact> findAll() { <1>
+    return contactRepository.findAll();
+}
+
+public List<Contact> findAll(String stringFilter) { <2>
+    if (stringFilter == null || stringFilter.isEmpty()) {
+        return contactRepository.findAll();
+    } else {
+        return contactRepository.search(stringFilter);
+    }
+}
+----
+
+<1> This is the existing `findAll` method that we do not need to touch.
+<2> Adds a new method for filtering based on a String.
+
+Finally, we add a method to search contacts to `ContactRepository`:
+
+.`*ContactRepository.java*`
+[source,java]
+----
+public interface ContactRepository extends JpaRepository<Contact, Long> {
+    @Query("select c from Contact c " +
+            "where lower(c.firstName) like lower(concat('%', :searchTerm, '%')) " +
+            "or lower(c.lastName) like lower(concat('%', :searchTerm, '%'))")
+    List<Contact> search(@Param("searchTerm") String searchTerm);
+}
+----
+
+Run the application. The grid is now searchable based on the name entered in the text field.
+
+image::images/app-grid-filtered.png[Grid filtered based on text field contents.]
+
+Proceed to the next chapter to connect your Contact Form to Java: <<connecting-your-contact-form-to-java#,Connect your Contact Form>>
