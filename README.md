@@ -2,9 +2,12 @@
 
 Official documentation and code examples for Vaadin.
 
-> **NOTICE**
->
+> **CONTENT ONLY**  
+> This repository does not generate the vaadin.com/docs website. It only contains the content for it.
+
+> **BETA**  
 > This repository is work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts of the Vaadin platform.
+
 
 ## Branches
 
