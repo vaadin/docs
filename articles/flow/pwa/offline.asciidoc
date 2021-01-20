@@ -1,0 +1,72 @@
+---
+title: PWA Offline Experience
+order: 6
+layout: page
+---
+
+= PWA Offline Experience
+
+Vaadin supports two alternative ways of building offline experiences:
+
+* Client-side TypeScript views (default)
+* A separate offline page
+
+For PWAs built with Vaadin, the service worker provides offline support for TypeScript routes and views. This enables building custom view logic in the offline mode. By default, it stores the application shell HTML, the compiled frontend bundles, and the other necessary resources, and then serves them offline from the browser’s cache.
+
+When building application views that work offline is not needed, for example, if it is enough to only display a static content page in the offline mode, you can optionally use a separate offline page instead of TypeScript views (`offlinePath` property in `@PWA` annotation).
+
+[role="since:com.vaadin:vaadin@V19"]
+== Offline TypeScript Views
+
+Adding the <<pwa-overview#,`@PWA` annotation>> on your application shell class enables the service worker, which automatically serves the client-side views offline.
+
+The service worker also caches and serves offline all the imported dependencies (using `import`) in TypeScript views.
+
+[WARNING]
+====
+As the server is not available when offline, endpoint calls must be wrapped with exception-handling code returning a fallback value:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/pwa/offline/ts-view-with-endpoint.ts[]
+----
+====
+
+== Creating a Custom Offline Page
+
+To use a separate offline page:
+
+. Create a file named `offline.html`.
+. Add the file to your static web resources directory (`src/main/resources/META-INF/resources/` in Spring projects, `src/main/webapp/` for non-Spring projects).
+. Specify `offlinePath="offline.html"` in the <<pwa-overview#,`@PWA` annotation>>.
+
+You can change the name of the offline page file specified in the `offlinePath` parameter.
+
+The offline page can only use resources found in the cache. By default, only the offline page, <<web-app-manifest#,manifest>>, and <<tutorial-pwa-icons#,icons>> are cached. If your page needs external resources (such as CSS, images, Web Components), you can define them using the `offlineResources` parameter in the <<pwa-overview#,`@PWA` annotation>>. See <<pwa-service-worker#defining-custom-cache-resources,Defining Custom Cache Resources>> for more.
+
+[#offlinePath]
+.PWA annotation with `offlinePath` setting:
+[source, java]
+----
+@PWA(name = "My Progressive Web Application",
+     shortName = "MyPWA",
+     offlinePath = "offline.html")
+public class AppShell implements AppShellConfigurator {
+}
+----
+
+== Generated Offline Page
+
+[WARNING]
+====
+The generated offline page provides compatibility with PWAs built before Vaadin 19.
+
+Consider using TypeScript views offline, or a custom offline page.
+====
+
+Vaadin has a built-in `offline.html` generated offline page. This is a simple page that:
+
+* Includes the application name and icon.
+* Communicates to the user that the application is offline, because there is no network connection.
+
+To use the built-in offline page, specify `offlinePath="offline.html"` as in <<#offlinePath, the above example>>.
