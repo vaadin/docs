@@ -3,25 +3,34 @@ version: "3"
 services:
   docs-app:
     image: vaadin/docbuilder:latest
-    working_dir: /docs-app
-    command: "sh -c '[ -f /root/.vaadin/proKey ] && (npm run build && cp -r /docs-app/public /out/) || echo \"Invalid Vaadin license file!\"'"
+    environment:
+      - "DOCS_PROXY_VAADIN_HOSTNAME=docs"
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    command: "sh -c '[ -f /root/.vaadin/proKey ] && npm run develop || echo \"Invalid Vaadin license file!\"'"
+
     volumes:
       - docbuilder-maven:/root/.m2
       - docbuilder-gatsby-cache:/docs-app/.cache
       - docbuilder-gatsby-public:/docs-app/public
-      - ..:/docs
-      - ./out:/out
+      - ../..:/docs
       - ~/.vaadin/proKey:/root/.vaadin/proKey
+    links:
+      - docs
 
   docs:
     image: vaadin/docbuilder:latest
+    expose:
+      - "8080"
+    restart: unless-stopped
     working_dir: /docs
-    command: "sh -c 'mvn clean package -DskipTests -Pproduction && cp -r /docs/target/*.jar /out/'"
+    command: "sh -c '[ -f /root/.vaadin/proKey ] && mvn || echo \"Invalid Vaadin license file!\"'"
     volumes:
       - docbuilder-maven:/root/.m2
       - docbuilder-vaadin-node-modules:/root/.vaadin/node_modules
-      - ./out:/out
-      - ..:/docs
+      - ../..:/docs
+      - ~/.vaadin/proKey:/root/.vaadin/proKey
 
 volumes:
   docbuilder-maven:
