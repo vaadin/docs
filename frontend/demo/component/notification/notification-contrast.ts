@@ -7,7 +7,7 @@ import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'themes/theme-generated.js';
 
-@customElement('notification-error')
+@customElement('notification-contrast')
 export class Example extends LitElement {
   @internalProperty()
   private notificationOpen = false;
@@ -29,7 +29,7 @@ export class Example extends LitElement {
 
       <!-- tag::snippet[] -->
       <vaadin-notification
-        theme="error"
+        theme="contrast"
         .opened="${this.notificationOpen}"
         @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
         .renderer="${this.renderer}"
@@ -41,7 +41,7 @@ export class Example extends LitElement {
   renderer = (root: HTMLElement) =>
     render(
       html`
-        <div>Failed to generate report</div>
+        <div>5 tasks deleted</div>
         <vaadin-button
           theme="tertiary-inline"
           @click="${() => (this.notificationOpen = false)}"
