@@ -53,26 +53,56 @@ You can set the path as a system property in a `VaadinServiceInitListener`, whic
 
 ==== Spring Applications
 
-If you have a Spring application, you can register a `VaadinServiceInitListener` by implementing the interface and annotating the class as a `@SpringComponent`.
-In the `serviceInit` method, you can then set `vaadin.ce.dataDir` as a system property.
+If you have a Spring application, you can provide a bean of type `CollaborationEngineConfiguration` from your main Spring class
+by annotating a method with the `@Bean` annotation and returning a configuration instance with the data directory path set using the `setDataDir` method.
 
-.`com.company.myapp.MyVaadinInitListener.java`
-```java
-@SpringComponent
-public class MyVaadinInitListener implements VaadinServiceInitListener {
-    @Override
-    public void serviceInit(ServiceInitEvent event) {
-        System.setProperty("vaadin.ce.dataDir",
-                "/Users/steve/vaadin/collaboration-engine/");
+.com.company.myapp.Application.java
+[source,java,subs="+macros"]
+----
+@SpringBootApplication
+public class Application {
+
+    public static void main(String... args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @Bean
+    public CollaborationEngineConfiguration ceConfigBean() {
+        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
+                licenseEvent -> {
+                    // See <<ce.production.license-events>>
+                });
+        configuration.setDataDir("/Users/steve/vaadin/collaboration-engine/");
+        return configuration;
     }
 }
-```
+----
 
 ==== Other Applications
 
-If you have a non-Spring application, you can implement the `VaadinServiceInitListener` in the same way as seen above, except that you can't use the `@SpringComponent` annotation.
-Instead, you need to register it through the Java Service Provider Interface (SPI) loading facility.
-You can do that by providing a file, `src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener` with a fully qualified class name to your listener as content, for example, `com.company.myapp.MyVaadinInitListener`.
+If you have a non-Spring application, you can implement a `VaadinServiceInitListener`
+where you create a `CollaborationEngineConfiguration` instance and set it using the `CollaborationEngine.configure()` method.
+
+.com.company.myapp.MyVaadinInitListener.java
+[source,java,subs="+macros"]
+----
+public class MyVaadinInitListener implements VaadinServiceInitListener {
+
+    @Override
+    public void serviceInit(ServiceInitEvent event) {
+        VaadinService service = serviceEvent.getSource();
+        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
+                licenseEvent -> {
+                    // See <<ce.production.license-events>>
+                });
+        configuration.setDataDir("/Users/steve/vaadin/collaboration-engine/");
+        CollaborationEngine.configure(service, configuration);
+    }
+}
+----
+
+Then, you need to register the listener via Java SPI loading facility.
+You do this by providing a file, `src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener` with a fully-qualified class name to your listener as content, for example, `com.company.myapp.MyVaadinInitListener`.
 
 .The location of the configuration file
 image::images/service-init-listener.png[The location of the configuration file]
@@ -181,25 +211,12 @@ One potential way to handle the event is to send a message to any existing appli
 Another option is to send an email to the relevant people, for example, those who maintain the deployment and those who are responsible of the Collaboration Engine license.
 You need to ensure that your application notices and handles the events.
 
-The listener can be configured in a `VaadinServiceInitListener` in the same way as the `vaadin.ce.dataDir` property,
-if you're setting that property in Java code, as described earlier.
-
-The following example is a Spring project, so the `VaadinServiceInitListener` is registered by adding the `@SpringComponent` annotation.
-If you are not using Spring, you can register the service init listener in the same way as described in <<ce.production.data-dir-in-project-files>>.
+The listener can be configured when creating the `CollaborationEngineConfiguration` as described earlier
+in <<ce.production.data-dir-in-project-files>>.
 
 ```java
-@SpringComponent
-public static class MyVaadinInitListener
-        implements VaadinServiceInitListener {
-
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(MyVaadinInitListener.class);
-
-    @Override
-    public void serviceInit(ServiceInitEvent serviceEvent) {
-        VaadinService service = serviceEvent.getSource();
-
-        LicenseEventHandler licenseEventHandler = licenseEvent -> {
+CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
+        licenseEvent -> {
             switch (licenseEvent.getType()) {
             case GRACE_PERIOD_STARTED:
             case LICENSE_EXPIRES_SOON:
@@ -213,17 +230,7 @@ public static class MyVaadinInitListener
             sendEmail(
                     "Vaadin Collaboration Engine license needs to be updated",
                     licenseEvent.getMessage());
-        };
-
-        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
-                licenseEventHandler);
-        CollaborationEngine.configure(service, configuration);
-    }
-
-    private void sendEmail(String subject, String content) {
-        // Implement sending an email to relevant people
-    }
-}
+    });
 ```
 
 In the above example, the license event handler logs the event messages using the SLF4J logging API, and sends an email.
