@@ -18,15 +18,15 @@ import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 
+const responsiveSteps: FormLayoutResponsiveStep[] = [
+  { minWidth: 0, columns: 1 },
+  { minWidth: '20em', columns: 2 }
+];
+
 @customElement('accordion-summary')
 export class Example extends LitElement {
   @internalProperty()
-  private items: Country[] = [];
-  @internalProperty()
-  private responsiveSteps: FormLayoutResponsiveStep[] = [
-    { minWidth: 0, columns: 1 },
-    { minWidth: '20em', columns: 2 }
-  ];
+  private countries: Country[] = [];
 
   @internalProperty()
   private personBinder = new Binder(this, PersonModel);
@@ -37,7 +37,7 @@ export class Example extends LitElement {
   @internalProperty()
   private openedPanelIndex = 0;
   async firstUpdated() {
-    this.items = await getCountries();
+    this.countries = await getCountries();
   }
   constructor() {
     super();
@@ -47,11 +47,11 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-accordion>
-        <vaadin-accordion-panel
-          .opened=${this.openedPanelIndex === 0}
-          @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value ? 0 : -1)}"
-        >
+      <vaadin-accordion
+        .opened=${this.openedPanelIndex}
+        @opened-changed=${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value)}
+      >
+        <vaadin-accordion-panel>
           <div slot="summary">
             Customer details
             <vaadin-vertical-layout
@@ -64,7 +64,7 @@ export class Example extends LitElement {
             </vaadin-vertical-layout>
           </div>
 
-          <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
+          <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
               label="First Name"
               required
@@ -93,10 +93,7 @@ export class Example extends LitElement {
           </vaadin-button>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel
-          .opened=${this.openedPanelIndex === 1}
-          @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value ? 1 : -1)}"
-        >
+        <vaadin-accordion-panel>
           <div slot="summary">
             Billing Address
             <vaadin-vertical-layout
@@ -116,7 +113,7 @@ export class Example extends LitElement {
             </vaadin-vertical-layout>
           </div>
 
-          <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
+          <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
               label="Address"
               ...="${field(this.personBinder.model.address.street)}"
@@ -138,7 +135,7 @@ export class Example extends LitElement {
               ...="${field(this.personBinder.model.address.country)}"
               item-label-path="name"
               item-value-path="id"
-              .items="${this.items}"
+              .items="${this.countries}"
             >
             </vaadin-combo-box>
           </vaadin-form-layout>
@@ -147,10 +144,7 @@ export class Example extends LitElement {
           </vaadin-button>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel
-          .opened=${this.openedPanelIndex === 2}
-          @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value ? 2 : -1)}"
-        >
+        <vaadin-accordion-panel>
           <div slot="summary">
             Payment
             <vaadin-vertical-layout
@@ -162,7 +156,7 @@ export class Example extends LitElement {
             </vaadin-vertical-layout>
           </div>
 
-          <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
+          <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
               label="Card number"
               ...="${field(this.cardBinder.model.accountNumber)}"
