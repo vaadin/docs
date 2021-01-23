@@ -11,7 +11,9 @@ export class LoginView extends LitElement implements AfterEnterObserver {
   // the url to redirect to after a successful login
   private returnUrl = '/';
 
-  private onSuccess = (_: LoginResult) => { Router.go(this.returnUrl) };
+  private onSuccess = (_: LoginResult) => {
+    Router.go(this.returnUrl);
+  };
 
   render() {
     return html`
@@ -22,7 +24,7 @@ export class LoginView extends LitElement implements AfterEnterObserver {
 
   async login(event: CustomEvent): Promise<LoginResult> {
     this.error = false;
-    // use the login helper method from auth.ts, which in turn uses 
+    // use the login helper method from auth.ts, which in turn uses
     // Vaadin provided login helper method to obtain the LoginResult
     const result = await login(event.detail.username, event.detail.password);
     this.error = result.error;
