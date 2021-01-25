@@ -7,7 +7,7 @@ import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 import { applyTheme } from 'themes/theme-generated.js';
 import { format, addDays } from 'date-fns';
 
-const dateTimeFormat = `yyyy-MM-dd'T'HH:mm:ss`;
+const dateTimeFormat = `yyyy-MM-dd'T'HH:00:00`;
 const minValue = format(new Date(), dateTimeFormat);
 const initialValue = format(addDays(new Date(), 7), dateTimeFormat);
 const maxValue = format(addDays(new Date(), 60), dateTimeFormat);
