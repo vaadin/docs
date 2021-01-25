@@ -15,6 +15,7 @@ public class AccordionFilledPanels extends Div {
     public AccordionFilledPanels() {
         // tag::snippet[]
         Accordion accordion = new Accordion();
+        // end::snippet[]
 
         Span name = new Span("Sophia Williams");
         Span email = new Span("sophia.williams@company.com");
@@ -24,8 +25,10 @@ public class AccordionFilledPanels extends Div {
         personalInformationLayout.setSpacing(false);
         personalInformationLayout.setPadding(false);
 
+        // tag::snippet[]
         AccordionPanel personalInfoPanel = accordion.add("Personal information", personalInformationLayout);
         personalInfoPanel.setThemeName("filled");
+        // end::snippet[]
 
         Span street = new Span("4027 Amber Lake Canyon");
         Span zipCode = new Span("72333-5884 Cozy Nook");
@@ -52,7 +55,6 @@ public class AccordionFilledPanels extends Div {
         paymentPanel.setThemeName("filled");
 
         add(accordion);
-        // end::snippet[]
     }
 
     public static class Exporter extends DemoExporter<AccordionFilledPanels> { // hidden-full-source-line

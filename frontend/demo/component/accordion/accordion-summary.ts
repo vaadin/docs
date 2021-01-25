@@ -17,8 +17,6 @@ import PersonModel from '../../../generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from '../../../generated/com/vaadin/demo/domain/CardModel';
 import { applyTheme } from 'themes/theme-generated.js';
 
-// tag::snippet[]
-
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },
   { minWidth: '20em', columns: 2 }
@@ -48,6 +46,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-accordion
         .opened=${this.openedPanelIndex}
         @opened-changed=${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value)}
@@ -64,6 +63,7 @@ export class Example extends LitElement {
               <span>${this.personBinder.value.address?.phone}</span>
             </vaadin-vertical-layout>
           </div>
+          <!-- end::snippet[] -->
 
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
@@ -168,9 +168,10 @@ export class Example extends LitElement {
           <vaadin-button theme="primary" @click=${() => (this.openedPanelIndex = -1)}>
             Finish
           </vaadin-button>
+          <!-- tag::snippet[] -->
         </vaadin-accordion-panel>
       </vaadin-accordion>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]

@@ -23,6 +23,7 @@ public class AccordionContent extends Div {
             createStyledAnchor("#", "Reports"),
             createStyledAnchor("#", "Data sources")
         ));
+        // end::snippet[]
 
         accordion.add("Customers", createContent(
             createStyledAnchor("#", "Accounts"),
@@ -39,7 +40,6 @@ public class AccordionContent extends Div {
         accordion.add(financesPanel);
 
         add(accordion);
-        // end::snippet[]
     }
     
     private VerticalLayout createContent(Anchor ...anchors) {

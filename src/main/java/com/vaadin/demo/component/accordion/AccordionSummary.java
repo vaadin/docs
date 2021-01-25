@@ -28,7 +28,6 @@ public class AccordionSummary extends Div {
     private static final String CUSTOMER_DETAILS = "Customer details";
 
     public AccordionSummary() {
-        // tag::snippet[]
         Accordion accordion = new Accordion();
 
         Binder<Person> personBinder = new Binder<>(Person.class);
@@ -38,7 +37,9 @@ public class AccordionSummary extends Div {
         cardBinder.setBean(new Card());
 
         FormLayout customerDetailsFormLayout = createFormLayout();
+        // tag::snippet[]
         AccordionPanel customDetailsPanel = accordion.add(CUSTOMER_DETAILS,  customerDetailsFormLayout);
+        // end::snippet[]
 
         FormLayout billingAddressFormLayout = createFormLayout();
         AccordionPanel billingAddressPanel = accordion.add(BILLING_ADDRESS,  billingAddressFormLayout);
@@ -74,6 +75,7 @@ public class AccordionSummary extends Div {
         customerDetailsFormLayout.add(email, 2);
         customerDetailsFormLayout.add(phone, 2);
 
+        // tag::snippet[]
         customDetailsPanel.addOpenedChangeListener(e -> {
             if(e.isOpened()) {
                 customDetailsPanel.setSummaryText(CUSTOMER_DETAILS);
@@ -86,6 +88,7 @@ public class AccordionSummary extends Div {
                 ));
             }
         });
+        // end::snippet[]
 
         Button customDetailsButton = new Button("Continue", (e) -> billingAddressPanel.setOpened(true));
         customDetailsButton.setThemeName("primary");
@@ -200,7 +203,6 @@ public class AccordionSummary extends Div {
 
 
         add(accordion);
-        // end::snippet[]
     }
 
     private FormLayout createFormLayout() {

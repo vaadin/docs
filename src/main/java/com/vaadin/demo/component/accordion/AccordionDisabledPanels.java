@@ -15,6 +15,7 @@ public class AccordionDisabledPanels extends Div {
     public AccordionDisabledPanels() {
         // tag::snippet[]
         Accordion accordion = new Accordion();
+        // end::snippet[]
 
         Span name = new Span("Sophia Williams");
         Span email = new Span("sophia.williams@company.com");
@@ -35,8 +36,10 @@ public class AccordionDisabledPanels extends Div {
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
         
+        // tag::snippet[]
         AccordionPanel billingAdressPanel = accordion.add("Billing address", billingAddressLayout);
         billingAdressPanel.setEnabled(false);
+        // end::snippet[]
 
         Span cardBrand = new Span("Mastercard");
         Span cardNumber = new Span("1234 5678 9012 3456");
@@ -51,7 +54,6 @@ public class AccordionDisabledPanels extends Div {
         paymentPanel.setEnabled(false);
 
         add(accordion);
-        // end::snippet[]
     }
 
     public static class Exporter extends DemoExporter<AccordionDisabledPanels> { // hidden-full-source-line

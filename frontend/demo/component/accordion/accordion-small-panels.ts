@@ -6,7 +6,6 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import { applyTheme } from 'themes/theme-generated.js';
 
-// tag::snippet[]
 @customElement('accordion-small-panels')
 export class Example extends LitElement {
   constructor() {
@@ -17,6 +16,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-accordion>
         <vaadin-accordion-panel theme="small">
           <div slot="summary">Personal information</div>
@@ -27,6 +27,7 @@ export class Example extends LitElement {
             <span>(501) 555-9128</span>
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
+        <!-- end::snippet[] -->
 
         <vaadin-accordion-panel theme="small">
           <div slot="summary">Billing address</div>
@@ -47,7 +48,9 @@ export class Example extends LitElement {
             <span>Expires 06/21</span>
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
+        <!-- tag::snippet[] -->
       </vaadin-accordion>
+      <!-- end::snippet[] -->
     `;
   }
 }

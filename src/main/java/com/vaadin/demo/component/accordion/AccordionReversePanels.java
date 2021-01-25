@@ -13,7 +13,6 @@ import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 public class AccordionReversePanels extends Div {
 
     public AccordionReversePanels() {
-        // tag::snippet[]
         Accordion accordion = new Accordion();
 
         Span name = new Span("Sophia Williams");
@@ -48,11 +47,12 @@ public class AccordionReversePanels extends Div {
         paymentLayout.setPadding(false);
         paymentLayout.add(cardBrand, cardNumber, expiryDate);
         
+        // tag::snippet[]
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
         paymentPanel.setThemeName("reverse");
+        // end::snippet[]
 
         add(accordion);
-        // end::snippet[]
     }
 
     public static class Exporter extends DemoExporter<AccordionReversePanels> { // hidden-full-source-line

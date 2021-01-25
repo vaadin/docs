@@ -24,6 +24,7 @@ public class AccordionBasic extends Div {
     personalInformationLayout.setPadding(false);
 
     accordion.add("Personal information", personalInformationLayout);
+    // end::snippet[]
 
     Span street = new Span("4027 Amber Lake Canyon");
     Span zipCode = new Span("72333-5884 Cozy Nook");
@@ -43,10 +44,9 @@ public class AccordionBasic extends Div {
     paymentLayout.setSpacing(false);
     paymentLayout.setPadding(false);
     paymentLayout.add(cardBrand, cardNumber, expiryDate);
-    AccordionPanel billingAddressPanel = accordion.add("Payment", paymentLayout);
+    accordion.add("Payment", paymentLayout);
 
     add(accordion);
-    // end::snippet[]
   }
 
   public static class Exporter extends DemoExporter<AccordionBasic> { // hidden-full-source-line
