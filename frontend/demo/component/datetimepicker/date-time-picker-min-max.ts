@@ -4,20 +4,13 @@ import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-lin
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
-
-// NOTE: Use a date utility library for more fluent DX
-const date = new Date();
-date.setMilliseconds(0);
-date.setSeconds(0);
-date.setMinutes(0);
-const minValue = date.toISOString().slice(0, -1);
-
-date.setDate(date.getDate() + 7);
-const initialValue = date.toISOString().slice(0, -1);
-
-date.setDate(date.getDate() + 53);
-const maxValue = date.toISOString().slice(0, -1);
 import { applyTheme } from 'themes/theme-generated.js';
+import { format, addDays } from 'date-fns';
+
+const dateTimeFormat = `yyyy-MM-dd'T'HH:mm:ss`;
+const minValue = format(new Date(), dateTimeFormat);
+const initialValue = format(addDays(new Date(), 7), dateTimeFormat);
+const maxValue = format(addDays(new Date(), 60), dateTimeFormat);
 
 @customElement('date-time-picker-min-max')
 export class Example extends LitElement {
