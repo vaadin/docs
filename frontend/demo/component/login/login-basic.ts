@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-login/vaadin-login-overlay';
+import '@vaadin/vaadin-login/vaadin-login-form';
 import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('login-basic')
@@ -15,7 +15,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-login-overlay></vaadin-login-overlay>
+      <vaadin-login-form></vaadin-login-form>
       <!-- end::snippet[] -->
     `;
   }
