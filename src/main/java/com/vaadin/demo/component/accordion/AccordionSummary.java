@@ -194,9 +194,9 @@ public class AccordionSummary extends Div {
             }
         });
 
-        Button paymenButton = new Button("Continue", (e) -> paymentPanel.setOpened(false));
-        paymenButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        paymentPanel.addContent(paymenButton);
+        Button paymentButton = new Button("Finish", (e) -> paymentPanel.setOpened(false));
+        paymentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        paymentPanel.addContent(paymentButton);
 
 
         add(accordion);
