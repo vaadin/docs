@@ -24,7 +24,7 @@ public class AccordionSmallPanels extends Div {
         personalInformationLayout.setSpacing(false);
         personalInformationLayout.setPadding(false);
 
-        AccordionPanel personalInfoPanel = accordion.add("Personal Information", personalInformationLayout);
+        AccordionPanel personalInfoPanel = accordion.add("Personal information", personalInformationLayout);
         personalInfoPanel.setThemeName("small");
 
         Span street = new Span("4027 Amber Lake Canyon");
@@ -36,7 +36,7 @@ public class AccordionSmallPanels extends Div {
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
         
-        AccordionPanel billingAdressPanel = accordion.add("Billing Address", billingAddressLayout);
+        AccordionPanel billingAdressPanel = accordion.add("Billing address", billingAddressLayout);
         billingAdressPanel.setThemeName("small");
 
         Span cardBrand = new Span("Mastercard");

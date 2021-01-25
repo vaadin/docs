@@ -23,7 +23,7 @@ public class AccordionBasic extends Div {
     personalInformationLayout.setSpacing(false);
     personalInformationLayout.setPadding(false);
 
-    accordion.add("Personal Information", personalInformationLayout);
+    accordion.add("Personal information", personalInformationLayout);
 
     Span street = new Span("4027 Amber Lake Canyon");
     Span zipCode = new Span("72333-5884 Cozy Nook");
@@ -33,7 +33,7 @@ public class AccordionBasic extends Div {
     billingAddressLayout.setSpacing(false);
     billingAddressLayout.setPadding(false);
     billingAddressLayout.add(street, zipCode, city);
-    accordion.add("Billing Address", billingAddressLayout);
+    accordion.add("Billing address", billingAddressLayout);
 
     Span cardBrand = new Span("Mastercard");
     Span cardNumber = new Span("1234 5678 9012 3456");

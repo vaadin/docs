@@ -1,6 +1,5 @@
 package com.vaadin.demo.component.accordion;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
@@ -14,18 +13,18 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.Address;
 import com.vaadin.demo.domain.Card;
 import com.vaadin.demo.domain.Country;
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
+import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("accordion-summary")
 public class AccordionSummary extends Div {
 
     private static final String PAYMENT = "Payment";
-    private static final String BILLING_ADDRESS = "Billing Address";
+    private static final String BILLING_ADDRESS = "Billing address";
     private static final String CUSTOMER_DETAILS = "Customer details";
 
     public AccordionSummary() {
@@ -49,10 +48,10 @@ public class AccordionSummary extends Div {
 
         // Customer details fields
 
-        TextField firstName = new TextField("First Name");
+        TextField firstName = new TextField("First name");
         personBinder.forField(firstName).bind("firstName");
 
-        TextField lastName = new TextField("Last Name");
+        TextField lastName = new TextField("Last name");
         personBinder.forField(lastName).bind("lastName");
 
         EmailField email = new EmailField("Email address");

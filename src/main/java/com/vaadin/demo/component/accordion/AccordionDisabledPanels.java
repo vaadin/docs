@@ -24,7 +24,7 @@ public class AccordionDisabledPanels extends Div {
         personalInformationLayout.setSpacing(false);
         personalInformationLayout.setPadding(false);
 
-        accordion.add("Personal Information", personalInformationLayout);
+        accordion.add("Personal information", personalInformationLayout);
 
         Span street = new Span("4027 Amber Lake Canyon");
         Span zipCode = new Span("72333-5884 Cozy Nook");
@@ -35,7 +35,7 @@ public class AccordionDisabledPanels extends Div {
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
         
-        AccordionPanel billingAdressPanel = accordion.add("Billing Address", billingAddressLayout);
+        AccordionPanel billingAdressPanel = accordion.add("Billing address", billingAddressLayout);
         billingAdressPanel.setEnabled(false);
 
         Span cardBrand = new Span("Mastercard");
