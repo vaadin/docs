@@ -22,6 +22,8 @@ public class Person {
 
   private String profession;
 
+  private Address address;
+
   public String getFirstName() {
     return firstName;
   }
@@ -76,6 +78,14 @@ public class Person {
 
   public void setProfession(String profession) {
     this.profession = profession;
+  }
+
+  public Address getAddress() {
+    return address;
+  }
+
+  public void setAddress(Address address) {
+    this.address = address;
   }
 
   public Integer getId() {
