@@ -63,7 +63,12 @@ module.exports = function(config) {
 
   config.devServer = {
     watchOptions: {
-      ignored: [path.resolve(__dirname, 'target'), path.resolve(__dirname, 'src', 'main', 'java')],
+      ignored: [
+        path.resolve(__dirname, 'target'),
+        path.resolve(__dirname, 'src', 'main', 'java'),
+        path.resolve(__dirname, 'frontend', 'themes', 'docs', 'docs.generated.js'),
+        path.resolve(__dirname, 'frontend', 'generated'),
+      ],
     },
   };
 };
