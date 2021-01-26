@@ -60,4 +60,10 @@ module.exports = function(config) {
     test: themeCssRegex,
     use: ['raw-loader', 'extract-loader', 'css-loader']
   });
+
+  config.devServer = {
+    watchOptions: {
+      ignored: [path.resolve(__dirname, 'target'), path.resolve(__dirname, 'src', 'main', 'java')],
+    },
+  };
 };
