@@ -1,12 +1,9 @@
 package com.vaadin.demo.component.cookieconsent;
 
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.charts.model.Label;
-import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.demo.DemoExporter;
+import com.vaadin.flow.component.cookieconsent.CookieConsent;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("cookie-consent-basic")
 public class CookieConsentBasic extends Div {
