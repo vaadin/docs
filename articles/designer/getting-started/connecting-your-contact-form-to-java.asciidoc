@@ -1,0 +1,429 @@
+---
+title: Connecting your Contact Form to Java
+order: 10
+layout: page
+---
+
+[[designer.connecting.contact.form]]
+[#java-contact-form]
+== Connecting your Contact Form to Java
+
+Now when the work with the grid is complete, we turn our attention to the contact form.
+
+We want the following behavior:
+
+. The form is hidden when it is not needed.
+. The form can be used to edit or delete an existing contact.
+. The form can be used to add a new contact.
+
+We will start by hiding the form.
+
+[#java-hiding-the-form]
+== Hiding the form
+
+The `MainView` class knows when the form is needed and we use this to hide and show the form.
+
+First, we connect the form to the `MainView` class, and then call `setVisible` on the form to hide it.
+
+. Open `main-view` in Designer.
+. Select the contact-form.
+. Give the contact form an id attribute with the value "form".
+. In the outline, click the Java connection icon to make the component available in the Java code.
+
+The contact form is now accessible from the `MainView` class.
+
+Next, open the `MainView` class and change it as follows to hide the form initially:
+
+.`*MainView.java*`
+[source,java]
+----
+public class MainView extends PolymerTemplate<MainView.MainViewModel> {
+
+    // Previous fields omitted
+
+    @Id("form")
+    private ContactForm form; <1>
+
+    public MainView(ContactService contactService) {
+      // Previous lines omitted
+
+      closeEditor(); <2>
+    }
+
+    private void closeEditor() { <3>
+      form.setVisible(false);
+    }
+
+    // Rest of the class omitted
+}
+----
+
+<1> This is the field created by Designer.
+<2> Calls `closeEditor` on the last line of the constructor to initially hide the form.
+<3> Adds a new method that calls `setVisible` to close the form.
+
+WARNING: Unfortunately, there is currently a https://github.com/vaadin/flow/issues/8256[bug] that prevents `setVisible` from working correctly in our case. For now, we can use the workaround detailed below. Without this the form won't be hidden.
+
+To work around the https://github.com/vaadin/flow/issues/8256[bug]:
+
+. Open `contact-form.js` in your IDE.
+. Edit the source by adding the following CSS rule into the style element.
+
+.`*contact-form.js*`
+[source,javascript]
+----
+    static get template() {
+        return html`
+<style include="shared-styles">
+                :host {
+                    display: block;
+                    height: 100%;
+                }
+                /* Workaround for https://github.com/vaadin/flow/issues/8256 */
+                :host([hidden]) { <1>
+                  display: none !important;
+                }
+            </style>
+`;
+    }
+----
+<1> This CSS is applied when the hidden attribute is present on the contact-form element.
+
+Now, the contact form will be hidden when the application starts.
+
+image::images/app-form-hidden.png[Form hidden when initially starting the application.]
+
+Next, we open the form when a contact is selected in the grid, and pass that contact to the form.
+
+[#java-open-form-with-selected]
+== Opening the form when a contact is selected
+
+When the user click on a contact in the grid, the contact is selected. At this point, we want to open the form and fill it with the contact's data. 
+
+We start by listening for a selection event in the grid, and when it occurs we pass the contact to the form:
+
+.`*MainView.java*`
+[source,java]
+----
+public class MainView extends PolymerTemplate<MainView.MainViewModel> {
+    // Omitted
+
+    public MainView(ContactService contactService) {
+
+        // Omitted
+
+        grid.getColumns().forEach(col -> col.setAutoWidth(true));
+        grid.asSingleSelect().addValueChangeListener(event ->
+                editContact(event.getValue())); <1>
+
+        // Omitted
+    }
+
+    private void editContact(Contact contact) { <2>
+        if (contact == null) {
+            closeEditor();
+        } else {
+            form.setContact(contact); <3>
+            form.setVisible(true);
+        }
+    }
+
+    // Omitted
+}
+----
+
+<1> Adds a listener for selection changes in grid.
+<2> Adds a new method to show or hide the form depending on selection presence.
+<3> Passes the contact to the form. This is a new method that needs to be added to `ContactForm`.
+
+Next, we add the `setContact` method to `ContactForm`. For now, it is sufficient that the project compiles, so we leave the method empty. It will be implemented in the next section.
+
+.`*ContactForm.java*`
+[source,java]
+----
+public class ContactForm extends PolymerTemplate<ContactForm.ContactFormModel> {
+    // Omitted
+
+    public void setContact(Contact contact) { <1>
+        // to be implemented
+    }
+
+    // Omitted
+}
+----
+
+<1> Adds a method to set the contact. This will be implemented shortly.
+
+If you run the application now, you'll see that when you select a contact the form is opened. And, if you click the selected contact, it becomes deselected and the form closes. The form remains empty though, because we have not yet bound its fields to the given contact. 
+
+Next, we populate the form with the selected contact's details.
+
+[#java-add-binder-to-contact-form]
+== Adding a binder
+
+To make the contact's details visible and editable in the form, we need to bind the contact bean to the form. This can be done by using a binder object. We use a validating binder that gives us simple validation based on the member fields of the contact bean.
+
+First, we add the binder to the `ContactForm` class and use it to bind the given contact's fields to the form:
+
+.`*ContactForm.java*`
+[source,java]
+----
+// Other fields omitted
+Binder<Contact> binder = new BeanValidationBinder<>(Contact.class); <1>
+
+public ContactForm() {
+    binder.bindInstanceFields(this); <2>
+}
+
+public void setContact(Contact contact) {
+    binder.setBean(contact); <3>
+}
+----
+<1> `BeanValidationBinder` is a `Binder` that is aware of bean validation annotations. By passing it to `Contact.class`, we define the type of object we are binding to.
+<2> `bindInstanceFields` matches fields in `Contact` and `ContactForm` based on their names.
+<3> Sets the given contact to the binder.
+
+The binder will look for fields in the `Contact` class and in `ContactForm` and bind those with matching names.
+
+WARNING: If you run the application now, the binder will throw an exception because it won't find a single field to bind to. We'll add the fields shortly in Designer.
+
+Next, we add the fields that the binder can bind to.
+
+[#java-connect-contact-form-fields]
+== Connecting the fields from contact-form
+
+To make it possible for the binder to bind the fields of a contact bean to the form fields, the fields must be present as members in the `ContactForm` class. We can add the fields to the class using Designer, but need to be careful with naming them because the binder works by matching the bean and field names. The bean contains fields named: `firstName`, `lastName`, `email`, `company`, and `status`. When we connect the fields from `contact-form`, we need to use these exact names.
+
+. In Designer, open `contact-form`.
+. Select the first name field, give it the "firstName" id attribute, and then connect it by clicking the Java icon in the outline. This connects the first name field with the "firstName" id. 
+. Repeat the procedure from step 2 above for the other fields in the form:
+.. Last name field = "lastName" id attribute.
+.. Email field = "email" id attribute.
+.. Company field = "company" id attribute.
+.. Status field = "status" id attribute.
+
+image::images/form-connect-fields-designer.png[Connect the form fields in Designer.]
+
+After this was done in Designer, you should have the following fields in the `ContactForm` class:
+
+.`*ContactForm.java*`
+[source,java]
+----
+    @Id("firstName")
+    private TextField firstName;
+    @Id("lastName")
+    private TextField lastName;
+    @Id("email")
+    private EmailField email;
+    @Id("company")
+    private ComboBox<String> company;
+    @Id("status")
+    private ComboBox<String> status;
+----
+
+If you run the application now, it will once again raise an exception, because the types of the combo boxes do not match the types in the `Contact` bean. 
+
+We fix this by editing them directly in the Java file:
+
+.`*ContactForm.java*`
+[source,java]
+----
+    @Id("company")
+    private ComboBox<Company> company;
+    @Id("status")
+    private ComboBox<Contact.Status> status;
+----
+
+There are still a few more things to fix. One is the text displayed in the company combo box. Currently, the contact object is printed as the value of the combo box. Instead of the object, we want to see the name of the company. The other issue is that the items in the combo boxes are still not set. We can get the companies from the `CompanyService`, and the statuses from the `Status` enumeration.
+
+Here's the full `ContactForm` class that implements the above changes:
+
+.`*ContactForm.java*`
+[source,java]
+----
+public class ContactForm extends PolymerTemplate<ContactForm.ContactFormModel> {
+
+    Binder<Contact> binder = new BeanValidationBinder<>(Contact.class);
+    @Id("firstName")
+    private TextField firstName;
+    @Id("lastName")
+    private TextField lastName;
+    @Id("email")
+    private EmailField email;
+    @Id("company")
+    private ComboBox<Company> company;
+    @Id("status")
+    private ComboBox<Contact.Status> status;
+
+    public ContactForm(CompanyService companyService) { <1>
+        binder.bindInstanceFields(this);
+
+        company.setItems(companyService.findAll()); <2>
+        company.setItemLabelGenerator(Company::getName); <3>
+        status.setItems(Contact.Status.values()); <4>
+    }
+
+    public void setContact(Contact contact) {
+        binder.setBean(contact);
+    }
+
+    // TemplateModel omitted
+}
+----
+<1> Adds `companyService` as a parameter. The Spring framework will inject it here.
+<2> Sets the company combo box items by getting them from the service.
+<3> Sets the item label generator so that we see company names in the combo box instead of company objects.
+<4> Sets the items of the status combo box.
+
+When you run the app now, there are no exceptions, all form fields are filled correctly, and items in the combo boxes are populated.
+
+image::images/app-form-populated.png[Form populated with the selected contact's details.]
+
+Next, we make sure that changes made in the form persist.
+
+== Adding, saving and deleting contacts
+
+So far, we've displayed existing contact data in the application, but still don't have the ability to add or modify data.
+
+In this section, we make adding and modifying contacts work.
+
+First, we make the Save, Delete and Close buttons work in the contact form. To add functionality to the buttons, we first need to make them available in the `ContactForm` class using Designer.
+
+. In Designer, open `contact-form`.
+. Select the save button, give it the "save" id attribute and connect it using the outline.
+. Select the delete button, give it the "delete" id attribute and connect it using the outline.
+. Select the close button, give it the "close" id attribute and connect using the outline.
+
+Now, you've added the following fields to `ContactForm`.
+
+.`*ContactForm.java*`
+[source,java]
+----
+    @Id("save")
+    private Button save;
+    @Id("delete")
+    private Button delete;
+    @Id("close")
+    private Button close;
+----
+
+When any of the above buttons is clicked, we want to execute a corresponding action. To avoid a circular dependency between `MainView` and `ContactForm`, and to keep `ContactForm` reusable, we make `ContactForm` send an event on a button click. `MainView` captures the events and performs the actual actions.
+
+Vaadin comes with an event-handling system for components. We’ve already used it to listen to value-change events from the filter text field. We want the form component to have a similar way of letting `MainView` know what is happening in the form.
+
+To do this, add the following event definitions at the end of the `ContactForm` class:
+
+.`*ContactForm.java*`
+[source,java]
+----
+// Events
+public static abstract class ContactFormEvent extends ComponentEvent<ContactForm> {
+  private Contact contact;
+
+  protected ContactFormEvent(ContactForm source, Contact contact) { <1>
+    super(source, false);
+    this.contact = contact;
+  }
+
+  public Contact getContact() {
+    return contact;
+  }
+}
+
+public static class SaveEvent extends ContactFormEvent {
+  SaveEvent(ContactForm source, Contact contact) {
+    super(source, contact);
+  }
+}
+
+public static class DeleteEvent extends ContactFormEvent {
+  DeleteEvent(ContactForm source, Contact contact) {
+    super(source, contact);
+  }
+
+}
+
+public static class CloseEvent extends ContactFormEvent {
+  CloseEvent(ContactForm source) {
+    super(source, null);
+  }
+}
+
+public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
+    ComponentEventListener<T> listener) { <2>
+  return getEventBus().addListener(eventType, listener);
+}
+----
+<1> `ContactFormEvent` is a common superclass for all the events. It contains the contact that was edited or deleted.
+<2> The `addListener` method uses Vaadin’s event bus to register the custom event types. Select the `com.vaadin` import for `Registration` if IntelliJ IDEA asks.
+
+With the above events, we can now implement the click listeners. Add the following to the `ContactForm` class:
+
+.`*ContactForm.java*`
+[source,java]
+----
+    public ContactForm(CompanyService companyService) {
+        // Omitted
+
+        save.addClickListener(e -> validateAndSave()); <1>
+        delete.addClickListener(e -> fireEvent(new DeleteEvent(this, binder.getBean()))); <2>
+        close.addClickListener(e -> fireEvent(new CloseEvent(this))); <3>
+        
+        binder.addStatusChangeListener(e -> save.setEnabled(binder.isValid())); <4>
+    }
+
+    private void validateAndSave() {
+        if (binder.isValid()) { <5>
+            fireEvent(new SaveEvent(this, binder.getBean()));
+        }
+    }
+----
+<1> The save button calls the `validateAndSave` method.
+<2> The delete button fires a `delete` event and passes the currently-edited contact.
+<3> The cancel button fires a `close` event.
+<4> Validates the form every time it changes. If it is invalid, it disables the save button to avoid invalid submissions.
+<5> Only fires a `save` event if the form is valid.
+
+Now, the events are sent. Next, we need to listen to and handle them in `MainView`.
+
+Add the following changes to `MainView` to handle the contact form events, and the "add contact" button click that is still missing:
+
+.`*MainView.java*`
+[source,java]
+----
+    public MainView(ContactService contactService) {
+        // omitted
+
+        form.addListener(ContactForm.SaveEvent.class, this::saveContact); <1>
+        form.addListener(ContactForm.DeleteEvent.class, this::deleteContact); <2>
+        form.addListener(ContactForm.CloseEvent.class, e -> closeEditor()); <3>
+
+        addContactButton.addClickListener(e -> editContact(new Contact())); <4>
+    }
+
+    private void saveContact(ContactForm.SaveEvent event) { <5>
+        contactService.save(event.getContact());
+        updateList();
+        closeEditor();
+    }
+
+    private void deleteContact(ContactForm.DeleteEvent event) { <6>
+        contactService.delete(event.getContact());
+        updateList();
+        closeEditor();
+    }
+
+    private void closeEditor() {
+        form.setVisible(false);
+        grid.asSingleSelect().clear(); <7>
+    }
+----
+<1> Calls `saveContact` when a `save` event is received from the contact form.
+<2> Calls `deleteContact` when a `delete` event is received from the contact form.
+<3> Closes the form when a close event is received from the contact form.
+<4> Handles add button clicks by opening the form with a new `Contact` object.
+<5> This new method saves the contact to the service, refreshes the grid, and closes the form.
+<6> This new method deletes the contact in the service, refreshes the grid, and closes the form.
+<7> Clears selection when closing from the form to keep the behavior consistent.
+
+Proceed to the last chapter and complete the tutorial: <<wrap-up#,Wrap up>>

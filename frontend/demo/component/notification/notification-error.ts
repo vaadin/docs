@@ -1,42 +1,55 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import '@vaadin/vaadin-notification/vaadin-notification';
 import { render } from 'lit-html';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('notification-error')
 export class Example extends LitElement {
+  @internalProperty()
+  private notificationOpen = false;
+
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
-  private opened = true;
-
   render() {
     return html`
+      <vaadin-button
+        @click="${() => (this.notificationOpen = true)}"
+        .disabled="${this.notificationOpen}"
+      >
+        Try it
+      </vaadin-button>
+
       <!-- tag::snippet[] -->
       <vaadin-notification
         theme="error"
-        .opened=${this.opened}
-        position="bottom-stretch"
-        duration="0"
-        .renderer=${(root: HTMLElement) =>
-          render(
-            html`
-              <div style="display: flex; justify-content: space-between; width:100%;">
-                <span>Failed to generate report</span
-                ><span @click=${() => (this.opened = false)}>X</span>
-              </div>
-            `,
-            root
-          )}
-      >
-      </vaadin-notification>
+        .opened="${this.notificationOpen}"
+        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
+        .renderer="${this.renderer}"
+      ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
+
+  renderer = (root: HTMLElement) =>
+    render(
+      html`
+        <div>Failed to generate report</div>
+        <vaadin-button
+          theme="tertiary-inline"
+          @click="${() => (this.notificationOpen = false)}"
+          aria-label="Close"
+        >
+          <iron-icon icon="lumo:cross"></iron-icon>
+        </vaadin-button>
+      `,
+      root
+    );
 }
