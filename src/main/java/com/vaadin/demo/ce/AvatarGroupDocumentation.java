@@ -18,13 +18,16 @@ public class AvatarGroupDocumentation extends VerticalLayout {
     private UserService userService;
 
     public AvatarGroupDocumentation() {
+        // tag::avatar-group-new[]
         User userEntity = userService.getCurrentUser();
         UserInfo userInfo = new UserInfo(userEntity.getId());
 
         CollaborationAvatarGroup avatarGroup = new CollaborationAvatarGroup(
                 userInfo, "avatars");
         add(avatarGroup);
+        // end::avatar-group-new[]
 
+        // tag::avatar-group-own[]
         // Exclude own avatar from the group:
         avatarGroup.setOwnAvatarVisible(false);
 
@@ -34,9 +37,11 @@ public class AvatarGroupDocumentation extends VerticalLayout {
         ownAvatar.setImage(userEntity.getImageUrl());
 
         add(ownAvatar);
+        // end::avatar-group-own[]
     }
 
     private void imageProvider() {
+        // tag::avatar-group-images[]
         avatarGroup.setImageProvider(userInfo -> {
             StreamResource streamResource = new StreamResource(
                     "avatar_" + userInfo.getId(), () -> {
@@ -48,9 +53,12 @@ public class AvatarGroupDocumentation extends VerticalLayout {
             streamResource.setContentType("image/png");
             return streamResource;
         });
+        // end::avatar-group-images[]
     }
 
+    // tag::avatar-group-topic[]
     private void personSelected(long personId) {
         avatarGroup.setTopic("person/" + personId);
     }
+    // end::avatar-group-topic[]
 }
