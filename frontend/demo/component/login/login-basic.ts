@@ -1,8 +1,8 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-login/vaadin-login-form';
+import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'themes/theme-generated.js';
+import '@vaadin/vaadin-login/vaadin-login-form';
 
 @customElement('login-basic')
 export class Example extends LitElement {
@@ -10,6 +10,17 @@ export class Example extends LitElement {
     super();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
+  }
+
+  static get styles() {
+    return css`
+      :host {
+        display: flex !important;
+        justify-content: center;
+        background-color: var(--lumo-contrast-5pct);
+        padding: var(--lumo-space-m);
+      }
+    `;
   }
 
   render() {

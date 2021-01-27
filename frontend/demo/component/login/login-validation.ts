@@ -1,8 +1,8 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-login/vaadin-login-overlay';
 import { applyTheme } from 'themes/theme-generated.js';
+import '@vaadin/vaadin-login/vaadin-login-overlay';
 
 @customElement('login-validation')
 export class Example extends LitElement {
@@ -15,7 +15,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-login-overlay></vaadin-login-overlay>
+      <vaadin-login-overlay opened error></vaadin-login-overlay>
       <!-- end::snippet[] -->
     `;
   }
