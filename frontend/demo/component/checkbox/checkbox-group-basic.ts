@@ -3,9 +3,16 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('checkbox-group-basic')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private value = ['0', '2'];
 

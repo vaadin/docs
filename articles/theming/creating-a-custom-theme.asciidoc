@@ -1,98 +1,365 @@
 ---
 title: Creating a Custom Theme
-order: 80
+order: 25
 layout: page
 ---
 
 = Creating a Custom Theme
-ifdef::web[]
-endif::web[]
 
-If customizing built-in themes is not enough and you want complete control, you can create a completely custom theme from scratch.
-This means that you explicitly define the style sheets for all the components that are used in your application.
+[role="since:com.vaadin:vaadin@V19"]
+--
+Custom Theme is the standard way to organize themes in a Vaadin application, making it easier to switch between themes and allow packaging a theme to reuse in other Vaadin applications.
+To prevent any confusions about the available features, please refer to the <<Limitations,limitations>> section.
+--
 
-ifdef::web[]
-endif::web[]
+== Define Custom Themes
 
-== Prerequisites
+The following describes a sample file system structure for [filename]#my-theme#:
 
-This documentation applies only to *server-side (Java) applications*.
-
-This approach is *recommended when you want to have full control over the CSS that gets sent to the browser*, if you want to avoid sending unnecessary CSS to the client.
-
-Before creating a custom theme, you should consider customizing one of the built-in themes instead and see if that satisfies your requirements.
-See the other articles in this section for instructions how to do that.
-
-== Create Theme Class
-
-You can integrate a custom component theme to be used with the built-in Vaadin components.
-To do this, you need to create a https://vaadin.com/api/platform/com/vaadin/flow/theme/Theme.html[Theme] class that tells Vaadin how to translate the base un-themed component imports into your themed version.
-
-The most important methods are:
-
-* [methodname]#getBaseUrl()#: This should return the import base path that is used to determine if it is an import that can be changed into a theme import.
-For Vaadin components that is `/src/`.
-
-* [methodname]#getThemeUrl()#: This should return what the base URL part should be changed into to get the correct theme import.
-For Vaadin components that is `/theme/[_themeName_]`.
-
-For example, overriding [methodname]#getBaseUrl()# and [methodname]#getThemeUrl()# in the `MyTheme` class would go as follows:
-
-.MyTheme.java
-[source, java]
+.Figure 1: a sample custom theme called [filename]#my-theme#
+[source, filesystem]
 ----
-include::src/main/java/com/vaadin/flow/tutorial/theme/IntegratingComponentTheme.java[tags=getUrls, indent=0]
+frontend/
+└── themes/ <1>
+    └── my-theme/ <2>
+        ├── components <3>
+        │   ├── vaadin-button.css <4>
+        │   └── vaadin-text-field.css <4>
+        ├── some-images <5>
+        ├── some-folders <5>
+        ├── document.css <6>
+        ├── styles.css <7>
+        └── theme.json <8>
+----
+<1> Contains all custom themes.
+This should always be named as `themes` to be considered as themes folder.
+<2> Contains all files for [filename]#my-theme#.
+Can be named anything as far as it does not contain spaces.
+<3> Contains component-specific themes.
+This should always be named as `components` to be considered as component-specific styles folder.
+<4> Component-specific theme file, name should be an exact match for the component's `tag` name.
+<5> Optional static resource folder for structuring the theme files (for example: fonts, CSS, images, etc).
+Can be named anything as far as it doesn't contain spaces.
+<6> CSS that is always applied to the root of the page (for <<Theming Embedded Web Components,embedded web component>>).
+It should be named as `document.css`.
+<7> Automatically loaded master stylesheet.
+Other non-component-specific stylesheets need to be imported through this file. It should be named as `styles.css`.
+<8> Theme configurations (for example assets from `node_modules` or <<Extending an Existing Custom Theme,parent theme>> properties) are defined in this file.
+It should name as `theme.json`.
+
+.Create the theme folder manually
+[NOTE]
+The theme folder structure is not being automatically generated and must be created by the developer.
+
+=== Custom Theme Folder
+Application themes should be placed under the `frontend/themes/` folder of a Vaadin project's root location.
+
+The `themes` folder location is not configurable.
+
+Each theme needs to be created in a separate folder, as the folder name is also the theme name used in `@Theme`.
+
+For example:
+
+* `@Theme("alpaca")`: the files should be in `frontend/themes/alpaca/`
+* `@Theme("frost-bite")`: the files should be `in frontend/themes/frost-bite/`
+
+=== Global Styles
+
+Any styles need to be added to either `styles.css` or imported from other CSS files by `styles.css` file.
+Since this file is an entry-point for the theme styles, it should be named as `styles.css`, located directly under theme folder's root.
+
+`styles.css` is being treated as the starting point for loading other non-component-specific stylesheets.
+This means, it may contain CSS `@import` statements to import other CSS files from the theme folders.
+
+For example, <<css-custom-properties#,CSS Custom Properties>> or `@font-face` can be defined in the `styles.css` file.
+See <<styling-applications#, Styling Applications>>.
+
+NOTE: Global styles can override <<theme-variants#global-variants, global variants>> styles.
+For example, `Lumo.DARK` variant defines a `--lumo-base-color` which can be overridden in CSS files.
+
+NOTE: At the moment any CSS imports need to be applied from files on the root level.
+See Vaadin Flow https://github.com/vaadin/flow/issues/9794[issue 9794]
+
+=== Component Styles
+
+Component-specific style sheets should be placed under the `components` folder.
+The file name must match the tag name of the component you want to style.
+See <<styling-components#, Styling Components>>.
+
+NOTE: Component styles can override <<theme-variants#component-variants, component variants>> styles.
+For example, styles in `vaadin-button.css` file can override styles from `ButtonVariant.LUMO_ERROR` variant of a Vaadin Button component.
+
+=== Static Resources
+
+You can create folders to organize static resources, such as images or fonts.
+When using in a style sheet, the resource location is relative to the CSS file location.
+
+For example, in Figure 1, `styles.css` file can have `background: url('./some-images/bg.jpg');`
+
+NOTE: The static resource must be available from the custom theme folder for it to be handled, else it should be available with the given URL.
+
+=== Theme Configuration
+
+==== Import CSS Files From npm Packages
+
+As CSS files can have `@import` statements to include other CSS files, it is also available in the custom theme to import CSS files from npm dependencies, to be used as <<#global-styles>> by adding `importCss` array in `theme.json`.
+
+For Example:
+
+.Sample `theme.json` for importCss
+[source, JSON]
+----
+{
+  "importCss": [
+    "@fortawesome/fontawesome-free/css/regular.css",
+    "@fortawesome/fontawesome-free/css/all.min.css"
+  ]
 }
 ----
 
-If you need more control, you can use the [methodname]#getHeaderInlineContents()# method.
-It returns a collection of HTML that will be inlined to the `BootstrapPage` body.
+Now, style classes from those CSS files can be used.
 
-Implement [methodname]#getHeaderInlineContents()# to add a custom style that includes the correct typography styles:
+In HTML:
 
-.MyTheme.java
-[source, java]
+.Using font awesome icons in HTML
+[source, HTML]
 ----
-include::src/main/java/com/vaadin/flow/tutorial/theme/IntegratingComponentTheme.java[tags=getHeaderInlineContents, indent=0]
-----
-
-Your can also support theme variants.
-The Lumo theme, for example, supports both light and dark variants.
-
-Override [methodname]#getHtmlAttributes()# in your custom theme class to add support for variants.
-
-For example, override [methodname]#getHtmlAttributes()# as follows:
-
-.MyTheme.java
-[source, java]
-----
-include::src/main/java/com/vaadin/flow/tutorial/theme/IntegratingComponentTheme.java[tags=getHtmlAttributes, indent=0]
+<i class="fab fa-vaadin"></i>
 ----
 
-== Create Style Sheets
+In Java code:
 
-You need to provide a style sheet for each component used in your application.
-Omitted components display without any styles.
-This is because all Vaadin components are imported using the `/src/` path, and it is the responsibility of the theme class to replace the [methodname]#getBaseUrl()# pattern with an appropriate path to the themed elements (as returned in the [methodname]#getThemeUrl()#).
-
-Create style sheets as JavaScript modules (`.js` files) for each of the Vaadin elements in the `/frontend/themes/myTheme/` folder.
-
-For example, modify  the `vaadin-button` component by adding custom rules to the original Lumo rules in `frontend/themes/myTheme/vaadin-button.js`:
-
-[source,js]
+.Using fort awesome icons in Java
+[source, Java]
 ----
-// Import the non-themed component
-import '@vaadin/vaadin-button/src/vaadin-button.js';
+include::src/main/java/com/vaadin/flow/tutorial/theme/UsingComponentThemes.java[tags=java-importCss-usage, indent=0, group=Java]
+----
 
-// Optional: reuse Lumo styles for button
-import '@vaadin/vaadin-button/theme/lumo/vaadin-button-styles.js';
+NOTE: Defining an `importCss` block which references an npm package, does not install it.
+Consider installing the referenced package by adding `@NpmPackage` on any desired class in the application.
 
-import { registerStyles, css } from '@vaadin/vaadin-themable-mixin/register-styles.js';
 
-// Register your custom CSS rules for vaadin-button
-registerStyles('vaadin-button', css`
-    :host {
-      border-radius: 0;
+==== Assets
+
+Assets like fonts and images from an npm dependency can be used in a theme after mapping them from the dependency to local URIs by adding `assets` block in the `theme.json`.
+
+An `assets` block definition should look like this:
+
+.Sample `theme.json` for declaring assets
+[source, JSON]
+----
+{
+  "assets": {
+    "npm-package-name-goes-here": {
+      "expression-to-refer-assets-of-package": "local/path/assets/being/copied/to"
     }
-`);
+  }
+}
 ----
+
+For example, to use SVG icons from `@fortawesome/fontawesome-free` npm package, the SVG files should be mapped to some local path like this:
+
+.Sample `theme.json` importing font awesome SVG assets
+[source, JSON]
+----
+{
+  "assets": {
+    "@fortawesome/fontawesome-free": {
+      "svgs/regular/**": "fortawesome/icons"
+    }
+  }
+}
+----
+
+Now, assuming the theme folder named as [filename]#my-theme#, those mapped SVG files can be referred by adding `themes/my-theme/` to the local URIs defined in `theme.json`:
+
+In stylesheet:
+
+.Sample usage of imported asset in CSS
+[source, CSS]
+----
+include::src/main/css/StylingApplications.css[tags=asset-in-css, indent=0, group=Java]
+----
+
+In java code:
+
+.Using imported asset in Java
+[source, java]
+----
+include::src/main/java/com/vaadin/flow/tutorial/theme/UsingComponentThemes.java[tags=asset-in-java, indent=0, group=Java]
+----
+
+While `assets` block is not accepting arrays, it can include multiple mappings from different packages:
+
+.Sample `theme.json` for importing multiple assets
+[source, JSON]
+----
+{
+  "assets": {
+    "@fortawesome/fontawesome-free": {
+      "svgs/regular/**": "fortawesome/icons",
+      "webfonts/**": "webfonts"
+    },
+    "@fortawesome/free-solid-svg-icons": {
+      "*.js": "solids"
+    }
+  }
+}
+----
+
+NOTE: Defining an `assets` block which references an npm package, does not install it.
+Consider installing the referenced package by adding `@NpmPackage` on any desired class in the application.
+
+== Use Custom Themes
+
+In server-side views (Java), use the [classname]#@Theme# annotation to apply a custom theme.
+You must set the annotation on an https://vaadin.com/api/platform/com/vaadin/flow/component/page/AppShellConfigurator.html[AppShellConfigurator] class, or an error `Found app shell configuration annotations in non 'AppShellConfigurator' classes.` is thrown.
+
+.Defining the custom theme
+[source, Java]
+----
+include::src/main/java/com/vaadin/flow/tutorial/theme/UsingComponentThemes.java[tags=apptheme, indent=0, group=Java]
+----
+
+A theme variant can also be applied on the base theme Lumo.
+
+.Using a theme variant
+[source, Java]
+----
+include::src/main/java/com/vaadin/flow/tutorial/theme/UsingComponentThemes.java[tags=lumo-dark, indent=0, group=Java]
+----
+See <<theme-variants#global-variants,Theme Variants>>.
+
+NOTE: Any changes to theme folder contents (add/remove files, file modifications) are automatically picked up by webpack.
+If a running application has live reload available, you can wait for it to reload the changes, otherwise, you can manually refresh the browser.
+
+NOTE: If you notice the following kind of webpack error after removing any files/folders from theme folder `Error: ENOENT: no such file or directory, open '.../themes/my-theme/styles.css'`, please manually refresh the browser.
+
+== Extending an Existing Custom Theme
+
+The custom theme can extend an existing custom theme, usually called **parent theme**, that is either located in
+the project themes folder or as a <<Creating a Reusable Custom Theme,reusable>> theme dependency jar.
+
+Project themes folder places are `frontend/themes`, `src/main/resources/static` and `src/main/resources/META-INF/resources/themes`.
+
+Extend from a parent theme by having a local theme in the application and adding "parent" key to the `theme.json`, so:
+
+. Create a theme folder in your application with a different name from the parent theme's name, under `frontend/themes/`.
+. Use the new theme folder's name in `@Theme("...")`.
+. In the `theme.json` add the parent theme's name, with the key `parent`.
+
+.Sample `theme.json` for parent theme declaration
+[source, JSON]
+----
+{
+  "parent": "acme-base"
+}
+----
+
+The extending theme can override parent theme styles as well as add its own.
+
+== Creating a Reusable Custom Theme
+
+Application theme can be packaged and reused in other applications.
+A reusable theme is a jar file containing only the theme files, and an optional java class (for example `Dependency.java`) with `NpmPackage`
+declarations for npm packages required by the theme.
+
+=== Reusable Theme Project Structure
+
+To create a reusable theme jar with maven, create a project with the following structure:
+
+.Figure 2: folder structure of a maven project needed for creating a theme jar
+[source, filesystem]
+----
+[project-root]
+├── src
+│   └── main
+│       ├── java
+│       │   └── org
+│       │       └── brandname
+│       │           └── theme
+│       │               └── Dependencies.java (optional)
+│       └── resources
+│           └── META-INF
+│               └── resources
+│                   └── themes
+│                       └── my-theme
+│                           ├── components/
+│                           ├── ...
+│                           ├── ...
+│                           ├── styles.css
+│                           └── theme.json
+└── pom.xml
+----
+
+The detailed steps to create the above project structure are as follows:
+
+. Create a new empty maven project (using either your preferred IDE's wizard or through Maven CLI).
+To keep the theme project as clean as possible, make sure no unused java class, package or resource exists in the created project, and then continue with the next steps.
+. Update the `pom.xml`
+- add the Vaadin version property:
++
+[source, pom]
+----
+<vaadin.version>19.0.0</vaadin.version>
+----
+
+- add dependency management:
++
+[source, pom]
+----
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-bom</artifactId>
+      <version>${vaadin.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+----
+
+- update dependencies to only contain the following dependency:
++
+[source, pom]
+----
+<dependency>
+  <groupId>com.vaadin</groupId>
+  <artifactId>vaadin</artifactId>
+  <scope>provided</scope>
+</dependency>
+----
+
+. Create the folders `src/main/resources/META-INF/resources/themes/[reusable-theme]`.
+
+. Add the theme files to the reusable theme folder.
+
+. If the theme uses npm assets, add `Dependencies.java` with `@NpmPackage` annotations.
+
+. Execute `mvn install` to create the theme jar.
+
+NOTE: If the reusable theme jar is going to be used in Vaadin SpringBoot applications, consider using `com.vaadin.flow.component`, `com.vaadin.flow.theme` or `com.vaadin.shrinkwrap`
+as the package of `Dependency.java` that are always being scanned.
+Otherwise, see <<{articles}/flow/spring/configuration#special-configuration-parameters,Vaadin's spring package scanning>> documentation for using other custom packages.
+
+=== Using the Theme in other Projects
+
+. Add the theme JAR as a dependency in another Vaadin application project.
+. Apply the theme with the `@Theme` annotation.
+
+== Theming Embedded Applications
+
+See <<{articles}/flow/embedding/theming/#,Theming Embedded Applications>>.
+
+== Limitations
+--
+The following options are not available:
+--
+<1> Activating multiple custom themes at the same time.
+<2> Switching between custom themes at runtime.
+<3> Defining multiple parent themes.
+<4> Having a theme based on Material built-in theme.
+<5> Using imports in theme sub folders
+Application themes can be only based on <<overview#built-in-themes,Lumo>> built-in theme.

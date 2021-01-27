@@ -5,9 +5,16 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon/iron-icon';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('text-field-prefix-suffix')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <vaadin-horizontal-layout theme="spacing">

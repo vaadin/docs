@@ -14,10 +14,17 @@ import { getCountries } from '../../domain/DataService';
 
 import Country from '../../../generated/com/vaadin/demo/domain/Country';
 import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
+import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
 @customElement('details-summary')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private items: Country[] = [];
 

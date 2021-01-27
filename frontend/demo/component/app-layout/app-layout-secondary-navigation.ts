@@ -6,9 +6,16 @@ import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-icons/vaadin-icons';
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('app-layout-secondary-navigation')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->

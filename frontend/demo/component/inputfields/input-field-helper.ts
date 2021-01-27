@@ -18,9 +18,16 @@ enum StrengthColor {
   moderate = '#e7c200',
   strong = 'var(--lumo-success-color)'
 }
+import { applyTheme } from 'themes/theme-generated.js';
 
 @customElement('input-field-helper')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private strengthText: StrengthText = StrengthText.weak;
   @internalProperty()
