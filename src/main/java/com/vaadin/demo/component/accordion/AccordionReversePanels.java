@@ -13,25 +13,46 @@ import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 public class AccordionReversePanels extends Div {
 
     public AccordionReversePanels() {
-        // tag::snippet[]
         Accordion accordion = new Accordion();
 
-        VerticalLayout personalInformationLayout = new VerticalLayout();
-        personalInformationLayout.add(new TextField("Name"), new TextField("Phone"), new TextField("Email"));
-        accordion.add("Personal Information", personalInformationLayout);
+        Span name = new Span("Sophia Williams");
+        Span email = new Span("sophia.williams@company.com");
+        Span phone = new Span("(501) 555-9128");
+
+        VerticalLayout personalInformationLayout = new VerticalLayout(name, email, phone);
+        personalInformationLayout.setSpacing(false);
+        personalInformationLayout.setPadding(false);
+
+        AccordionPanel personalInfoPanel = accordion.add("Personal information", personalInformationLayout);
+        personalInfoPanel.setThemeName("reverse");
+
+        Span street = new Span("4027 Amber Lake Canyon");
+        Span zipCode = new Span("72333-5884 Cozy Nook");
+        Span city = new Span("Arkansas");
 
         VerticalLayout billingAddressLayout = new VerticalLayout();
-        billingAddressLayout.add(new TextField("Address"), new TextField("City"), new TextField("State"),
-                new TextField("Zip Code"));
-        accordion.add("Billing Address", billingAddressLayout);
+        billingAddressLayout.setSpacing(false);
+        billingAddressLayout.setPadding(false);
+        billingAddressLayout.add(street, zipCode, city);
+        
+        AccordionPanel billingAdressPanel = accordion.add("Billing address", billingAddressLayout);
+        billingAdressPanel.setThemeName("reverse");
+
+        Span cardBrand = new Span("Mastercard");
+        Span cardNumber = new Span("1234 5678 9012 3456");
+        Span expiryDate = new Span("Expires 06/21");
 
         VerticalLayout paymentLayout = new VerticalLayout();
-        paymentLayout.add(new Span("Not yet implemented"));
-        AccordionPanel billingAddressPanel = accordion.add("Payment", paymentLayout);
-        billingAddressPanel.setEnabled(false);
+        paymentLayout.setSpacing(false);
+        paymentLayout.setPadding(false);
+        paymentLayout.add(cardBrand, cardNumber, expiryDate);
+        
+        // tag::snippet[]
+        AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
+        paymentPanel.setThemeName("reverse");
+        // end::snippet[]
 
         add(accordion);
-        // end::snippet[]
     }
 
     public static class Exporter extends DemoExporter<AccordionReversePanels> { // hidden-full-source-line
