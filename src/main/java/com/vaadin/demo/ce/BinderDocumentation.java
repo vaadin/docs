@@ -84,12 +84,12 @@ public class BinderDocumentation {
 
         binder.bind(supervisor, "supervisor");
         // end::binder-serializer[]
-
+        // tag::binder-bind[]
         CheckboxGroup<String> pets = new CheckboxGroup<>();
         pets.setItems("Dog", "Cat", "Parrot");
 
         binder.forField(pets, Set.class, String.class).bind("pets");
-
+        // end::binder-bind[]
         // tag::binder-converter[]
         Checkbox married = new Checkbox();
         binder.forField(married, Boolean.class)
