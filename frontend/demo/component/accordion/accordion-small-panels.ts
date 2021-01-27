@@ -6,7 +6,6 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import { applyTheme } from 'themes/theme-generated.js';
 
-// tag::snippet[]
 @customElement('accordion-small-panels')
 export class Example extends LitElement {
   constructor() {
@@ -17,34 +16,41 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-accordion>
-        <vaadin-accordion-panel>
-          <div slot="summary">Personal Information</div>
+        <vaadin-accordion-panel theme="small">
+          <div slot="summary">Personal information</div>
 
-          <vaadin-vertical-layout theme="padding spacing">
-            <vaadin-text-field label="Name"></vaadin-text-field>
-            <vaadin-text-field label="Phone"></vaadin-text-field>
-            <vaadin-text-field label="Email"></vaadin-text-field>
+          <vaadin-vertical-layout>
+            <span>Sophia Williams</span>
+            <span>sophia.williams@company.com</span>
+            <span>(501) 555-9128</span>
+          </vaadin-vertical-layout>
+        </vaadin-accordion-panel>
+        <!-- end::snippet[] -->
+
+        <vaadin-accordion-panel theme="small">
+          <div slot="summary">Billing address</div>
+
+          <vaadin-vertical-layout>
+            <span>4027 Amber Lake Canyon</span>
+            <span>72333-5884 Cozy Nook</span>
+            <span>Arkansas</span>
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel>
-          <div slot="summary">Billing Address</div>
-
-          <vaadin-vertical-layout theme="padding spacing">
-            <vaadin-text-field label="Address"></vaadin-text-field>
-            <vaadin-text-field label="City"></vaadin-text-field>
-            <vaadin-text-field label="State"></vaadin-text-field>
-            <vaadin-text-field label="Zip Code"></vaadin-text-field>
-          </vaadin-vertical-layout>
-        </vaadin-accordion-panel>
-
-        <vaadin-accordion-panel disabled>
+        <vaadin-accordion-panel theme="small">
           <div slot="summary">Payment</div>
 
-          <span>Not yet implemented</span>
+          <vaadin-vertical-layout>
+            <span>MasterCard</span>
+            <span>1234 5678 9012 3456</span>
+            <span>Expires 06/21</span>
+          </vaadin-vertical-layout>
         </vaadin-accordion-panel>
+        <!-- tag::snippet[] -->
       </vaadin-accordion>
+      <!-- end::snippet[] -->
     `;
   }
 }
