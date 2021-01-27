@@ -4,7 +4,8 @@ import java.io.ByteArrayInputStream;
 
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.UserInfo;
-import com.vaadin.demo.ce.User.UserService;
+import com.vaadin.demo.domain.User;
+import com.vaadin.demo.domain.User.UserService;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.StreamResource;

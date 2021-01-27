@@ -1,11 +1,11 @@
-package com.vaadin.demo.ce;
+package com.vaadin.demo.domain;
 
 import java.util.List;
 
 /**
  * User entity class used in documentation examples.
  */
-class User {
+public class User {
 
     public static class UserService {
         public User getCurrentUser() {
