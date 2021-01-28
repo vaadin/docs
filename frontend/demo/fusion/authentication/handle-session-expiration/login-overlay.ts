@@ -4,11 +4,12 @@ import { LoginResult } from '@vaadin/flow-frontend';
 
 @customElement('login-view')
 export class LoginView extends LitElement {
-  
   private returnUrl = '/';
 
   // @ts-ignore
-  private onSuccess = (_: LoginResult) => { Router.go(this.returnUrl) };
+  private onSuccess = (_: LoginResult) => {
+    Router.go(this.returnUrl);
+  };
 
   private static overlayResult?: Promise<LoginResult>;
 
@@ -20,13 +21,13 @@ export class LoginView extends LitElement {
       return this.overlayResult;
     }
     const overlay = new this();
-    return this.overlayResult = new Promise(resolve => {
+    return (this.overlayResult = new Promise(resolve => {
       overlay.onSuccess = result => {
         this.overlayResult = undefined;
         overlay.remove();
         resolve(result);
-      }
+      };
       document.body.append(overlay);
-    });
+    }));
   }
 }
