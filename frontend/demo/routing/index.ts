@@ -1,6 +1,6 @@
 // tag::routing-basic[]
 import { Router } from '@vaadin/router';
-import { Flow } from '@vaadin/flow-frontend/Flow';
+import { Flow } from '@vaadin/flow-frontend';
 
 const { serverSideRoutes } = new Flow({
   imports: () => import('../../../target/frontend/generated-flow-imports')
