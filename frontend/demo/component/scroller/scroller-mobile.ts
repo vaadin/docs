@@ -23,7 +23,7 @@ export class Example extends LitElement {
         max-width: 100%;
         width: 360px;
       }
-      
+
       section h2 {
         margin-left: var(--lumo-space-m);
         margin-right: var(--lumo-space-m);
@@ -35,7 +35,7 @@ export class Example extends LitElement {
     return html`
       <section id="container">
         <h2>Create new...</h2>
-        
+
         <!-- tag::snippet[] -->
         <vaadin-scroller scroll-direction="horizontal">
           <vaadin-horizontal-layout style="display: inline-flex;" theme="padding spacing">
@@ -58,7 +58,6 @@ export class Example extends LitElement {
           </vaadin-horizontal-layout>
         </vaadin-scroller>
         <!-- end::snippet[] -->
-        
       </section>
     `;
   }

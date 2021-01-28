@@ -35,11 +35,11 @@ export class Example extends LitElement {
         border-bottom: 1px solid var(--lumo-contrast-20pct);
         padding: var(--lumo-space-m);
       }
-      
+
       header h2 {
         margin: 0;
       }
-      
+
       header iron-icon {
         box-sizing: border-box;
         height: var(--lumo-icon-size-m);
@@ -69,17 +69,27 @@ export class Example extends LitElement {
         </header>
 
         <!-- tag::snippet[] -->
-        <vaadin-scroller scroll-direction="vertical" style="border-bottom: 1px solid var(--lumo-contrast-20pct); padding: var(--lumo-space-m);">
+        <vaadin-scroller
+          scroll-direction="vertical"
+          style="border-bottom: 1px solid var(--lumo-contrast-20pct); padding: var(--lumo-space-m);"
+        >
           <section>
             <h3>Personal information</h3>
             <vaadin-text-field style="width: 100%;" label="First name"></vaadin-text-field>
             <vaadin-text-field style="width: 100%;" label="Last name"></vaadin-text-field>
-            <vaadin-date-picker initial-position="1990-01-01" label="Birthdate" style="width: 100%;"></vaadin-date-picker>
+            <vaadin-date-picker
+              initial-position="1990-01-01"
+              label="Birthdate"
+              style="width: 100%;"
+            ></vaadin-date-picker>
           </section>
           <section>
             <h3>Employment information</h3>
             <vaadin-text-field style="width: 100%;" label="Position"></vaadin-text-field>
-            <vaadin-text-area style="width: 100%;" label="Additional information"></vaadin-text-area>
+            <vaadin-text-area
+              style="width: 100%;"
+              label="Additional information"
+            ></vaadin-text-area>
           </section>
         </vaadin-scroller>
         <!-- end::snippet[] -->
