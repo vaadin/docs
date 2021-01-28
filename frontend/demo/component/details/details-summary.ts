@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
@@ -10,9 +10,9 @@ import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/sizing';
 import '@vaadin/vaadin-lumo-styles/color';
-import { getCountries } from '../../domain/DataService';
+import { getCountries } from 'Frontend/demo/domain/DataService';
 
-import Country from '../../../generated/com/vaadin/demo/domain/Country';
+import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import { applyTheme } from 'generated/theme';
 

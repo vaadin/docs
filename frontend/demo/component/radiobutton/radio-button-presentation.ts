@@ -1,11 +1,11 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import { getCards } from '../../domain/DataService';
-import Card from '../../../generated/com/vaadin/demo/domain/Card';
+import { getCards } from 'Frontend/demo/domain/DataService';
+import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { applyTheme } from 'generated/theme';
 
 @customElement('radio-button-presentation')

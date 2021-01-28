@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-line
 

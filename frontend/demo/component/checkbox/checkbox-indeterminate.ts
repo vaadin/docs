@@ -1,12 +1,12 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { getPeople } from '../../domain/DataService';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 
 @customElement('checkbox-indeterminate')

@@ -1,6 +1,6 @@
-import Country from '../../generated/com/vaadin/demo/domain/Country';
-import Person from '../../generated/com/vaadin/demo/domain/Person';
-import Card from '../../generated/com/vaadin/demo/domain/Card';
+import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 
 const datasetCache: { [key: string]: any[] } = {};
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {

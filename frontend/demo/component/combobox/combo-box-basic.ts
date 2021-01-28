@@ -1,10 +1,10 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import { getCountries } from '../../domain/DataService';
-import Country from '../../../generated/com/vaadin/demo/domain/Country';
+import { getCountries } from 'Frontend/demo/domain/DataService';
+import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'generated/theme';
 
 @customElement('combo-box-basic')

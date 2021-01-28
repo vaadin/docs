@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/selectConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty, query } from 'lit-element';
@@ -6,8 +6,8 @@ import { render } from 'lit-html';
 import { SelectElement } from '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 
 @customElement('select-presentation')
