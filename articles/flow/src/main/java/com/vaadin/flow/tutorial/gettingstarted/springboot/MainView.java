@@ -17,8 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Route
 @PWA(name = "Vaadin Application",
         shortName = "Vaadin App",
-        description = "This is an example Vaadin application.",
-        enableInstallPrompt = true)
+        description = "This is an example Vaadin application.")
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 public class MainView extends VerticalLayout {
