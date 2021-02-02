@@ -1,0 +1,120 @@
+---
+title: Overview
+order: 0
+layout: page
+---
+straightforward
+:vaadin-version: {moduleMavenVersion:com.vaadin:vaadin}
+
+= Upgrading from Vaadin 15 to {vaadin-version}
+
+Upgrading from a Vaadin 15+ version to the latest is in general straightforward, nevertheless, a few breaking changes need to take into account when upgrading:
+
+A field with `@Id` annotation in Java is now optional in the generated TypeScript code. 
+Given an entity with an `id` field like below
+
+.Entity.java
+[source,java]
+----
+public class Entity {
+    @Id
+    private int id;
+}
+----
+now in the TypeScript files, instead of using `entity.id`, you might need to change to `entity.id!` or `entity.id?`.
+
+Spring Security
+
+Starting from Vaadin 19, Vaadin offers the offline feature, which uses service works. 
+The Spring Security configuration requires some change for the service worker related files.
+If you have used `HttpSecurity.authorizeRequests()` to do role-based authorization in your security configuraiton, for example, 
+
+.SecurityConfiguration.java
+[source,java]
+----
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    ...
+    http.authorizeRequests().anyRequest().hasAnyAuthority(Role.getAllRoles());
+    ...
+}
+----
+
+Then you would have configured Sring Security to bypass the static resources like below
+
+.SecurityConfiguration.java
+[source,java]
+----
+@Override
+public void configure(WebSecurity web) {
+    web.ignoring().antMatchers(
+            // client-side JS code
+            "/VAADIN/**",
+            ...
+            // web application manifest
+            "/manifest.webmanifest",
+            "/sw.js",
+            "/offline-page.html",
+            ...
+    );
+}
+----
+
+Starting from Vaadin 19, you will need to add one more file `/sw-runtime-resources-precache.js` to the list, that is,
+
+.SecurityConfiguration.java
+[source,java]
+----
+@Override
+public void configure(WebSecurity web) {
+    web.ignoring().antMatchers(
+            // client-side JS code
+            "/VAADIN/**",
+            ...
+            // web application manifest
+            "/manifest.webmanifest",
+            "/sw.js",
+            "/offline-page.html",
+            "/sw-runtime-resources-precache.js",
+            ...
+    );
+}
+----
+
+Another potential Spring Security related breaking change is about using `HttpSecurity.requestCache()` to redirect the user to the intended page after login. 
+
+.SecurityConfiguration.java
+[source,java]
+----
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    ...
+    http
+
+    // Register our CustomRequestCache, that saves unauthorized access attempts, so
+    // the user is redirected after login.
+    .requestCache().requestCache(new CustomRequestCache())
+    
+    // Restrict access to our application.
+    .and().authorizeRequests()
+
+    // Allow all flow internal requests.
+    .requestMatchers(SecurityUtils::isFrameworkInternalRequest).permitAll()
+    ...
+}
+----
+
+Now you need to ignore the service worker initiated requests, otherwise the access attempts will be overriden by the service worker requests and Spring cannot redirect you to the intended page. 
+The `SecurityUtils::isFrameworkInternalRequest` can be updated like below to also include the service worker initiated requests.
+
+.SecurityUtils.java
+[source,java]
+----
+static boolean isFrameworkInternalRequest(HttpServletRequest request) {
+    final String parameterValue = request.getParameter(ApplicationConstants.REQUEST_TYPE_PARAMETER);
+    String referer = request.getHeader("Referer");
+    boolean isServiceWorkInitiated = (referer != null && referer.endsWith("sw.js"));
+    return isServiceWorkInitiated || parameterValue != null
+            && Stream.of(RequestType.values()).anyMatch(r -> r.getIdentifier().equals(parameterValue));
+}
+----
