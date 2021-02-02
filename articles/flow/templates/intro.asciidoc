@@ -1,0 +1,66 @@
+---
+title: Using Templates from Server-side Java Code
+order: 1
+layout: page
+---
+
+= Using Templates from Server-side Java Code
+
+In Vaadin, you have a few different options on how to build your views.
+
+. Build your views purely with Java.
+. Define your layouts of your views declaratively and implement the UI logic in Java.
+
+These ways to build views can be mixed and matched within an application.
+All Vaadin components are available through the Java API and declaratively in HTML.
+Choosing the correct way depends on your use case and preferences.
+This chapter goes through the second option, how to build your UIs declaratively while implementing the logic in Java.
+
+== Benefits of Using Templates
+
+Separately defining the layout of a view from defining the logic of said view gives a clear and maintainable code.
+It makes it easier to find how the view is defined and where it is updated.
+HTML templates are a robust way of defining the UI structure, while Java is a great way to define the logic of the view.
+
+Vaadin has support for two declarative template languages, Polymer and LitElement.
+The LitElement library is the successor of the Polymer library.
+Vaadin will support both for the foreseeable future.
+We recommend choosing LitElement as the template language when deciding to build new templates for your Vaadin applications.
+It is a future proof, lightweight, and more focused template language.
+
+Vaadin can refer to and access components defined by a template from Java.
+By giving components in the template unique ids, any component with an id can be accessed with Java API to configure logic further.
+Java-only components like compositions built with Java can be added to a template by giving a layout an id in the template and adding the Java component in Java code.
+
+For example `<vaadin-button id="my-button">Press me</vaadin-button>` can be accessed with `@Id("my-button") Button button;` in Java.
+
+The elements inside a template and their attributes are parsed by the framework so that the initial state of each mapped server-side component is consistent with the attributes set in the template.
+For instance, consider a template containing the text field `<vaadin-text-field id="name-field" placeholder="Enter name"></vaadin-text-field>`, which is mapped as the class member `@Id("name-field") TextField nameField` in Java.
+After creation of the server-side component, `nameField.getPlaceholder()` will return the placeholder text (`"Enter name"`) immediately.
+
+As declarative layouts are a robust and maintainable way for defining views, https://vaadin.com/designer[Vaadin Designer], the visual tool for building UI for Vaadin apps, uses them as its format.
+
+== Known Limitations of Templates
+
+The template API has limitations that you need to be aware of before using it.
+
+* The framework considers any attribute other than `theme` or one of the https://www.w3.org/TR/html52/dom.html#global-attributes[HTML 5 global attributes] for server-side initialization.
+However, if the attribute value is not a constant, that is, it contains bindings such as `${...}` and `{{...}}`, it is not parsed and the property is not initialized on the server side.
+Only attributes are parsed: properties defined by nested elements, such as grid columns and items, are not parsed from the template but must be initialized on the server side.
+* You can add components and elements to a template structure, but you cannot remove anything present in the original template.
+However, overriding component properties is possible.
+ * For `LitTemplate`, you cannot configure the column renderers for `Grid`, `TreeGrid` or `GridPro` in HTML.
+The column configuration and driving of data needs to happen from Java to the `@Id`-mapped component.
+This is different than with `PolymerTemplate`.
+* Calling `setText` from Java on a template-based component causes removal of child elements.
+For example, if the template is `<div id="myDiv">Some text<vaadin-button id="myButton">My Button</vaadin-button></div>`, calling `myDiv.setText` will cause the `myButton` element to be removed.
+To keep children, instead wrap the text content in a separate child alongside `myButton` and call `setText` on that element: `<div id="myDiv"><span id="myTest">Some text</span><vaadin-button id="myButton">My Button</vaadin-button></div>`.
+
+== Correctly Separating Structure and Logic
+Strive to only define things that do not change in the template and leave all dynamic parts to Java. In the template you can, for example, have attributes that never change, captions for components like `Button` and `TextField` that always stay the same, or styling for the view.
+If, for example, a `Button` should change the caption depending on user interaction, then leave it empty in the template and define the initial value in Java.
+
+With `Grid`, defining columns can feel like a static part, but columns and data go strongly hand in hand.
+xWhen using `vaadin-grid` inside a `LitTemplate`, the column configuration and driving of data must happen from the server side Java code.
+
+In the <<basic#,next chapter>>, you will get a full example with HTML template and Java logic.
