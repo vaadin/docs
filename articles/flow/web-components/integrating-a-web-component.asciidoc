@@ -6,58 +6,112 @@ layout: page
 
 = Integrating a Web Component
 
-Web Components are a collection of web standards that allow you to create new HTML tags with custom names. Web Components can be reused and provide full encapsulation of styles and markup. See <<introduction-to-webcomponents#,Introduction to Web Components>> for more.
+Web Components are a collection of web standards allowing you to create new HTML tags with custom name, reusability and full encapsulation on styles & markup. To understand more about what Web Components are, visit <<introduction-to-webcomponents#,Introduction to Web Components>>.
 
-To be able to use a Web Component in Vaadin you need:
+To be able to use a web component from Flow you need two things: to load the HTML/JS/CSS files needed by the component and a Java API used to configure the component and to listen to events from it.
 
-* To load the HTML/JS/CSS files needed by the component (see instructions below). 
-* A Java API to configure the component and listen to events from it. See <<java-api-for-a-web-component#,Creating a Java API for a Web Component>> for more. 
+The client-side files for a web component, typically one HTML file, are available using the Bower package manager. To avoid having to use two package managers, i.e. Maven and Bower, in the same project, the files can be packaged into a jar file called a webjar, which in turn can be deployed to Maven central. Flow will automatically use webjars and server the static files to the browser with an additional possibility to serve files installed using Bower.
 
-The Web Component's client-side files (typically JavaScript module files) are available using https://www.npmjs.com/[npm]. Vaadin 14 and above (Flow 2.0 +) supports npm and automatically installs and uses npm packages, and serves the static files to the browser.
+[NOTE]
+It is only in very special cases that you need Bower or benefit from using it. In most cases it is quicker and easier to use webjars.
 
-Since Vaadin 14.2 the _pnpm_ tool is used for package management instead of _npm_. This is done transparently. In case there is a reason to use npm instead of pnpm, you may disable pnpm
-(see <<../advanced/tutorial-all-vaadin-properties#,All Vaadin properties>> or <<../production/tutorial-production-mode-advanced#,Advanced production mode topics>>).
-pnpm improves the package management in many ways; for example, it allows to share the same packages between various
-projects and avoid downloading them every time for every project which also reduces the number of IO operations.
+== Step 1. Creating a Webjar
 
-== Integrating a JS Module into Vaadin
+If the webjar is not available yet, it can be deployed using webjars.org. Through https://www.webjars.org/ anybody can deploy any available Bower artifact as a webjar. Press "Add a WebJar", make sure "Bower GitHub" is selected, enter the GitHub repository URL and select the version to deploy. Wait until deployment finishes.
 
-While you can start from scratch and do it all manually, the easiest way is to use the https://github.com/vaadin/addon-starter-flow[Vaadin Add-on Starter]. This gives you:
+image:images/webjars_ui.png[WebJars UI]
 
-* A project with all the necessary dependencies. 
-* An npm import for the selected component. 
-* A stub component Java class for your Web Component integration. 
-* A Maven profile that handles everything necessary to deploy the component to Vaadin Directory.
+Webjars are managed through the webjars.org service which handles packaging and deploying of them to Maven central. The groupId and artifactId of a webjar is defined as follows:
+* groupId: org.webjars.bowergithub.[GITHUB_ORG]
+* artifactId: [GITHUB_REPO]
+* version: [GITHUB_RELEASE_VERSION]
 
-*Example*: Annotations in the Java component class for a starter project for the https://github.com/material-components/material-components-web-components/tree/master/packages/slider[mwc-slider] Web Component.
+For example, paper-slider 2.0.4 is available at https://github.com/PolymerElements/paper-slider/releases/tag/v2.0.4 and the Maven artifact is
+* groupId: org.webjars.bowergithub.polymerelements
+* artifactId: paper-slider
+* version: 2.0.4
+
+You can see that paper-slider 2.0.4 is already available by opening http://central.maven.org/maven2/org/webjars/bowergithub/polymerelements/paper-slider/2.0.4/
+
+[NOTE]
+Many web component repositories tag versions using a `v` prefix. This is not included in the Maven version.
+
+[NOTE]
+All group and artifact ids are lower case, regardless of the GitHub name casing.
+
+The most typical problem you can run into when deploying a webjar is that the license defined in the project's bower.json is not a known open source license. The webjars.org site is an open source project and only deploys artifacts with a known, free license. If the license is just missing from the project's `bower.json`, you can make a pull request to add it and everybody will benefit. You also have the possibility to fork the project, fix the license and deploy a webjar from your fork.
+
+If the project does not use an open source license accepted by webjars.org, you can still use the webjars.org service to create a webjar using an available REST endpoint if the project is in a public GitHub repository:
+
+[source, sh]
+----
+curl -OJ -H "Content-Type: application/json" -d '{"groupId": "com.example.yourcompany", "license": { "SomeLicenseID": "https://some.license.url/somewhere" } }' "https://www.webjars.org/create?webJarType=bowergithub&nameOrUrlish=[GITHUB_REPOSITORY_URL]&version=[GITHUB_VERSION]"
+----
+
+In this case you will have to deploy it yourself.
+
+[NOTE]
+You do not have to be the author of the component or owner of the repository to deploy a webjar. You can deploy anything publicly available in GitHub
+
+[NOTE]
+The webjar is immediately deployed to https://dl.bintray.com/webjars/maven/org/webjars/bowergithub/ and later synchronized to Maven central. Add `dl.bintray.com` in your `pom.xml` to be able to use it immediately:
+[source, xml]
+----
+<repositories>
+    <repository>
+        <id>webjars</id>
+        <url>https://dl.bintray.com/webjars/maven</url>
+    </repository>
+</repositories>
+----
+
+
+[NOTE]
+If you create a web component, never ever move the tag after a release or the webjar contents will not match the contents of the GitHub release tag, which is used by Bower.
+
+[NOTE]
+webjars.org contains "Bower Original WebJars" and "Bower GitHub WebJars". Always use "Bower GitHub WebJars", the other, deprecated version is not supported by Flow.
+
+== Step 2. Creating the Java Integration
+
+While you can start from scratch and do all the things manually, it's easiest to start with the component project available at https://vaadin.com/start/v10-component. This will give you a project with Flow dependencies, import for the webjar for the selected component and a stub Java class for your web component integration. It also contains a Maven profile which will handle all things needed to deploy it to Vaadin Directory.
+
+As an example, if you create a starter project for https://github.com/PolymerElements/paper-slider, the relevant parts of the generated project is
+
+[source, xml]
+----
+<dependency>
+    <groupId>org.webjars.bowergithub.polymerelements</groupId>
+    <artifactId>paper-slider</artifactId>
+    <version>2.0.6</version>
+</dependency>
+----
+
+This includes the webjar for `paper-slider`, containing all needed HTML/CSS/JS.
+
+[source, xml]
+----
+<profile>
+    <id>directory</id>
+    …
+</profile>
+----
+
+This profile, activated as  `mvn clean install -Pdirectory`, produces a zip package you can upload to https://vaadin.com/directory
+
+
+The main component file `src/main/java/.../PaperSlider.java`:
 
 [source, java]
 ----
-@Tag("mwc-slider")
-@NpmPackage(value = "@material/mwc-slider",
-            version = "0.18.0")
-@JsModule("@material/mwc-slider/mwc-slider.js")
-----
-* The `@Tag` annotation defines the name of the HTML element. 
-* The `@JSModule` and `@NpmPackage` annotations define the import of the JavaScript module. 
-
-
-
-== Adding Front-end Files
-
-If your component requires in-project front-end files, for example additional JavaScript modules, add them to the `src/main/resources/META-INF/frontend` directory so that they are packaged in the component JAR if you choose to make an add-on of your component. 
-
-*Example*: Using the `@JsModule` annotation to add a local JavaScript module.
-[source, java]
-----
-@JsModule("./my-local-module.js")
+@Tag("paper-slider")
+@HtmlImport("bower_components/paper-slider/paper-slider.html")
+public class PaperSlider extends Component {
 ----
 
-When running  `mvn clean install`, the `vaadin-maven-plugin` automatically installs the npm package in `node_modules` and imports the JavaScript module file into the document provided to the browser. In addition, if  you run the Jetty web server from Maven (using `mvn jetty:run`), your project's source code is monitored for changes to these types of annotations: any change to `@NpmPackage` or `@JsModule` annotations triggers installation of the referenced packages and hot deployment of your app, including the new JS module imports.
+The name of the HTML element is defined using `@Tag("paper-slider")` and the HTML import for the component is defined using `@HtmlImport("bower_components/paper-slider/paper-slider.html")`. The format for the HTML import should always be `bower_components/abc/def.html` even though webjars do not actually contain a `bower_components` directory. This allows you to temporarily or permanently use `Bower` instead of webjars in the project, without changing your code. The Flow server automatically removes the `bower_components` part when serving contents from webjars.
 
-=== Understanding the Project Files
-
-The project includes the `DemoView` component class at `src/test/java/…/DemoView.java`.
+The main test/demo Java class `src/test/java/…/DemoView.java`
 
 [source, java]
 ----
@@ -65,45 +119,36 @@ The project includes the `DemoView` component class at `src/test/java/…/DemoVi
 public class DemoView extends VerticalLayout {
 ----
 
+The project is set up in a slightly unconventional way so it can be a single-module Maven project. The test folder is used for a test/demo application in addition to actual test files. When you run 
 
-The project set up is slightly unconventional in order to allow it to be a single-module Maven project: it uses the `test` folder for both the demo application and for the actual test files. When you run `mvn jetty:run` in the project, it deploys `DemoView` and displays it at http://localhost:8080.
+[source, sh]
+----
+mvn jetty:run
+----
 
+in the project, it will deploy `DemoView` and show it at http://localhost:8080
 
-Your project is now set up and you can  go ahead and create the Java API. See <<java-api-for-a-web-component#,Creating a Java API for a Web Component>> for how to do this.
+Now you are set to create the Java API, for more details see <<creating-java-api-for-a-web-component#,Creating Java API for a Web Component>>
 
 [NOTE]
-Some Web Components do not show a UI when they are added to the page as empty tags. If the demo view is empty, use the browser console to verify that all files were found (no 404 errors) and then check if the component is correctly  configured. See <<debugging-a-web-component-integration#,Debugging a Web Component Integration>> for more. 
+Some web components will not show any UI when they are just added as empty tags to the page. If the demo view is empty, check first using the browser inspector that all files were found (no 404s) and then check if you need to configure the component in some way to show up.
 
 [NOTE]
-While the project setup is easy to use for development and testing, it does not allow you to easily produce a demo WAR file for deployment. It is usually better to create a separate project (or convert the project into a multi-module project) for this purpose. The demo files included in the starter, are intended as test UIs, whereas your result should be aimed at the end user.
+While the project setup is easy to use for development/testing, it does not allow you to easily produce a demo war file for deployment. It's usually better to create a separate project (or convert the project into a multi-module project) for this as the "demo" files included in the addon itself tend to be more test UIs and a demo should be aimed at the end user.
 
-[IMPORTANT]
-If your project is configured as a multi-module project, for example because the base project is an older version or you have manually converted it, source monitoring does not work and changes to the component are not automatically reflected to your demo application.
+== Step 3. Deploying the Add-on to Vaadin Directory
 
-== Deploying the Add-on to the Vaadin Directory
-
-When you are satisfied with the API, you can make the add-on available to everyone by deploying it to the https://vaadin.com/directory[Vaadin Directory]. 
-
-To create a directory-compatible add-on package use:
+When you are satisfied with the API, you can make the add-on available to the world by deploying it into Vaadin Directory. You can create the Directory compatible add-on package using
 
 [source, sh]
 ----
 mvn clean install -Pdirectory
 ----
-* This creates a ZIP file in the `target` directory.
 
-To add your add-on to the Vaadin Directory:
+This creates a zip file in the `target` directory. 
 
-. Go to https://vaadin.com/directory.
-. Login or register.
-. Upload the ZIP file. 
-. Write an overview for your add-on to let others know:
-** What it can do.
-** Which browsers are supported
-** Any other relevant information. 
-. Publish your add-on. 
-
-Users can use your add-on by copying the dependency information from the add-on page in the directory.
+Go to https://vaadin.com/directory, log in or register, and upload this zip file. Be sure to write an overview for your add-on to let others know what you can do with it, what browsers it supports etc. Then publish it and others can take your add-on into use by copying the dependency information from the add-on page in the directory.
 
 [NOTE]
-The metadata used by the Vaadin Directory is defined in `assembly/MANIFEST.MF`, based on the project's metadata. If you make changes to the project, for example by removing `<name></name>`, make sure to update the metadata as well.
+The metadata used by Vaadin Directory is defined in `assembly/MANIFEST.MF`, based on the project's metadata. If you do changes to the project such as removing `<name></name>`, make sure you update the metadata.
+

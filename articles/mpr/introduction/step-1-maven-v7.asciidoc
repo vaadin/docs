@@ -1,0 +1,241 @@
+---
+title: Step 1 - pom.xml configuration for Vaadin 7
+order: 2
+layout: page
+---
+
+= Step 1 - pom.xml configuration for Vaadin 7
+
+== Maven setup
+
+=== When using Vaadin 12+
+
+Starting from Vaadin 12, MPR is part of the Vaadin Platform, so the supported version of the project is set for you when importing the plaform in your project. In other words, you only need to define the platform version:
+
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <type>pom</type>
+            <scope>import</scope>
+            <version>12.0.0</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+
+... and then declare the usage of `vaadin-core` and `mpr-v7`:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>mpr-v7</artifactId>
+</dependency>
+----
+
+=== When using Vaadin 10
+
+With Vaadin 10, MPR is not part of the Vaadin Platform, and it needs to be imported separately. It will transitively install the compatible Vaadin Flow version:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>mpr-v7</artifactId>
+    <version>1.1.1</version>
+</dependency>
+----
+
+=== Framework 7 dependency
+
+When using MPR the minimum requirement for Vaadin 7 version is 7.7.14 or newer.
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-server</artifactId>
+    <version>7.7.15</version>
+    <exclusions>
+        <exclusion>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-elemental</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-themes</artifactId>
+    <version>7.7.15</version>
+</dependency>
+----
+
+[NOTE]
+You also need to remove the dependency on the `vaadin-client-compiled`, since a custom widgetset is served by the MPR project.
+
+[NOTE]
+When using MPR you can not use CDN for the widgetset. This means that the configuration
+`<vaadin.widgetset.mode>cdn</vaadin.widgetset.mode>` or `<vaadin.widgetset.mode>fetch</vaadin.widgetset.mode>` should be removed.
+
+If not already added in your build section, you need to add the `vaadin-maven-plugin` for it to manage the custom widgetset.
+Maven plugin version used at the moment is 7.7.15.
+
+[source,xml]
+----
+<build>
+     <plugins>
+         <plugin>
+             <groupId>com.vaadin</groupId>
+             <artifactId>vaadin-maven-plugin</artifactId>
+             <version>7.7.15</version>
+             <executions>
+                 <execution>
+                     <goals>
+                         <goal>resources</goal>
+                         <goal>update-widgetset</goal>
+                         <goal>compile</goal>
+                     </goals>
+                 </execution>
+             </executions>
+         </plugin>
+     </plugins>
+ </build>
+----
+
+To display Flow application logs, any slf4j implementation should be added to the project.
+The easiest way would be to use `slf4j-simple` dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-simple</artifactId>
+    <version>1.7.25</version>
+</dependency>
+----
+
+== Next step
+
+* <<step-2-legacy-servlets#,Step 2 - Removing legacy servlets -> >>
+
+Or:
+
+* <<../Overview#,<- Go back to the overview>>
+
+== Appendix: sample pom.xml
+
+[[sample-pom]]
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.mycompany</groupId>
+    <artifactId>my-mpr-app</artifactId>
+    <packaging>war</packaging>
+    <version>0.1</version>
+
+    <properties>
+        <vaadin.version>7.7.15</vaadin.version>
+        <vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
+
+        <slf4j.version>1.7.25</slf4j.version>
+        <jetty.plugin.version>9.3.9.v20160517</jetty.plugin.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-bom</artifactId>
+                <type>pom</type>
+                <scope>import</scope>
+                <version>12.0.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>mpr-v7</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-server</artifactId>
+            <version>${vaadin.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jsoup</groupId>
+                    <artifactId>jsoup</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.gwt</groupId>
+                    <artifactId>gwt-elemental</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-themes</artifactId>
+            <version>${vaadin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>resources</goal>
+                            <goal>update-widgetset</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- The Jetty plugin allows us to easily test the development build by
+				running jetty:run on the command line. -->
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>${jetty.plugin.version}</version>
+                <configuration>
+                    <scanIntervalSeconds>2</scanIntervalSeconds>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+----

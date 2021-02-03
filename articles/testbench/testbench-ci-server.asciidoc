@@ -1,0 +1,96 @@
+---
+title: Running Tests on a CI Server
+order: 120
+layout: page
+---
+
+[[testbench.ci-server]]
+= Running Tests on a CI Server
+
+Your tests can be run on a CI server as part of the build in the same way as you would run other tests but there are a few things to take into account:
+
+1. The application must be deployed to a server and the server started
+2. The URL used in the test must match the URL for the deployed application
+3. The browsers you want to run on must be available
+4. If run in parallel, tests should be truly independent of each other
+5. You need to install a license file on the CI server
+
+[[testbench.ci-server.deploying]]
+== Deploying the Application
+Deployment of the application can be done in several different ways depending on the setup and your preferences. The important thing is that the applicatiton is deployed and ready to accept requests before the tests are started.
+
+For applications without external dependencies, it is often handy to start a test as part of the build. If you are building with Maven, see <<dummy/../testbench-running-with-maven#,Running Tests with Maven>> for information on how you can start and stop the server as part of the build.
+
+If you have an external server that you deploy the application to, you will typically copy the result of the build to that server in one build step, then wait for the deployment to finish by querying the server or polling the URL where the application should be.  The following build step will then execute the TestBench tests using the predefined URL.
+
+[[testbench.ci-server.correct-url]]
+== Using the Correct URL
+In tests you typically use an URL like `http://localhost:8080/` when running on your local machine. On a build server this is usually ok if you are running the server and the tests all on the same build agent. 
+
+If only the server is running on the build agent and the browsers are running on a separate machine or on a cloud based browser provider, you might need to define and use a public IP of the build agent. Either you need to pass the IP address to the build in some way and use it in your test, or you can use the provided `IPAddress.findSiteLocalAddress()` helper in your test as e.g.
+[source, java]
+----
+getDriver().get("http://" + IPAddress.findSiteLocalAddress() + ":8080/");
+----
+
+If you are deploying on another host name, you need to pass that information to the tests in a suitable way, e.g. as a system property or environment variable you read in the test code.
+
+[NOTE]
+If you are not using site local addresses (10.x.y.z, 172.16.x.y or 192.168.x.y) then you can use `IPAddress.findIPAddress(..)` instead.
+
+
+[[testbench.ci-server.browsers]]
+== Making Sure the Browsers are Available
+When running the tests on your local machine you need to have a suitable browser installed. If the test creates a `ChromeDriver` instance, you need to have Chrome installed and so on. The same goes for the CI server (the build agent) if you are running tests directly on a local browser (as opposed to a test cluster described in <<dummy/../testbench-running-test-on-multiple-browsers#,Running Tests on Multiple Browsers in a Grid>>).
+
+In addition to installing the browsers on the build agent, you must take into account that browsers typically require a GUI to be run. This is not available directly on your typical build system. The options for running on such a system are:
+
+1. Run Chrome or Firefox in headless mode. Then no GUI is needed.
+2. If it is a Linux based system, start `xvfb` which provides a GUI environment for the browser without actually showing the GUI environment anywhere.
+
+To run Chrome in headless mode, you need to pass the `--headless` (and `--disable-gpu` on Windows) parameter to the `ChromeDriver` when starting the browser. The parameters can be defined using `ChromeOptions`:
+[source, java]
+----
+ChromeOptions options = new ChromeOptions();
+options.addArguments("--headless", "--disable-gpu");
+setDriver(new ChromeDriver(options));
+----
+
+Similarly, to run Firefox in headless mode, you need to pass the `-headless` parameter to the `FirefoxDriver`:
+[source, java]
+----
+FirefoxOptions options = new FirefoxOptions();
+options.addArguments("--headless", "--disable-gpu");
+setDriver(new FirefoxDriver(options));
+----
+
+[NOTE]
+The `--disable-gpu` flag is only needed on Windows and until http://crbug.com/737678 is resolved but it should not hurt on other platforms.
+
+[NOTE]
+Previously PhantomJS was recommended as a good way to do headless testing. You should no longer use PhantomJS as it has fallen far behind the latest browser versions and will likely not work properly with Vaadin platform.
+
+
+[[testbench.ci-server.independent-tests]]
+== Truly Independent Tests
+The easiest way to ensure that tests do not interfere with each other is to have a separate test database initialized from scratch for each test. How you do this is typically connected to what stack you are using. If you are using e.g. Spring Boot, you can use the `SpringRunner` and set your test to rollback any transaction at the end of the test. Other environments might have different options for this.
+
+If you are not resetting the database for each test, you should typically not run the tests in parallel as it will be very hard to understand where something went wrong when a lot of tests suddenly fail. When running tests in sequence you can, even though it is not a good practice, take into account in what way the previous test modified the data set. A better approach is typically to try not to alter the global state in the test, or at least set up data needed by the test in the test itself. An example would be that when you test a CRUD view, you should start by creating an entity instead of selecting an existing entity randomly. You can then delete your test entity in the end of the test. Both of these approaches will though cause a lot of tests to fail if one test fails in the beginning of the set and you always need to hunt down the initial problem and then rerun the whole set to find additional errors. 
+
+[[testbench.ci-server.license]]
+== Installing the License
+The license for your subscription is stored on your local machine in
+----
+~/.vaadin/proKey (Mac/Linux)
+%HOMEPATH%\.vaadin\proKey (Windows)
+----
+You need to copy the file from your local machine to the CI server to enable running tests on the CI server. The CVAL3 license allows you to use your personal license on the CI server also. This is the preferred way as it will always make the license available to all builds running on the same server.
+
+If you do not have access to the build agent running your builds on the CI server, you can also supply the license information using a system property:
+----
+-Dvaadin.proKey=<username>/<proKey>
+----
+where the `username` and `proKey` values come from your local `proKey` license file. 
+
+[NOTE]
+If you use a system property then it needs to be supplied to the process running the tests. It might not be enough to supply the system property to the build command starting the build.

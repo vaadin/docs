@@ -1,0 +1,75 @@
+---
+title: Routing with Spring
+order: 3
+layout: page
+---
+
+
+= Routing with Spring
+
+Routing works the same way with Spring as it does with a plain Flow application.
+To be able to handle the default route you just define a component with `@Route("")` annotation:
+
+[source,java]
+----
+@Route("")
+public class RootComponent extends Div {
+    public RootComponent(){
+        setText("Default path");
+    }
+}
+----
+
+In the same way you may define any other router path. See  
+<<../routing/tutorial-routing-annotation#,Defining Routes with @Route>> 
+tutorial and other router tutorials for more details about using router.
+
+The only thing that is new here for Spring is the possibility to use dependency injection in the
+components annotated with `@Route`. Such a component is instantiated by Spring
+and becomes a Spring initialized bean. In particular it means that you may autowire
+other Spring managed beans. Here is an example:
+
+[source,java]
+----
+@Route("")
+public class RootComponent extends Div {
+    
+    public RootComponent(@Autowired DataBean dataBean){
+        setText(dataBean.getMessage());
+    }
+}
+
+public interface DataBean {
+    String getMessage();
+}
+
+@Component
+public class DataBeanImpl implements DataBean {
+
+    public String getMessage(){
+        return "message";
+    }
+}
+----
+
+You should be aware of the difference between running the application as a Spring Boot 
+application and a WAR application deployed to a Web server. In the latter case 
+all `@Route` annotations are discovered out of the box due to Servlet 3.0 specification. 
+It doesn't happen automatically in the Spring Boot application case due to a design decision  
+(see https://github.com/spring-projects/spring-boot/issues/321).
+Vaadin Spring add-on implements scanning for route classes (and other Vaadin
+types that needs to be discovered and registered at startup) for Spring Boot applications for you.
+But this scanning is done only inside Spring Boot application class package (the package
+where `@SpringBootApplication` class is located). If your application contains 
+route classes in packages that are not scanned by default then you have two options:
+either move them into the `@SpringBootApplication` application class package 
+(or its subpackages) or explicitly specify the packages where the scanning should 
+discover the route classes. `@EnableVaadin` annotation allows you to do this via 
+its `value` parameter.
+
+[NOTE]
+Normally you don't need to use the `@EnableVaadin` annotation at all with Spring Boot.
+The annotation is intended to be used in Spring MVC case where it enables 
+the Vaadin configuration. In Spring Boot case auto-configuration is available
+which makes it work out of the box. So the only reason why you need to use 
+`@EnableVaadin` is specifying the packages to scan.

@@ -3,14 +3,13 @@ const CACHE_DIR = './.cache';
 
 // Repo name, branch and local directory name
 const repos = [
-  ['vaadin-docs', 'vaadin17'],
-  ['designer-internal', 'master', 'designer'],
-  ['vaadin-charts-flow', 'master', 'charts'],
+  ['vaadin-docs', 'vaadin10'],
+  ['designer-internal', 'v10-maintenance', 'designer'],
+  ['vaadin-charts-flow', '6.0', 'charts'],
   ['testbench', 'master'],
-  ['bakery-app-starter-flow-docs', 'master', 'bakeryflow'],
-  ['flow-and-components-documentation', 'master', 'flow'],
-  ['multiplatform-runtime-internal', 'master', 'mpr'],
-  ['business-app-starter-flow-docs', 'master', 'business-app']
+  ['bakery-app-starter-flow-docs', 'v10', 'bakeryflow'],
+  ['flow-and-components-documentation', 'V10', 'flow'],
+  ['multiplatform-runtime-internal', '1.1', 'mpr']
 ];
 
 
@@ -74,23 +73,18 @@ function migrateDocs() {
   delete sections.elements;
 
   const flowPath = path.join(__dirname, '../articles/flow');
-  // Themes and Styling section has already been restructured
-  // const themesPath = path.join(__dirname, '../articles/themes');
   const designerPath = path.join(__dirname, '../articles/designer');
   const testbenchPath = path.join(__dirname, '../articles/testbench');
   const mprPath = path.join(__dirname, '../articles/mpr');
   const bakeryPath = path.join(__dirname, '../articles/bakeryflow');
-  const basPath = path.join(__dirname, '../articles/business-app');
-  const chartsPath = path.join(__dirname, '../articles/ds/components/charts');
+  const chartsPath = path.join(__dirname, '../articles/charts');
 
   // Cleanup
   fs.rmdirSync(flowPath, { recursive: true });
-  fs.rmdirSync(themesPath, { recursive: true });
   fs.rmdirSync(designerPath, { recursive: true });
   fs.rmdirSync(testbenchPath, { recursive: true });
   fs.rmdirSync(mprPath, { recursive: true });
   fs.rmdirSync(bakeryPath, { recursive: true });
-  fs.rmdirSync(basPath, { recursive: true });
   fs.rmdirSync(chartsPath, { recursive: true });
 
   // Helper function for all copy operations
@@ -110,32 +104,14 @@ function migrateDocs() {
   );
   generateTopLevelIndex({
     folderPath: flowPath,
-    title: 'Framework',
+    title: 'Flow',
     order: 1,
-    icon: '../_images/flow.svg'
   });
   generateIndexes(sections.flow.subpages, 'flow');
   generateExternalLinks(sections.flow.external, 'flow');
 
   // TODO draft content should be in a different branch (portlet support is not yet available)?
   fs.remove(path.join(flowPath, 'portlet-support'));
-
-
-  // Themes and styling
-  // fs.mkdirSync(themesPath);
-  // fs.copySync(
-  //   path.join(__dirname, CACHE_DIR, 'flow/documentation-themes'),
-  //   themesPath,
-  //   { filter }
-  // );
-  // generateTopLevelIndex({
-  //   folderPath: themesPath,
-  //   title: 'Theming and Styling',
-  //   order: 3,
-  //   icon: '../_images/themes.svg'
-  // });
-  // generateIndexes(sections.themes.subpages, 'themes', 110);
-  // generateExternalLinks(sections.themes.external, 'themes');
 
   // Designer
   fs.copySync(
@@ -147,10 +123,27 @@ function migrateDocs() {
     folderPath: designerPath,
     title: 'Designer',
     order: 4,
-    icon: '../_images/designer.svg'
   });
   generateIndexes(sections.designer.subpages, 'designer');
   generateExternalLinks(sections.designer.external, 'designer');
+
+
+
+  // Charts
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'charts/documentation'),
+    chartsPath,
+    { filter }
+  );
+  // overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
+  generateTopLevelIndex({
+    folderPath: chartsPath,
+    title: 'Charts',
+    order: 5,
+  });
+  generateIndexes(sections.charts.subpages, 'charts');
+  generateExternalLinks(sections.charts.external, 'charts');
+
 
 
   // TestBench
@@ -162,8 +155,7 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: testbenchPath,
     title: 'TestBench',
-    order: 5,
-    icon: '../_images/testbench.svg'
+    order: 6,
   });
   generateIndexes(sections.testbench.subpages, 'testbench');
   generateExternalLinks(sections.testbench.external, 'testbench');
@@ -177,28 +169,11 @@ function migrateDocs() {
   );
   generateTopLevelIndex({
     folderPath: bakeryPath,
-    title: 'Full Stack App Starter',
-    order: 6,
-    icon: '../_images/fullstack-starter.svg'
+    title: 'Bakery App Starter',
+    order: 7,
   });
   generateIndexes(sections.bakeryflow.subpages, 'bakeryflow');
   generateExternalLinks(sections.bakeryflow.external, 'bakeryflow');
-
-
-  // Business app starter
-  fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'business-app'),
-    basPath,
-    { filter }
-  );
-  generateTopLevelIndex({
-    folderPath: basPath,
-    title: 'Business App Starter',
-    order: 7,
-    icon: '../_images/business-starter.svg'
-  });
-  generateIndexes(sections['business-app'].subpages, 'business-app');
-  generateExternalLinks(sections['business-app'].external, 'business-app');
 
 
   // MPR
@@ -211,21 +186,9 @@ function migrateDocs() {
     folderPath: mprPath,
     title: 'Multiplatform Runtime',
     order: 8,
-    icon: '../_images/mpr.svg'
   });
   generateIndexes(sections.mpr.subpages, 'mpr');
   generateExternalLinks(sections.mpr.external, 'mpr');
-
-
-  // Charts
-  fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'charts/documentation'),
-    chartsPath,
-    { filter }
-  );
-  overviewToIndex(path.join(chartsPath, 'charts-overview.asciidoc'), 'Charts');
-  generateIndexes(sections.charts.subpages, 'ds/components/charts');
-  generateExternalLinks(sections.charts.external, 'ds/components/charts');
 
 
   try {

@@ -1,0 +1,228 @@
+[[view-navigation-with-vaadin-designer]]
+View navigation with Vaadin Designer
+------------------------------------
+
+In this tutorial you will learn how to set up event listeners to handle
+user input, and leverage those event listeners to build navigation
+between views. This tutorial assumes you have Vaadin plugin and Vaadin
+Designer installed. You should be familiar with using design templates,
+which is a topic described in our previous
+https://vaadin.com/wiki/-/wiki/Main/Using+templates+in+Vaadin+Designer[tutorial].
+The code samples in this tutorial are written using *Java 8*. Let’s get
+started.
+
+image:https://vaadin.com/documents/10187/11059787/order-form-full.png/e8c58c5e-30bc-44ef-b04a-301272100e86?t=1445412684787[image]
+
+[[creating-your-designs]]
+Creating your designs
+~~~~~~~~~~~~~~~~~~~~~
+
+At first you need some views. The fastest way is to use the set of
+templates available
+https://github.com/vaadin/ibm-design-language-templates/tree/master/DesignerTemplate/completed_templates[here].
+Create your application’s main view using the template called
+`NavigationTemplateVaadin`. Name your design as `MainViewDesign`. Create two
+other views using the templates called `FormTemplateVaadin` and
+`DashboardTemplateVaadin`. Name your views `OrderViewDesign` and
+`DashboardViewDesign` respectively. In addition, create a design called
+`AboutViewDesign` containing only a `VerticalLayout`.
+
+[[basic-navigation]]
+Basic navigation
+~~~~~~~~~~~~~~~~
+
+Vaadin Designer will automatically update the design Java file when you
+change your design html. It also means that you should not touch the
+auto-generated Java file, because your changes will be overwritten.
+Instead what you want to do is extend the class and hook up your event
+listeners there. Create a new class called `MainView` and extend it from
+MainViewDesign and repeat the same thing to the other design files, too.
+From the companion java file you can see that for every `Component` you
+have in your design, a field of that type is declared. The fields have
+an access modifier protected.
+
+In the UI class, set the application’s initial content
+
+[source, java]
+....
+@Override
+protected void init(VaadinRequest vaadinRequest) {
+    setContent(new MainView());
+}
+....
+
+In the `MainView`, add click listeners to buttons in the navigation
+sidebar
+
+[source, java]
+....
+public class MainView extends MainViewDesign {
+
+    public MainView() {
+        menuButton1.addClickListener(event -> scroll_panel.setContent(new DashboardView());
+        menuButton2.addClickListener(event -> scroll_panel.setContent(new OrderView());
+        menuButton3.addClickListener(event -> scroll_panel.setContent(new AboutView());
+    }
+}
+....
+
+This version of navigation works, but it doesn’t allow to use the
+browser’s back button. You can make the navigation more comprehensive by
+using a `Navigator`. I’ll show you how to do that next.
+
+[[improved-navigation]]
+Improved navigation
+~~~~~~~~~~~~~~~~~~~
+
+To create a more comprehensive navigation you should use `Navigator`.
+It uses URL fragments for selecting the active view and
+because of that the back button and navigating with a URL works. First
+you need to change your `DashboardView`, `OrderView` and `AboutView` to
+implement the `com.vaadin.navigator.View` interface. The `Navigator` uses
+`String` view names to identify the views, so to make your life easier
+later, add a public view name field to each of the sub-views.
+
+[source, java]
+....
+public class DashboardView extends DashboardViewDesign implements View {
+    public static final String VIEW_NAME = "dashboard";
+
+    @Override
+    public void enter(ViewChangeEvent event) {
+
+    }
+}
+....
+
+Now your sub-views are ready to be used with a `Navigator`. Next you need
+to create a navigator and attach it to your UI with a designated area to
+the sub-views. The `MainViewDesign` has a `Panel` called `scroll_panel` which
+is perfect for displaying the views.
+
+Here is the new `MainView` constructor
+
+[source, java]
+....
+public MainView() {
+    Navigator navigator = new Navigator(UI.getCurrent(), scroll_panel);
+}
+....
+
+Add views to the navigator. And navigate to the `DashboardView`.
+
+[source, java]
+....
+public MainView() {
+    Navigator navigator = new Navigator(UI.getCurrent(), scroll_panel);
+    navigator.addView(DashboardView.VIEW_NAME, DashboardView.class);
+    navigator.addView(OrderView.VIEW_NAME, OrderView.class);
+    navigator.addView(AboutView.VIEW_NAME, AboutView.class);
+    if (navigator.getState().isEmpty()) {
+        navigator.navigateTo(DashboardView.VIEW_NAME);
+    }
+}
+....
+
+Then add a click listener and invoke a navigation method to handle
+calling the navigator.
+
+[source, java]
+....
+public MainView() {
+    Navigator navigator = new Navigator(UI.getCurrent(), scroll_panel);
+    navigator.addView(DashboardView.VIEW_NAME, DashboardView.class);
+    navigator.addView(OrderView.VIEW_NAME, OrderView.class);
+    navigator.addView(AboutView.VIEW_NAME, AboutView.class);
+    if (navigator.getState().isEmpty()) {
+        navigator.navigateTo(DashboardView.VIEW_NAME);
+    }
+    menuButton1.addClickListener(event -> doNavigate(DashboardView.VIEW_NAME));
+    menuButton2.addClickListener(event -> doNavigate(OrderView.VIEW_NAME));
+    menuButton3.addClickListener(event -> doNavigate(AboutView.VIEW_NAME));
+}
+
+private void doNavigate(String viewName) {
+    UI.getCurrent().getNavigator().navigateTo(viewName);
+}
+....
+
+Now the navigation is done properly and you can test it out. There is
+still a slight issue with the selected/unselected menu item style. Let’s
+fix that next.
+
+[[adding-final-touches]]
+Adding final touches
+~~~~~~~~~~~~~~~~~~~~
+
+The menu button matching the active view should have the selected style
+and the rest of the menu buttons should not have it. It’s worth noting
+that the view can be navigated to by clicking a button or by entering a
+URL, so it’s not enough to handle the selected style only in the button
+click listener. The displayed view needs to be mapped to a button
+somehow. The following implementation is just one way to achieve this.
+It looks fairly complicated, so I’m sure you can come up with a better
+solution if you try.
+
+[source, java]
+....
+public class MainLayout extends MainLayoutDesign implements ViewDisplay {
+
+    private static final String STYLE_SELECTED = "selected";
+    private Navigator navigator;
+
+    public MainLayout() {
+        navigator = new Navigator(UI.getCurrent(), (ViewDisplay) this);
+        addNavigatorView(DashboardView.VIEW_NAME, DashboardView.class, menuButton1);
+        addNavigatorView(OrderView.VIEW_NAME, OrderView.class, menuButton2);
+        addNavigatorView(AboutView.VIEW_NAME, AboutView.class, menuButton3);
+        if (navigator.getState().isEmpty()) {
+            navigator.navigateTo(DashboardView.VIEW_NAME);
+        }
+    }
+
+    private void doNavigate(String viewName) {
+        getUI().getNavigator().navigateTo(viewName);
+    }
+
+    private void addNavigatorView(String viewName,
+            Class<? extends View> viewClass, Button menuButton) {
+        navigator.addView(viewName, viewClass);
+        menuButton.addClickListener(event -> doNavigate(viewName));
+        menuButton.setData(viewClass.getName());
+    }
+
+    private void adjustStyleByData(Component component, Object data) {
+        if (component instanceof Button) {
+            if (data != null && data.equals(((Button) component).getData())) {
+                component.addStyleName(STYLE_SELECTED);
+            } else {
+                component.removeStyleName(STYLE_SELECTED);
+            }
+        }
+    }
+
+    @Override
+    public void showView(View view) {
+        if (view instanceof Component) {
+            scroll_panel.setContent((Component) view);
+            Iterator it = side_bar.iterator();
+            while (it.hasNext()) {
+                adjustStyleByData(it.next(), view.getClass().getName());
+            }
+        } else {
+            throw new IllegalArgumentException("View is not a Component");
+        }
+    }
+}
+....
+
+In this last iteration I use `AbstractComponent`’s `setData` and `getData`
+methods to store the view class name and map it to the button to be
+highlighted. I also changed the MainLayout to be a
+`com.vaadin.navigator.ViewDisplay` and highlight the button in the
+`showView` implementation. Ok, maybe that was more complicated than it
+should be, but now both clicking a menu button and navigating using a
+URL changes the selected style of the button in question. Great job!
+
+https://github.com/vaadin/designer-tutorials/[See the example code at
+GitHub]

@@ -1,0 +1,217 @@
+---
+title: Component Enabled State
+order: 3
+layout: page
+---
+
+= Component Enabled State
+
+A component that allows user interaction (such as an TextField or a Button) can have three different enabled states:
+
+* enabled: this is the default. An enabled component allows the user to interact with it;
+* explicitly disabled: a component is explicitly disabled when the `setEnabled(false)` is called directly on it.
+Any communication from the client to the server is blocked, and the user can't interact with the component in any way;
+* implicitly disabled: a component is implicitly disabled when it is a child of a explicitly disabled container.
+The component behaves exactly like a explicitly disabled one, but when it gets detached from the disabled container, it gets
+enabled again.
+
+Any component that implements the `HasEnabled` interface can be explicitly enabled/disabled. For example:
+
+[source,java]
+----
+TextField name = new TextField("Name");
+name.setEnabled(false);
+----
+
+The `name` field on this example is disabled, so the user can't interact with it, and any events from the client to server
+are blocked. The server doesn't handle any status updates from the component, even if the component is changed manually on
+the browser (by a client-side script or via developer console, for example).
+
+When you have a container, you can disable all components inside it by using the same API:
+
+[source,java]
+----
+FormLayout form = new FormLayout();
+
+TextField name = new TextField("Name");
+TextField email = new TextField("E-mail");
+Button submit = new Button("Submit");
+
+form.add(name, email, submit);
+form.setEnabled(false); // all children are implicitly disabled
+System.out.println(name.isEnabled()); // prints false
+----
+
+When an implicitly disabled component is detached from a disabled container, it gets enabled again. Likewise, if an enabled
+component is attached to a disabled container, the component gets implicitly disabled. For example:
+
+[source,java]
+----
+FormLayout form = new FormLayout();
+form.setEnabled(false); // the entire form is disabled
+
+TextField name = new TextField("Name");
+System.out.println(name.isEnabled()); // prints true, since it is not attached yet
+
+Button submit = new Button("Submit");
+submit.setEnabled(false); // the submit button is explicitly disabled
+System.out.println(submit.isEnabled()); // prints false
+
+form.add(name, submit); // attaches children
+
+System.out.println(name.isEnabled()); // prints false
+System.out.println(submit.isEnabled()); // prints false
+
+form.remove(name); // the name field gets detached
+System.out.println(name.isEnabled()); // prints true
+
+form.remove(submit); // the submit button gets detached
+System.out.println(submit.isEnabled()); // prints false, since it was explicitly disabled
+----
+
+== Override default disabled behavior
+
+By default disabled components don't allow any user interaction from the client side.
+Complicated (composite) components sometimes should stay partly functional even in disabled state.
+In this case it should be possible to enable some RPC client side calls which
+are blocked for disabled component.
+
+In the following example the Polymer template component controls its enabled state
+by itself via the checkbox. E.g. it may be a registration form which becomes
+enabled only when user accepts a license agreement. The checkbox should
+not ever be disabled and it should enable/disable the component.
+
+[source, java]
+----
+@Tag("registration-form")
+@HtmlImport("src/registration-form.html")
+public class RegistrationForm extends PolymerTemplate<TemplateModel>
+        implements HasEnabled {
+
+    @Id
+    private TextField name;
+
+    @Id
+    private TextField email;
+
+    @Id
+    private Button submit;
+
+    @Id
+    private Element enable;
+
+    public RegistrationForm() {
+        enable.synchronizeProperty("checked", "checked-changed",
+                DisabledUpdateMode.ALWAYS);
+        enable.addPropertyChangeListener("checked", this::handleEnabled);
+        setEnabled(false);
+    }
+
+    private void handleEnabled(PropertyChangeEvent event) {
+        setEnabled((Boolean) event.getValue());
+    }
+
+    @EventHandler
+    private void register() {
+        String userName = name.getValue();
+        String userEmail = email.getValue();
+        System.out.println("Register user with name='" + userName
+                + "' and email='" + userEmail + "'");
+    }
+}
+----
+
+Here is its template file:
+
+[source, html]
+----
+<dom-module id="registration-form">
+    <template>
+        <vaadin-text-field id='name'>{{name}}</vaadin-text-field>
+        <vaadin-text-field id='email'>{{email}}</vaadin-text-field>
+        <vaadin-button id='submit' on-click='register'>Register</vaadin-button>
+        <vaadin-checkbox id='enable'>Accept License Agreement</vaadin-checkbox>
+    </template>
+    <script>
+         class RegistrationForm extends Polymer.Element {
+           static get is() {return 'registration-form'}
+         }
+         customElements.define(RegistrationForm.is, RegistrationForm);
+    </script>
+</dom-module>
+----
+
+In this example the checkbox is implicitly disabled if the template (which is its parent)
+is disabled. As a result no RPC will be allowed for the checkbox. The method
+`synchronizeProperty` with extra argument is used to synchronize `checked`
+property. The argument value is `DisabledUpdateMode.ALWAYS`  enum value which
+instructs to allow updates for this property even if the element is disabled.
+
+Here is the list of RPC communications which are blocked for the disabled element:
+- Property changes
+- DOM events
+- Event handler methods (methods annotated with `@EventHandler`)
+- Client delegate methods (methods annotated with `@ClientCallable`)
+
+E.g. the `register()` method is an event handler method which is blocked when the component
+is disabled.
+
+=== Enable property changes
+
+Similarly to the `synchronizeProperty` API method which allows to receive property updates
+for disabled components if it's called with `DisabledUpdateMode.ALWAYS` argument value, you may
+use declarative way to do the same via `@Synchronize` annotation for the property getter
+in your component:
+
+[source, java]
+----
+@Synchronize(property = "prop", value = "prop-changed", allowUpdates = DisabledUpdateMode.ALWAYS)
+public String getProp(){
+    return getElement().getProperty("prop");
+}
+----
+
+=== Enable DOM events
+
+You may use two ways to receive DOM events: `Element` API method `addEventListener` and
+`@DomEvent` annotation.
+
+To unblock DOM event for a disabled element using API method you may use
+`addEventListener` overload which accepts extra parameter with value `DisabledUpdateMode.ALWAYS`.
+
+[source, java]
+----
+public Notification() {
+    getElement().addEventListener("opened-changed", event -> {
+       System.out.println("Notification is opened");})
+    .setDisabledUpdateMode(DisabledUpdateMode.ALWAYS);
+}
+----
+
+To unblock DOM event for a disabled component via `@DomEvent` annotation you may
+use the extra parameter value `DisabledUpdateMode.ALWAYS` :
+`@DomEvent(value="input", allowUpdates = DisabledUpdateMode.ALWAYS )`.
+
+[source, java]
+----
+@DomEvent(value = "click", allowUpdates = DisabledUpdateMode.ALWAYS)
+public class CustomEvent extends ComponentEvent<Component> {
+}
+----
+
+=== Enable server handler methods
+
+If you have server handler methods annotation with `@ClientCallable` or
+`@EventHandler` then you may unblock them for the disabled component specifying
+ `DisabledUpdateMode.ALWAYS` as a value: `@EventHandler(DisabledUpdateMode.ALWAYS)`.
+
+[source, java]
+----
+@EventHandler(DisabledUpdateMode.ALWAYS)
+private void eventHandler(){
+}
+
+@ClientCallable(DisabledUpdateMode.ALWAYS)
+private void clientRequest(){
+}
+----

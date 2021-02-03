@@ -1,0 +1,182 @@
+---
+title: Theming Crash Course
+order: 4
+layout: page
+---
+= Theming Web Components
+
+This chapter gives an overview of everything you need to understand in order to master and be productive in theming modern web applications which are built with web components.
+
+First, it is important to draw the line between global styles and scoped styles:
+
+* Before web components were introduced, the styles were global on the web, meaning that a selector in CSS can target any element in the document.
+*  Web components, and Shadow DOM in particular, introduce style scoping to the web platform.
+The contents of web components are isolated from global styles, and instead have scoped styles, which are specific to a particular web component only.
+
+This guide describes how to apply global and scoped styles, as well as how to share common styles between style scopes for the application theming purpose.
+
+== Global Styles
+
+Global styles are styles defined in the document scope.
+Global styles can target document body and any regular DOM contents inside, including the application views,
+but can not target Shadow DOM contents, such as internals of Vaadin components, Polymer templates, and other web components.
+To define global styles, use `<custom-style><style>...</style><custom-style>` tags in HTML.
+
+[NOTE]
+Using the `<custom-style>` wrapper for global styles is required by Polymer to enable correct cross-browser scoping.
+
+Place your global styles in a separate HTML file:
+
+.src/main/webapp/frontend/styles/shared-styles.html
+[source,html]
+----
+<custom-style>
+  <style>
+    /* Example global style */
+    html {
+      font-size: 1em;
+    }
+  </style>
+</custom-style>
+----
+
+As shown in the previous chapter, this file should be imported to the root layout level of your application.
+
+== Styling Polymer Templates
+
+Since Polymer templates are web components, their template contents end up in Shadow DOM.
+By design, Shadow DOM defines a local style scope, isolated from global styles.
+
+Scoped styles, which are specific to a single template, can be added directly to the `<style>` tag inside the template:
+
+.src/main/webapp/frontend/src/my-view.html
+[source,html]
+----
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="my-view">
+  <template>
+    <style>
+      /* Example scoped styles, applied to <my-view> template contents only */
+
+      :host {
+        /* Styles for the `<my-view>` hosting element */
+        display: block;
+      }
+
+      .my-view-title {
+        font-weight: bold;
+        border-bottom: 1px solid gray;
+      }
+    </style>
+
+    <div class="my-view-title">My view title</div>
+  </template>
+</dom-module>
+<script>
+  class MyView extends Polymer.Element {
+    static get is() { return 'my-view'; }
+  }
+
+  customElements.define(MyView.is, MyView);
+</script>
+----
+
+== Using Custom CSS Properties
+
+One of the needs for theming is to share common style values, such as sizes, colors, etc, between pieces of the application.
+This could be achieved using custom CSS properties, which is a special syntax for assigning and referencing CSS variables.
+Custom CSS properties are inherited, their values cross Shadow DOM boundaries.
+Polymer templates can reuse values defined by global styles, as well as override them.
+
+Use global styles for `html` element to define a global custom CSS property:
+
+.src/main/webapp/frontend/styles/shared-styles.html
+[source,html]
+----
+<custom-style>
+  <style>
+    html {
+      /* Example global custom CSS property definition */
+      --my-theme-color: brown;
+    }
+  </style>
+</custom-style>
+----
+
+For referencing your custom CSS property, use ```var(--my-property)``` syntax. For example, in your Polymer template styles:
+
+.src/main/webapp/frontend/src/my-view.html
+[source,html]
+----
+<!-- ... -->
+
+<dom-module id="my-view">
+  <template>
+    <style>
+      /* ... */
+
+      .my-view-title {
+        /* Example referencing custom CSS property */
+        color: var(--my-theme-color);
+      }
+    </style>
+  </template>
+
+  <!-- ... -->
+</dom-module>
+----
+
+== Using Style Modules
+
+Style modules allow sharing the same stylesheet between multiple Polymer templates and global styles.
+
+Style modules are defined in HTML using ```<dom-module id="my-styles"><template><style>/* ... */</style></template></dom-module>``` tag combination:
+
+.src/main/webapp/frontend/styles/shared-styles.html
+[source,html]
+----
+<dom-module id="shared-styles">
+  <template>
+    <style>
+      /* Example style module */
+      .my-outline-style {
+        outline: 1px solid green;
+      }
+    </style>
+  </template>
+</dom-module>
+----
+
+To include a style module in a Polymer template, import the module file with HTML imports and use ```<style include="module-id">```:
+
+.src/main/webapp/frontend/src/my-view.html
+[source,html]
+----
+<!-- ... -->
+<link rel="import" href="../styles/shared-styles.html">
+
+<dom-module id="my-view">
+  <template>
+    <style include="shared-styles">
+      /*  */
+    </style>
+  </template>
+
+  <!-- ... -->
+</dom-module>
+----
+
+NOTE: Use a space-separated list of style module ids to include multiple style modules into a single scope: ```<style include="shared-styles other-shared-styles"></style>```.
+
+Style modules can also be included in global styles:
+
+.src/main/webapp/frontend/styles/global-styles.html
+[source,html]
+----
+<link rel="import" href="./shared-styles.html">
+
+<custom-style>
+  <style include="shared-styles"></style>
+</custom-style>
+----

@@ -1,0 +1,234 @@
+---
+title: Vaadin CDI contexts
+order: 3
+layout: page
+---
+
+
+= Vaadin CDI Contexts
+
+You can find a summary about contexts at <<../spring/tutorial-spring-scopes#,Vaadin Spring Scopes>>. The concept is the same.
+
+In addition to standard CDI contexts the CDI add-on introduces some new contexts.
+
+.Normal and Pseudo scopes
+Most scopes are normal scopes in CDI. It means a call to a managed bean
+is delegated by a client proxy to the active instance. The active instance is provided by the context.
+Vaadin component hierarchy does not work properly with CDI client proxies, so as a precaution the Vaadin CDI
+plugin will not deploy if any such beans are discovered.
+Normal scopes introduced by this add-on are `@VaadinServiceScoped`, `@VaadinSessionScoped`, `@NormalUIScoped`, `@NormalRouteScoped`.
+
+Any scope that is not a normal scope is called a pseudo-scope.
+Scopes of this kind are standard `@Dependent`, and `@Singleton`. Additionally `@UIScoped`, and `@RouteScoped` introduced by this add-on.
+Injection of a pseudo-scoped bean will create a direct reference to the object.
+There are some limitations when not using proxies. Circular referencing (that
+is, injecting A to B and B to A) will not work.
+Injecting into a larger scope will bind the instance
+from the currently active smaller scope, and will ignore smaller scope change.
+For example a `@UIScoped` bean after being injected into session scope will point to the same
+ instance ( even its `UI` is closed ) regardless of current `UI`.
+
+.About Push
+Vaadin contexts are usable inside the `UI.access` method with any push transport.
+[NOTE]
+Please refer to <<../advanced/tutorial-push-access#push.access,Asynchronous Updates>>
+about push.
+
+An incoming websocket message does not count as a request in CDI.
+Need an http request to have request, session, and conversation context.
+So you should use `WEBSOCKET_XHR` (it is the default), or `LONG_POLLING`
+transport, otherwise you lost these standard contexts.
+
+In background threads contexts depending on http request are not active regardless of push.
+
+== `@VaadinServiceScoped`
+
+`@VaadinServiceScoped` context manages the beans during Vaadin Service lifecycle.
+The lifecycle of the service is the same as the lifecycle of its Vaadin servlet.
+
+[NOTE]
+Please refer to <<../advanced/tutorial-application-lifecycle#application.lifecycle.servlet-service,Vaadin Servlet and Service>>
+section of <<../advanced/tutorial-application-lifecycle#,Application Lifecycle>> tutorial
+for details about the Vaadin Service.
+
+For beans automatically picked up by VaadinService you need the `@VaadinServiceEnabled` annotation.
+It should be used together with `@VaadinServiceScoped`,
+see <<tutorial-cdi-service-beans#,Vaadin service interfaces as a CDI bean>> for details.
+
+== `@VaadinSessionScoped`
+
+`@VaadinSessionScoped` context manages the beans during Vaadin Session lifecycle.
+It means that the same bean instance will be used within the whole Vaadin session.
+
+[NOTE]
+Please refer to <<../advanced/tutorial-application-lifecycle#application.lifecycle.session,User Session>>
+section of <<../advanced/tutorial-application-lifecycle#,Application Lifecycle>> tutorial
+for details about the Vaadin Session lifecycle.
+
+[source,java]
+----
+@Route("")
+public class MainLayout extends Div {
+    @Inject
+    public MainLayout(SessionService bean){
+        setText(bean.getText());
+    }
+}
+
+@Route("editor")
+public class Editor extends Div {
+    @Inject
+    public Editor(SessionService bean){
+        setText(bean.getText());
+    }
+}
+
+@VaadinSessionScoped
+public class SessionService {
+    private String uid = UUID.randomUUID().toString();
+
+    public String getText(){
+        return "session "+uid;
+    }
+}
+----
+
+In this example the same instance of `SessionService` will be used as long as
+we access the application from the same Vaadin session since it's session scoped.
+E.g. if you open the root target in one tab and the editor target in another tab,
+then the shown text will be the same for both. It happens because the session
+is the same even though the tabs (and `UI` instances) are different.
+
+== `@UIScoped`, `@NormalUIScoped`
+
+The `@UIScoped`, and `@NormalUIScoped` context manages the beans during the `UI` lifecycle. Similar to the example above
+the `UIService` will be the same while we are in the same `UI` since it's ui scoped now.
+
+For components use `@UIScoped`, for other beans you can use `@NormalUIScoped`.
+
+[NOTE]
+Please refer to <<../advanced/tutorial-application-lifecycle#application.lifecycle.ui,Loading a UI>>
+section of <<../advanced/tutorial-application-lifecycle#,Application Lifecycle>> tutorial
+for details about the `UI` lifecycle.
+
+[source,java]
+----
+@Route("")
+public class MainLayout extends Div {
+    @Inject
+    public MainLayout(UIService bean){
+        setText(bean.getText());
+    }
+}
+
+@Route("editor")
+public class Editor extends Div {
+    @Inject
+    public Editor(UIService bean){
+        setText(bean.getText());
+    }
+}
+
+@NormalUIScoped
+public class UIService {
+    private String uid = UUID.randomUUID().toString();
+
+    public String getText(){
+        return "ui " + uid;
+    }
+}
+----
+
+Now if you open two browser tabs, the text in these will be different since the `UI` instances
+are different. But if you navigate to the `Editor` instance via the router (or the `UI` instance which
+delegates navigation to the router) then the text will be the same.
+
+[source,java]
+----
+public void edit() {
+    getUI().get().navigate("editor");
+}
+----
+
+So inside the same `UI` instance the same bean instance with `@UIScoped`, or `@NormalUIScoped` is used.
+
+== `@RouteScoped`, `@NormalRouteScoped`
+
+`@RouteScoped`, and `@NormalRouteScoped` context's lifecycle on its own is same as UI context's.
+Together with the concept of `@RouteScopeOwner` it can be used
+to bind beans to router components (`@Route`, `RouteLayout`, `HasErrorParameter`).
+
+Until owner remains in the route chain, all beans owned by it remain in the scope.
+
+For Vaadin components use `@RouteScoped`, for other beans you can use `@NormalRouteScoped`.
+
+[NOTE]
+Please refer to
+<<../routing/tutorial-routing-annotation#,Defining Routes With @Route>>, and
+<<../routing/tutorial-router-layout#,Router Layouts and Nested Router Targets>>
+about the details of route targets, layouts, and chain.
+
+
+[source,java]
+----
+@Route("")
+@RoutePrefix("parent")
+public class ParentView extends Div implements RouterLayout {
+    @Inject
+    public ParentView(@RouteScopeOwner(ParentView.class) RouteService routeService) {
+        setText(routeService.getText());
+    }
+}
+
+@Route(value = "child-a", layout = ParentView.class)
+public class ChildAView extends Div {
+    @Inject
+    public ChildAView(@RouteScopeOwner(ParentView.class) RouteService routeService) {
+        setText(routeService.getText());
+    }
+}
+
+@Route(value = "child-b", layout = ParentView.class)
+public class ChildBView extends Div {
+    @Inject
+    public ChildBView(@RouteScopeOwner(ParentView.class) RouteService routeService) {
+        setText(routeService.getText());
+    }
+}
+
+@NormalRouteScoped
+@RouteScopeOwner(ParentView.class)
+public class RouteService {
+    private String uid = UUID.randomUUID().toString();
+
+    public String getText() {
+        return "ui " + uid;
+    }
+}
+----
+
+In this example `ParentView`, `ChildAView`, and `ChildBView` ( paths are `/parent`, `/parent/child-a`, and `/parent/child-b`) use the same `RouteService` instance,
+while you navigate between them. After navigating out of `ParentView`, `RouteService` is destroyed too.
+
+[NOTE]
+As you can see `@RouteScopeOwner` is redundant.
+It is a CDI qualifier, so you have to define it both on the bean, and on the injection point.
+
+Route components can be `@RouteScoped` too.
+In this case `@RouteScopeOwner` should point to a parent layout.
+Omitting it means owner is the class itself.
+
+[source,java]
+----
+@Route("scoped")
+@RouteScoped
+public class ScopedView extends Div {
+    private void onMessage(@Observes(notifyObserver = IF_EXISTS) MessageEvent message) {
+        setText(message.getText());
+    }
+}
+----
+
+In this example message is delivered to the `ScopedView` instance we already navigated to.
+If we are on an other view, there is no instance of this bean, and the message is not delivered to it.
+

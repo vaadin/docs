@@ -5,45 +5,25 @@ layout: page
 ---
 = Debugging a Web Component Integration
 
-Web Component integrations can be problematic. If your component does not work as expected, or as you would like, there are a number of things that you can try.
+Not everything is smooth sailing and sometimes the component just refuses to work like you want it to. If the problem is on the Java side, you can use your standard IDE debugger to figure out what happens but when the problem is in the browser, it gets a bit trickier. Chrome Inspector is an invaluable tool when trying to figure out what goes wrong. 
 
-In this section, we detail the most common integration issues and what to do about them.
+== Is the element not configured as it should?
 
-== Java Issues
+Check with the DOM inspector that the element contains the expected attributes (most of the time properties are synchronized to attributes and vice versa). If the property is not synchronized to an attribute, select the element in the inspector and write `$0.somePropertyName` in the console to check that the value is the expected one.
 
-If the problem is on the Java side, you can use your standard IDE debugger to solve the issues.
+== Is an event not sent to the server as you would expect? 
 
+Select the element, and write `monitorEvents($0,'event-name');` in the console. You will now see a log row if the event is triggered and will know you have the correct event name and that the web component actually fires the event. You can leave out `'event-name'` to log all events but be prepared to see a lot of `mousemove` events. You can also use this to see which properties are defined for the event so that you can know what to include in `@EventData`
 
-== Browser Issues
+== Do you need to debug the Javascript?
 
-When the problem is in the browser, things can be tricky. The https://developers.google.com/web/tools/chrome-devtools[Chrome inspector] is an invaluable tool when trying to figure out what is wrong.
+If you need to debug what the web component does, use the browser debugger to set breakpoints at suitable places. In more problematic cases, e.g. if the problem occurs on initial setup, you can add a `debugger;` statement to the web component code to make the browser always and automatically break at that point. To do that, you need to get a editable copy of the web component included in your project. One way is to unzip the files from the webjar you are using into the location used by Flow. As the add-on project is a `jar` project it has no `src/main/webapp` folder where you can place static files, instead Jetty is configured to use `src/test/webjar-debug/META-INF/resources` as the webapp folder. This particular folder is chosen so you can unzip a webjar directly into `src/test/webjar-debug` and those files will be used instead of the files in a web jar. 
 
-=== Configuration Issues
+To debug the `increment()` function in `paper-slider` you can thus do:
 
-Use the DOM inspector to check that the element is configured correctly and contains the expected attributes. Problems often occur because properties are synchronized to attributes and _vice versa_.
-
-If a property is not correctly synchronized to an attribute, select the element in the inspector and enter `$0.somePropertyName` in the console to check that the value is the expected one.
-
-== Events Not Sent to the Server
-
-If an event not sent to the server as expected, select the element, and enter `monitorEvents($0,'event-name');` in the console. If the event is triggered, you will see a log row and will know that you have the correct event name and that the Web Component actually fires the event.
-
-To log all events, you can leave out the `'event-name'`, but be prepared for a lot of `mousemove` events.
-
-You can also use this to establish which properties are defined for the event, and therefore what to include in your `@EventData` annotation.
-
-=== Debugging JavaScript Issues
-
-If you need to debug the JavaScript, for example because the Web Component does not behave as expected, or do what is intended, you can use the browser debugger to set breakpoints at suitable places.
-
-In more problematic cases, for example if the problem occurs on initial setup, you can add a `debugger;` statement to the Web Component code to ensure the browser always (and automatically) breaks at a particular point. To do this, you need to edit the Web Component included in your project. All components used in the project are downloaded by npm and located in the `node_modules` folder, under the project root folder.
-
-For example, to debug the `increment()` function in `paper-slider` component, you could:
-
-. Launch the project in developer mode to ensure that any frontend file changes are used automatically after page reload.
-. Find `paper-slider` in the `node_modules` directory: `node_modules/@polymer/paper-slider`.
-. Add a `debugger` statement to the `increment: function() {` function.
-. Reload the page and click the "Increment" button with the inspector window open.
+1. Unzip `paper-slider-2.0.6.jar` into `src/test/webjar-debug`, e.g. `unzip ~/.m2/repository/org/webjars/bowergithub/polymerelements/paper-slider/2.0.6/paper-slider-2.0.6.jar -d src/test/webjars-debug/`
+2. Add a `debugger` statement to the `increment: function() {` function
+3. Restart Jetty, click on the "Increment" button when the inspector window is open
 
 [TIP]
-Disable the cache in the browser network tab to avoid loading old versions of the files you are debugging.
+Disable the cache in the browser network tab to avoid getting old versions of the files you are debugging.

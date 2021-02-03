@@ -1,0 +1,114 @@
+---
+title: Including Style Sheets
+order: 2
+layout: page
+---
+
+= Including Style Sheets
+
+For styling the application you typically need to include a style sheet. There
+are two ways to do this.
+
+[source,java]
+----
+@StyleSheet("styles.css") // Relative to Servlet URL
+@StyleSheet("http://www.example.com/example.css") // Loaded from external location
+public class MainLayout extends Component {
+  // implementation omitted
+}
+----
+
+The above snippet uses the `@StyleSheet` annotation on a component. The value of
+the annotation is a URL to load the style sheet from. The style sheet is loaded
+when the component is shown for the first time in the browser. You can use the
+annotation multiple times on the same component.
+
+Another way of adding a style sheet is using the `addStyleSheet(String url)`
+method from the `Page` class. It does exactly the same as the `@StyleSheet`
+annotation.
+
+[source,java]
+----
+  public MainLayout(){
+      // Loaded from "/root.css" regardless of how your application is deployed
+      UI.getCurrent().getPage().addStyleSheet("/root.css");
+  }
+}
+----
+
+You can place style sheets and other static resources in any folder inside your WAR file except for `/VAADIN` which is reserved for framework internal use.
+`VaadinServlet` handles static resource requests if you have mapped it to `/*` .
+Otherwise, the servlet container will take care of static resource requests.
+
+By using relative URLs you are not dependent on whether the application is deployed in the root context (e.g.  `http://mysite.com/`) or in a sub context (e.g. `http://mysite.com/myapp/`).
+Relative URLs are resolved using the page base URI, which is always set to match the servlet URL.
+
+[TIP]
+====
+If you are using a servlet path for the servlet, e.g. `http://mysite.com/myapp/myservlet/` then you will need to take the servlet path into account when including resources.
+This is needed because the base URI is `http://mysite.com/myapp/myservlet/` but static resources are deployed in `http://mysite.com/myapp/`.
+
+You can use the special protocol `context://` with e.g. `Page.addStyleSheet` to ensure a URL relative to the context path but this is only supported when including resources.
+
+When you configure an element, e.g setting the `src` attribute for an `<img>`, you cannot use the `context://` protocol. Your options are then:
+
+* Cancel out the servlet path, e.g. `../images/logo.png`.
+* Use an absolute URL, e.g. `/myapp/images/logo.png`
+* Deploy your static resources in a directory matching the servlet path, e.g. `/myservlet/`.
+====
+
+You should be careful with the global styles which you include using `@StyleSheet` annotation or 
+the `addStyleSheet` method. Such styles may leak into web components if a browser 
+doesn't have built-in web components support. A web component (see <<../web-components/integrating-a-web-component.asciidoc,Integrating a Web Component>>) normally uses its own styles defined for it and those styles are scoped to the web component.
+Global styles don't influence on the web component anyhow as well. 
+But this is true only if there is native web components browser support.
+
+[NOTE]
+
+See `Browser support` section https://www.webcomponents.org/[here] for full list 
+of browsers which support web components natively and which requires polyfills.   
+
+But if an user uses browser without this native support, then the missing functionality
+is polyfilled, and a web component in such browsers is not anymore a scoped unit
+but a regular part of the DOM tree. In this case, global styles work for it in the same
+way as for any other HTML element.
+
+To be able to prevent leaking global styles into the local DOM of web components you
+should use `<custom-style>`:
+* Add an import for Polymer `custom-style.html` e.g. `<link rel="import" href="bower_components/polymer/lib/elements/custom-style.html">`. 
+* Add `<custom-style>`  declaration including the CSS you want to add into the `<head>` element (see below an example).
+
+[source,html]
+----
+<custom-style>
+  <style>
+    html {
+      color: red;
+    }
+  </style>
+</custom-style>
+----
+
+You may do this via `@HtmlImport` annotation if you put the content together in one file and import it:
+
+[source,html]
+----
+<link rel="import" href="bower_components/polymer/lib/elements/custom-style.html">
+
+<custom-style>
+  <style>
+    html {
+      color: red;
+    }
+  </style>
+</custom-style>
+----
+
+then use `@HtmlImport("shared-styles.html")` if the file name `shared-styles.html` 
+has the above content.
+
+See https://www.polymer-project.org/2.0/docs/api/elements/Polymer.CustomStyle for more details.
+
+[TIP]
+
+To learn more, see <<../theme/theming-crash-course#,Theming Crash Course>>

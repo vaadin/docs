@@ -1,0 +1,110 @@
+---
+title: Components instantiated by the framework
+order: 2
+layout: page
+---
+
+
+= Components instantiated by the framework
+
+Most of the components instantiated by the Vaadin framework become managed beans ( full fledged CDI contextual instances ).
+They are queried from CDI `BeanManager` by the add-on, and all of the CDI features are usable.
+
+[NOTE]
+Add-on looks up the CDI bean by type ( component class ), and `@Any`.
+
+[NOTE]
+When type is not found as a CDI bean
+( for example ambiguous, or does not have a no-arg public constructor ),
+instantiation falls back to the default Vaadin behavior ( instantiated as a POJO ).
+After the instantiation, dependency injection is performed.
+Injects work, but other CDI features are not, because instantiated component is not a contextual instance.
+
+[NOTE]
+`@PreDestroy` of `@Dependent` beans instantiated by the framework are not run.
+Since it is the default context, it is about all beans without an explicit context.
+
+== Router components ( `@Route`, `RouteLayout`, `HasErrorParameter` )
+
+Your route targets, route layouts, and exception targets become managed beans.
+They look just the same as without the add-on, but CDI features are available.
+
+An example of a minimal route target using `@Inject`:
+
+[source,java]
+----
+@Route
+public class MainView extends VerticalLayout {
+    @Inject
+    public MainView(Greeter greeter) {
+        add(new Span(greeter.sayHello()));
+    }
+}
+----
+
+[NOTE]
+Vaadin scans router components on startup without any clue about CDI beans.
+Using producers, or `@Typed` causes issues with these kind of beans.
+
+== Components injected by `@Id` into polymer templates
+
+Components injected into polymer template classes by `@id` become managed beans.
+
+For example:
+
+[source,java]
+----
+public class TestTemplate extends PolymerTemplate<TemplateModel> {
+    @Id
+    private DependentLabel label;
+}
+----
+
+[source,java]
+----
+@Dependent
+@Tag("dependent-label")
+public class DependentLabel extends Label {
+    @Inject
+    private Greeter greeter;
+
+    @PostConstruct
+    private void init() {
+        setText(greeter.sayHello());
+    }
+}
+----
+
+[source,html]
+----
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+
+<dom-module id="test-template">
+    <template>
+        <div>
+            <dependent-label id="label"/>
+        </div>
+    </template>
+
+    <script>
+        class TestTemplate extends Polymer.Element {
+            static get is() { return 'test-template' }
+        }
+        customElements.define(TestTemplate.is, TestTemplate);
+    </script>
+</dom-module>
+----
+
+[IMPORTANT]
+The managed bean injected into the template should not exist before the instantiation of the template.
+Otherwise it doesn't bind to it's element causing a wrong component tree.
+A dependent bean is safe.
+
+== Custom UI is not a managed bean
+
+As of Vaadin Flow no custom `UI` subclass is needed for the application.
+You can define one by the corresponding servlet parameter,
+but it is instantiated by the framework as a POJO.
+
+You should not need a custom UI subclass. Though dependency injection can be achieved, just in case.
+Use `BeanManager` in your overridden `UI.init`. Through Deltaspike's `BeanProvider.injectFields(this)` for example.
