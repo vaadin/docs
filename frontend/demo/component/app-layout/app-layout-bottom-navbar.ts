@@ -23,6 +23,7 @@ export class Example extends LitElement {
         font-size: var(--lumo-font-size-l);
       }
 
+      vaadin-tabs,
       vaadin-tab {
         flex: 1;
       }
@@ -39,7 +40,6 @@ export class Example extends LitElement {
       <vaadin-app-layout>
         <vaadin-drawer-toggle slot="navbar"></vaadin-drawer-toggle>
         <h1 slot="navbar">MyApp</h1>
-        >
         <vaadin-tabs slot="navbar touch-optimized">
           <vaadin-tab>
             <iron-icon icon="vaadin:dashboard"></iron-icon>
