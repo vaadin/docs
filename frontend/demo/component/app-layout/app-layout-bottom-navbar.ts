@@ -26,7 +26,7 @@ export class Example extends LitElement {
       vaadin-tab {
         flex: 1;
       }
-
+      /* hidden-full-source-line: the bottom navbar is forced on in the example */
       vaadin-app-layout[overlay] /* hidden-full-source-line */ {
         --vaadin-app-layout-touch-optimized: true; /* hidden-full-source-line */
       } /* hidden-full-source-line */
