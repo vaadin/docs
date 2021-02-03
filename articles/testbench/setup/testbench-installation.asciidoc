@@ -1,0 +1,183 @@
+---
+title: Installing Vaadin TestBench
+order: 1
+layout: page
+---
+
+[[testbench.installation]]
+= Installing Vaadin TestBench
+
+As with most Vaadin add-ons, you can install Vaadin TestBench as a Maven or Ivy
+dependency in your project, or from an installation package. The installation
+package contains some extra material, such as documentation, as well as the
+standalone library, which you use for testing in a grid.
+
+The component element classes are Vaadin version specific and they are packaged
+in a [filename]#vaadin-testbench-api# library JAR, separately from the
+[filename]#vaadin-testbench-core# runtime library, which is needed for executing
+the tests.
+
+Additionally, you may need to install drivers for the browsers you are using as described in <<testbench.installation.browserdrivers>>.
+
+[[testbench.installation.development]]
+== Test Development Setup
+
+In a typical test development setup, you develop tests in a Java project and run
+them on the development workstation. You can run the same tests in a dedicated
+test server, such as a continuous integration system.
+
+In a test development setup, you do not need a grid hub or nodes. However, if
+you develop tests for a grid, you can run the tests, the grid hub, and one node
+all in your development workstation. A distributed setup is described later.
+
+[[testbench.installation.development.maven]]
+=== Maven Dependency
+
+Add to the Vaadin TestBench dependency to your pom.xml.
+Remember to use the test scope as you don't want the testing libraries to be deployed with your application.
+
+[subs="normal"]
+----
+&lt;dependency&gt;
+    &lt;groupId&gt;com.vaadin&lt;/groupId&gt;
+    &lt;artifactId&gt;vaadin-testbench&lt;/artifactId&gt;
+    &lt;version&gt;[replaceable]##4.1.0.beta2##&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+----
+
+You also need to define the Vaadin add-ons repository if not already defined:
+
+
+----
+<repository>
+   <id>vaadin-addons</id>
+   <url>http://maven.vaadin.com/vaadin-addons</url>
+</repository>
+----
+
+The [literal]#++vaadin-archetype-application++# archetype includes the repository declarations.
+
+
+[[testbench.installation.development.ivy]]
+=== Ivy Dependency
+
+The Ivy dependency, to be defined in [filename]#ivy.xml#, would be as follows:
+
+[subs="normal"]
+----
+&lt;dependency org="com.vaadin" name="vaadin-testbench"
+   rev="**latest.release**" conf="nodeploy-&gt;default"/&gt;
+----
+The optional [literal]#++nodeploy->default++# configuration mapping requires a
+[literal]#++nodeploy++# configuration in the Ivy module; it is automatically
+created for new Vaadin projects.
+
+A new Vaadin project created with the Vaadin Plugin for Eclipse includes the dependency.
+
+
+[[testbench.installation.development.organization]]
+=== Code Organization
+
+We generally recommend developing tests in a project or module separate from the
+web application to be tested to avoid library problems. If the tests are part of
+the same project, you should at least arrange the source code and dependencies
+so that the test classes, the TestBench library, and their dependencies would
+not be deployed unnecessarily with the web application.
+
+[[testbench.installation.distributed]]
+== A Distributed Testing Environment
+
+Vaadin TestBench supports distributed execution of tests in a grid. See <<dummy/../../environment/testbench-grid#testbench.grid,"Running Tests in a
+Distributed Environment">>.
+
+[[testbench.installation.browserdrivers]]
+== Installing Browser Drivers
+
+Each browser requires a browser specific web driver to be setup before tests can be run.
+
+. Download the latest browser driver
+
+** Firefox - install GeckoDriver for your platform from the latest release at:
+
++
+https://github.com/mozilla/geckodriver/releases
+
+** Chrome - install ChromeDriver (a part of the Chromium project) for your platform
+from the latest release at:
+
++
+https://sites.google.com/a/chromium.org/chromedriver/downloads
+
+** Microsoft Edge - install MicrosoftWebDriver for your platform
+from the latest release at:
+
++
+https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
+
+** Internet Explorer (Windows only) - install [filename]#IEDriverServer.exe# from
+the latest Selenium release:
+
++
+https://github.com/SeleniumHQ/selenium/wiki/InternetExplorerDriver
+
+. Add the driver executable to user PATH. In a distributed testing environment, give it as a command-line parameter to the grid node service, as described in <<dummy/../../environment/testbench-grid#testbench.grid.node,"Starting a Grid Node">>.
+
+[[testbench.installation.browserdrivers.addingtopath]]
+=== Adding Web Driver to System Path
+The driver executable must be included in the operating
+system [literal]#++PATH++# or be given with a driver-specific system Java
+property:
+
+* Google Chrome: [parameter]#webdriver.chrome.driver#
+* Mozilla Firefox: [parameter]#webdriver.gecko.driver#
+* Microsoft Edge: [parameter]#webdriver.edge.driver#
+* Internet Explorer: [parameter]#webdriver.ie.driver#
+* PhantomJS: [parameter]#phantomjs.ghostdriver.path#
+    and [parameter]#phantomjs.binary.path#
+
+You can set the property in Java with [methodname]#System.setProperty(prop,
+key))# or pass it as a command-line parameter to the Java executable with
+[parameter]#-Dwebdriver.chrome.driver=/path/to/driver#.
+
+If you use an ESR version of Firefox, which is recommended for test stability,
+you need refer to the binary when creating the driver as follows:
+
+
+----
+FirefoxBinary binary =
+    new FirefoxBinary(new File("/path/to/firefox_ESR_45"));
+driver = TestBench.createDriver(
+    new FirefoxDriver(binary, new FirefoxProfile()));
+----
+
+[[testbench.installation.browserdrivers.ubuntu]]
+=== Installing ChromeDriver for Ubuntu Chromium
+
+While you can install Google Chrome in Ubuntu, it also has its own Chromium
+Browser, which is based on the Google Chrome. Chromium has its own version of
+ChromeDriver, which requires some additional installation steps to be usable.
+
+Install the ChromeDriver:
+
+[subs="normal"]
+----
+[prompt]#$# [command]#sudo apt-get# install [parameter]#chromium-chromedriver#
+----
+Add the driver executable to path, such as:
+
+[subs="normal"]
+----
+[prompt]#$# [command]#sudo ln# -s [parameter]#/usr/lib/chromium-browser/chromedriver# [parameter]#/usr/local/bin/chromedriver#
+----
+The Chromium libraries need to be included in the system library path:
+
+[subs="normal"]
+----
+[prompt]#$# [command]#sudo sh# -c 'echo "/usr/lib/chromium-browser/libs" &gt; /etc/ld.so.conf.d/chrome_libs.conf'
+----
+[subs="normal"]
+----
+[prompt]#$# [command]#sudo ldconfig#
+----
+

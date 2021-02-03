@@ -1,0 +1,76 @@
+---
+title: Architecture
+order: 3
+layout: page
+---
+
+= Architecture
+The guiding principle when create the architecture was
+"Create what is needed, do not create what you might think possibly will be needed sometimes in the future maybe".
+
+By focusing on the current needs you are able to ship a fully working version much faster than if you try to take all possibly future scenarios into account. When the application evolves and becomes more complex, you can add complexity in the parts that really need it and not spend effort on adding complexity where it will just be in the way. As long as you have automated tests, you can be confident in your refactoring that you are not breaking the application.
+
+The app starter is a layered application, where the service layer knows how to deal with persistent data i.e. the database, and the UI layer takes care of setting up the correct component hierarchy for the user to see and reacting to events from the user.
+
+== Service Layer
+The service layer is separated from the UI layer for multiple reasons. The most pertinent one is to avoid creating messy UI code.
+
+The service layer is responsible for providing data to the UI layer for showing to the end user, and for handling updates to the data based on actions the end user performs in the application.
+It hides the data layer implementation details, e.g. Spring/Deltaspike Data in this app starter, from the UI so the UI can use understandable and descriptive high level methods. In addition to making the UI code easy to read, this provides a logical place to handle transaction boundaries, data level access control (not implemented in this app starter) and other database related concepts.
+
+While the service layer in this app starter is separated only using a package name, it could quite easily be extracted to a separate Maven module. The advantage of this is that you can verify you are not accidentally using the UI layer from the service layer (there should be no dependency ever in this direction). The disadvantage is that you will have a more complex project as it will become a multi module Maven project.
+
+The service layer in this app starter is built upon Spring/Deltaspike Data. Validation in the service layer is performed using bean validation and annotations on the entity classes.
+
+An H2 in-memory database is used by default for easy setup and getting started. This should be swapped out for a real database before going into production, see <<changing-database>>.
+
+== UI Layer
+The UI layer is responsible for creating an interface for the user to see, reacting to events from the user, calling the service layer to fetch and update data, and to update the user interface based on changes.
+
+=== Everything is a component
+As the UI layer is built using Vaadin Framework 8, it is component based. Everything you see on the screen is a component, possibly containing other components.
+
+There are two types of components involved in creating the UI: Basic UI components and Application components.
+
+*Basic UI components* are the components shipped with Vaadin Framework itself or included as add-ons. This includes components such as `Button` where you mainly listen for events from the user, layout components like `Board` and user input components such as `TextField`. The basic UI components are general purpose and can be used in all applications as they are not tied in any way to the application logic.
+
+*Application components* are components created inside the application itself. An application component differs from a basic UI component in the way that it knows about the application and how the application should work. In many cases you do not think about that you create application components, but in practice all views in your application are components, parts of the views are typically extracted to application components and so on.
+
+In this app starter, there are many application components used. In addition to the main layout and all views, there are smaller components like `OrdersGrid` and `RoleSelect`.
+
+Both `OrdersGrid` and  `RoleSelect` are standalone components which knows how to show certain data to the user. `OrdersGrid` is the grid used on the Dashboard and the Storefront views, capable of showing the orders which are due today and in the future. `RoleSelect` is a drop down which shows the available roles in the application. They both connect to the service layer when they need some data and present it to the user in a suitable way.
+
+=== Patterns for Building Application Components
+Some application components are very simple, like `RoleSelect`. They can be implemented using a few lines of code and naturally fit into one class. Trying to split a component like this into multiple parts would only include complexity and go against the guiding principles for the achitecture.
+
+Some application components on the other hand are very complex. At least views with much functionality tend to fall into this category. To be able to deal with the complexity, the implementation should be split into multiple parts, each with a clear responsibility. This can be done in different ways but in this app starter the first split is done into layout and logic using Vaadin Designer for the layouts.
+
+Vaadin Designer naturally splits out all the layout configuration into the Design HTML file and creates an auto generated companion Java file so the components used in the layout can be accessed from Java. The logic (event listeners, service layer calls etc) is then added to a separate Java file, which typically extends the generated class so it can access the components in the layout.
+
+For some application components, the split between layout and logic is not enough to deal with the complexity. There are a couple of cases in this app starter when this split just did not make the code readable and understandable. The view where you create/edit an order and the CRUD views for users and products will still be hard to read when you have split out the layout code as there is simply quite much logic code. In these cases, the MVP pattern (or a variant thereof) has been utilized so that pure business logic goes into a `presenter` class and UI related logic goes into a `view` class (there is no `model` class as the model is so simple in all the cases).
+
+[NOTE]
+Do not confuse the "V" in MVP with a `View` in Vaadin. The "V" in MVP stands for the UI part of the component while a `View` in Vaadin stands for something which has a URL and can be navigated to. You can build an application component using MVP even though the component is not a Vaadin `View`.
+
+In the cases the MVP pattern is utilized, the view decides which components to use and how to lay them out (the Design file is considered as part of the view). The view also wires event listeners, configures how fields are bound and what validators to use in the UI (validators are UI level helpers, the real data validation takes place in the service layer).
+
+The presenter is the one aware of the service layer (view is not), deals with what should happen on view events and also handles navigation to/from views.
+
+[NOTE]
+To follow the guiding principle, the MVP implementations do not try to accomplish goals like making the presenter not know about Vaadin Framework, making it possible to swap the View class with an implementation not based on Vaadin Framework etc. The presenter class is aware of Vaadin Framework concepts and classes but does not care about specific components used in the view.
+
+=== Communication between Application Components
+Application components are built to be standalone and reusable in multiple places. To avoid coupling them to other application components, they provide an API which can be used to configure them and/or they fire events to indicate that something has happened which might be of interest to other components.
+
+References to other components are acquired by utilizing dependency injection. Many components exist only in one place in the view and are then using `@ViewScope` (only one instance is created per view). These can be injected into any other component in the view without accidentally creating multiple instances. After injection, the component API can be used to e.g. add an event listener.
+
+Some components can appear multiple times on a view, like the `ProductInfo` component which encapsulates the information about one product in an order (product name, quantity, details) and provides controls for modifying and removing the product. The `ProductInfo` component is set to `prototype` scope so that a new instance is created whenever it is injected. We can therefore not inject references into other components the same way as for components using `@ViewScope`. To get events from the `ProductInfo` components, a view scoped event bus is used. The `ProductInfo` component fires an event whenever some information inside it changed and every other component in the view can listen to any event it is interested in. In this case `OrderEditPresenter` listens for `ProductInfoChangeEvent`s and reacts to them by recalculating the new total price for the order.
+
+[TIP]
+Keep it simple, do what you need now and refactor when you need more.
+
+[NOTE]
+The event bus is scoped to the active view so that views can be removed from memory once the user has navigated away.
+
+[NOTE]
+Events should tell what happened and not what action the receiver should take. This makes code much more clear and also ensures the responsibilities stay clear.

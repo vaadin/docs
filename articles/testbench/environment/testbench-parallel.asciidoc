@@ -1,0 +1,95 @@
+---
+title: Parallel Execution of Tests
+order: 3
+layout: page
+---
+
+[[testbench.parallel]]
+= Parallel Execution of Tests
+
+The [classname]#ParallelTest# class provides an easy way to run tests in
+parallel locally, as well as remotely in a test grid.
+
+To enable parallel execution of tests, usually during test development, you need to extend [classname]#ParallelTest# instead of
+[classname]#TestBenchTestCase#. [classname]#ParallelTest# will automatically:
+
+* Grab a screenshot if the test fails
+* Terminate the driver after the test ends (remove any calls to `WebDriver.quit()` you might have in your test)
+* Take any `@RunLocally` or `@RunOnHub` annotations on the test class,  and the corresponding system properties, into account
+
+For a parallel test, you *must* define the hub it should be run on (using `@RunOnHub` or `-Dcom.vaadin.testbench.Parameters.hubHostname=[hubHost])` or that it should run locally on a given browser (using `@RunLocally` or `-Dcom.vaadin.testbench.Parameters.runLocally=[browser]-[version])`. The system property contains either a browserName, which should (case insensitively) match an enum in  `com.vaadin.testbench.parallel.Browser` or a name-version combination. It can for example be `edge` or `chrome-45`.
+
+[[testbench.parallel.local]]
+== Local Parallel Execution
+
+When you add a `@RunLocally` annotation on the test class or define the `-Dcom.vaadin.testbench.Parameters.runLocally=[browser]-[version]` system property, the `ParallelTest` will be run using a local browser regardless of any `@RunOnHub` definition.
+
+----
+@RunLocally
+public class MyTest extends ParallelTest {
+   @Test
+   ...
+}
+----
+
+[TIP]
+It's usually better to use the system property to avoid accidentally committing a `@RunLocally` annotation to the repository.
+
+
+When you run the tests, TestBench launches multiple browser windows to run each test in parallel.
+
+The default browser to run locally on is Firefox. You can give another browser as a
+parameter for the annotation, e.g.
+
+----
+@RunLocally(Browser.CHROME)
+----
+
+For Chrome and IE, you need to have the browser driver installed, as described
+in
+<<dummy/../../setup/testbench-installation#testbench.installation.browserdrivers,"Installing
+Browser Drivers">>.
+
+
+[[testbench.parallel.grid]]
+== Multi-Browser Execution in a Grid
+
+To run tests in multiple different browsers or remotely, you first need to set
+up and launch a grid hub and one or more grid nodes, as described in
+<<dummy/../../environment/testbench-grid#testbench.grid,"Running Tests in a
+Distributed Environment">>. This enables remote execution in a test grid,
+although you can run the hub and a test node also in your development
+workstation.
+
+To run a test case class in a grid, you simply need to annotate the test case
+classes with the [literal]#++@RunOnHub++# annotation or using `-Dcom.vaadin.testbench.Parameters.hubHostname=[hubHost])`. Both the annotation and the system parameter takes the host address
+of the hub as a parameter. You
+need to define the browsers to run on in a method annotated with
+[literal]#++@BrowserConfiguration++#. It must return a list of
+[classname]#DesiredCapabilities#.
+
+----
+@RunOnHub("hub.testgrid.mydomain.com")
+public class MyTest extends ParallelTest {
+   @Test
+   ...
+
+   @BrowserConfiguration
+   public List<DesiredCapabilities> getBrowserConfiguration() {
+       List<DesiredCapabilities> browsers =
+           new ArrayList<DesiredCapabilities>();
+
+       // Add all the browsers you want to test
+       browsers.add(BrowserUtil.firefox());
+       browsers.add(BrowserUtil.chrome());
+       browsers.add(BrowserUtil.ie11());
+
+       return browsers;
+   }
+}
+----
+
+The actual browsers tested depends on the browser capabilities of the test node or nodes.
+
+[TIP]
+If you have more test classes, you can put the configuration in a common base class that extends [classname]#ParallelTest#.

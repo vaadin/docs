@@ -1,0 +1,103 @@
+---
+title: Known Issues
+order: 4
+layout: page
+---
+
+[[testbench.known-issues]]
+= Known Issues
+
+This section provides information and instructions on a few features that are
+known to be difficult to use or need modification to work.
+
+[[testbench.known-issues.firefox]]
+== Latest Firefox Compatibility
+
+Mozilla Firefox changed important APIs in version 48 that affected their compatibility with WebDriver which directly affects TestBench.
+Geckodriver used for the latest Firefox versions (48 and newer) does not support link:https://github.com/mozilla/geckodriver/issues/159[actions API].
+In practice, meaning that you can not simulate context click and double click in tests.
+It also means that some parts of the Element API just will not work.
+It is recommended to use either link:https://www.mozilla.org/en-US/firefox/organizations/all/[Firefox 45 ESR]
+or link:https://ftp.mozilla.org/pub/firefox/releases/47.0.1/[Firefox 47] with GeckoDriver.
+You should use GeckoDriver in legacy mode with Firefox 45 ESR and Firefox 47, by setting [parameter]#FirefoxDriver.MARIONETTE# to false:
+
+[source, java]
+----
+@Before
+public void setup() {
+    FirefoxBinary binary = new FirefoxBinary(new File(pathToFirefox));
+    FirefoxProfile firefoxProfile = new FirefoxProfile();
+    DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+    // Enable legacy mode
+    capabilities.setCapability(FirefoxDriver.MARIONETTE, false);
+
+    WebDriver driver = new FirefoxDriver(binary,firefoxProfile,capabilities);
+    setDriver(driver);
+}
+
+----
+
+[[testbench.known-issues.firefox-mac]]
+== Running Firefox Tests on Mac OS X
+
+Firefox needs to have focus in the main window for any focus events to be
+triggered. This sometimes causes problems if something interferes with the
+focus. For example, a [classname]#TextField# that has an input prompt relies on
+the JavaScript [methodname]#onFocus()# event to clear the prompt when the field
+is focused.
+
+The problem occurs when OS X considers the Java process of an application using
+TestBench (or the node service) to have a native user interface capability, as
+with AWT or Swing, even when they are not used. This causes the focus to switch
+from Firefox to the process using TestBench, causing tests requiring focus to
+fail. To remedy this problem, you need to start the JVM in which the tests are
+running with the [parameter]#-Djava.awt.headless=true# parameter to disable the
+user interface capability of the Java process.
+
+Note that the same problem is present also when debugging tests with Firefox. We
+therefore recommend using Chrome for debugging tests, unless Firefox is
+necessary.
+
+[[testbench.known-issues.ie-random-failures]]
+== Random Failures with Internet Explorer Driver
+
+Unfortunately, a TestBench test may sometimes behave unexpectedly, causing random failures.
+One of the reasons for these random failures is problems with the Internet Explorer Driver.
+Internet Explorer specification requires browser window to be focused to receive user events,
+while Selenium Web Driver specification points out that Web Driver should work without window focus.
+You can get more information about it from Internet Explorer Driver
+link:https://github.com/SeleniumHQ/selenium/wiki/InternetExplorerDriver#native-events-and-internet-explorer[documentation].
+
+TestBench provides a workaround to this problem.
+Use [classname]#RetryRule(int maxAttempts)# rule to re-run a test several times in case of a random failure.
+Use [parameter]#maxAttempts# to specify the maximum number of attempts for running tests.
+The test passes as soon as one attempt is executed without any errors,
+i.e. it is only run as many times as needed.
+
+----
+public class RandomFailureTest extends TestBenchTestCase {
+    // Run the test two times
+    @Rule
+    public RetryRule rule = new RetryRule(2);
+
+    @Test
+    public void emptyTest() {
+    }
+
+}
+----
+[NOTE]
+[classname]#RetryRule# affects all the test methods in the class and also child classes.
+
+[NOTE]
+The default value of [parameter]#maxAttempts# is 1, meaning that tests run only once.
+You can change the value of [parameter]#maxAttempts# using the Java system property:
+[parameter]#-Dcom.vaadin.testbench.Parameters.maxAttempts=2#.
+ This will affect all the TestBench tests.
+
+[NOTE]
+Use [classname]#RetryRule# when you are sure that the test fails because of the problems
+with the Web Driver, but not your application. Using [classname]#RetryRule# without cautions may
+hide random problems happening in your application.
+
+

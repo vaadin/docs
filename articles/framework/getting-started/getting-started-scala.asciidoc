@@ -1,0 +1,142 @@
+---
+title: Using Vaadin with Scala
+order: 1000
+layout: page
+---
+
+[[getting-started.scala]]
+= Using Vaadin with Scala
+
+You can use Vaadin with any JVM compatible language, such as Scala or Groovy.
+
+This document will help you to set up a **Hello World** project in Vaadin with Scala using Maven.
+
+*It is assumed you already have Java and Maven pre-installed.*
+
+## Getting Started
+* Run the Maven archetype below to get a simple app created:
+```bash
+mvn archetype:generate -DarchetypeGroupId=com.vaadin -DarchetypeArtifactId=vaadin-archetype-application -DarchetypeVersion=8.0.5 -DgroupId=com.pany -DartifactId=ui -Dversion=1.0-SNAPSHOT -Dpackaging=war
+```
+_Note that at this point you could import the project to and IDE like IntelliJ._
+
+* You now should have the Vaadin Java project under the directory `ui`. Since we are doing Scala, delete the `java` directory in `${project_home}/src/main/` and create an empty `scala` directory in the same place.
+
+* Add the following Scala dependency and...
+```xml
+  <dependency>
+   <groupId>org.scala-lang</groupId>
+   <artifactId>scala-library</artifactId>
+   <version>2.12.1</version>
+  </dependency>
+```
+...plugin to your 'pom.xml'
+```xml
+  <plugin>
+   <groupId>net.alchim31.maven</groupId>
+   <artifactId>scala-maven-plugin</artifactId>
+   <version>3.2.2</version>
+   <executions>
+    <execution>
+     <goals>
+      <goal>compile</goal>
+      <goal>testCompile</goal>
+     </goals>
+    </execution>
+   </executions>
+   <configuration>
+    <scalaCompatVersion>2.12</scalaCompatVersion>
+    <scalaVersion>2.12</scalaVersion>
+   </configuration>
+  </plugin>
+```
+
+* Create the following class in the new-created `scala` directory.
+```scala
+package com.mycompany.myproject
+
+import java.util.Date
+import javax.servlet.annotation.WebServlet
+
+import com.vaadin.annotations.{Theme, VaadinServletConfiguration}
+import com.vaadin.server.{VaadinRequest, VaadinServlet}
+import com.vaadin.ui.Button.{ClickEvent, ClickListener}
+import com.vaadin.ui._
+
+@WebServlet(urlPatterns = Array("/*"), name = "MyScalaUIServlet", asyncSupported = true)
+@VaadinServletConfiguration(ui = classOf[MyScalaUI], productionMode = false)
+class MyScalaUIServlet extends VaadinServlet {
+}
+
+@Theme("mytheme")
+class MyScalaUI extends UI {
+
+  override def init(request: VaadinRequest): Unit = {
+    val content: VerticalLayout = new VerticalLayout
+    setContent(content)
+
+    val label: Label = new Label("Hello, world!")
+    content addComponent label
+
+    // Handle user interaction
+    content addComponent new Button("Click Me from Scala!",
+      new ClickListener {
+        override def buttonClick(event: ClickEvent): Unit =
+          Notification.show("The time is " + new Date)
+      })
+  }
+}
+```
+
+* Now just execute:
+```bash
+mvn clean package jetty:run -Dvaadin.productionMode=true
+```
+
+* You should get logs containing something similar to:
+```bash
+[INFO] Started ServerConnector@15e41fff{HTTP/1.1,[http/1.1]}{0.0.0.0:8080}
+[INFO] Started @9194ms
+[INFO] Started Jetty Server
+[INFO] Using Non-Native Java sun.nio.fs.PollingWatchService
+```
+_The important information here is that Jetty is now running on port 8080_
+
+* Go to `localhost:8080` from the web browser and the page should be working:
+
+image::img/hello-world-scala-page.png[]
+
+* If you can see the page above, congratulations you have created your first Vaadin with Scala app.
+
+ifdef::web[]
+[[getting-started.scala.lambdas]]
+== Defining Listeners with Lambda Expressions
+
+Scala does not support use of lambda expressions for calling functional
+interfaces, like Java 8 does. Hence, we can't just use a lambda expression for
+the [interfacename]#ClickListener# in the example above. You can, however,
+define implicit conversions from lambda expressions to such interface
+implementations. For example, for click listeners:
+
+
+[source, scala]
+----
+implicit def clickListener(f: ClickEvent => Unit) =
+  new ClickListener {
+    override def buttonClick(event: ClickEvent) {
+      f(event)
+    }
+  }
+----
+
+You could then use a lambda expression as follows:
+
+
+[source, scala]
+----
+content addComponent new Button("Click Me!",
+  (event: ClickEvent) =>
+      Notification.show("The time is " + new Date))
+----
+
+endif::web[]

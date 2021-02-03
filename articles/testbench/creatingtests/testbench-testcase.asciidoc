@@ -1,0 +1,178 @@
+---
+title: Creating a Test Case
+order: 1
+layout: page
+---
+
+[[testbench.testcase]]
+= Creating a Test Case
+
+[[testbench.testcase.setup]]
+== Test Setup
+
+Test configuration is done in a method annotated with [literal]#++@Before++#.
+The method is executed before each test case.
+
+The basic configuration tasks are:
+
+* Set TestBench parameters
+* Create the web driver
+* Do any other initialization
+
+[[testbench.development.setup.parameters]]
+=== TestBench Parameters
+
+TestBench parameters are defined with static methods in the
+[classname]#com.vaadin.testbench.Parameters# class. The parameters are mainly
+for screenshots and documented in
+<<dummy/../../creatingtests/testbench-screenshots#testbench.screenshots,"Taking and
+Comparing Screenshots">>.
+
+
+
+[[testbench.testcase.basic]]
+== Basic Test Case Structure
+
+A typical test case does the following:
+
+. Open the URL
+. Navigate to desired state .. Find a HTML element ( [classname]#WebElement#) for interaction
+.. Use [methodname]#click()# and other commands to interact with the element
+.. Repeat with different elements until desired state is reached
+
+
+. Find a HTML element ( [classname]#WebElement#) to check
+. Get and assert the value of the HTML element
+. Get a screenshot
+
+The [classname]#WebDriver# allows finding HTML elements in a page in various
+ways, for example, with XPath expressions. The access methods are defined
+statically in the [classname]#By# class.
+
+These tasks are realized in the following test code:
+
+
+----
+
+@Test
+public void basic() throws Exception {
+    getDriver().get("http://localhost:8080/tobetested");
+
+    // Find an element to interact upon
+    ButtonElement button =
+        $(ButtonElement.class).id("mybutton");
+
+    // Click the button
+    button.click();
+
+    // Check that the label text is correct
+    LabelElement label = $(LabelElement.class).first();
+    assertEquals("Thanks!", label.getText());
+}
+----
+
+You can also use URI fragments in the URL to open the application at a specific
+state.
+
+ifdef::web[]
+For information about URI fragments, see
+<<dummy/../../../framework/advanced/advanced-urifu#advanced.urifu,"Managing URI
+Fragments">>.
+endif::web[]
+
+You should use the JUnit assertion commands. They are static methods defined in
+the [package]#org.junit.Assert# class, which you can import (for example) with:
+
+
+----
+import static org.junit.Assert.assertEquals;
+----
+
+Please see the
+link:http://seleniumhq.org/docs/03_webdriver.html#selenium-webdriver-api-commands-and-operations[Selenium
+API documentation] for a complete reference of the element search methods in the
+[classname]#WebDriver# and [classname]#By# classes and for the interaction
+commands in the [classname]#WebElement# class.
+
+TestBench has a collection of its own commands, defined in the
+[interfacename]#TestBenchCommands# interface. You can get a command object that
+you can use by calling [literal]#++testBench(driver)++# in a test case.
+
+While you can develop tests simply with test cases as described above, for the
+sake of maintainability it is often best to modularize the test code further,
+such as to separate testing at the levels of business logic and the page layout.
+See
+<<dummy/../../bestpractices/testbench-maintainable#testbench.maintainable,"Creating
+Maintainable Tests">> for information about using page objects for this purpose.
+
+
+[[testbench.testcase.webdriver]]
+== Creating and Closing a Web Driver
+
+Vaadin TestBench uses Selenium WebDriver to execute tests in a browser. The
+[classname]#WebDriver# instance is created with the static
+[methodname]#createDriver()# method in the [classname]#TestBench# class. It
+takes the driver as the parameter and returns it after registering it. The test
+cases must extend the [classname]#TestBenchTestCase# class, which manages the
+TestBench-specific features. You need to store the driver in the test case with
+[methodname]#setDriver()#.
+
+The basic way is to create the driver in a method annotated with the JUnit
+[literal]#++@Before++# annotation and close it in a method annotated with
+[literal]#++@After++#.
+
+
+----
+public class AdvancedTest extends TestBenchTestCase {
+    @Before
+    public void setUp() throws Exception {
+        ...
+        setDriver(TestBench.createDriver(new FirefoxDriver()));
+    }
+    ...
+    @After
+    public void tearDown() throws Exception {
+        driver.quit();
+    }
+}
+----
+
+This creates the driver for each test you have in the test class, causing a new
+browser instance to be opened and closed. If you want to keep the browser open
+between the tests, you can use [literal]#++@BeforeClass++# and
+[literal]#++@AfterClass++# methods to create and quit the driver. In that case,
+the methods as well as the driver instance have to be static and you need to set
+the driver in a [literal]#++@Before++# method.
+
+
+----
+public class AdvancedTest extends TestBenchTestCase {
+    static private WebDriver driver;
+
+    @BeforeClass
+    static public void createDriver() throws Exception {
+        driver = TestBench.createDriver(new FirefoxDriver());
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        setDriver(driver);
+    }
+    ...
+    @AfterClass
+    static public void tearDown() throws Exception {
+        driver.quit();
+    }
+}
+----
+
+[[testbench.development.webdriver.browsers]]
+=== Browser Drivers
+
+Please see the API documentation of the [interfacename]#WebDriver# interface for
+a complete list of supported drivers, that is, classes implementing the
+interface.
+
+All supported browsers require a special driver, as was noted in
+<<dummy/../../setup/testbench-installation#testbench.installation.browserdrivers,"Installing
+Browser Drivers">>.

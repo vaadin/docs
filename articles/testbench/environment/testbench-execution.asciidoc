@@ -1,0 +1,195 @@
+---
+title: Running Tests
+order: 1
+layout: page
+---
+
+[[testbench.execution]]
+= Running Tests
+
+During test development, you usually run the tests from your IDE. After that,
+you want to have them run by a build system, possibly under a continuous
+integration system. In the following, we describe how to run tests by Ant and
+Maven.
+
+[[testbench.execution.ant]]
+== Running Tests with Ant
+
+Apache Ant has built-in support for executing JUnit tests; you can use the
+[literal]#++<junit>++# task in an Ant script to execute JUnit tests. Note that
+in earlier versions, you need to enable the support, you need to have the JUnit
+library [filename]#junit.jar# and its Ant integration library
+[filename]#ant-junit.jar# in the Ant classpath, as described in the Ant
+documentation.
+
+The following Ant script allows testing a Vaadin application created with the
+Vaadin Plugin for Eclipse. It assumes that the test source files are located
+under a [filename]#test# directory under the current directory and compiles them
+to the [filename]#classes# directory. The the class path is defined with the
+[literal]#++classpath++# reference ID and should contain TestBench and other
+necessary libraries.
+
+
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="run-tests">
+    <path id="classpath">
+        <fileset dir="lib">
+            <include name="vaadin-testbench-*.jar"/>
+            <include name="junit-*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- This target compiles the JUnit tests. -->
+    <target name="compile-tests">
+        <mkdir dir="classes" />
+        <javac srcdir="test" destdir="classes"
+               debug="on" encoding="utf-8"
+        	   includeantruntime="false">
+            <classpath>
+                <path refid="classpath" />
+            </classpath>
+        </javac>
+    </target>
+
+    <!-- This target calls JUnit -->
+    <target name="run-tests" depends="compile-tests">
+        <junit fork="yes">
+            <classpath>
+                <path refid="classpath" />
+                <pathelement path="classes" />
+            </classpath>
+
+            <formatter type="brief" usefile="false" />
+
+            <batchtest>
+                <fileset dir="test">
+                    <include name="**/**.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+</project>
+----
+
+You also need to deploy the application to test, and possibly launch a dedicated
+server for it.
+
+[[testbench.execution.ant.ivy]]
+=== Retrieving TestBench with Ivy
+
+To retrieve TestBench and its dependencies with Ivy in the Ant script, first
+install Ivy to your Ant installation, if necessary. In the build script, you
+need to enable Ivy with the namespace declaration and include a target for
+retrieving the libraries, as follows:
+
+
+----
+<project xmlns:ivy="antlib:org.apache.ivy.ant"
+         default="run-tests">
+...
+    <!-- Retrieve dependencies with Ivy -->
+    <target name="resolve">
+        <ivy:retrieve conf="testing" type="jar,bundle"
+            pattern="lib/[artifact]-[revision].[ext]"/>
+    </target>
+
+    <!-- This target compiles the JUnit tests. -->
+    <target name="compile-tests" depends="resolve">
+        ...
+----
+
+This requires that you have a " [literal]#++testing++#" configuration in your
+[filename]#ivy.xml# and that the TestBench dependency are enabled in the
+configuration.
+
+[subs="normal"]
+----
+
+&lt;ivy-module&gt;
+    ...
+    &lt;configurations&gt;
+        ...
+        **&lt;conf name="testing" /&gt;**
+    &lt;/configurations&gt;
+
+    &lt;dependencies&gt;
+        ...
+        &lt;!-- TestBench 4 --&gt;
+        &lt;dependency org="com.vaadin"
+                    name="vaadin-testbench-api"
+                    rev="latest.release"
+                    conf="nodeploy**,testing** -&gt; default" /&gt;
+        ...
+----
+You also need to build and deploy the application to be tested to the server and
+install the TestBench license key.
+
+
+
+[[testbench.execution.maven]]
+== Running Tests with Maven
+
+Executing JUnit tests with Vaadin TestBench under Maven requires defining it as
+a dependency in any POM that needs to execute TestBench tests.
+
+A complete example of a Maven test setup is given in the TestBench demo project
+available at
+link:https://github.com/vaadin/testbench-demo[github.com/vaadin/testbench-demo].
+See the [filename]#README# for further instructions.
+
+[[testbench.execution.maven.dependency]]
+=== Defining TestBench as a Dependency
+
+You need to define the TestBench library as a dependency in the Maven POM of
+your project as follows:
+
+
+----
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-testbench</artifactId>
+      <version>4.x.x</version>
+    </dependency>
+----
+
+For instructions on how to create a new Vaadin project with Maven, please see
+<<dummy/../../../framework/getting-started/getting-started-maven#getting-started.maven,"Using
+Vaadin with Maven">>.
+
+
+[[testbench.execution.maven.running]]
+=== Running the Tests
+
+To compile and run the tests, simply execute the [literal]#++test++# lifecycle
+phase with Maven as follows:
+
+[subs="normal"]
+----
+[prompt]#$# [command]#mvn# test
+...
+-----------------------------------------------------
+ T E S T S
+-----------------------------------------------------
+Running TestBenchExample
+Tests run: 6, Failures: 1, Errors: 0, Skipped: 1, Time elapsed: 36.736 sec &lt;&lt;&lt; FAILURE!
+
+Results :
+
+Failed tests:
+  testDemo(TestBenchExample):
+      expected:&lt;[5/17/]12&gt; but was:&lt;[17.6.20]12&gt;
+
+Tests run: 6, Failures: 1, Errors: 0, Skipped: 1
+...
+----
+The example configuration starts Jetty to run the application that is tested.
+
+If you have screenshot tests enabled, as mentioned in
+<<dummy/../../setup/testbench-installation#testbench.installation.examples,"TestBench
+Demo">>, you will get failures from screenshot comparison. The failed
+screenshots are written to the [filename]#target/testbench/errors# folder. To
+enable comparing them to "expected" screenshots, you need to copy the
+screenshots to the [filename]#src/test/resources/screenshots/reference/# folder.
+See <<dummy/../../creatingtests/testbench-screenshots#testbench.screenshots,"Taking
+and Comparing Screenshots">> for more information regarding screenshots.

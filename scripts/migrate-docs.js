@@ -3,13 +3,14 @@ const CACHE_DIR = './.cache';
 
 // Repo name, branch and local directory name
 const repos = [
-  ['vaadin-docs', 'vaadin10'],
-  ['designer-internal', 'v10-maintenance', 'designer'],
-  ['vaadin-charts-flow', '6.0', 'charts'],
-  ['testbench', 'master'],
-  ['bakery-app-starter-flow-docs', 'v10', 'bakeryflow'],
-  ['flow-and-components-documentation', 'V10', 'flow'],
-  ['multiplatform-runtime-internal', '1.1', 'mpr']
+  ['vaadin-docs', 'vaadin8'],
+  ['framework', 'master', 'framework'],
+  ['designer-internal', '2.x', 'designer'],
+  ['charts', 'master', 'charts'],
+  ['testbench', '5.2'],
+  ['spreadsheet', 'master'],
+  ['board', 'master'],
+  ['bakery-app-starter-fw8-docs', 'master', 'bakeryfw8'],
 ];
 
 
@@ -72,20 +73,22 @@ function migrateDocs() {
 
   delete sections.elements;
 
-  const flowPath = path.join(__dirname, '../articles/flow');
+  const fwPath = path.join(__dirname, '../articles/framework');
   const designerPath = path.join(__dirname, '../articles/designer');
-  const testbenchPath = path.join(__dirname, '../articles/testbench');
-  const mprPath = path.join(__dirname, '../articles/mpr');
-  const bakeryPath = path.join(__dirname, '../articles/bakeryflow');
   const chartsPath = path.join(__dirname, '../articles/charts');
+  const testbenchPath = path.join(__dirname, '../articles/testbench');
+  const spreadSheetPath = path.join(__dirname, '../articles/spreadsheet');
+  const boardPath = path.join(__dirname, '../articles/board');
+  const bakeryPath = path.join(__dirname, '../articles/bakeryfw8');
 
   // Cleanup
-  fs.rmdirSync(flowPath, { recursive: true });
+  fs.rmdirSync(fwPath, { recursive: true });
   fs.rmdirSync(designerPath, { recursive: true });
-  fs.rmdirSync(testbenchPath, { recursive: true });
-  fs.rmdirSync(mprPath, { recursive: true });
-  fs.rmdirSync(bakeryPath, { recursive: true });
   fs.rmdirSync(chartsPath, { recursive: true });
+  fs.rmdirSync(testbenchPath, { recursive: true });
+  fs.rmdirSync(spreadSheetPath, { recursive: true });
+  fs.rmdirSync(boardPath, { recursive: true });
+  fs.rmdirSync(bakeryPath, { recursive: true });
 
   // Helper function for all copy operations
   function filter(src, dest) {
@@ -95,23 +98,20 @@ function migrateDocs() {
     return true;
   }
 
-  // Flow/framework
-  fs.mkdirSync(flowPath);
+  // Framework
+  fs.mkdirSync(fwPath);
   fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'flow/documentation'),
-    flowPath,
+    path.join(__dirname, CACHE_DIR, 'framework/documentation'),
+    fwPath,
     { filter }
   );
   generateTopLevelIndex({
-    folderPath: flowPath,
-    title: 'Flow',
+    folderPath: fwPath,
+    title: 'Framework',
     order: 1,
   });
-  generateIndexes(sections.flow.subpages, 'flow');
-  generateExternalLinks(sections.flow.external, 'flow');
-
-  // TODO draft content should be in a different branch (portlet support is not yet available)?
-  fs.remove(path.join(flowPath, 'portlet-support'));
+  generateIndexes(sections.framework.subpages, 'framework');
+  generateExternalLinks(sections.framework.external, 'framework');
 
   // Designer
   fs.copySync(
@@ -122,7 +122,7 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: designerPath,
     title: 'Designer',
-    order: 4,
+    order: 2,
   });
   generateIndexes(sections.designer.subpages, 'designer');
   generateExternalLinks(sections.designer.external, 'designer');
@@ -139,7 +139,7 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: chartsPath,
     title: 'Charts',
-    order: 5,
+    order: 3,
   });
   generateIndexes(sections.charts.subpages, 'charts');
   generateExternalLinks(sections.charts.external, 'charts');
@@ -155,15 +155,47 @@ function migrateDocs() {
   generateTopLevelIndex({
     folderPath: testbenchPath,
     title: 'TestBench',
-    order: 6,
+    order: 4,
   });
   generateIndexes(sections.testbench.subpages, 'testbench');
   generateExternalLinks(sections.testbench.external, 'testbench');
 
 
+
+  // Spreadsheet
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'spreadsheet/documentation'),
+    spreadSheetPath,
+    { filter }
+  );
+  generateTopLevelIndex({
+    folderPath: spreadSheetPath,
+    title: 'Spreadsheet',
+    order: 5,
+  });
+  generateIndexes(sections.spreadsheet.subpages, 'spreadsheet');
+  generateExternalLinks(sections.spreadsheet.external, 'spreadsheet');
+
+
+
+  // Board
+  fs.copySync(
+    path.join(__dirname, CACHE_DIR, 'board/documentation'),
+    boardPath,
+    { filter }
+  );
+  generateTopLevelIndex({
+    folderPath: boardPath,
+    title: 'Board',
+    order: 6,
+  });
+  generateIndexes(sections.board.subpages, 'board');
+  generateExternalLinks(sections.board.external, 'board');
+
+
   // Bakery/full-stack starter
   fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'bakeryflow'),
+    path.join(__dirname, CACHE_DIR, 'bakeryfw8'),
     bakeryPath,
     { filter }
   );
@@ -172,23 +204,9 @@ function migrateDocs() {
     title: 'Bakery App Starter',
     order: 7,
   });
-  generateIndexes(sections.bakeryflow.subpages, 'bakeryflow');
-  generateExternalLinks(sections.bakeryflow.external, 'bakeryflow');
+  generateIndexes(sections.bakeryfw8.subpages, 'bakeryfw8');
+  generateExternalLinks(sections.bakeryfw8.external, 'bakeryfw8');
 
-
-  // MPR
-  fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'mpr/mpr-documentation/documentation'),
-    mprPath,
-    { filter }
-  );
-  generateTopLevelIndex({
-    folderPath: mprPath,
-    title: 'Multiplatform Runtime',
-    order: 8,
-  });
-  generateIndexes(sections.mpr.subpages, 'mpr');
-  generateExternalLinks(sections.mpr.external, 'mpr');
 
 
   try {

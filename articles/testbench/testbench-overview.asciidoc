@@ -1,67 +1,228 @@
 ---
 title: Overview
-order: 10
+order: 1
 layout: page
 ---
 
 [[testbench.overview]]
 = TestBench
 
-Vaadin TestBench is a tool for creating and running browser based integration tests for your Vaadin application. TestBench simulates a user of your application, performs the tasks specified using Java code and verifies that the expected actions take place in the application.
+Testing is one of the cornerstones of modern software development. Extending
+throughout the development process, testing is the thread that binds the product
+to the requirements. In agile and other iterative development processes, with
+ever shorter release cycles and continuous integration, the automation of
+integration, regression, endurance, and acceptance testing is paramount.
+Further, UI automation may be needed for integration purposes, such as for
+assistive technologies. The special nature of web applications creates many
+unique requirements for both testing and UI automation.
 
-TestBench can also visually inspect your application and detect unintentionally introduced changes, and verify that the application visually looks OK in all the browsers you are testing with. TestBench also includes special support for other Vaadin products, making testing easy and robust compared to generic web testing solutions.
+Vaadin TestBench allows controlling the browser from Java code, as illustrated
+in <<figure.testbench.webdriver>>. It can open a new browser window to start the
+application, interact with the UI components, for example, by clicking them, and
+then get the HTML element values.
 
-Although not the main purpose of TestBench, you can also use TestBench to automate mundane tasks such as filling out forms.
+[[figure.testbench.webdriver]]
+.Controlling the Browser with TestBench
+image::img/webdriver-use-lo.png[]
 
-== A Typical Test
+Before going further into feature details, you may want to try out Vaadin
+TestBench yourself. You just need to create a new Vaadin project either with the
+Eclipse plugin or the Maven archetype. Both create a simple application stub
+that includes TestBench test cases for testing the UI. You also need to install
+an evaluation license. For instructions, jump to
+<<dummy/../../testbench/testbench-quickstart#testbench.quickstart,"Quick
+Start">> and, after trying it out, come back.
 
-A typical test can look like:
+== Vaadin TestBench in Software Development
 
-1. Start a browser instance.
-  *  Chrome/Firefox/Safari/IE11/Edge are supported desktop browsers
-  *  iPhone/iPad/Android simulators are supported for mobile testing
-2. Fill in the login form and log in to the application
-3. Navigate to the order view
-4. Fill in form fields to place an order
-5. Verify that the order was placed
+Vaadin TestBench can work as the centerpiece of the software development
+process, for testing the application at all modular levels and in all the phases
+of the development cycle:
 
-In Java code, this could be:
+* Automated acceptance tests
 
-[source, java]
-----
-@Test
-public void fillForm() {
-   setDriver(new ChromeDriver());
-   getDriver().get("http://localhost:8080");
-   LoginViewElement loginView = $(LoginViewElement.class).first();
-   MainViewElement mainView = loginView.login("admin@vaadin.com", "admin");
-   FormViewElement formView = mainView.navigateTo("form");
-   formView.clickNew();
-   formView.setName("John", "Doe");
-   formView.clickSave();
-   Assert.assertEquals("John Doe was added", formView.getMessage());
-}
-----
+* Unit tests
 
-The code above uses the page object pattern to hide the implementation details of the view from the main test logic. For more information, see <<dummy/../testbench-maintainable-tests-using-page-objects#, Creating Maintanable Test using Page Objects>>.
+* End-to-end integration tests
 
-TestBench supports much more complex test cases, both regarding business logic (it's Java, you can do whatever you want), and regarding running tess, e.g. executing on multiple browser instances in parallel, testing that an application works when multiple users interact simultaneously with the same view/data and comparing that the main view of the application still looks like the pregenerated reference screenshot.
+* Regression tests
+
+
+Let us look at each of these topics separately.
+
+Any methodological software development, agile or not, is preceded by
+specification of requirements, which define what the software should actually
+do. __Acceptance tests__ ensure that the product conforms to the requirements.
+In agile development, their automation allows continuous tracking of progress
+towards iteration goals, as well as detecting regressions. The importance of
+requirements is emphasized in __test-driven development__ (TDD), where tests are
+written before actual code. In
+<<dummy/../../testbench/bestpractices/testbench-bdd#testbench.bdd,"Behaviour-Driven
+Development">>, we show how to use Vaadin TestBench for __behaviour-driven
+development__ (BDD), a form of TDD that concentrates on the formal behavioural
+specification of requirements.
+
+__Unit testing__ is applied to the smallest scale of software components; in
+Vaadin applications these are typically individual UI components or view
+classes. You may also want to generate many different kinds of inputs for the
+application and check that they produce the desired outputs. For complex
+composites, such as views, you can use the Page Object Pattern described in
+<<dummy/../../testbench/bestpractices/testbench-maintainable#testbench.maintainable.pageobject,"The
+Page Object Pattern">>. The pattern simplifies and modularizes testing by
+separating low-level details from the more abstract UI logic. In addition to
+serving the purpose of unit tests, it creates an abstraction layer for
+higher-level tests, such as acceptance and end-to-end tests.
+
+__Integration tests__ ensure that software units work together at different
+levels of modularization. At the broadest level, __end-to-end tests__ extend
+through the entire application lifecycle from start to finish, going through
+many or all user stories. The aim is not just to verify the functional
+requirements for user interaction, but also that data integrity is maintained.
+For example, in a messaging application, a user would log in, both send and
+receive messages, and finally log out. Such test workflows could include
+configuration, registration, interaction between users, administrative tasks,
+deletion of user accounts, and so forth.
+
+In __regression testing__, you want to ensure that only intended changes occur
+in the behaviour after modifying the code. There are two lines of defence
+against such regressions. The primary source of regression tests are the
+acceptance, unit, and integration tests that validate that the displayed values
+in the UI's HTML representation are logically correct. Yet, they are not
+sufficient for detecting visual regressions, for example, because of invalid UI
+rendering or theme problems. Comparing screenshots to reference images forms a
+more sensitive layer to detect regressions, at the expense of losing robustness
+for changes in layout and themeing. The costs of the tradeoff can be minimized
+by careful application of screenshot comparison only at critical points and by
+making the analysis of such regressions as easy as possible. As described in
+<<dummy/../../testbench/creatingtests/testbench-screenshots#testbench.screenshots,"Taking and
+Comparing Screenshots">>, Vaadin TestBench automatically highlights differences
+in screenshots and allows masking irrelevant areas from image comparison.
+
+You can develop such tests along with your application code, for example with
+JUnit, which is a widely used Java unit testing framework. You can run the tests
+as many times as you want in your workstation or in a distributed grid setup.
+
+[[figure.testbench.workflow]]
+.TestBench Workflow
+image::img/tt-workflow-lo.png[]
+
 
 == Features
 
 The main features of Vaadin TestBench are:
 
-* Control one or several browser instances from Java, both desktop and mobile browsers
-* A powerful and robust way to describe your tests so they do not break with application changes
-* A high level API for finding the component you want to interact with
-* Vaadin Component API for easy interaction with all Vaadin components and HTML elements
-* Automatic screen comparison highlighting differences
-* Assertion based UI state validation
-* Easily running tests in parallel
-* Test grid support for speeding up tests by running in parallel on multiple browsers on selected operating systems
-* Support for JUnit and other testing frameworks
-* All features available in Selenium
+* Control a browser from Java
 
-== Commercial License
+* Generate component selectors in debug window
 
-Vaadin TestBench is a commercial product and part of the https://vaadin.com/pricing[Pro Subscription]. You will be asked to validate your license or start a trial period when you start using the tool.
+* Validate UI state by assertions and screen capture comparison
+
+* Screen capture comparison with difference highlighting
+
+* Distributed test grid for running tests
+
+* Integration with unit testing
+
+* Test with browsers on mobile devices
+
+
+Execution of tests can be distributed over a grid of test nodes, which speeds up
+testing. The grid nodes can run different operating systems and have different
+browsers installed. In a minimal setup, such as for developing the tests, you
+can use Vaadin TestBench on just a single computer.
+
+
+== Based on Selenium
+
+Vaadin TestBench is based on the Selenium web browser automation library,
+especially Selenium WebDriver, which allows you to control browsers straight
+from Java code.
+
+Selenium is augmented with Vaadin-specific extensions, such as:
+
+* Proper handling of Ajax-based communications of Vaadin
+* A high-level, statically typed element query API for Vaadin components
+* Performance testing of Vaadin applications
+* Screen capture comparison
+* Finding HTML elements by a Vaadin selector
+
+
+[[testbench.overview.components]]
+== TestBench Components
+
+The TestBench library includes WebDriver, which provides API to control a
+browser like a user would. This API can be used to build tests, for example,
+with JUnit. It also includes the grid hub and node servers, which you can use to
+run tests in a grid configuration.
+
+Vaadin TestBench Library provides the central control logic for:
+
+* Executing tests with the WebDriver
+
+* Additional support for testing Vaadin-based applications
+
+* Comparing screen captures with reference images
+
+* Distributed testing with grid node and hub services
+
+
+
+[[testbench.overview.requirements]]
+== Requirements
+
+Requirements for developing and running tests are:
+
+* Java JDK 1.6 or newer
+
+* Browsers installed on test nodes as supported by Selenium WebDriver
+
+** Google Chrome
+** Internet Explorer
+** Mozilla Firefox (ESR version recommended)
+** Opera
+** Mobile browsers: Android, iPhone
+
+* A build system, such as Ant or Maven, to automate execution of tests during
+build process (recommended)
+
+
+Note that running tests on an Extended Support Release (ESR) version of Firefox
+is recommended because of the frequent release cycle of Firefox, which often
+cause tests to fail. Download an ESR release of Firefox from
+http://www.mozilla.org/en-US/firefox/organizations/all.html. Install it
+alongside your normal Firefox install (do not overwrite).
+
+For Mac OS X, note the issue mentioned in
+<<dummy/../../testbench/testbench-known-issues#testbench.known-issues.firefox-mac,"Running
+Firefox Tests on Mac OS X">>.
+
+
+[[testbench.overview.cis]]
+== Continuous Integration Compatibility
+
+Continuous integration means automatic compilation and testing of applications
+frequently, typically at least daily, but ideally every time when code changes
+are committed to the source repository. This practice allows catching
+integration problems early and finding the changes that first caused them to
+occur.
+
+You can make unit tests with Vaadin TestBench just like you would do any other
+Java unit tests, so they work seamlessly with continuous integration systems.
+Vaadin TestBench is tested to work with at least TeamCity and Hudson/Jenkins
+build management and continuous integration servers, which all have special
+support for the JUnit unit testing framework.
+
+[[figure.testbench.overview.cis]]
+.Continuous Integration Workflow
+image::img/cis-workflow-lo.png[]
+
+<<figure.testbench.overview.cis>> illustrates a typical development setup. Both
+changes to application and test sources are checked in into a source repository,
+from where the CIS server checks them out, compiles, and deploys the web
+application to a server. Then, it runs the tests and collects the results.
+
+
+== Licensing and Trial Period
+
+Vaadin TestBench is a commercial product and part of the
+https://vaadin.com/pricing[Pro subscription]. A free 14-day trial is available.

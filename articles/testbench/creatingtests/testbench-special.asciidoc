@@ -1,0 +1,357 @@
+---
+title: Special Testing Topics
+order: 3
+layout: page
+---
+
+[[testbench.special]]
+= Special Testing Topics
+
+In the following, we go through a number of TestBench features for handling
+special cases, such as tooltips, scrolling, notifications, context menus, and
+profiling responsiveness. Finally, we look into the Page Object pattern.
+
+[[testbench.special.waitforvaadin]]
+== Waiting for Vaadin
+
+Selenium, on which Vaadin TestBench is based, is originally intended for regular
+web applications that load a page that is immediately rendered by the browser.
+In such applications, you can test the page elements immediately after the page
+is loaded. In Vaadin and other AJAX applications, rendering is done by
+JavaScript code asynchronously, so you need to wait until the server has given
+its response to an AJAX request and the JavaScript code finishes rendering the
+UI. Selenium supports AJAX applications by having special wait methods to poll
+the UI until the rendering is finished. In pure Selenium, you need to use the
+wait methods explicitly, and know what to use and when. Vaadin TestBench works
+together with the client-side engine of Vaadin framework to immediately detect
+when the rendering is finished. Waiting is implicit, so you do not normally need
+to insert any wait commands yourself.
+
+Waiting is automatically enabled, but it may be necessary to disable it in some
+cases. You can do that by calling [methodname]#disableWaitForVaadin()# in the
+[interfacename]#TestBenchCommands# interface. You can call it in a test case as
+follows:
+
+
+----
+testBench(driver).disableWaitForVaadin();
+----
+
+When disabled, you can wait for the rendering to finish by calling
+[methodname]#waitForVaadin()# explicitly.
+
+
+----
+testBench(driver).waitForVaadin();
+----
+
+You can re-enable the waiting with [methodname]#enableWaitForVaadin()# in the
+same interface.
+
+
+[[testbench.special.waituntil]]
+== Waiting Until a Condition is Met
+
+In addition to waiting for Vaadin, it is also possible to wait until a condition
+is met. This could, for example, be used to wait until an element is visible on
+the web page.
+
+
+----
+waitUntil(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[@title='Debug message log']"));
+----
+
+The above waits until the specified element is present or times out after
+waiting for 10 seconds by default.
+
+`waitUntil(condition, timeout)` allows the timeout duration to be controlled.
+
+
+[[testbench.special.tooltip]]
+== Testing Tooltips
+
+Component tooltips show when you hover the mouse over a component. Showing them
+require special command. Handling them is also special, as the tooltips are
+floating overlay element, which are not part of the normal component hierarchy.
+
+Let us assume that you have set the tooltip as follows:
+
+
+----
+// Create a button with a component ID
+Button button = new Button("Push Me!");
+button.setId("main.button");
+
+// Set the tooltip
+button.setDescription("This is a tip");
+----
+
+The tooltip of a component is displayed with the [methodname]#showTooltip()#
+method in the [classname]#TestBenchElementCommands# interface. You should wait a
+little to make sure it comes up. The floating tooltip element is not under the
+element of the component, but you can find it by
+[literal]#++//div[@class='v-tooltip']++# XPath expression.
+
+
+----
+@Test
+public void testTooltip() throws Exception {
+    driver.get(appUrl);
+
+    ButtonElement button =
+        $(ButtonElement.class).id("main.button");
+
+    button.showTooltip();
+
+    WebElement ttip = findElement(By.className("v-tooltip"));
+    assertEquals(ttip.getText(), "This is a tip");
+}
+----
+
+
+[[testbench.special.scrolling]]
+== Scrolling
+
+((("scrolling")))
+Some Vaadin components, such as [classname]#Table# and [classname]#Panel# have a
+scrollbar. Normally, when you interact with an element within such a scrolling
+region, TestBench implicitly tries to scroll to the element to make it visible.
+In some cases, you may wish to scroll a scrollbar explicitly. You can accomplish
+that with the [methodname]#scroll()# (vertical) and [methodname]#scrollLeft()#
+(horizontal) methods in the respective element classes for the scrollable
+components. The scroll position is given in pixels.
+
+
+----
+// Scroll to a vertical position
+PanelElement panel = $(PanelElement.class)
+        .caption("Scrolling Panel").first();
+panel.scroll(123);
+----
+
+
+[[testbench.special.notifications]]
+== Testing Notifications
+
+((("[classname]#Notification#", "testing")))
+You can find notification elements by the [classname]#NotificationElement# class
+in the element query API. The element class supports getting the caption with
+[methodname]#getCaption()#, description with [methodname]#getDescription()#, and
+notification type with [methodname]#getType()#.
+
+Let us assume that you pop the notifcation up as follows:
+
+
+----
+Button button = new Button("Pop It Up", e -> // Java 8
+    Notification.show("The caption", "The description",
+                      Notification.Type.WARNING_MESSAGE));
+----
+
+You could then check for the notification as follows:
+
+
+----
+// Click the button to open the notification
+ButtonElement button =
+    $(ButtonElement.class).caption("Pop It Up").first();
+button.click();
+
+// Verify the notification
+NotificationElement notification =
+        $(NotificationElement.class).first();
+assertEquals("The caption", notification.getCaption());
+assertEquals("The description", notification.getDescription());
+assertEquals("warning", notification.getType());
+notification.close();
+----
+
+You need to close the notification box with [methodname]#close()# to move
+forward.
+
+
+[[testbench.special.contextmenu]]
+== Testing Context Menus
+
+((("context menus")))
+Opening context menus requires special handling. First, to open a menu, you need
+to "context-click" on a specific sub-element in a component that supports
+context menus. You can do that with a [methodname]#contextClick()# action in a
+[classname]#Actions# object.
+
+A context menu is displayed as a floating element, which is under a special
+overlays element in the HTML page, not under the component from which it pops
+up. You can find it from the page by its CSS class [literal]#++v-contextmenu++#.
+The menu items are represented as text, and you can find the text with an XPath
+expression as shown in the example below.
+
+In the following example, we open a context menu in a [classname]#Table#
+component, find an item by its caption text, and click it.
+
+
+----
+// Get a table cell to work on
+TableElement table = inExample(TableElement.class).first();
+WebElement cell = table.getCell(3, 0); // A cell in the row
+
+// Perform context click action to open the context menu
+new Actions(getDriver()).contextClick(cell).perform();
+
+// Find the opened menu
+WebElement menu = findElement(By.className("v-contextmenu"));
+
+// Find a specific menu item
+WebElement menuitem = menu.findElement(
+    By.xpath("//*[text() = 'Add Comment']"));
+
+// Select the menu item
+menuitem.click();
+----
+
+
+[[testbench.special.javascript]]
+== Executing JavaScript
+
+((("javascript")))
+Sometimes the available API does not offer what you are lookng for and you want
+to execute a JavaScript snippet to accomplish your task. For this there is the
+`executeScript` method in `TestBenchTestCase`. You can freely define what
+JavaScript snippet to execute and add references to elements and other
+parameters using the `Object... args` parameter. All arguments passed to the
+method are available through the `arguments` array in JavaScript.
+
+For example to return the `offsetHeight` property of an element you could do
+----
+WebElement element = ...; // find the element somehow
+Long offsetHeight = (Long)executeScript("return arguments[0].offsetHeight", element);
+----
+
+The argument array and the return type support a limited set of types:
+
+* HTML elements are converted to `TestBenchElement` instances
+* Decimal numbers are converted to `Double`
+* Non-decimal numbers are converted to `Integer`
+* Booleans are converted to `Boolean`
+* All other values except arrays are converted to `String`
+* Returned arrays are converted to `List<Object>`, containing types described above
+
+As there is no way to know what type the JavaScript function returns, you always
+need to cast the return value.
+
+[[testbench.special.timing]]
+== Profiling Test Execution Time
+
+It is not just that it works, but also how long it takes. Profiling test
+execution times consistently is not trivial, as a test environment can have
+different kinds of latency and interference. For example in a distributed setup,
+timings taken on the test server would include the latencies between the test
+server, the grid hub, a grid node running the browser, and the web server
+running the application. In such a setup, you could also expect interference
+between multiple test nodes, which all might make requests to a shared
+application server and possibly also share virtual machine resources.
+
+Furthermore, in Vaadin applications, there are two sides which need to be
+profiled: the server-side, on which the application logic is executed, and the
+client-side, where it is rendered in the browser. Vaadin TestBench includes
+methods for measuring execution time both on the server-side and the
+client-side.
+
+The [interfacename]#TestBenchCommands# interface offers the following methods
+for profiling test execution time:
+
+[methodname]#totalTimeSpentServicingRequests()#:: Returns the total time (in milliseconds) spent servicing requests in the
+application on the server-side. The timer starts when you first navigate to the
+application and hence start a new session. The time passes only when servicing
+requests for the particular session. The timer is shared in the servlet session,
+so if you have, for example, multiple portlets in the same application
+(session), their execution times will be included in the same total.//TODO
+Vaadin 7: windows to
+roots
+
++
+Notice that if you are also interested in the client-side performance for the
+last request, you must call the [methodname]#timeSpentRenderingLastRequest()#
+before calling this method. This is due to the fact that this method makes an
+extra server request, which will cause an empty response to be rendered.
+
+[methodname]#timeSpentServicingLastRequest()#:: Returns the time (in milliseconds) spent servicing the last request in the
+application on the server-side. Notice that not all user interaction through the
+WebDriver cause server requests.
+
++
+As with the total above, if you are also interested in the client-side
+performance for the last request, you must call the
+[methodname]#timeSpentRenderingLastRequest()# before calling this method.
+
+[methodname]#totalTimeSpentRendering()#:: Returns the total time (in milliseconds) spent rendering the user interface of
+the application on the client-side, that is, in the browser. This time only
+passes when the browser is rendering after interacting with it through the
+WebDriver. The timer is shared in the servlet session, so if you have, for
+example, multiple portlets in the same application (session), their execution
+times will be included in the same total.
+
+[methodname]#timeSpentRenderingLastRequest()#:: Returns the time (in milliseconds) spent rendering user interface of the
+application after the last server request. Notice that not all user interaction
+through the WebDriver cause server requests.
+
++
+If you also call the [methodname]#timeSpentServicingLastRequest()# or
+[methodname]#totalTimeSpentServicingRequests()#, you should do so before calling
+this method. The methods cause a server request, which will zero the rendering
+time measured by this method.
+
+
+
+Generally, only interaction with fields in the __immediate__ mode cause server
+requests. This includes button clicks. Some components, such as
+[classname]#Table#, also cause requests otherwise, such as when loading data
+while scrolling. Some interaction could cause multiple requests, such as when
+images are loaded from the server as the result of user interaction.
+
+The following example is given in the
+[filename]#link:https://github.com/vaadin/testbench-demo/blob/8.0/src/test/java/com/vaadin/testbenchexample/VerifyExecutionTimeITCase.java[VerifyExecutionTimeITCase.java]#
+file in the TestBench demo.
+
+
+----
+@Test
+public void verifyServerExecutionTime() throws Exception {
+    // Get start time on the server-side
+    long currentSessionTime = testBench(getDriver())
+            .totalTimeSpentServicingRequests();
+
+    // Interact with the application
+    calculateOnePlusTwo();
+
+    // Calculate the passed processing time on the serve-side
+    long timeSpentByServerForSimpleCalculation =
+            testBench().totalTimeSpentServicingRequests() -
+            currentSessionTime;
+
+    // Report the timing
+    System.out.println("Calculating 1+2 took about "
+            + timeSpentByServerForSimpleCalculation
+            + "ms in servlets service method.");
+
+    // Fail if the processing time was critically long
+    if (timeSpentByServerForSimpleCalculation > 30) {
+        fail("Simple calculation shouldn't take " +
+             timeSpentByServerForSimpleCalculation + "ms!");
+    }
+
+    // Do the same with rendering time
+    long totalTimeSpentRendering =
+            testBench().totalTimeSpentRendering();
+    System.out.println("Rendering UI took "
+            + totalTimeSpentRendering + "ms");
+    if (totalTimeSpentRendering > 400) {
+        fail("Rendering UI shouldn't take "
+               + totalTimeSpentRendering + "ms!");
+    }
+
+    // A normal assertion on the UI state
+    assertEquals("3.0",
+        $(TextFieldElement.class).first()
+        .getAttribute("value"));
+}
+----

@@ -1,0 +1,260 @@
+---
+title: Creating Maintainable Tests
+order: 1
+layout: page
+---
+
+[[testbench.maintainable]]
+= Creating Maintainable Tests
+
+The first important rule in developing tests is to keep them readable and
+maintainable. Otherwise, when the test fail, such as after refactoring the
+application code, the developers get impatient in trying to understand them to
+fix them, and easily disable them. Readability and maintainability can be
+improved with the Page Object Pattern described below.
+
+The second rule is to run the tests often. It is best to use a continuous
+integration server to run them at least once a day, or preferably on every
+commit.
+
+[[testbench.maintainable.robustness]]
+== Increasing Selector Robustness
+
+Robustness of tests is important for avoiding failures because of irrelevant
+changes in the HTML DOM tree. Different selectors have differences in their
+robustness and it depends on how they are used.
+
+The ElementQuery API uses the logical widget hierarchy to find the HTML
+elements, instead of the exact HTML DOM structure. This makes them somewhat
+robust, although still vulnerable to irrelevant changes in the exact component
+hierarchy of the UI. Also, if you internationalize the application, selecting
+components by their caption is not viable.
+
+The low-level XPath selector can be highly vulnerable to changes in the DOM
+path, especially if the path is given down from the body element of the page.
+The selector is, however, very flexible, and can be used in robust ways, for
+example, by selecting by HTML element and a CSS class name or an attribute
+value. You can likewise use a CSS selector to select specific components by CSS
+class in a robust way.
+
+[[testbench.maintainable.robustness.id]]
+=== Using Component IDs to Increase Robustness
+
+To make UIs more robust for testing, you can set a unique __component ID__ for
+specific components with [methodname]#setId()#, as described in more detail in
+<<dummy/../../creatingtests/testbench-selectors#testbench.selectors.id,"Finding by
+ID">>.
+
+Let us consider the following application, in which we set the IDs using a
+hierarchical notation to ensure that they are unique; in a more modular case you
+could consider a different strategy.
+
+
+----
+public class UIToBeTested extends UI {
+    @Override
+    protected void init(VaadinRequest request) {
+        setId("myui");
+
+        final VerticalLayout content = new VerticalLayout();
+        content.setMargin(true);
+        content.setId("myui.content");
+        setContent(content);
+
+        // Create a button
+        Button button = new Button("Push Me!");
+
+        // Optional: give the button a unique ID
+        button.setId("myui.content.pushmebutton");
+
+        content.addComponent(button);
+    }
+}
+----
+
+After preparing the application this way, you can find the element by the
+component ID with the [methodname]#id()# query terminator.
+
+
+----
+// Click the button
+ButtonElement button =
+    $(ButtonElement.class).id("myui.content.pushmebutton");
+button.click();
+----
+
+The IDs are HTML element [literal]#++id++# attributes and must be unique in the
+UI, as well as in the page in which the UI is running, in case the page has
+other content than the particular UI instance. In case there could be multiple
+UIs, you can include a UI part in the ID, as we did in the example above.
+
+
+[[testbench.maintainable.robustness.css]]
+=== Using CSS Class Names to Increase Robustness
+
+As a similar method to using component IDs, you can add CSS class names to
+components with [methodname]#addStyleName()#. This enables matching them with
+the [methodname]#findElement(By.className())# selector, as described in
+<<dummy/../../creatingtests/testbench-selectors#testbench.selectors.css,"Finding by
+CSS Class">>. You can use the selector in element queries. Unlike IDs, CSS class
+names do not need to be unique, so an HTML page can have many elements with the
+same CSS class.
+
+You can use CSS class names also in XPath selectors.
+
+
+
+[[testbench.maintainable.pageobject]]
+== The Page Object Pattern
+
+The Page Object Pattern aims to simplify and modularize testing application
+views. The pattern follows the design principle of
+link:http://en.wikipedia.org/wiki/Separation_of_concerns[separation of
+concerns], to handle different concerns in separate modules, while hiding
+information irrelevant to other tests by encapsulation.
+
+[[testbench.maintainable.pageobject.defining]]
+=== Defining a Page Object
+
+A __page object__ has methods to interact with a view or a sub-view, and to
+retrieve values in the view. You also need a method to open the page and
+navigate to the proper view.
+
+For example:
+
+
+----
+public class CalculatorPageObject
+       extends TestBenchTestCase {
+    @FindBy(id = "button_=")
+    private WebElement equals;
+    ...
+
+    /**
+     * Opens the URL where the calculator resides.
+     */
+    public void open() {
+        getDriver().get(
+            "http://localhost:8080/?restartApplication");
+    }
+
+    /**
+     * Pushes buttons on the calculator
+     *
+     * @param buttons the buttons to push: "123+2", etc.
+     * @return The same instance for method chaining.
+     */
+    public CalculatorPageObject enter(String buttons) {
+        for (char numberChar : buttons.toCharArray()) {
+            pushButton(numberChar);
+        }
+        return this;
+    }
+
+    /**
+     * Pushes the specified button.
+     *
+     * @param button The character of the button to push.
+     */
+    private void pushButton(char button) {
+        getDriver().findElement(
+            By.id("button_" + button)).click();
+    }
+
+    /**
+     * Pushes the equals button and returns the contents
+     * of the calculator "display".
+     *
+     * @return The string (number) shown in the "display"
+     */
+    public String getResult() {
+        equals.click();
+        return display.getText();
+    }
+
+    ...
+}
+----
+
+
+[[testbench.maintainable.pageobject.findby]]
+=== Finding Member Elements By ID
+
+If you have [classname]#WebElement# members annotated with [classname]#@FindBy#,
+they can be automatically filled with the HTML element matching the given
+component ID, as if done with
+[literal]#++driver.findElement(By.id(fieldname))++#. To do so, you need to
+create the page object with [classname]#PageFactory# as is done in the following
+test setup:
+
+
+----
+public class PageObjectExampleITCase {
+    private CalculatorPageObject calculator;
+
+    @Before
+    public void setUp() throws Exception {
+        driver = TestBench.createDriver(new FirefoxDriver());
+
+        // Use PageFactory to automatically initialize fields
+        calculator = PageFactory.initElements(driver,
+                         CalculatorPageObject.class);
+    }
+    ...
+----
+
+The members must be typed dynamically as [classname]#WebElement#, but you can
+wrap them to a typed element class with the [methodname]#wrap()# method:
+
+
+----
+ButtonElement equals = equalsElement.wrap(ButtonElement.class);
+----
+
+
+[[testbench.maintainable.pageobject.using]]
+=== Using a Page Object
+
+Test cases can use the page object methods at business logic level, without
+knowing about the exact structure of the views.
+
+For example:
+
+
+----
+@Test
+public void testAddCommentRowToLog() throws Exception {
+    calculator.open();
+
+    // Just do some math first
+    calculator.enter("1+2");
+
+    // Verify the result of the calculation
+    assertEquals("3.0", calculator.getResult());
+
+    ...
+}
+----
+
+
+[[testbench.maintainable.pageobject.example]]
+=== The Page Object Example
+
+You can find the complete example of the Page Object Pattern in the
+[filename]#src/test/java/com/vaadin/testbenchexample/pageobjectexample/# folder
+in the TestBench Demo. The [filename]#PageObjectExampleITCase.java# runs tests
+on the Calc UI (also included in the example sources), using the page objects to
+interact with the different parts of the UI and to check the results.
+
+The page objects included in the [filename]#pageobjects# subfolder are as
+follows:
+
+* The [classname]#CalculatorPageObject# (as outlined in the example code above)
+has methods to click the buttons in the calculator and the retrieve the result
+shown in the "display".
+
+* The [classname]#LogPageObject# can retrieve the content of the log entries in
+the log table, and right-click them to open the comment sub-window.
+
+* The [classname]#AddComment# can enter a comment string in the comment editor
+sub-window and submit it (click the [guilabel]#Add# button).

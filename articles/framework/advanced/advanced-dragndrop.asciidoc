@@ -1,0 +1,506 @@
+---
+title: Drag and Drop
+order: 12
+layout: page
+---
+
+[[advanced.dragndrop]]
+= Drag and Drop
+
+((("Drag and Drop", id="term.advanced.dragndrop", range="startofrange")))
+
+Dragging an object from one location to another by grabbing it with mouse,
+holding the mouse button pressed, and then releasing the button to "drop" it to
+the other location is a common way to move, copy, or associate objects. For
+example, most operating systems allow dragging and dropping files between
+folders or dragging a document on a program to open it. Framework version 8.1 adds support for https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API[HTML5 drag and drop] features. This makes it possible to set components as drag sources that user can drag and drop, or to set them as drop targets to drop things on.
+
+
+== Drag Source
+
+Any component can be made a drag source that has textual data that is transferred when it is dragged and dropped.
+
+To make a component a drag source, you apply the [classname]#DragSourceExtension# to it. Then you can define the text to transfer, and the allowed drag effect.
+
+[source, java]
+----
+Label draggableLabel = new Label("You can grab and drag me");
+DragSourceExtension<Label> dragSource = new DragSourceExtension<>(draggableLabel);
+
+// set the allowed effect
+dragSource.setEffectAllowed(EffectAllowed.MOVE);
+// set the text to transfer
+dragSource.setDataTransferText("hello receiver");
+// set other data to transfer (in this case HTML)
+dragSource.setDataTransferData("text/html", "<label>hello receiver</label>");
+----
+
+The __effect allowed__ specifies the allowed effects that must match the __drop effect__ of the drop target. If these don't match, the drop event is never fired on the target. If multiple effects are allowed, the user can use the modifier keys to switch between the desired effects. The default effect and the modifier keys are system and browser dependent.
+
+The __data transfer text__ is textual data, that the drop target will receive in the __drop event__.
+
+The __data transfer data__ is any data of the given type, that the drop target will also receive in the __drop event__. The order, in which the data is set for the drag source, is preserved, which helps the drop target finding the most preferred and supported data.
+
+[NOTE]
+====
+Note that `"text"` is the only cross browser supported data type. If your application supports IE11, pleas only use the `setDataTransferText()` method.
+====
+
+The [classname]#DragStartEvent# is fired when the drag has started, and the [classname]#DragEndEvent# event when the drag has ended, either in a drop or a cancel.
+
+[source, java]
+----
+dragSource.addDragStartListener(event ->
+    Notification.show("Drag event started")
+);
+dragSource.addDragEndListener(event -> {
+    if (event.isCanceled()) {
+        Notification.show("Drag event was canceled");
+    } else {
+        Notification.show("Drag event finished");
+    }
+});
+----
+
+You can check whether the drag was canceled using the `isCanceled()` method.
+
+It is possible to transfer any Object as server side data to the drop target if both the drag source and drop target are placed in the same UI. This data is available in the drop event via the `DropEvent.getDragData()` method.
+
+[source, java]
+----
+dragSource.addDragStartListener(event ->
+    dragSource.setDragData(myObject)
+);
+dragSource.addDragEndListener(event ->
+    dragSource.setDragData(null)
+);
+----
+
+=== CSS Style Rules
+
+The drag source element, additional to it's primary style name, have a style name with the `-dragsource` suffix. For example, a Label component would have the style name `v-label-dragsource` when the drag source extension is applied to it.
+Additionally, the elements also have the `v-draggable` style name that is independent of the component's primary style.
+
+While being dragged, the element also gets the style name with suffix `-dragged`.
+An example for this is `v-label-dragged` in case of a Label component.
+This style name is added during the drag start and removed during the drag end event.
+
+The browsers allow the user to select and drag and drop text, which could cause issues with components that have text. The Framework tries to prevent this by automatically adding the following style to all `v-draggable` elements. It is included by the sass mixin `valo-drag-element`.
+
+[source, css]
+----
+.v-draggable {
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+----
+
+
+[[advanced.dragndrop.drophandler]]
+== Drop Target
+
+The drag operations end when the mouse button is released on a valid drop target. It is then up to the target to react to the drop event and the data associated with the drag, set by the drag source.
+
+To make a component be a drop target, you apply the [classname]#DropTargetExtension# to it. The extension allows you to control when the drop is acceptable and then react to the drop event.
+
+[source, java]
+----
+VerticalLayout dropTargetLayout = new VerticalLayout();
+dropTargetLayout.setCaption("Drop things inside me");
+dropTargetLayout.addStyleName(ValoTheme.LAYOUT_CARD);
+
+// make the layout accept drops
+DropTargetExtension<VerticalLayout> dropTarget = new DropTargetExtension<>(dropTargetLayout);
+
+// the drop effect must match the allowed effect in the drag source for a successful drop
+dropTarget.setDropEffect(DropEffect.MOVE);
+
+// catch the drops
+dropTarget.addDropListener(event -> {
+    // if the drag source is in the same UI as the target
+    Optional<AbstractComponent> dragSource = event.getDragSourceComponent();
+    if (dragSource.isPresent() && dragSource.get() instanceof Label) {
+        // move the label to the layout
+        dropTargetLayout.addComponent(dragSource.get());
+
+        // get possible transfer data
+        String message = event.getDataTransferData("text/html");
+        if (message != null) {
+            Notification.show("DropEvent with data transfer html: " + message);
+        } else {
+            // get transfer text
+            message = event.getDataTransferText();
+            Notification.show("DropEvent with data transfer text: " + message);
+        }
+
+        // handle possible server side drag data, if the drag source was in the same UI
+        event.getDragData().ifPresent(data -> handleMyDragData((MyObject) data));
+    }
+});
+----
+
+When data is dragged over a drop target, the __v-drag-over__ class name is applied to the root element of the drop target component automatically.
+
+=== Controlling When The Drop is Acceptable
+
+The __drop effect__ allows you to specify the desired drop effect, and for a succesful drop it must match the allowed effect that has been set for the drag source. Note that you can allow multiple effects, and that you should not rely on the default effect since it may vary between browsers.
+
+The __drop criteria__ allows you to determine whether the current drag data can be dropped on the drop target. It is executed on `dragenter`, `dragover` and `drop` events. The script gets the current event as a parameter named `event`. Returning `false` will prevent the drop and no drop event is fired on the server side.
+
+////
+TODO Add an example of drop criteria
+////
+
+=== CSS Style Rules
+
+Each drop target element have an applied style name, the primary style name with `-droptarget` suffix, e.g. `v-label-droptarget`, to indicate that it is a potential target for data to be dropped onto it.
+
+When dragging data over a drop target and the drag over criteria passes, a style name is applied to indicate that the element accepts the drop. This style name is the primary style name with `-drag-center` suffix, e.g. `v-label-drag-center`.
+
+
+////
+TODO add back when supported with new API ?
+[[advanced.dragndrop.external]]
+== Dragging Files from Outside the Browser
+
+The [classname]#DropTargetExtension# allows dragging files from outside the
+browser and dropping them on a target component.
+
+Dropped files are automatically uploaded to the application and can be acquired from the
+wrapper with [methodname]#getFiles()#. The files are represented as
+[classname]#Html5File# objects as defined in the inner class. You can define an
+upload [classname]#Receiver# to receive the content of a file to an
+[classname]#OutputStream#.
+
+Dragging and dropping files to browser is supported in HTML 5 and requires a
+compatible browser, such as Mozilla Firefox 3.6 or newer.
+
+////
+
+[[advanced.dragndrop.mobile]]
+== Mobile Drag And Drop Support
+
+The HTML 5 Drag and Drop API is not yet supported by mobile browsers. To enable HTML5 DnD support on mobile devices, we have included
+an link:https://github.com/timruffles/mobile-drag-drop[external Polyfill]. Please note that this Polyfill is under the BSD 2 License.
+
+By default, the mobile DnD support is disabled, but you can enable it any time for a [classname]#UI#. Starting from the request where the support was enabled, all the added [classname]#DragSourceExtension#, [classname]#DropTargetExtension# and their subclasses will also work on mobile devices for that UI. The Polyfill is only loaded when the user is using a touch device. 
+
+Drag and Drop is mutually exclusive with context click on mobile devices.
+
+[source, java]
+----
+public class MyUI extends UI {
+    protected void init(VaadinRequest request) {
+        setMobileHtml5DndEnabled(true);
+    }
+}
+----
+
+[NOTE]
+====
+When disabling the support, you need to also remove all the [classname]#DragSourceExtension#, [classname]#DropTargetExtension# and their subclasses that were added when the mobile DnD support was enabled.
+====
+
+=== CSS Style Rules
+
+The Polyfill allows you to apply custom styling to enhance the user experience on touch devices. It is important to remember that these customizations are only used when the polyfill is loaded, and not possible for desktop DnD operations.
+
+The drag image can be customized using the `dnd-poly-drag-image` class name. You must NOT wrap the class rule with e.g. `.valo`, since that is not applied to the drag image element. The following styling can be used to make the drag image opaque and "snap back" when the user did not drop to a valid dropzone:
+
+[source, css]
+====
+.dnd-poly-drag-image {
+    opacity: .5 !important;
+}
+
+.dnd-poly-drag-image.dnd-poly-snapback {
+    transition-property: transform, -webkit-transform !important;
+    transition-duration: 200ms !important;
+    transition-timing-function: ease-out !important;
+}
+====
+
+More details can be found from the link:https://github.com/timruffles/ios-html5-drag-drop-shim/tree/rewrite:[Polyfill] website.
+
+
+[[advanced.dragndrop.grid]]
+== Drag and Drop Rows in Grid
+
+It is possible to drag and drop the rows of a Grid component. This allows reordering of rows, dragging rows between different Grids, dragging rows outside of a Grid or dropping data onto rows.
+
+In Vaadin Framework 8.2, a `GridRowDragger` helper has been added to make it easier for the simple cases to enable drag-and-drop support for reordering one grid's rows and moving rows between two grids with the same data type.
+
+=== Drag and Drop Reordering Items of a Grid (since 8.2)
+
+To allow the user to reorder the rows in a grid, you can use the `GridRowDragger` extension. It will handle configuring the grid as a drag source and drop target, and insert the dropped rows to the dropped index in the data provider, when a `ListDataProvider` is used.
+
+[source,java]
+----
+// create a new grid backed by a list data provider
+Grid<Task> taskGrid = new Grid<>("Priority Tasks", service.getTasks());
+
+// grid column etc. setup omitted
+
+// enable DnD reordering within the grid
+GridRowDragger<Task> gridRowDragger = new GridRowDragger<>(taskGrid);
+
+// disable all columns sorting so DnD reordering is always used
+grid.getColumns().stream().forEach(col -> col.setSortable(false));
+----
+
+The `GridRowDragger` uses the `DropMode.BETWEEN` by default. It does not allow the user to drop data on top of a sorted grid's rows by automatically switching to `DropMode.ON_GRID` if the grid has been sorted by the user. This is because the shown drop location would not be correct due to the sorting. It is recommended that you disable the sorting for the grid, by using the `Column.setSortable` method (like above). By default, all columns are sortable when a in-memory data provider is used. If you allow the user to drop on top of a sorted grid's rows, you should scroll the dropped data to be visible with `grid.scrollToRow(index);` after drop for good UX - the `GridRowDragger` does not do this!
+
+If you want to customize the setup for the grid as a drag source or drop target, you can access and customize the handlers with the `getGridDragSource()` and `getGridDropTarget()` methods.
+
+For supporting other data providers, you can customize data provider updating on drop event with `setSourceDataProviderUpdater(SourceDataProviderUpdater<T> updater)` (for the source grid row removal) and `setTargetDataProviderUpdater(TargetDataProviderUpdater<T> updater)` (for the target grid row adding). The drop index calculation can be customized via `setDropIndexCalculator(DropIndexCalculator<T> dropIndexCalculator)`.
+
+=== Drag and Drop between two Grids (since 8.2)
+
+The `GridRowDragger` extension enables you to easily setup drag and drop moving of data between two grids. The same features apply as with the single grid reordering case in previous chapter.
+
+The following code snippet shows an example of allowing dragging items both ways between two grids. Note that it does not allow the user to drop the data on the same grid where the drag was started from, by setting the drop effect to `NONE` and thus the drop indicator is not shown.
+
+[source,java]
+----
+// create grids with list data providers, and disable sorting
+Grid<Person> left = createGrid();
+Grid<Person> right = createGrid();
+
+GridRowDragger<Person> leftToRight = new GridRowDragger<>(left, right);
+GridRowDragger<Person> rightToLeft = new GridRowDragger<>(right, left);
+
+// Don't show the drop indicator for drags over the same grid where the drag started
+leftToRight.getGridDragSource()
+        .addDragStartListener(event -> rightToLeft.getGridDropTarget()
+                        .setDropEffect(DropEffect.NONE));
+leftToRight.getGridDragSource().addDragEndListener(
+        event -> rightToLeft.getGridDropTarget().setDropEffect(null));
+
+rightToLeft.getGridDragSource()
+        .addDragStartListener(event -> leftToRight.getGridDropTarget()
+                        .setDropEffect(DropEffect.NONE));
+rightToLeft.getGridDragSource().addDragEndListener(
+        event -> leftToRight.getGridDropTarget().setDropEffect(null));
+----
+
+=== Grid as a Drag Source
+
+A Grid component's rows can be made draggable by applying [classname]#GridDragSource# extension to the component. The extended Grid's rows become draggable, meaning that each row can be grabbed and moved by the mouse individually.
+When the Grid's selection mode is `SelectionMode.MULTI` and multiple rows are selected, it is possible to drag all the visible selected rows by grabbing one of them. However, when the grabbed row is not selected, only that one row will be dragged.
+
+[NOTE]
+====
+It is important to note that when dragging multiple rows, only the visible selected rows will be set as dragged data.
+====
+
+By default, the drag data of type `"text"` will contain the content of each column separated by a tabulator character (`"\t"`).
+When multiple rows are dragged, the generated data is combined into one String separated by new line characters (`"\n"`).
+You can override the default behaviour and provide a custom drag data for each item by setting a custom _drag data generator_ for the `"text"` type.
+The generator is executed for each item and returns a `String` containing the data to be transferred for that item.
+
+The following example shows how you can define the allowed drag effect and customize the drag data by setting a drag data generator.
+
+[source,java]
+----
+Grid<Person> grid = new Grid<>();
+// ...
+GridDragSource<Person> dragSource = new GridDragSource<>(grid);
+
+// set allowed effects
+dragSource.setEffectAllowed(EffectAllowed.MOVE);
+
+// add a drag data generator
+dragSource.setDragDataGenerator("text", person -> {
+    return person.getFirstName() + " " + person.getLastName() +
+           "\t" +  // tabulator character
+           person.getAddress().getCity();
+});
+----
+
+It is possible to set multiple generators with the `setDragDataGenerator(type, generator)` method.
+The generated data will be set as data transfer data with the given type and can then be accessed during drop from the drop event's `getDataTransferData(type)` method.
+
+The [classname]#GridDragStartEvent# is fired when dragging a row has started, and the [classname]#GridDragEndEvent# when the drag has ended, either in a drop or a cancel.
+
+[source,java]
+----
+dragSource.addGridDragStartListener(event ->
+    // Keep reference to the dragged items
+    draggedItems = event.getDraggedItems()
+);
+
+// Add drag end listener
+dragSource.addGridDragEndListener(event -> {
+    // If drop was successful, remove dragged items from source Grid
+    if (event.getDropEffect() == DropEffect.MOVE) {
+        ((ListDataProvider<Person>) grid.getDataProvider()).getItems()
+                .removeAll(draggedItems);
+        grid.getDataProvider().refreshAll();
+
+        // Remove reference to dragged items
+        draggedItems = null;
+    }
+});
+----
+
+The dragged rows can be accessed from both events using the `getDraggedItems()` method.
+
+==== CSS Style Rules
+
+A drag source Grid's rows have the `v-grid-row-dragsource` and the `v-draggable` style names applied to indicate that the rows are draggable.
+
+Additionally, the style name `v-grid-row-dragged` is applied to all the dragged rows during the drag start event and removed during the drag end event.
+
+=== Grid as a Drop Target
+
+To make a Grid component's rows accept a drop event, apply the [classname]#GridDropTarget# extension to the component. When creating the extension, you need to specify where the transferred data can be dropped on.
+
+[NOTE]
+====
+Since 8.2, there is an option to make the grid not accept drops on rows if the grid has been sorted by the user. This is because the drop location might not be in the place that is shown to the users due to the sorting – and this can cause bad user experience. This is controlled with the method `setDropAllowedOnSortedGridRows` and is by default set to `true` to not change behavior in comparison to Framework version 8.1. When this is set to `false` and the user has sorted the grid, there will not be a target drop row for drops for the grid, and the indicator is always the same as with `DropMode.ON_GRID`. 
+
+When the grid has been sorted, you should put the dropped data to the correct location (according to the sorting), and then scroll to the row where the dropped data ended up into and possibly also selecting it.
+====
+
+[source,java]
+----
+Grid<Person> grid = new Grid<>();
+// ...
+GridDropTarget<Person> dropTarget = new GridDropTarget<>(grid, DropMode.BETWEEN);
+dropTarget.setDropEffect(DropEffect.MOVE);
+
+// do not show drop target between rows when grid has been sorted
+dropTarget.setDropAllowedOnSortedGridRows(false);
+----
+
+The _drop mode_ specifies the behaviour of the row when an element is dragged over or dropped onto it. Use `DropMode.ON_TOP` when you want to drop elements on top of a row and `DropMode.BETWEEN` when you want to drop elements between rows. `DropMode_ON_TOP_OR_BETWEEN` allows to drop on between or top rows. `DropMode.ON_GRID` (since version 8.2) does not allow dropping on the grid rows, but just into the grid, without a specific target row.
+
+The [classname]#GridDropEvent# is fired when data is dropped onto one of the Grid's rows. The following example shows how you can insert items into the Grid at the drop position. If the drag source is another Grid, you can access the generated drag data with the event's [methodname]#getDataTransferText()# method.
+If the drag source Grid uses a custom generator for a different type than `"text"`, you can access it's generated data using the [methodname]#getDataTransferData(type)# method. You can also check all the received data transfer data by fetching the type-to-data map with the [methodname]#getDataTransferData()# method.
+
+[source,java]
+----
+dropTarget.addGridDropListener(event -> {
+    // Accepting dragged items from another Grid in the same UI
+    event.getDragSourceExtension().ifPresent(source -> {
+        if (source instanceof GridDragSource) {
+            // Get the target Grid's items
+            ListDataProvider<Person> dataProvider = (ListDataProvider<Person>)
+                    event.getComponent().getDataProvider();
+            List<Person> items = (List<Person>) dataProvider.getItems();
+
+            // Calculate the target row's index
+            int index = items.size();
+            if (event.getDropTargetRow().isPresent()) {
+                index = items.indexOf(event.getDropTargetRow().get()) + (
+                    event.getDropLocation() == DropLocation.BELOW ? 1 : 0);
+            }
+
+            // Add dragged items to the target Grid
+            items.addAll(index, draggedItems);
+            dataProvider.refreshAll();
+
+            // Show the dropped data
+            Notification.show("Dropped row data: " + event.getDataTransferText());
+        }
+    });
+});
+----
+
+The _drop location_ property in the [classname]#GridDropEvent# specifies the dropped location in relative to grid row the drop happened on and depends on the used [classname]#DropMode#. When the drop happened on top of a row, the possible options for the location are `ON_TOP`, `ABOVE` and `BELOW`.
+
+If the grid is empty or if the drop was on empty space after the last row in grid, and the [classname]#DropMode.ON_TOP# was used, then the drop location `EMPTY` will be used. If the drop modes [classname]#DropMode.BETWEEN# or [classname]#DropMode.ON_TOP_OR_BETWEEN# are used, then the location can be `EMPTY` only when the grid was empty; otherwise the drop happened `BELOW` the last visible row. When the drop location is `EMPTY`, the [methodname]#getDropTargetRow# method will also return an empty optional. If the grid has been sorted by the user and `setDropAllowedOnSortedGridRows` has been set to `false`, the location will be `EMPTY` and there will not be a target row for the drops.
+
+When dropping on top of the grid's header or footer, the drop location will be `EMPTY` if there are no rows in the grid or if [classname]#DropMode.ON_TOP# was used. If there are rows in the grid, dropping on top of the header will set the drop location to `ABOVE` and the dropped row will be the first currently visible row in grid. Similarly, if dropping on top of the footer, the drop location will be `BELOW` and the dropped row will be the last visible row in the grid.
+
+==== CSS Style Rules
+
+A drop target Grid's body has the style name `v-grid-body-droptarget` to indicate that it is a potential target for data to be dropped.
+
+When dragging data over a drop target Grid's row, depending on the drop mode and the mouse position relative to the row, a style name is applied to the row or to the grid body to indicate the drop location.
+When dragging on top of a row, `v-grid-row-drag-center` indicates ON_TOP, `v-grid-row-drag-top` indicates ABOVE and `v-grid-row-drag-bottom` indicates BELOW locations. When dragging on top of an empty grid, or when the drop location is ON_TOP and dragged below the last row in grid (and there is empty space visible), the `v-grid-body-drag-top` style is applied to the `v-grid-tablewrapper` element which surrounds the grid header, body and footer.
+
+(((range="endofrange", startref="term.advanced.dragndrop")))
+
+=== Drag and Drop Rows in TreeGrid
+
+To make the rows of a TreeGrid component draggable or to make them a drop target, apply [classname]#TreeGridDragSource# or [classname]#TreeGridDropTarget# extensions to the component, respectively.
+In addition to the drag and drop features for Grid above, [classname]#TreeGridDropEvent# provides information about the status of the node (expanded or collapsed) and its depth in the hierarchy.
+
+== Drag and Drop Files
+
+Files can be uploaded to the server by dropping them onto a file drop target. To make a component a file drop target, apply the [classname]#FileDropTarget# extension to it by creating a new instance and passing the component as first constructor parameter to it.
+
+You can handle the dropped files with the `FileDropHandler` that you add as the second constructor parameter. The [classname]#FileDropEvent#, received by the handler, contains information about the dropped files such as file name, file size and mime type.
+In the handler you can decide if you would like to upload each of the dropped files.
+
+To start uploading a file, set a `StreamVariable` to it. The stream variable provides an output stream where the file will be written and has callback methods for all the stages of the upload process.
+
+[source,java]
+----
+Label dropArea = new Label("Drop files here");
+FileDropTarget<Label> dropTarget = new FileDropTarget<>(dropArea, event -> {
+
+    Collection<Html5File> files = event.getFiles();
+    files.forEach(file -> {
+        // Max 1 MB files are uploaded
+        if (file.getFileSize() <= 1024 * 1024) {
+            file.setStreamVariable(new StreamVariable() {
+
+                // Output stream to write the file to
+                @Override
+                public OutputStream getOutputStream() {
+                    try{
+                        return new FileOutputStream("/path/to/files/"
+                          + file.getFileName());
+                        }catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                    return null;
+                }
+
+                // Returns whether onProgress() is called during upload
+                @Override
+                public boolean listenProgress() {
+                    return true;
+                }
+
+                // Called periodically during upload
+                @Override
+                public void onProgress(StreamingProgressEvent event) {
+                    Notification.show("Progress, bytesReceived="
+                        + event.getBytesReceived());
+                }
+
+                // Called when upload started
+                @Override
+                public void streamingStarted(StreamingStartEvent event) {
+                    Notification.show("Stream started, fileName="
+                        + event.getFileName());
+                }
+
+                // Called when upload finished
+                @Override
+                public void streamingFinished(StreamingEndEvent event) {
+                    Notification.show("Stream finished, fileName="
+                        + event.getFileName());
+                }
+
+                // Called when upload failed
+                @Override
+                public void streamingFailed(StreamingErrorEvent event) {
+                    Notification.show("Stream failed, fileName="
+                        + event.getFileName());
+                }
+
+                @Override
+                public boolean isInterrupted() {
+                    return false;
+                }
+            });
+        }
+    }
+});
+----

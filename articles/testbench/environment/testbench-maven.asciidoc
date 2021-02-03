@@ -1,0 +1,222 @@
+---
+title: Integration Testing with Maven
+order: 5
+layout: page
+---
+
+[[testbench.maven]]
+= Integration Testing with Maven
+
+TestBench is often used in Maven projects, where you want to run tests as part
+of the build lifecycle. While ordinary Java unit tests are usually executed in
+the [literal]#++test++# phase, TestBench tests are usually executed in the
+[literal]#++integration-test++# phase (to run the phase properly you need to
+invoke [literal]#++verify++# phase as explained later).
+
+<<dummy/../../../testbench/testbench-quickstart#testbench.quickstart.maven,"Quick
+Start with Maven">> describes how to use the Vaadin application archetype for
+Maven provides a TestBench setup. In this section, we largely go through that
+and also describe how to make such a setup also in Vaadin add-on projects.
+
+[[testbench.maven.project]]
+== Project Structure
+
+[[testbench.maven.project.application]]
+=== In Vaadin Applications
+
+In a typical Vaadin application, such as in the one created by the archetype,
+you only have one module and you run tests there. The application sources would
+normally be in [filename]#src/main# and test code, together with TestBench
+tests, in [filename]#src/test#.
+
+
+[[testbench.maven.project.multimodule]]
+=== In Libraries and Add-ons
+
+In multi-module projects, you may have libraries in other modules, and the
+actual web application in another. Here you could do library unit tests in the
+library modules, and integration tests in the web application module.
+
+The multi-module project structure is recommended for Vaadin add-ons, where you
+have the add-on library in one module and a demo in another.
+
+
+
+[[testbench.maven.lifecycle]]
+== Overview of Lifecycle
+
+The Maven lifecycle phases relevant to TestBench execution are as follows:
+
+. [literal]#++compile++#
+
+** Compile server-side
+** Compile widget set
+** Compile theme
+
+. [literal]#++test-compile++#
+
+** Compile test classes (both unit and integration tests)
+
+. [literal]#++pre-integration-test++#
+
+** Start web server (Jetty or other)
+
+. [literal]#++integration-test++#
+
+** Execute TestBench tests
+
+. [literal]#++post-integration-test++#
+
+** Stop web server
+
+. [literal]#++verify++#
+
+** Verify the results of the integration tests
+
+
+
+[[testbench.maven.overview]]
+== Overview of Configuration
+
+The Maven configuration in the [filename]#pom.xml# should include the following
+parts, with our reference toolchain given in parentheses:
+
+* Integration test runner (Maven Failsafe Plugin)
+
+* Web server (Jetty)
+
+* Web server runner (Jetty Maven Plugin)
+
+* Vaadin compilation and deployment (Vaadin Maven Plugin)
+
+
+
+[[testbench.maven.vaadin]]
+== Vaadin Plugin Configuration
+
+The Vaadin Maven Plugin compiles the widget set with the Vaadin Client Compiler
+and the theme with the Vaadin Sass compiler in the [literal]#++compile++# phase.
+Its configuration should be as is normal for Vaadin projects. The default
+configuration is created by the Vaadin project archetype, as described in
+<<dummy/../../../framework/getting-started/getting-started-maven#getting-started.maven,"Using
+Vaadin with Maven">>.
+
+
+[[testbench.maven.integration]]
+== Configuring Integration Testing
+
+Our reference toolchain uses the Maven Failsafe Plugin to execute integration
+tests with TestBench. The plugin executes tests (JUnit or other) defined in the
+test files included in the plugin configuration.
+
+To run TestBench tests made with JUnit, you need that dependency in the
+[literal]#++<dependencies>++# section:
+
+[subs="normal"]
+----
+&lt;!-- Needed for running TestBench tests --&gt;
+  &lt;dependency&gt;
+  &lt;groupId&gt;junit&lt;/groupId&gt;
+  &lt;artifactId&gt;junit&lt;/artifactId&gt;
+  &lt;version&gt;[replaceable]##4.12##&lt;/version&gt;
+  &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+----
+Surefire requires the following plugin configuration (under
+[literal]#++<plugins>++#):
+
+[subs="normal"]
+----
+&lt;plugin&gt;
+  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+  &lt;artifactId&gt;maven-failsafe-plugin&lt;/artifactId&gt;
+  &lt;version&gt;[replaceable]##2.17##&lt;/version&gt;
+  &lt;configuration&gt;
+    &lt;includes&gt;
+      &lt;include&gt;[replaceable]##**⁄*Tests.java##&lt;/include&gt;
+    &lt;/includes&gt;
+    &lt;excludes&gt;
+      [replaceable]#&lt;!-- Here list files that might match to naming conventions unintentionally. We can ignore them from testing. --&gt;#
+    &lt;/excludes&gt;
+  &lt;/configuration&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;id&gt;failsafe-integration-tests&lt;/id&gt;
+      &lt;phase&gt;integration-test&lt;/phase&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;integration-test&lt;/goal&gt;
+      &lt;/goals&gt;
+    &lt;/execution&gt;
+    &lt;execution&gt;
+      &lt;id&gt;failsafe-verify&lt;/id&gt;
+      &lt;phase&gt;verify&lt;/phase&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;verify&lt;/goal&gt;
+      &lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+&lt;/plugin&gt;
+----
+Set the include and exclude patterns according to your naming convention. See
+Failsafe documentation for more details about the configuration, for example, if
+you want to use other test provider than JUnit.
+
+
+[[testbench.maven.server]]
+== Configuring Test Server
+
+We use Jetty as our reference test server, as it is a light-weight server that
+is easy to configure with a Maven plugin.
+
+The dependency for Jetty goes as follows:
+
+[subs="normal"]
+----
+&lt;dependency&gt;
+    &lt;groupId&gt;org.eclipse.jetty&lt;/groupId&gt;
+    &lt;artifactId&gt;jetty-webapp&lt;/artifactId&gt;
+    &lt;version&gt;[replaceable]##9.2.10.v20150310##&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+----
+The plugin configuration for running Jetty goes as follows:
+
+[subs="normal"]
+----
+&lt;plugin&gt;
+    &lt;groupId&gt;org.mortbay.jetty&lt;/groupId&gt;
+    &lt;artifactId&gt;jetty-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;[replaceable]##8.1.16.v20140903##&lt;/version&gt;
+
+    &lt;configuration&gt;
+        &lt;webApp&gt;
+            &lt;contextPath&gt;[replaceable]##/myapp##&lt;/contextPath&gt;
+        &lt;/webApp&gt;
+        &lt;stopKey&gt;STOP&lt;/stopKey&gt;
+        &lt;stopPort&gt;8005&lt;/stopPort&gt;
+    &lt;/configuration&gt;
+
+    &lt;executions&gt;
+        &lt;execution&gt;
+            &lt;id&gt;start-jetty&lt;/id&gt;
+            &lt;phase&gt;pre-integration-test&lt;/phase&gt;
+                &lt;goals&gt;
+                &lt;goal&gt;start&lt;/goal&gt;
+            &lt;/goals&gt;
+            &lt;configuration&gt;
+                &lt;daemon&gt;true&lt;/daemon&gt;
+                &lt;scanIntervalSeconds&gt;0&lt;/scanIntervalSeconds&gt;
+            &lt;/configuration&gt;
+        &lt;/execution&gt;
+        &lt;execution&gt;
+            &lt;id&gt;stop-jetty&lt;/id&gt;
+            &lt;phase&gt;post-integration-test&lt;/phase&gt;
+            &lt;goals&gt;
+                 &lt;goal&gt;stop&lt;/goal&gt;
+            &lt;/goals&gt;
+        &lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;
+----
+Here you only need to configure the [parameter]#contextPath# parameter, which is
+the context path to your web application.

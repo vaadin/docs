@@ -1,0 +1,108 @@
+---
+title: Going to production with Spring & Beanstalk
+order: 7
+layout: page
+---
+
+= Going to production with Spring & Beanstalk
+There are many options when looking to deploy your application for production, ranging from in-house to cloud-based solutions.
+
+In the following we'll take a look at how to deploy the Spring version to AWS Elastic Beanstalk (EB).
+
+Beanstalk is part of Amazon Web Services (AWS) and hides a lot of the complexity with provisioning, load balancing, scaling etc, since you do not have to deal with each of these individually. However, since it's part of AWS, you can still take full control of the individual services, if you have specific needs, or as your application grows.
+
+== Getting an Amazon Elastic Beanstalk account
+
+In order to use Amazon Elastic Beanstalk, you need to have a AWS account. Head over to https://aws.amazon.com/elasticbeanstalk to read more about the service, and create an account.
+
+TIP: You will be asked to provide credit-card details before making use of AWS services, but there is a link:https://aws.amazon.com/free[free tier] that allows you to try the service for free. You can also set up a link:http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-alarms.html[billing alarm] to ensure you don't accidentally exceed the free tier limits (or any other spending budget you might have.)
+
+We'll do the following steps
+
+  1. Configure the application for production
+  2. Build a production WAR
+  3. Create an EB application, upload the WAR
+  4. Create a stand-alone production database in EB
+  5. Configure the application to use the production database
+
+== Configuring Vaadin for Production
+When going to production, you want to make sure your Vaadin application is in production mode by setting the following parameter in `application.properties`:
+
+`vaadin.servlet.productionMode=true`
+
+== Configuring a Production Database
+
+To be able to use another database, you first need to add the appropriate JDBC driver as a dependency in `pom.xml`, e.g for MySQL:
+```
+<dependency>
+  <groupId>mysql</groupId>
+  <artifactId>mysql-connector-java</artifactId>
+</dependency>
+```
+Changing the database is covered in more detail in <<changing-database,Changing database>>
+
+When running in EB, the environment provides some variables we can use to configure our database connection in `application.properties`:
+```
+spring.jpa.hibernate.ddl-auto=create
+spring.datasource.url=jdbc:mysql://${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DB_NAME}
+spring.datasource.username=${RDS_USERNAME}
+spring.datasource.password=${RDS_PASSWORD}
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL5Dialect
+```
+
+NOTE: There is a separate `application.production.properties` with these properties pre-configured. We'll configure EB to use that instead of the regular `application.properties` - that way we can have separate production and development properties, and use the embedded database when developing.
+
+== Preparing a Production WAR
+Run `mvn install` to build and package your application into a `.war` -file (it will be placed in the `target` folder).
+
+== Creating an EB Web Application
+To create a new Elastic Beanstalk application, either click "Build a web app" in the AWS main page, know as the "console".
+(You can also find Elastic Beanstalk in the menu and "Create New Application" - the steps will be similar, but not identical.)
+
+image::img/aws-eb-create.png[Creating a EB web application]
+
+Next choose a name for your application, select "tomcat", and "upload your code".
+
+At this point, we can click "Create application", and wait for the environment to start (it can take a while).
+
+Once started, we can go to the URL (available in at the top of the page) and verify our application is working.
+
+image::img/aws-eb-running.png[Application running]
+
+However, at this point the application is still using the internal database.
+
+== Creating a Database for Production
+From the "Configuration" screen we can configure a database in the "Data Tier" -section. We'll "create a new RDS database", choose MySQL, set a master username and password, and go ahead an create the database. This operation can take a while to complete.
+
+image::img/aws-eb-mysql.png[Creating a database]
+
+== Enabling Production Mode
+Once the database is up-and-running, we'll configure our application to use `application.production.properties`, which will enable productionMode and take the production database into use. Go to "Software Configuration" on the "Configuration" screen. You want to set the following in "Environment Properties":
+
+`spring.config.name=application.production`
+
+image::img/aws-eb-props.png[Use production mode properties]
+
+NOTE: The `spring.config.name` -property should not have the `.properties` extension.
+
+When you apply the change, your environment will be restarted with the new configuration.
+
+== Post Production
+Once you have your application up-and-running with a production database, you might wonder how you can see the contents of your database. You can do this with the regular tools you use to connect to MySQL, but by default access is restricted; you need to modify your security realm. AWS provides a handy "My IP" shorthand; after applying, you should be able to connect to the database (note: Elastic Beanstalk uses the database name "ebdb" by default.)
+
+image::img/aws-eb-mysql2.png[Accessing the database remotely]
+
+You may also want to review server logs, especially if you run into problems. You can request and download (view) logs easily from the console:
+
+image::img/aws-eb-logs.png[Accessing the database remotely]
+
+There is a lot more you can do with AWS Elastic Beanstalk and Amazon Web Services in general, and fortunately the link:http://aws.amazon.com/documentation/elasticbeanstalk[official documentation] is very good.
+
+Here are some further topics you might want to review:
+
+* link:https://aws.amazon.com/answers/web-applications/aws-web-app-deployment-java/[Deploying Java web applications on AWS (starting point)]
+* link:https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_Java.html[Working with Java (starting point)]
+* link:https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/customdomains.html[Your domain name]
+* link:https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/configuring-https.html[Configuring HTTPS]
+* link:https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html[Configuring databases]
+* link:https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3.html[EB CLI]

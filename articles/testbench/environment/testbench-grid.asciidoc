@@ -1,0 +1,360 @@
+---
+title: Running Tests in a Distributed Environment
+order: 2
+layout: page
+---
+
+[[testbench.grid]]
+= Running Tests in a Distributed Environment
+
+A distributed test environment consists of a test server, a grid hub and a number of test nodes.
+
+The components of a grid setup are illustrated in
+<<figure.testbench.architecture>>.
+
+[[figure.testbench.architecture]]
+.Vaadin TestBench Grid Setup
+image::img/tt-architecture-simple-lo.png[]
+
+The grid hub is a service that handles communication between the JUnit test runner and the nodes.
+The hub listens to calls from test runners and delegates them to the grid nodes.
+The nodes are services that perform the actual execution of test commands in the browser.
+Different nodes can run on different operating system platforms and have different browsers installed.
+
+The hub requires very little resources, so you would typically run it either in the test server or on one of the nodes.
+You can run the tests, the hub, and one node all in one host, but in a fully distributed setup, you install the Vaadin TestBench components on separate hosts.
+
+Controlling browsers over a distributed setup requires using a remote WebDriver.
+
+[[testbench.grid.remote]]
+== Running Tests Remotely
+
+Remote tests are just like locally executed tests, except instead of using a
+browser driver, you use a remote web driver that can connect to the hub. The hub
+delegates the connection to a grid node with the desired capabilities, that is,
+which browsers are installed in the node.
+
+Instead of creating and handling the remote driver explicitly, as described in
+the following, you can use the [classname]#ParallelTest# framework presented in
+<<dummy/../testbench-parallel#testbench.parallel,"Parallel
+Execution of Tests">>.
+
+An example of remote execution of tests is given in the TestBench demo described
+in
+<<dummy/../../setup/testbench-installation#testbench.installation.examples,"TestBench
+Demo">>. See the [filename]#README.md# file for further instructions.
+
+In the following example, we create and use a remote driver that runs tests in a
+Selenium cloud at [uri]#testingbot.com#. The desired capabilities of a test node
+are described with a [classname]#DesiredCapabilities# object.
+
+
+----
+public class UsingHubITCase extends TestBenchTestCase {
+
+    private String baseUrl;
+    private String clientKey = "INSERT-YOUR-CLIENT-KEY-HERE";
+    private String clientSecret = "INSERT-YOUR-CLIENT-KEY-HERE";
+
+    @Before
+    public void setUp() throws Exception {
+        // Create a RemoteDriver against the hub.
+        // In you local setup you don't need key and secret,
+        // but if you use service like testingbot.com, they
+        // can be used for authentication
+        URL testingbotdotcom = new URL("http://" +
+                clientKey + ":" + clientSecret +
+                "@hub.testingbot.com:4444/wd/hub");
+        setDriver(new RemoteWebDriver(testingbotdotcom,
+                DesiredCapabilities.iphone()));
+        baseUrl = "http://demo.vaadin.com/Calc/";
+    }
+
+    @Test
+    @Ignore("Requires testingbot.com credientials")
+    public void testOnePlusTwo() throws Exception {
+        // run the test just as with "local bots"
+        openCalculator();
+        $(ButtonElement.class).caption("1").first().click();
+        $(ButtonElement.class).caption("+").first().click();
+        $(ButtonElement.class).caption("2").first().click();
+        $(ButtonElement.class).caption("=").first().click();
+        assertEquals("3.0", $(TextFieldElement.class)
+                            .first().getAttribute("value"));
+
+        // Thats it. Services may provide also some other goodies
+        // like the video replay of your test in testingbot.com
+    }
+
+    private void openCalculator() {
+        getDriver().get(baseUrl);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        getDriver().quit();
+    }
+}
+----
+
+Please see the API documentation of the [classname]#DesiredCapabilities# class
+for a complete list of supported capabilities.
+
+Running the example requires that the hub service and the nodes are running.
+Starting them is described in the subsequent sections. Please refer to
+link:http://seleniumhq.org/docs/07_selenium_grid.html[Selenium documentation]
+for more detailed information.
+
+
+[[testbench.grid.hub]]
+== Starting the Hub
+
+The TestBench grid hub listens to calls from test runners and delegates them to
+the grid nodes. The grid hub service is included in the Vaadin TestBench JAR and
+you can start it with the following command:
+
+[subs="normal"]
+----
+[prompt]#$# [command]#java# -jar vaadin-testbench-standalone-4.x.x.jar \
+       -role hub
+----
+You can open the control interface of the hub also with a web browser. Using the
+default port, just open URL [uri]#http://localhost:4444/#. Once you have started
+one or more grid nodes, as instructed in the next section, the "console" page
+displays a list of the grid nodes with their browser capabilities.
+
+
+[[testbench.grid.node-configuration]]
+== Node Service Configuration
+
+Test nodes can be configured with command-line options, as described later, or
+in a configuration file in JSON format. If no configuration file is provided, a
+default configuration is used.
+
+A node configuration file is specified with the [parameter]#-nodeConfig#
+parameter to the node service, for example as follows:
+
+[subs="normal"]
+----
+[prompt]#$# [command]#java# -jar vaadin-testbench-standalone-4.x.x.jar
+       -role node -nodeConfig [parameter]#nodeConfig.json#
+----
+See <<testbench.grid.node>> for further details on starting the node service.
+
+[[testbench.grid.node-configuration.format]]
+=== Configuration File Format
+
+The test node configuration file follows the JSON format, which defines nested
+associative maps. An associative map is defined as a block enclosed in curly
+braces ( [literal]#++{}++#). A mapping is a key-value pair separated with a
+colon ( [literal]#++:++#). A key is a string literal quoted with double quotes (
+[literal]#++"key"++#). The value can be a string literal, list, or a nested
+associative map. A list a comma-separated sequence enclosed within square
+brackets ( [literal]#++[]++#).
+
+The top-level associative map should have two associations:
+[literal]#++capabilities++# (to a list of associative maps) and
+[literal]#++configuration++# (to a nested associative map).
+
+[subs="normal"]
+----
+{
+  "capabilities":
+    [
+      {
+        "browserName": "firefox",
+        ...
+      },
+      ...
+    ],
+  "port": 5555,
+  ...
+}
+----
+A complete example is given later.
+
+
+[[testbench.grid.node-configuration.capabilities]]
+=== Browser Capabilities
+
+The browser capabilities are defined as a list of associative maps as the value
+of the [literal]#++capabilities++# key. The capabilities can also be given from
+command-line using the [parameter]#-browser# parameter, as described in
+<<testbench.grid.node>>.
+
+The keys in the map are the following:
+
+[parameter]#platform#:: The operating system platform of the test node: [literal]#++WINDOWS++#, [literal]#++XP++#, [literal]#++VISTA++#, [literal]#++LINUX++#, or [literal]#++MAC++#.
+[parameter]#browserName#:: A browser identifier, any of: [literal]#++android++#, [literal]#++chrome++#, [literal]#++firefox++#, [literal]#++htmlunit++#, [literal]#++internet explorer++#, [literal]#++iphone++#, [literal]#++opera++#, or [literal]#++phantomjs++# (as of TestBench 3.1).
+[parameter]#maxInstances#:: The maximum number of browser instances of this type open at the same time for parallel testing.
+[parameter]#version#:: The major version number of the browser.
+[parameter]#seleniumProtocol#:: This should be [literal]#++WebDriver++# for WebDriver use.
+[parameter]#firefox_binary#:: Full path and file name of the Firefox executable. This is typically needed if you have Firefox ESR installed in a location that is not in the system path.
+
+
+
+[[testbench.grid.node-configuration.server]]
+=== Server Configuration
+
+The node service configuration is defined as a nested associative map as the
+value of the [literal]#++configuration++# key. The configuration parameters can
+also be given as command-line parameters to the node service, as described in
+<<testbench.grid.node>>.
+
+See the following example for a typical server configuration.
+
+
+[[testbench.grid.node-configuration.example]]
+=== Example Configuration
+
+[subs="normal"]
+----
+{
+  "capabilities":
+    [
+      {
+        "browserName": "firefox",
+        "maxInstances": 5,
+        "seleniumProtocol": "WebDriver",
+        "version": "10",
+        "firefox_binary": "/path/to/firefox10"
+      },
+      {
+        "browserName": "firefox",
+        "maxInstances": 5,
+        "version": "16",
+        "firefox_binary": "/path/to/firefox16"
+      },
+      {
+        "browserName": "chrome",
+        "maxInstances": 5,
+        "seleniumProtocol": "WebDriver"
+      },
+      {
+        "platform": "WINDOWS",
+        "browserName": "internet explorer",
+        "maxInstances": 1,
+        "seleniumProtocol": "WebDriver"
+      }
+    ],
+  "proxy": "org.openqa.grid.selenium.proxy.DefaultRemoteProxy",
+  "maxSession": 5,
+  "port": 5555,
+  "host": ip,
+  "register": true,
+  "registerCycle": 5000,
+  "hubPort": 4444
+}
+----
+
+
+[[testbench.grid.node]]
+== Starting a Grid Node
+
+A TestBench grid node listens to calls from the hub and is capable of opening a
+browser. The grid node service is included in the Vaadin TestBench JAR and you
+can start it with the following command:
+
+[subs="normal"]
+----
+[prompt]#$# [command]#java# -jar \
+       vaadin-testbench-standalone-4.x.x.jar \
+       -role node \
+       -hub [parameter]#http://localhost:4444/grid/register#
+----
+The node registers itself in the grid hub. You need to give the address of the
+hub either with the [parameter]#-hub# parameter or in the node configuration
+file as described in <<testbench.grid.node-configuration>>.
+
+You can run one grid node in the same host as the hub, as is done in the example
+above with the localhost address.
+
+[[testbench.grid.node.os-settings]]
+=== Operating system settings
+
+Make any operating system settings that might interfere with the browser and how it is opened or closed.
+Typical problems include crash handler dialogs.
+
+On Windows, disable error reporting in case a browser crashes as follows:
+
+. Open "Control Panel > System"
+
+. Select the [guilabel]#Advanced# tab
+
+. Select [guilabel]#Error reporting#
+
+. Check that [guilabel]#Disable error reporting# is selected
+
+. Check that [guilabel]#But notify me when critical errors occur# is not selected
+
+[[testbench.grid.node.screenshot-settings]]
+=== Settings for Screenshots
+
+The screenshot comparison feature requires that the user interface of the browser stays constant.
+The exact features that interfere with testing depend on the browser and the operating system.
+
+In general:
+
+* Disable blinking cursor
+
+* Use identical operating system themeing on every host
+
+* Turn off any software that may suddenly pop up a new window
+
+* Turn off screen saver
+
+
+If using Windows and Internet Explorer, you should give also the following setting:
+
+* Turn on [guilabel]#Allow active content to run in files on My Computer# under
+[guilabel]#Security settings#
+
+
+[[testbench.grid.node.browser-capabilities]]
+=== Browser Capabilities
+
+The browsers installed in the node can be defined either with command-line parameters or with a configuration file in JSON format, as described in <<testbench.grid.node-configuration>>.
+
+On command-line, you can issue one or more [parameter]#-browser# options to define the browser capabilities. It must be followed by a comma-separated list of property-value definitions, such as the following:
+
+
+----
+-browser "browserName=firefox,version=10,firefox_binary=/path/to/firefox10" \
+-browser "browserName=firefox,version=16,firefox_binary=/path/to/firefox16" \
+-browser "browserName=chrome,maxInstances=5" \
+-browser "browserName=internet explorer,maxInstances=1,platform=WINDOWS"
+----
+
+The configuration properties are described in
+<<testbench.grid.node-configuration>>.
+
+
+[[testbench.grid.node.browserdriver]]
+=== Browser Driver Parameters
+
+If you use Chrome or Internet Explorer, their remote driver executables must be
+in the system path (in the [literal]#++PATH++# environment variable) or be given
+with a command-line parameter to the node service:
+
+Internet Explorer:: [parameter]#-Dwebdriver.ie.driver=C:\path\to\IEDriverServer.exe#
+Google Chrome:: [parameter]#-Dwebdriver.chrome.driver=/path/to/ChromeDriver#
+
+
+[[testbench.grid.mobile]]
+== Mobile Testing
+
+Vaadin TestBench includes an iPhone and an Android driver, with which you can
+test on mobile devices. The tests can be run either in a device or in an
+emulator/simulator.
+
+The actual testing is just like with any WebDriver, using either the
+[classname]#IPhoneDriver# or the [classname]#AndroidDriver#. The Android driver
+assumes that the hub ( [filename]#android-server#) is installed in the emulator
+and forwarded to port 8080 in localhost, while the iPhone driver assumes port
+3001. You can also use the [classname]#RemoteWebDriver# with either the
+[methodname]#iphone()# or the [methodname]#android()# capability, and specify
+the hub URI explicitly.
+
+The mobile testing setup is covered in detail in the Selenium documentation for
+both the link:http://ios-driver.github.io/ios-driver/[iOS driver] and the
+link:http://selendroid.io/mobileWeb.html[AndroidDriver].

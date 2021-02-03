@@ -1,0 +1,409 @@
+---
+title: Vaadin TestBench Tutorial
+order: 3
+layout: page
+---
+
+[[testbench.tutorial]]
+= TestBench Tutorial
+
+[[testbench.tutorial.introduction]]
+== Introduction
+
+This tutorial shows how to add tests to an existing project, step-by-step.
+As the project to add tests to, we will use the <<dummy/../../framework/tutorial#framework.tutorial.archetype,"Address book tutorial">> (link:https://github.com/vaadin/tutorial[Github]).
+
+In this tutorial, you will learn how to:
+
+* Set the browser driver and open the tested web page.
+* Add TestBench to an existing project.
+* Create a TestBench test case.
+* Identify and select different components using the new ElementQuery API.
+* Interact with different components using the relevant Element API.
+
+The complete source code for the resulting project is available at link:https://github.com/vaadin/testbench-tutorial[].
+
+[[testbench.tutorial.prerequisites]]
+== Prerequisites
+
+To follow along with this tutorial exactly as it is written, you need to have the command line Git and Maven tools as well as a JDK installed.
+You may also follow along using your favorite IDE, but this tutorial does not contain instructions on how to use Maven or Git in your IDE.
+
+[[testbench.tutorial.setup]]
+== Setup
+
+To begin, we need to clone the Vaadin tutorial project from link:https://github.com/vaadin/tutorial[Github].
+Using command line git, you can clone the project by using the following command:
+
+[subs="normal"]
+----
+[command]#git# clone https://github.com/vaadin/tutorial.git
+----
+
+After the repository is cloned on your local machine, make sure that you can run and view it in your browser.
+You can do that by using the `run` goal of the jetty plugin:
+
+[subs="normal"]
+----
+[command]#cd# tutorial
+[command]#mvn# jetty:run
+----
+
+The above command will start a Jetty server and run the application on link: http://localhost:8080/[http://localhost:8080/].
+Go ahead, point your browser to that address and play around with the application for a bit.
+
+When you have finished investigating the Address Book application, you can shut down the Jetty server by pressing kbd:[Ctrl+C] in the terminal where you started it.
+
+[[testbench.tutorial.add-dependency]]
+== Adding TestBench to Your Project
+To start using TestBench, you need to add it as a dependency to your project and install a license key.
+These topics are covered in <<dummy/../../testbench/setup/testbench-installation#testbench.installation.development.maven,"Maven Dependency">>
+and <<dummy/../../testbench/setup/testbench-license#testbench-license,"Installing Vaadin TestBench License">>.
+
+[[testbench.tutorial.first-test]]
+== Creating the First TestBench Test
+
+In the Maven world, all test classes and resources live in the [filename]#src/test# directory, so create that directory.
+Continue by creating a java directory under that so that you end up with a [filename]#src/test/java# directory structure.
+
+Create a new file called [filename]#AddressBookIT.java# in the [filename]#src/test/java# directory.
+
+First, make the class extend [classname]#TestBenchTestCase#:
+
+[source, java]
+----
+import com.vaadin.testbench.TestBenchTestCase;
+...
+
+public class AddressBookIT extends TestBenchTestCase {
+   ...
+}
+----
+
+Extending this base class will provide you with all the Vaadin TestBench API that makes it easy for you to write UI-level tests for Vaadin applications.
+
+We use Firefox driver in the code examples. Make sure you have Firefox installed.
+You also need to install Geckodriver, see see <<dummy/../../testbench/setup/testbench-installation#testbench.installation.browserdrivers,"Installing Browser Drivers">>.
+
+We are now ready to make the empty JUnit test above use Vaadin TestBench.
+Let us start by opening a browser.
+This can be done in a method annotated with [classname]#@Before# method, which is run before each of the tests are run.
+We should also close the browser in the [classname]#@After# method. This way we have a clean browser for each test that is run.
+
+[source, java]
+----
+import org.junit.After;
+import org.junit.Before;
+import org.openqa.selenium.firefox.FirefoxDriver;
+...
+
+public class AddressBookIT extends TestBenchTestCase {
+   @Before
+   public void setUp() throws Exception {
+       setDriver(new FirefoxDriver());
+   }
+
+   @Test
+   public void testFails() {
+       Assert.fail("This is supposed to fail");
+   }
+   @After
+   public void tearDown() throws Exception {
+       getDriver().quit();
+   }
+   ...
+}
+----
+
+TestBench also supports testing applications through other browsers, such as Chrome, Internet Explorer, or even in the headless (doesn’t show any UI) PhantomJS browser by instantiating [classname]#ChromeDriver#, [classname]#InternetExplorerDriver#, or [classname]#PhantomJSDriver#, respectively.
+See <<creatingtests/testbench-testcase#testbench.testcase.webdriver,"Creating and Closing a Web Driver">> on how to run on the different browsers.
+
+[NOTE]
+Before TestBench version 5.0.0, Firefox did not require a web driver setup.
+Since TestBench version 5.0.0, Geckodriver is used to run tests on Firefox.
+Geckodriver requires a separate installation.
+You can run your tests using other browsers.
+All supported browsers require a special driver and some additional setup, see
+<<dummy/../../testbench/setup/testbench-installation#testbench.installation.browserdrivers,"Installing Browser Drivers">>.
+
+[NOTE]
+Geckodriver used for the latest Firefox versions (48 and newer) does not support link:https://github.com/mozilla/geckodriver/issues/159[actions API].
+In practice, meaning that you can not simulate context click and double click in tests.
+It also means that some parts of the Element API just will not work
+It is recommended you use link:https://www.mozilla.org/en-US/firefox/organizations/all/[Firefox 45 ESR] to execute tests on Firefox, before this is fixed.
+See <<dummy/../../testbench/testbench-known-issues#testbench.known-issues.firefox,"Known Issues">> for details.
+
+Run the test with the following command and observe that it opens up a Firefox browser and immediately closes it again.
+
+[subs="normal"]
+----
+[command]#mvn# verify
+----
+
+[[testbench.tutorial.writing-tests.navigating]]
+=== Navigating to a Web Page
+
+Let us change the failing test into something more useful.
+First, we will make it navigate to the URL where our application is running.
+Note that the server needs to be running for any test to work.
+Use the [literal]#mvn jetty:run# command to run it like we did above.
+Rename the [methodname]#testFails()# method to [methodname]#testAddressBook()# and tell the driver to navigate to link:http://localhost:8080/[].
+We will also make the test verify that the application is started by verifying that a table is visible:
+
+[source, java]
+----
+import com.vaadin.testbench.elements.GridElement;
+...
+
+public class AddressBookIT extends TestBenchTestCase {
+   ...
+
+   @Test
+   public void testAddressBook() {
+       getDriver().get("http://localhost:8080/");
+       Assert.assertTrue($(GridElement.class).exists());
+   }
+}
+----
+
+Above, we looked for a Vaadin component on the web page by using an element query, that is, the [literal]#$()# method.
+The argument to this method is an element class corresponding to the element we are searching for.
+After obtaining a basic element query, we can specify additional rules such as [methodname]#.caption(“My Caption”)# or [methodname]#.at(index)#, etc.
+See the <<testbench-overview#testbench.overview,"TestBench chapter">> and especially <<creatingtests/testbench-elementquery,"Querying Elements">> for details.
+
+We are now ready to run the test. Make sure that the application server is up and running.
+If you have not started it yet, issue the [command]#mvn jetty:run# command to start it now and wait for the “Started Jetty server” message to appear in the terminal.
+Once Jetty is running, we can run our test in a different terminal – or even using the run as JUnit command in your favorite IDE.
+It is just a plain JUnit test, after all.
+
+The test should open up a browser, load the application, successfully verify that a table is visible, close the browser, and passe the test.
+Awesome! Now stop the jetty server by pressing kbd:[ctrl+C] in the terminal.
+
+[[testbench.tutorial.build-real-tests]]
+== Build Real Tests
+
+Now we are ready to build real test cases for the Address Book application.
+
+[[testbench.tutorial.data-validation]]
+=== Your First Test - Data Validation
+
+The first test will click the first row in the table and verify that a form containing the same information is shown.
+
+First, create a new test in the [classname]#AddressBookIT# class by copying the [methodname]#testAddressBook()# method and naming it [methodname]#testFormShowsCorrectData()#.
+The test should do the following:
+
+. The contacts are shown using a Vaadin [classname]#Grid# component, so the test should find it using ElementQuery.
+You can use the Vaadin debug window to get an ElementQuery for the Grid component by pointing and clicking as follows:
+
+.. Open the application by navigating to link:http://localhost:8080/?debug[] in your favorite browser.
+ Note the [literal]#?debug# parameter in the URL. Using it causes the debug window to open in the lower right corner of the window
+
+.. In the debug window (see <<figure.testbench.debugscreenshot>>)
+
+... Click on the TestBench icon (1)
+
+... Click on the “targeting” icon (2)
+
+... Click on the Grid component (3)
+
+... An ElementQuery code line will be printed in the debug window.
+
++
+[[figure.testbench.debugscreenshot]]
+.Vaadin Debug Screenshot
+image::img/screenshots/debug-screenshot.png[]
+
+. Store the first name and last name values shown in the first row of the table for later comparison
+
+. Click on the first row
+
+. Assert that the values in the first name and last name fields are the same as in the table
+
+The resulting test looks like this:
+
+[source, java]
+----
+import com.vaadin.testbench.elements.TextFieldElement;
+...
+
+@Test
+public void testFormShowsCorrectData() {
+    getDriver().get("http://localhost:8080/");
+
+    // 1. Find the grid
+    GridElement grid = $(GridElement.class).first();
+
+    // 2. Store the first name and last name values shown
+    // in the first row of the grid for later comparison
+    String firstName = grid.getCell(0, 0).getText();
+    String lastName = grid.getCell(0, 1).getText();
+
+    // 3. Click on the first row
+    grid.getCell(0, 0).click();
+
+    // 4. Assert that the values in the first name and
+    // last name fields are the same as in the grid
+    Assert.assertEquals(firstName, $(FormLayoutElement.class).
+        $(TextFieldElement.class).first().getValue());
+    Assert.assertEquals(lastName, $(FormLayoutElement.class).
+        $(TextFieldElement.class).get(1).getValue());
+    }
+}
+----
+
+Run the test and verify that the build is successful by issuing the [command]#mvn verify# command.
+
+[[testbench.tutorial.data-entry]]
+=== Data Entry
+
+In this second test, we will add a new person, search for this person, and verify that the same data that was entered is shown in the form.
+
+Create a new test in the same class in the same way as earlier when we created our first test. Name this one [methodname]#testEnterNew()#. The steps of this test are the following:
+
+. Click on the [guibutton]#New# button
+
+. Type “Tyler” in the first name field
+
+. Type “Durden” in the last name field
+
+. Save this new contact
+
+. Click on some other row, for example, row 7
+
+. Verify that the same name is not in the fields after selecting some other row
+
+. Click on the first row again
+
+. Verify that the first row and the form contains the new contact
+
+The test should now look as follows:
+
+[source, java]
+----
+import com.vaadin.testbench.elements.ButtonElement;
+...
+
+@Test
+public void testEnterNew() {
+    getDriver().get("http://localhost:8080/");
+
+    // 1. Click the "New contact" button
+    $(ButtonElement.class).caption("Add new customer").first().click();
+
+    // 2. Enter "Tyler" into the first name field
+    $(FormLayoutElement.class).$(TextFieldElement.class).
+        first().setValue("Tyler");
+
+    // 3. Enter "Durden" into the last name field
+    $(FormLayoutElement.class).$(TextFieldElement.class).
+        get(1).setValue("Durden");
+
+    // 4. Save the new contact by clicking "Save" button
+    $(ButtonElement.class).caption("Save").first().click();
+
+    // 5. Click on some other row
+    GridElement table = $(GridElement.class).first();
+    table.getCell(6, 0).click();
+
+    // 6. Assert that the entered name is not in the text
+    // fields any longer
+    Assert.assertNotEquals("Tyler", $(FormLayoutElement.class).
+        $(TextFieldElement.class).first().getValue());
+    Assert.assertNotEquals("Durden", $(FormLayoutElement.class).
+        $(TextFieldElement.class).get(1).getValue());
+
+    // 7. Click on the first row
+    table.getCell(0,0).click();
+
+    // 8. Verify that the first row and form
+    // contain "Tyler Durden"
+    Assert.assertEquals("Tyler",table.getCell(0, 0).getText());
+    Assert.assertEquals("Durden",table.getCell(0, 1).getText());
+    Assert.assertEquals("Tyler", $(FormLayoutElement.class).
+        $(TextFieldElement.class).first().getValue());
+    Assert.assertEquals("Durden", $(FormLayoutElement.class).
+        $(TextFieldElement.class).get(1).getValue());
+}
+----
+
+Again, run the test and verify that the build is successful by issuing the [literal]#mvn verify# command. Not bad!
+
+[[testbench.tutorial.start-server-automatic]]
+=== Start the Server Automatically
+
+You might feel that it is tedious to have to start and stop the jetty server.
+The good news is that Maven can do this for us automatically.
+The 'IT' in the test class name [classname]#AddressBookIT#, marks it as an Integration Test using the conventions of the Failsafe plugin. This results in the test being run in the [literal]#integration-test# phase of the Maven build.
+Next up: adding the Failsafe plugin declaration to the  [filename]#pom.xml# file.
+Open [filename]#pom.xml# and add the following declaration of the Failsafe plugin after the [literal]#<plugins># start tag directly inside of the [literal]#<build></build># tags:
+
+----
+<plugin>
+ <artifactId>maven-failsafe-plugin</artifactId>
+ <version>2.17</version>
+ <executions>
+   <execution>
+     <goals>
+       <goal>integration-test</goal>
+       <goal>verify</goal>
+     </goals>
+   </execution>
+ </executions>
+</plugin>
+----
+
+Next, find the jetty plugin section in the same file and replace it with the following configuration:
+
+----
+<plugin>
+   <groupId>org.eclipse.jetty</groupId>
+   <artifactId>jetty-maven-plugin</artifactId>
+   <version>9.2.3.v20140905</version>
+   <executions>
+       <!-- start and stop jetty (running our app) when
+            running integration tests -->
+       <execution>
+           <id>start-jetty</id>
+           <phase>pre-integration-test</phase>
+           <goals>
+               <goal>start</goal>
+           </goals>
+           <configuration>
+               <scanIntervalSeconds>0</scanIntervalSeconds>
+               <stopKey>STOP</stopKey>
+               <stopPort>8866</stopPort>
+           </configuration>
+       </execution>
+       <execution>
+           <id>stop-jetty</id>
+           <phase>post-integration-test</phase>
+           <goals>
+               <goal>stop</goal>
+           </goals>
+           <configuration>
+               <stopKey>STOP</stopKey>
+               <stopPort>8866</stopPort>
+           </configuration>
+       </execution>
+   </executions>
+</plugin>
+----
+
+Now running all integration tests is as easy as typing:
+
+[subs="normal"]
+----
+[command]#mvn# clean verify
+----
+
+Try it and see that it compiles and packages everything, starts the Jetty server, runs our integration test, and stops the Jetty server.
+The build is still successful.
+
+== Summary
+
+Congratulations! Hopefully you now have a good idea of how to set up a project for tests with Vaadin TestBench and how to write tests.
+Now you can continue with more advanced topics such as:
+
+ * <<dummy/../../testbench/bestpractices/testbench-maintainable#testbench.maintainable,"Creating Maintainable Tests">>
+ * <<dummy/../../testbench/environment/testbench-headless#testbench.headless,"Headless Testing">>
+ * <<dummy/../../testbench/creatingtests/testbench-selectors#testbench.selectors,"Element Selectors">>

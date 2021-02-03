@@ -1,0 +1,164 @@
+---
+title: Querying Elements
+order: 2
+layout: page
+---
+
+[[testbench.elementquery]]
+= Querying Elements
+
+The high-level ElementQuery API allows querying Vaadin components in the browser
+according to their component class type, hierarchy, caption, and other
+properties. Once one or more components are found, they can be interacted upon.
+The query API forms an domain-specific language (DSL), embedded in the
+[classname]#TestBenchTestCase# class.
+
+The basic idea of element queries match elements and return queries, which can
+again be queried upon, until terminated by a terminal query that returns one or
+more elements.
+
+Consider the following query:
+
+
+----
+List<ButtonElement> buttons = $(ButtonElement.class).all();
+----
+
+The query returns a list of HTML elements of all the [classname]#Button#
+components in the UI. Every Vaadin component has its corresponding element
+class, which has methods to interact with the particular component type. We
+could control the buttons found by the query, for example, by clicking them as
+follows:
+
+
+----
+for (ButtonElement b: buttons)
+    b.click();
+----
+
+In the following sub-sections, we look into the details of element queries.
+
+[[testbench.elementquery.debugwindow]]
+== Generating Queries with Debug Window
+
+You can use the debug window to easily generate the element query code to select
+a particular element in the UI. This should be especially useful when starting
+to use TestBench, to get the idea what the queries should be like.
+
+First, enable the debug window with the [literal]#++&debug++# parameter for the
+application, as described in more detail in
+<<dummy/../../../framework/advanced/advanced-debug#advanced.debug,"Debug Mode and
+Window">>. You can interact with the UI in any way you like before generating
+the query code, but we recommend that you proceed by following the sequence in
+which the user would use the UI in each use case, making the queries at each
+step.
+
+Switch to the TestBench tab in the debug window, and enable the pick mode by
+clicking the small button. Now, when you hover the mouse pointer on elements, it
+highlights them, and when you click one, it generates the TestBench element
+query to find the element. Use of the debug window is illustrated in
+<<figure.testbench.elementquery.debugwindow>>.
+
+[[figure.testbench.elementquery.debugwindow]]
+.Using Debug Window to Generate Element Queries
+image::img/debugwindow-select-annotated-lo.png[]
+
+You can select and copy and paste the code from the debug window to your editor.
+To exit the pick mode, click the pick button again.
+
+The debug window feature is available in Vaadin 7.2 and later.
+
+
+[[testbench.elementquery.create]]
+== Querying Elements by Component Type ([methodname]#$#)
+
+The [methodname]#$# method creates an [classname]#ElementQuery# that looks for
+the given element class. The method is available both in
+[classname]#TestBenchTestcase# and [classname]#ElementQuery#, which defines the
+context. The search is done recursively in the context.
+
+
+----
+// Find the first OK button in the UI
+ButtonElement button = $(ButtonElement.class)
+    .caption("OK").first();
+
+// A nested query where the context of the latter
+// component type query is the matching elements
+// - matches the first Label inside the "content" layout.
+LabelElement label = $(VerticalLayoutElement.class)
+    .id("content").$(LabelElement.class).first();
+----
+
+
+[[testbench.elementquery.nonrecursive]]
+== Non-Recursive Component Queries ([methodname]#$$#)
+
+The [methodname]#$$# method creates a non-recursive [classname]#ElementQuery#.
+It is a shorthand for first creating a recursive query with [methodname]#$# and
+then calling [methodname]#recursive(false)# for the query.
+
+
+[[testbench.elementquery.testbenchelement]]
+== Element Classes
+
+((("[classname]#TestBenchElement#")))
+Each Vaadin component has a corresponding element class in TestBench, which
+contains methods for interacting with the particular component. The element
+classes extend [classname]#TestBenchElement#. It implements Selenium
+[interfacename]#WebElement#, so the Selenium element API can be used directly.
+The element classes are distributed in a Vaadin library rather than with
+TestBench, as they must correspond with the Vaadin version used in the
+application.
+
+In addition to components, other Vaadin UI elements such as notifications (see
+<<dummy/../../creatingtests/testbench-special#testbench.special.notifications,"Testing
+Notifications">>) can have their corresponding element class. Add-on libraries
+may also define their custom element classes.
+
+[classname]#TestBenchElement# is a TestBench command executor, so you can always
+use an element to create query in the sub-tree of the element. For example, in
+the following we first find a layout element by its ID and then do a sub-query
+to find the first label in it:
+
+
+----
+VerticalLayoutElement layout =
+    $(VerticalLayoutElement.class).id("content");
+LabelElement label = layout.$(LabelElement.class).first();
+----
+
+
+[[testbench.elementquery.elementquery]]
+== [classname]#ElementQuery# Objects
+
+You can use an [classname]#ElementQuery# object to either make sub-queries to
+refine the query, or use a query terminator to finalize the query and get one or
+more matching elements.
+
+
+[[testbench.elementquery.terminators]]
+== Query Terminators
+
+A query is finalized by a sub-query that returns an element or a collection of
+elements.
+
+[methodname]#first()#:: Returns the first found element.
+
+[methodname]#get()#:: Returns the element by index in the collection of matching elements.
+
+[methodname]#all()#:: Returns a [interfacename]#List# of elements of the query type.
+
+[methodname]#id()#:: Returns the unique element having the given ID. Element IDs must always be
+unique in the web page. It is therefore meaningless to make a complex query to
+match the ID, just matching the element class is enough.
+
+
+
+[[testbench.elementquery.elements]]
+=== Web Elements
+
+A query returns one or more elements extending Selenium [classname]#WebElement#.
+The particular element-specific class offers methods to manipulate the
+associated Vaadin component, while you can also use the lower-level
+general-purpose methods defined in [classname]#WebElement#.

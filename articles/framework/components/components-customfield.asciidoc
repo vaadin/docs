@@ -1,0 +1,83 @@
+---
+title: Composite Fields with CustomField
+order: 34
+layout: page
+---
+
+[[components.customfield]]
+= Composite Fields with CustomField
+
+The [classname]#CustomField# is a way to create composite components as with [classname]#CustomComponent#, except that it implements the [interfacename]#Field# interface and inherits [classname]#AbstractField#, described in <<components-fields#components.fields,"Field Components">>.
+A field allows editing a property value in the data model, and can be bound to data with [classname]#Binder#, as described in <<../datamodel/datamodel-forms#datamodel.forms, "Binding Data to Forms">>.
+
+A composite field class must implement [methodname]#initContent()# method.
+It should return the content composite of the field.
+
+Methods overriding
+[methodname]#setInternalValue()# should call the superclass method.
+
+[[components.customfield.basic]]
+== Basic Use
+
+Let us consider a simple custom switch button component that allows you to click a button to switch it "on" and "off", as illustrated in <<figure.components.customfield.basic>>.
+
+[[figure.components.customfield.basic]]
+.A custom switch button field
+image::img/customfield-basic.png[width=25%, scaledwidth=40%]
+
+The field has [classname]#Boolean# value type, which the [methodname]#getType()# returns.
+In [methodname]#initContent()#, we initialize the button and the layout.
+Notice how we handle user interaction with the button to change the field value.
+We customize the [methodname]#setValue()# method to reflect the state back to the user.
+
+[source, Java]
+----
+public class BooleanField extends CustomField<Boolean> {
+    private final Button button = new Button("Off");
+    private boolean value;
+
+    @Override
+    protected Component initContent() {
+        button.addClickListener(event -> {
+            setValue(!getValue());
+            button.setCaption(getValue() ? "On" : "Off");
+        });
+
+        VerticalLayout layout = new VerticalLayout();
+        layout.addComponent(new Label("Click the button"));
+        layout.addComponent(button);
+        return layout;
+    }
+
+    @Override
+    public Boolean getValue() {
+        return value;
+    }
+
+    @Override
+    protected void doSetValue(Boolean value) {
+        this.value = value;
+        button.setCaption(value ? "On" : "Off");
+    }
+}
+----
+
+We can now use the field in all the normal ways for a field:
+
+[source, Java]
+----
+// Create it
+BooleanField field = new BooleanField();
+
+// It's a field so we can set its value
+field.setValue(new Boolean(true));
+
+// ...and read the value
+Label value = new Label(field.getValue()?
+    "Initially on" : "Initially off");
+
+// ...and handle value changes
+field.addValueChangeListener(event ->
+    value.setValue(field.getValue()?
+        "It's now on" : "It's now off"));
+----

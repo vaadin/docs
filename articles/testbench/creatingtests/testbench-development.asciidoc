@@ -1,0 +1,272 @@
+//---
+//title: Developing JUnit Tests
+//order: 2
+//layout: page
+//---
+
+[[testbench.development]]
+= Developing JUnit Tests
+
+JUnit is a popular unit testing framework for Java development. Most Java IDEs,
+build systems, and continuous integration systems provide support for JUnit.
+However, while we concentrate on the development of JUnit tests in this chapter,
+Vaadin TestBench and the WebDriver are in no way specific to JUnit and you can
+use any test execution framework, or just regular Java applications, to develop
+TestBench tests.
+
+You may want to keep your test classes in a separate source tree in your
+application project, or in an altogether separate project, so that you do not
+have to include them in the web application WAR. Having them in the same project
+may be nicer for version control purposes.
+
+[[testbench.development.basic]]
+== Basic Test Case Structure
+
+A JUnit test case is defined with annotations for methods in a test case class.
+With TestBench, the test case class should extend the
+[classname]#TestBenchTestCase# class, which provides the WebDriver and
+ElementQuery APIs.
+
+
+----
+public class MyTestcase extends TestBenchTestCase {
+----
+
+The basic JUnit annotations used in TestBench testing are the following:
+
+[literal]#++@Rule++#:: You can define certain TestBench parameters and other JUnit rules with the
+[literal]#++@Rule++# annotation.
+
++
+For example, to enable taking screenshots on test failures, as described in
+<<dummy/../../../testbench/creatingtests/testbench-screenshots#testbench.screenshots.failure,"Taking
+Screenshots on Failure">>, you would define:
+
+
++
+----
+@Rule
+public ScreenshotOnFailureRule screenshotOnFailureRule =
+        new ScreenshotOnFailureRule(this, true);
+----
++
+Note that if you use this rule, you must __not__ call
+[methodname]#driver.quit()# in your [literal]#++@After++# method, as the method
+is executed before the screenshot is taken, but the driver must be open to take
+it.
+
+[literal]#++@Before++#:: The annotated method is executed before each test (annotated with
+[literal]#++@Test++#). Normally, you create and set the driver here.
+
+
++
+----
+@Before
+public void setUp() throws Exception {
+    setDriver(new FirefoxDriver());
+}
+----
++
+The driver class should be one of [classname]#FirefoxDriver#,
+[classname]#ChromeDriver#, [classname]#InternetExplorerDriver#,
+[classname]#SafariDriver#, or [classname]#PhantomJSDriver#. Please check
+[classname]#RemoteWebDriver# from API documentation for the current list of
+implementations. Notice that some of the drivers require installing a browser
+driver, as described in
+<<dummy/../../../testbench/setup/testbench-installation#testbench.installation.browserdrivers,"Installing
+Browser Drivers">>.
+
++
+The driver instance is stored in the [literal]#++driver++# property in the test
+case. While you can access the property directly by the member variable, you
+should set it only with the setter.
+
+[literal]#++@Test++#:: Annotates a test method. You normally first open the page and then execute
+commands and make assertions on the content.
+
+
++
+----
+@Test
+public void testClickButton() throws Exception {
+    getDriver().get("http://localhost:8080/myproject");
+
+    // Click the button
+    ButtonElement button = $(ButtonElement.class).
+            caption("Click Me").first();
+    button.click();
+
+    // Check that the label text is correct
+    LabelElement label = $(LabelElement.class).first();
+    assertEquals("Thanks!", label.getText());
+}
+----
++
+Normally, you would define the URL with a variable that is common for all tests,
+and possibly concatenate it with a URI fragment to get to an application state.
+
+[literal]#++@After++#:: After each test is finished, you normally need to quit the driver to close the
+browser.
+
+
++
+----
+@After
+public void tearDown() throws Exception {
+    driver.quit();
+}
+----
++
+However, if you enable grabbing screenshots on failure with the
+[classname]#ScreenshotOnFailureRule#, as described in
+<<dummy/../../testbench/testbench-screenshots#testbench.screenshots.failure,"Taking
+Screenshots on Failure">>, the rules are executed after [literal]#++@After++#,
+but the driver needs to be open when the rule to take the screenshot is
+executed. Therefore, you should not quit the driver in that case. The rule quits
+the driver implicitly.
+
+
+
+You can use any other JUnit features. Notice, however, that using TestBench
+requires that the driver has been created and is still open.
+
+A complete test case could be as follows:
+
+
+----
+import com.vaadin.testbench.ScreenshotOnFailureRule;
+import com.vaadin.testbench.TestBenchTestCase;
+import com.vaadin.testbench.elements.ButtonElement;
+import com.vaadin.testbench.elements.LabelElement;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.openqa.selenium.firefox.FirefoxDriver;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+public class MyprojectTest extends TestBenchTestCase {
+    @Rule
+    public ScreenshotOnFailureRule screenshotOnFailureRule =
+            new ScreenshotOnFailureRule(this, true);
+
+    @Before
+    public void setUp() throws Exception {
+        setDriver(new FirefoxDriver()); // Firefox
+    }
+
+    /**
+     * Opens the URL where the application is deployed.
+     */
+    private void openTestUrl() {
+        getDriver().get("http://localhost:8080/myproject");
+    }
+
+    @Test
+    public void testClickButton() throws Exception {
+        openTestUrl();
+
+        // At first there should be no labels
+        assertFalse($(LabelElement.class).exists());
+
+        // Click the button
+        ButtonElement clickMeButton = $(ButtonElement.class).
+                caption("Click Me").first();
+        clickMeButton.click();
+
+        // There should now be one label
+        assertEquals(1, $(LabelElement.class).all().size());
+
+        // ... with the specified text
+        assertEquals("Thank you for clicking",
+                $(LabelElement.class).first().getText());
+
+        // Click the button again
+        clickMeButton.click();
+
+        // There should now be two labels
+        List<LabelElement> allLabels =
+            $(LabelElement.class).all();
+        assertEquals(2, allLabels.size());
+
+        // ... and the last label should have the correct text
+        LabelElement lastLabel = allLabels.get(1);
+        assertEquals("Thank you for clicking",
+                     lastLabel.getText());
+    }
+}
+----
+
+This test case stub is created by the Vaadin project wizard in Eclipse and by
+the Maven archetype, as described in
+<<dummy/../../testbench/testbench-quickstart#testbench.quickstart,"Quick
+Start">>.
+
+
+[[testbench.development.eclipse]]
+== Running JUnit Tests in Eclipse
+
+The Eclipse IDE integrates JUnit with nice control features, such as running the
+tests in the current test source file. The test results are reported visually in
+the JUnit view in Eclipse.
+
+New Vaadin projects created with the Vaadin Plugin for Eclipse contain the
+TestBench API dependency, as described in
+<<dummy/../../testbench/testbench-quickstart#testbench.quickstart,"Quick
+Start">>, so you can run TestBench tests right away.
+
+To configure an existing project for TestBench testing, you need to do the
+following:
+
+. Include the TestBench API dependency in the project.
+
+.. If using a project created with the Vaadin Plugin for Eclipse, add the TestBench
+API library dependency in [filename]#ivy.xml#. It should be as follows:
+
+
++
+[subs="normal"]
+----
+&lt;dependency org="com.vaadin"
+            name="vaadin-testbench-api"
+            rev="**latest.release**"
+            conf="nodeploy-&gt;default"/&gt;
+----
++
+The TestBench API library provides element classes for Vaadin components, so its
+revision number follows the earliest supported Vaadin release. For old Vaadin
+versions, you can try using the [literal]#++latest.release++# as given above.
+
++
+The project should contain the [literal]#++nodeploy++# configuration, as created
+for new Vaadin projects. See
+<<dummy/../../framework/addons/addons-eclipse#addons.eclipse,"Installing Add-ons
+in Eclipse with Ivy">> for more details.
+
+.. Otherwise, add the [filename]#vaadin-testbench-api# and
+[filename]#vaadin-testbench-core# JARs from the installation package to a
+library folder in the project, such as [filename]#lib#. You should not put the
+library in [filename]#WEB-INF/lib# as it is not used by the deployed Vaadin web
+application. Refresh the project by selecting it and pressing F5.
+
+
+. Right-click the project in Project Explorer and select [guilabel]#Properties#, and open the [guilabel]#Java Build Path# and the [guilabel]#Libraries# tab. Click [guibutton]#Add JARs#, navigate to the library folder, select the library, and click [guibutton]#OK#.
+. Switch to the [guilabel]#Order and Export# tab in the project properties. Make sure that the TestBench JAR is above the [filename]##gwt-dev.jar## (it may contain an old [filename]#httpclient# package), by selecting it and moving it with the [guibutton]#Up# and [guibutton]#Down# buttons.
+. Click [guibutton]#OK# to exit the project properties.
+. Right-click a test source file and select "Run As > JUnit Test".
+
+A JUnit view should appear, and it should open the Firefox browser, launch the
+application, run the test, and then close the browser window. If all goes well,
+you have a passed test case, which is reported in the JUnit view area in
+Eclipse, as illustrated in <<figure.testbench.development.eclipse>>.
+
+[[figure.testbench.development.eclipse]]
+.Running JUnit Tests in Eclipse
+image::img/screenshots/eclipse-junit-run.png[]
+
+If you are using some other IDE, it might support JUnit tests as well. If not,
+you can run the tests using Ant or Maven.

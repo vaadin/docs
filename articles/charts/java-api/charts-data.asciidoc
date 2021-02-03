@@ -10,7 +10,7 @@ layout: page
 Chart data is stored in a data series model that contains information about the
 visual representation of the data points in addition to their values. There are
 a number of different types of series - [classname]#DataSeries#,
-[classname]#ListSeries#, [classname]#HeatSeries#, and
+[classname]#ListSeries#, [classname]#AreaListSeries#, and
 [classname]#RangeSeries#.
 
 [[charts.data.listseries]]
@@ -61,8 +61,8 @@ series.add(new DataSeriesItem(1960, 201485));
 series.add(new DataSeriesItem(1961, 188105));
 series.add(new DataSeriesItem(1962, 177206));
 
-// Modify the radius of one point
-series.get(2).getMarker().setRadius(20);
+// Modify the color of one point
+series.get(2).getMarker().setFillColor(SolidColor.RED);
 conf.addSeries(series);
 ----
 
@@ -277,7 +277,12 @@ series, as shown in <<figure.charts.data.drilldown.drilldown-details>>.
 .Detailed series after a drill-down
 image::img/charts-drilldown-details.png[]
 
-To make use of drill-down, you need to provide the top-level series and all the
+There are two ways to use drill-down: synchronous and asynchronous.
+
+[[charts.data.drilldown.sync]]
+=== Synchronous
+
+When using synchronous drill-down, you provide the top-level series and all the
 series below it beforehand. The data is transferred to the client-side at the
 same time and no client-server communication needs to happen for the drill-down.
 The drill-down series must have an identifier, set with [methodname]#setId()#,
@@ -300,3 +305,38 @@ drillDownSeries.add(new DataSeriesItem("MSIE 9.0", 2.81));
 series.addItemWithDrilldown(mainItem, drillDownSeries);
 ----
 
+
+[[charts.data.drilldown.async]]
+=== Asynchronous
+
+When using asynchronous drill-down, you omit the drill-down series parameter.
+Instead, you provide a callback method with
+[methodname]#Chart.setDrillDownCallback()#. When the user clicks an item in the
+series, the callback is called to provide a drill-down series.
+
+[source, java]
+----
+DataSeries series = new DataSeries();
+
+DataSeriesItem mainItem = new DataSeriesItem("MSIE", 55.11);
+
+series.addItemWithDrilldown(mainItem);
+
+chart.setDrilldownCallback(new DrilldownCallback() {
+    @Override
+    public Series handleDrilldown(DrilldownEvent event) {
+        DataSeries drillDownSeries = new DataSeries("MSIE versions");
+
+        drillDownSeries.add(new DataSeriesItem("MSIE 6.0", 10.85));
+        drillDownSeries.add(new DataSeriesItem("MSIE 7.0", 7.35));
+        drillDownSeries.add(new DataSeriesItem("MSIE 8.0", 33.06));
+        drillDownSeries.add(new DataSeriesItem("MSIE 9.0", 2.81));
+
+        return drillDownSeries;
+    }
+});
+----
+
+You can use the event to decide what kind of series you want to return. The
+event contains, for example, a reference to the item that was clicked. Note that
+the same callback is used for all items. The callback can also return null, which will prevent a drilldown.
