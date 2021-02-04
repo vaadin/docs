@@ -9,7 +9,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs style="width: calc(var(--lumo-size-l) * 9);">
-        <vaadin-tab>Dashboard</vaadin-tab>
+        <vaadin-tab>Dashboards</vaadin-tab>
         <vaadin-tab>Orders</vaadin-tab>
         <vaadin-tab>Customers</vaadin-tab>
         <vaadin-tab>Products</vaadin-tab>

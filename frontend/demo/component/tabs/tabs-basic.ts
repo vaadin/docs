@@ -9,9 +9,9 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs>
-        <vaadin-tab>Tab one</vaadin-tab>
-        <vaadin-tab>Tab two</vaadin-tab>
-        <vaadin-tab>Tab three</vaadin-tab>
+        <vaadin-tab>Details</vaadin-tab>
+        <vaadin-tab>Payment</vaadin-tab>
+        <vaadin-tab>Shipping</vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->
     `;

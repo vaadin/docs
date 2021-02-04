@@ -24,7 +24,7 @@ export class Example extends LitElement {
           <vaadin-tab theme="icon-on-top">
             <a tabindex="-1" target="_self">
               <iron-icon icon="vaadin:dashboard"></iron-icon>
-              Dashboard
+              Dashboards
             </a>
           </vaadin-tab>
           <vaadin-tab theme="icon-on-top">
