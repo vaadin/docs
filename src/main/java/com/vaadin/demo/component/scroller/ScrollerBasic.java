@@ -7,8 +7,6 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -19,6 +17,9 @@ import java.time.LocalDate;
 
 @Route("scroller-basic")
 public class ScrollerBasic extends VerticalLayout {
+
+  public static final String PERSONAL_TITLE_ID = "personal-title";
+  public static final String EMPLOYMENT_TITLE_ID = "employment-title";
 
   public ScrollerBasic() {
     setAlignItems(Alignment.STRETCH);
@@ -42,6 +43,8 @@ public class ScrollerBasic extends VerticalLayout {
 
     Icon arrowLeft = VaadinIcon.ARROW_LEFT.create();
     arrowLeft.setSize("var(--lumo-icon-size-m)");
+    arrowLeft.getElement()
+            .setAttribute("aria-hidden", "true");
     arrowLeft.getStyle()
             .set("box-sizing", "border-box")
             .set("margin-right", "var(--lumo-space-m)")
@@ -55,6 +58,7 @@ public class ScrollerBasic extends VerticalLayout {
     // tag::snippet[]
     // Personal information
     H3 personalTitle = new H3("Personal information");
+    personalTitle.setId(PERSONAL_TITLE_ID);
 
     TextField firstName = new TextField("First name");
     firstName.setWidthFull();
@@ -67,9 +71,11 @@ public class ScrollerBasic extends VerticalLayout {
     birthDate.setWidthFull();
 
     Section personalInformation = new Section(personalTitle, firstName, lastName, birthDate);
+    personalInformation.getElement().setAttribute("aria-labelledby", PERSONAL_TITLE_ID);
 
     // Employment information
     H3 employementTitle = new H3("Employment information");
+    employementTitle.setId(EMPLOYMENT_TITLE_ID);
 
     TextField position = new TextField("Position");
     position.setWidthFull();
@@ -78,6 +84,7 @@ public class ScrollerBasic extends VerticalLayout {
     additionalInformation.setWidthFull();
 
     Section employmentInformation = new Section(employementTitle, position, additionalInformation);
+    employmentInformation.getElement().setAttribute("aria-labelledby", EMPLOYMENT_TITLE_ID);
 
     // NOTE
     // We are using inline styles here to keep the example simple.

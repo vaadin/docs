@@ -63,7 +63,7 @@ export class Example extends LitElement {
       <vaadin-vertical-layout id="container">
         <header>
           <a href="#" aria-label="Go back">
-            <iron-icon icon="vaadin:arrow-left"></iron-icon>
+            <iron-icon icon="vaadin:arrow-left" aria-hidden="true"></iron-icon>
           </a>
           <h2>Edit employee</h2>
         </header>
@@ -73,8 +73,8 @@ export class Example extends LitElement {
           scroll-direction="vertical"
           style="border-bottom: 1px solid var(--lumo-contrast-20pct); padding: var(--lumo-space-m);"
         >
-          <section>
-            <h3>Personal information</h3>
+          <section aria-labelledby="personal-info-title">
+            <h3 id="personal-info-title">Personal information</h3>
             <vaadin-text-field style="width: 100%;" label="First name"></vaadin-text-field>
             <vaadin-text-field style="width: 100%;" label="Last name"></vaadin-text-field>
             <vaadin-date-picker
@@ -83,8 +83,8 @@ export class Example extends LitElement {
               style="width: 100%;"
             ></vaadin-date-picker>
           </section>
-          <section>
-            <h3>Employment information</h3>
+          <section aria-labelledby="employment-info-title">
+            <h3 id="employment-info-title">Employment information</h3>
             <vaadin-text-field style="width: 100%;" label="Position"></vaadin-text-field>
             <vaadin-text-area
               style="width: 100%;"
