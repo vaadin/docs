@@ -25,8 +25,9 @@ vertical.addComponent(new TextField("Street address"));
 vertical.addComponent(new TextField("Postal code"));
 layout.addComponent(vertical);
 ----
+See the http://demo.vaadin.com/book-examples-vaadin7/book#layout.orderedlayout.basic[on-line example, window="_blank"].
 
-You could define it declaratively with the following equivalent design:
+You could define it declaractively with the following equivalent design:
 
 [source, html]
 ----
@@ -36,6 +37,9 @@ You could define it declaratively with the following equivalent design:
   <vaadin-text-field caption="Postal code"/>
 </vaadin-vertical-layout>
 ----
+ifdef::web[]
+See the http://demo.vaadin.com/book-examples-vaadin7/book#layout.orderedlayout.basic[on-line example, window="_blank"].
+endif::web[]
 
 Declarative designs can be crafted by hand, but are most conveniently created
 with the Vaadin Designer.
@@ -68,8 +72,12 @@ to variables in the Java code, as well as optional attributes.
       <vaadin-label><b>Hello!</b> -
                     How are you?</vaadin-label>
 
-      <vaadin-grid _id="mygrid" caption="My Grid"
-                    size-full :expand/>
+      <vaadin-horizontal-layout size-full :expand>
+       <vaadin-tree _id="mytree" caption="My Tree"
+                    width-auto height-full/>
+       <vaadin-table _id="mytable" caption="My Table"
+                     size-full :expand/>
+      </vaadin-horizontal-layout>
     </vaadin-vertical-layout>
   </body>
 </html>
@@ -81,7 +89,7 @@ element.
 
 The above design defines the same UI layout as done earlier with Java code, and
 illustrated in
-<<application-architecture#figure.application.architecture.example,"Simple
+<<dummy/../../../framework/application/application-architecture#figure.application.architecture.example,"Simple
 Hierarchical UI">>.
 
 
@@ -183,8 +191,8 @@ documentation of Vaadin.
 Component properties are directly mapped to the attributes of the HTML elements
 according to the names of the properties. Attributes are written in lower-case
 letters and dash is used for word separation instead of upper-case letters in
-the Java methods, so that [literal]#++placeholder++# attribute is equivalent to
-[methodname]#setPlaceholder()#.
+the Java methods, so that [literal]#++input-prompt++# attribute is equivalent to
+[methodname]#setInputPrompt()#.
 
 For example, the __caption__ property, which you can set with
 [methodname]#setCaption()#, is represented as [literal]#++caption++# attribute.
@@ -195,7 +203,7 @@ classes.
 
 [source, html]
 ----
-<vaadin-text-field caption="Name" placeholder="Enter Name"/>
+<vaadin-text-field caption="Name" input-prompt="Enter Name"/>
 ----
 
 
@@ -240,13 +248,17 @@ component [parameter]#c# is equivalent to calling [methodname]#setExpandRatio(c,
   &lt;!-- Expands to take up all remaining vertical space --&gt;
   &lt;vaadin-horizontal-layout size-full **:expand**&gt;
     &lt;!-- Automatic width - shrinks horizontally --&gt;
-    &lt;vaadin-radio-button-group width-auto height-full/&gt;
+    &lt;vaadin-tree width-auto height-full/&gt;
 
     &lt;!-- Expands horizontally to take remaining space --&gt;
-    &lt;vaadin-grid size-full **:expand**/&gt;
+    &lt;vaadin-table size-full **:expand**/&gt;
   &lt;/vaadin-horizontal-layout&gt;
 &lt;/vaadin-vertical-layout&gt;
 ----
+Again, compare the above declaration to the Java code given in
+<<dummy/../../../framework/application/application-architecture#application.architecture,"Building
+the UI">>.
+
 
 
 [[application.declarative.identifiers]]
@@ -269,7 +281,7 @@ design. This is the recommended way to identifying components.
 
 [source, html]
 ----
-<vaadin-grid _id="mygrid" caption="My Grid"/>
+<vaadin-tree _id="mytree" caption="My Tree"/>
 ----
 
 
@@ -298,24 +310,26 @@ For example, the following class could be used to bind the design given earlier.
 ----
 @DesignRoot
 public class MyViewDesign extends VerticalLayout {
-    RadioButtonGroup<String> myRadioButtonGroup;
-    Grid<String> myGrid;
+    Tree mytree;
+    Table mytable;
 
     public MyViewDesign() {
         Design.read("MyDeclarativeUI.html", this);
 
         // Show some (example) data
-        myCheckBoxGroup.setItems("Venus", "Earth", "Mars");
-        myGrid.setItems(
-            GridExample.generateContent());
+        mytree.setContainerDataSource(
+            TreeExample.createTreeContent());
+        mytable.setContainerDataSource(
+            TableExample.generateContent());
 
         // Some interaction
-        myCheckBoxGroup.addValueChangeListener(event ->
+        mytree.addItemClickListener(event -> // Java 8
             Notification.show("Selected " +
-                event.getValue());
+                event.getItemId()));
     }
 }
 ----
+See the http://demo.vaadin.com/book-examples-vaadin7/book#application.declarative.designroot[on-line example, window="_blank"].
 
 The design root class must match or extend the root element class of the design.
 For example, earlier we had [literal]#++<vaadin-vertical-layout>++# element in the
@@ -325,7 +339,9 @@ HTML file, which can be bound to a class extending [classname]#VerticalLayout#.
 [[application.declarative.composite.using]]
 === Using a Design
 
-You can create and use a declaratively defined component just like any other component.
+The fact that a component is defined declaratively is not visible in its API, so
+you can create and use such it just like any other component.
+
 For example, to use the previously defined design root component as the content
 of the entire UI:
 
@@ -345,7 +361,7 @@ public class DeclarativeViewUI extends UI {
 === Designs in View Navigation
 
 To use a design in view navigation, as described in
-<<../advanced/advanced-navigator#advanced.navigator,"Navigating
+<<dummy/../../../framework/advanced/advanced-navigator#advanced.navigator,"Navigating
 in an Application">>, you just need to implement the [interfacename]#View#
 interface.
 
@@ -368,5 +384,5 @@ navigator.addView(MAINVIEW, new MainView());
 ----
 
 See
-<<../advanced/advanced-navigator#advanced.navigator.pathparam,"Handling
-Path Parameters">> for a complete example.
+<<dummy/../../../framework/advanced/advanced-navigator#advanced.navigator.urifragment,"Handling
+URI Fragment Path">> for a complete example.

@@ -1,0 +1,873 @@
+---
+title: Mobile User Interface Components
+order: 7
+layout: page
+---
+
+[[mobile.components]]
+= Mobile User Interface Components
+
+TouchKit introduces a number of components special to mobile user interfaces to
+give better user interaction and to utilize the special features in mobile
+devices.
+
+[classname]#NavigationView#:: A view with a navigation bar ( [classname]#NavigationBar# for navigating back
+and forth in a [classname]#NavigationManager#.
+
+[classname]#Toolbar#:: A horizontal layout especially for buttons. A sub-component of
+[classname]#TabBarView# or [classname]#NavigationView#.
+
+[classname]#NavigationManager#:: A component container that enables slide animations between the components while
+the server request is being made for the purpose of latency compensation. The
+components are typically [classname]##NavigationView##s or
+[classname]##SwipeView##s.
+
+[classname]#NavigationButton#:: A special button for initiating view change in a [classname]#NavigationManager#
+on the client-side, for the purpose of latency compensation.
+
+[classname]#Popover#:: A floating pop-up frame that can be positioned relative to a component.
+
+[classname]#SwipeView#:: A view for navigating back and forth in a [classname]#NavigationManager# using
+horizontal swipe gestures.
+
+[classname]#Switch#:: A sliding on/off toggle for boolean values.
+
+[classname]#VerticalComponentGroup#:: A vertical layout for grouping components.
+
+[classname]#HorizontalButtonGroup#:: A horizontal layout for grouping especially buttons.
+
+[classname]#TabBarView#:: A tabbed view with a content area on the top and a [classname]#Toolbar# for
+navigating between sub-views on the bottom.
+
+[classname]#EmailField#,[classname]#NumberField#, and[classname]#UrlField#:: Text fields for inputting specifically email addresses, numbers, and URLs,
+respectively, with a specific virtual keyboard.
+
+
+
+The components are detailed in the following subsections.
+
+[[mobile.components.navigationview]]
+== [classname]#NavigationView#
+
+The [classname]#NavigationView# is a layout component that consists of a
+navigation bar and a content area. The content area is scrollable, so there is
+no need to use an inner panel component. In addition, there can be an optional
+toolbar component at the bottom of the view. A [classname]#NavigationView# is
+often used inside a [classname]#NavigationManager# to get view change
+animations.
+
+[[figure.mobile.components.navigationview]]
+.Layout of the [classname]#NavigationView#
+image::img/navigationview-lo.png[]
+
+[classname]#NavigationView# has a full size by default. The content area is
+expanding, so that it takes all the space left over from the navigation bar and
+toolbar.
+
+[[mobile.components.navigationview.navigationbar]]
+=== Navigation Bar
+
+The navigation bar at the top of [classname]#NavigationView# is a separate
+[classname]#NavigationBar# component. It has two component slots, with one on
+the left and one on the right. The caption is displayed in the middle. The
+[classname]#NavigationBar# component can be used independently as well.
+
+When the [classname]#NavigationBar# is used for navigation and you set the
+previous component with [methodname]#setPreviousComponent()#, the left slot is
+automatically filled with a [guibutton]#Back# button. This is done automatically
+if you use the [classname]#NavigationView# inside a
+[classname]#NavigationManager#.
+
+You can get access to the navigation bar component with
+[methodname]#getNavigationBar()# to use its manipulator methods directly, but
+[classname]#NavigationView# also offers some shorthand methods:
+[methodname]#setLeftComponent()#, [methodname]#setRightComponent()#, and a
+setter and a getter for the caption.
+
+
+[[mobile.components.navigationview.toolbar]]
+=== Toolbar
+
+A slot for an optional toolbar is located at the bottom of the
+[classname]#NavigationView#. The toolbar can be any component, but a
+[classname]#Toolbar# component made for this purpose is included in TouchKit. It
+is described in <<mobile.components.toolbar>>. You could also use a
+[classname]#HorizontalLayout# or [classname]#CssLayout#.
+
+You usually fill the tool bar with [classname]#Button# components with an icon
+and no textual caption. You set the toolbar with [methodname]#setToolbar()#.
+
+
+ifdef::web[]
+[[mobile.components.navigationview.css]]
+=== Styling with CSS
+
+
+----
+.v-touchkit-navview { }
+  .v-touchkit-navview-wrapper {}
+  .v-touchkit-navview-toolbar {}
+.v-touchkit-navview .v-touchkit-navview-notoolbar {}
+----
+
+The root element has the [literal]#++v-touchkit-navview++# class. The content
+area is wrapped inside a [literal]#++v-touchkit-navview-wrapper++# element. If
+the view has a toolbar, the toolbar slot has the
+[literal]#++v-touchkit-navview-toolbar++# style, but if not, the top-level
+element has the [literal]#++v-touchkit-navview-notoolbar++# style.
+
+endif::web[]
+
+
+[[mobile.components.toolbar]]
+== [classname]#Toolbar#
+
+The [classname]#Toolbar# is a horizontal layout component intended for
+containing [classname]#Button# components. The toolbar has by default 100%
+horizontal width and a fixed height. The components are spread evenly in the
+horizontal direction. [classname]#Toolbar# is used in a [classname]#TabBarView#,
+as described in <<mobile.components.tabbarview>>.
+
+For a description of the inherited features, please refer to
+<<dummy/../../framework/layout/layout-orderedlayout#layout.orderedlayout,"VerticalLayout
+and HorizontalLayout">>.
+
+ifdef::web[]
+[[mobile.components.toolbar.css]]
+=== Styling with CSS
+
+
+----
+.v-touchkit-toolbar { }
+----
+
+The component has an overall [literal]#++v-touchkit-toolbar++# style.
+
+endif::web[]
+
+
+[[mobile.components.navigationpanel]]
+== [classname]#NavigationManager#
+
+The [classname]#NavigationManager# is a visual effect component that gives
+sliding animation when switching between views. You can register three
+components: the currently displayed component, the previous one on the left, and
+the next component on the right. You can set these components with
+[methodname]#setCurrentComponent()#, [methodname]#setPreviousComponent()#, and
+[methodname]#setNextComponent()#, respectively.
+
+The [classname]#NavigationManager# component is illustrated in
+<<figure.mobile.components.navigationpanel>>.
+
+[[figure.mobile.components.navigationpanel]]
+.[classname]#NavigationManager# with Three [classname]##NavigationView##s
+image::img/navigationpanel-lo.png[]
+
+The navigation manager is important for responsiveness, because the previous and
+next components are cached and the slide animation started before server is
+contacted to load the new next or previous views.
+
+You give the initial view as a parameter for the constructor. Typically, you use
+a navigation manager as the UI content or inside a [classname]#TabBarView#.
+
+
+----
+public class MyUI extends UI {
+    @Override
+    protected void init(VaadinRequest request) {
+        NavigationManager manager =
+               new NavigationManager(new MainView());
+        setContent(manager);
+    }
+}
+----
+
+[[mobile.components.navigationpanel.viewhandling]]
+=== Changing Views
+
+Switching between the views (components) is normally done with predefined
+navigation targets to enhance responsiveness. Clicking a
+[classname]#NavigationButton# or a button in a navigation bar starts navigation
+automatically without a server roundtrip. Swipe gestures are supported with the
+[classname]#SwipeView# component.
+
+Navigation can also be done programmatically with the [methodname]#navigateTo()#
+method. If breadcrumbs are enabled, the current view is also pushed to the
+breadcrumb stack. To navigate back, you can call [methodname]#navigateBack()#,
+which is also called implicitly if a [guibutton]#Back# button is clicked in a
+[classname]#NavigationView#. Also, if navigation is done to the "previous"
+component, [methodname]#navigateBack()# is done implicitly.
+
+When navigation occurs, the current component is moved as the previous or next
+component, according to the direction of the navigation.
+
+
+[[mobile.components.navigationpanel.viewhandling]]
+=== Handling View Changes
+
+While you can put any components in the manager, some special features are
+enabled when using the [classname]#NavigationView#. When a view becomes visible,
+the [methodname]#onBecomingVisible()# method in the view is called. You can
+override it, just remember to call the superclass method.
+
+
+----
+@Override
+protected void onBecomingVisible() {
+    super.onBecomingVisible();
+
+    ...
+}
+----
+
+Otherwise, you can handle navigation changes in the manager with a
+[interfacename]#NavigationListener#. The [parameter]#direction# property tells
+whether the navigation was done forward or backward in the breadcrumb stack,
+that is, whether navigation was done with [methodname]#navigateTo()# or
+[methodname]#navigateBack#. The current component, accessible with
+[methodname]#getCurrentComponent()#, refers to the navigation target component.
+
+
+----
+manager.addNavigationListener(new NavigationListener() {
+    @Override
+    public void navigate(NavigationEvent event) {
+        if (event.getDirection() ==
+                NavigationEvent.Direction.BACK) {
+            // Do something
+            Notification.show("You came back to " +
+                manager.getCurrentComponent().getCaption());
+        }
+    }
+});
+----
+
+
+[[mobile.components.navigationpanel.breadcrump]]
+=== Tracking Breadcrumbs
+
+[classname]#NavigationManager# also handles __breadcrumb__ tracking. The
+[methodname]#navigateTo()# pushes the current view on the top of the breadcrumb
+stack and [methodname]#navigateBack()# can be called to return to the previous
+breadcrumb level.
+
+Notice that calling [methodname]#navigateTo()# with the "previous" component is
+equivalent to calling [methodname]#navigateBack()#.
+
+
+
+[[mobile.components.navigationbutton]]
+== [classname]#NavigationButton#
+
+The [classname]#NavigationButton# is a special version of the regular
+[classname]#Button# component, designed for navigation inside a
+[classname]#NavigationManager# (see <<mobile.components.navigationpanel>>).
+Clicking a navigation button will automatically navigate to the defined target
+view. The view change animation does not need to make a server request first,
+but starts immediately after clicking the button. If you leave the target view
+empty, an empty placeholder view is shown in the animation. The view is filled
+after it gets the content from the server.
+
+A navigation button does not have a particular border by default, because
+multiple navigation buttons are typically used inside a
+[classname]#VerticalComponentGroup# to create menus, as illustrated in
+<<figure.mobile.components.navigationbutton>>.
+
+[[figure.mobile.components.navigationbutton]]
+.[classname]##NavigationButton##s Inside a Vertical Component Group
+image::img/verticalcomponentgroup.png[]
+
+A navigation button has a caption and can have a description and an icon. If not
+given explicitly, the caption is taken from the caption of the navigation view
+if it is initialized before the button. The icon is positioned left of the
+caption, and the description is aligned on the right side of the button.
+
+You can give the target view either in the constructor or with
+[methodname]#setTargetView()#, or create it later by handling the button click.
+
+
+----
+// Button caption comes from the view caption
+box.addComponent(new NavigationButton(new PopoverView()));
+
+// Give button caption explicitly
+box.addComponent(new NavigationButton("Decorated Popover",
+                   new DecoratedPopoverView()));
+----
+
+If the target view is not created or initialized before the button is clicked,
+it does not yet have a caption during the animation. The default is to use the
+button caption as a temporary target view caption, but you can set it explicitly
+with [methodname]#setTargetViewCaption()#. The temporary caption is shown during
+the slide animation and until the content for the view has been received from
+the server. It is then replaced with the proper caption of the view, and you
+normally want to have it the same. The temporary caption is also used as the
+caption of button if it is not given explicitly.
+
+
+----
+
+final NavigationButton navButton = new NavigationButton();
+navButton.setTargetViewCaption("Text Input Fields");
+navButton.addClickListener(
+    new NavigationButtonClickListener() {
+
+    @Override
+    public void buttonClick(NavigationButtonClickEvent event) {
+        navButton.getNavigationManager()
+            .navigateTo(new FieldView());
+    }
+});
+box.addComponent(navButton);
+----
+
+Creating views dynamically this way is recommended to reduce the memory
+footprint.
+
+Notice that the automatic navigation will only work if the button is inside a
+[classname]#NavigationManager# (in a view managed by it). If you just want to
+use the button as a visual element, you can use it like a regular
+[classname]#Button# and handle the click events with a
+[classname]#ClickListener#.
+
+ifdef::web[]
+[[mobile.components.navigationbutton.css]]
+=== Styling with CSS
+
+
+----
+.v-touchkit-navbutton { }
+  .v-touchkit-navbutton-desc { }
+  .v-icon { }
+----
+
+The component has an overall [literal]#++v-touchkit-navbutton++# style. If the
+component description is set with [methodname]#setDescription()#, it is shown in
+a separate [literal]#++<span>++# element with the
+[literal]#++v-touchkit-navbutton-desc++# style. The description has an
+alternative [literal]#++emphasis++# style, as well as a stronger capsule-like
+[literal]#++pill++# style with rounded corners, which you can enable with
+[methodname]#addStyleName()#.
+
+The default style of the navigation button is designed for placing the buttons
+inside a [classname]#VerticalComponentGroup#. It has a different style when it
+is in a [classname]#HorizontalButtonGroup# and when in the left or right slot of
+the [classname]#NavigationBar#.
+
+endif::web[]
+
+
+[[mobile.components.popover]]
+== [classname]#Popover#
+
+[classname]#Popover# is much like a regular Vaadin sub-window, useful for
+quickly displaying some options or a small form related to an action. Unlike
+regular sub-windows, it does not support dragging or resizing by the user. As
+sub-windows usually require a rather large screen size, the [classname]#Popover#
+is most useful for tablet devices. When used on smaller devices, such as phones,
+the [classname]#Popover# automatically fills the entire screen.
+
+[[figure.mobile.components.popover]]
+.[classname]#Popover# in a Phone
+image::img/parking-map-popover.png[]
+
+It is customary to use a [classname]#NavigationView# to have border decorations
+and caption. In the following, we subclass [classname]#Popover# to create the
+content.
+
+
+----
+class DetailsPopover extends Popover {
+    public DetailsPopover() {
+        setWidth("350px");
+        setHeight("65%");
+
+        // Have some details to display
+        VerticalLayout layout = new VerticalLayout();
+        ...
+
+        NavigationView c = new NavigationView(layout);
+        c.setCaption("Details");
+        setContent(c);
+    }
+}
+----
+
+A [classname]#Popover# can be opened relative to a component by calling
+[methodname]#showRelativeTo()#. In the following example, we open the popover
+when a table item is clicked.
+
+
+----
+
+Table table = new Table("Planets", planetData());
+table.addItemClickListener(new ItemClickListener() {
+    @Override
+    public void itemClick(ItemClickEvent event) {
+        DetailsPopover popover = new DetailsPopover();
+
+        // Show it relative to the navigation bar of
+        // the current NavigationView.
+        popover.showRelativeTo(view.getNavigationBar());
+    }
+});
+----
+
+You can also add the [classname]#Popover# to the [classname]#UI# with
+[methodname]#addWindow()#.
+
+A popover is shown in a tablet device as illustrated
+<<figure.mobile.components.popover.tablet>>. In this example, we have a
+[classname]#CssLayout# with some buttons as the popover content.
+
+[[figure.mobile.components.popover.tablet]]
+.[classname]#Popover# in a Tablet Device
+image::img/popover-tablet.png[]
+
+ifdef::web[]
+[[mobile.components.popover.close]]
+=== Closing a Popover
+
+When [parameter]#closable# is enabled in a [classname]#Popover#, as it is by
+default, it can be closed by clicking anywhere outside the popup area. This may
+not be enough if the popover fills the entire screen, in which case the user
+gets stuck. The popover can be closed programmatically by calling
+[methodname]#close()#. You can, for example, add a
+[interfacename]#MouseEvents.ClickListener# to the popover to allow closing it by
+clicking anywhere inside it.
+
+If the popover has editable fields, you may want to have a close button in the
+navigation bar of the [classname]#NavigationView#. In the following example, we
+add a close button to the right slot of the navigation bar (you need to include
+the icon in your theme).
+
+
+----
+class DetailsPopover extends Popover
+      implements Button.ClickListener {
+    public DetailsPopover(Table table, Object itemId) {
+        setWidth("350px");
+        setHeight("65%");
+        Layout layout = new FormLayout();
+        ... create the content ...
+
+        // Decorate with navigation view
+        NavigationView content = new NavigationView(layout);
+        content.setCaption("Details");
+        setContent(content);
+
+        // Have a close button
+        Button close = new Button(null, this);
+        close.setIcon(new ThemeResource("close64.png"));
+        content.setRightComponent(close);
+    }
+
+    public void buttonClick(ClickEvent event) {
+        close();
+    }
+}
+----
+
+endif::web[]
+
+ifdef::web[]
+[[mobile.components.popover.css]]
+=== Styling with CSS
+
+
+----
+.v-touchkit-popover .v-touchkit-fullscreen { }
+  .v-touchkit-popover .v-touchkit-relative { }
+  .v-touchkit-popover .v-touchkit-plain { }
+----
+
+The component has an overall [literal]#++v-touchkit-popover++# style. If
+full-screen, it also has the [literal]#++v-touchkit-fullscreen++# style, if
+positioned relatively it has [literal]#++v-touchkit-relative++#, and if not, the
+[literal]#++v-touchkit-plain++# style.
+
+endif::web[]
+
+
+[[mobile.components.swipeview]]
+== [classname]#SwipeView#
+
+The [classname]#SwipeView# is a wrapper that allows navigating between views by
+swiping them horizontally left or right. The component works together with a
+[classname]#NavigationManager# (see <<mobile.components.swipeview>>) to change
+between the views when swiped, and to animate the change. A
+[classname]#SwipeView# should be an immediate child of the
+[classname]#NavigationManager#, but can contain a [classname]#NavigationView# to
+provide button navigation as well.
+
+Let us have a selection of photographs to browse. We extend
+[classname]#NavigationManager# that creates the slide effect and create actual
+image views dynamically. In the constructor, we create the two first ones.
+
+
+----
+class SlideShow extends NavigationManager
+      implements NavigationListener {
+    String imageNames[] = {"Mercury.jpg", "Venus.jpg",
+        "Earth.jpg", "Mars.jpg", "Jupiter.jpg",
+        "Saturn.jpg", "Uranus.jpg", "Neptune.jpg"};
+    int pos = 0;
+
+    public SlideShow() {
+        // Set up the initial views
+        navigateTo(createView(pos));
+        setNextComponent(createView(pos+1));
+
+        addNavigationListener(this);
+    }
+----
+
+The individual views have a [classname]#SwipeView# and the top.
+
+
+----
+    SwipeView createView(int pos) {
+        SwipeView view = new SwipeView();
+        view.setSizeFull();
+
+        // Use an inner layout to center the image
+        VerticalLayout layout = new VerticalLayout();
+        layout.setSizeFull();
+
+        Image image = new Image(null, new ThemeResource(
+            "planets/" + imageNames[pos]));
+        layout.addComponent(image);
+        layout.setComponentAlignment(image,
+            Alignment.MIDDLE_CENTER);
+
+        view.setContent(layout);
+        return view;
+    }
+----
+
+When the view is swiped to either direction, we need to set the next image in
+that direction dynamically in the [classname]#NavigationManager#.
+
+
+----
+@Override
+public void navigate(NavigationEvent event) {
+    switch (event.getDirection()) {
+        case FORWARD:
+            if (++pos < imageNames.length-1)
+                setNextComponent(createView(pos+1));
+            break;
+        case BACK:
+            if (--pos > 0)
+                setPreviousComponent(createView(pos-1));
+    }
+}
+----
+
+
+[[mobile.components.switch]]
+== [classname]#Switch#
+
+The [classname]#Switch# component is a two-state selector that can be toggled
+either by tapping or sliding and looks like the switch button in Apple iOS. It
+extends [classname]#CheckBox# and has therefore [classname]#Boolean# value type.
+The caption is managed by the containing layout.
+
+
+----
+VerticalComponentGroup group =
+        new VerticalComponentGroup();
+Switch myswitch = new Switch("To be or not to be?");
+myswitch.setValue(true);
+group.addComponent(myswitch);
+----
+
+As with other field components, you can handle value changes with a
+[interfacename]#ValueChangeListener#. Use [methodname]#setImmediate(true)# to
+get them immediately when toggled.
+
+The result is shown in <<figure.mobile.components.switch>>.
+
+[[figure.mobile.components.switch]]
+.[classname]#Switch#
+image::img/switch.png[]
+
+ifdef::web[]
+[[mobile.components.switch.css]]
+=== Styling with CSS
+
+
+----
+.v-touchkit-switch { }
+  .v-touchkit-switch-slider { }
+----
+
+The component has an overall [literal]#++v-touchkit-switch++# style. The slider
+element has [literal]#++v-touchkit-switch-slider++# style.
+
+endif::web[]
+
+
+[[mobile.components.verticalcomponentgroup]]
+== [classname]#VerticalComponentGroup#
+
+The [classname]#VerticalComponentGroup# is a layout component for grouping
+components in a vertical stack with a border. Component captions are placed left
+of the components, and the components are aligned right. The component group is
+typically used for forms or with [classname]#NavigationButton# to create
+navigation menus.
+
+
+----
+VerticalComponentGroup group =
+    new VerticalComponentGroup("TouchKit Components");
+group.setWidth("100%");
+
+// Navigation to sub-views
+group.addComponent(new NavigationButton(
+    new PopoverView()));
+group.addComponent(new NavigationButton(
+    new DecoratedPopoverView()));
+
+layout.addComponent(box);
+----
+
+The result is shown in <<figure.mobile.components.verticalcomponentgroup>>.
+
+[[figure.mobile.components.verticalcomponentgroup]]
+.[classname]#VerticalComponentGroup#
+image::img/verticalcomponentgroup.png[]
+
+ifdef::web[]
+[[mobile.components.verticalcomponentgroup.css]]
+=== Styling with CSS
+
+
+----
+.v-touchkit-verticalcomponentgroup { }
+----
+
+The component has an overall [literal]#++v-touchkit-verticalcomponentgroup++#
+style. If the component has a caption, the [literal]#++v-touchkit-has-caption++#
+style is added.
+
+endif::web[]
+
+
+[[mobile.components.horizontalbuttongroup]]
+== [classname]#HorizontalButtonGroup#
+
+The [classname]#HorizontalButtonGroup# is intended for grouping buttons inside
+the slots of a [classname]#VerticalComponentGroup# with a special button group
+style.
+
+
+----
+VerticalComponentGroup vertical =
+        new VerticalComponentGroup();
+vertical.addComponent(new TextField("Name"));
+
+HorizontalButtonGroup buttons =
+        new HorizontalButtonGroup();
+buttons.addComponent(new Button("OK"));
+buttons.addComponent(new Button("Cancel"));
+vertical.addComponent(buttons);
+----
+
+The result is shown in <<figure.mobile.components.horizontalbuttongroup>>
+
+[[figure.mobile.components.horizontalbuttongroup]]
+.[classname]#HorizontalButtonGroup#
+image::img/horizontalbuttongroup.png[]
+
+You can also make single buttons prettier by wrapping them in the component.
+Also the [classname]#Upload# component has a button, and you can give it the
+[literal]#++v-button++# style to make it look like a button would in the group
+
+ifdef::web[]
+, as is done in
+<<dummy/../../touchkit/mobile-features#mobile.features.upload,"Uploading
+Content">>
+endif::web[]
+.
+
+Despite the name, and the fact that the button group is intended for buttons,
+you can, in fact, put any components inside it. Whether the result is
+meaningful, depends on the component.
+
+ifdef::web[]
+[[mobile.components.horizontalbuttongroup.css]]
+=== Styling with CSS
+
+
+----
+.v-touchkit-horizontalbuttongroup { }
+----
+
+The component has an overall [literal]#++v-touchkit-horizontalbuttongroup++#
+style. As noted above, the TouchKit style sheet includes special rules for
+components that have the [literal]#++v-button++# style inside the group.
+
+endif::web[]
+
+
+[[mobile.components.tabbarview]]
+== [classname]#TabBarView#
+
+The [classname]#TabBarView# is a layout component that consist of a tab bar at
+the bottom of the screen and a content area. Each tab has a content component
+which is displayed when the tab is selected.
+
+[[figure.mobile.components.tabbarview]]
+.[classname]#TabBar# with Four [classname]##NavigationView##s
+image::img/parking-tabs-lo.png[]
+
+[classname]#TabBarView# implements [interfacename]#ComponentContainer#, but uses
+its own specialized API for monipulating tabs. To add a new tab, you need to
+call [methodname]#addTab()# with the content component. It creates the tab and
+returns a [classname]#Tab# object for managing it. You should set at least the
+caption and icon for a tab.
+
+
+----
+TabBarView bar = new TabBarView();
+
+// Create some Vaadin component to use as content
+Label content = new Label("Really simple content");
+
+// Create a tab for it
+Tab tab = bar.addTab(label);
+
+// Set tab name and/or icon
+tab.setCaption("tab name");
+tab.setIcon(new ThemeResource(...));
+----
+
+A tab can be removed with [methodname]#removeTab()#. Note that the
+[interfacename]#ComponentContainer# methods [methodname]#addComponent()# and
+[methodname]#removeComponent()# will throw an
+[classname]#UnsupportedOperationException# if used.
+
+ifdef::web[]
+[[mobile.components.tabbarview.selection]]
+=== Changing Tab Selection
+
+Current tab selection can be accessed with [methodname]#getSelectedTab()# and
+set with [methodname]#setSelectedTab()#. Changing tab selection either by the
+user or programmatically causes a [interfacename]#SelectedTabChangeEvent#, which
+you can handle with a [interfacename]#SelectedTabChangeListener#.
+
+
+----
+Tab selectedTab = bar.getSelectedTab();
+bar.setSelectedTab(selectedTab);
+----
+
+endif::web[]
+
+ifdef::web[]
+[[mobile.components.tabbarview.css]]
+=== Styling with CSS
+
+
+----
+.v-touchkit-tabbar {}
+.v-touchkit-tabbar-wrapper {}
+.v-touchkit-tabbar-toolbar {} 
+----
+
+The component has overall [literal]#++v-touchkit-tabbar++# style. Content area
+is wrapped inside a [literal]#++v-touchkit-tabbar-wrapper++# element. Tab bar
+control area itself has the [literal]#++v-touchkit-tabbar-toolbar++# style.
+
+endif::web[]
+
+
+[[mobile.components.emailfield]]
+== [classname]#EmailField#
+
+The [classname]#EmailField# is just like the regular [classname]#TextField#,
+except that it has automatic capitalization and correction turned off. Mobile
+devices also recognize the field as an email field and can offer a virtual
+keyboard for the purpose, so that it includes the at ( [literal]#++@++#) and
+period ( [literal]#++.++#) characters, and possibly a shorthand for
+[literal]#++.com++#.
+
+[[figure.mobile.components.emailfield]]
+.[classname]#EmailField# while editing
+image::img/emailfield.png[]
+
+ifdef::web[]
+[[mobile.components.emailfield.css]]
+=== Styling with CSS
+
+
+----
+.v-textfield {}
+.v-textfield.v-textfield-error {}
+----
+
+The [classname]#EmailField# has an overall [literal]#++v-textfield++# style,
+just like a regular [classname]#TextField# component would. It will get also the
+[literal]#++v-textfield-error++# if there is a component error, for example,
+from failed validation.
+
+endif::web[]
+
+
+[[mobile.components.numberfield]]
+== [classname]#NumberField#
+
+The [classname]#NumberField# is just like the regular [classname]#TextField#,
+except that it is marked as a numeric input field for mobile devices, so that
+they will show a numeric virtual keyboard rather than the default alphanumeric.
+
+[[figure.mobile.components.emailfield]]
+.[classname]#NumberField# while editing
+image::img/numberfield.png[]
+
+ifdef::web[]
+[[mobile.components.numberfield.css]]
+=== Styling with CSS
+
+
+----
+.v-textfield {}
+.v-textfield.v-numberfield-error {}
+----
+
+The [classname]#NumberField# has an overall [literal]#++v-textfield++# style,
+just like a regular [classname]#TextField# component would. It will get also the
+[literal]#++v-numberfield-error++# if there is a component error, for example,
+from failed validation.
+
+endif::web[]
+
+
+[[mobile.components.urlfield]]
+== [classname]#UrlField#
+
+The [classname]#UrlField# is just like the regular [classname]#TextField#,
+except that it is marked as a URL input field for mobile devices, so that they
+will show a URL input virtual keyboard rather than the default alphanumeric. It
+has convenience methods [methodname]#getUrl()# and [methodname]#setUrl(URL url)#
+for converting input value from and to java.net.URL.
+
+ifdef::web[]
+[[mobile.components.urlfield.css]]
+=== Styling with CSS
+
+
+----
+.v-textfield {}
+.v-textfield.v-textfield-error {}
+----
+
+The [classname]#UrlField# has an overall [literal]#++v-textfield++# style, just
+like a regular [classname]#TextField# component would.
+
+endif::web[]
+
+
+
+

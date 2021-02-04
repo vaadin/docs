@@ -1,0 +1,459 @@
+---
+title: Advanced Mobile Features
+order: 8
+layout: page
+---
+
+[[mobile.features]]
+= Advanced Mobile Features
+
+[[mobile.features.fallback]]
+== Providing a Fallback UI
+
+You may need to use the same URL and hence the same servlet for both the mobile
+TouchKit UI and for regular browsers. In this case, you need to recognize the
+mobile browsers compatible with Vaadin TouchKit and provide a fallback UI for
+any other browsers. The fallback UI can be a regular Vaadin UI, a "Sorry!"
+message, or a redirection to an alternate user interface.
+
+You can handle the fallback logic in a custom [classname]#UIProvider# that
+creates the UIs in the servlet. As TouchKit supports only WebKit and Windows
+Phone browsers, you can do the recognition by checking if the
+[parameter]#user-agent# string contains the sub-strings " [literal]#++webkit++#"
+or " [literal]#++windows phone++#" as follows:
+
+
+----
+public class MyUIProvider extends UIProvider {
+    @Override
+    public Class<? extends UI>
+              getUIClass(UIClassSelectionEvent event) {
+        String ua = event.getRequest()
+                .getHeader("user-agent").toLowerCase();
+        if (   ua.toLowerCase().contains("webkit")
+            || ua.toLowerCase().contains("windows phone 8")
+            || ua.toLowerCase().contains("windows phone 9")) {
+            return MyUI.class;
+        } else {
+            return MyFallbackUI.class;
+        }
+    }
+}
+----
+
+The custom UI provider has to be added in a custom servlet class, which you need
+to define in the [filename]#web.xml#, as described in
+<<dummy/../../touchkit/mobile-elements#mobile.elements.settings,"TouchKit
+Settings">>. For example, as follows:
+
+
+----
+public class MyServlet extends TouchKitServlet {
+    private MyUIProvider uiProvider = new MyUIProvider();
+
+    @Override
+    protected void servletInitialized() throws ServletException {
+        super.servletInitialized();
+
+        getService().addSessionInitListener(
+                new SessionInitListener() {
+            @Override
+            public void sessionInit(SessionInitEvent event)
+                    throws ServiceException {
+                event.getSession().addUIProvider(uiProvider);
+            }
+        });
+
+        ... other custom servlet settings ...
+    }
+}
+----
+
+See the Parking Demo for a working example.
+
+
+[[mobile.features.geolocation]]
+== Geolocation
+
+The geolocation feature in TouchKit allows receiving the geographical location
+from the mobile device. The browser will ask the user to confirm that the web
+site is allowed to get the location information. Tapping [guibutton]#Share
+Location# gives the permission. The browser will give the position acquired by
+GPS, cellular positioning, or Wi-Fi positioning, as enabled in the device.
+
+Geolocation is requested by calling the static [methodname]#detect()# method in
+[classname]#Geolocator#. You need to provide a [classname]#PositionCallback#
+handler that is called when the device has an answer for your request. If the
+geolocation request succeeds, [methodname]#onSuccess()# is called. Otherwise,
+for example, if the user did not allow sharing of his location,
+[methodname]#onFailure()# is called. The geolocation data is provided in a
+[classname]#Position# object.
+
+
+----
+Geolocator.detect(new PositionCallback() {
+    public void onSuccess(Position position) {
+        double latitude  = position.getLatitude();
+        double longitude = position.getLongitude();
+        double accuracy  = position.getAccuracy();
+
+        ...
+    }
+
+    public void onFailure(int errorCode) {
+        ...
+    }
+});
+----
+
+The position is given as degrees with fractions in the WGS84 coordinate system
+used by GPS. The longitude is positive to East and negative to West of the prime
+meridian of WGS84. The accuracy is given in meters. In addition to the above
+data, the following are also provided:
+
+* Altitude
+* Altitude accuracy
+* Heading
+* Speed
+
+If any of the position data is unavailable, its value will be zero.
+
+The [methodname]#onFailure()# is called if the positioning fails for some
+reason. The [parameter]#errorCode# explains the reason. Error 1 is returned if
+the permission was denied, 2 if the position is unavailable, 3 on positioning
+timeout, and 0 on an unknown error.
+
+Notice that geolocation can take significant time, depending on the location
+method used by the device. With Wi-Fi and cellular positioning, the time is
+usually less than 30 seconds. With unassisted GPS, it can reach 15 minutes on a
+fresh device and even longer if the reception is bad. However, once a location
+fix has been made, updates to the location will be faster. If you are making
+navigation software, you need to update the position data fairly frequently by
+calling the [methodname]#detect()# method in [classname]#Geolocator# multiple
+times.
+
+ifdef::web[]
+[[mobile.features.geolocation.map]]
+=== Displaying Position on a Map
+
+Geographical positions are often visualized with a map. There are countless ways
+to do that, for example, in the Parking Demo we use the
+link:http://vaadin.com/directory#addon/v-leaflet[V-Leaflet] add-on component.
+
+Notice that the geolocation gives the position in the WGS84 coordinate system
+used by GPS. The same system is conveniently used by many Internet map services,
+but is not in any way universal. Further, in some countries, map data is legally
+required to have erroneus coordinates.
+
+The [classname]#MapView# in the Parking Demo is a TouchKit navigation view that
+uses the [classname]#LMap# component from the add-on to display the map:
+
+
+----
+public class MapView extends CssLayout
+      implements PositionCallback, LeafletClickListener {
+    private LMap map;
+    private final LMarker you = new LMarker();
+    ...
+----
+
+Position is requested from the device when a button is clicked:
+
+
+----
+locatebutton = new Button("", new ClickListener() {
+    @Override
+    public void buttonClick(final ClickEvent event) {
+        Geolocator.detect(MapView.this);
+    }
+});
+locatebutton.addStyleName("locatebutton");
+locatebutton.setWidth(30, Unit.PIXELS);
+locatebutton.setHeight(30, Unit.PIXELS);
+locatebutton.setDisableOnClick(true);
+addComponent(locatebutton);
+----
+
+When TouchKit gets the position, we center the map as follows:
+
+
+----
+@Override
+public void onSuccess(final Position position) {
+    ParkingUI app = ParkingUI.getApp();
+    app.setCurrentLatitude(position.getLatitude());
+    app.setCurrentLongitude(position.getLongitude());
+
+    setCenter();
+
+    // Enable centering on current position manually
+    locatebutton.setEnabled(true);
+}
+
+private void setCenter() {
+    if (map != null)
+        map.setCenter(you.getPoint());
+}
+----
+
+endif::web[]
+
+
+[[mobile.features.localstorage]]
+== Storing Data in the Local Storage
+
+The [classname]#LocalStorage# UI extension allows storing data in the HTML5
+local storage from the server-side application. The storage is a singleton,
+which you can get with [methodname]#LocalStorage.get()#.
+
+
+----
+final LocalStorage storage = LocalStorage.get();
+----
+
+[[mobile.features.localstorage.storing]]
+=== Storing Data
+
+You can store data in the local storage as key-value pairs with the
+[methodname]#put()# method. Both the key and value must be strings. Storing the
+data requires a client round-trip, so the success or failure of the store
+operation can be handled with an optional [interfacename]#LocalStorageCallback#.
+
+
+----
+// Editor for the value to be stored
+final TextField valueEditor = new TextField("Value");
+valueEditor.setNullRepresentation("");
+layout.addComponent(valueEditor);
+
+Button store = new Button("Store", new ClickListener() {
+    @Override
+    public void buttonClick(ClickEvent event) {
+        storage.put("value", valueEditor.getValue(),
+                    new LocalStorageCallback() {
+            @Override
+            public void onSuccess(String value) {
+                Notification.show("Stored");
+            }
+
+            @Override
+            public void onFailure(FailureEvent error) {
+                Notification.show("Storing Failed");
+            }
+        });
+    }
+}));
+layout.addComponent(store);
+----
+
+
+[[mobile.features.localstorage.retrieving]]
+=== Retrieving Data from the Storage
+
+You can retrieve data from the local storage with the [methodname]#get()#
+method. It takes the key and a [interfacename]#LocalStorageCallback# to receive
+the retrieved value, or a failure. Retrieving the value to the server-side
+requires a client rount-trip and another server request is made to send the
+value with the callback.
+
+
+----
+storage.get("value", new LocalStorageCallback() {
+    @Override
+    public void onSuccess(String value) {
+        valueEditor.setValue(value);
+        Notification.show("Value Retrieved");
+    }
+
+    @Override
+    public void onFailure(FailureEvent error) {
+        Notification.show("Failed because: " +
+                          error.getMessage());
+    }
+});
+----
+
+
+
+ifdef::web[]
+[[mobile.features.upload]]
+== Uploading Content
+
+Uploading content from a mobile device works just like with regular Vaadin
+applications using the [classname]#Upload# component.
+
+In an offline UI or client-side code in general, you need to handle uploading
+differently, using a special upload widget or handler.
+
+ifdef::web[]
+[[mobile.features.upload.server-side]]
+=== Server-Side [classname]#Upload# Component
+
+In a server-side UI, you can use the regular [classname]#Upload# component
+described in
+<<dummy/../../framework/components/components-upload#components.upload,"Upload">>.
+When choosing a file, the device will ask to select the file from files,
+gallery, camera, or other possible sources, depending on the device. The only
+difference to normal use is that the upload component must be in __immediate__
+mode.
+
+Uploading is supported by most mobile operating systems, such as iOS, Android,
+and Windows RT devices, but not in some, such as WP8.
+
+The following example shows how to implement simple upload to an in-memory
+storage.
+
+
+----
+// Display the image - only a placeholder first
+final Image image = new Image();
+image.setWidth("100%");
+image.setVisible(false);
+layout.addComponent(image);
+
+// Implement both receiver that saves upload in a file and
+// listener for successful upload
+class ImageUploader implements Receiver, SucceededListener,
+                               ProgressListener {
+    final static int maxLength = 10000000;
+    ByteArrayOutputStream fos = null;
+    String filename;
+    Upload upload;
+
+    public ImageUploader(Upload upload) {
+        this.upload = upload;
+    }
+
+    public OutputStream receiveUpload(String filename,
+                                      String mimeType) {
+        this.filename = filename;
+        fos = new ByteArrayOutputStream(maxLength + 1);
+        return fos; // Return the output stream to write to
+    }
+
+    @Override
+    public void updateProgress(long readBytes,
+                               long contentLength) {
+        if (readBytes > maxLength) {
+            Notification.show("Too big content");
+            upload.interruptUpload();
+        }
+    }
+
+    public void uploadSucceeded(SucceededEvent event) {
+        // Show the uploaded file in the image viewer
+        image.setSource(new StreamResource(new StreamSource() {
+            @Override
+            public InputStream getStream() {
+                byte[] bytes = fos.toByteArray();
+                return new ByteArrayInputStream(bytes);
+            }
+        }, filename));
+
+        image.setVisible(true);
+    }
+};
+
+Upload upload = new Upload();
+ImageUploader uploader = new ImageUploader(upload);
+upload.setReceiver(uploader);
+upload.addSucceededListener(uploader);
+upload.setImmediate(true); // Only button
+
+// Wrap it in a button group to give better style
+HorizontalButtonGroup group = new HorizontalButtonGroup();
+group.addComponent(upload);
+layout.addComponent(group);
+----
+
+The result is shown in <<figure.mobile.features.upload>> (©2001 Marko Grönroos).
+
+[[figure.mobile.features.upload]]
+.Mobile Upload
+image::img/upload.png[]
+
+endif::web[]
+
+ifdef::web[]
+[[mobile.features.upload.client-side]]
+=== Upload on the Client-Side
+
+When making a client-side widget that handles file upload, such as for offline
+mode, you can use the GWT
+link:http://www.gwtproject.org/javadoc/latest/com/google/gwt/user/client/ui/FileUpload.html[component].
+In such case, you need to communicate the image data to the server with an RPC
+call.
+
+On a mobile device, the perhaps most common upload task is to capture images
+with the integrated camera. To display them in the client-side UI correctly, you
+want make sure that they have reasonable size and correct orientation, without
+making a server round-trip to do the corrections. To send them to the server,
+you want to avoid using too much bandwidth. The [classname]#ImageUpload# widget
+included in the [literal]#++lib-gwt-imageupload++# add-on,
+link:https://vaadin.com/directory#addon/lib-gwt-imageupload[available from
+Vaadin Directory], allows launching the camera application in the device and
+capturing an image. It further allows defining an image manipulation pipeline
+with transformations to reduce the image size if necessary, correct the
+orientation according to EXIF data, and so forth. The corrected image is loaded
+to a memory buffer, which you can display in another widget, send to the server,
+or store in the local store.
+
+In the following, we allow capturing an image with the camera, normalize the
+image and reduce its size, and reduce the size further for displaying it in a
+thumbnail. Notice that the image data is encoded as a URL, which can be used as
+such in CSS, for example.
+
+
+----
+final ImageUpload fileUpload = new ImageUpload();
+
+// Have a separate button to initiate the upload
+final VButton takePhotoButton = new VButton();
+takePhotoButton.addClickHandler(new ClickHandler() {
+    @Override
+    public void onClick(ClickEvent event) {
+        fileUpload.click();
+    }
+});
+
+// Capture images from the camera, instead of allowing to
+// choose from gallery or other sources.
+fileUpload.setCapture(true);
+
+// Normalize the orientation and make size suitable for
+// sending to server
+EXIFOrientationNormalizer normalizer =
+        new EXIFOrientationNormalizer();
+normalizer.setMaxWidth(1024);
+normalizer.setMaxHeight(1024);
+fileUpload.addImageManipulator(normalizer);
+fileUpload.addImageLoadedHandler(new ImageLoadedHandler() {
+    @Override
+    public void onImageLoaded(ImageLoadedEvent event) {
+        // Store the image data as encoded URL
+        setImage(event.getImageData().getDataURL());
+    }
+});
+
+// Reduce the size further for displaying a thumbnail
+ImageTransformer thumbGenerator = new ImageTransformer();
+thumbGenerator.setImageDataSource(fileUpload);
+thumbGenerator.setMaxWidth(75);
+thumbGenerator.setMaxHeigth(75);
+thumbGenerator.addImageLoadedHandler(new ImageLoadedHandler() {
+   @Override
+   public void onImageLoaded(ImageLoadedEvent event) {
+       // Store the thumbnail image data as encoded URL
+       setThumbnail(event.getImageData().getDataURL());
+   }
+});
+----
+
+See the Parking Demo for more details about the usage of the add-on.
+
+endif::web[]
+
+endif::web[]
+
+
+

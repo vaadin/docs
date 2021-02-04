@@ -36,14 +36,14 @@ To start off, we need to create a new project where we can add the charts.
 For more details on this topic, please refer to <<charts-installing.asciidoc#, "Installing Vaadin Charts">> and link:../../framework/addons/addons-overview.html[Vaadin Add-ons].
 
 Here we use Maven to set up a project, using the command-line.
-You can then be import the project into your IDE.
+You can then import the project into your IDE.
 You can use the IDE to generate a new maven project using the `vaadin-archetype-application` archetype, but in the following example we do it on command-line.
 
 [subs="normal"]
 ----
 [prompt]#+++$+++# [command]#mvn# archetype:generate -DarchetypeGroupId=com.vaadin \
  -DarchetypeArtifactId=vaadin-archetype-application \
- -DarchetypeVersion=[replaceable]#8.0.0#
+ -DarchetypeVersion=[replaceable]#7.7.6#
 ----
 
 [NOTE]
@@ -102,9 +102,9 @@ Add the following dependency declaration just before the end tag (`</dependencie
 ----
 ...
    <dependency>
-      <groupId>com.vaadin</groupId>
+      <groupId>com.vaadin.addon</groupId>
       <artifactId>vaadin-charts</artifactId>
-      <version>4.0.5</version>
+      <version>3.2.0</version>
    </dependency>
 </dependencies>
 ...
@@ -315,38 +315,42 @@ layout.addComponent(getWeatherChart(data));
 ----
 
 As the temperature data is supposed to be shown as a line chart, we can start in much the same way as the shoe size chart, with just a few differences.
-This time, we use a different kind of data series object, a [classname]#DataProviderSeries#, and configure the X-axis to be a date/time axis.
+This time, we use a different kind of data series object, a [classname]#ContainerDataSeries#, and configure the X-axis to be a date/time axis.
 The result looks as follows:
 
 [source,java]
 ----
 private Chart getWeatherChart(ChartsData data) {
-  Chart chart = new Chart();
-  Configuration conf = chart.getConfiguration();
-  conf.setTitle("Turku, Finland 2013");
+   Chart chart = new Chart();
+   Configuration conf = chart.getConfiguration();
+   conf.setTitle("Turku, Finland 2013");
 
-  conf.getChart().setType(ChartType.LINE);
-  ListDataProvider<WeatherInfo> dataProvider = new ListDataProvider<>(data.getWeatherData());
-  DataProviderSeries<WeatherInfo> temp = new DataProviderSeries<>(dataProvider);
+   conf.getChart().setType(ChartType.LINE);
 
-  temp.setName("Temperature");
-  temp.setX(WeatherInfo::getInstant);
-  temp.setY(WeatherInfo::getMaxTemp);
-  conf.addSeries(temp);
+   BeanItemContainer<WeatherInfo> weatherContainer =
+           new BeanItemContainer<WeatherInfo>(
+                   WeatherInfo.class, data.getWeatherData());
 
-  conf.getxAxis().setTitle("Date");
-  conf.getxAxis().setType(AxisType.DATETIME);
-  conf.getyAxis().setTitle("Temperature (°C)");
-  return chart;
+   ContainerDataSeries temp =
+       new ContainerDataSeries(weatherContainer);
+   temp.setName("Temperature");
+   temp.setXPropertyId("date");
+   temp.setYPropertyId("maxTemp");
+
+   conf.addSeries(temp);
+   conf.getxAxis().setTitle("Date");
+   conf.getxAxis().setType(AxisType.DATETIME);
+   conf.getyAxis().setTitle("Temperature (°C)");
+   return chart;
 }
 ----
 
 Let us look a little closer at the new series type.
-The [classname]#DataProviderSeries# is bound to a normal [interfacename]#DataProvider# from Vaadin Framework.
-In this case, we create a [classname]#ListDataProvider# that contains [classname]#WeatherInfo# beans.
-We then create a [classname]#DataProviderSeries# instance, set the name of the series, and define the functions used for retrieving the X and Y data.
-In this case, the value returned from a call to the [methodname]#getInstant()# method in [classname]#WeatherInfo# will be used as the value of X for each data point.
-Similarly, the value returned by calling [methodname]#getMaxTemp()# will be used as the value of Y.
+The [classname]#ContainerDataSeries# is bound to a normal [interfacename]#Container# from Vaadin Framework.
+In this case, we create a [classname]#BeanItemContainer# that contains [classname]#WeatherInfo# beans.
+We then create a [classname]#ContainerDataSeries# instance, set the name of the series, and define the IDs of the properties that hold the X and Y data.
+In this case, the property ID [parameter]#date# will cause the value returned from a call to the [methodname]#getDate()# method in [classname]#WeatherInfo# to be used as the value of X for each data point.
+Similarly, the [parameter]#maxTemp# property ID will cause the value returned by calling [methodname]#getMaxTemp()# to be used as the value of Y.
 
 Configuring the X-axis should be fairly self-explanatory.
 It just sets the title and type of the axis.
@@ -359,16 +363,16 @@ Awesome! We are well on our way.
 
 Let us continue by adding the humidity data to the chart.
 For this set of data, we want to show it using columns instead of lines, which can be done by configuring suitable plot options for the series.
-We will use the same provider bound to a new [classname]#DataProviderSeries# to provide the data:
+We will use the same container bound to a new [classname]#ContainerDataSeries# to provide the data:
 
 [source,java]
 ----
-ListDataProvider<WeatherInfo> dataProvider = new ListDataProvider<>(weatherInfo);
-DataProviderSeries<WeatherInfo> humidity = new DataProviderSeries<>(dataProvider);
-
+ContainerDataSeries humidity =
+    new ContainerDataSeries(weatherContainer);
 humidity.setName("Humidity");
-humidity.setX(WeatherInfo::getInstant);
-humidity.setY(WeatherInfo::getMeanHumidity);
+humidity.setXPropertyId("date");
+humidity.setYPropertyId("meanHumidity");
+
 humidity.setPlotOptions(new PlotOptionsColumn());
 conf.addSeries(humidity);
 ----
@@ -402,42 +406,44 @@ The final method should look something as follows:
 [source,java]
 ----
 private Chart getWeatherChart(ChartsData data) {
-  Chart chart = new Chart();
-  Configuration conf = chart.getConfiguration();
-  conf.setTitle("Turku, Finland 2013");
+   Chart chart = new Chart();
+   Configuration conf = chart.getConfiguration();
+   conf.setTitle("Turku, Finland 2013");
 
-  conf.getChart().setType(ChartType.LINE);
+   conf.getChart().setType(ChartType.LINE);
 
-  ListDataProvider<WeatherInfo> dataProvider = new ListDataProvider<>(data.getWeatherData());
+   BeanItemContainer<WeatherInfo> weatherContainer =
+      new BeanItemContainer<WeatherInfo>(
+          WeatherInfo.class, data.getWeatherData());
 
-  DataProviderSeries<WeatherInfo> temp = new DataProviderSeries<>(dataProvider);
+   ContainerDataSeries temp =
+      new ContainerDataSeries(weatherContainer);
+          temp.setName("Temperature");
+          temp.setXPropertyId("date");
+          temp.setYPropertyId("maxTemp");
 
-  temp.setName("Temperature");
-  temp.setX(WeatherInfo::getInstant);
-  temp.setY(WeatherInfo::getMaxTemp);
+   conf.getxAxis().setTitle("Date");
+   conf.getxAxis().setType(AxisType.DATETIME);
+   conf.getyAxis().setTitle("Temperature (°C)");
 
-  conf.getxAxis().setTitle("Date");
-  conf.getxAxis().setType(AxisType.DATETIME);
-  conf.getyAxis().setTitle("Temperature (°C)");
+   ContainerDataSeries humidity =
+      new ContainerDataSeries(weatherContainer);
+   humidity.setName("Humidity");
+   humidity.setXPropertyId("date");
+   humidity.setYPropertyId("meanHumidity");
+   humidity.setPlotOptions(new PlotOptionsColumn());
 
-  DataProviderSeries<WeatherInfo> humidity = new DataProviderSeries<>(dataProvider);
+   conf.addSeries(humidity);
+   conf.addSeries(temp);
 
-  humidity.setName("Humidity");
-  humidity.setX(WeatherInfo::getInstant);
-  humidity.setY(WeatherInfo::getMeanHumidity);
-  humidity.setPlotOptions(new PlotOptionsColumn());
+   YAxis humidityYAxis = new YAxis();
+   humidityYAxis.setTitle("Humidity (%)");
+   humidityYAxis.setMin(0);
+   humidityYAxis.setOpposite(true);
+   conf.addyAxis(humidityYAxis);
+   humidity.setyAxis(humidityYAxis);
 
-  conf.addSeries(humidity);
-  conf.addSeries(temp);
-
-  YAxis humidityYAxis = new YAxis();
-  humidityYAxis.setTitle("Humidity (%)");
-  humidityYAxis.setMin(0);
-  humidityYAxis.setOpposite(true);
-  conf.addyAxis(humidityYAxis);
-  humidity.setyAxis(humidityYAxis);
-
-  return chart;
+   return chart;
 }
 ----
 
@@ -448,14 +454,24 @@ Restart, refresh, and enjoy a better looking chart!
 One issue remains.
 Drawing the chart is a bit slow, because of the huge amount of data packed into it.
 To make it more efficient, we need to downsample the data in some way.
-For very simple downsampling, we can use the Vaadin DataProvider filtering API.
+For very simple downsampling, we can use the Vaadin container filtering API.
 Try something like the following filter to show only the values for each Sunday:
 
 [source,java]
 ----
-dataProvider.addFilter(point -> {
-  LocalDateTime date = LocalDateTime.ofInstant(point.getInstant(), ZoneId.of("Europe/Helsinki"));
-  return date.getDayOfWeek() == DayOfWeek.SUNDAY;
+weatherContainer.addContainerFilter(new Filter() {
+   @Override
+   public boolean passesFilter(Object o, Item item)
+                    throws UnsupportedOperationException {
+       Date date = (Date)item.getItemProperty("date")
+                             .getValue();
+       return date.getDay() == 0;
+   }
+
+  @Override
+   public boolean appliesToProperty(Object o) {
+       return "date".equals(o);
+   }
 });
 ----
 

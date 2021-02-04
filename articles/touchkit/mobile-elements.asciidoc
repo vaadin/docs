@@ -1,0 +1,434 @@
+---
+title: Elements of a TouchKit Application
+order: 6
+layout: page
+---
+
+[[mobile.elements]]
+= Elements of a TouchKit Application
+
+At minimum, a TouchKit application requires a UI class, which is defined in a
+deployment descriptor, as usual for Vaadin applications. You usually define a
+servlet class, where you can also do some TouchKit-specific configuration. You
+may also need to have a custom theme. These and other tasks are described in the
+following subsections.
+
+[[mobile.elements.servlet]]
+== The Servlet Class
+
+When using a Servlet 3.0 compatible application server, you usually define the
+UI and make basic configuration with a servlet class with the
+[literal]#++@WebServlet++# annotation. Vaadin Plugin for Eclipse creates the
+servlet class as a static inner class of the UI class, while the Maven archetype
+creates it as a separate class, which is usually the preferred way.
+
+The servlet class must define the UI class as usual. Additionally, you can
+configure the following TouchKit features in the servlet class:
+
+* Customize bookmark or home screen icon
+* Customize splash screen image
+* Customize status bar in iOS
+* Use special web app mode in iOS
+* Provide a fallback UI ( <<dummy/../../touchkit/mobile-features#mobile.features.fallback,"Providing a Fallback UI">>)
+* Enable offline mode
+
+A custom servlet should normally extend the [classname]#TouchKitServlet#. You
+should place your code in [methodname]#servletInitialized()# and call the super
+method in the beginning.
+
+
+----
+public class MyServlet extends TouchKitServlet {
+    @Override
+    protected void servletInitialized() throws ServletException {
+        super.servletInitialized();
+
+        ... customization ...
+    }
+}
+----
+
+If you need to rather extend some other servlet, possibly in another add-on, it
+should be trivial to reimplement the functionality of
+[classname]#TouchKitServlet#, which is just to manage the TouchKit settings
+object.
+
+If using [filename]#web.xml# deployment descriptor instead of the
+[classname]#@WebServlet#, you only need to implement custom servlet class if you
+need to do any of the above configuration, which you typically need to do.
+
+
+[[mobile.elements.webxml]]
+== Defining Servlet and UI with [filename]#web.xml# Deployment Descriptor
+
+If using an old style [filename]#web.xml# deployment descriptor, you need to
+define the special [classname]#TouchKitServlet# class instead of the regular
+[classname]#VaadinServlet# in the [filename]#web.xml# deployment descriptor.
+Often you need to make some configuration or add special logic in a custom
+servlet, as described in the previous section, in which case you need to define
+your servlet in the deployment descriptor.
+
+[subs="normal"]
+----
+&lt;servlet&gt;
+  &lt;servlet-name&gt;Vaadin UI Servlet&lt;/servlet-name&gt;
+  &lt;servlet-class&gt;
+    **com.vaadin.addon.touchkit.server.TouchKitServlet**
+  &lt;/servlet-class&gt;
+  &lt;init-param&gt;
+    &lt;description&gt;Vaadin UI class to start&lt;/description&gt;
+    &lt;param-name&gt;ui&lt;/param-name&gt;
+    &lt;param-value&gt;**com.example.myapp.MyMobileUI**&lt;/param-value&gt;
+  &lt;/init-param&gt;
+&lt;/servlet&gt;
+----
+
+[[mobile.elements.settings]]
+== TouchKit Settings
+
+TouchKit has a number of settings that you can customize for your needs. The
+[classname]#TouchKitSettings# configuration object is managed by
+[classname]#TouchKitServlet#, so if you make any modifications to it, you need
+to implement a custom servlet, as described earlier.
+
+
+----
+public class MyServlet extends TouchKitServlet {
+    @Override
+    protected void servletInitialized() throws ServletException {
+        super.servletInitialized();
+
+        TouchKitSettings s = getTouchKitSettings();
+        ...
+    }
+}
+----
+
+The settings include special settings for iOS devices, which are contained in a
+separate [classname]#IosWebAppSettings# object, available from the TouchKit
+settings with [methodname]#getIosWebAppSettings()#.
+
+[[mobile.elements.settings.icons]]
+=== Application Icons
+
+The location bar, bookmarks, and other places can display an icon for the web
+application. You can set the icon, or more exactly icons, in an
+[classname]#ApplicationIcons# object, which manages icons for different
+resolutions. The most properly sized icon for the context is used. iOS devices
+prefer icons with 57×57, 72×72, and 144×144 pixels, and Android devices 36×36,
+48×48, 72×72, and 96×96 pixels.
+
+You can add an icon to the application icons collection with
+[methodname]#addApplicationIcon()#. You can acquire the base URL for your
+application from the servlet context, as shown in the following example.
+
+
+----
+TouchKitSettings s = getTouchKitSettings();
+String contextPath = getServletConfig()
+    .getServletContext().getContextPath();
+s.getApplicationIcons().addApplicationIcon(
+    contextPath + "VAADIN/themes/mytheme/icon.png");
+----
+
+The basic method just takes the icon name, while the other one lets you define
+its size. It also has a [parameter]#preComposed# parameter, which when true,
+instructs Safari from adding effects to the icon in iOS.
+
+
+[[mobile.elements.settings.viewport]]
+=== Viewport Settings
+
+The [classname]#ViewPortSettings# object, which you can get from the TouchKit
+settings with [methodname]#getViewPortSettings()#, manages settings related to
+the display, most importantly the scaling limitations.
+
+
+----
+TouchKitSettings s = getTouchKitSettings();
+ViewPortSettings vp = s.getViewPortSettings();
+vp.setViewPortUserScalable(true);
+...
+----
+
+See the link:http://developer.apple.com/library/safari/[Safari Development
+Library] at the Apple developer's site for more details regarding the
+functionality in the iOS browser.
+
+
+[[mobile.elements.settings.splash]]
+=== Startup Image for iOS
+
+iOS browser supports a startup (splash) image that is shown while the
+application is loading. You can set it in the [classname]#IosWebAppSettings#
+object with [methodname]#setStartupImage()#. You can acquire the base URL for
+your application from the servlet context, as shown in the following example.
+
+
+----
+TouchKitSettings s = getTouchKitSettings();
+String contextPath = getServletConfig().getServletContext()
+    .getContextPath();
+s.getIosWebAppSettings().setStartupImage(
+    contextPath + "VAADIN/themes/mytheme/startup.png");
+----
+
+
+[[mobile.elements.settings.webapp]]
+=== Web App Capability for iOS
+
+iOS supports a special web app mode for bookmarks added and started from the
+home screen. With the mode enabled, the client may, among other things, hide the
+browser's own UI to give more space for the web application. The mode is enabled
+by a header that tells the browser whether the application is designed to be
+used as a web application rather than a web page.
+
+
+----
+TouchKitSettings s = getTouchKitSettings();
+s.getIosWebAppSettings().setWebAppCapable(true);
+----
+
+See the link:http://developer.apple.com/library/safari/[Safari Development
+Library] at the Apple developer's site for more details regarding the
+functionality in the iOS browser.
+
+
+[[mobile.elements.settings.cache]]
+=== Cache Manifest
+
+The [classname]#ApplicationCacheSettings# object manages the cache manifest,
+which is used to configure how the browser caches the page and other resources
+for the web app. See <<dummy/../../touchkit/mobile-offline#mobile.offline,"Offline
+Mode">> for more details about its use.
+
+
+
+[[mobile.elements.ui]]
+== The UI
+
+Mobile UIs extend the [classname]#UI# class as usual and construct the user
+interface from components.
+
+
+----
+@Theme("mobiletheme")
+@Widgetset("com.example.myapp.MyAppWidgetSet")
+@Title("My Simple App")
+public class SimplePhoneUI extends UI {
+    @Override
+    protected void init(VaadinRequest request) {
+        // Create the content root layout for the UI
+        TabBarView mainView = new TabBarView();
+        setContent(mainView);
+
+        ...
+    }
+}
+----
+
+As TouchKit comes with a custom widget set, you need to use a combining widget
+set for your project, defined with the [literal]#++@Widgetset++# annotation for
+the UI. The combining widget set descriptor is automatically generated by the
+Vaadin Plugin for Eclipse and in Maven when you install or define the TouchKit
+add-on.
+
+Most commonly, you will use a combination of the major three TouchKit components
+as the basis of the UI: [classname]#TabBarView#, [classname]#NavigationView#, or
+[classname]#NavigationManager#.
+
+If a offline UI is provided, it needs to be enabled in the initialization of the
+UI, as described in <<dummy/../../touchkit/mobile-offline#mobile.offline,"Offline
+Mode">>. This code is included in the project stub created by the Maven
+archetype.
+
+
+[[mobile.elements.widgetset]]
+== Mobile Widget Set
+
+TouchKit includes a widget set and therefore requires compiling a project widget
+set that includes it, as described in
+<<dummy/../../framework/addons/addons-overview.asciidoc#addons.overview,"Using
+Vaadin Add-ons">>. The project widget set descriptor is automatically generated
+during the compilation process, whether you use Maven or the Eclipse plugin.
+
+Note that if you have a TouchKit UI in the same project as a non-TouchKit UI,
+you probably do not want to compile the TouchKit widget set into its widget set.
+As the automatic generation of the descriptor includes all the widget sets that
+it finds from the class path, the result can be unwanted, and you need to edit
+the widget set descriptor manually.
+
+
+[[mobile.elements.theme]]
+== Mobile Theme
+
+You can use both Sass and CSS themes for TouchKit applications, although they
+are defined a bit differently from regular Vaadin themes. To optimize how a
+theme is loaded, you can build it into a GWT client bundle.
+
+[[mobile.elements.theme.css]]
+=== Defining a Regular Theme
+
+Using plain CSS is often the easiest way to define a simple theme for a mobile
+application, as using Sass would not yield all the same benefits as in a regular
+Vaadin application. TouchKit includes its own base theme in its widget set, so
+you do not need to [literal]#++@import++# it explicitly.
+
+A CSS theme is defined in a file located at
+[filename]#VAADIN/themes/mymobiletheme/styles.css#. As importing the base does
+not need to (and should not) be done, it could simply be as follows:
+
+
+----
+.stylishlabel {
+    color: red;
+    font-style: italic;
+}
+----
+
+You need to set the theme with the [literal]#++@Theme("mymobiletheme")++#
+annotation for your UI class, as usual.
+
+You can also use Sass by creating a [filename]#styles.scss# and then compiling
+it to CSS with the Vaadin theme compiler. However, as above, you should not
+include a base theme. The rules do not need to be wrapped in a selector with the
+theme name, as is recommended for regular Vaadin themes.
+
+
+[[mobile.elements.theme.responsive]]
+=== Responsive Mobile Themes
+
+The responsive extension is especially useful for mobile layouts, as it makes it
+easy to adapt a layout for phones and tablets and for changing the screen
+orientation. With the extension, changing the UI layout according to screen
+orientation is handled entirely on the client-side by the add-on, using special
+CSS selectors in the theme. See
+<<dummy/../../framework/themes/themes-responsive#themes.responsive,"Responsive
+Themes">> for details.
+
+The Parking Demo uses the extension. From its source code, which is available at
+Github, you can learn how the conditional selectors are used in the
+link:https://github.com/vaadin/parking-demo/tree/master/src/main/resources/com/vaadin/demo/parking/widgetset/client/theme[CSS
+defined in a GWT client bundle].
+
+For example, the CSS for the [guilabel]#Stats# tab in the Parking demo defines a
+responsive selector as follows, to allow fitting two charts side-by-side if
+there is enough room horizontally:
+
+
+----
+.stats .statschart {
+    margin-bottom: 30px;
+    float: left;
+    width: 100%;
+}
+
+.v-ui[width-range~="801px-"] .stats .statschart {
+    width: 48% !important;
+    margin: 0 1%;
+}
+----
+
+Normally, if there's 800 pixels or less space horizontally, each chart takes
+100% of the screen width, causing the second one to wrap to the next line in the
+containing [classname]#CssLayout#. If there is more space, the two charts are
+shown in 48% width, so that both can fit in the same line.
+
+ifdef::web[]
+This follows the flexible wrapping pattern described in
+<<dummy/../../framework/themes/themes-responsive#themes.responsive.wrap,"Flexible
+Wrapping">>.
+endif::web[]
+
+
+[[mobile.elements.theme.gwt]]
+=== Defining a Theme in a GWT Client Bundle
+
+Using a GWT theme instead of a regular Vaadin theme offers several performance
+benefits on mobile devices by reducing the number of resources loaded
+separately. All the resources, such as images and stylesheets, can be loaded
+with the widget set. Images can be handled as sprites tiled in bundle images.
+
+The GWT CSS classes have their own special format, a bit similar to Sass themes.
+See
+link:https://developers.google.com/web-toolkit/doc/latest/DevGuideClientBundle[GWT
+Developer's Guide for detailed information about client bundles] and how to
+define image, CSS, and other resources.
+
+To use a GWT client bundle in a TouchKit application, you need to define a
+__theme loader__ that extends the TouchKit [classname]#ThemeLoader# and
+implements the [methodname]#load()# method to inject the bundle. The theme
+loader and the client bundle are a client-side classes that are compiled into
+the widget set, and must therefore be defined under the [filename]#client#
+directory.
+
+For example, in the Parking Demo we have as follows:
+
+
+----
+public class ParkingThemeLoader extends ThemeLoader {
+    @Override
+    public final void load() {
+        // First load the default TouchKit theme...
+        super.load();
+
+        // ... and add Parking Demo CSS from its own bundle
+        ParkingBundle.INSTANCE.fontsCss().ensureInjected();
+        ParkingBundle.INSTANCE.css().ensureInjected();
+        ParkingBundle.INSTANCE.ticketsCss().ensureInjected();
+        ParkingBundle.INSTANCE.statsCss().ensureInjected();
+        ParkingBundle.INSTANCE.shiftsCss().ensureInjected();
+        ParkingBundle.INSTANCE.mapCss().ensureInjected();
+    }
+}
+----
+
+You can call [methodname]#super.load()# to load the default TouchKit theme, but
+you can omit the call if you do not want to use it. In such case, your GWT theme
+should import the Vaadin base theme explicitly.
+
+The theme loader must be defined in the [filename]#.gwt.xml# widget set
+descriptor as follows:
+
+[subs="normal"]
+----
+&lt;replace-with
+    class="**com.vaadin.demo.parking.widgetset.client.theme.ParkingThemeLoader**"&gt;
+    &lt;when-type-is
+        class="com.vaadin.addon.touchkit.gwt.client.ThemeLoader" /&gt;
+&lt;/replace-with&gt;
+----
+See the Parking Demo sources for a complete example of defining a GWT theme.
+
+
+
+[[mobile.elements.icons]]
+== Using Font Icons
+
+You can use font icons, as described in
+<<dummy/../../framework/themes/themes-fonticon#themes.fonticon,"Font Icons">>,
+also with most TouchKit components.
+
+[[figure.mobile.elements.icons]]
+.Font Icons in [classname]#TabBarView#
+image::img/fonticons.png[]
+
+For example, as is done in the UI stub of a TouchKit project created from the
+Maven archetype:
+
+
+----
+// Have a tab bar with multiple tab views
+TabBarView tabBarView = new TabBarView();
+
+// Have a tab
+... create view1 ...
+Tab tab1 = tabBarView.addTab(view1);
+
+// Use the "book" icon for the tab
+tab1.setIcon(FontAwesome.BOOK);
+----
+
+
+
+

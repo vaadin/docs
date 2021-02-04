@@ -1,0 +1,146 @@
+---
+title: Building an Optimized Widget Set
+order: 10
+layout: page
+---
+
+[[mobile.optimization]]
+= Building an Optimized Widget Set
+
+Mobile networks are generally somewhat slower than DSL Internet connections.
+When starting a Vaadin application, the widget set is the biggest resource that
+needs to be loaded in the browser. As most of the Vaadin components are not used
+by most applications, especially mobile ones, it is beneficial to create an
+optimized version of the widget set.
+
+Vaadin supports lazy loading of individual widget implementations when they are
+needed. The [classname]#TouchKitWidgetSet# used in TouchKit applications
+optimizes the widgetset to only download the most essential widgets first and
+then load other widget implementation lazily. This is a good compromise for most
+TouchKit applications. Nevertheless, because of the high latency of most mobile
+networks, loading the widget set in small pieces might not be the best solution
+for every case. With custom optimization, you can create a monolithic widget set
+stripped off all unnecessary widgets. Together with proper GZip compression, is
+should be quite light-weight for mobile browsers.
+
+However, if the application has big components which are rarely used or not on
+the initial views, it may be best to load those widgets eagerly or lazily.
+
+You can find a working example of widget set optimization in the
+[filename]#ParkingWidgetset.gwt.xml# and [filename]#WidgetLoaderFactory.java# in
+the Parking Demo sources.
+
+ifdef::web[]
+[[mobile.optimization.widgetmap]]
+== Generating the Widget Map
+
+You can fine-tune a widget set by using a custom [classname]#WidgetMapGenerator#
+implementation. The generator class should extend
+[classname]#TouchKitBundleLoaderFactory# and override its
+[methodname]#getConnectorsForWidgetset()# method. The method returns the
+connector classes of the widgets used in the widget set.
+
+The list of used connectors (and their widgets) can be built manually if you
+know what components you use in your application. You can also, for example, use
+a debugger to dig into the [classname]#CommunicationManager# class in Vaadin,
+which opens all the views of the running application. It contains a set of all
+components that have been used so far.
+
+In Parking Demo, we first build a list of the connector class names in the
+constructor as follows:
+
+
+----
+
+public class WidgetLoaderFactory
+       extends TouchKitBundleLoaderFactory {
+    private final ArrayList<String> usedConnectors;
+
+    public WidgetLoaderFactory() {
+        usedConnectors = new ArrayList<String>();
+        usedConnectors.add(ButtonConnector.class.getName());
+        usedConnectors.add(ChartConnector.class.getName());
+        usedConnectors.add(CssLayoutConnector.class.getName());
+        ...
+----
+
+Then we use the list it in the [methodname]#getConnectorsForWidgetset()# to
+create the proper list of class type definitions by filtering them from all
+class type definitions. [classname]#JClassType# is used for type definition.
+
+
+----
+@Override
+protected Collection<JClassType> getConnectorsForWidgetset(
+        TreeLogger logger, TypeOracle typeOracle)
+        throws UnableToCompleteException {
+    // The usedConnectors list should contain all the
+    // connectors that we need in the app, so we
+    // can leave all others away.
+
+    // Get all connectors in the unoptimized widget set
+    Collection<JClassType> connectorsForWidgetset = super
+            .getConnectorsForWidgetset(logger, typeOracle);
+
+    // Filter the connectors using the used list
+    ArrayList<JClassType> arrayList =
+            new ArrayList<JClassType>();
+    for (JClassType jClassType : connectorsForWidgetset) {
+        String qualifiedSourceName =
+            jClassType.getQualifiedSourceName();
+        if (usedConnectors.contains(qualifiedSourceName)) {
+            arrayList.add(jClassType);
+        }
+    }
+    return arrayList;
+}
+----
+
+endif::web[]
+
+ifdef::web[]
+[[mobile.optimization.loadingstyle]]
+== Defining the Widget Loading Style
+
+The [methodname]#getLoadStyle()# method should return the widget loading style,
+which should be [parameter]#EAGER# to get a monolithic widgetset.
+
+
+----
+    @Override
+    protected LoadStyle getLoadStyle(JClassType connectorType) {
+        return LoadStyle.EAGER;
+    }
+}
+----
+
+endif::web[]
+
+ifdef::web[]
+[[mobile.optimization.definition]]
+== Applying the Custom Widget Map Generator
+
+It needs to be defined in the [filename]#.gwt.xml# widget set definition file as
+follows:
+
+[subs="normal"]
+----
+&lt;generate-with class="[replaceable]##com.myprj.WidgetLoaderFactory##"&gt;
+    &lt;when-type-assignable class="com.vaadin.client.metadata.ConnectorBundleLoader" /&gt;
+&lt;/generate-with&gt;
+----
+endif::web[]
+
+ifdef::web[]
+[[mobile.optimization.deployment]]
+== Deployment
+
+Note that you need to enable GZip compression for your deployment if you wish to
+optimize the startup time and minimize the amount of transferred data. The best
+method for doing that highly depends on your hosting setup, so we do not cover
+it here.
+
+endif::web[]
+
+
+

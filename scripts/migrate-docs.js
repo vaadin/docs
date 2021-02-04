@@ -3,14 +3,14 @@ const CACHE_DIR = './.cache';
 
 // Repo name, branch and local directory name
 const repos = [
-  ['vaadin-docs', 'vaadin8'],
-  ['framework', 'master', 'framework'],
-  ['designer-internal', '2.x', 'designer'],
-  ['charts', 'master', 'charts'],
-  ['testbench', '5.2'],
-  ['spreadsheet', 'master'],
+  ['vaadin-docs', 'vaadin7'],
+  ['framework', '7.7'],
+  ['designer-internal', '1.x', 'designer'],
+  ['charts', '3.2'],
+  ['testbench', '4.2'],
+  ['spreadsheet', '1.5'],
   ['board', 'master'],
-  ['bakery-app-starter-fw8-docs', 'master', 'bakeryfw8'],
+  ['touchkit', 'official-4.x'],
 ];
 
 
@@ -78,8 +78,7 @@ function migrateDocs() {
   const chartsPath = path.join(__dirname, '../articles/charts');
   const testbenchPath = path.join(__dirname, '../articles/testbench');
   const spreadSheetPath = path.join(__dirname, '../articles/spreadsheet');
-  const boardPath = path.join(__dirname, '../articles/board');
-  const bakeryPath = path.join(__dirname, '../articles/bakeryfw8');
+  const touchkitPath = path.join(__dirname, '../articles/touchkit');
 
   // Cleanup
   fs.rmdirSync(fwPath, { recursive: true });
@@ -87,8 +86,7 @@ function migrateDocs() {
   fs.rmdirSync(chartsPath, { recursive: true });
   fs.rmdirSync(testbenchPath, { recursive: true });
   fs.rmdirSync(spreadSheetPath, { recursive: true });
-  fs.rmdirSync(boardPath, { recursive: true });
-  fs.rmdirSync(bakeryPath, { recursive: true });
+  fs.rmdirSync(touchkitPath, { recursive: true });
 
   // Helper function for all copy operations
   function filter(src, dest) {
@@ -178,34 +176,19 @@ function migrateDocs() {
 
 
 
-  // Board
+  // TouchKit
   fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'board/documentation'),
-    boardPath,
+    path.join(__dirname, CACHE_DIR, 'touchkit/documentation'),
+    touchkitPath,
     { filter }
   );
   generateTopLevelIndex({
-    folderPath: boardPath,
-    title: 'Board',
+    folderPath: touchkitPath,
+    title: 'TouchKit',
     order: 6,
   });
-  generateIndexes(sections.board.subpages, 'board');
-  generateExternalLinks(sections.board.external, 'board');
-
-
-  // Bakery/full-stack starter
-  fs.copySync(
-    path.join(__dirname, CACHE_DIR, 'bakeryfw8'),
-    bakeryPath,
-    { filter }
-  );
-  generateTopLevelIndex({
-    folderPath: bakeryPath,
-    title: 'Bakery App Starter',
-    order: 7,
-  });
-  generateIndexes(sections.bakeryfw8.subpages, 'bakeryfw8');
-  generateExternalLinks(sections.bakeryfw8.external, 'bakeryfw8');
+  generateIndexes(sections.touchkit.subpages, 'touchkit');
+  generateExternalLinks(sections.touchkit.external, 'touchkit');
 
 
 
