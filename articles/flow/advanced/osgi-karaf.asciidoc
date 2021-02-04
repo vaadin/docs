@@ -1,0 +1,104 @@
+---
+title: Using Vaadin with Karaf
+layout: page
+---
+
+[[osgi.karaf]]
+= Using Vaadin with Karaf
+
+The Karaf `http` feature along with `war` feature provides HTTP Whiteboard implementation 
+which is de facto standard in Karaf.
+This implementation is known as PAX Web (see HTTP feature details https://karaf.apache.org/manual/latest-2.x/users-guide/http.html[here]).
+PAX Web is not fully compliant to HTTP Whiteboard OSGi Compendium 7 specification: there are some issues related to
+`ServletContextListener` support. Due to these issues the recommended `VaadinServlet` registration way described in
+generic <<osgi-basic#,Using Vaadin with OSGi>> tutorial doesn't work in PAX Web.
+
+It's still possible to use Vaadin OSGi support with PAX Web though. But the `OSGiVaadinServlet` should be used
+as a base class for the servlet which is registered in an OSGi bundle:
+
+[source, Java]
+----
+@org.osgi.service.component.annotations.Component(service = Servlet.class)
+@HttpWhiteboardServletAsyncSupported
+@HttpWhiteboardServletPattern("/*")
+public class FixedVaadinServlet extends OSGiVaadinServlet {
+
+    @Override
+    protected void servletInitialized() throws ServletException {
+        getService().setClassLoader(getClass().getClassLoader());
+    }
+
+}
+----
+
+Refer to generic <<osgi-basic#,Using Vaadin with OSGi>> tutorial for other non-Karaf related details.
+
+
+[[karf.base.starter]]
+== Karaf Base Starter
+
+A Karaf base starter project is available at https://github.com/vaadin/base-starter-flow-karaf.
+
+The project may be used as a basis for a custom OSGi Vaadin web bundle project.
+The README contains information how to run Karaf, install all required Karaf features and install project feature to the 
+existing Karaf container.
+
+The base project generated `feature` maven artifact classifier which contains all the dependencies for the 
+project and it can be used as a basis for custom project "feature".
+There are a number of Karaf features already provided by Vaadin (see below).
+
+
+[[karf.features]]
+== Karaf Features
+
+One of the most important question which needs to be solved when OSGi bundle is deployed to the OSGi container is 
+the bundle dependencies resolution. The bundle will not work in the OSGi container even though it's deployed
+until all its dependencies are resolved.
+Karaf allows to solve this via `"feature"` concept: bundles can be combined into a `"feature"` 
+which contains all dependency bundles and it can be installed as one unit.
+
+Vaadin provides several features which can be used depending on requirements:
+- flow-server
+- flow-data
+- flow-osgi
+- flow
+- vaadin-core
+- vaadin
+
+The `flow-server` feature contains the minimum dependencies which have to be added to any Vaadin web project.
+The `flow-osgi` feature contains necessary dependency for Vaadin OSGi web bundle.
+The `flow` feature combines all Flow bundles altogether and it's convenient when you use all 
+Flow modules in your project but it may be too big for your purposes (some bundles can be excluded from it).
+The similar situation is with `vaadin-core`  and `vaadin` features: they combine all Flow bundles
+(including `flow`  feature) plus all Vaadin components (the first one contains all free components,
+the second one includes free and commercial components). These features can be used 
+as is if you want to deploy everything to the Karaf container and don't think about 
+anything else. But it's also possible to use the features as a base for a custom feature.
+
+The feature can be installed into the Karaf container via two command:
+
+[source]
+----
+karaf@root()> feature:repo-add mvn:com.vaadin/flow/$FLOW_VERSION$/xml/features
+karaf@root()> feature:install flow
+----
+
+Here is `$FLOW_VERSION$` is a placeholder for the Flow artifact version value.
+The first command uses `feature` maven classifier to add feature repository (which is an XML file with feature declaration).
+The second command installs the feature which is declared in the added repository.
+http://tools.vaadin.com/nexus/content/repositories/vaadin-prereleases/com/vaadin/flow/6.0.0.beta1/flow-6.0.0.beta1-features.xml[Here] is an example
+of the feature repository.
+
+The same can be done with any mentioned feature.
+
+Sometimes it might be useful to install a bundle without a feature. This can be done
+this way:
+
+[source]
+----
+karaf@root()> bundle:install mvn:com.vaadin/flow-html-components/$FLOW_VERSION$
+karaf@root()> bundle:install mvn:com.vaadin/vaadin-text-field-flow/$TEXT_FIELD_VERSION$
+----
+
+The command refers to the maven artifact via `com.vaadin`  group id, `flow-html-components` (`vaadin-text-field-flow`) artifact id and
+the artifact version.
