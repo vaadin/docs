@@ -18,10 +18,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box>
-        <vaadin-item>Show assignee</vaadin-item>
-        <vaadin-item>Show due date</vaadin-item>
-        <vaadin-item>Show status</vaadin-item>
+      <vaadin-list-box selected="0">
+        <vaadin-item>In progress</vaadin-item>
+        <vaadin-item>Done</vaadin-item>
+        <vaadin-item>Cancelled</vaadin-item>
       </vaadin-list-box>
       <!-- end::snippet[] -->
     `;
