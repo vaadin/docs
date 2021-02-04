@@ -60,4 +60,16 @@ module.exports = function(config) {
     test: themeCssRegex,
     use: ['raw-loader', 'extract-loader', 'css-loader']
   });
+
+  // Avoid having the docs-app dev server recompile whenever the Java-sources or generated files change
+  config.devServer = {
+    watchOptions: {
+      ignored: [
+        path.resolve(__dirname, 'target'),
+        path.resolve(__dirname, 'src', 'main', 'java'),
+        path.resolve(__dirname, 'frontend', 'themes', 'docs', 'docs.generated.js'),
+        path.resolve(__dirname, 'frontend', 'generated')
+      ],
+    },
+  };
 };
