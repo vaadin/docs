@@ -12,6 +12,3 @@ For example:
 - `articles/forms/data-binding.asciidoc` → `/forms/data-binding/`
 
 See [Authoring articles](https://github.com/vaadin/docs/wiki/Authoring-articles) to learn how to write documentation articles.
-
-### `scripts`
-Project related scripts (tests, validation builds, preview deployment, etc).
