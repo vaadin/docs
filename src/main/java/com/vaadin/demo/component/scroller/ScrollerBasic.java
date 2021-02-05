@@ -100,7 +100,7 @@ public class ScrollerBasic extends VerticalLayout {
 
     // Footer
     Button save = new Button("Save");
-    save.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ICON);
+    save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
     save.getStyle().set("margin-right", "var(--lumo-space-s)");
 
     Button reset = new Button("Reset");
