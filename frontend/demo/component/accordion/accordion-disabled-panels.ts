@@ -54,4 +54,3 @@ export class Example extends LitElement {
     `;
   }
 }
-// end::snippet[]
