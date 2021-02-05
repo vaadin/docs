@@ -5,6 +5,7 @@ import '@vaadin/vaadin-avatar/vaadin-avatar';
 import { applyTheme } from 'themes/theme-generated.js';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import * as img from '../../../../src/main/resources/images/company-logo.png';
 
 @customElement('avatar-image')
 export class Example extends LitElement {
@@ -26,10 +27,10 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-avatar
-        name=${`${this.person?.firstName} ${this.person?.lastName}`}
-        image=${this.person?.pictureUrl}
+        .name=${`${this.person?.firstName} ${this.person?.lastName}`}
+        .img=${this.person?.pictureUrl}
       ></vaadin-avatar>
-      <vaadin-avatar image="AL"></vaadin-avatar>
+      <vaadin-avatar .img=${img} name="Company Inc."></vaadin-avatar>
       <!-- end::snippet[] -->
     `;
   }
