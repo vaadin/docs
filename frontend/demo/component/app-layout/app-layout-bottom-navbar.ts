@@ -38,7 +38,6 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-app-layout>
-        <vaadin-drawer-toggle slot="navbar"></vaadin-drawer-toggle>
         <h1 slot="navbar">MyApp</h1>
         <vaadin-tabs slot="navbar touch-optimized">
           <vaadin-tab>
