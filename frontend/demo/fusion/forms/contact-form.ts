@@ -5,7 +5,7 @@ import '@vaadin/vaadin-button';
 
 import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
-import { saveContact } from 'Frontend/generated/ContactEndpoint';
+import { ContactEndpoint } from 'Frontend/generated/ContactEndpoint';
 
 import { Binder } from '@vaadin/form';
 
@@ -42,6 +42,6 @@ export class ContactForm extends LitElement {
   }
 
   async save() {
-    await this.binder.submitTo(saveContact);
+    await this.binder.submitTo(ContactEndpoint.saveContact);
   }
 }
