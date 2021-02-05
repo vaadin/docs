@@ -95,7 +95,7 @@ export class Example extends LitElement {
         <!-- end::snippet[] -->
 
         <footer>
-          <vaadin-button theme="primary icon">Save</vaadin-button>
+          <vaadin-button theme="primary">Save</vaadin-button>
           <vaadin-button theme="tertiary">Reset</vaadin-button>
         </footer>
       </vaadin-vertical-layout>
