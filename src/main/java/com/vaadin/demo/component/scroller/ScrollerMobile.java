@@ -2,8 +2,8 @@ package com.vaadin.demo.component.scroller;
 
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Section;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -11,21 +11,23 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.router.Route;
 
 @Route("scroller-mobile")
-public class ScrollerMobile extends Div {
+public class ScrollerMobile extends Section {
 
   public ScrollerMobile() {
+    setMaxWidth("100%");
+    setWidth("360px");
+    getStyle().set("border", "1px solid var(--lumo-contrast-20pct)");
+
     // Header
-    Paragraph header = new Paragraph("Create new...");
-    header.getStyle().set("font-family", "var(--lumo-font-family)");
-    header.getStyle().set("font-size", "var(--lumo-font-size-l)");
-    add(header);
+    H2 createNewTitle = new H2("Create new...");
+    createNewTitle.getStyle()
+            .set("margin-left", "var(--lumo-space-m)")
+            .set("margin-right", "var(--lumo-space-m)");
+    add(createNewTitle);
 
     // tag::snippet[]
     Scroller scroller = new Scroller();
     scroller.setScrollDirection(Scroller.ScrollDirection.HORIZONTAL);
-
-    scroller.setWidth("300px");
-    scroller.setMaxWidth("100%");
 
     Button auditBtn = new Button("Audit");
     auditBtn.setIcon(new Icon(VaadinIcon.CLIPBOARD_CHECK));
@@ -43,16 +45,11 @@ public class ScrollerMobile extends Div {
     invoiceBtn.setIcon(new Icon(VaadinIcon.INVOICE));
     invoiceBtn.setHeight("100px");
 
-    HorizontalLayout container = new HorizontalLayout();
-    container.setWidth("max-content");
+    HorizontalLayout buttons = new HorizontalLayout(auditBtn, reportBtn, dashboardBtn, invoiceBtn);
+    buttons.setPadding(true);
+    buttons.getStyle().set("display", "inline-flex");
 
-    container.setSpacing(true);
-    container.setMargin(true);
-
-    container.add(auditBtn, reportBtn, dashboardBtn, invoiceBtn);
-
-    scroller.setContent(container);
-
+    scroller.setContent(buttons);
     add(scroller);
     // end::snippet[]
   }
