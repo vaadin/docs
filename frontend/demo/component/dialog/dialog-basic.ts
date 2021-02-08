@@ -6,6 +6,10 @@ import { guard } from 'lit-html/directives/guard';
 
 import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+
 import { applyTheme } from 'themes/theme-generated.js';
 
 // tag::snippet[]
@@ -28,10 +32,21 @@ export class Example extends LitElement {
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <div>
-                This simple dialog will close by pressing the Esc key, or by a mouse click anywhere
-                outside the dialog area
-              </div>
+              <vaadin-vertical-layout theme="spacing" style="align-items: stretch;">
+                <h2 style="margin: var(--lumo-space-m) 0 0 0;">New employee</h2>
+                <vaadin-vertical-layout style="align-items: stretch;">
+                  <vaadin-text-field label="First name"></vaadin-text-field>
+                  <vaadin-text-field label="Last name"></vaadin-text-field>
+                </vaadin-vertical-layout>
+                <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
+                  <vaadin-button @click=${() => (this.dialogOpened = false)}>
+                    Cancel
+                  </vaadin-button>
+                  <vaadin-button theme="primary" @click=${() => (this.dialogOpened = false)}>
+                    Save changes
+                  </vaadin-button>
+                </vaadin-horizontal-layout>
+              </vaadin-vertical-layout>
             `,
             root
           );
