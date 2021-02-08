@@ -1,4 +1,6 @@
 const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const execShellCommand = cmd => {
   console.log(cmd);
@@ -31,16 +33,12 @@ if (!globalThis.process.env.DOCS_INIT_UNDO) {
   execShellCommand(`echo '${envFileContent}' > docbuilder/develop/.env`);
 
   // Create a root index file under ds
-  const dsIndexFileContent = `
----
-title: Design System
-order: 40
-layout: index
----
-= Design System
-  `.trim();
-  execShellCommand(`echo '${dsIndexFileContent}' > articles/ds/index.asciidoc`);
+  const dsIndexFileContent = fs
+    .readFileSync(path.resolve('articles/ds/overview.asciidoc'), 'utf-8')
+    .replace('title: Overview', 'title: Design System');
 
+  execShellCommand(`echo '${dsIndexFileContent}' > articles/ds/index.asciidoc`);
+  execShellCommand(`rm articles/ds/overview.asciidoc`);
 } else {
   execShellCommand('git sparse-checkout disable');
   execShellCommand('rm -f .git/info/sparse-checkout');
