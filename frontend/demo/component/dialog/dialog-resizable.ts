@@ -6,12 +6,12 @@ import { guard } from 'lit-html/directives/guard';
 
 import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-text-field/vaadin-text-area';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
 import { applyTheme } from 'themes/theme-generated.js';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { getPeople } from '../../domain/DataService';
 
 @customElement('dialog-resizable')
 export class Example extends LitElement {
@@ -23,6 +23,13 @@ export class Example extends LitElement {
 
   @internalProperty()
   private dialogOpened = false;
+
+  @internalProperty()
+  private people: Person[] | null;
+
+  async firstUpdated() {
+    this.people = await getPeople(50);
+  }
 
   render() {
     return html`
@@ -36,23 +43,18 @@ export class Example extends LitElement {
             html`
               <vaadin-vertical-layout
                 theme="spacing"
-                style="width: 300px; max-width: 100%; align-items: stretch;"
+                style="max-width: 100%; min-width: 300px; align-items: stretch;"
               >
                 <h2 style="margin: var(--lumo-space-m) 0 0 0; font-size: 1.5em; font-weight: bold;">
-                  New employee
+                  Employees
                 </h2>
-                <vaadin-vertical-layout style="align-items: stretch;">
-                  <vaadin-text-field label="Title"></vaadin-text-field>
-                  <vaadin-text-area label="Description"></vaadin-text-area>
-                </vaadin-vertical-layout>
-                <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
-                  <vaadin-button @click=${() => (this.dialogOpened = false)}>
-                    Cancel
-                  </vaadin-button>
-                  <vaadin-button theme="primary" @click=${() => (this.dialogOpened = false)}>
-                    Add note
-                  </vaadin-button>
-                </vaadin-horizontal-layout>
+                <vaadin-grid .items=${this.people}>
+                  <vaadin-grid-column path="firstName" title="First name"></vaadin-grid-column>
+                  <vaadin-grid-column path="lastName" title="Last name"></vaadin-grid-column>
+                  <vaadin-grid-column path="email" title="Email"></vaadin-grid-column>
+                  <vaadin-grid-column path="profession" title="Profession"></vaadin-grid-column>
+                  <vaadin-grid-column path="membership" title="Membership"></vaadin-grid-column>
+                </vaadin-grid>
               </vaadin-vertical-layout>
             `,
             root
