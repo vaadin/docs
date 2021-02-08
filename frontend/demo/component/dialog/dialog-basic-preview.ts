@@ -16,11 +16,13 @@ export class Example extends LitElement {
         justify-content: center;
         background-color: var(--lumo-shade-20pct);
         padding: var(--lumo-space-l);
+        pointer-events: none;
+        user-select: none;
       }
 
       .overlay {
-        box-shadow: 0 0 0 1px var(--lumo-shade-5pct), var(--lumo-box-shadow-xl);
-        background-image: none;
+        display: flex;
+        justify-content: center;
         outline: none;
         -webkit-tap-highlight-color: transparent;
         background-color: var(--lumo-base-color);
@@ -36,7 +38,6 @@ export class Example extends LitElement {
         text-transform: none;
         -webkit-text-size-adjust: 100%;
         -webkit-font-smoothing: antialiased;
-        display: flex;
       }
 
       .content {
@@ -48,7 +49,7 @@ export class Example extends LitElement {
   }
   render() {
     return html`
-      <div class="overlay" style="justify-content: center; pointer-events: none;">
+      <div class="overlay">
         <div class="content">
           <vaadin-vertical-layout theme="spacing" style="align-items: stretch;">
             <h2 style="margin: var(--lumo-space-m) 0 0 0;">
