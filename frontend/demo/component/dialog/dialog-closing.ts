@@ -12,8 +12,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
 import { applyTheme } from 'themes/theme-generated.js';
 
-// tag::snippet[]
-@customElement('dialog-basic')
+@customElement('dialog-closing')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -26,6 +25,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-dialog
         aria-label="simple"
         .opened=${this.dialogOpened}
@@ -56,9 +56,9 @@ export class Example extends LitElement {
         })}"
         @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
       ></vaadin-dialog>
+      <!-- end::snippet[] -->
 
       <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
     `;
   }
 }
-// end::snippet[]
