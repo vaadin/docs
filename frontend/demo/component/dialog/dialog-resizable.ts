@@ -13,7 +13,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
 import { applyTheme } from 'themes/theme-generated.js';
 
-@customElement('dialog-draggable')
+@customElement('dialog-resizable')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -29,7 +29,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-dialog
         aria-label="simple"
-        draggable
+        resizable
         .opened=${this.dialogOpened}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
