@@ -5,7 +5,6 @@ import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'themes/theme-generated.js';
 import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { MenuBarItem } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { AvatarElement } from '@vaadin/vaadin-avatar/vaadin-avatar';
 
