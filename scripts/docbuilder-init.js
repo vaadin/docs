@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 
 const execShellCommand = cmd => {
-  console.log(cmd);
   return new Promise((resolve, _) => {
     execSync(cmd, (_, stdout) => resolve(stdout));
   });
@@ -27,7 +26,7 @@ if (!globalThis.process.env.DOCS_INIT_UNDO) {
   // Update working directory
   execShellCommand('git read-tree -m -u HEAD');
 
-  // Create the env files for docbuilder TODO: Enable once docbuilder is available
+  // Create the env files for docbuilder
   const envFileContent = `DOCS_ARTICLES_PATH="articles/ds"`;
   execShellCommand(`echo '${envFileContent}' > docbuilder/build/.env`);
   execShellCommand(`echo '${envFileContent}' > docbuilder/develop/.env`);
