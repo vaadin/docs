@@ -25,7 +25,7 @@ export class Example extends LitElement {
   private dialogOpened = false;
 
   @internalProperty()
-  private people: Person[] | null;
+  private people: Person[] | undefined;
 
   async firstUpdated() {
     this.people = await getPeople(50);
@@ -43,12 +43,12 @@ export class Example extends LitElement {
             html`
               <vaadin-vertical-layout
                 theme="spacing"
-                style="max-width: 100%; min-width: 300px; align-items: stretch;"
+                style="max-width: 100%; min-width: 300px; height: 100%; align-items: stretch;"
               >
                 <h2 style="margin: var(--lumo-space-m) 0 0 0; font-size: 1.5em; font-weight: bold;">
                   Employees
                 </h2>
-                <vaadin-grid .items=${this.people}>
+                <vaadin-grid .items=${this.people} style=" min-height: 300px; flex: 1;">
                   <vaadin-grid-column path="firstName" title="First name"></vaadin-grid-column>
                   <vaadin-grid-column path="lastName" title="Last name"></vaadin-grid-column>
                   <vaadin-grid-column path="email" title="Email"></vaadin-grid-column>
