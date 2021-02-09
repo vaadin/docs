@@ -39,6 +39,24 @@ if (!globalThis.process.env.DOCS_INIT_UNDO) {
 
   execShellCommand(`echo '${dsIndexFileContent}' > articles/ds/index.asciidoc`);
   execShellCommand(`rm articles/ds/overview.asciidoc`);
+
+  // Replace cross references with links in _shared.asciidoc
+  let dsFoundationSharedFileContent = fs.readFileSync(
+    path.resolve('articles/ds/foundation/_shared.asciidoc'),
+    'utf-8'
+  );
+  const crRegex = /<<{articles}\/theming\/(.*),(.*)>>/g;
+  const matches = dsFoundationSharedFileContent.matchAll(crRegex);
+
+  for (const match of matches) {
+    dsFoundationSharedFileContent = dsFoundationSharedFileContent.replace(
+      match[0],
+      `link:http://vaadin.com/docs-beta/latest/theming/${match[1]}[${match[2]}]`
+    );
+  }
+  execShellCommand(
+    `echo '${dsFoundationSharedFileContent}' > articles/ds/foundation/_shared.asciidoc`
+  );
 } else {
   execShellCommand('git sparse-checkout disable');
   execShellCommand('rm -f .git/info/sparse-checkout');
