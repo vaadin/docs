@@ -19,14 +19,19 @@ export class Example extends LitElement {
   static get styles() {
     return css`
       h1 {
-        margin: 0 var(--lumo-space-s);
+        margin: var(--lumo-space-s) var(--lumo-space-m);
         font-size: var(--lumo-font-size-l);
       }
 
       vaadin-tabs,
       vaadin-tab {
-        flex: 1;
+        flex: auto;
       }
+
+      .content {
+        padding: var(--lumo-space-m);
+      }
+
       /* hidden-full-source-line: the bottom navbar is forced on in the example */
       vaadin-app-layout[overlay] /* hidden-full-source-line */ {
         --vaadin-app-layout-touch-optimized: true; /* hidden-full-source-line */
@@ -55,7 +60,7 @@ export class Example extends LitElement {
         </vaadin-tabs>
 
         <div class="content">
-          <h3>Page title</h3>
+          <h2>Page title</h2>
           <p>Page content</p>
         </div>
       </vaadin-app-layout>
