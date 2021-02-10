@@ -18,6 +18,7 @@ export class Example extends LitElement {
         padding: var(--lumo-space-l);
         pointer-events: none;
         user-select: none;
+        -webkit-user-select: none;
       }
 
       .overlay {
