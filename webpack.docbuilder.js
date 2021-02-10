@@ -40,6 +40,8 @@ const themeOptions = {
 // this matches css files in the theme
 const themeCssRegex = /(\\|\/).*frontend(\\|\/)themes\1[\s\S]*?\.css/;
 
+const embeddedWcRegex = /(\\|\/).*target(\\|\/)frontend(\\|\/)[\s\S]*-wc.js/;
+
 const projectThemePath = path.resolve(__dirname, 'frontend/themes');
 const reusableThemesPath = path.resolve(__dirname, 'target/flow-frontend/themes');
 const hasReusableThemes = fs.existsSync(reusableThemesPath);
@@ -66,6 +68,12 @@ module.exports = function(config) {
   config.module.rules.push({
     test: themeCssRegex,
     use: ['raw-loader', 'extract-loader', 'css-loader']
+  });
+
+  // The docbuilder bundle should never contain the embedded Vaadin examples
+  config.module.rules.push({
+    test: embeddedWcRegex,
+    use: ['null-loader']
   });
 
   // Avoid having the docs-app dev server recompile whenever the Java-sources or generated files change
