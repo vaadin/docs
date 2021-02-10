@@ -2,6 +2,7 @@ import '../../init'; // hidden-full-source-line
 
 import { html, css, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-ordered-layout/vaadin-scroller';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
@@ -21,36 +22,37 @@ export class Example extends LitElement {
   static get styles() {
     return css`
       #container {
-        width: calc(var(--lumo-size-l) * 8);
-        font-family: var(--lumo-font-family);
+        align-items: stretch;
         border: 1px solid var(--lumo-contrast-20pct);
         max-width: 100%;
+        height: 400px;
+        width: 360px;
       }
 
-      #header {
+      header {
+        align-items: center;
         display: flex;
         border-bottom: 1px solid var(--lumo-contrast-20pct);
         padding: var(--lumo-space-m);
-        align-items: center;
       }
 
-      #header iron-icon {
-        height: var(--lumo-font-size-m);
+      header h2 {
+        margin: 0;
+      }
+
+      header iron-icon {
+        box-sizing: border-box;
+        height: var(--lumo-icon-size-m);
         margin-right: var(--lumo-space-m);
-        cursor: pointer;
-        color: var(--lumo-tertiary-text-color);
+        padding: calc(var(--lumo-space-xs) / 2);
+        width: var(--lumo-icon-size-m);
       }
 
-      #header span {
-        font-size: var(--lumo-font-size-l);
-      }
-
-      #footer {
-        border-top: 1px solid var(--lumo-contrast-20pct);
+      footer {
         padding: var(--lumo-space-wide-m);
       }
 
-      #footer vaadin-button {
+      footer vaadin-button:first-child {
         margin-right: var(--lumo-space-s);
       }
     `;
@@ -58,39 +60,45 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <div id="container">
-        <div id="header">
-          <iron-icon icon="vaadin:arrow-left"></iron-icon>
-          <span>Edit Employee</span>
-        </div>
+      <vaadin-vertical-layout id="container">
+        <header>
+          <a href="#" aria-label="Go back">
+            <iron-icon icon="vaadin:arrow-left" aria-hidden="true"></iron-icon>
+          </a>
+          <h2>Edit employee</h2>
+        </header>
 
         <!-- tag::snippet[] -->
         <vaadin-scroller
           scroll-direction="vertical"
-          style="height: 320px; padding: var(--lumo-space-m);"
+          style="border-bottom: 1px solid var(--lumo-contrast-20pct); padding: var(--lumo-space-m);"
         >
-          <p style="font-size: var(--lumo-font-size-l); margin-top: var(--lumo-space-s)">
-            Personal information
-          </p>
-          <vaadin-text-field style="width: 100%;" label="First name"></vaadin-text-field>
-          <vaadin-text-field style="width: 100%;" label="Last name"></vaadin-text-field>
-          <vaadin-date-picker
-            style="width: 100%;"
-            label="Birthdate"
-            initial-position="1990-01-01"
-          ></vaadin-date-picker>
-
-          <p style="font-size: var(--lumo-font-size-l)">Employment</p>
-          <vaadin-text-field style="width: 100%;" label="Position"></vaadin-text-field>
-          <vaadin-text-area style="width: 100%;" label="Additional information"></vaadin-text-area>
+          <section aria-labelledby="personal-title">
+            <h3 id="personal-title">Personal information</h3>
+            <vaadin-text-field style="width: 100%;" label="First name"></vaadin-text-field>
+            <vaadin-text-field style="width: 100%;" label="Last name"></vaadin-text-field>
+            <vaadin-date-picker
+              initial-position="1990-01-01"
+              label="Birthdate"
+              style="width: 100%;"
+            ></vaadin-date-picker>
+          </section>
+          <section aria-labelledby="employment-title">
+            <h3 id="employment-title">Employment information</h3>
+            <vaadin-text-field style="width: 100%;" label="Position"></vaadin-text-field>
+            <vaadin-text-area
+              style="width: 100%;"
+              label="Additional information"
+            ></vaadin-text-area>
+          </section>
         </vaadin-scroller>
         <!-- end::snippet[] -->
 
-        <div id="footer">
-          <vaadin-button theme="primary icon">Save</vaadin-button>
+        <footer>
+          <vaadin-button theme="primary">Save</vaadin-button>
           <vaadin-button theme="tertiary">Reset</vaadin-button>
-        </div>
-      </div>
+        </footer>
+      </vaadin-vertical-layout>
     `;
   }
 }
