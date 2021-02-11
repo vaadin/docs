@@ -76,11 +76,6 @@ module.exports = function(config) {
     use: ['null-loader']
   });
 
-  // Resolve all-example-resources-or-empty if it hasn't been resolved (by docs-app)
-  if (!config.resolve.alias['all-example-resources-or-empty']) {
-    config.resolve.alias['all-example-resources-or-empty'] = path.resolve(__dirname, 'frontend/demo/init.ts');
-  }
-
   // Avoid having the docs-app dev server recompile whenever the Java-sources or generated files change
   config.devServer = {
     watchOptions: {

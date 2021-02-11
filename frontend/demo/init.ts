@@ -1,5 +1,4 @@
 import './init-flow-namespace';
-import 'all-example-resources-or-empty';
 import '@vaadin/flow-frontend/dndConnector-es6.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 // @ts-ignore
