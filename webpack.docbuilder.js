@@ -53,7 +53,7 @@ const applyThemePath = path.resolve(
 );
 
 module.exports = function (config) {
-  const allFlowImportsPath = path.resolve(__dirname, 'target/frontend/generated-flow-imports');
+  const allFlowImportsPath = path.resolve(__dirname, 'target/frontend/generated-flow-imports.js');
   config.resolve.alias['all-flow-imports-or-empty'] =
     process.env.DOCS_IMPORT_EXAMPLE_RESOURCES === 'true'
       ? allFlowImportsPath
