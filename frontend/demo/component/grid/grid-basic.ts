@@ -7,7 +7,7 @@ import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('grid-basic')

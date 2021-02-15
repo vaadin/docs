@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-disabled')
 export class Example extends LitElement {

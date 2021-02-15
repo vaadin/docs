@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('avatar-name')
 export class Example extends LitElement {

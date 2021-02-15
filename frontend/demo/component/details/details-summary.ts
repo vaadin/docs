@@ -14,7 +14,7 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('details-summary')

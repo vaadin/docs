@@ -7,7 +7,7 @@ import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 
 const initialStartValue = '2020-08-25T20:00';
 const initialEndValue = '2020-09-01T20:00';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-range')
 export class Example extends LitElement {

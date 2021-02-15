@@ -6,7 +6,7 @@ import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-placement-side')
 export class Example extends LitElement {

@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-lin
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-time-picker/vaadin-time-picker';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('time-picker-seconds-step')
 export class Example extends LitElement {

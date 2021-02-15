@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-integer-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('number-field-integer')
 export class Example extends LitElement {

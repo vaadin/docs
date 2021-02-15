@@ -4,7 +4,7 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-progress-bar/vaadin-progress-bar';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-custom-field/vaadin-custom-field';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('progress-bar-theme-variants')
 export class Example extends LitElement {

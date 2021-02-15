@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-progress-bar/vaadin-progress-bar';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('progress-bar-basic')
 export class Example extends LitElement {

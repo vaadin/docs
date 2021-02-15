@@ -4,7 +4,7 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-password-field';
 import '@vaadin/vaadin-text-field';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('input-field-focus')
 export class Example extends LitElement {

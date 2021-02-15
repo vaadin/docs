@@ -5,7 +5,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon/iron-icon';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-prefix-suffix')
 export class Example extends LitElement {

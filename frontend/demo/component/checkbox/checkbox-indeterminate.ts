@@ -7,7 +7,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {

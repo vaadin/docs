@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-helper-2')
 export class Example extends LitElement {

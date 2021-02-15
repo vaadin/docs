@@ -4,7 +4,7 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-text-field';
 import '@vaadin/vaadin-date-picker';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('input-field-required')
 export class Example extends LitElement {

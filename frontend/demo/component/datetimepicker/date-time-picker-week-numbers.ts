@@ -5,7 +5,7 @@ import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-lin
 import { customElement, html, LitElement, query } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 import { DateTimePickerElement } from '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-week-numbers')
 export class Example extends LitElement {

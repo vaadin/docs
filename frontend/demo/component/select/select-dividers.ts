@@ -7,7 +7,7 @@ import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-dividers')
 export class Example extends LitElement {

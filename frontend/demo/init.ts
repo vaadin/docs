@@ -14,7 +14,7 @@ import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 // @ts-ignore
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import client from 'Frontend/generated/connect-client.default';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // Make sure custom component styles get registered
 const div = document.createElement('div');

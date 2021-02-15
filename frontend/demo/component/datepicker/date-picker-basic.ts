@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('date-picker-basic')

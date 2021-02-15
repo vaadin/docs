@@ -13,7 +13,7 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
     labelsPosition: 'aside'
   }
 ];
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('number-field-stepper-controls')
 export class Example extends LitElement {

@@ -7,7 +7,7 @@ import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-pro-basic')
 export class Example extends LitElement {

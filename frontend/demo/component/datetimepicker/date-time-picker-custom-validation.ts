@@ -6,7 +6,7 @@ import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 import { Binder, field } from '@vaadin/form';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-custom-validation')
 export class Example extends LitElement {

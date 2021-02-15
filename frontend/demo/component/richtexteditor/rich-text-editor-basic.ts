@@ -4,7 +4,7 @@ import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
 
 import templates from '../../../../src/main/resources/data/templates.json';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('rich-text-editor-basic')
