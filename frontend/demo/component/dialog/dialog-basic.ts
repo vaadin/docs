@@ -10,7 +10,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('dialog-basic')
 export class Example extends LitElement {

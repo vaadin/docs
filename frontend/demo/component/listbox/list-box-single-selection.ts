@@ -5,7 +5,7 @@ import '@vaadin/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('list-box-single-selection')
 export class Example extends LitElement {
@@ -18,10 +18,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box>
-        <vaadin-item>Show assignee</vaadin-item>
-        <vaadin-item>Show due date</vaadin-item>
-        <vaadin-item>Show status</vaadin-item>
+      <vaadin-list-box selected="0">
+        <vaadin-item>In progress</vaadin-item>
+        <vaadin-item>Done</vaadin-item>
+        <vaadin-item>Cancelled</vaadin-item>
       </vaadin-list-box>
       <!-- end::snippet[] -->
     `;

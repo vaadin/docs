@@ -7,7 +7,7 @@ import { getPeople } from '../../domain/DataService';
 import { ComboBoxItemModel } from '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { render } from 'lit-html';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {

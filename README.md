@@ -13,7 +13,7 @@ Official documentation and code examples for Vaadin.
 
 All official documentation version branches (listed below) can and should contain documentation for pre-release features once they are available in a Vaadin pre-release. Remember to indicate new features with a “since version” indicator in Asciidoc, for example, `[role="since:com.vaadin:vaadin@V18"]`.
 
-### `master`
+### `latest`
 
 Documentation for the latest major Vaadin version, including all previous major versions since the latest LTS version. If in doubt, make documentation updates against this branch.
 

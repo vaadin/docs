@@ -3,7 +3,7 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-details/vaadin-details';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 // tag::snippet[]
 @customElement('details-basic')
