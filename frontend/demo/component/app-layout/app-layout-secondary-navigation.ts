@@ -8,7 +8,7 @@ import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('app-layout-secondary-navigation')
 export class Example extends LitElement {

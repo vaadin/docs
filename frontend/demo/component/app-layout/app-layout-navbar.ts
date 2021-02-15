@@ -6,7 +6,7 @@ import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('app-layout-navbar')
 export class Example extends LitElement {
@@ -35,18 +35,10 @@ export class Example extends LitElement {
       <vaadin-app-layout>
         <h1 slot="navbar">MyApp</h1>
         <vaadin-tabs slot="navbar" style="margin: 0 auto;">
-          <vaadin-tab>
-            Dashboards
-          </vaadin-tab>
-          <vaadin-tab>
-            Orders
-          </vaadin-tab>
-          <vaadin-tab>
-            Customers
-          </vaadin-tab>
-          <vaadin-tab>
-            Products
-          </vaadin-tab>
+          <vaadin-tab> Dashboards </vaadin-tab>
+          <vaadin-tab> Orders </vaadin-tab>
+          <vaadin-tab> Customers </vaadin-tab>
+          <vaadin-tab> Products </vaadin-tab>
         </vaadin-tabs>
       </vaadin-app-layout>
       <!-- end::snippet[] -->

@@ -13,7 +13,7 @@ import CardModel from '../generated/com/vaadin/demo/domain/CardModel';
 // @ts-ignore
 import Card from '../generated/com/vaadin/demo/domain/Card';
 import client from '../generated/connect-client.default';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 // Make sure custom component styles get registered
 const div = document.createElement('div');

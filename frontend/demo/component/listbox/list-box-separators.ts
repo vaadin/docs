@@ -5,7 +5,7 @@ import '@vaadin/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('list-box-separators')
 export class Example extends LitElement {

@@ -9,3 +9,4 @@ declare module '*.jpg' {
 }
 
 declare module 'themes/theme-generated.js';
+declare module 'generated/theme';
