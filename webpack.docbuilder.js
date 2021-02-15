@@ -20,18 +20,21 @@ const themeProjectFolders = projectStaticAssetsFolders.map(folder =>
   path.resolve(folder, 'themes')
 );
 
+const frontendGeneratedFolder = path.resolve(__dirname, 'frontend/generated');
+
 // Target flow-fronted auto generated to be the actual target folder
 const flowFrontendFolder = path.resolve(__dirname, 'target/flow-frontend');
 
 const flowFrontendThemesFolder = path.resolve(flowFrontendFolder, 'themes');
 
 const themeOptions = {
-  // The following matches target/flow-frontend/themes/theme-generated.js
-  // and for theme in JAR that is copied to target/flow-frontend/themes/
-  // and not frontend/themes
+  devMode: false,
+  // The following matches folder 'target/flow-frontend/themes/'
+  // (not 'frontend/themes') for theme in JAR that is copied there
   themeResourceFolder: flowFrontendThemesFolder,
   themeProjectFolders,
-  projectStaticAssetsOutputFolder
+  projectStaticAssetsOutputFolder,
+  frontendGeneratedFolder
 };
 
 // this matches css files in the theme
@@ -39,13 +42,17 @@ const themeCssRegex = /(\\|\/).*frontend(\\|\/)themes\1[\s\S]*?\.css/;
 
 const projectThemePath = path.resolve(__dirname, 'frontend/themes');
 const reusableThemesPath = path.resolve(__dirname, 'target/flow-frontend/themes');
-const hasReusableThemes = fs
-  .readdirSync(reusableThemesPath)
-  .some(file => !file.includes('theme-generated.js'));
+const hasReusableThemes = fs.existsSync(reusableThemesPath);
 
 const themesPath = hasReusableThemes ? reusableThemesPath : projectThemePath;
+const applyThemePath = path.resolve(
+  hasReusableThemes ? frontendGeneratedFolder : projectThemePath,
+  'theme.js'
+);
 
 module.exports = function(config) {
+  config.resolve.alias['themes/theme-generated.js'] = applyThemePath;
+  config.resolve.alias['generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
 
@@ -69,7 +76,7 @@ module.exports = function(config) {
         path.resolve(__dirname, 'src', 'main', 'java'),
         path.resolve(__dirname, 'frontend', 'themes', 'docs', 'docs.generated.js'),
         path.resolve(__dirname, 'frontend', 'generated')
-      ],
-    },
+      ]
+    }
   };
 };
