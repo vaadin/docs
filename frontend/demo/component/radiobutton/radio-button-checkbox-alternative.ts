@@ -5,7 +5,7 @@ import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('radio-button-checkbox-alternative')
 export class Example extends LitElement {

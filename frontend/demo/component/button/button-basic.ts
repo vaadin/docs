@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 // tag::snippet[]
 @customElement('button-basic')

@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('combo-box-custom-entry-1')
 export class Example extends LitElement {

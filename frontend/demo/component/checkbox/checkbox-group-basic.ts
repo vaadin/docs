@@ -3,7 +3,7 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('checkbox-group-basic')
 export class Example extends LitElement {

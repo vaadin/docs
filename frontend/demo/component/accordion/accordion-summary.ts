@@ -15,7 +15,7 @@ import { getCountries } from '../../domain/DataService';
 import { Binder, field } from '@vaadin/form';
 import PersonModel from '../../../generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from '../../../generated/com/vaadin/demo/domain/CardModel';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },

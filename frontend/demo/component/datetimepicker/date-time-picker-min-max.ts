@@ -4,7 +4,7 @@ import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-lin
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import { format, addDays } from 'date-fns';
 
 const dateTimeFormat = `yyyy-MM-dd'T'HH:00:00`;

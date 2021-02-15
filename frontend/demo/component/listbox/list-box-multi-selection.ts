@@ -5,7 +5,7 @@ import '@vaadin/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('list-box-multi-selection')
 export class Example extends LitElement {
@@ -18,10 +18,20 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box>
-        <vaadin-item>Show assignee</vaadin-item>
-        <vaadin-item>Show due date</vaadin-item>
-        <vaadin-item>Show status</vaadin-item>
+      <vaadin-list-box
+        multiple
+        style="height: calc(var(--lumo-size-l) * 5)"
+        .selectedValues="${[0, 3]}"
+      >
+        <vaadin-item>Aria Bailey</vaadin-item>
+        <vaadin-item>Aaliyah Butler</vaadin-item>
+        <vaadin-item>Eleanor Price</vaadin-item>
+        <vaadin-item>Allison Torres</vaadin-item>
+        <vaadin-item>Madeline Lewis</vaadin-item>
+        <vaadin-item>Lucas Edwards</vaadin-item>
+        <vaadin-item>Paul Gibbs</vaadin-item>
+        <vaadin-item>Hana Newton</vaadin-item>
+        <vaadin-item>Jane Stone</vaadin-item>
       </vaadin-list-box>
       <!-- end::snippet[] -->
     `;
