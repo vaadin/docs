@@ -52,7 +52,14 @@ const applyThemePath = path.resolve(
   'theme.js'
 );
 
-module.exports = function(config) {
+module.exports = function (config) {
+  const allFlowImportsPath = path.resolve(__dirname, 'target/frontend/generated-flow-imports');
+  config.resolve.alias['all-flow-imports-or-empty'] =
+    process.env.DOCS_IMPORT_EXAMPLE_RESOURCES === 'true'
+      ? allFlowImportsPath
+      : // false not supported in Webpack 4, let's use a resource that would get included anyway
+        applyThemePath;
+
   config.resolve.alias['themes/theme-generated.js'] = applyThemePath;
   config.resolve.alias['generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
@@ -70,7 +77,7 @@ module.exports = function(config) {
     use: ['raw-loader', 'extract-loader', 'css-loader']
   });
 
-  // The docbuilder bundle should never contain the embedded Vaadin examples
+  // The docs-app bundle should never contain the embedded Vaadin examples
   config.module.rules.push({
     test: embeddedWcRegex,
     use: ['null-loader']
