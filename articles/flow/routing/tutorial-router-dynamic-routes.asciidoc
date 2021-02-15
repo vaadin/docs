@@ -1,15 +1,17 @@
 ---
 title: Registering Routes Dynamically
-order: 10
+order: 12
 layout: page
 ---
 
 
 = Registering Routes Dynamically
 
-In addition to registering routes using the <<tutorial-routing-annotation#,`@Route` annotation>>, you can add and remove routes dynamically during runtime. This is useful when a route should be added or removed based on changed business data or application configuration at startup, for example. 
+In addition to registering routes and route templates using the <<tutorial-routing-annotation#,`@Route` annotation>>, you can add and remove routes dynamically during runtime.
+This is useful when a route should be added or removed based on changed business data or application configuration at startup, for example.
 
-The `RouteConfiguration` class allows you to configure routes to a specific scope. You can configure routes to:
+The `RouteConfiguration` class allows you to configure routes to a specific scope.
+You can configure routes to:
 
 * All users using the *application* scope, or 
 * Only certain active users using the *session* scope. 
@@ -34,14 +36,15 @@ RouteConfiguration.forSessionScope().setRoute("home",
 
 A route set for the user can override a route with the same path from the application scope. This means that any statically registered `@Route` can be overridden for a specific user, if necessary.
 
-The routes in the session scope are only accessible for the current user for as
-long as the session is valid. When the session is invalidated by the user logging out, the session-scoped routes are no longer available automatically. It is not necessary to specifically remove these routes. 
+The routes in the session scope are only accessible for the current user for as long as the session is valid.
+When the session is invalidated by the user logging out, the session-scoped routes are no longer available automatically.
+It is not necessary to specifically remove these routes.
 
 When removing routes, you need to define precisely which route to remove. 
 
 *Examples*:
 
-* Removing a navigation target (`AdminView.class`) with all possible route aliases registered to it.
+* Removing a navigation target (`AdminView.class`) with all possible route aliases and route templates registered to it.
 +
 [source, java]
 ----
@@ -59,19 +62,11 @@ configuration.removeRoute(AdminView.class);
 configuration.removeRoute("admin");
 ----
 
-* Removing a single navigation target registered to a path (`"users"` from `UsersView.class`,  without removing target with parameter, like `"users/{id}"`).
-+
-[source, java]
-----
-// Remove the "/users" path but keep e.g.
-// "/users/123"
-configuration.removeRoute("users", UsersView.class);
-----
-
 For more related information, see: 
 
 * <<Adding Route Aliases for Dynamic Routes>> (below).
-* <<tutorial-router-url-parameters#,Routing and URL Parameters>> (multiple navigation targets on a single path).
+* <<tutorial-router-templates#,Route Templates>>
+* <<tutorial-router-url-parameters#,Typed URL Parameters>>
 
 
 [NOTE]
@@ -85,7 +80,7 @@ When dynamically registering a route, any annotations on the classes *are ignore
 
 You can register routes during application startup using the `ServiceInitLister`.
 
-*Example*: Using `ServiceInitLister` to register a route during deployement. 
+*Example*: Using `ServiceInitLister` to register a route during deployment.
 
 [source,java]
 ----
@@ -114,7 +109,7 @@ See <<../advanced/tutorial-service-init-listener#,VaadinServiceInitListener>> fo
 
 When routes are registered dynamically, you may need to update UI components, like navigation menus, based on the added or removed routes.
 
-You can retrieve the registered routes using the `getAvailableRoutes()` method from the registry. To be notified of route changes, you can register a listener using the `addRoutesChangeListener` method.
+You can retrieve the registered route templates using the `getAvailableRoutes()` method from the `RouteConfiguration`. To be notified of route changes, you can register a listener using the `addRoutesChangeListener` method.
 
 [NOTE]
 You should use the session registry to monitor changes, because it contains all the routes that are available for the current user.
@@ -145,7 +140,9 @@ configuration.addRoutesChangeListener(event -> {
 
 == Adding Route Aliases for Dynamic Routes
 
-When adding dynamic routes, the first path for which a navigation target is added is marked as the main path. The main path is returned by the `getUrl` methods in a `RouteConfiguration`. Any additional registered path is seen as a route alias.
+When adding dynamic routes, the first route for which a navigation target is added is marked as the main route.
+The main route url is returned by the `getUrl` methods in a `RouteConfiguration`.
+Any additional registered route is seen as a route alias.
 
 *Example*: Adding multiple routes as navigation targets in a `RouteConfiguration`. 
 
@@ -180,7 +177,9 @@ Be cautious when adding or removing routes from the `ApplicationRouteRegistry`, 
 
 If you want to map all routes in the same way using the `@Route` annotation, you can configure the routes statically, but postpone registration until runtime. 
 
-To skip static registration on servlet initialization, add the `registerAtStartup = false` parameter to the `@Route` annotation. This prevents the route being registered on startup to the application-scoped registry. It also makes it easier to use existing parent chains and paths that are modified from the parent.
+To skip static registration on servlet initialization, add the `registerAtStartup = false` parameter to the `@Route` annotation.
+This prevents the route being registered on startup to the application-scoped registry.
+It also makes it easier to use existing parent chains and paths that are modified from the parent.
 
 *Example*: Using the `registerAtStartup` parameter to postpone route registration. 
 [source, java]
@@ -203,11 +202,14 @@ if (getCurrentUser().hasAccessToReporting()) {
 
 == Example: Adding a New View on User Login
 
-This example demonstrates how to add a new view on user login. There are two types of users: admin users and normal users. After login, we show a different view, depending on the user's access rights. 
+This example demonstrates how to add a new view on user login.
+Two types of users are available: admin users and normal users.
+After login, we show a different view, depending on the user's access rights.
 
 The demo application contains:
 
-* The `LoginPage` class that defines a statically registered route, `""`. This route is mapped to the login used for user authentication. 
+* The `LoginPage` class that defines a statically registered route, `""`.
+This route is mapped to the login used for user authentication.
 +
 [source, java]
 ----
@@ -261,7 +263,8 @@ public class InfoView extends Div {
 }
 ----
 
-After login, we want to add a new route depending on the access rights of the user. There are two available targets:
+After login, we want to add a new route depending on the access rights of the user.
+Two targets are available:
 
 * `AdminView` class.
 +
