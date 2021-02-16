@@ -1,0 +1,115 @@
+---
+title: Frontend Tools
+order: 150
+layout: page
+---
+
+= Frontend Tools
+
+This section describes the frontend development tools that Vaadin requires, and some configuration parameters related to the utilization of these.
+
+== Node.js
+
+Vaadin uses the Node.js runtime in development mode to run the Webpack development server, as well as the Node.js package manager (npm) and package runner (npx) to fetch, install and run frontend packages.
+
+Node.js can be installed in three different ways:
+
+- Automatically into user's home directory (`~/.vaadin/node`).
+- Globally with downloaded installer or package manager (such as Homebrew).
+  Node.js can be downloaded from https://nodejs.org/en/download/[https://nodejs.org/en/download/].
+  Installing Node.js automatically installs the command-line tools `npm` and `npx` as well.
+- Project-local installation (`_project_dir_/node`) using the frontend-maven-plugin[https://github.com/eirslett/frontend-maven-plugin].
+
+If Node.js is found globally, Vaadin validates that it is a supported version; if it is too old, it installs a compatible version into `~/.vaadin`.
+We recommend using the latest LTS version.
+A project-local installation will always take precedence over a global or `~/.vaadin` installation.
+
+
+=== Proxy Settings for Downloading Frontend Toolchain
+
+If you are behind a proxy server you should config your proxy settings so Vaadin can use them to download the frontend toolchain.
+There are four places where Vaadin read proxy settings from.
+You can set your proxy data in either of the followings:
+
+. system properties:
+. `{project directory}/.npmrc` file
+. `{user home directory}/.npmrc` file
+. environment variables
+
+The settings are read from the list above in order.
+For example, if you set your proxy in system properties, other sources will be ignored.
+The keys that you should use to define your proxy settings are as follows:
+
+[cols=3]
+|===
+|In System Properties and Environment Variables
+|In .npmrc files
+|Description
+
+|HTTP_PROXY
+|proxy
+|a proxy to use for outgoing http requests
+
+|HTTPS_PROXY
+|https-proxy
+|a proxy to use for outgoing https requests
+
+|NOPROXY
+|noproxy
+|a comma-separated string of domain extensions that a proxy should not be used for
+|===
+
+`.npmrc` file structure is ini (like Java properties files).
+It includes pairs of key-values separated by `=`.
+Here is an example of the content of such a file with proxy settings:
+```
+proxy=http://myusername:s3cr3tpassw0rd@proxyserver1:8085"
+https-proxy=http://myusername:s3cr3tpassw0rd@proxyserver1:8086"
+noproxy=192.168.1.1,vaadin.com,mycompany.com
+```
+
+To learn more about `.npmrc` file you can see https://docs.npmjs.com/configuring-npm/npmrc[official npmrc document].
+
+=== Building an Application using Travis CI
+
+If you are using https://travis-ci.org/[Travis] as a Continuous Integration server then there are two different options to install a proper Node.js version:
+
+. Specify the version via Travis configuration in `.travis.yml`.
+. Install Node.js automatically by Vaadin
+
+Please refer to https://docs.travis-ci.com/user/languages/javascript-with-nodejs/#specifying-nodejs-versions[Specifying Node.js versions] in Travis docs how to specify the Node version via `.travis.yml` file.
+
+You may force Node.js installation to the `~/.vaadin` folder via the `require.home.node` property.
+This property sets the Maven `requireHomeNodeExec` parameter value, so you may configure the Maven goal using `<requireHomeNodeExec>true</requireHomeNodeExec>`.
+To force node installation into home directory in development mode you should use `vaadin.require.home.node` system property or `require.home.node` web init parameter.
+
+
+== PNPM
+
+pnpm reduces the download time across multiple projects by caching the downloaded packages.
+It is the recommended and default package manager for Vaadin projects.
+
+You do not need to install pnpm separately.
+Vaadin uses npx, the node package runner to locate (and if necessary download) a compatible pnpm version.
+If you have installed pnpm globally (via `npm install -g pnpm`), the installed version is used by default unless it is determined to be too old.
+
+To install a custom frontend package into your project with pnpm, install Node.js globally and run pnpm using npx.
+For example, to install the `mobx` package into `node_modules`, run the following command in the project directory:
+
+```
+npx pnpm i mobx
+```
+
+If you have installed pnpm globally, you can alternatively call it directly:
+
+```
+pnpm i mobx
+```
+
+Vaadin requires pnpm 5 or newer.
+If you have already installed an older version of pnpm globally the above command runs the old version; either upgrade pnpm or pass a version specifier to npx, for example `pnpm@5.15.2` instead of `pnpm`.
+pnpm accepts other common npm flags, such as `--save` and `--save-dev` for saving the dependency to `package.json`.
+
+[NOTE]
+Vaadin expects transitive platform dependencies to be available directly under `node_modules`.
+In Vaadin versions earlier than 19 that use pnpm, the `--shamefully-hoist` flag must be explicitly given to pnpm during package installation: `pnpm i --shamefully-hoist mobx`.

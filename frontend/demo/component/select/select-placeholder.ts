@@ -7,7 +7,7 @@ import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('select-placeholder')
 export class Example extends LitElement {

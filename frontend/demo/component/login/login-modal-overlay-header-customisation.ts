@@ -1,8 +1,8 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import { applyTheme } from 'themes/theme-generated.js';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
+import { applyTheme } from 'generated/theme';
 import * as img from '../../../../src/main/resources/images/logo-white.png';
 
 @customElement('login-modal-overlay-header-customisation')

@@ -1,4 +1,4 @@
-import { Flow } from '@vaadin/flow-frontend/Flow';
+import { Flow } from '@vaadin/flow-frontend';
 import { Router } from '@vaadin/router';
 
 import './main-layout';

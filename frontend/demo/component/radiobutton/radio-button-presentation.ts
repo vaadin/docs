@@ -6,7 +6,7 @@ import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getCards } from '../../domain/DataService';
 import Card from '../../../generated/com/vaadin/demo/domain/Card';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('radio-button-presentation')
 export class Example extends LitElement {

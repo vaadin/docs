@@ -1,10 +1,11 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, css, unsafeCSS } from 'lit-element';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import * as img from '../../../../src/main/resources/images/earth.jpg';
+
 @customElement('login-rich-content')
 export class Example extends LitElement {
   constructor() {
