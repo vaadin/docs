@@ -10,17 +10,6 @@ registerStyles(
       background-position: center;
       background-image: url(${unsafeCSS(img)})
     }
-
-    :host([theme='header-customised']) ::slotted(.title) {
-      color: var(--lumo-primary-contrast-color) !important;
-      font-weight: 600 !important;
-      margin-top: var(--lumo-space-m) !important;
-      margin-bottom: var(--lumo-space-xs) !important;
-    }
-
-    :host([theme='header-customised']) ::slotted(span) {
-      color: var(--lumo-primary-contrast-color) !important;
-    }
   }`
 );
 //end::snippet[]
