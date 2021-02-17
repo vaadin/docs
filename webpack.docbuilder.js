@@ -40,6 +40,8 @@ const themeOptions = {
 // this matches css files in the theme
 const themeCssRegex = /(\\|\/).*frontend(\\|\/)themes\1[\s\S]*?\.css/;
 
+const embeddedWcRegex = /(\\|\/).*target(\\|\/)frontend(\\|\/)[\s\S]*-wc.js/;
+
 const projectThemePath = path.resolve(__dirname, 'frontend/themes');
 const reusableThemesPath = path.resolve(__dirname, 'target/flow-frontend/themes');
 const hasReusableThemes = fs.existsSync(reusableThemesPath);
@@ -50,7 +52,14 @@ const applyThemePath = path.resolve(
   'theme.js'
 );
 
-module.exports = function(config) {
+module.exports = function (config) {
+  const allFlowImportsPath = path.resolve(__dirname, 'target/frontend/generated-flow-imports.js');
+  config.resolve.alias['all-flow-imports-or-empty'] =
+    process.env.DOCS_IMPORT_EXAMPLE_RESOURCES === 'true'
+      ? allFlowImportsPath
+      : // false not supported in Webpack 4, let's use a resource that would get included anyway
+        applyThemePath;
+
   config.resolve.alias['themes/theme-generated.js'] = applyThemePath;
   config.resolve.alias['generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
@@ -66,6 +75,12 @@ module.exports = function(config) {
   config.module.rules.push({
     test: themeCssRegex,
     use: ['raw-loader', 'extract-loader', 'css-loader']
+  });
+
+  // The docs-app bundle should never contain the embedded Vaadin examples
+  config.module.rules.push({
+    test: embeddedWcRegex,
+    use: ['null-loader']
   });
 
   // Avoid having the docs-app dev server recompile whenever the Java-sources or generated files change
