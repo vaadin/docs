@@ -23,6 +23,14 @@ export class Example extends LitElement {
         font-size: var(--lumo-font-size-l);
       }
 
+      iron-icon {
+        padding: 0.25rem;
+        box-sizing: border-box !important;
+        margin: 0 auto;
+        width: var(--lumo-icon-size-m);
+        height: var(--lumo-icon-size-m);
+      }
+
       vaadin-tabs,
       vaadin-tab {
         flex: auto;
@@ -46,16 +54,24 @@ export class Example extends LitElement {
         <h1 slot="navbar">MyApp</h1>
         <vaadin-tabs slot="navbar touch-optimized">
           <vaadin-tab>
-            <iron-icon icon="vaadin:dashboard"></iron-icon>
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:dashboard"></iron-icon>
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:cart"></iron-icon>
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:cart"></iron-icon>
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:user-heart"></iron-icon>
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:user-heart"></iron-icon>
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:package"></iron-icon>
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:package"></iron-icon>
+            </a>
           </vaadin-tab>
         </vaadin-tabs>
 
