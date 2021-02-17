@@ -3,12 +3,12 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import { getPeople } from '../../domain/DataService';
 import { MenuBarItem } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { AvatarElement } from '@vaadin/vaadin-avatar/vaadin-avatar';
 
-@customElement('avatar-basic')
+@customElement('avatar-menu-bar')
 export class Example extends LitElement {
   constructor() {
     super();

@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import * as img from '../../../../src/main/resources/images/company-logo.png';
@@ -16,7 +16,7 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private person!: Person;
+  private person?: Person;
 
   async firstUpdated() {
     const people = await getPeople(1);

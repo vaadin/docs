@@ -2,10 +2,10 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar-group';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import { AvatarGroupItem } from '@vaadin/vaadin-avatar/src/interfaces';
 
-@customElement('avatar-group-basic')
+@customElement('avatar-group-max-items')
 export class Example extends LitElement {
   constructor() {
     super();
