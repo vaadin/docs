@@ -20,33 +20,31 @@ export class Example extends LitElement {
 
   async firstUpdated() {
     this.items = await getPeople();
-    // TODO use Finnish i18n; translate the object / update the form / leave as is
     // tag::snippet[]
     const crud = this.shadowRoot?.querySelector('vaadin-crud');
     if (crud) {
       crud.i18n = {
-        newItem: 'Nuevo usuario',
-        editItem: 'Editar usuario',
-        saveItem: 'Guardar',
-        cancel: 'Cancelar',
-        deleteItem: 'Borrar...',
-        editLabel: 'Editar usuario',
+        newItem: 'Luo uusi',
+        editItem: 'Muuta tietoja',
+        saveItem: 'Tallenna',
+        cancel: 'Peruuta',
+        deleteItem: 'Poista...',
+        editLabel: 'Muokkaa',
         confirm: {
           delete: {
-            title: 'Confirmar borrado',
-            content:
-              '¿Estás seguro de querer borrar el usuario seleccionado? La acción no es reversible.',
+            title: 'Poista kohde',
+            content: 'Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.',
             button: {
-              confirm: 'Borrar',
-              dismiss: 'Cancelar'
+              confirm: 'Poista',
+              dismiss: 'Peruuta'
             }
           },
           cancel: {
-            title: 'Cancelar la edición',
-            content: 'Se han hecho cambios en el usuario que no se han guardado.',
+            title: 'Hylkää muutokset',
+            content: 'Kohteessa on tallentamattomia muutoksia',
             button: {
-              confirm: 'Descartar cambios',
-              dismiss: 'Continuar editando'
+              confirm: 'Hylkää',
+              dismiss: 'Peruuta'
             }
           }
         }
@@ -55,6 +53,11 @@ export class Example extends LitElement {
     // end::snippet[]
     if (crud) {
       crud.editorOpened = true;
+      const comboBox = crud?.shadowRoot?.querySelector('vaadin-combo-box');
+      if (comboBox) {
+        // Items need to be assigned before setting editedItem
+        comboBox.items = [...new Set(this.items.map(i => i.profession))];
+      }
       crud.editedItem = this.items[0];
       (crud as any).__isNew = false;
     }
@@ -69,7 +72,25 @@ export class Example extends LitElement {
         .editorOpened="${true}"
         include="firstName, lastName, email, profession"
         .items=${this.items}
-      ></vaadin-crud>
+      >
+        <vaadin-grid slot="grid">
+          <vaadin-crud-edit-column></vaadin-crud-edit-column>
+          <vaadin-grid-column path="firstName" header="Etunimi"></vaadin-grid-column>
+          <vaadin-grid-column path="lastName" header="Sukunimi"></vaadin-grid-column>
+          <vaadin-grid-column path="email" header="Sähköposti"></vaadin-grid-column>
+          <vaadin-grid-column path="profession" header="Ammatti"></vaadin-grid-column>
+        </vaadin-grid>
+        <vaadin-form-layout slot="form">
+          <vaadin-text-field path="firstName" label="Etunimi" required></vaadin-text-field>
+          <vaadin-text-field path="lastName" label="Sukunimi" required></vaadin-text-field>
+          <vaadin-email-field path="email" label="Sähköposti" required></vaadin-email-field>
+          <vaadin-combo-box
+            path="profession"
+            label="Ammatti"
+            .items="${[...new Set(this.items.map(i => i.profession))]}"
+          ></vaadin-combo-box>
+        </vaadin-form-layout>
+      </vaadin-crud>
       <!-- end::snippethtml[] -->
     `;
   }

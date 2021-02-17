@@ -34,7 +34,7 @@ export class Example extends LitElement {
       crud.editedItem = this.items[0];
       (crud as any).__isNew = false;
     }
-    // TODO: create an issue for buttons or find a better way to customize
+    // TODO(yuriy): update once https://github.com/vaadin/vaadin-crud/issues/228 is closed.
     // tag::snippet[]
     const deleteBtn = this.shadowRoot
       ?.querySelector('vaadin-crud')

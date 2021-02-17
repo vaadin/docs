@@ -35,6 +35,11 @@ export class Example extends LitElement {
     const crud = this.shadowRoot?.querySelector('vaadin-crud');
     if (crud) {
       crud.editorOpened = true;
+      const comboBox = crud?.shadowRoot?.querySelector('vaadin-combo-box');
+      if (comboBox) {
+        // Items need to be assigned before setting editedItem
+        comboBox.items = [...new Set(this.items.map(i => i.profession))];
+      }
       crud.editedItem = this.items[0];
       (crud as any).__isNew = false;
     }
@@ -49,7 +54,7 @@ export class Example extends LitElement {
         include="firstName, lastName, email, profession"
         .items=${this.items}
       >
-        <vaadin-form-layout slot="form" style="max-width: 60em;">
+        <vaadin-form-layout slot="form">
           <vaadin-text-field path="firstName" label="First name" required></vaadin-text-field>
           <vaadin-text-field path="lastName" label="Last name" required></vaadin-text-field>
           <vaadin-email-field path="email" label="Email" required></vaadin-email-field>
