@@ -37,6 +37,7 @@ export class Example extends LitElement {
       <vaadin-dialog
         aria-label="simple"
         resizable
+        draggable
         .opened=${this.dialogOpened}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
