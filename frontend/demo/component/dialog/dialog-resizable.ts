@@ -49,7 +49,7 @@ export class Example extends LitElement {
                 <h2 style="margin: var(--lumo-space-m) 0 0 0; font-size: 1.5em; font-weight: bold;">
                   Employees
                 </h2>
-                <vaadin-grid .items=${this.people} style=" min-height: 300px; flex: 1;">
+                <vaadin-grid .items=${this.people}>
                   <vaadin-grid-column path="firstName" title="First name"></vaadin-grid-column>
                   <vaadin-grid-column path="lastName" title="Last name"></vaadin-grid-column>
                   <vaadin-grid-column path="email" title="Email"></vaadin-grid-column>
