@@ -38,9 +38,14 @@ export class Example extends LitElement {
                 theme="spacing"
                 style="width: 300px; max-width: 100%; align-items: stretch;"
               >
-                <h2 style="margin: var(--lumo-space-m) 0 0 0; font-size: 1.5em; font-weight: bold;">
-                  New employee
-                </h2>
+                <vaadin-horizontal-layout
+                  class="draggable"
+                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); cursor: move; padding: var(--lumo-space-m) var(--lumo-space-l); margin: calc(var(--lumo-space-s) * -1) calc(var(--lumo-space-l) * -1) 0"
+                >
+                  <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">
+                    New employee
+                  </h2>
+                </vaadin-horizontal-layout>
                 <vaadin-vertical-layout style="align-items: stretch;">
                   <vaadin-text-field label="Title"></vaadin-text-field>
                   <vaadin-text-area label="Description"></vaadin-text-area>
