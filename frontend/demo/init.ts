@@ -1,3 +1,4 @@
+import './init-flow-namespace';
 import '@vaadin/flow-frontend/dndConnector-es6.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 // @ts-ignore
@@ -13,7 +14,7 @@ import CardModel from '../generated/com/vaadin/demo/domain/CardModel';
 // @ts-ignore
 import Card from '../generated/com/vaadin/demo/domain/Card';
 import client from '../generated/connect-client.default';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 // Make sure custom component styles get registered
 const div = document.createElement('div');
@@ -22,12 +23,6 @@ applyTheme(div.shadowRoot);
 
 // @ts-ignore
 client.prefix = __VAADIN_CONNECT_PREFIX__;
-
-// The connectors require window.Vaadin.Flow namespace to exists
-// @ts-ignore
-window.Vaadin = window.Vaadin || {};
-// @ts-ignore
-window.Vaadin.Flow = window.Vaadin.Flow || {};
 
 // @ts-ignore Workaround a Vaadin issue
 AppointmentModel.createEmptyValue = () => Appointment;

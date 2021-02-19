@@ -16,7 +16,7 @@ enum StrengthColor {
   moderate = '#e7c200',
   strong = 'var(--lumo-success-color)'
 }
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('password-field-advanced-helper')
 export class Example extends LitElement {

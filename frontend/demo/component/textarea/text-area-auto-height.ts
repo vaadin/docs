@@ -3,7 +3,7 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, css } from 'lit-element';
 import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('text-area-auto-height')
 export class Example extends LitElement {

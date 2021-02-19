@@ -7,7 +7,7 @@ import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { getPeople } from '../../domain/DataService';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('list-box-custom-item-presentation')
 export class Example extends LitElement {
