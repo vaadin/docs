@@ -1,0 +1,280 @@
+---
+title: Server Push
+layout: page
+---
+
+
+[[push.configuration]]
+= Server Push Configuration
+
+[.lead]
+Server push allows you to update the UI from the server, without the user explicitly requesting for updates (via a button click or other interaction).
+
+For example, server push can be used to send a new chat message for all participants without delay.
+
+It is based on a client-server connection which the client establishes and the server can then use to send updates to the client.
+
+The server-client communication uses a WebSocket connection, if the browser and the server support it.
+If not, the connection falls back to a method supported by the browser.
+Vaadin uses the link:https://github.com/Atmosphere/atmosphere[Atmosphere framework] internally.
+
+[[push.configuration.enabling]]
+== Enabling Push in Your Application
+
+To enable server push, you need to define the push mode either in the deployment
+descriptor or with the `@Push` annotation on your application shell class.
+
+[[push.configuration.pushmode]]
+=== Push Modes and Transports
+
+You can use server push in two modes: `automatic` and `manual`.
+The automatic mode pushes changes to the browser automatically after `access()` finishes.
+With the manual mode, you can do the push explicitly with `push()`, which allows more flexibility.
+
+Server push can use several transports: WebSockets, long polling, or combined WebSockets+XHR.
+WebSockets+XHR is the default transport.
+
+[[push.configuration.annotation]]
+=== The Push Annotation
+
+You can enable server push for the application with the `@Push` annotation as follows. It defaults to automatic mode (`PushMode.AUTOMATIC`).
+
+[source, Java]
+----
+@Push
+public class Application extends SpringBootServletInitializer {
+  ...
+}
+----
+
+To enable manual mode, you need to give the `PushMode.MANUAL` parameter as follows:
+
+
+[source, Java]
+----
+@Push(PushMode.MANUAL)
+public class Application extends SpringBootServletInitializer {
+  ...
+}
+----
+
+To use the long polling transport, you need to set the transport parameter as `Transport.LONG_POLLING` as follows:
+
+[source, Java]
+----
+@Push(transport = Transport.LONG_POLLING)
+public class Application extends SpringBootServletInitializer {
+  ...
+}
+----
+
+[[push.configuration.servlet]]
+=== Servlet Configuration
+
+If you are configuring your servlet manually, make sure to set the `async-supported` parameter.
+
+You can enable server push and define the push mode for an entire application in the servlet
+configuration with the `pushmode` parameter for the servlet in the
+`web.xml` deployment descriptor or a corresponding `@WebServlet` annotation.
+
+It is also possible to configure the URL to use for push requests by setting the `pushURL` parameter.
+This is useful for servers that require a predefined URL to push.
+
+
+
+[[push.access]]
+== Asynchronous Updates
+
+Making changes to a UI from another thread and pushing them to the browser requires locking the user session.
+Otherwise, the UI update done from another thread could conflict with a regular event-driven update and cause either data corruption or deadlocks.
+Because of this, you may only access an UI using the `access()` method, which locks the session to prevent conflicts.
+It takes as parameter a `Command` to execute while the session is locked.
+
+For example:
+
+[source, Java]
+----
+ui.access(new Command() {
+    @Override
+    public void execute() {
+        statusLabel.setText(statusText);
+    }
+});
+----
+
+You also use a lambda expression to define your access command.
+
+[source, Java]
+----
+ui.access(() -> statusLabel.setText(statusText));
+----
+
+If the push mode is `manual`, you need to push the pending UI changes to the browser explicitly with the `push()` method.
+
+[source, Java]
+----
+ui.access(() -> {
+    statusLabel.setText(statusText);
+    ui.push();
+});
+----
+
+Below is a complete example of a case where we make UI changes from another thread.
+
+[source, Java]
+----
+
+@Push
+@Route("push")
+public class PushyView extends VerticalLayout {
+    private FeederThread thread;
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        add(new Span("Waiting for updates"));
+
+        // Start the data feed thread
+        thread = new FeederThread(attachEvent.getUI(), this);
+        thread.start();
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        // Cleanup
+        thread.interrupt();
+        thread = null;
+    }
+
+    private static class FeederThread extends Thread {
+        private final UI ui;
+        private final PushyView view;
+
+        private int count = 0;
+
+        public FeederThread(UI ui, PushyView view) {
+            this.ui = ui;
+            this.view = view;
+        }
+
+        @Override
+        public void run() {
+            try {
+                // Update the data for a while
+                while (count < 10) {
+                    // Sleep to emulate background work
+                    Thread.sleep(500);
+                    String message = "This is update " + count++;
+
+                    ui.access(() -> view.add(new Span(message)));
+                }
+
+                // Inform that we are done
+                ui.access(() -> {
+                    view.add(new Span("Done updating"));
+                });
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+----
+
+When sharing data between UIs or user sessions, you need to consider the message-passing mechanism more carefully, as explained in the next section.
+
+
+[[push.broadcaster]]
+== Collaborative Views
+
+Broadcasting messages to be pushed to UIs in other user sessions requires some sort of message-passing mechanism that sends the messages to all UIs that are registered as recipients.
+As processing server requests for different UIs happens concurrently in different threads of the application server, locking the data structures is important to avoid deadlock situations.
+
+[[push.broadcaster.broadcaster]]
+=== The Broadcaster
+
+The standard pattern for sending messages to other users is to use a _broadcaster_ singleton that registers recipients and broadcasts messages to them.
+To avoid deadlocks, it is recommended that the messages are sent through a message queue in a separate thread.
+Using a Java `ExecutorService` running a single thread is one of the easiest and safest ways.
+The methods in the class are defined as `synchronized` to prevent race conditions.
+
+
+[source, Java]
+----
+public class Broadcaster {
+    static Executor executor = Executors.newSingleThreadExecutor();
+
+    static LinkedList<Consumer<String>> listeners = new LinkedList<>();
+
+    public static synchronized Registration register(
+            Consumer<String> listener) {
+        listeners.add(listener);
+
+        return () -> {
+            synchronized (Broadcaster.class) {
+                listeners.remove(listener);
+            }
+        };
+    }
+
+    public static synchronized void broadcast(String message) {
+        for (Consumer<String> listener : listeners) {
+            executor.execute(() -> listener.accept(message));
+        }
+    }
+}
+----
+
+
+[[push.broadcaster.receiving]]
+=== Receiving Broadcasts
+
+The receivers need register a consumer to the broadcaster to receive the broadcasts.
+The registration should be removed when the component is no longer attached.
+When updating the UI in a receiver, it should be done safely by executing the update through the `access()` method of the UI, as described in the previous section, <<push.access>>.
+
+[source, Java]
+----
+@Push
+@Route("broadcaster")
+public class BroadcasterView extends Div {
+    VerticalLayout messages = new VerticalLayout();
+    Registration broadcasterRegistration;
+
+    // Creating the UI shown separately
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        UI ui = attachEvent.getUI();
+        broadcasterRegistration = Broadcaster.register(newMessage -> {
+            ui.access(() -> messages.add(new Span(newMessage)));
+        });
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        broadcasterRegistration.remove();
+        broadcasterRegistration = null;
+    }
+}
+----
+
+
+[[push.broadcaster.sending]]
+=== Sending Broadcasts
+
+To send broadcasts with a broadcaster singleton, such as the one described above, you would only need to call the `broadcast()` method as follows.
+
+[source, Java]
+----
+public BroadcasterView() {
+    TextField message = new TextField();
+    Button send = new Button("Send", e -> {
+        Broadcaster.broadcast(message.getValue());
+        message.setValue("");
+    });
+
+    HorizontalLayout sendBar = new HorizontalLayout(message, send);
+
+    add(sendBar, messages);
+}
+----
