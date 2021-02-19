@@ -1,5 +1,7 @@
 package com.vaadin.demo.domain;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
 
 @JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
@@ -11,6 +13,8 @@ public class Person {
   private String lastName;
 
   private String email;
+
+  private Date birthday;
 
   private Integer id;
 
@@ -46,6 +50,14 @@ public class Person {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public Date getBirthday() {
+    return birthday;
+  }
+
+  public void setBirthday(Date birthday) {
+    this.birthday = birthday;
   }
 
   public boolean isSubscriber() {
