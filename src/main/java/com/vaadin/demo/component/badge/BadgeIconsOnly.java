@@ -15,6 +15,7 @@ public class BadgeIconsOnly extends Div {
         badge.getElement().getThemeList().add("badge pill contrast");
 
         add(badge);
+        // end::snippet[]
     }
 
     public static class Exporter extends DemoExporter<BadgeIconsOnly> { // hidden-full-source-line

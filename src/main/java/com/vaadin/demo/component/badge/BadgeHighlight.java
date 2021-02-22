@@ -15,6 +15,7 @@ public class BadgeHighlight extends Div {
         badge.getElement().getThemeList().add("badge pill contrast");
 
         add(badge);
+        // end::snippet[]
     }
 
     public static class Exporter extends DemoExporter<BadgeHighlight> { // hidden-full-source-line

@@ -15,6 +15,7 @@ public class BadgeColor extends Div {
         badge.getElement().getThemeList().add("badge pill contrast");
 
         add(badge);
+        // end::snippet[]
     }
 
     public static class Exporter extends DemoExporter<BadgeColor> { // hidden-full-source-line
