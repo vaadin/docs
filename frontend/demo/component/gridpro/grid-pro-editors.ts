@@ -9,7 +9,6 @@ import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'themes/theme-generated.js';
-import Country from '../../../generated/com/vaadin/demo/domain/Country';
 import { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 
 @customElement('grid-pro-editors')
@@ -42,14 +41,14 @@ export class Example extends LitElement {
         </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column
           path="birthday"
-          .renderer=${(root: HTMLElement, column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer=${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
             const person = model?.item as Person;
             const birthday = new Date(`${person.birthday} 00:00.0000`).toLocaleDateString();
             root.textContent = birthday;
           }}
           .editModeRenderer=${(
             root: HTMLElement,
-            column?: GridColumnElement,
+            _column?: GridColumnElement,
             model?: GridItemModel
           ) => {
             root.innerHTML = '';

@@ -33,7 +33,7 @@ export class Example extends LitElement {
       <vaadin-grid-pro .items=${this.items} enter-next-row>
         <vaadin-grid-column
           header="Name (read-only)"
-          .renderer=${(root: HTMLElement, column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer=${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
             const item = model?.item as Person;
             root.textContent = `${item.firstName} ${item.lastName}`;
           }}
