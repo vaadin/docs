@@ -7,6 +7,7 @@ export const injectGlobalCss = (css, target) => {
   target.adoptedStyleSheets = [...target.adoptedStyleSheets, sheet];
 };
 import stylesCss from './styles.css';
+import documentCss from './document.css';
 
 window.Vaadin = window.Vaadin || {};
 window.Vaadin.Flow = window.Vaadin.Flow || {};
@@ -18,6 +19,7 @@ export const applyTheme = target => {
     (!window.Vaadin.Flow['_vaadinds_docs_globalCss'].includes(target) && target !== document);
   if (injectGlobal) {
     injectGlobalCss(stylesCss.toString(), target);
+    injectGlobalCss(documentCss.toString(), document);
 
     window.Vaadin.Flow['_vaadinds_docs_globalCss'].push(target);
   }
