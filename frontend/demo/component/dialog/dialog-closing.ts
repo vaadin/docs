@@ -29,6 +29,7 @@ export class Example extends LitElement {
       <vaadin-dialog
         aria-label="simple"
         .opened=${this.dialogOpened}
+        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
@@ -54,7 +55,6 @@ export class Example extends LitElement {
             root
           );
         })}"
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
       ></vaadin-dialog>
       <!-- end::snippet[] -->
 

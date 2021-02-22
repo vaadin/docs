@@ -31,6 +31,7 @@ export class Example extends LitElement {
         aria-label="simple"
         draggable
         .opened=${this.dialogOpened}
+        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
@@ -63,7 +64,6 @@ export class Example extends LitElement {
             root
           );
         })}"
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
       ></vaadin-dialog>
       <!-- end::snippet[]  -->
       <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>

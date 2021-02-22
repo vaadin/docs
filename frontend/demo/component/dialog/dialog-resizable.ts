@@ -25,7 +25,7 @@ export class Example extends LitElement {
   private dialogOpened = false;
 
   @internalProperty()
-  private people: Person[] | undefined;
+  private people?: Person[];
 
   async firstUpdated() {
     this.people = await getPeople(50);
@@ -39,6 +39,7 @@ export class Example extends LitElement {
         resizable
         draggable
         .opened=${this.dialogOpened}
+        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
@@ -61,7 +62,6 @@ export class Example extends LitElement {
             root
           );
         })}"
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
       ></vaadin-dialog>
       <!-- end::snippet[]  -->
       <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
