@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 import './hint-badge'; // hidden-full-source-line
@@ -20,7 +20,15 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @internalProperty()
-  private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
+  private items = [
+    { text: 'View' },
+    { component: 'hr' },
+    { text: 'Edit' },
+    { text: 'Delete' },
+    { component: 'hr' },
+    { text: 'Email' },
+    { text: 'Call' }
+  ];
   // end:snippet[]
 
   @internalProperty()
