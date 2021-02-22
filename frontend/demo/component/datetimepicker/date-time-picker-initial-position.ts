@@ -6,7 +6,7 @@ import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 
 const currentYear = new Date().getFullYear();
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('date-time-picker-initial-position')
 export class Example extends LitElement {

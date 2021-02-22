@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('login-modal-overlay-header-customisation')
 export class Example extends LitElement {

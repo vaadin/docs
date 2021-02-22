@@ -10,7 +10,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
 import * as img from '../../../../src/main/resources/images/reindeer.jpg';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('scroller-basic')
 export class Example extends LitElement {

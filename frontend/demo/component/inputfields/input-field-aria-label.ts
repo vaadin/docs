@@ -4,7 +4,7 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-text-field';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('input-field-aria-label')
 export class Example extends LitElement {

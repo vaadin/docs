@@ -8,7 +8,7 @@ import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('app-layout-secondary-navigation')
 export class Example extends LitElement {
@@ -29,6 +29,14 @@ export class Example extends LitElement {
       h2 {
         align-self: center;
       }
+
+      iron-icon {
+        padding: 0.25rem;
+        box-sizing: border-box !important;
+        margin: 0 4px;
+        width: var(--lumo-icon-size-m);
+        height: var(--lumo-icon-size-m);
+      }
     `;
   }
 
@@ -42,10 +50,18 @@ export class Example extends LitElement {
             <h2>Orders</h2>
           </vaadin-horizontal-layout>
           <vaadin-tabs>
-            <vaadin-tab>All</vaadin-tab>
-            <vaadin-tab>Open</vaadin-tab>
-            <vaadin-tab>Completed</vaadin-tab>
-            <vaadin-tab>Cancelled</vaadin-tab>
+            <vaadin-tab>
+              <a tabindex="-1" target="_self">All</a>
+            </vaadin-tab>
+            <vaadin-tab>
+              <a tabindex="-1" target="_self">Open</a>
+            </vaadin-tab>
+            <vaadin-tab>
+              <a tabindex="-1" target="_self">Completed</a>
+            </vaadin-tab>
+            <vaadin-tab>
+              <a tabindex="-1" target="_self">Cancelled</a>
+            </vaadin-tab>
           </vaadin-tabs>
         </vaadin-vertical-layout>
 
@@ -53,32 +69,46 @@ export class Example extends LitElement {
 
         <vaadin-tabs slot="drawer" selected="1" orientation="vertical">
           <vaadin-tab>
-            <iron-icon icon="vaadin:dashboard"></iron-icon>
-            Dashboards
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:dashboard"></iron-icon>
+              Dashboards
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:cart"></iron-icon>
-            Orders
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:cart"></iron-icon>
+              Orders
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:user-heart"></iron-icon>
-            Customers
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:user-heart"></iron-icon>
+              Customers
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:package"></iron-icon>
-            Products
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:package"></iron-icon>
+              Products
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:records"></iron-icon>
-            Documents
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:records"></iron-icon>
+              Documents
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:list"></iron-icon>
-            Tasks
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:list"></iron-icon>
+              Tasks
+            </a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:chart"></iron-icon>
-            Analytics
+            <a tabindex="-1" target="_self">
+              <iron-icon icon="vaadin:chart"></iron-icon>
+              Analytics
+            </a>
           </vaadin-tab>
         </vaadin-tabs>
       </vaadin-app-layout>
