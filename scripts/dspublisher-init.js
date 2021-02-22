@@ -26,10 +26,10 @@ if (!globalThis.process.env.DOCS_INIT_UNDO) {
   // Update working directory
   execShellCommand('git read-tree -m -u HEAD');
 
-  // Create the env files for docbuilder
+  // Create the env files for dspublisher
   const envFileContent = `DOCS_ARTICLES_PATH="articles/ds"`;
-  execShellCommand(`echo '${envFileContent}' > docbuilder/build/.env`);
-  execShellCommand(`echo '${envFileContent}' > docbuilder/develop/.env`);
+  execShellCommand(`echo '${envFileContent}' > dspublisher/build/.env`);
+  execShellCommand(`echo '${envFileContent}' > dspublisher/develop/.env`);
 
   // Create a root index file under ds
   const dsIndexFileContent = fs
