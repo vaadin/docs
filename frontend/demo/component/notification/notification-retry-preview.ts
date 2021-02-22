@@ -8,7 +8,7 @@ import '@vaadin/vaadin-notification/vaadin-notification';
 export class Example extends LitElement {
   render() {
     return html`
-      <vaadin-notification-card theme="error" style="justify-content: center;">
+      <vaadin-notification-card theme="error" slot="middle">
         <div>Failed to generate report</div>
         <div style="width: 2em"></div>
         <vaadin-button theme="tertiary-inline">Retry</vaadin-button>

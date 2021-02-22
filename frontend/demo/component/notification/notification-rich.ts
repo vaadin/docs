@@ -34,7 +34,7 @@ export class Example extends LitElement {
           );
         })}"
         theme="success"
-        position="bottom-start"
+        position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -57,7 +57,7 @@ export class Example extends LitElement {
           );
         })}"
         theme="error"
-        position="bottom-start"
+        position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -77,7 +77,7 @@ export class Example extends LitElement {
             root
           );
         })}"
-        position="bottom-start"
+        position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -104,7 +104,7 @@ export class Example extends LitElement {
             root
           );
         })}"
-        position="bottom-start"
+        position="middle"
       ></vaadin-notification>
       <!-- end::snippet[] -->
 
