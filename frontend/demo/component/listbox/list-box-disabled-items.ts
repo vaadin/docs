@@ -5,7 +5,7 @@ import '@vaadin/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('list-box-disabled-items')
 export class Example extends LitElement {
@@ -18,10 +18,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box>
-        <vaadin-item>Show assignee</vaadin-item>
-        <vaadin-item>Show due date</vaadin-item>
-        <vaadin-item>Show status</vaadin-item>
+      <vaadin-list-box selected="0">
+        <vaadin-item>In progress (2)</vaadin-item>
+        <vaadin-item>Done (4)</vaadin-item>
+        <vaadin-item disabled>Cancelled (0)</vaadin-item>
       </vaadin-list-box>
       <!-- end::snippet[] -->
     `;

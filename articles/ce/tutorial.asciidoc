@@ -1,5 +1,5 @@
 ---
-title: Tutorial
+title: Quick Start Guide
 order: 2
 layout: page
 ---
@@ -7,18 +7,18 @@ layout: page
 [[ce.tutorial]]
 = Getting Started With Collaboration Engine
 
-This tutorial shows basic steps to set up Collaboration Engine in your Vaadin project
+This guide shows the basic steps to set up Collaboration Engine in your Vaadin project
 and add the following collaboration features to a simple form:
 
 * Users can see the avatars of all the users who are using the application at the same time.
 * When someone enters a new value to a field, it is propagated to all users.
 * Users can see who is currently editing each field (a feature referred to as field highlight).
 
-.Subscription required for production use
+.Collaboration Engine requires a license file for use in production mode
 [IMPORTANT]
-Collaboration Engine is a commercial product that requires a subscription for production use.
-You can try it out and develop applications with it without charge.
-<<going-to-production#, When you take your application to production>>, you need a valid subscription.
+Collaboration Engine follows a runtime billing model, based on the number of end users using collaborative features in an application.
+Developers can start with a free 10 end user / month license, or request a commercial license with a larger quota of end users.
+Visit the <<going-to-production#, Setting up for production>> section of our documentation to learn how to download and install a license.
 
 [[ce.tutorial.setup]]
 == Preparing the Application
@@ -40,7 +40,7 @@ In the project's [filename]`pom.xml` file, add Collaboration Engine as a depende
 <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>collaboration-engine</artifactId>
-    <version>2.0.0</version>
+    <version>3.0.0</version>
 </dependency>
 ----
 
@@ -49,15 +49,19 @@ Consult the https://github.com/vaadin/collaboration-engine/releases[releases pag
 [[ce.tutorial.push]]
 === Enabling Server Push
 
-Add `@Push` annotation on top of your root layout.
+Add `@Push` annotation on top of your `AppShellConfigurator`.
 This enables the server to propagate updates between clients in real time.
-By default, when creating a new project from `start.vaadin.com`, the root layout is `MainView.java`.
+In Spring applications, you can implement the interface in your main application class.
 
-[source, java]
+[source, Java]
 ----
 @Push
-public class MainView extends AppLayout {
-    ...
+@SpringBootApplication
+public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+
+    public static void main(String... args) {
+        SpringApplication.run(Application.class, args);
+    }
 }
 ----
 
@@ -74,28 +78,9 @@ This tutorial shows how to build a form where the users can edit the name and da
 
 Consider a `Person` bean class such as follows:
 
-[source, java]
+[source, Java]
 ----
-public class Person {
-    private String name;
-    private LocalDate dateOfBirth;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/ce/TutorialView.java[tags=person-bean,indent=0]
 ----
 
 === Creating a Simple View
@@ -103,17 +88,9 @@ public class Person {
 To start writing the actual application, create a view with a text field
 and a date picker but not yet any collaborative functionality.
 
-[source, java]
+[source, Java]
 ----
-@Route(value = "", layout = MainView.class)
-public class TutorialView extends VerticalLayout {
-
-    public TutorialView() {
-        TextField nameField = new TextField("Name");
-        DatePicker dateOfBirthField = new DatePicker("Date of birth");
-        add(nameField, dateOfBirthField);
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/ce/TutorialView.java[tags=tutorial;add-components;!*,indent=0]
 ----
 
 === Providing User Information
@@ -122,14 +99,12 @@ The `UserInfo` class represents an end user of a collaborative application.
 It has properties such as `name` and `image`, which are used to display information about who else is currently viewing the same view or editing a field.
 
 The user id should be the unique identifier of the currently logged-in user.
-(Note that this tutorial uses an id based on the UI instance instead of a user-based id.
-This allows simulating multiple users by opening the view in multiple browser tabs.)
+Note that this tutorial uses an id based on the UI instance instead of a user-based id.
+This allows simulating multiple users by opening the view in multiple browser tabs.
 
-[source, java]
+[source, Java]
 ----
-// NOTE: In a real application, use the user id of the logged in user instead
-String userId = System.identityHashCode(UI.getCurrent()) + "";
-UserInfo localUser = new UserInfo(userId, "User " + userId);
+include::{root}/src/main/java/com/vaadin/demo/ce/TutorialView.java[tags=user-info,indent=0]
 ----
 
 The name is displayed to other users when editing a field, and the user's avatar contains the abbreviation of the name (as the above example does not provide a user image).
@@ -142,11 +117,9 @@ This property is generated automatically, so you don't have to set it explicitly
 
 To display the avatars of all users who are currently using the application, create a `CollaborationAvatarGroup` component.
 
-[source, java]
+[source, Java]
 ----
-CollaborationAvatarGroup avatarGroup = new CollaborationAvatarGroup(
-        localUser, "tutorial");
-addComponentAsFirst(avatarGroup);
+include::{root}/src/main/java/com/vaadin/demo/ce/TutorialView.java[tags=avatar-group,indent=0]
 ----
 
 First of all, the components needs the local user's information (the `UserInfo`
@@ -179,13 +152,9 @@ After initializing, we use the regular binder methods to bind the person object'
 Finally, we set the topic to connect to (the same as for `CollaborationAvatarGroup`) and a supplier for the initial bean value that will populate the fields when the first user connects to the topic.
 The supplier could load the editable item from a backend, but in this example we populate the fields with an empty `Person` object.
 
-[source, java]
+[source, Java]
 ----
-CollaborationBinder<Person> binder = new CollaborationBinder<>(
-        Person.class, localUser);
-binder.forField(nameField).bind("name");
-binder.forField(dateOfBirthField).bind("dateOfBirth");
-binder.setTopic("tutorial", () -> new Person());
+include::{root}/src/main/java/com/vaadin/demo/ce/TutorialView.java[tags=binder,indent=0]
 ----
 
 The example takes care of propagating the field values among users, as well as displaying the currently focused user with the field highlight.
