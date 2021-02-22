@@ -8,32 +8,54 @@ layout: page
 = Setting Up for Production
 
 ifdef::articles[]
-Enabling the production mode is described in <<{articles}/guide/production/production-overview#, Deploying to Production>>.
+Enabling production mode for a Vaadin application is described in <<{articles}/guide/production/production-overview#, Deploying to Production>>.
 endif::articles[]
 ifndef::articles[]
-Enabling the production mode is described in <<../flow/production/tutorial-production-mode-basic#, Deploying to Production>>.
+Enabling production mode for a Vaadin application is described in <<../flow/production/tutorial-production-mode-basic#, Deploying to Production>>.
 endif::articles[]
-Using Collaboration Engine requires some extra steps when you take your application to production.
+If your application uses Collaboration Engine, it requires some extra steps when you take your application to production.
+These steps are described here.
 
-You need to:
+Before configuring your Vaadin application for production mode, you need to:
 
-. Get a license file with an end-user quota.
+. Get a license file with an end user quota.
 . Configure where Collaboration Engine files are stored.
 . Store the license file in the right location.
-. Implement a `LicenseEventHandler` to be notified when the license needs to be updated.
+. Implement a `LicenseEventHandler` to get notified when the license needs to be updated.
 
+
+[[ce.production.obtain-universal-license]]
+== Obtaining a Free "Universal" License File
+
+All Vaadin applications receive a free 10 end user per month quota with a universal license file. 
+If you don't have a commercial Vaadin subscription (Pro, Prime, or Enterprise), you can https://website.vaadin.com/hubfs/collaboration-engine/ce-license.json[download the universal license file].
+
+The name of the license file is `ce-license.json`.
+It informs Collaboration Engine that you are entitled to receive a quota of 10 end users per month.
+
+You can upgrade to a commercial license to increase your monthly end user quota.
+However, a commercial license also requires an active Vaadin commercial subscription (Pro, Prime, or Enterprise).
 
 [[ce.production.obtain-license]]
-== Obtaining a License File
+== Obtaining a Commercial License File
 
-First, you need to have a subscription with a large enough user limit to meet your needs.
-If you do not yet have a license, https://vaadin.com/collaboration/#contact-us[request a license through the product page] to get in contact with Vaadin.
+If you need to use Collaboration Engine powered features for more than 10 end users / month, please request a commercial license file.
+
+First, you need to have a commercial Vaadin subscription (Pro, Prime, or Enterprise) to request this license.
+Each Vaadin subscription offers a bundled quota of end users per month, based on the number of development seats.
+Visit, https://vaadin.com/collaboration#pricing[the official feature page] to learn more about the bundled quotas. 
+
+To obtain your license, https://vaadin.com/collaboration/#contact-us[contact our team]. 
+You can also request and purchase a larger quota of end users than provided by your commercial Vaadin subscription. 
+End users above your bundled quota are billed at 1 USD (or 1 EUR) per month.
 
 The name of the license file is `ce-license.json`.
 It defines how many unique end users can use collaborative features per month and when the license expires.
 
 [[ce.production.configure-data-dir]]
 == Configuring File Storage Location
+
+Follow the steps in this section after you receive your license file.
 
 You need to configure which directory should be used by Collaboration Engine to store files by setting the `vaadin.ce.dataDir` property.
 In version 2, the only file that Collaboration Engine uses is the `ce-license.json`, but in upcoming versions can use the directory to store automatic usage statistics, topic data, and so forth.
@@ -57,16 +79,10 @@ If you have a Spring application, you can register a `VaadinServiceInitListener`
 In the `serviceInit` method, you can then set `vaadin.ce.dataDir` as a system property.
 
 .`com.company.myapp.MyVaadinInitListener.java`
-```java
-@SpringComponent
-public class MyVaadinInitListener implements VaadinServiceInitListener {
-    @Override
-    public void serviceInit(ServiceInitEvent event) {
-        System.setProperty("vaadin.ce.dataDir",
-                "/Users/steve/vaadin/collaboration-engine/");
-    }
-}
-```
+[source, Java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/MyVaadinInitListener.java[tags=init-listener;!*,indent=0]
+----
 
 ==== Other Applications
 
@@ -187,44 +203,11 @@ if you're setting that property in Java code, as described earlier.
 The following example is a Spring project, so the `VaadinServiceInitListener` is registered by adding the `@SpringComponent` annotation.
 If you are not using Spring, you can register the service init listener in the same way as described in <<ce.production.data-dir-in-project-files>>.
 
-```java
-@SpringComponent
-public static class MyVaadinInitListener
-        implements VaadinServiceInitListener {
-
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(MyVaadinInitListener.class);
-
-    @Override
-    public void serviceInit(ServiceInitEvent serviceEvent) {
-        VaadinService service = serviceEvent.getSource();
-
-        LicenseEventHandler licenseEventHandler = licenseEvent -> {
-            switch (licenseEvent.getType()) {
-            case GRACE_PERIOD_STARTED:
-            case LICENSE_EXPIRES_SOON:
-                LOGGER.warn(licenseEvent.getMessage());
-                break;
-            case GRACE_PERIOD_ENDED:
-            case LICENSE_EXPIRED:
-                LOGGER.error(licenseEvent.getMessage());
-                break;
-            }
-            sendEmail(
-                    "Vaadin Collaboration Engine license needs to be updated",
-                    licenseEvent.getMessage());
-        };
-
-        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
-                licenseEventHandler);
-        CollaborationEngine.configure(service, configuration);
-    }
-
-    private void sendEmail(String subject, String content) {
-        // Implement sending an email to relevant people
-    }
-}
-```
+.`com.company.myapp.MyVaadinInitListener.java`
+[source, Java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/MyVaadinInitListener.java[tags=init-listener;!send-email,indent=0]
+----
 
 In the above example, the license event handler logs the event messages using the SLF4J logging API, and sends an email.
 When it is time to update the license, the message is logged as a warning.
@@ -234,39 +217,10 @@ The default event messages provide information of what has happened, how it affe
 Below is an example implementation of the `sendEmail()` method.
 It requires the `javax.mail.mail` package as a dependency.
 
-```java
-private void sendEmail(String subject, String content) {
-    // Replace the following information:
-    String from = "sender@gmail.com";
-    String password = "*****"; // Read, for example, from encrypted config file.
-    String to = "receiver@gmail.com";
-    String host = "smtp.gmail.com";
-
-    Properties properties = System.getProperties();
-    properties.put("mail.smtp.host", host);
-    properties.put("mail.smtp.port", "465");
-    properties.put("mail.smtp.ssl.enable", "true");
-    properties.put("mail.smtp.auth", "true");
-
-    Session session = Session.getInstance(properties, new Authenticator() {
-        @Override
-        protected PasswordAuthentication getPasswordAuthentication() {
-            return new PasswordAuthentication(from, password);
-        }
-    });
-    try {
-        MimeMessage message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(from));
-        message.addRecipient(Message.RecipientType.TO,
-                new InternetAddress(to));
-        message.setSubject(subject);
-        message.setText(content);
-        Transport.send(message);
-    } catch (MessagingException e) {
-        LOGGER.error(e.getMessage(), e);
-    }
-}
-```
+[source, Java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/MyVaadinInitListener.java[tags=send-email,indent=0]
+----
 
 .Exception thrown if events are not handled
 NOTE: Collaboration Engine throws an exception in production mode if a configuration has not been defined.
@@ -286,14 +240,10 @@ The count of end users starts over on the first day of each month.
 When you use any Collaboration Engine features, you have to provide a
 `UserInfo` object with a unique ID.
 
-```java
-String userId = "steve@example.com";
-String name = "Steve";
-UserInfo userInfo = new UserInfo(userId, name);
-CollaborationAvatarGroup avatarGroup = new CollaborationAvatarGroup(
-        userInfo, "app");
-add(avatarGroup);
-```
+[source, Java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/ProductionDocumentation.java[tags=user-def,indent=0]
+----
 
 Collaboration Engine records the ID of each user that accesses collaborative features in the ongoing month and counts towards your quota for the current month.
 Each user ID is counted only once per month.
@@ -337,12 +287,14 @@ You can use the status to adapt the UI according to whether the end-user can use
 
 For example:
 
-```java
-UserInfo userInfo = new UserInfo("steve@example.com", "Steve");
-CollaborationEngine.getInstance().requestAccess(userInfo, response -> {
-    component.setVisible(response.hasAccess());
-});
-```
+[source, Java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/ProductionDocumentation.java[tags=request-access,indent=0]
+----
+
+.Cache the results
+[TIP]
+To avoid calling this method multiple times per user, it is suggested to cache the result during the login process, for example, in the session.
 
 [[ce.production.restrict-usage]]
 === Limiting Collaborative Features to Some End Users
@@ -358,15 +310,8 @@ For example, if you only use collaborative features in the admin views, only tho
 For example, by checking the role or privileges or the user, you can decide in code if the users should have collaborative features enabled or not.
 
 An example of how to enable collaboration by checking user permissions:
-```java
-User userEntity = userService.getCurrentUser();
-if (userEntity.getRoles().contains(Role.ADMIN)) {
-    UserInfo userInfo = new UserInfo(userEntity.getId(),
-            userEntity.getName(), userEntity.getImageUrl());
 
-    CollaborationAvatarGroup avatarGroup = new CollaborationAvatarGroup(
-            userInfo, "avatars");
-
-    add(avatarGroup);
-}
-```
+[source, Java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/ProductionDocumentation.java[tags=restrict-usage,indent=0]
+----

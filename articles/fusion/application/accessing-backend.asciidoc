@@ -7,14 +7,16 @@ layout: page
 
 = Accessing Java Backend
 
-A server-side Java endpoint is a back-end method that is exposed for calling from client-side TypeScript code.
-An endpoint in Vaadin is a class that defines one or more API methods.
+A server-side Java endpoint is a backend method that is exposed for calling from client-side TypeScript code.
+An endpoint in Vaadin is a class that defines one or more public methods.
 
-Vaadin bridges Java backend endpoints and a TypeScript frontend. It generates
-TypeScript clients to call the Java backend in a type-checkable way.
+Vaadin bridges Java backend endpoints and a TypeScript frontend.
+It generates TypeScript clients to call the Java backend in a type-checkable way.
 
+.Vaadin endpoints depend on Spring Boot auto configuration.
 [WARNING]
-Vaadin endpoints depend on Spring Boot auto-configuration. It does not work if the auto-configuration is disabled, for example, when you use `@EnableWebMvc`. As a workaround, remove the `@EnableWebMvc` annotation, as stated in link:https://docs.spring.io/spring-boot/docs/2.3.4.RELEASE/reference/html/spring-boot-features.html#boot-features-spring-mvc-auto-configuration[Spring Boot documentation].
+They do not work if the auto configuration is disabled, for example, when you use `@EnableWebMvc`.
+As a workaround, remove the `@EnableWebMvc` annotation, as stated in link:https://docs.spring.io/spring-boot/docs/2.3.4.RELEASE/reference/html/spring-boot-features.html#boot-features-spring-mvc-auto-configuration[Spring Boot documentation].
 If you have an idea how to make it more useful for you, please share it on link:https://github.com/vaadin/flow/issues/new/[GitHub^].
 
 == Creating an Endpoint
@@ -41,9 +43,9 @@ public class CounterEndpoint {
 }
 ----
 
-When the application starts, Vaadin analyzes such classes in order to be able to process the requests made to such endpoints, and to appropriately verify user access.
-For each request that is trying to access the method in the corresponding Vaadin endpoint, a permission check is carried on.
-`@AnonymousAllowed` means that it permits anyone to call the method via the request without the authorization
+When the application starts, Vaadin scans the classpath for `@Endpoint`-annotated classes.
+For each request to access a public method in a Vaadin endpoint, a permission check is carried out.
+`@AnonymousAllowed` means that Vaadin permits anyone to call the method from the client-side.
 
 Please refer to the <<../security/overview#, Security>> for configuring endpoint access.
 
@@ -60,7 +62,7 @@ This syntax has the following properties:
 
 The following example demonstrates the `City.ts` module:
 
-.City.ts
+.`City.ts`
 [source,typescript]
 ----
 // Declare and export an interface
@@ -69,7 +71,7 @@ export default interface City {
 }
 ----
 
-.index.ts
+.`index.ts`
 [source,typescript]
 ----
 // Import and use a declaration from another module
@@ -83,16 +85,15 @@ const cityObject: City = {
 
 In Vaadin applications, the `index.ts` (or, optionally, `index.js`) file is also a module.
 
-== Modules Generated from Vaadin Endpoints
+== Modules Generated From Vaadin Endpoints
 
-Fusion generates a TypeScript module for every Vaadin endpoint on the back end.
+Fusion generates a TypeScript module for every Vaadin endpoint on the backend.
 Each such module exports all the methods in the endpoint.
 
-You can either import an entire generated module as an endpoint, or import the
-methods from the module separately.
+You can either import an entire module at once or select individual endpoint methods.
 For example, the `CounterEndpoint.ts` could be used as in the following snippets:
 
-.index.ts (import the whole module)
+.`index.ts` (import the whole endpoint module)
 [[index.ts]]
 [source,typescript]
 ----
@@ -103,7 +104,7 @@ import * as counterEndpoint from './generated/CounterEndpoint';
 counterEndpoint.addOne(1).then(result => console.log(result));
 ----
 
-.index.ts (only import the needed method)
+.`index.ts` (import a single endpoint method)
 [source,typescript]
 ----
 // Other imports
@@ -126,8 +127,8 @@ For more information about supported types, see <<../advanced/fusion-advanced-ty
 For example, the generated TypeScript module for the Java endpoint defined in
  <<accessing-backend#how-to-create-vaadin-endpoint,CounterEndpoint.java>> would look as follows:
 
+.`CounterEndpoint.ts`
 [source,typescript]
-.CounterEndpoint.ts
 ----
 /**
  * A Vaadin endpoint that counts numbers.

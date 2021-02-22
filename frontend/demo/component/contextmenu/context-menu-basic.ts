@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-li
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 // tag::snippet[]
 @customElement('context-menu-basic')

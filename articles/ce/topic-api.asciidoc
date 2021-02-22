@@ -27,17 +27,9 @@ This tutorial will build a view with a checkbox where the user can choose whethe
 
 First, create the view with a checkbox but not yet any collaborative functionality.
 
-[source, java]
+[source, Java]
 ----
-@Route(value = "", layout = MainView.class)
-public class TopicView extends VerticalLayout {
-  private final Checkbox checkbox;
-
-  public TopicView() {
-      checkbox = new Checkbox("Is it Friday?");
-      add(checkbox);
-  }
-}
+include::{root}/src/main/java/com/vaadin/demo/ce/TopicView.java[tags=topic-view;add-components;!*,indent=0]
 ----
 
 === Define Topic Connection
@@ -46,33 +38,24 @@ Sharing data between multiple users happens through a `TopicConnection` instance
 By default, the connection is deactivated until its related component is attached to the UI.
 
 Open a connection to the `tutorial` topic and define the activation callback
-which will be triggered when the current `TopicView` component (i.e. `this`) is attached.
+which will be triggered when the current `TopicView` component (`this`) is attached.
 The user who is related to the topic connection must be defined.
 
-[source, java]
+[source, Java]
 ----
-//TODO: replace generated ID and name with data from the actual logged in user
-String userId = System.identityHashCode(UI.getCurrent()) + "";
-UserInfo localUser = new UserInfo(userId, "User " + userId);
-
-CollaborationEngine.getInstance().openTopicConnection(this, "tutorial", localUser,
-    topic -> {
-        // logic for the connection's activation callback
-        return null;
-    });
+include::{root}/src/main/java/com/vaadin/demo/ce/TopicView.java[tags=user-info;open-topic;!*,indent=0]
 ----
 
 The activation callback should return a registration that is run when the connection is deactivated.
 Since we are not yet registering any own listeners that need cleanup, we can just return `null`.
 
 === Define a category in the Topic
-The topic stores collaborative data in named maps. In the activation callback, get a map by its name:
+The topic stores collaborative data in named maps.
+In the activation callback, get a map by its name:
 
-[source, java]
+[source, Java]
 ----
-    ...
-    topic -> {
-        CollaborationMap fieldValues = topic.getNamedMap("fieldValues");
+include::{root}/src/main/java/com/vaadin/demo/ce/TopicView.java[tags=open-topic;get-map;!*,indent=0]
 ----
 
 === Pass Values to the Topic
@@ -81,14 +64,9 @@ The first actual step to making the application collaborative is to update the t
 `isFriday` is the key associated with the value of the checkbox.
 Add a value change listener that updates the related topic map.
 
-[source, java]
+[source, Java]
 ----
-    topic -> {
-        ...
-        Registration registration = checkbox
-            .addValueChangeListener(valueChangeEvent -> {
-                fieldValues.put("isFriday", valueChangeEvent.getValue());
-            });
+include::{root}/src/main/java/com/vaadin/demo/ce/TopicView.java[tags=open-topic;get-map;registration;!*,indent=0]
 ----
 
 The topic's structure now looks like:
@@ -108,20 +86,11 @@ This is also done in the activation callback so that the subscription is opened 
 It's also necessary to return the registration of the listener so
 it can be removed when the component is detached to avoid leaking memory.
 
-[source, java]
+[source, Java]
 ----
-    topic -> {
-        ...
-        fieldValues.subscribe(event -> {
-            if ("isFriday".equals(event.getKey())) {
-                checkbox.setValue(
-                        Boolean.TRUE.equals(event.getValue(Boolean.class)));
-            }
-        });
+include::{root}/src/main/java/com/vaadin/demo/ce/TopicView.java[tags=open-topic,indent=0]
+----
 
-        return registration;
-    }
-----
 TIP: In case there are many registrations, they can be combined by `Registration.combine(registration1, registration2);`.
 
 [[ce.topic-tutorial.run]]

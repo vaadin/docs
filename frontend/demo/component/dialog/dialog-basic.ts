@@ -6,7 +6,7 @@ import { guard } from 'lit-html/directives/guard';
 
 import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-button/vaadin-button';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 // tag::snippet[]
 @customElement('dialog-basic')

@@ -13,7 +13,7 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
     labelsPosition: 'aside'
   }
 ];
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('text-field-text-alignment')
 export class Example extends LitElement {
