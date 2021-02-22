@@ -10,11 +10,11 @@ public class BadgeBasic extends Div {
 
     public BadgeBasic() {
         // tag::snippet[]
-
         Span badge = new Span("Badge");
         badge.getElement().getThemeList().add("badge pill contrast");
 
         add(badge);
+        // end::snippet[]
     }
 
     public static class Exporter extends DemoExporter<BadgeBasic> { // hidden-full-source-line
