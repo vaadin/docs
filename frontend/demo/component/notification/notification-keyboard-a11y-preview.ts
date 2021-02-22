@@ -9,7 +9,7 @@ const isMac = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'].indexOf(window.navig
 export class Example extends LitElement {
   render() {
     return html`
-      <vaadin-notification-card theme="contrast" style="justify-content: center;">
+      <vaadin-notification-card theme="contrast" slot="middle">
         <div>5 tasks deleted</div>
         <div style="width: 2em"></div>
         <vaadin-button theme="primary">
