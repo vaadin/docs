@@ -1,0 +1,307 @@
+---
+title: Loading Resources
+order: 60
+layout: page
+---
+
+[[flow.loading-resources]]
+= Loading Resources
+
+Applications can use various types of resources, such as JavaScript code, CSS, and images.
+This article describes how they are stored in a project and then accessed in an application.
+
+== Resource Cheat Sheet
+
+The following tables show how to load various resources and where the resource files should be placed in a project.
+
+.In non-Spring projects
+|===
+|File type |Import |File location
+
+|CSS files
+|`@CssImport("./my-styles/styles.css")`<<foot-1,[1]>>
+|`/frontend/my-styles/styles.css`
+
+|JavaScript and Polymer templates
+|`@JsModule("./src/my-script.js")`<<foot-1,[1]>>
+|`/frontend/src/my-script.js`
+
+|Static files, such as images
+|`new Image("img/flower.jpg", "A flower")`
+|`/src/main/webapp/img/flower.jpg`
+|===
+
+.In Spring projects
+|===
+|File type |Import |File location
+
+|CSS files
+|`@CssImport("./my-styles/styles.css")`<<foot-1,[1]>>
+|`/frontend/my-styles/styles.css`
+
+|JavaScript and Polymer templates
+|`@JsModule("./src/my-script.js")`<<foot-1,[1]>>
+|`/frontend/src/my-script.js`
+
+|Static files, such as images
+|`new Image("img/flower.jpg", "A flower")`
+|`/src/main/resources/META-INF/resources/img/flower.jpg`
+|===
+
+.In add-ons
+|===
+|File type |Import |File location
+
+|CSS files
+|`@CssImport("./my-styles/styles.css")`<<foot-1,[1]>>
+|`/src/main/resources/META-INF/resources/frontend/my-styles/styles.css`
+
+|JavaScript and Polymer templates
+|`@JsModule("./src/my-script.js")`<<foot-1,[1]>>
+|`/src/main/resources/META-INF/resources/frontend/src/my-script.js`
+
+|Static files, such as images
+|`new Image("img/flower.jpg", "A flower")`
+|`/src/main/resources/META-INF/resources/img/flower.jpg`
+|===
+
+=== Footnotes
+
+[[foot-1]]
+. The `@JsModule` and `@CssImport` annotations can also be used for importing from an npm package.
+In this case, the path is defined as `@JsModule("@polymer/paper-input")` or `@CssImport("some-package/style.css")`.
+Paths referring to the local frontend directory should be prefixed with `./`.
+
+== Importing JavaScript and CSS
+
+You can add JavaScript files in two ways, either by using annotations or through the [classname]#Page# object.
+
+Sometimes the way client-side resources are loaded to the browser affects the functionality of the application.
+Vaadin Flow provides advanced methods to configure the loading of these resources.
+
+=== Using Annotations
+
+The following example shows how to import JavaScript files into [classname]#CustomComponent#:
+
+[source,java]
+----
+@Tag("div")
+@JavaScript("/js/script.js")
+@JsModule("./src/my-module.js")
+@StyleSheet(value = "/css/big_style_file.css")
+static class CustomComponent extends Component
+        implements HasText {
+  // implementation omitted
+}
+----
+
+The following annotations are available:
+
+[classname]#@JsModule#::
+Defines a JavaScript module dependency.
+These dependencies are loaded first.
++
+Lit templates should be imported using `@JsModule` (see <<../templates/tutorial-basic#,Creating a Simple Component Using the Template API>> for more information).
+
+[classname]#@JavaScript#::
+Defines a JavaScript file dependency.
+The file is loaded according to the load mode, as described in <<flow.loading-resources.load-mode>>.
+
+[classname]#@CssImport#::
+Imports a local style sheet, which can be bundled in the frontend bundle.
++
+See <<{articles}/theming/importing-style-sheets#,Importing Style Sheets>>.
+
+[classname]#@StyleSheet#::
+Imports an external or linked style sheet.
++
+See <<{articles}/theming/importing-style-sheets#,Importing Style Sheets>>.
+
+All the resource annotations are repeatable.
+Add one annotation for each file that you need to add.
+
+
+=== Loading JavaScript With the Page Object
+
+You can use the [methodname]#addJavaScript(String url)# method in [classname]#Page# to load JavaScript.
+The [classname]#Page# object also has an [classname]#addJsModule(String url)# method, which you can use to load an external JavaScript module.
+
+The following example uses `addJavaScript(String url)` to import JavaScript files:
+
+[source,java]
+----
+UI.getCurrent().getPage().addJavaScript("/js/script.js");
+// external JavaScript module
+UI.getCurrent().getPage()
+        .addJsModule("https://unpkg.com/lodash@4.17.15");
+----
+
+=== Dependency Loading Order
+
+Imported dependency files of the same type, load in the order they are defined in the class.
+For example, CSS files load in the `@CssImport` annotation definition order, JavaScript files in the `@JsModule` and  `@JavaScript` annotation definition order.
+
+The loading order of imported dependencies is only guaranteed for one file type, in one class.
+Specifically, loading order is not guaranteed between classes; annotations on class `A` could be imported before or after annotations on class `B`.
+
+Frontend resources bundled by webpack also have a type group ordering;
+JavaScript files loaded by `@JsModule` annotation come always before JavaScript files loaded by `@JavaScript`, and both of those come before CSS files loaded by `@CssImport`.
+The exception to this rule are `@JsModule` annotations of files annotated with `@Theme`.
+All JavaScript modules found on such classes are imported before other file types.
+This covers both `Lumo` and `Material` themes as well as custom themes created by the developer.
+
+
+For example, you could have multiple imported dependencies of different file types in a single class as follows:
+
+[source, java]
+----
+@JavaScript("1.js")
+@JsModule("a.js")
+@CssImport("1.css")
+@JavaScript("2.js")
+@JsModule("b.js")
+@CssImport("2.css")
+static class OrderedDependencies extends Div {
+}
+----
+
+The loading order of the files would be: `a.js`, `b.js`, `1.js`, `2.js`, `1.css`, and `2.css`.
+
+Imports on other classes could be before or after the imports present here (within each file group).
+
+You can control the load order of dependencies of different file types, by adding imports within an JavaScript import.
+
+In the following example, using JavaScript imports ensures that `custom-css.js` runs before `javascript-file.js`.
+The `custom-css.js` uses the technique for wrapping CSS into JavaScript presented in <<{articles}/theming/importing-style-sheets#,Importing Style Sheets>>.
+
+[source, javascript]
+----
+import '../styles/custom-css.js';
+import './javascript-file.js';
+----
+
+[[flow.loading-resources.load-mode]]
+=== Load Mode
+
+Resources referenced with annotations or loaded with the methods in the [classname]#Page# object can be imported with different levels of eagerness.
+This is controlled with the _load mode_.
+
+Notice that the load mode does not affect files that are bundled by webpack.
+Those files are included into the frontend resource bundle and are available after the bundle has been loaded.
+
+Three lode modes are available:
+
+`LoadMode.EAGER` (default)::
+This is the default load mode for all dependencies.
+The eager mode ensures that the dependency is loaded as soon as possible, and before the initial page load.
++
+The eager mode is suitable in most cases.
+Use it if you are unsure which mode to use.
+
+`LoadMode.INLINE`::
+The dependencies are included inline in the body of the page.
+This mode eliminates round trips when fetching dependencies.
+// TODO How to catch exception for annotation?
+If the contents cannot be fetched, an exception is thrown and loading stops.
++
+[NOTE]
+Pay attention to URLs used for inline dependencies: the URLs may change and could be incorrect after loading.
+
+`LoadMode.LAZY`::
+The dependencies are loaded in the background, after all eager and inline dependencies have loaded.
+Lazy dependency loading is independent of page initialization.
++
+Lazy mode is suitable when you need to load the dependency, but it is not important when it is loaded.
+
+You can give the load mode as a parameter for annotations that load the resources.
+
+The following example shows how to use annotations to add resource files:
+
+[source,java]
+----
+@Tag("div")
+@StyleSheet(value = "/css/big_style_file.css",
+        loadMode = LoadMode.INLINE)
+@JavaScript(value = "/js/animation.js",
+        loadMode = LoadMode.LAZY)
+public class MainLayout extends Component {
+    // implementation omitted
+}
+----
+
+When loading resources with the [classname]#Page# object, you can use the following methods:
+
+* [methodname]`addStyleSheet(String url, LoadMode loadMode)`
+* [methodname]`addJavaScript(String url, LoadMode loadMode)`
+
+For example:
+
+[source,java]
+----
+  public MainLayout() {
+      UI.getCurrent().getPage().addStyleSheet(
+            "/css/big_style_file.css", LoadMode.INLINE);
+      UI.getCurrent().getPage().addJavaScript(
+            "/js/animation.js", LoadMode.LAZY);
+  }
+}
+----
+
+
+=== Load-Order Guarantees
+
+All eager and inline dependencies are guaranteed to load before lazy dependencies.
+
+For example, component could use JavaScript animation, say `/js/animation.js`.
+It is optional and not required to display when the page is loaded.
+You can postpone its loading, giving priority to other resources.
+
+Dependencies with the same load mode are guaranteed to load in the order defined in the component.
+This is true for all load modes.
+
+
+== Storing Resources
+
+Resources can be loaded as individual files or bundled into the frontend bundle that also includes all Vaadin web components and other resources.
+
+=== Bundled Frontend Resources
+
+Vaadin bundles all the web components used in an application into a single frontend bundle file, which can be loaded efficiently when the application page is loaded.
+You can include your own files into the bundle as well.
+
+Static resources that are bundled using webpack and referenced with the `@JavaScript`, `@JsModule`, and `@CssImport` annotations should be placed under `{project directory}/frontend`.
+This includes normal JavaScript files, Polymer 3 template files, and CSS files.
+When importing files using these annotations, prefix the path with `./`, which signifies the `frontend/` directory.
+For example, a CSS file `my-custom.css` under `{project directory}/frontend/styles/my-custom.css` would be referenced `@CssImport("./styles/my-custom.css")`.
+
+If the `./` prefix is missing from a `@JsModule` annotation, the import is treated as a reference to an npm module under `node_modules/` folder.
+
+=== Static Resources
+
+This section covers static resource locations for resources that should not be bundled by webpack.
+
+You can place your resource files (CSS style sheets and JavaScript files, and other static resources) in any folder in your Web Archive (WAR) file, except `/VAADIN`, which is reserved for internal framework use.
+
+`VaadinServlet` handles static resource requests, if you have mapped it to `/*`.
+If not, the servlet container takes care of static resource requests.
+
+If you use relative URLs, it is irrelevant whether your application is deployed in the root context (for example  `\http://mysite.com/`) or in a sub context (for example `\http://mysite.com/myapp/`).
+Relative URLs are resolved using the page base URI, which is always set to match the servlet URL.
+
+=== Using a Servlet Path
+
+If you use a servlet path for the servlet, for example `\http://mysite.com/myapp/myservlet/`, you need to take the servlet path into account when including resources.
+This is because the base URI is `\http://mysite.com/myapp/myservlet/`, but static resources are deployed at `\http://mysite.com/myapp/`.
+
+You can use the `context://` protocol, with the `Page.addStyleSheet` method, for example.
+This ensures the URL is relative to the context path.
+This protocol is only supported when including resources.
+
+When you configure an element, for example setting the `src` attribute for an `<img>`, you cannot use the `context://` protocol.
+
+Your options are:
+
+* Take the servlet path into account with your relative URL, for example `../images/logo.png`.
+* Use an absolute URL, for example `/myapp/images/logo.png`.
+* Deploy your static resources in a directory that matches your servlet path, for example `/myservlet/`.
+
