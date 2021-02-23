@@ -48,6 +48,7 @@ export class Example extends LitElement {
           );
         })}"
         theme="error"
+        position="middle"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;

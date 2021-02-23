@@ -30,6 +30,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-notification
         theme="success"
+        position="middle"
         .opened="${this.notificationOpen}"
         @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
         .renderer="${this.renderer}"

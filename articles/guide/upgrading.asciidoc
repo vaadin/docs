@@ -1,0 +1,204 @@
+---
+title: Upgrading Guide
+order: 70
+---
+
+= Upgrading Guide
+:toclevels: 2
+
+:vaadin-version: {moduleMavenVersion:com.vaadin:vaadin}
+
+[.lead]
+Instructions for upgrading to the latest Vaadin version. To run applications or components developed with Vaadin 7 or 8 inside an application written using the latest version, see <<{articles}/tools/mpr/overview#,Multiplatform Runtime>>.
+
+== Common Steps
+
+These steps apply regardless of what version you are upgrading from.
+
+. Delete `node_modules` folder, `package.json`, and `pnpm-lock.yaml`
+
+. Edit the `pom.xml` file and change the Vaadin version to `{vaadin-version}`:
++
+[source, XML]
+----
+include::{root}/pom.xml[tag=vaadin-version, indent=0]
+----
++
+.View full pom.xml
+[TIP,role=small]
+Click the "Expand code" button to view a complete reference `pom.xml` file.
+
+. Update Spring Version (Spring-based projects only).
++
+Vaadin is compatible with Spring 5.2.0 or newer, and Spring Boot 2.2.0 or newer.
+If your application uses an older version of Spring, update it to a compatible version:
++
+[source, XML]
+----
+include::{root}/pom.xml[tag=spring-version, indent=0]
+----
+
+. Run `mvn clean install`
+
+
+== Changes in Vaadin 19
+
+These instructions apply when upgrading from a version before Vaadin 19.
+
+=== Generated @Id Field Is Now of Optional Type in TypeScript
+A field with `@Id` annotation in Java is now of optional type in the generated TypeScript code.
+Given an entity with an `id` field:
+
+.`Entity.java`
+[source, Java]
+----
+public class Entity {
+    @Id
+    private int id;
+}
+----
+
+Now in the TypeScript files, instead of using `endpoint.getEntity(entity.id)`, you might need to change to `endpoint.getEntity(entity.id!)` (if you know that the `id` is always set when this is called) or add a type guard to explicitly check that `id` is not `undefined`.
+
+=== Ignore One More Service Worker Related Static File
+You need to ignore one more static file, `/sw-runtime-resources-precache.js`, if you use `HttpSecurity.authorizeRequests()` to do role-based authorization in your security configuration as follows:
+
+.`SecurityConfiguration.java`
+[source, Java]
+----
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    ...
+    http.authorizeRequests().anyRequest().hasAnyAuthority(Role.getAllRoles());
+    ...
+}
+----
+
+In such case, you need to add one more file `/sw-runtime-resources-precache.js` to the static resource list that Spring Security bypasses:
+
+.`SecurityConfiguration.java`
+[source, Java]
+----
+@Override
+public void configure(WebSecurity web) {
+    web.ignoring().antMatchers(
+            // client-side JS code
+            "/VAADIN/**",
+            ...
+            // web application manifest
+            "/manifest.webmanifest",
+            "/sw.js",
+            "/offline-page.html",
+            "/sw-runtime-resources-precache.js",
+            ...
+    );
+}
+----
+
+=== Ignore the Service Worker Initiated Requests
+Another potential Spring Security related breaking change is about using `HttpSecurity.requestCache()` to redirect the user to the intended page after login.
+
+An example of using `HttpSecurity.requestCache()`:
+
+.`SecurityConfiguration.java`
+[source, Java]
+----
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    ...
+    http
+
+    // Register our CustomRequestCache, that saves unauthorized access attempts, so
+    // the user is redirected after login.
+    .requestCache().requestCache(new CustomRequestCache())
+
+    // Restrict access to our application.
+    .and().authorizeRequests()
+
+    // Allow all flow internal requests.
+    .requestMatchers(SecurityUtils::isFrameworkInternalRequest).permitAll()
+    ...
+}
+----
+
+Now you need to ignore the service worker initiated requests, otherwise the access attempts are overridden by the service worker requests and Spring cannot redirect you to the intended page.
+This can be done by inspecting the `Referer` header of the request.
+
+The `SecurityUtils::isFrameworkInternalRequest()` can be updated as follows to also include the service worker initiated requests:
+
+.`SecurityUtils.java`
+[source, Java]
+----
+static boolean isFrameworkInternalRequest(HttpServletRequest request) {
+    final String parameterValue = request
+        .getParameter(ApplicationConstants.REQUEST_TYPE_PARAMETER);
+    // Use Referer in header to check if it is a sevice worker
+    // initiated request
+    String referer = request.getHeader("Referer");
+    boolean isServiceWorkInitiated = (referer != null
+                && referer.endsWith("sw.js"));
+    return isServiceWorkInitiated
+            || parameterValue != null
+            && Stream.of(RequestType.values())
+                .anyMatch(r -> r.getIdentifier().equals(parameterValue));
+}
+----
+
+
+== Changes in Vaadin 15
+
+These instructions apply when upgrading from a version before Vaadin 15.
+
+=== Update Main Layout/View Annotations
+
+Several annotations typically placed on the `MainLayout` / `MainView` class must be moved to a class that implements the `AppShellConfigurator` interface, for example:
+
+[source, Java]
+----
+@PWA(name = "My Vaadin App", shortName = "my-app")
+public class AppShell implements AppShellConfigurator {
+
+}
+----
+
+see <<{articles}/flow/advanced/modifying-the-bootstrap-page#java-annotations, set of annotations to modify the Bootstrap page>> for more details.
+
+=== Breaking API Changes
+
+A set of API breaking changes and their replacements are listed below:
+
+- Property synchronization methods in `Element` are replaced with similar API in `DomListenerRegistration`: `getSynchronizedPropertyEvents`, `getSynchronizedProperties`, `removeSynchronizedPropertyEvent`, `removeSynchronizedProperty`, `addSynchronizedPropertyEvent`, `addSynchronizedProperty`,  `synchronizeProperty`.
+- JavaScript execution APIs `executeJavaScript` and `callFunction` in `Element` and `Page` are replaced with similarly named methods that give access to the return value `executeJs` and `callJsFunction`:
+- Miscellaneous `Element` methods: `Element(String, boolean)`, `addEventListener(String, DomEventListener, String...)`
+- Device and platform detection methods `WebBrowser#isIOS()`, `WebBrowser#isIPad()`, `BrowserDetails#isSafariOrIOS()`, `BrowserDetails#isIOS()`, `BrowserDetails#isIPad()` are replaced with method in `ExtendedClientDetails`: `isIPad()`, `isIOS()`
+- Methods `JsModule#loadMode()` and `Page#addJsModule(String, LoadMode)` for setting the load mode of JsModule are removed since it does not function with JavaScript modules.
+- The construction methods `BeforeEvent(NavigationEvent, Class<?>)` and `BeforeEvent(Router, NavigationTrigger, Location, Class<?>, UI)` in `BeforeEvent` are replaced with `BeforeEvent(NavigationEvent, Class, List)` and `BeforeEvent(Router, NavigationTrigger, Location, Class, UI, List)`
+-  Methods `getUrl()`, `getUrlBase()` and `getRoutes()` in `Router` are replaced with methods `getUrl()`, `getUrlBase()` and `getAvailableRoutes()` in `RouterConfiguration`. The `resolve()` method in `Router` is replaced with the `resolve()` method in `RouteUtil`. The `getRoutesByParent()` method in `Router` is removed and has no replacement.
+- `ServletHelper` is replaced with `HandlerHelper`
+- `ExecutionCanceler` is replaced with `PendingJavaScriptResult`
+- The `getBodyAttributes` method in `AbstractTheme`, `Lumo` and `Material` is replaced with `getHtmlAttributes`
+- The `removeDataGenerator` method in `HasDataGenerators` and `CompositeDataGenerator` is removed in favor of using the registration returned from `addDataGenerator(DataGenerator)`
+- The mehtods `preventsDefault` and `stopsPropagation` in `ShortcutRegistration` are replaced with `isBrowserDefaultAllowed ` and `isEventPropagationAllowed`
+-  The `safeEscapeForHtml` method in `VaadinServlet` is removed in favor of using `org.jsoup.nodes.Entities#escape(String)`
+- The static method `getInstance` in `ApplicationRouteRegistry` is removed in favor of the instance method.
+- The protected instance method `getApplicationUrl` from `VaadinServlet` is removed
+
+=== Bootstrapping Changes
+
+For applications upgraded from earlier versions of Vaadin, client-side bootstrapping requires replacing the usages of the V10-14 `BootstrapHandler` APIs with their `IndexHtmlRequestHandler` API counterparts as described in <<{articles}/flow/advanced/tutorial-modifying-the-bootstrap-page#IndexHtmlRequestListener-interface, _IndexHtmlRequestListener interface_>> section.
+
+The reason for this API change is that with client-side bootstrapping the initial page HTML generation is separated from loading the Flow client and creating a server-side `UI` instance.
+
+- In Vaadin 10 to 14 these two steps are combined and the `index.html` page includes the code and configuration needed to start the Flow client engine and link the browser page to the server-side `UI` instance.
+
+- In Vaadin 15+ with client-side bootstrapping the `index.html` page includes only the basic HTML markup and links to the TypeScript UI code. When <<../typescript/creating-routes#,adding routes in TypeScript>>, the `UI` is not guaranteed to be created, thus is optional. It will be only available after the user navigates to a server-side route.
+
+
+== Earlier Versions
+
+pass:[<!-- vale Vaadin.Versions = NO -->]
+
+- link:../../../v14/flow/migration/1-migrating-v8-v10/[Upgrading from Vaadin 8 to Vaadin 14]
+- link:../../../v14/flow/v14-migration/v14-migration-guide/[Upgrading from Vaadin 10–13 to Vaadin 14]
+
+pass:[<!-- vale Vaadin.Versions = YES -->]
