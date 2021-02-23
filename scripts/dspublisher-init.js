@@ -20,11 +20,10 @@ if (!globalThis.process.env.DOCS_INIT_UNDO) {
 !/articles/_images
 !/articles/index.asciidoc
 !/articles/vaadin-version.asciidoc
+!/articles/ds/overview.asciidoc
+!/articles/404.asciidoc
   `.trim();
   execShellCommand(`echo '${sparseCheckoutFileContent}' > .git/info/sparse-checkout`);
-
-  // Update working directory
-  execShellCommand('git read-tree -m -u HEAD');
 
   // Create the env files for dspublisher
   const envFileContent = `DOCS_ARTICLES_PATH="articles/ds"`;
@@ -37,7 +36,9 @@ if (!globalThis.process.env.DOCS_INIT_UNDO) {
     .replace('title: Overview', 'title: Design System');
 
   execShellCommand(`echo '${dsIndexFileContent}' > articles/ds/index.asciidoc`);
-  execShellCommand(`rm articles/ds/overview.asciidoc`);
+
+  // Copy 404 page
+  execShellCommand(`cp articles/404.asciidoc articles/ds/404.asciidoc`);
 
   // Replace cross references with links in _shared.asciidoc
   let dsFoundationSharedFileContent = fs.readFileSync(
@@ -56,6 +57,9 @@ if (!globalThis.process.env.DOCS_INIT_UNDO) {
   execShellCommand(
     `echo '${dsFoundationSharedFileContent}' > articles/ds/foundation/_shared.asciidoc`
   );
+
+  // Update working directory
+  execShellCommand('git read-tree -m -u HEAD');
 } else {
   execShellCommand('git sparse-checkout disable');
   execShellCommand('rm -f .git/info/sparse-checkout');
