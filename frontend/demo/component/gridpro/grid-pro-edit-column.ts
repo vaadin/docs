@@ -34,8 +34,10 @@ export class Example extends LitElement {
         <vaadin-grid-column
           header="Name (read-only)"
           .renderer=${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
-            const item = model?.item as Person;
-            root.textContent = `${item.firstName} ${item.lastName}`;
+            if (model?.item) {
+              const { firstName, lastName } = model.item as Person;
+              root.textContent = `${firstName} ${lastName}`;
+            }
           }}
         ></vaadin-grid-column>
         <vaadin-grid-pro-edit-column

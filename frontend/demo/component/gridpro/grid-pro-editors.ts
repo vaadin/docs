@@ -42,9 +42,11 @@ export class Example extends LitElement {
         <vaadin-grid-pro-edit-column
           path="birthday"
           .renderer=${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
-            const person = model?.item as Person;
-            const birthday = new Date(`${person.birthday} 00:00.0000`).toLocaleDateString();
-            root.textContent = birthday;
+            if (model?.item) {
+              const person = model.item as Person;
+              const birthday = new Date(`${person.birthday} 00:00.0000`).toLocaleDateString();
+              root.textContent = birthday;
+            }
           }}
           .editModeRenderer=${(
             root: HTMLElement,
@@ -53,7 +55,10 @@ export class Example extends LitElement {
           ) => {
             root.innerHTML = '';
             const datePicker = document.createElement('vaadin-date-picker');
-            datePicker.value = (model?.item as Person).birthday;
+            if (model?.item) {
+              const person = model.item as Person;
+              datePicker.value = person.birthday;
+            }
             root.appendChild(datePicker);
           }}
         ></vaadin-grid-pro-edit-column>
