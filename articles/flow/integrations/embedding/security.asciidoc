@@ -1,0 +1,106 @@
+---
+title: Security
+order: 50
+layout: page
+---
+
+
+= Security in Embedded Applications
+
+You can prevent the host (embedding) application accessing the embedded application using the properties of the embedded application. 
+
+[WARNING]
+Keep in mind that the embedded application is instantiated, regardless of of whether access is restricted or not. The reason is that property values are only checked when the server-side listener detects an update on the client side. Always avoid including sensitive data in the embedded web component's constructor.
+
+
+*Example*: Setting a property from the host (embedding) page and checking it inside an embedded application.
+
+[source, html]
+----
+<!doctype html>
+
+<head>
+  <link rel="import" href="web-component/my-comp.js">
+  <script type="text/javascript">
+        function login(){
+            // request token for the current user
+            // somehow
+            var token =
+                "d9f6a737-b2b8-46a7-a834-209c8b214969";
+            var comp = document.querySelector(
+                "#embedded-web-component");
+            comp.token = token;
+        }
+  </script>
+</head>
+
+<body>
+  <p>
+    Web components implemented using server side Java
+  </p>
+  
+  <button onclick="login()">Login</button>
+
+  <my-comp id="embedded-web-component"></my-comp>
+
+</body>
+----
+
+* The `my-comp` element is embedded in a static page.
+* The `token` property is set from a JavaScript function that retrieves it within the `login` function (that is invoked on the login button click).
+
+*Example*: Associated web component and its exporter class.
+
+[source, java]
+----
+public class EmbeddedComponentExporter
+       extends WebComponentExporter<EmbeddedComponent> {
+
+    public EmbeddedComponentExporter() {
+        super("my-comp");
+
+        addProperty("token", "")
+                .onChange(this::authorize);
+    }
+
+    @Override
+    protected void configureInstance(
+           WebComponent<EmbeddedComponent> webComponent,
+           EmbeddedComponent component) {
+    }
+
+    private void authorize(EmbeddedComponent component,
+                           String token) {
+        // check the token
+        if (isValidToken(token)) {
+            component.init();
+        }
+    }
+
+    private boolean isValidToken(String token) {
+        return true;
+    }
+
+}
+
+public class EmbeddedComponent extends Div {
+
+    public EmbeddedComponent() {
+        // Don't retrieve any sensitive data here
+        // without granted access (via security token)
+    }
+
+    public void init() {
+        // Initialize your secured component here
+    }
+}
+----
+
+* The embedded web component is instantiated before the exporter instance
+receives the token value. For this reason, avoid retrieving or initializing components with sensitive date in the constructor. Do your initialization only after the valid token value is received.
+
+[NOTE]
+If you cannot prevent the initialization of the web component in the constructor, you can wrap it in a container, like `Div`. Create a `Div` subclass (instead of using `EmbeddedComponent`), and add an `EmbeddedComponent` instance into the `Div` subclass when the token is validated.
+
+[NOTE]
+If you use a Dependency Injection (DI) framework, keep in mind that `EmbeddedComponentExporter` is instantiated directly without DI, and you may not use this instance to inject anything from DI context. As a workaround, you can create a a wrapper component that is instantiated within the DI context, and then use the wrapper instance to access the DI context.

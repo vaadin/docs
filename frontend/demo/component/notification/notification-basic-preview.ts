@@ -8,7 +8,7 @@ import '@vaadin/vaadin-notification/vaadin-notification';
 export class Example extends LitElement {
   render() {
     return html`
-      <vaadin-notification-card style="justify-content: center;">
+      <vaadin-notification-card slot="middle">
         <div>Financial report generated</div>
         <vaadin-button theme="tertiary-inline">
           <iron-icon icon="lumo:cross"></iron-icon>

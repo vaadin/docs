@@ -40,6 +40,7 @@ export class Example extends LitElement {
             root
           );
         })}"
+        position="middle"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
