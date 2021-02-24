@@ -2,8 +2,8 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, query } from 'lit-element';
 import { applyTheme } from 'themes/theme-generated.js';
-import '@vaadin/vaadin-login/vaadin-login-overlay';
-import { LoginOverlayElement } from '@vaadin/vaadin-login/vaadin-login-overlay';
+import './login-overlay-mockup';
+import { LoginOverlayMockupElement } from './login-overlay-mockup';
 
 @customElement('login-additional-information')
 export class Example extends LitElement {
@@ -13,9 +13,8 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  //tag::snippet[]
-  @query('vaadin-login-overlay')
-  private login?: LoginOverlayElement;
+  @query('login-overlay-mockup')
+  private login?: LoginOverlayMockupElement;
   firstUpdated() {
     if (this.login && this.login.i18n) {
       this.login.i18n = {
@@ -27,8 +26,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-login-overlay opened></vaadin-login-overlay>
+      <login-overlay-mockup></login-overlay-mockup>
     `;
   }
-  //end::snippet[]
 }
