@@ -11,7 +11,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('dialog-draggable')
 export class Example extends LitElement {

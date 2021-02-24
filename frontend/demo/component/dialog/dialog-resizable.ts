@@ -9,7 +9,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { getPeople } from '../../domain/DataService';
 
