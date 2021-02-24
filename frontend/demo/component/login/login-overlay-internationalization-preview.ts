@@ -1,11 +1,11 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import { applyTheme } from 'generated/theme';
-import '@vaadin/vaadin-login/vaadin-login-overlay';
+import { applyTheme } from 'themes/theme-generated.js';
+import './login-overlay-mockup';
 import { LoginI18n } from '@vaadin/vaadin-login/vaadin-login-overlay';
 
-@customElement('login-modal-overlay-internationalization')
+@customElement('login-modal-overlay-internationalization-preview')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -13,7 +13,6 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  //tag::snippet[]
   private i18n: LoginI18n = {
     header: {
       title: 'Sovelluksen nimi',
@@ -35,8 +34,11 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-login-overlay .i18n=${this.i18n} opened></vaadin-login-overlay>
+      <login-overlay-mockup
+        .i18n=${this.i18n}
+        .headerTitle=${this.i18n.header?.title}
+        .description=${this.i18n.header?.description}
+      ></login-overlay-mockup>
     `;
   }
-  //end::snippet[]
 }

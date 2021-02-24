@@ -15,7 +15,11 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-login-overlay></vaadin-login-overlay>
+      <vaadin-login-overlay
+        title="TaskMob"
+        description="Built with ♥ by Vaadin"
+        opened
+      ></vaadin-login-overlay>
       <!-- end::snippet[] -->
     `;
   }
