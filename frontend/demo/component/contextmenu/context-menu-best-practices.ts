@@ -35,6 +35,7 @@ export class Example extends LitElement {
       <hint-badge
         message="Open the Context Menu by right-clicking (desktop) or long-pressing (mobile) a Grid row. Alternatively, use the Menu Bar in the last column."
       ></hint-badge>
+      <!-- hidden-full-source-line -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column label="Filename" path="filename"></vaadin-grid-column>

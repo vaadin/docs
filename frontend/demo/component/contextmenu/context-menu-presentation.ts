@@ -13,7 +13,6 @@ import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 
-// tag::snippet[]
 @customElement('context-menu-presentation')
 export class Example extends LitElement {
   constructor() {
@@ -25,6 +24,7 @@ export class Example extends LitElement {
   @internalProperty()
   private gridItems: Person[] = [];
 
+  // tag::snippet[]
   async firstUpdated() {
     this.gridItems = await getPeople();
     const itemsArray = this.createItemsArray(this.gridItems.slice(0, 6));
@@ -32,9 +32,9 @@ export class Example extends LitElement {
     const contextMenu = this.shadowRoot?.querySelector('vaadin-context-menu');
     if (contextMenu) {
       contextMenu.items = [
-        { text: 'Open' },
+        { component: this.createItem('vaadin:file-search', 'Open') },
         {
-          text: 'Assign',
+          component: this.createItem('vaadin:user-check', 'Assign'),
           children: [
             { component: this.createSearchField() },
             { text: 'Managers', component: this.createHeader() },
@@ -47,15 +47,20 @@ export class Example extends LitElement {
             { component: itemsArray[5] }
           ]
         },
-        { text: 'Status', children: [{ text: 'Assigned' }, { text: 'Promoted' }] },
+        {
+          component: this.createItem('vaadin:clipboard-check', 'Status'),
+          children: [{ text: 'Assigned' }, { text: 'Promoted' }]
+        },
         { component: 'hr' },
-        { text: 'Delete' }
+        { component: this.createItem('vaadin:trash', 'Delete') }
       ];
     }
   }
+  // end::snippet[]
 
   render() {
     return html`
+      <!-- tag::snippethtml[] -->
       <hint-badge></hint-badge>
       <!-- hidden-full-source-line -->
       <vaadin-context-menu>
@@ -66,6 +71,7 @@ export class Example extends LitElement {
           <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
+      <!-- end::snippethtml[] -->
     `;
   }
 
@@ -97,6 +103,20 @@ export class Example extends LitElement {
     });
   }
 
+  createItem(iconName: string, text: string) {
+    const item = window.document.createElement('vaadin-context-menu-item');
+    const icon = window.document.createElement('iron-icon');
+
+    icon.style.width = 'var(--lumo-icon-size-s)';
+    icon.style.height = 'var(--lumo-icon-size-s)';
+    icon.style.marginRight = 'var(--lumo-space-s)';
+
+    icon.setAttribute('icon', iconName);
+    item.appendChild(icon);
+    text && item.appendChild(window.document.createTextNode(text));
+    return item;
+  }
+
   createSearchField() {
     const textField = document.createElement('vaadin-text-field');
     textField.placeholder = 'Search';
@@ -118,4 +138,3 @@ export class Example extends LitElement {
     return header;
   }
 }
-// end::snippet[]
