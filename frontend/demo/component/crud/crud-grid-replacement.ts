@@ -26,7 +26,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-crud include="firstName, lastName" .items=${this.items}>
+      <vaadin-crud include="firstName, lastName, email, profession" .items=${this.items}>
         <vaadin-grid slot="grid">
           <vaadin-crud-edit-column></vaadin-crud-edit-column>
           <vaadin-grid-column path="firstName" header="First name"></vaadin-grid-column>
