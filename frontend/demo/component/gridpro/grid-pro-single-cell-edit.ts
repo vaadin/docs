@@ -7,9 +7,9 @@ import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'themes/theme-generated.js';
 
-@customElement('grid-pro-basic')
+@customElement('grid-pro-single-cell-edit')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -27,7 +27,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid-pro .items=${this.items}>
+      <vaadin-grid-pro .items=${this.items} single-cell-edit>
         <vaadin-grid-pro-edit-column path="firstName"> </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column path="lastName"> </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column path="email"></vaadin-grid-pro-edit-column>
