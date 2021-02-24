@@ -40,7 +40,6 @@ export class Example extends LitElement {
       <hint-badge
         message="Open the Context Menu by focusing a Grid row and pressing Space or Enter."
       ></hint-badge>
-      <!-- hidden-full-source-line -->
       <vaadin-context-menu open-on="open-context-menu" .items=${this.items}>
         <vaadin-grid
           .items=${this.gridItems}

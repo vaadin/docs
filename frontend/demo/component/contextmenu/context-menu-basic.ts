@@ -32,9 +32,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippethtml[] -->
+      <!-- hint-badge component is created and used for demonstration purposes only -->
       <hint-badge></hint-badge>
-      <!-- hidden-full-source-line -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>

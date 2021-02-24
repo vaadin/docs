@@ -45,8 +45,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <hint-badge></hint-badge
-      ><!-- hidden-full-source-line -->
+      <hint-badge></hint-badge>
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column path="filename"></vaadin-grid-column>
