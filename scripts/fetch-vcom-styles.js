@@ -20,7 +20,7 @@ async function fetchAntlersStyleSheets() {
     }
     const css = await response.text();
     let localStyleSheetPath =
-      '../frontend/styles/antlers/' + url.split('https://cdn.vaadin.com/vaadin-design-system/latest/')[1];
+      '../dspublisher/theme/styles/antlers/' + url.split('https://cdn.vaadin.com/vaadin-design-system/latest/')[1];
     await fs.outputFile(path.resolve(__dirname, localStyleSheetPath), css);
   }
 }
