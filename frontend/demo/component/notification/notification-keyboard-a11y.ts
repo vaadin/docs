@@ -47,6 +47,7 @@ export class Example extends LitElement {
         })}"
         theme="contrast"
         duration="10000"
+        position="middle"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
