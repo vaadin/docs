@@ -28,12 +28,6 @@ export class Example extends LitElement {
 
   async firstUpdated() {
     this.items = await getPeople();
-    const crud = this.shadowRoot?.querySelector('vaadin-crud');
-    if (crud) {
-      crud.editorOpened = true;
-      crud.editedItem = this.items[0];
-      (crud as any).__isNew = false;
-    }
   }
 
   render() {

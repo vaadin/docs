@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
-import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
@@ -15,25 +15,11 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  static get styles() {
-    return css`
-      vaadin-crud {
-        --vaadin-crud-editor-max-height: 100%;
-      }
-    `;
-  }
-
   @internalProperty()
   private items: Person[] = [];
 
   async firstUpdated() {
     this.items = await getPeople();
-    const crud = this.shadowRoot?.querySelector('vaadin-crud');
-    if (crud) {
-      crud.editorOpened = true;
-      crud.editedItem = this.items[0];
-      (crud as any).__isNew = false;
-    }
     // tag::snippet[]
     const deleteBtn = this.shadowRoot
       ?.querySelector('vaadin-crud')
@@ -48,7 +34,6 @@ export class Example extends LitElement {
       <!-- tag::snippethtml[] -->
 
       <vaadin-crud
-        editor-position="bottom"
         include="firstName, lastName, email, profession"
         .items=${this.items}
       ></vaadin-crud>

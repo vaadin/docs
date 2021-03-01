@@ -51,16 +51,6 @@ export class Example extends LitElement {
       };
     }
     // end::snippet[]
-    if (crud) {
-      crud.editorOpened = true;
-      const comboBox = crud?.shadowRoot?.querySelector('vaadin-combo-box');
-      if (comboBox) {
-        // Items need to be assigned before setting editedItem
-        comboBox.items = [...new Set(this.items.map(i => i.profession))];
-      }
-      crud.editedItem = this.items[0];
-      (crud as any).__isNew = false;
-    }
   }
 
   render() {
@@ -69,7 +59,6 @@ export class Example extends LitElement {
 
       <vaadin-crud
         editor-position="aside"
-        .editorOpened="${true}"
         include="firstName, lastName, email, profession"
         .items=${this.items}
       >
