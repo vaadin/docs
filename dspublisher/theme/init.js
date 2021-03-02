@@ -1,3 +1,5 @@
+// This js-file gets run whenever dspublisher is started
+
 const path = require(`path`);
 const fs = require(`fs-extra`);
 const fetch = require('node-fetch').default;
@@ -20,7 +22,7 @@ async function fetchAntlersStyleSheets() {
     }
     const css = await response.text();
     let localStyleSheetPath =
-      '../dspublisher/theme/styles/antlers/' + url.split('https://cdn.vaadin.com/vaadin-design-system/latest/')[1];
+      './styles/antlers/' + url.split('https://cdn.vaadin.com/vaadin-design-system/latest/')[1];
     await fs.outputFile(path.resolve(__dirname, localStyleSheetPath), css);
   }
 }
