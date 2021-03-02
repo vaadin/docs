@@ -18,34 +18,59 @@ it can be easy to introduce new bugs when changing application logic.
 
 This is where a state management library like link:https://mobx.js.org/[MobX] can help
 and make the application easier to maintain and extend.
-Here we concentrate on an approach to store all shared frontend state in a central MobX state store
+Here we concentrate on an approach to store all shared front-end state in a central MobX state store
 which will be the single source of truth for the application state.
 Then it's easy to display the state data (or anything that can be derived from it) anywhere in the UI so that the data is automatically updated everywhere where it is displayed whenever the data is updated in the state store.
 
 == Using MobX in Your Application
 
-As a starting point you can generate a project at link:https://start.vaadin.com/[start.vaadin.com].
-Make sure to select Vaadin 18 or later with TypeScript UI from the Application settings tab before clicking [guibutton]#Download#.
+Vaadin recommends to use the link:https://mobx.js.org/[MobX] library to manage front-end state in your apps.
+When using LitElement that means you should extend the `MobxLitElement` class instead of `LitElement`.
+When your views are based on `MobxLitElement`,
+any MobX observables used in the `render()` method are automatically tracked
+so that any change to those observables is automatically reflected in the view.
 
-=== Installing MobX
+Creating a new Vaadin Fusion project with
+link:https://start.vaadin.com/[start.vaadin.com] (or link:https://vaadin.com/labs/cli[Vaadin CLI])
+already takes care of setting up the basics for you
+by providing a MobX store (named `AppState`) in addition to `View` and `Layout` helper base classes for your application views and layouts.
+Both `View` and `Layout` extend `MobxLitElement` and you may expand the `AppState` store with your own observables and actions to be used in your views.
 
-[role="deprecated:com.vaadin:vaadin@V19"]
-==== Vaadin 18
+.MobX decorators with TypeScript
+[CAUTION]
+====
+MobX has experimental support for decorators (`@observable`, `@action`) but using them requires a special setting `"useDefineForClassFields": true` in `tsconfig.json`. Unfortunately having that setting link:https://github.com/Polymer/lit-element/issues/855[breaks LitElement decorators] (`@property`, `@query`) so you can't use both LitElement decorators and MobX decorators in the same app. We recommend not to use MobX decorators for now in projects that use LitElement.
 
-```
-npx -p pnpm@4.5.0 pnpm --shamefully-hoist i mobx @adobe/lit-mobx
-```
+For more information see link:https://mobx.js.org/enabling-decorators.html#enabling-decorators-[Enabling decorators] in MobX documentation.
+====
 
-[role="since:com.vaadin:vaadin@V19"]
-==== Vaadin 19+
+== Creating a Data Store
 
-```
-npx pnpm i mobx @adobe/lit-mobx
-```
+Here is a minimal example of a MobX store that contains one link:https://mobx.js.org/observable-state.html[observable] property (`quote`) and one link:https://mobx.js.org/actions.html[action] (`setQuote()`) for updating that property. Here the store is initialized and exported on the last line so that you can import the same store instance into any view or component to access the shared state.
 
-=== Creating a data store
+.my-state.ts
+[source,typescript]
+----
+import { makeAutoObservable } from 'mobx';
 
-TODO: how to change the code and a minimal example of how to create a state store and use it in a UI component
+class MyState {
+  quote: string = `Anything that can be derived from the application state,
+    should be. Automatically. - MobX documentation`;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  setQuote(quote: string) {
+    this.quote = quote;
+  }
+}
+export const myState = new MyState();
+----
+
+link:https://mobx.js.org/observable-state.html#makeautoobservable[makeAutoObservable] can automatically infer that `quote` is an observable and `setQuote()` is an action.
+
+Make sure that an initial value is assigned to all state properties before calling `makeAutoObservable()`, otherwise the property will not be observable. This is a link:https://mobx.js.org/observable-state.html#limitations[MobX limitation] since we can't use the TypeScript configuration `"useDefineForClassFields": true` due to conflict with LitElement decorators mentioned above.
 
 .What is a data store?
 [NOTE]
@@ -53,9 +78,51 @@ TODO: how to change the code and a minimal example of how to create a state stor
 "The main responsibility of stores is to move logic and state out of your components into a standalone testable unit." - link:https://mobx.js.org/defining-data-stores.html#stores[Defining data stores] in MobX documentation.
 ====
 
+== Using a Store
+
+.my-view.ts
+[source,typescript,subs="callouts+"]
+----
+import { customElement, html } from 'lit-element';
+import { TextFieldElement } from '@vaadin/vaadin-text-field';
+import { View } from '../view';
+import { myState } from 'Frontend/store/my-state'; // <1>
+
+@customElement('my-view')
+export class MyView extends View {
+  render() {
+    const { quote } = myState; // <2>
+    
+    // <3>
+    return html`
+      <p>${quote}</p>
+      <vaadin-text-field .value=${quote} @input=${this.onInput}></vaadin-text-field>
+    `;
+  }
+
+  onInput(e: InputEvent) {
+    myState.setQuote((e.target as TextFieldElement).value); // <4>
+  }
+}
+----
+<1> Import the store into your view or component.
+<2> Alias one or more state properties from `myState` into local variables for easy referencing.
+<3> Use state properties in the template.
+<4> Update state by calling an action method in the store.
+
+By default, it is not allowed to change the state outside of actions. Read more about actions in the MobX documentation: link:https://mobx.js.org/actions.html[Updating state using actions].
+
+== Understanding MobX
+
+To be able to effectively use MobX and understand how it works, you should take a look at the official link:https://mobx.js.org/[MobX documentation] which is a great resource for learning the basic concepts as well as advanced usage.
+
+In addition to the concepts of observables and actions that we briefly showed here, you should also be aware of link:https://mobx.js.org/computeds.html[computed] values and link:https://mobx.js.org/reactions.html[reactions] and when to use them.
+
 == External Links and References
 
 - link:https://mobx.js.org/[MobX documentation]
+
+- MobxLitElement from link:https://github.com/adobe/lit-mobx[lit-mobx]
 
 - Vaadin Tips video: link:https://www.youtube.com/watch?v=MNxnZ8pzSBo[LitElement state management with MobX in a Vaadin Fusion project]
 
