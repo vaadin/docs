@@ -1,4 +1,4 @@
-import '../../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
 

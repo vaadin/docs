@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
 import '@vaadin/vaadin-button/vaadin-button';
