@@ -6,7 +6,6 @@ import './hint-badge'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { render } from 'lit-html';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import { getPeople } from '../../domain/DataService';
@@ -36,7 +35,6 @@ export class Example extends LitElement {
         {
           component: this.createItem('vaadin:user-check', 'Assign'),
           children: [
-            { component: this.createSearchField() },
             { text: 'Managers', component: this.createHeader() },
             { component: itemsArray[0] },
             { component: itemsArray[1] },
@@ -114,20 +112,6 @@ export class Example extends LitElement {
     item.appendChild(icon);
     text && item.appendChild(window.document.createTextNode(text));
     return item;
-  }
-
-  createSearchField() {
-    const textField = document.createElement('vaadin-text-field');
-    textField.placeholder = 'Search';
-    textField.style.width = '100%';
-    textField.setAttribute('theme', 'small');
-    render(
-      html`
-        <iron-icon icon="vaadin:search" slot="prefix"></iron-icon>
-      `,
-      textField
-    );
-    return textField;
   }
 
   createHeader() {
