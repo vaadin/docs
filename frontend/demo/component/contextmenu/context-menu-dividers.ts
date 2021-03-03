@@ -29,7 +29,7 @@ export class Example extends LitElement {
     { text: 'Email' },
     { text: 'Call' }
   ];
-  // end:snippet[]
+  // end::snippet[]
 
   @internalProperty()
   private gridItems: Person[] = [];
@@ -40,8 +40,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippethtml[] -->
       <hint-badge></hint-badge>
+      <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>

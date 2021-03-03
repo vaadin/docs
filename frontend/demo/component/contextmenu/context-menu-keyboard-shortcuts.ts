@@ -22,7 +22,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   @internalProperty()
   private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
-  // end:snippet[]
+  // end::snippet[]
 
   @query('vaadin-grid')
   private grid?: GridElement;
@@ -36,10 +36,10 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippethtml[] -->
       <hint-badge
         message="Open the Context Menu by focusing a Grid row and pressing Space or Enter."
       ></hint-badge>
+      <!-- tag::snippethtml[] -->
       <vaadin-context-menu open-on="open-context-menu" .items=${this.items}>
         <vaadin-grid
           .items=${this.gridItems}

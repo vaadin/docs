@@ -30,7 +30,7 @@ export class Example extends LitElement {
     { component: 'hr' },
     { text: 'Delete' }
   ];
-  // end:snippet[]
+  // end::snippet[]
 
   @internalProperty()
   private gridItems = [
@@ -40,8 +40,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippethtml[] -->
       <hint-badge></hint-badge>
+      <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column path="filename"></vaadin-grid-column>

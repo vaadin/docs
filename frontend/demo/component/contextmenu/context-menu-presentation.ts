@@ -60,8 +60,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippethtml[] -->
       <hint-badge></hint-badge>
+      <!-- tag::snippethtml[] -->
       <vaadin-context-menu>
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>

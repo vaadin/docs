@@ -21,7 +21,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   @internalProperty()
   private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
-  // end:snippet[]
+  // end::snippet[]
 
   @internalProperty()
   private gridItems: Person[] = [];
@@ -34,6 +34,7 @@ export class Example extends LitElement {
     return html`
       <!-- hint-badge component is created and used for demonstration purposes only -->
       <hint-badge></hint-badge>
+      <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
