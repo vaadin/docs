@@ -28,6 +28,8 @@ public class Person {
 
   private Address address;
 
+  private Integer managerId;
+
   public String getFirstName() {
     return firstName;
   }
@@ -123,6 +125,14 @@ public class Person {
     }
     Person other = (Person) obj;
     return id == other.id;
+  }
+
+  public Integer getManagerId() {
+    return managerId;
+  }
+
+  public void setManagerId(Integer managerId) {
+    this.managerId = managerId;
   }
 }
 // end::snippet[]
