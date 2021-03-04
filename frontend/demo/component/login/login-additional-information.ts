@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, query } from 'lit-element';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
 import { LoginOverlayElement } from '@vaadin/vaadin-login/vaadin-login-overlay';
 

@@ -8,7 +8,7 @@ import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import '@vaadin/vaadin-grid/vaadin-grid-column';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import { GridItemModel } from '@vaadin/vaadin-grid';
 import { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid-column';
 

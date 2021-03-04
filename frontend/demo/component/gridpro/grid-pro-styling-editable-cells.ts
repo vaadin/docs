@@ -8,7 +8,7 @@ import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import '@vaadin/vaadin-grid/vaadin-grid-column';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 
 @customElement('grid-pro-styling-editable-cells')
 export class Example extends LitElement {
