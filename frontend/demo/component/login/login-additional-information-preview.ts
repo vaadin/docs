@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, query } from 'lit-element';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'generated/theme';
 import './login-overlay-mockup';
 import { LoginOverlayMockupElement } from './login-overlay-mockup';
 
