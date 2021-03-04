@@ -26,10 +26,7 @@ export class Example extends LitElement {
       const manager = params.parentItem as Person;
       people = await getPeople({ managerId: manager.id });
     } else {
-      people = (await getPeople({ managerId: null })).map(person => ({
-        ...person,
-        hasChildren: true
-      }));
+      people = await getPeople({ managerId: null });
     }
 
     const startIndex = params.page * params.pageSize;

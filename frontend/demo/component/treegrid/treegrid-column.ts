@@ -37,10 +37,7 @@ export class Example extends LitElement {
       const manager = params.parentItem as Person;
       people = await getPeople({ managerId: manager.id });
     } else {
-      people = (await getPeople({ managerId: null })).map(person => ({
-        ...person,
-        hasChildren: true
-      }));
+      people = await getPeople({ managerId: null });
       this.managers = people;
     }
 
@@ -58,7 +55,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-horizontal-layout theme="spacing">
-        <h2 style="flex: 1; margin: 0;">Employee</h2>
+        <h2 style="flex: 1; margin-bottom: 0; margin-top: 0;">Employee</h2>
         <vaadin-button
           @click=${() =>
             this.managers && this.managers.forEach(manager => this.grid.expandItem(manager))}
