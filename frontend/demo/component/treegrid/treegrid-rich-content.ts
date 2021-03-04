@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
 import { customElement, LitElement, query } from 'lit-element';
-import { html, render } from 'lit-html';
+import { html } from 'lit-html';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
@@ -19,10 +19,7 @@ import {
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
-import {
-  GridTreeToggleExpandedChanged,
-  GridTreeToggleElement
-} from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
+import { GridTreeToggleExpandedChanged } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 
 @customElement('treegrid-rich-content')
 export class Example extends LitElement {
