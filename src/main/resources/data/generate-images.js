@@ -19,7 +19,7 @@
 //   {value: 'Obstetrician', manager: 'Manager of Department of Obstetrics'},
 //   {value: 'Pulmonologist', manager: 'Manager of Department of Pulmonology'},
 //   {value: 'Surgeon', manager: 'Manager of Department of Surgery'},
-//   {value: 'Ophthalmologist', manager: 'Manager of Department of Ophthalmology and Optometry'},
+//   {value: 'Ophthalmologist', manager: 'Manager of Department of Ophthalmology'},
 //   {value: 'Oncologist', manager: 'Manager of Department of Oncology'},
 //   {value: 'Urologist', manager: 'Manager of Department of Urology'},
 //   {value: 'Otolaryngologist', manager: 'Manager of Department of Otorhinolaryngology'},
@@ -52,9 +52,11 @@
 //     var {value, manager} = professions[Math.floor(Math.random() * professions.length)];
 //     if (managers.has(manager)) {
 //       person.profession = value;
+//       person.hasChildren = false;
 //       person.managerId = managers.get(manager)
 //     } else {
 //       person.profession = manager;
+//       person.hasChildren = true;
 //       managers.set(manager, person.id);
 //     }
 //   }
