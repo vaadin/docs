@@ -35,6 +35,12 @@ public class DataService {
     return getPeople().subList(0, count);
   }
 
+  public static List<Person> getPeople(int count, Integer managarId) {
+    List<Person> people = getPeople();
+    people.removeIf((Person person) -> person.getManagerId() != managarId);
+    return people.subList(0, count);
+  }
+
   public static Templates getTemplates() {
     return getItems(Templates.class, "templates.json");
   }

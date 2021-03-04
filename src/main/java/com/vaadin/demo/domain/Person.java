@@ -30,6 +30,8 @@ public class Person {
 
   private Integer managerId;
 
+  private boolean hasChildren;
+
   public String getFirstName() {
     return firstName;
   }
@@ -133,6 +135,14 @@ public class Person {
 
   public void setManagerId(Integer managerId) {
     this.managerId = managerId;
+  }
+
+  public boolean hasChildren() {
+    return hasChildren;
+  }
+
+  public void setHasChildren(boolean hasChildren) {
+    this.hasChildren = hasChildren;
   }
 }
 // end::snippet[]
