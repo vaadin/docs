@@ -1,0 +1,84 @@
+---
+title: Error Handling
+order: 70
+layout: page
+---
+
+= Error Handling
+
+This article covers error handling on the client side of a Fusion application.
+A robust client implementation should be able to deal with the most common cases.
+This includes invalid endpoint calls, errors on the server side, and network outages.
+
+== Endpoint Errors
+
+Fusion determines the success of an endpoint call inspecting the HTTP status code.
+The server returns https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200[200 OK] code when it is able to correctly process the request: deserialize the method body, find and execute the particular method in the endpoint, and serialize its return value into a response.
+If the status code of the response is not 200 OK, Fusion throws an error on the client side.
+The available parameters in the error and the specific class of the thrown error depend on the failure mode.
+The most common ones are described below.
+
+=== Missing Endpoint
+
+If the request addresses an endpoint or a method name not present on the backend, the server responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404[404 Not Found] and Fusion raises an error of type `EndpointError`.
+
+=== Parameter Validation Error
+
+If the corresponding method on the backend part was found for the request, but the parameter count and types do not match the endpoint method (see <<../advanced/type-conversion#,Type conversion between JavaScript and Java>> for more details about the type conversion rules), the server responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400[400 Bad Request] and Fusion raises an error of type `EndpointValidationException`.
+The error instance contains a field `validationErrorData` holding validation error information for each invalid parameter.
+
+Note that when using <<../forms/binder-validation#,server-side form validation>>, validation exceptions from the server are handled automatically by the form binder.
+
+=== Server Side Errors
+
+If the endpoint exists and its parameters could be passed, but its execution raises a Java runtime exception, the server responds with
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500[500 Internal Server Error] and Fusion raises an error of type `EndpointError`. As a special case, if the server-side exception is an instance of `com.vaadin.flow.server.connect.exception.EndpointException` or its subclass, the server instead responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400[400 Bad Request] and the exception type and message passed to the `EndpointException` in Java are available in the `EndpointError` instance via the `type` and `message` attributes.
+For example, given the following endpoint implementation:
+
+[source,Java]
+----
+import com.vaadin.flow.server.connect.exception.EndpointException;
+
+@Endpoint
+public class DataEndpoint {
+
+  public String endpointMethod() {
+    throw new EndpointException("Not implemented");
+  }
+}
+----
+
+The following client-side call to the endpoint method will log the error message and exception type:
+
+[source,typescript]
+----
+import { EndpointError } from '@vaadin/flow-frontend';
+
+import * as dataEndpoint from '../../../generated/DataEndpoint';
+
+try {
+  await dataEndpoint.endpointMethod();
+} catch (error) {
+  console.warn(error.message); // "Not implemented"
+  if (error instanceof EndpointError) {
+    console.warn(error.type); // "com.vaadin.flow.server.connect.exception.EndpointException"
+  }
+}
+----
+
+== Network Errors
+
+When the server is not reachable due to outage or network disruption, an endpoint call will result in a low-level network error, different from `EndpointError`.
+Applications that support offline mode can wrap endpoint calls with exception-handling code returning a fallback value, by distinguishing between the error classes as follows:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/pwa/offline/ts-view-with-endpoint.ts[]
+----
+
+Also see <<../pwa/cache-client-side-data#,this article>> on caching endpoint data in local storage using a generic wrapper.
+
+== Unexpected Response Contents
+
+If the server replies with another response than 200 OK, and the string contained in the response is not valid JSON, an `EndpointResponseError` is raised.
+The exception contains the response text as message and the https://developer.mozilla.org/en-US/docs/Web/API/Response[Response] object in the `response` field.
