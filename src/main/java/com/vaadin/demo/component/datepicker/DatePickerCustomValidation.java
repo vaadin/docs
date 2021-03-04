@@ -10,7 +10,7 @@ public class DatePickerCustomValidation extends Div {
 
     public DatePickerCustomValidation() {
         // tag::snippet[]
-        DatePicker datePicker = new DatePicker("Birthday");
+        DatePicker datePicker = new DatePicker("Date");
 
         add(datePicker);
         // end::snippet[]
