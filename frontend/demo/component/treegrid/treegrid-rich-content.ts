@@ -64,7 +64,6 @@ export class Example extends LitElement {
               .leaf=${!person.hasChildren}
               .level=${model.level!}
               @expanded-changed=${(e: GridTreeToggleExpandedChanged) => {
-                console.log('expanded');
                 grid && grid[e.detail.value ? 'expandItem' : 'collapseItem'](person);
               }}
               .expanded=${model.expanded!}
@@ -110,7 +109,7 @@ export class Example extends LitElement {
   }
   render() {
     return html`
-      <vaadin-grid .dataProvider=${this.dataProvider.bind(this)}>
+      <vaadin-grid .dataProvider=${this.dataProvider}>
         <vaadin-grid-column
           auto-width
           header="Employee"
