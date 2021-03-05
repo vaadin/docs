@@ -103,7 +103,9 @@ Note that this will reset your Git working directory!`);
 
     // Create a custom docs theme
     const themePath = path.resolve(ROOT, relativeThemePath);
-    fs.mkdirSync(themePath);
+    if (!fs.existsSync(themePath)) {
+      fs.mkdirSync(themePath);
+    }
     fs.writeFileSync(path.resolve(themePath, 'init.js'), '');
     fs.writeFileSync(path.resolve(themePath, 'header.ts'), '');
     fs.writeFileSync(
