@@ -46,7 +46,7 @@ async function run() {
     execShellCommand('rm -f .git/info/sparse-checkout');
     execShellCommand('git read-tree -m -u HEAD');
     execShellCommand('git reset --hard HEAD');
-    execShellCommand('git clean -f');
+    execShellCommand('git clean -fd');
   } else if (fs.existsSync(path.resolve(ROOT, 'dspublisher/.env'))) {
     console.log(`Seems that you've already initialized a design system.
 You can revert the previous init with "DOCS_INIT_UNDO=true npm run dspublisher:init"
