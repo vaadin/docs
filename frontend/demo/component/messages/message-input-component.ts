@@ -1,11 +1,10 @@
 import '../../init'; // hidden-full-source-line
 
-import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'generated/theme';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
+import { guard } from 'lit-html/directives/guard';
 
 @customElement('message-input-component')
 export class Example extends LitElement {
@@ -18,31 +17,29 @@ export class Example extends LitElement {
   @internalProperty()
   private message = '';
 
+  @internalProperty()
+  private notificationOpened = false;
+
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-message-input @submit="${this._handleSubmit}"></vaadin-message>
+      <vaadin-message-input @submit="${this._handleSubmit}"></vaadin-message-input>
       <!-- end::snippet[] -->
-      <vaadin-notification id="notification"
-      theme="primary"
-      position="middle"
-      .renderer="${this.renderer}"></vaadin-notification>
+      <vaadin-notification
+        id="notification"
+        theme="primary"
+        position="middle"
+        .opened="${this.notificationOpened}"
+        @opened-changed="${(e: CustomEvent) => (this.notificationOpened = e.detail.value)}"
+        .renderer="${guard([this.message], () => (root: HTMLElement) => {
+          root.textContent = `Message received: ${this.message}`;
+        })}"
+      ></vaadin-notification>
     `;
   }
 
-  _handleSubmit(event: any) {
-    console.log(event.type);
+  _handleSubmit(event: CustomEvent) {
     this.message = event.detail.value;
-    console.log(this.message);
-    const notification = <NotificationElement>this.renderRoot.querySelector('#notification');
-    notification.open();
+    this.notificationOpened = true;
   }
-
-  renderer = (root: HTMLElement) =>
-    render(
-      html`
-        <div>Message received: ${this.message}</div>
-      `,
-      root
-    );
 }
