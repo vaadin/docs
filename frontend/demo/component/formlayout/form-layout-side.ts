@@ -7,7 +7,6 @@ import '@vaadin/vaadin-form-layout/vaadin-form-item';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import { applyTheme } from 'generated/theme';
 
-// tag::snippet[]
 @customElement('form-layout-side')
 export class Example extends LitElement {
   constructor() {
@@ -18,6 +17,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-form-layout>
         <vaadin-form-item>
           <label slot="label">Revenue</label>
@@ -38,7 +38,7 @@ export class Example extends LitElement {
           </vaadin-text-field>
         </vaadin-form-item>
       </vaadin-form-layout>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]

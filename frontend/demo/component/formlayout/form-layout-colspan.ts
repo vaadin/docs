@@ -9,7 +9,6 @@ import '@vaadin/vaadin-time-picker/vaadin-time-picker';
 import { applyTheme } from 'generated/theme';
 import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 
-// tag::snippet[]
 @customElement('form-layout-custom-layout')
 export class Example extends LitElement {
   constructor() {
@@ -18,6 +17,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   private responsiveSteps: FormLayoutResponsiveStep[] = [
     { minWidth: 0, columns: 1 },
     { minWidth: '20em', columns: 3 }
@@ -33,5 +33,5 @@ export class Example extends LitElement {
       </vaadin-form-layout>
     `;
   }
+  // end::snippet[]
 }
-// end::snippet[]

@@ -8,7 +8,6 @@ import '@vaadin/vaadin-text-field/vaadin-email-field';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('form-layout-basic')
 export class Example extends LitElement {
   constructor() {
@@ -24,6 +23,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-form-layout .responsiveSteps=${this.responsiveSteps}>
         <vaadin-text-field colspan="1" label="First name"></vaadin-text-field>
         <vaadin-text-field colspan="1" label="Last name"></vaadin-text-field>
@@ -31,7 +31,7 @@ export class Example extends LitElement {
         <vaadin-password-field label="Password"> </vaadin-password-field>
         <vaadin-password-field label="Confirm password"> </vaadin-password-field>
       </vaadin-form-layout>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]
