@@ -20,6 +20,7 @@ import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 import { GridTreeToggleExpandedChanged } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
+import { render } from 'lit-html';
 
 @customElement('treegrid-rich-content')
 export class Example extends LitElement {
@@ -51,85 +52,60 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   employeeRenderer(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) {
-    let treeToggle, nameSpan, professionSpan;
     const { grid } = this;
-
-    if (root.firstElementChild) {
-      treeToggle = root.querySelector('vaadin-grid-tree-toggle')!;
-      [nameSpan, professionSpan] = root.querySelectorAll('span');
-    } else {
-      const container = document.createElement('vaadin-horizontal-layout');
-
-      treeToggle = document.createElement('vaadin-grid-tree-toggle');
-      treeToggle.addEventListener('expanded-changed', (e: GridTreeToggleExpandedChanged) => {
-        grid && grid[e.detail.value ? 'expandItem' : 'collapseItem']((e.target as any).item);
-      });
-      container.append(treeToggle);
-
-      const detailContainer = document.createElement('vaadin-vertical-layout');
-      container.append(detailContainer);
-
-      nameSpan = document.createElement('span');
-      detailContainer.append(nameSpan);
-
-      professionSpan = document.createElement('span');
-      professionSpan.style.fontSize = 'var(--lumo-font-size-s)';
-      professionSpan.style.color = 'var(--lumo-contrast-70pct)';
-      detailContainer.append(professionSpan);
-
-      root.append(container);
-    }
 
     if (model?.item) {
       const person = model.item as Person;
 
-      (treeToggle as any).item = person;
-      treeToggle.leaf = person.managerId !== undefined;
-      treeToggle.level = model.level!;
-      treeToggle.expanded = model.expanded!;
-
-      nameSpan.textContent = `${person.firstName} ${person.lastName}`;
-      professionSpan.textContent = person.profession;
+      render(
+        html`
+          <vaadin-horizontal-layout>
+            <vaadin-grid-tree-toggle
+              .leaf=${!person.hasChildren}
+              .level=${model.level!}
+              @expanded-changed=${(e: GridTreeToggleExpandedChanged) => {
+                console.log('expanded');
+                grid && grid[e.detail.value ? 'expandItem' : 'collapseItem'](person);
+              }}
+              .expanded=${model.expanded!}
+            ></vaadin-grid-tree-toggle>
+            <img
+              .src=${person.pictureUrl}
+              style="height: var(--lumo-size-m); width: var(--lumo-size-m); align-self: center;"
+            />
+            <vaadin-vertical-layout>
+              <span>${person.firstName} ${person.lastName}</span>
+              <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-contrast-70pct);"
+                >${person.profession}</span
+              >
+            </vaadin-vertical-layout>
+          </vaadin-horizontal-layout>
+        `,
+        root
+      );
     }
   }
   contactRenderer(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) {
-    let emailSpan, phoneSpan;
-    if (root.firstElementChild) {
-      [emailSpan, phoneSpan] = root.querySelectorAll('span');
-    } else {
-      const container = document.createElement('vaadin-vertical-layout');
-      container.style.color = 'var(--lumo-primary-color)';
-      container.style.fontSize = 'var(--lumo-font-size-s)';
-      root.append(container);
-
-      const emailContainer = document.createElement('div');
-      container.append(emailContainer);
-
-      const emailIcon = document.createElement('iron-icon');
-      emailIcon.icon = 'vaadin:envelope';
-      emailIcon.style.height = 'var(--lumo-font-size-m)';
-      emailContainer.append(emailIcon);
-
-      emailSpan = document.createElement('span');
-      emailContainer.append(emailSpan);
-
-      const phoneContainer = document.createElement('div');
-      container.append(phoneContainer);
-
-      const phoneIcon = document.createElement('iron-icon');
-      phoneIcon.icon = 'vaadin:phone';
-      phoneIcon.style.height = 'var(--lumo-font-size-m)';
-      phoneContainer.append(phoneIcon);
-
-      phoneSpan = document.createElement('span');
-      phoneContainer.append(phoneSpan);
-    }
-
     if (model?.item) {
       const person = model.item as Person;
 
-      emailSpan.textContent = person.email;
-      phoneSpan.textContent = person.address.phone;
+      render(
+        html`
+          <vaadin-vertical-layout
+            style="color: var(--lumo-primary-color); font-size: var(--lumo-font-size-s);"
+          >
+            <div>
+              <iron-icon icon="vaadin:envelope" style="height: var(--lumo-font-size-m)"></iron-icon>
+              <span>${person.email}</span>
+            </div>
+            <div>
+              <iron-icon icon="vaadin:phone" style="height: var(--lumo-font-size-m)"></iron-icon>
+              <span>${person.address.phone}</span>
+            </div>
+          </vaadin-vertical-layout>
+        `,
+        root
+      );
     }
   }
   render() {
