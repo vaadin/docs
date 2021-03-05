@@ -63,6 +63,8 @@ module.exports = function (config) {
   config.resolve.alias['themes/theme-generated.js'] = applyThemePath;
   config.resolve.alias['generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
+  const frontendFolder = path.resolve(__dirname, 'frontend');
+  config.resolve.alias['Frontend'] = frontendFolder;
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
 
   // If there are pre-existing rules that affect CSS files,
