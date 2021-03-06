@@ -18,19 +18,6 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  // tag::snippet[]
-  @internalProperty()
-  private items = [
-    { text: 'View' },
-    { component: 'hr' },
-    { text: 'Edit' },
-    { text: 'Delete' },
-    { component: 'hr' },
-    { text: 'Email' },
-    { text: 'Call' }
-  ];
-  // end::snippet[]
-
   @internalProperty()
   private gridItems: Person[] = [];
 
@@ -41,8 +28,18 @@ export class Example extends LitElement {
   render() {
     return html`
       <hint-badge></hint-badge>
-      <!-- tag::snippethtml[] -->
-      <vaadin-context-menu .items=${this.items}>
+      <!-- tag::snippet[] -->
+      <vaadin-context-menu
+        .items=${[
+          { text: 'View' },
+          { component: 'hr' },
+          { text: 'Edit' },
+          { text: 'Delete' },
+          { component: 'hr' },
+          { text: 'Email' },
+          { text: 'Call' }
+        ]}
+      >
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
           <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
@@ -50,7 +47,7 @@ export class Example extends LitElement {
           <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
-      <!-- end::snippethtml[] -->
+      <!-- end::snippet[] -->
     `;
   }
 }

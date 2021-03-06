@@ -11,6 +11,7 @@ import '@vaadin/vaadin-icons/vaadin-icons';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
+import { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
 @customElement('context-menu-presentation')
 export class Example extends LitElement {
@@ -23,36 +24,36 @@ export class Example extends LitElement {
   @internalProperty()
   private gridItems: Person[] = [];
 
+  @internalProperty()
+  private items?: ContextMenuItem[];
+
   // tag::snippet[]
   async firstUpdated() {
     this.gridItems = await getPeople();
     const itemsArray = this.createItemsArray(this.gridItems.slice(0, 6));
 
-    const contextMenu = this.shadowRoot?.querySelector('vaadin-context-menu');
-    if (contextMenu) {
-      contextMenu.items = [
-        { component: this.createItem('vaadin:file-search', 'Open') },
-        {
-          component: this.createItem('vaadin:user-check', 'Assign'),
-          children: [
-            { text: 'Managers', component: this.createHeader() },
-            { component: itemsArray[0] },
-            { component: itemsArray[1] },
-            { component: itemsArray[2] },
-            { text: 'Senior Managers', component: this.createHeader() },
-            { component: itemsArray[3] },
-            { component: itemsArray[4] },
-            { component: itemsArray[5] }
-          ]
-        },
-        {
-          component: this.createItem('vaadin:clipboard-check', 'Status'),
-          children: [{ text: 'Assigned' }, { text: 'Promoted' }]
-        },
-        { component: 'hr' },
-        { component: this.createItem('vaadin:trash', 'Delete') }
-      ];
-    }
+    this.items = [
+      { component: this.createItem('vaadin:file-search', 'Open') },
+      {
+        component: this.createItem('vaadin:user-check', 'Assign'),
+        children: [
+          { text: 'Managers', component: this.createHeader() },
+          { component: itemsArray[0] },
+          { component: itemsArray[1] },
+          { component: itemsArray[2] },
+          { text: 'Senior Managers', component: this.createHeader() },
+          { component: itemsArray[3] },
+          { component: itemsArray[4] },
+          { component: itemsArray[5] }
+        ]
+      },
+      {
+        component: this.createItem('vaadin:clipboard-check', 'Status'),
+        children: [{ text: 'Assigned' }, { text: 'Promoted' }]
+      },
+      { component: 'hr' },
+      { component: this.createItem('vaadin:trash', 'Delete') }
+    ];
   }
   // end::snippet[]
 
@@ -60,7 +61,7 @@ export class Example extends LitElement {
     return html`
       <hint-badge></hint-badge>
       <!-- tag::snippethtml[] -->
-      <vaadin-context-menu>
+      <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
           <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>

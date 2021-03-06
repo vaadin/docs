@@ -4,6 +4,10 @@ import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-li
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import { applyTheme } from 'generated/theme';
+import {
+  ContextMenuItem,
+  ContextMenuItemSelected
+} from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
 @customElement('context-menu-basic')
 export class Example extends LitElement {
@@ -16,15 +20,15 @@ export class Example extends LitElement {
   // tag::snippet[]
   @internalProperty()
   private items = [
-    { text: 'Abigail Lewis', checkable: true },
-    { text: 'Allison Torres', checkable: true, checked: true },
-    { text: 'Anna Myers', checkable: true },
-    { text: 'Lauren Wright', checkable: true },
-    { text: 'Tamaki Ryushi', checkable: true }
+    { text: 'Abigail Lewis' },
+    { text: 'Allison Torres', checked: true },
+    { text: 'Anna Myers' },
+    { text: 'Lauren Wright' },
+    { text: 'Tamaki Ryushi' }
   ];
 
   @internalProperty()
-  private selectedItem?: { text: string } = this.items[1];
+  private selectedItem?: ContextMenuItem = this.items[1];
   // end::snippet[]
 
   render() {
@@ -37,7 +41,8 @@ export class Example extends LitElement {
     `;
   }
 
-  itemSelected(e: CustomEvent) {
+  itemSelected(e: ContextMenuItemSelected) {
     this.selectedItem = e.detail.value;
+    this.items.forEach(item => (item.checked = item === this.selectedItem));
   }
 }
