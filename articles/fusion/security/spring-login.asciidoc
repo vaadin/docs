@@ -7,11 +7,15 @@ layout: page
 
 = Adding a Login Form with Spring Security
 
+[role="since:com.vaadin:vaadin@V20 standalone"]
+--
+--
+
 Since the downloaded application is a link:https://spring.io/projects/spring-boot[Spring Boot] project, the easiest way to enable authentication is by adding link:https://spring.io/projects/spring-security[Spring Security].
 
 == Dependencies
 
-Add the following dependency to the project maven file.
+Add the following dependency to the project Maven file.
 
 .pom.xml
 [source,xml]
@@ -50,6 +54,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
+    // Set default security policy that permits Vaadin internal requests and
+    // denies all other
+    VaadinSpringSecurity.configure(http);
     // Ignore the login processing url and vaadin endpoint calls
     http.csrf().ignoringAntMatchers("/login", "/connect/**");
     // Use default spring login form
@@ -74,7 +81,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   public void configure(WebSecurity web) {
-    web.ignoring().antMatchers("/VAADIN/**");
+    // Access to static resources, bypassing Spring security.
+    VaadinSpringSecurity.configure(web);
   }
 }
 ----
@@ -114,6 +122,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
+    // Set default security policy that permits Vaadin internal requests and
+    // denies all other
+    VaadinSpringSecurity.configure(http);
     // Ignore the login processing url and vaadin endpoint calls
     http.csrf().ignoringAntMatchers("/login", "/connect/**");
     // Use default spring login form
@@ -123,7 +134,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   public void configure(WebSecurity web) {
     // Access to static resources, bypassing Spring security.
-    web.ignoring().antMatchers("/VAADIN/**");
+    VaadinSpringSecurity.configure(web);
   }
 
   @Override
@@ -134,6 +145,37 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
         .withUser("admin").password("{noop}admin").roles("ADMIN", "USER");
   }
+}
+----
+
+=== Alternatives to Using the Configuration Helper
+
+`VaadinSpringSecurity.configure(http)` configures HTTP security to bypass framework internal resources.
+If you prefer to roll your own configuration instead of using the helper, the matcher for these resources can be retrieved with `VaadinSpringSecurity.getDefaultHttpSecurityPermitMatcher()`.
+For example:
+
+.SecurityConfig.java
+[source,java]
+----
+public static void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests()
+        .requestMatchers(getDefaultHttpSecurityPermitMatcher())
+        .antMatchers("public/**") // custom matcher
+        .permitAll()
+        ...
+}
+----
+
+Analogously, the matcher for static resources to be ignored is available as `VaadinSpringSecurity.getDefaultWebSecurityIgnoreMatcher`:
+
+.SecurityConfig.java
+[source,java]
+----
+public static void configure(WebSecurity web) throws Exception {
+    web.ignoring()
+       .requestMatchers(getDefaultWebSecurityIgnoreMatcher())
+       .antMatchers("static/**") // custom matcher
+       ...
 }
 ----
 
