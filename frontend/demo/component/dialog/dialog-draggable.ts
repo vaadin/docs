@@ -7,12 +7,13 @@ import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
 import { applyTheme } from 'generated/theme';
 
-@customElement('dialog-basic')
+@customElement('dialog-draggable')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -28,6 +29,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-dialog
         aria-label="simple"
+        draggable
         .opened=${this.dialogOpened}
         @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
         .renderer="${guard([], () => (root: HTMLElement) => {
@@ -37,19 +39,24 @@ export class Example extends LitElement {
                 theme="spacing"
                 style="width: 300px; max-width: 100%; align-items: stretch;"
               >
-                <h2 style="margin: var(--lumo-space-m) 0 0 0; font-size: 1.5em; font-weight: bold;">
-                  New employee
-                </h2>
+                <vaadin-horizontal-layout
+                  class="draggable"
+                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); cursor: move; padding: var(--lumo-space-m) var(--lumo-space-l); margin: calc(var(--lumo-space-s) * -1) calc(var(--lumo-space-l) * -1) 0"
+                >
+                  <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">
+                    New employee
+                  </h2>
+                </vaadin-horizontal-layout>
                 <vaadin-vertical-layout style="align-items: stretch;">
-                  <vaadin-text-field label="First name"></vaadin-text-field>
-                  <vaadin-text-field label="Last name"></vaadin-text-field>
+                  <vaadin-text-field label="Title"></vaadin-text-field>
+                  <vaadin-text-area label="Description"></vaadin-text-area>
                 </vaadin-vertical-layout>
                 <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
                   <vaadin-button @click=${() => (this.dialogOpened = false)}>
                     Cancel
                   </vaadin-button>
                   <vaadin-button theme="primary" @click=${() => (this.dialogOpened = false)}>
-                    Save changes
+                    Add note
                   </vaadin-button>
                 </vaadin-horizontal-layout>
               </vaadin-vertical-layout>
@@ -58,8 +65,7 @@ export class Example extends LitElement {
           );
         })}"
       ></vaadin-dialog>
-      <!-- end::snippet[] -->
-
+      <!-- end::snippet[]  -->
       <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
     `;
   }
