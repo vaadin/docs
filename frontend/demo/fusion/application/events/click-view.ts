@@ -1,7 +1,6 @@
 import '../../init'; // hidden-full-source-line
-import { customElement, html } from 'lit-element';
+import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
-import { View } from '../../view';
 
 const showNotification = (message: string) => {
   console.log(message);
@@ -9,7 +8,7 @@ const showNotification = (message: string) => {
 
 // tag::snippet[]
 @customElement('click-view')
-export class ClickView extends View {
+export class ClickView extends LitElement {
   render() {
     return html`
       <vaadin-button @click="${this.sayHello}">Say hello</vaadin-button>

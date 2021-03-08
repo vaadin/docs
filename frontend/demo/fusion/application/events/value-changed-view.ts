@@ -1,11 +1,10 @@
 import '../../init'; // hidden-full-source-line
-import { customElement, html, internalProperty } from 'lit-element';
+import { customElement, html, internalProperty, LitElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
-import { View } from '../../view';
 
 // tag::snippet[]
 @customElement('value-changed-view')
-export class ValueChangedView extends View {
+export class ValueChangedView extends LitElement {
   @internalProperty()
   private name = '';
 
