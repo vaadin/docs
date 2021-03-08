@@ -1,16 +1,22 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement } from 'lit-element';
+import { customElement, LitElement, query } from 'lit-element';
+import { html } from 'lit-html';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
-import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-button/vaadin-button';
+import {
+  GridDataProviderCallback,
+  GridDataProviderParams,
+  GridElement
+} from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from '../../domain/DataService';
-import { html } from 'lit-html';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 
-@customElement('treegrid-basic')
+@customElement('tree-grid-column')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -18,7 +24,12 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  // tag::snippet[]
+  private managers?: Person[];
+
+  // async firstUpdated() {
+  //   this.managers = (await getPeople({managerId: null}));
+  // }
+
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
     let people: Person[];
 
@@ -27,6 +38,7 @@ export class Example extends LitElement {
       people = await getPeople({ managerId: manager.id });
     } else {
       people = await getPeople({ managerId: null });
+      this.managers = people;
     }
 
     const startIndex = params.page * params.pageSize;
@@ -36,9 +48,26 @@ export class Example extends LitElement {
     callback(pageItems, treeLevelSize);
   }
 
+  // tag::snippet[]
+  @query('vaadin-grid')
+  private grid!: GridElement;
+
   render() {
     return html`
-      <vaadin-grid .dataProvider=${this.dataProvider}>
+      <vaadin-horizontal-layout theme="spacing">
+        <h2 style="flex: 1; margin-bottom: 0; margin-top: 0;">Employee</h2>
+        <vaadin-button
+          @click=${() =>
+            this.managers && this.managers.forEach(manager => this.grid.expandItem(manager))}
+          >Expand All</vaadin-button
+        >
+        <vaadin-button
+          @click=${() =>
+            this.managers && this.managers.forEach(manager => this.grid.collapseItem(manager))}
+          >Collapse All</vaadin-button
+        >
+      </vaadin-horizontal-layout>
+      <vaadin-grid .dataProvider=${this.dataProvider.bind(this)}>
         <vaadin-grid-tree-column
           path="firstName"
           item-has-children-path="hasChildren"

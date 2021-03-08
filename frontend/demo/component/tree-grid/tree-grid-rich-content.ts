@@ -22,7 +22,7 @@ import { applyTheme } from 'generated/theme';
 import { GridTreeToggleExpandedChanged } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 import { render } from 'lit-html';
 
-@customElement('treegrid-rich-content')
+@customElement('tree-grid-rich-content')
 export class Example extends LitElement {
   constructor() {
     super();
