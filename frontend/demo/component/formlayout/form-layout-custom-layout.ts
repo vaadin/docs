@@ -20,12 +20,16 @@ export class Example extends LitElement {
   // tag::snippet[]
   private responsiveSteps: FormLayoutResponsiveStep[] = [
     { minWidth: 0, columns: 1 },
-    { minWidth: '20em', columns: 2 },
-    { minWidth: '40em', columns: 3 }
+    { minWidth: '10em', columns: 2 },
+    { minWidth: '20em', columns: 3 }
   ];
 
   render() {
     return html`
+      <p>
+        Use the draggable split handle to resize Form Layout's available space and test its
+        responsiveness;
+      </p>
       <vaadin-split-layout>
         <vaadin-form-layout .responsiveSteps=${this.responsiveSteps}>
           <vaadin-text-field label="First name"></vaadin-text-field>
