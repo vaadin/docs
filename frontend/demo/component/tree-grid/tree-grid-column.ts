@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, query } from 'lit-element';
+import { customElement, internalProperty, LitElement, query } from 'lit-element';
 import { html } from 'lit-html';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
@@ -26,51 +26,66 @@ export class Example extends LitElement {
 
   private managers?: Person[];
 
-  // async firstUpdated() {
-  //   this.managers = (await getPeople({managerId: null}));
-  // }
-
-  async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
-    let people: Person[];
+  private dataProvider = async (
+    params: GridDataProviderParams,
+    callback: GridDataProviderCallback
+  ) => {
+    let results: Person[];
 
     if (params.parentItem) {
       const manager = params.parentItem as Person;
-      people = await getPeople({ managerId: manager.id });
+      results = await getPeople({ managerId: manager.id });
     } else {
-      people = await getPeople({ managerId: null });
-      this.managers = people;
+      results = await getPeople({ managerId: null });
+      this.managers = results;
     }
 
+    const resultsWithManagerFilled: Promise<Person>[] = results.map(async person => {
+      const isManager = (await getPeople({ managerId: person.id })).length > 0;
+      return {
+        ...person,
+        isManager
+      };
+    });
+    results = await Promise.all(resultsWithManagerFilled);
+
     const startIndex = params.page * params.pageSize;
-    const pageItems = people.slice(startIndex, startIndex + params.pageSize);
+    const pageItems = results.slice(startIndex, startIndex + params.pageSize);
     // Inform grid of the requested tree level's full size
-    const treeLevelSize = people.length;
+    const treeLevelSize = results.length;
     callback(pageItems, treeLevelSize);
-  }
+  };
 
   // tag::snippet[]
   @query('vaadin-grid')
   private grid!: GridElement;
+
+  @internalProperty()
+  private expandedItems: unknown[] = [];
 
   render() {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <h2 style="flex: 1; margin-bottom: 0; margin-top: 0;">Employee</h2>
         <vaadin-button
-          @click=${() =>
-            this.managers && this.managers.forEach(manager => this.grid.expandItem(manager))}
-          >Expand All</vaadin-button
+          @click=${() => {
+            if (this.managers) {
+              this.expandedItems = [...this.managers];
+            }
+          }}
         >
-        <vaadin-button
-          @click=${() =>
-            this.managers && this.managers.forEach(manager => this.grid.collapseItem(manager))}
-          >Collapse All</vaadin-button
-        >
+          Expand All
+        </vaadin-button>
+        <vaadin-button @click=${() => (this.expandedItems = [])}>Collapse All</vaadin-button>
       </vaadin-horizontal-layout>
-      <vaadin-grid .dataProvider=${this.dataProvider.bind(this)}>
+      <vaadin-grid
+        .dataProvider=${this.dataProvider}
+        .itemIdPath=${'id'}
+        .expandedItems=${this.expandedItems}
+      >
         <vaadin-grid-tree-column
           path="firstName"
-          item-has-children-path="hasChildren"
+          item-has-children-path="isManager"
         ></vaadin-grid-tree-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>

@@ -20,19 +20,27 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
-    let people: Person[];
+    let results: Person[];
 
     if (params.parentItem) {
       const manager = params.parentItem as Person;
-      people = await getPeople({ managerId: manager.id });
+      results = await getPeople({ managerId: manager.id });
     } else {
-      people = await getPeople({ managerId: null });
+      results = await getPeople({ managerId: null });
     }
+    const resultsWithManagerFilled: Promise<Person>[] = results.map(async person => {
+      const isManager = (await getPeople({ managerId: person.id })).length > 0;
+      return {
+        ...person,
+        isManager
+      };
+    });
+    results = await Promise.all(resultsWithManagerFilled);
 
     const startIndex = params.page * params.pageSize;
-    const pageItems = people.slice(startIndex, startIndex + params.pageSize);
+    const pageItems = results.slice(startIndex, startIndex + params.pageSize);
     // Inform grid of the requested tree level's full size
-    const treeLevelSize = people.length;
+    const treeLevelSize = results.length;
     callback(pageItems, treeLevelSize);
   }
 
@@ -41,7 +49,7 @@ export class Example extends LitElement {
       <vaadin-grid .dataProvider=${this.dataProvider}>
         <vaadin-grid-tree-column
           path="firstName"
-          item-has-children-path="hasChildren"
+          item-has-children-path="isManager"
         ></vaadin-grid-tree-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>

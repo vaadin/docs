@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, query } from 'lit-element';
+import { customElement, internalProperty, LitElement } from 'lit-element';
 import { html } from 'lit-html';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
@@ -13,7 +13,6 @@ import {
   GridColumnElement,
   GridDataProviderCallback,
   GridDataProviderParams,
-  GridElement,
   GridItemModel
 } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from '../../domain/DataService';
@@ -30,30 +29,41 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @query('vaadin-grid')
-  private grid?: GridElement;
+  @internalProperty()
+  private expandedItems: Person[] = [];
 
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
-    let people: Person[];
+    let results: Person[];
 
     if (params.parentItem) {
       const manager = params.parentItem as Person;
-      people = await getPeople({ managerId: manager.id });
+      results = await getPeople({ managerId: manager.id });
     } else {
-      people = await getPeople({ managerId: null });
+      results = await getPeople({ managerId: null });
     }
 
+    const resultsWithManagerFilled: Promise<Person>[] = results.map(async person => {
+      const isManager = (await getPeople({ managerId: person.id })).length > 0;
+      return {
+        ...person,
+        isManager
+      };
+    });
+    results = await Promise.all(resultsWithManagerFilled);
+
     const startIndex = params.page * params.pageSize;
-    const pageItems = people.slice(startIndex, startIndex + params.pageSize);
+    const pageItems = results.slice(startIndex, startIndex + params.pageSize);
     // Inform grid of the requested tree level's full size
-    const treeLevelSize = people.length;
+    const treeLevelSize = results.length;
     callback(pageItems, treeLevelSize);
   }
 
   // tag::snippet[]
-  employeeRenderer(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) {
-    const { grid } = this;
-
+  private employeeRenderer = (
+    root: HTMLElement,
+    _column?: GridColumnElement,
+    model?: GridItemModel
+  ) => {
     if (model?.item) {
       const person = model.item as Person;
 
@@ -61,12 +71,16 @@ export class Example extends LitElement {
         html`
           <vaadin-horizontal-layout>
             <vaadin-grid-tree-toggle
-              .leaf=${!person.hasChildren}
-              .level=${model.level!}
+              .leaf=${!person.isManager}
+              .level=${model.level || 0}
               @expanded-changed=${(e: GridTreeToggleExpandedChanged) => {
-                grid && grid[e.detail.value ? 'expandItem' : 'collapseItem'](person);
+                if (e.detail.value) {
+                  this.expandedItems = [...this.expandedItems, person];
+                } else {
+                  this.expandedItems = this.expandedItems.filter(p => p.id !== person.id);
+                }
               }}
-              .expanded=${model.expanded!}
+              .expanded=${!!model.expanded}
             ></vaadin-grid-tree-toggle>
             <img
               .src=${person.pictureUrl}
@@ -74,16 +88,16 @@ export class Example extends LitElement {
             />
             <vaadin-vertical-layout>
               <span>${person.firstName} ${person.lastName}</span>
-              <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-contrast-70pct);"
-                >${person.profession}</span
-              >
+              <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-contrast-70pct);">
+                ${person.profession}
+              </span>
             </vaadin-vertical-layout>
           </vaadin-horizontal-layout>
         `,
         root
       );
     }
-  }
+  };
   contactRenderer(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) {
     if (model?.item) {
       const person = model.item as Person;
@@ -109,11 +123,11 @@ export class Example extends LitElement {
   }
   render() {
     return html`
-      <vaadin-grid .dataProvider=${this.dataProvider}>
+      <vaadin-grid .dataProvider=${this.dataProvider} .expandedItems=${this.expandedItems}>
         <vaadin-grid-column
           auto-width
           header="Employee"
-          .renderer=${this.employeeRenderer.bind(this)}
+          .renderer=${this.employeeRenderer}
         ></vaadin-grid-column>
         <vaadin-grid-column
           auto-width
