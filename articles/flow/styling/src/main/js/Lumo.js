@@ -1,4 +1,4 @@
-// tutorial::../documentation-themes/lumo/lumo-overview.asciidoc
+// tutorial::../documentation-themes/lumo/overview.asciidoc
 
 // tag::imports[]
 // Import the main style sheets which set all the
