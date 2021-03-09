@@ -30,7 +30,7 @@ public class Person {
 
   private Integer managerId;
 
-  private boolean isManager;
+  private boolean manager;
 
   public String getFirstName() {
     return firstName;
@@ -138,11 +138,11 @@ public class Person {
   }
 
   public boolean isManager() {
-    return isManager;
+    return manager;
   }
 
-  public void setIsManager(boolean isManager) {
-    this.isManager = isManager;
+  public void setManager(boolean manager) {
+    this.manager = manager;
   }
 }
 // end::snippet[]

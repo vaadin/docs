@@ -69,7 +69,7 @@ export class Example extends LitElement {
       >
         <vaadin-grid-tree-column
           path="firstName"
-          item-has-children-path="isManager"
+          item-has-children-path="manager"
         ></vaadin-grid-tree-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>

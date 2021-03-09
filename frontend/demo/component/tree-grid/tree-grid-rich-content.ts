@@ -62,7 +62,7 @@ export class Example extends LitElement {
         html`
           <vaadin-horizontal-layout>
             <vaadin-grid-tree-toggle
-              .leaf=${!person.isManager}
+              .leaf=${!person.manager}
               .level=${model.level || 0}
               @expanded-changed=${(e: GridTreeToggleExpandedChanged) => {
                 if (e.detail.value) {

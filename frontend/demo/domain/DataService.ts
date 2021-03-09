@@ -36,7 +36,7 @@ export async function getPeople(options?: PeopleOptions): Promise<Person[]> {
   people = people.map(person => {
     return {
       ...person,
-      isManager: people.some(p => p.managerId === person.id)
+      manager: people.some(p => p.managerId === person.id)
     };
   });
 
