@@ -15,7 +15,6 @@ module.exports = async function(config) {
 /articles/ds
 !/articles/_images
 !/articles/index.asciidoc
-!/articles/vaadin-version.asciidoc
 !/articles/ds/overview.asciidoc
 !/articles/404.asciidoc
 !/dspublisher/theme
