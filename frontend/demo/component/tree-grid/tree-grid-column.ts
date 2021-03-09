@@ -1,17 +1,13 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, internalProperty, LitElement, query } from 'lit-element';
+import { customElement, internalProperty, LitElement } from 'lit-element';
 import { html } from 'lit-html';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-button/vaadin-button';
-import {
-  GridDataProviderCallback,
-  GridDataProviderParams,
-  GridElement
-} from '@vaadin/vaadin-grid/vaadin-grid';
+import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
@@ -48,9 +44,6 @@ export class Example extends LitElement {
   };
 
   // tag::snippet[]
-  @query('vaadin-grid')
-  private grid!: GridElement;
-
   @internalProperty()
   private expandedItems: unknown[] = [];
 
