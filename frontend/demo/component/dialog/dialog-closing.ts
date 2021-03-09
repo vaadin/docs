@@ -12,7 +12,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
 import { applyTheme } from 'generated/theme';
 
-@customElement('dialog-basic')
+@customElement('dialog-closing')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -37,21 +37,19 @@ export class Example extends LitElement {
                 theme="spacing"
                 style="width: 300px; max-width: 100%; align-items: stretch;"
               >
-                <h2 style="margin: var(--lumo-space-m) 0 0 0; font-size: 1.5em; font-weight: bold;">
-                  New employee
+                <h2 style="margin: var(--lumo-space-m) 0; font-size: 1.5em; font-weight: bold;">
+                  System maintenance
                 </h2>
-                <vaadin-vertical-layout style="align-items: stretch;">
-                  <vaadin-text-field label="First name"></vaadin-text-field>
-                  <vaadin-text-field label="Last name"></vaadin-text-field>
-                </vaadin-vertical-layout>
-                <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
-                  <vaadin-button @click=${() => (this.dialogOpened = false)}>
-                    Cancel
-                  </vaadin-button>
-                  <vaadin-button theme="primary" @click=${() => (this.dialogOpened = false)}>
-                    Save changes
-                  </vaadin-button>
-                </vaadin-horizontal-layout>
+                <p>
+                  System maintenance will begin at 3 PM. It is schedule to conclude at 5PM. We
+                  apologise for any inconvenience.
+                </p>
+                <vaadin-button
+                  @click=${() => (this.dialogOpened = false)}
+                  style="align-self: flex-end;"
+                >
+                  Close
+                </vaadin-button>
               </vaadin-vertical-layout>
             `,
             root
