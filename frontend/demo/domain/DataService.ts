@@ -33,9 +33,17 @@ export async function getPeople(options?: PeopleOptions): Promise<Person[]> {
   }
   let people: Person[] = await getDataset<Person>('people.json', options?.count);
 
+  people = people.map(person => {
+    return {
+      ...person,
+      isManager: people.some(p => p.managerId === person.id)
+    };
+  });
+
   if (options?.managerId !== undefined) {
     people = people.filter(person => person.managerId == options?.managerId);
   }
+
   return people.map((person, index) => {
     return {
       ...person,

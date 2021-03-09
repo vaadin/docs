@@ -40,15 +40,6 @@ export class Example extends LitElement {
       this.managers = results;
     }
 
-    const resultsWithManagerFilled: Promise<Person>[] = results.map(async person => {
-      const isManager = (await getPeople({ managerId: person.id })).length > 0;
-      return {
-        ...person,
-        isManager
-      };
-    });
-    results = await Promise.all(resultsWithManagerFilled);
-
     const startIndex = params.page * params.pageSize;
     const pageItems = results.slice(startIndex, startIndex + params.pageSize);
     // Inform grid of the requested tree level's full size
