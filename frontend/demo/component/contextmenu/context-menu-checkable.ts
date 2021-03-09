@@ -21,14 +21,14 @@ export class Example extends LitElement {
   @internalProperty()
   private items: ContextMenuItem[] = [
     { text: 'Abigail Lewis' },
-    { text: 'Allison Torres', checked: true },
+    { text: 'Allison Torres' },
     { text: 'Anna Myers' },
     { text: 'Lauren Wright' },
     { text: 'Tamaki Ryushi' }
   ];
 
   @internalProperty()
-  private selectedItem = this.items.find(item => item.checked);
+  private selectedItem = this.items[1];
   // end::snippet[]
 
   render() {
@@ -36,7 +36,7 @@ export class Example extends LitElement {
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu
         .items=${this.items.map(item => {
-          return { ...item, checked: item.text === this.selectedItem?.text };
+          return { ...item, checked: item === this.selectedItem };
         })}
         @item-selected=${this.itemSelected}
       >
@@ -46,7 +46,11 @@ export class Example extends LitElement {
     `;
   }
 
+  // tag::snippetselected[]
   itemSelected(e: ContextMenuItemSelected) {
-    this.selectedItem = e.detail.value;
+    this.selectedItem = this.items.find(
+      item => item.text === e.detail.value.text
+    ) as ContextMenuItem;
   }
+  // end::snippetselected[]
 }
