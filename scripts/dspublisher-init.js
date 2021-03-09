@@ -1,19 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const simpleGit = require('simple-git');
+const { execSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 
-const gitOptions = {
-  baseDir: ROOT,
-  binary: 'git',
-  maxConcurrentProcesses: 6
-};
-const git = simpleGit(gitOptions);
-
 module.exports = async function(config) {
   // Mark the repo to use sparsecheckout
-  git.addConfig('core.sparsecheckout', 'true');
+  execSync('git config core.sparsecheckout true', { cwd: ROOT, stdio: 'inherit' });
 
   // Build the sparse-checkout file
   const sparseCheckoutFileContent = `
@@ -85,7 +78,5 @@ header h3 a::before {
   );
 
   // Update working directory
-  // TODO: Doesn't work
-  // TODO: Can't use a dependency that requires installation. Just use execSync
-  git.reset('mixed', ['HEAD']);
+  execSync('git read-tree -m -u HEAD', { cwd: ROOT, stdio: 'inherit' });
 };
