@@ -23,16 +23,16 @@ export async function getCards(count?: number): Promise<Card[]> {
 
 let peopleImages: string[];
 
-type PeopleOptions = {
+export type PeopleOptions = {
   managerId?: number | null;
   count?: number;
+  startIndex?: number;
 };
 export async function getPeople(options?: PeopleOptions): Promise<Person[]> {
   if (!peopleImages) {
     peopleImages = (await import('../../../src/main/resources/data/peopleImages.json')).default;
   }
-  let people: Person[] = await getDataset<Person>('people.json', options?.count);
-
+  let people: Person[] = await getDataset<Person>('people.json');
   people = people.map(person => {
     return {
       ...person,
@@ -43,6 +43,11 @@ export async function getPeople(options?: PeopleOptions): Promise<Person[]> {
   if (options?.managerId !== undefined) {
     people = people.filter(person => person.managerId == options?.managerId);
   }
+
+  const startIndex = options?.startIndex || 0;
+  const count = options?.count ? startIndex + options.count : undefined;
+
+  people = people.slice(startIndex, count);
 
   return people.map((person, index) => {
     return {

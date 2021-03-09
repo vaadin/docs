@@ -15,7 +15,7 @@ import {
   GridDataProviderParams,
   GridItemModel
 } from '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople } from '../../domain/DataService';
+import { getPeople, PeopleOptions } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 import { GridTreeToggleExpandedChanged } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
@@ -35,11 +35,19 @@ export class Example extends LitElement {
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
     let results: Person[];
 
+    const peopleOptions: PeopleOptions = {
+      count: params.pageSize,
+      startIndex: params.page * params.pageSize,
+      managerId: null
+    };
+
     if (params.parentItem) {
       const manager = params.parentItem as Person;
-      results = await getPeople({ managerId: manager.id });
+      peopleOptions.managerId = manager.id;
+
+      results = await getPeople(peopleOptions);
     } else {
-      results = await getPeople({ managerId: null });
+      results = await getPeople(peopleOptions);
     }
 
     const startIndex = params.page * params.pageSize;

@@ -8,7 +8,7 @@ import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-button/vaadin-button';
 import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople } from '../../domain/DataService';
+import { getPeople, PeopleOptions } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 
@@ -28,19 +28,27 @@ export class Example extends LitElement {
   ) => {
     let results: Person[];
 
+    const peopleOptions: PeopleOptions = {
+      count: params.pageSize,
+      startIndex: params.page * params.pageSize,
+      managerId: null
+    };
+
     if (params.parentItem) {
       const manager = params.parentItem as Person;
-      results = await getPeople({ managerId: manager.id });
+      peopleOptions.managerId = manager.id;
+
+      results = await getPeople(peopleOptions);
     } else {
-      results = await getPeople({ managerId: null });
+      results = await getPeople(peopleOptions);
       this.managers = results;
     }
 
-    const startIndex = params.page * params.pageSize;
-    const pageItems = results.slice(startIndex, startIndex + params.pageSize);
+    // const startIndex = params.page * params.pageSize;
+    // const pageItems = results.slice(startIndex, startIndex + params.pageSize);
     // Inform grid of the requested tree level's full size
     const treeLevelSize = results.length;
-    callback(pageItems, treeLevelSize);
+    callback(results, treeLevelSize);
   };
 
   // tag::snippet[]
