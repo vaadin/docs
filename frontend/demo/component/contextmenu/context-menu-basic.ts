@@ -9,6 +9,7 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
+import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
 @customElement('context-menu-basic')
 export class Example extends LitElement {
@@ -36,7 +37,7 @@ export class Example extends LitElement {
       <hint-badge></hint-badge>
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
-        <vaadin-grid .items=${this.gridItems}>
+        <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
           <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
           <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
@@ -45,5 +46,13 @@ export class Example extends LitElement {
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;
+  }
+
+  onContextMenu(e: MouseEvent) {
+    if (
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+    ) {
+      e.stopPropagation();
+    }
   }
 }

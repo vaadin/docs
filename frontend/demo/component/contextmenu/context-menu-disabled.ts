@@ -7,6 +7,7 @@ import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { applyTheme } from 'generated/theme';
+import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
 @customElement('context-menu-basic')
 export class Example extends LitElement {
@@ -19,7 +20,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   @internalProperty()
   private items = [
-    { text: 'Preview' },
+    { text: 'Preview', disabled: true },
     { text: 'Edit' },
     { component: 'hr' },
     {
@@ -47,12 +48,20 @@ export class Example extends LitElement {
       <hint-badge></hint-badge>
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
-        <vaadin-grid .items=${this.gridItems}>
+        <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
           <vaadin-grid-column path="filename"></vaadin-grid-column>
           <vaadin-grid-column path="size"></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;
+  }
+
+  onContextMenu(e: MouseEvent) {
+    if (
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+    ) {
+      e.stopPropagation();
+    }
   }
 }

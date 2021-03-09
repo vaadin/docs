@@ -32,7 +32,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <hint-badge message="Open the Context Meny by clicking a Grid row."></hint-badge>
+      <hint-badge message="Open the Context Menu by clicking a Grid row."></hint-badge>
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu open-on="click" .items=${this.items}>
         <vaadin-grid .items=${this.gridItems}>

@@ -9,6 +9,7 @@ import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { applyTheme } from 'generated/theme';
+import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
 @customElement('context-menu-basic')
 export class Example extends LitElement {
@@ -36,7 +37,7 @@ export class Example extends LitElement {
       ></hint-badge>
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
-        <vaadin-grid .items=${this.gridItems}>
+        <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
           <vaadin-grid-column label="Filename" path="filename"></vaadin-grid-column>
           <vaadin-grid-column label="Size" path="size"></vaadin-grid-column>
           <vaadin-grid-column
@@ -56,10 +57,7 @@ export class Example extends LitElement {
     }
 
     const menuBar = document.createElement('vaadin-menu-bar');
-    menuBar &&
-      (menuBar.items = [
-        { component: this.makeIcon('vaadin:ellipsis-dots-v'), children: this.items }
-      ]);
+    menuBar.items = [{ component: this.makeIcon('vaadin:ellipsis-dots-v'), children: this.items }];
     root.appendChild(menuBar);
   }
 
@@ -69,5 +67,13 @@ export class Example extends LitElement {
     icon.setAttribute('icon', iconName);
     item.appendChild(icon);
     return item;
+  }
+
+  onContextMenu(e: MouseEvent) {
+    if (
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+    ) {
+      e.stopPropagation();
+    }
   }
 }

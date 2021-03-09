@@ -12,6 +12,7 @@ import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 import { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
 @customElement('context-menu-presentation')
 export class Example extends LitElement {
@@ -62,7 +63,7 @@ export class Example extends LitElement {
       <hint-badge></hint-badge>
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
-        <vaadin-grid .items=${this.gridItems}>
+        <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
           <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
           <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
@@ -120,5 +121,13 @@ export class Example extends LitElement {
     header.style.marginBottom = '0';
     header.style.color = 'gray';
     return header;
+  }
+
+  onContextMenu(e: MouseEvent) {
+    if (
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+    ) {
+      e.stopPropagation();
+    }
   }
 }
