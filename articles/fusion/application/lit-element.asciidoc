@@ -4,119 +4,69 @@ order: 20
 layout: page
 ---
 
-= LitElement basics
+= LitElement Basics
 
-For creating views on the frontend side, Vaadin Fusion uses web components, a native technology that allows creating custom HTML elements. It is almost like a framework built into the browser, so it is usually faster and smaller than any other framework, while still allowing developing views quickly and easily.
+For creating views on the frontend side, Vaadin Fusion uses web components, a native technology that allows creating custom HTML elements.
+It is almost like a framework built into the browser, so it is usually faster and smaller than any other framework, while still allowing developing views quickly and easily.
 
 However, since the in-browser implementation of the web components is very low-level, to make them more convenient, it is recommended to use a LitElement library.
 
-LitElement provides a simple base class, and a set of tools to create reactive web components. Under the hood, it uses lit-html, a tiny library to render and re-render HTML templates in the most efficient and declarative way.
+LitElement provides a simple base class, and a set of tools to create reactive web components.
+Under the hood, it uses lit-html, a tiny library to render and re-render HTML templates in the most efficient and declarative way.
 
-Let's take a closer look at the creation of the LitElement-based web component.
+== Templates
 
-.my-view.ts
+A class that inherits the LitElement base class must implement a method called `render()` which returns a `TemplateResult` instance produced by the `html` tag. The string tagged with the `html` tag is displayed in the browser as the component's content.
+
+More about tags and tagged template literals you can find in link:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates[MDN documentation].
+
 [source,typescript]
 ----
-import {LitElement, html, customElement} from 'lit-element';
-
-@customElement('my-view')
-class MyView extends LitElement {
-  render() {
-    return html`<h1>My View</h1>`;
-  }
-}
-
-export default MyView;
-----
-Here is the `<my-view>` element defined. It will display `<h1>My view</h1>` at the page.
-
-== Styling
-
-For styling, LitElement provides a static property `styles`. You may use either a stylesheet imported from the `.css` file or define it in the component directly using the `css` tagged function.
-
-You may specify multiple styles for the `styles` property. Just use the array instead of a direct assigning.
-
-.my-view.ts
-[source,typescript]
-----
-import {css, LitElement, html, customElement} from 'lit-element';
-import styles from './my-view.css';
-
-@customElement('my-view')
-class MyView extends LitElement {
-  static styles = [
-    styles,
-    css`
-      h1 {
-        color: red;
-      }
-    `,
-  ];
-
-  render() {
-    return html`<h1>My View</h1>`;
-  }
-}
-
-export default MyView;
+include::{root}/frontend/demo/fusion/lit-basics/templates.ts[]
 ----
 
-== Data properties
+== Data Binding
+
+=== Properties
 
 Components can have properties that receives data from the outside (from HTML or HTML templating system) or preserves internal state. Changing that properties triggers asynchronous re-render to fill the template with the new data.
 
 There are two decorators provided by LitElement that can transform a regular class field to a component data property.
 
-- `@property` - makes a field a data property that is allowed to receive data from the outside. It means that you can send the data to the component via one of the following options:
-  - Using the `html` tag function of LitElement: +html`<my-view .myProperty=${"myValue"}></my-view>`+
-  - As an attribute to an instance of the component: `document.querySelector('my-view').setAttribute('myProperty', 'myValue')`.
-  - As a property to an instance of the component: `document.querySelector('my-view').myProperty = 'myValue'`.
-- `@internalProperty` - makes a field a data property that contains an internal state of the component. That properties must not be used from outside. You can use it for example if you need to trigger re-render on some events fired by children.
+* `@property` - makes a field a data property that is allowed to receive data from the outside. It means that you can send the data to the component via one of the following options:
+  ** Using the `html` tag from LitElement: `html++`++<my-view .myProperty=${"myValue"}></my-view>``
+  ** As an attribute to an instance of the component: `document.querySelector('my-view').setAttribute('myProperty', 'myValue')`.
+  ** As a property to an instance of the component: `document.querySelector('my-view').myProperty = 'myValue'`.
+* `@internalProperty` - makes a field a data property that contains an internal state of the component. That properties must not be used from outside. You can use it for example if you need to trigger re-render on some events fired by children.
 
 Read more about data properties in the link:https://lit-element.polymer-project.org/guide/properties[LitElement documentation].
 
-.my-view.ts
+=== Template Binding
+
+The `html` function is designed to assign JavaScript values to HTML elements in an obvious and easy way.
+LitElement considers four ways to do that:
+
+* Assign to an attribute. Only values of simple types can be assigned to an attribute: `String`, `Number` or `Boolean`. The value is converted to the string (`Boolean` values are corrected directly to their string representations) and also reflected in the HTML code. For that approach you can use the regular HTML attribute syntax.
+* Assign to a property. Allows any value type. Value is not reflected in the HTML code. It is recommended to use that approach over the assigning to an attribute because it is simpler and more performant. For that approach you must add a dot `.` before the property name: `.property`.
+* Assign a boolean attribute. Allows only boolean values. The only difference from the attribute assigning is that the attribute is empty and instead of the direct assigning is removed and added again depending on the value. For that approach you myst add a question mark `?` before the property name.
+* Listen to an event by the name. Allows only functions. When the element fires an event, the function assigned to the name is called with the event as an argument. For that approach you must add an at sign `@` before the event name: `@event`.
+
+More about how to write templates in the link:https://lit-element.polymer-project.org/guide/templates[LitElement documentation].
+
+=== Example
+
 [source,typescript]
 ----
-import {LitElement, html, customElement, property, internalProperty} from 'lit-element';
-import {classMap} from 'lit-html/directives/class-map'
-
-@customElement('my-view')
-class MyView extends LitElement {
-  @property() message: string = '';
-  @property() name: string = '';
-
-  @internalProperty() active: boolean = false;
-
-  render() {
-    return html`
-      <dl class=${classMap({
-         active: this.active,
-      })}>
-        <dt>${this.name}</dt>
-        <dd>${this.message}</dd>
-      </dl>
-      <button @click=${this.onClick}></button>
-    `;
-  }
-
-  // It is not necessary to bind the property in the constructor because of the
-  // LitElement design. Read more in "LitElement templates" section.
-  private onClick() {
-    this.active = !this.active;
-  }
-}
-
-export default MyView;
+include::{root}/frontend/demo/fusion/lit-basics/data-binding.ts[]
 ----
 
-== LitElement lifecycle
+== Lifecycle
 
 Each component has lifecycle methods that may be overridden to execute some code at the specific time. To the standard web component lifecycle LitElement adds own methods to handle the asynchronous `render` calls.
 
 Here is the list of LitElement lifecycle methods. More about them you can read in the link:https://lit-element.polymer-project.org/guide/lifecycle[LitElement documentation].
 
-=== `constructor`
+* `constructor`
 
 **Specificity**: JS class
 
@@ -126,7 +76,7 @@ Usually, you don't need `constructor` because LitElement handles everything impo
 
 **NOTE**: When the element is created, no render happens. The element needs to be connected to run the `render` callback.
 
-=== `connectedCallback`
+* `connectedCallback`
 
 **Specificity**: Web Components
 
@@ -134,9 +84,9 @@ This callback is invoked each time the element is connected to the DOM.
 
 Usually, the `connectedCallback` is used for setting up component-level event listeners, etc.
 
-**NOTE**: since `render` is asynchronous it won't over when the `connectedCallback` finishes. Use <<first-updated,`firstUpdated`>> callback to execute the code after the first render.
+**NOTE**: since `render` is asynchronous it does not over when the `connectedCallback` finishes. Use <<first-updated,`firstUpdated`>> callback to execute the code after the first render.
 
-=== `disconnectedCallback`
+* `disconnectedCallback`
 
 **Specificity**: Web Components
 
@@ -144,61 +94,35 @@ This callback is invoked each time the element is disconnected from the DOM.
 
 Usually, it is used to remove or close everything that is set up during the `connectedCallback`.
 
-**NOTE**: This callback is invoked __after__ the element is disconnected from the DOM. You won't have access to the DOM from within the component in this callback.
+**NOTE**: This callback is invoked __after__ the element is disconnected from the DOM. You do not have access to the DOM from within the component in this callback.
 
-=== `firstUpdated` [[first-updated]]
+* `firstUpdated` [[first-updated]]
 
 **Specificity**: LitElement
 
 This callback is invoked right after the first render is over and before the first `updated` callback. It receives an object that contains all changed properties.
 
-=== `updated`
+* `updated`
 
 **Specificity**: LitElement
 
 This callback is invoked after each render; for the first render, it is invoked right after the `firstUpdated` callback. Just like `firstUpdate`, it receives an object that contains all properties changed after the previous render.
 
-=== Example
-
-.my-view.ts
 [source,typescript]
 ----
-import {LitElement, html, customElement} from 'lit-element';
-
-@customElement('my-button')
-class MyButton extends LitElement {
-  constructor() {
-    super();
-    this.onClick = this.onClick.bind(this);
-  }
-
-  connectedCallback() {
-    this.addEventListener('click', this.onClick);
-  }
-
-  disconnectedCallback() {
-    this.removeEventListener('click', this.onClick);
-  }
-
-  render() {
-    return html`<button>Some button</button>`;
-  }
-
-  private onClick() {
-    console.log('I am clicked');
-  }
-}
-
-export default MyView;
+include::{root}/frontend/demo/fusion/lit-basics/lifecycle.ts[]
 ----
 
-== LitElement templates
+== Styling
 
-The `render()` method should return a `TemplateResult` instance produced by the `html` tagged function. More about how to write templates in the link:https://lit-element.polymer-project.org/guide/templates[LitElement documentation].
+For styling, LitElement provides a static property `styles`. You may use either a stylesheet imported from the `.css` file or define it in the component directly using the `css` tagged function.
 
-== Usage in routing
+You may specify multiple styles for the `styles` property. Just use the array instead of a direct assigning.
 
-About how to use components in the Vaadin Router you can read in the <<{articles}/fusion/routing/router#,Vaadin Router documentation>>.
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/lit-basics/styling.ts[]
+----
 
 == Shadow and Light DOM
 
@@ -209,19 +133,9 @@ A web component can create a shadow tree within. It is a separate document fragm
 
 Shadow DOM is enabled by default in LitElement.
 
-.shadow-component.ts
 [source,typescript]
 ----
-import {LitElement, html, customElement} from 'lit-element';
-
-@customElement('my-view')
-class MyView extends LitElement {
-  render() {
-    return html`<h1>My View</h1>`;
-  }
-}
-
-export default MyView;
+include::{root}/frontend/demo/fusion/lit-basics/shadow-dom.ts[]
 ----
 
 === Light DOM
@@ -230,7 +144,15 @@ If you don't want to use the Shadow DOM you may still use the Light DOM, a regul
 
 To enable Light DOM for the LitElement component, add a `createRenderRoot() { return this; }` method to your component.
 
-=== Usage advices
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/lit-basics/light-dom.ts[]
+----
+
+=== Usage Advices
 
 It is recommended to use Shadow DOM only for design components (checkboxes, text fields, combo-boxes, etc.) and Light DOM for any other components like views or their parts. It would allow avoiding possible performance issues that might happen due to multiple nesting of shadow trees.
 
+== Using in Routes
+
+About how to use components in the Vaadin Router you can read in the <<{articles}/fusion/routing/router#,Vaadin Router documentation>>.
