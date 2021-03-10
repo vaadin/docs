@@ -10,6 +10,7 @@ import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { applyTheme } from 'generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import { MenuBarElement } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 
 @customElement('context-menu-basic')
 export class Example extends LitElement {
@@ -41,7 +42,7 @@ export class Example extends LitElement {
           <vaadin-grid-column label="Filename" path="filename"></vaadin-grid-column>
           <vaadin-grid-column label="Size" path="size"></vaadin-grid-column>
           <vaadin-grid-column
-            width="120px"
+            width="80px"
             flex-grow="0"
             .renderer="${this.menuBarRenderer.bind(this)}"
           ></vaadin-grid-column>
@@ -58,7 +59,7 @@ export class Example extends LitElement {
 
     const menuBar = document.createElement('vaadin-menu-bar');
     menuBar.items = [{ component: this.makeIcon('vaadin:ellipsis-dots-v'), children: this.items }];
-    menuBar.theme = 'icon';
+    menuBar.setAttribute('theme', 'icon');
     root.appendChild(menuBar);
   }
 
