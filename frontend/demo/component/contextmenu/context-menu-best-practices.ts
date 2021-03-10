@@ -10,7 +10,6 @@ import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { applyTheme } from 'generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
-import { MenuBarElement } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 
 @customElement('context-menu-basic')
 export class Example extends LitElement {
