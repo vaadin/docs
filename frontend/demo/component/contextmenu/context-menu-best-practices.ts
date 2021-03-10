@@ -58,6 +58,7 @@ export class Example extends LitElement {
 
     const menuBar = document.createElement('vaadin-menu-bar');
     menuBar.items = [{ component: this.makeIcon('vaadin:ellipsis-dots-v'), children: this.items }];
+    menuBar.theme = 'icon';
     root.appendChild(menuBar);
   }
 
