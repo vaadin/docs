@@ -28,7 +28,12 @@ export type PeopleOptions = {
   count?: number;
   startIndex?: number;
 };
-export async function getPeople(options?: PeopleOptions): Promise<Person[]> {
+
+export type PeopleResults = {
+  people: Person[];
+  hierarhcyLevelSize: number;
+};
+export async function getPeople(options?: PeopleOptions): Promise<PeopleResults> {
   if (!peopleImages) {
     peopleImages = (await import('../../../src/main/resources/data/peopleImages.json')).default;
   }
@@ -44,15 +49,20 @@ export async function getPeople(options?: PeopleOptions): Promise<Person[]> {
     people = people.filter(person => person.managerId == options?.managerId);
   }
 
+  const hierarhcyLevelSize = people.length;
+
   const startIndex = options?.startIndex || 0;
   const count = options?.count ? startIndex + options.count : undefined;
 
   people = people.slice(startIndex, count);
-
-  return people.map((person, index) => {
+  people = people.map((person, index) => {
     return {
       ...person,
       pictureUrl: peopleImages[index % peopleImages.length]
     };
   });
+  return {
+    people,
+    hierarhcyLevelSize
+  };
 }

@@ -26,29 +26,21 @@ export class Example extends LitElement {
     params: GridDataProviderParams,
     callback: GridDataProviderCallback
   ) => {
-    let results: Person[];
-
     const peopleOptions: PeopleOptions = {
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: null
+      managerId: params.parentItem ? (params.parentItem as Person).id : null
     };
 
-    if (params.parentItem) {
-      const manager = params.parentItem as Person;
-      peopleOptions.managerId = manager.id;
+    const { people, hierarhcyLevelSize } = await getPeople(peopleOptions);
 
-      results = await getPeople(peopleOptions);
-    } else {
-      results = await getPeople(peopleOptions);
-      this.managers = results;
+    if (!params.parentItem) {
+      this.managers = people;
     }
 
-    // const startIndex = params.page * params.pageSize;
-    // const pageItems = results.slice(startIndex, startIndex + params.pageSize);
-    // Inform grid of the requested tree level's full size
-    const treeLevelSize = results.length;
-    callback(results, treeLevelSize);
+    const startIndex = params.page * params.pageSize;
+    const pageItems = people.slice(startIndex, startIndex + params.pageSize);
+    callback(pageItems, hierarhcyLevelSize);
   };
 
   // tag::snippet[]

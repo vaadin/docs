@@ -19,7 +19,7 @@ export class Example extends LitElement {
   private person?: Person;
 
   async firstUpdated() {
-    const people = await getPeople({ count: 1 });
+    const { people } = await getPeople({ count: 1 });
     this.person = people[0];
   }
 
