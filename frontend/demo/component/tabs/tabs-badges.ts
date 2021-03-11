@@ -17,6 +17,10 @@ export class Example extends LitElement {
         span[theme~='badge'] {
           margin-inline-start: var(--lumo-space-xs);
         }
+        vaadin-tab[selected] span[theme~='badge'] {
+          background-color: var(--lumo-primary-color-10pct);
+          color: var(--lumo-primary-text-color);
+        }
       `
     ];
   }
@@ -29,16 +33,16 @@ export class Example extends LitElement {
       -->
       <vaadin-tabs>
         <vaadin-tab>
-          Open
-          <span theme="badge small">24</span>
+          <span>Open</span>
+          <span theme="badge small contrast">24</span>
         </vaadin-tab>
         <vaadin-tab>
-          Completed
-          <span theme="badge small">439</span>
+          <span>Completed</span>
+          <span theme="badge small contrast">439</span>
         </vaadin-tab>
         <vaadin-tab>
-          Cancelled
-          <span theme="badge small">5</span>
+          <span>Cancelled</span>
+          <span theme="badge small contrast">5</span>
         </vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->

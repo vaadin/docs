@@ -4,12 +4,13 @@ import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.Route;
 
-@Route("tabs-basic")
-public class TabsBasic extends Div {
+@Route("tabs-theme-centered")
+public class TabsThemeCentered extends Div {
 
-	public TabsBasic() {
+	public TabsThemeCentered() {
 		// tag::snippet[]
 		Tab details = new Tab("Details");
 		Tab payment = new Tab("Payment");
@@ -18,10 +19,11 @@ public class TabsBasic extends Div {
 		Tabs tabs = new Tabs(
 			details, payment, shipping
 		);
+		tabs.addThemeVariants(TabsVariant.LUMO_CENTERED);
 		// end::snippet[]
 		add(tabs);
 	}
 
-	public static class Exporter extends DemoExporter<TabsBasic> { // hidden-full-source-line
+	public static class Exporter extends DemoExporter<TabsThemeCentered> { // hidden-full-source-line
 	} // hidden-full-source-line
 }
