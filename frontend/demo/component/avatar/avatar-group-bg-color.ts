@@ -1,9 +1,10 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar-group';
 import { applyTheme } from 'generated/theme';
-import { AvatarGroupItem } from '@vaadin/vaadin-avatar/src/interfaces';
+import { getPeople } from '../../domain/DataService';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-group-bg-color')
 export class Example extends LitElement {
@@ -13,21 +14,26 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  //tag::snippet[]
-  private people: AvatarGroupItem[] = [
-    { name: 'Ada Lovelace', colorIndex: 0 },
-    { name: 'Katherine Johnson', colorIndex: 1 },
-    { name: 'Alan Turing', colorIndex: 2 },
-    { name: 'Linus Torvalds', colorIndex: 3 },
-    { name: 'Tim Berners-Lee ', colorIndex: 4 },
-    { name: 'Steve Wozniak', colorIndex: 5 },
-    { name: 'Ken Thompson', colorIndex: 6 }
-  ];
+  @internalProperty()
+  private items: Person[] = [];
+
+  async firstUpdated() {
+    this.items = await getPeople(6);
+  }
 
   render() {
     return html`
-      <vaadin-avatar-group .items=${this.people}></vaadin-avatar-group>
+      <!-- tag::snippet[] -->
+      <vaadin-avatar-group
+        .items=${this.items.map((person, colorIndex) => {
+          return {
+            name: `${person.firstName} ${person.lastName}`,
+            colorIndex: colorIndex
+          };
+        })}
+      >
+      </vaadin-avatar-group>
+      <!-- end::snippet[] -->
     `;
   }
-  //end::snippet[]
 }

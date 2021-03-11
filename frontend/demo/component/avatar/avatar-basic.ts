@@ -18,16 +18,18 @@ export class Example extends LitElement {
   private person?: Person;
 
   async firstUpdated() {
-    const people = await getPeople(1);
-    this.person = people[0];
+    [this.person] = await getPeople(1);
   }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-avatar></vaadin-avatar>
-      <vaadin-avatar abbr="AL"></vaadin-avatar>
-      <vaadin-avatar .img=${this.person?.pictureUrl}></vaadin-avatar>
+      <vaadin-avatar .name=${`${this.person?.firstName} ${this.person?.lastName}`}></vaadin-avatar>
+      <vaadin-avatar
+        .img=${this.person?.pictureUrl}
+        .name=${`${this.person?.firstName} ${this.person?.lastName}`}
+      ></vaadin-avatar>
       <!-- end::snippet[] -->
     `;
   }

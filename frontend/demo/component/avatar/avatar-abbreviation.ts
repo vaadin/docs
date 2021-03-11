@@ -15,8 +15,8 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-avatar name="Ada Lovelace" abbr="AdL"></vaadin-avatar>
-      <vaadin-avatar name="Ada Lovelace"></vaadin-avatar>
+      <vaadin-avatar name="Augusta Ada King"></vaadin-avatar>
+      <vaadin-avatar name="Augusta Ada King" abbr="AK"></vaadin-avatar>
       <!-- end::snippet[] -->
     `;
   }

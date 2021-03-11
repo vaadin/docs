@@ -1,9 +1,10 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar-group';
 import { applyTheme } from 'generated/theme';
-import { AvatarGroupItem } from '@vaadin/vaadin-avatar/src/interfaces';
+import { getPeople } from '../../domain/DataService';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-group-max-items')
 export class Example extends LitElement {
@@ -13,18 +14,25 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  private people: AvatarGroupItem[] = [
-    { name: 'Ada Lovelace' },
-    { name: 'Katherine Johnson' },
-    { name: 'Alan Turing' },
-    { name: 'Linus Torvalds' },
-    { name: 'Tim Berners-Lee ' }
-  ];
+  @internalProperty()
+  private items: Person[] = [];
+
+  async firstUpdated() {
+    this.items = await getPeople(3);
+  }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-avatar-group .items=${this.people} .maxItemsVisible=${3}></vaadin-avatar-group>
+      <vaadin-avatar-group
+        .maxItemsVisible=${3}
+        .items=${this.items.map(person => {
+          return {
+            name: `${person.firstName} ${person.lastName}`
+          };
+        })}
+      >
+      </vaadin-avatar-group>
       <!-- end::snippet[] -->
     `;
   }

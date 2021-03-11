@@ -5,7 +5,7 @@ import '@vaadin/vaadin-avatar/vaadin-avatar';
 import { applyTheme } from 'generated/theme';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import * as img from '../../../../src/main/resources/images/company-logo.png';
+import * as companyLogo from '../../../../src/main/resources/images/company-logo.png';
 
 @customElement('avatar-image')
 export class Example extends LitElement {
@@ -19,18 +19,17 @@ export class Example extends LitElement {
   private person?: Person;
 
   async firstUpdated() {
-    const people = await getPeople(1);
-    this.person = people[0];
+    [this.person] = await getPeople(1);
   }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-avatar
-        .name=${`${this.person?.firstName} ${this.person?.lastName}`}
         .img=${this.person?.pictureUrl}
+        .name=${`${this.person?.firstName} ${this.person?.lastName}`}
       ></vaadin-avatar>
-      <vaadin-avatar .img=${img} name="Company Inc."></vaadin-avatar>
+      <vaadin-avatar .img=${companyLogo} name="Company Inc."></vaadin-avatar>
       <!-- end::snippet[] -->
     `;
   }
