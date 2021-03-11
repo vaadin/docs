@@ -23,13 +23,13 @@ export async function getCards(count?: number): Promise<Card[]> {
 
 let peopleImages: string[];
 
-export type PeopleOptions = {
+type PeopleOptions = {
   managerId?: number | null;
   count?: number;
   startIndex?: number;
 };
 
-export type PeopleResults = {
+type PeopleResults = {
   people: Person[];
   hierarhcyLevelSize: number;
 };
@@ -37,20 +37,15 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   if (!peopleImages) {
     peopleImages = (await import('../../../src/main/resources/data/peopleImages.json')).default;
   }
-  let people: Person[] = await getDataset<Person>('people.json');
-  people = people.map(person => {
-    return {
-      ...person,
-      manager: people.some(p => p.managerId === person.id)
-    };
-  });
+  const allPeople = await getDataset<Person>('people.json');
+
+  let people = [...allPeople];
 
   if (options?.managerId !== undefined) {
     people = people.filter(person => person.managerId == options?.managerId);
   }
 
   const hierarhcyLevelSize = people.length;
-
   const startIndex = options?.startIndex || 0;
   const count = options?.count ? startIndex + options.count : undefined;
 
@@ -58,7 +53,8 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   people = people.map((person, index) => {
     return {
       ...person,
-      pictureUrl: peopleImages[index % peopleImages.length]
+      pictureUrl: peopleImages[index % peopleImages.length],
+      manager: allPeople.some(p => p.managerId === person.id)
     };
   });
   return {

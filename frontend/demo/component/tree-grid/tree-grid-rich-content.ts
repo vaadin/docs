@@ -15,7 +15,7 @@ import {
   GridDataProviderParams,
   GridItemModel
 } from '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople, PeopleOptions } from '../../domain/DataService';
+import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 import { GridTreeToggleExpandedChanged } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
@@ -33,17 +33,13 @@ export class Example extends LitElement {
   private expandedItems: Person[] = [];
 
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
-    const peopleOptions: PeopleOptions = {
+    const { people, hierarhcyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
       managerId: params.parentItem ? (params.parentItem as Person).id : null
-    };
+    });
 
-    const { people, hierarhcyLevelSize } = await getPeople(peopleOptions);
-
-    const startIndex = params.page * params.pageSize;
-    const pageItems = people.slice(startIndex, startIndex + params.pageSize);
-    callback(pageItems, hierarhcyLevelSize);
+    callback(people, hierarhcyLevelSize);
   }
 
   // tag::snippet[]
@@ -70,10 +66,12 @@ export class Example extends LitElement {
               }}
               .expanded=${!!model.expanded}
             ></vaadin-grid-tree-toggle>
+
             <img
               .src=${person.pictureUrl}
               style="height: var(--lumo-size-m); width: var(--lumo-size-m); align-self: center;"
             />
+
             <vaadin-vertical-layout>
               <span>${person.firstName} ${person.lastName}</span>
               <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-contrast-70pct);">

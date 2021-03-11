@@ -5,7 +5,7 @@ import { customElement, LitElement } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople, PeopleOptions } from '../../domain/DataService';
+import { getPeople } from '../../domain/DataService';
 import { html } from 'lit-html';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
@@ -20,17 +20,15 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
-    const peopleOptions: PeopleOptions = {
+    // The requested page and the full length of the corresponding
+    // hierarhcy level is requested from the data service
+    const { people, hierarhcyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
       managerId: params.parentItem ? (params.parentItem as Person).id : null
-    };
+    });
 
-    const { people, hierarhcyLevelSize } = await getPeople(peopleOptions);
-
-    const startIndex = params.page * params.pageSize;
-    const pageItems = people.slice(startIndex, startIndex + params.pageSize);
-    callback(pageItems, hierarhcyLevelSize);
+    callback(people, hierarhcyLevelSize);
   }
 
   render() {
