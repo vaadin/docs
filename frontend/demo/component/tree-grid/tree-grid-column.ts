@@ -20,27 +20,23 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  private managers?: Person[];
+  private managers: Person[] = [];
 
   private dataProvider = async (
     params: GridDataProviderParams,
     callback: GridDataProviderCallback
   ) => {
-    let results: Person[];
+    const { people, hierarhcyLevelSize } = await getPeople({
+      count: params.pageSize,
+      startIndex: params.page * params.pageSize,
+      managerId: params.parentItem ? (params.parentItem as Person).id : null
+    });
 
-    if (params.parentItem) {
-      const manager = params.parentItem as Person;
-      results = await getPeople({ managerId: manager.id });
-    } else {
-      results = await getPeople({ managerId: null });
-      this.managers = results;
+    if (!params.parentItem) {
+      this.managers = people;
     }
 
-    const startIndex = params.page * params.pageSize;
-    const pageItems = results.slice(startIndex, startIndex + params.pageSize);
-    // Inform grid of the requested tree level's full size
-    const treeLevelSize = results.length;
-    callback(pageItems, treeLevelSize);
+    callback(people, hierarhcyLevelSize);
   };
 
   // tag::snippet[]
@@ -51,17 +47,12 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <h2 style="flex: 1; margin-bottom: 0; margin-top: 0;">Employee</h2>
-        <vaadin-button
-          @click=${() => {
-            if (this.managers) {
-              this.expandedItems = [...this.managers];
-            }
-          }}
-        >
+        <vaadin-button @click=${() => (this.expandedItems = [...this.managers])}>
           Expand All
         </vaadin-button>
         <vaadin-button @click=${() => (this.expandedItems = [])}>Collapse All</vaadin-button>
       </vaadin-horizontal-layout>
+
       <vaadin-grid
         .dataProvider=${this.dataProvider}
         .itemIdPath=${'id'}
