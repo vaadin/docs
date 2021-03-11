@@ -7,8 +7,8 @@ import {
   TemplateResult
 } from 'lit-element';
 
-@customElement('example-template-binding-view')
-class ExampleTemplateBindingView extends LitElement {
+@customElement('data-binding-view')
+class DataBindingView extends LitElement {
   @property() message = '';
   @property() name = '';
 
@@ -17,16 +17,16 @@ class ExampleTemplateBindingView extends LitElement {
   render(): TemplateResult {
     return html`
       <example-template-header ?active=${this.active} name=${this.name} .message=${this.message}>
-        <button @click=${this.onClick}>Toggle</button>
+        <button @click=${this._onClick}>Toggle</button>
       </example-template-header>
     `;
   }
 
   // It is not necessary to bind the property in the constructor because of the
   // LitElement design.
-  private onClick() {
+  private _onClick() {
     this.active = !this.active;
   }
 }
 
-export default ExampleTemplateBindingView;
+export default DataBindingView;
