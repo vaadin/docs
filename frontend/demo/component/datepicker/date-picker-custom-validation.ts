@@ -4,8 +4,8 @@ import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'generated/theme';
+import { DatePickerElement } from '@vaadin/vaadin-date-picker/vaadin-date-picker';
 
-// tag::snippet[]
 @customElement('date-picker-custom-validation')
 export class Example extends LitElement {
   constructor() {
@@ -16,8 +16,27 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-date-picker label="Birthday"></vaadin-date-picker>
+      <!-- tag::snippet[] -->
+      <x-date-picker-working-days
+        label="Meeting date"
+        helper-text="Mondays-Fridays only"
+      ></x-date-picker-working-days>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]
+
+// tag::custom-validation[]
+@customElement('x-date-picker-working-days')
+class DatePickerWorkingDays extends DatePickerElement {
+  checkValidity() {
+    if (this._inputValue === '') {
+      return true;
+    }
+
+    const dayOfTheWeek = new Date(this._inputValue).getDay();
+
+    return dayOfTheWeek > 0 && dayOfTheWeek < 6;
+  }
+}
+// end::custom-validation[]

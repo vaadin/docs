@@ -1,11 +1,11 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'generated/theme';
+import { DatePickerValueChanged } from '@vaadin/vaadin-date-picker/vaadin-date-picker';
 
-// tag::snippet[]
 @customElement('date-picker-date-range')
 export class Example extends LitElement {
   constructor() {
@@ -14,10 +14,26 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  @internalProperty()
+  private departureDate = '';
+
+  @internalProperty()
+  private returnDate = '';
+
   render() {
     return html`
-      <vaadin-date-picker label="Birthday"></vaadin-date-picker>
+      <!-- tag::snippet[] -->
+      <vaadin-date-picker
+        label="Departure date"
+        @value-changed=${(e: DatePickerValueChanged) => (this.departureDate = e.detail.value)}
+        .max=${this.returnDate}
+      ></vaadin-date-picker>
+      <vaadin-date-picker
+        label="Return date"
+        @value-changed=${(e: DatePickerValueChanged) => (this.returnDate = e.detail.value)}
+        .min=${this.departureDate}
+      ></vaadin-date-picker>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]
