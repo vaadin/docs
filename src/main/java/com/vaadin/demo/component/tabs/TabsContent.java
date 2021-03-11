@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.tabs;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
