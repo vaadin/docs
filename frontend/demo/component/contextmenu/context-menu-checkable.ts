@@ -9,7 +9,7 @@ import {
   ContextMenuItemSelected
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
-@customElement('context-menu-basic')
+@customElement('context-menu-checkable')
 export class Example extends LitElement {
   constructor() {
     super();

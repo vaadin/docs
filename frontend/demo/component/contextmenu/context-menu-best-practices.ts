@@ -11,7 +11,7 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import { applyTheme } from 'generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
-@customElement('context-menu-basic')
+@customElement('context-menu-best-practices')
 export class Example extends LitElement {
   constructor() {
     super();
