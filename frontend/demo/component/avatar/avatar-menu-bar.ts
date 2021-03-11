@@ -20,7 +20,8 @@ export class Example extends LitElement {
   private menuBarItems: MenuBarItem[] = [];
 
   async firstUpdated() {
-    const [person] = await getPeople(1);
+    const { people } = await getPeople({ count: 1 });
+    const [person] = people;
 
     const avatarElement: AvatarElement = document.createElement('vaadin-avatar');
     avatarElement.img = person.pictureUrl;

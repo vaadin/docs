@@ -1,7 +1,5 @@
 import { html, LitElement } from 'lit-element';
 
-// Use this custom element to modify the dspublisher header content
-// Use an empty file to not show a header
 export default class Example extends LitElement {
   createRenderRoot() {
     return this;

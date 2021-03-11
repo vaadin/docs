@@ -25,7 +25,8 @@ export class Example extends LitElement {
   private select?: SelectElement;
 
   async firstUpdated() {
-    this.people = await getPeople(4);
+    const { people } = await getPeople({ count: 4 });
+    this.people = people;
     // Need to manually re-run the bound renderer whenever the item set changes dynamiclly
     // to have the new items available for keyboard selection (with the overlay closed)
     this.select?.render();

@@ -24,7 +24,8 @@ export class Example extends LitElement {
   private selectedIds: string[] = [];
 
   async firstUpdated() {
-    this.items = await getPeople(3);
+    const { people } = await getPeople({ count: 3 });
+    this.items = people;
     this.selectedIds = [String(this.items[0].id), String(this.items[2].id)];
   }
 

@@ -28,6 +28,10 @@ public class Person {
 
   private Address address;
 
+  private Integer managerId;
+
+  private boolean manager;
+
   public String getFirstName() {
     return firstName;
   }
@@ -123,6 +127,22 @@ public class Person {
     }
     Person other = (Person) obj;
     return id == other.id;
+  }
+
+  public Integer getManagerId() {
+    return managerId;
+  }
+
+  public void setManagerId(Integer managerId) {
+    this.managerId = managerId;
+  }
+
+  public boolean isManager() {
+    return manager;
+  }
+
+  public void setManager(boolean manager) {
+    this.manager = manager;
   }
 }
 // end::snippet[]
