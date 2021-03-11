@@ -35,7 +35,9 @@ module.exports = async function(config) {
   const envVariables = [
     `DOCS_ARTICLES_PATH="articles/ds"`,
     `DOCS_THEME_PATH="${relativeThemePath}"`,
-    'DOCS_IMPORT_EXAMPLE_RESOURCES="true"'
+    `DOCS_TITLE="${config.dsName}"`,
+    'DOCS_IMPORT_EXAMPLE_RESOURCES="true"',
+    'DOCS_IMPORT_HEADER_IN_DEV="true"'
   ];
   fs.writeFileSync(path.resolve(ROOT, 'dspublisher/.env'), envVariables.join('\n'));
 
