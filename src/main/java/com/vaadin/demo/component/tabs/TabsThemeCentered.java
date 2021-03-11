@@ -16,9 +16,7 @@ public class TabsThemeCentered extends Div {
 		Tab payment = new Tab("Payment");
 		Tab shipping = new Tab("Shipping");
 
-		Tabs tabs = new Tabs(
-			details, payment, shipping
-		);
+		Tabs tabs = new Tabs(details, payment, shipping);
 		tabs.addThemeVariants(TabsVariant.LUMO_CENTERED);
 		// end::snippet[]
 		add(tabs);

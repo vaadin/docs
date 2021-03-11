@@ -17,9 +17,7 @@ public class TabsHorizontal extends Div {
 		Tab documents = new Tab("Documents");
 		Tab orders = new Tab("Orders");
 
-		Tabs tabs = new Tabs(
-			analytics, customers, dashboards, documents, orders
-		);
+		Tabs tabs = new Tabs(analytics, customers, dashboards, documents, orders);
 		tabs.setMaxWidth("100%");
 		tabs.setWidth("400px");
 		// end::snippet[]

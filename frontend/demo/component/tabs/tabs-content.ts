@@ -1,7 +1,9 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/vaadin-lumo-styles/typography.js';
 
 @customElement('tabs-content')
 export class Example extends LitElement {
@@ -9,16 +11,7 @@ export class Example extends LitElement {
   private content = '';
 
   @internalProperty()
-  private pages = ['Dashboard', 'Payment', 'Shipping'];
-
-  static get styles() {
-    return css`
-      div.content {
-        font-family: var(--lumo-font-family);
-        padding: var(--lumo-space-m);
-      }
-    `;
-  }
+  private pages = ['Details', 'Payment', 'Shipping'];
 
   render() {
     return html`
@@ -29,14 +22,14 @@ export class Example extends LitElement {
         <vaadin-tab>Shipping</vaadin-tab>
       </vaadin-tabs>
 
-      <div class="content">
-        ${this.content}
-      </div>
+      <vaadin-vertical-layout theme="padding">
+        <p>${this.content}</p>
+      </vaadin-vertical-layout>
       <!-- end::snippet[] -->
     `;
   }
 
   selectedChanged(e: CustomEvent) {
-    this.content = `This is ${this.pages[e.detail.value]} page`;
+    this.content = `This is the ${this.pages[e.detail.value]} tab`;
   }
 }

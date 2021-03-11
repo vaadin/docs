@@ -14,6 +14,8 @@ export class Example extends LitElement {
         <vaadin-tab>Dashboards</vaadin-tab>
         <vaadin-tab>Documents</vaadin-tab>
         <vaadin-tab>Orders</vaadin-tab>
+        <vaadin-tab>Products</vaadin-tab>
+        <vaadin-tab>Tasks</vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->
     `;

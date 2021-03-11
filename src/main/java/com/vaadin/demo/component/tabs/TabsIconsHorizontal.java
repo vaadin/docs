@@ -32,9 +32,7 @@ public class TabsIconsHorizontal extends Div {
 			tab.addThemeVariants(TabVariant.LUMO_ICON_ON_TOP);
 		}
 
-		Tabs tabs = new Tabs(
-			profile, settings, notifications
-		);
+		Tabs tabs = new Tabs(profile, settings, notifications);
 		// end::snippet[]
 		add(tabs);
 	}

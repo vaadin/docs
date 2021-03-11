@@ -4,22 +4,24 @@ import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.Route;
 
-@Route("tabs-basic")
-public class TabsBasic extends Div {
+@Route("tabs-theme-minimal")
+public class TabsThemeMinimal extends Div {
 
-	public TabsBasic() {
+	public TabsThemeMinimal() {
 		// tag::snippet[]
 		Tab details = new Tab("Details");
 		Tab payment = new Tab("Payment");
 		Tab shipping = new Tab("Shipping");
 
 		Tabs tabs = new Tabs(details, payment, shipping);
+		tabs.addThemeVariants(TabsVariant.LUMO_MINIMAL);
 		// end::snippet[]
 		add(tabs);
 	}
 
-	public static class Exporter extends DemoExporter<TabsBasic> { // hidden-full-source-line
+	public static class Exporter extends DemoExporter<TabsThemeMinimal> { // hidden-full-source-line
 	} // hidden-full-source-line
 }

@@ -12,6 +12,7 @@ public class TabsStates extends Div {
 	public TabsStates() {
 		// tag::snippet[]
 		Tab selected = new Tab("Selected");
+
 		Tab unselected = new Tab("Unselected");
 
 		Tab disabled = new Tab("Disabled");

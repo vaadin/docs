@@ -13,21 +13,19 @@ public class TabsBadges extends Div {
 	public TabsBadges() {
 		// tag::snippet[]
 		Tab open = new Tab(
-			createBadge(24),
-			new Span("Open")
+			new Span("Open"),
+			createBadge(24)
 		);
 		Tab completed = new Tab(
-			createBadge(439),
-			new Span("Completed")
+			new Span("Completed"),
+			createBadge(439)
 		);
 		Tab cancelled = new Tab(
-			createBadge(5),
-			new Span("Cancelled")
+			new Span("Cancelled"),
+			createBadge(5)
 		);
 
-		Tabs tabs = new Tabs(
-			open, completed, cancelled
-		);
+		Tabs tabs = new Tabs(open, completed, cancelled);
 		// end::snippet[]
 		add(tabs);
 	}

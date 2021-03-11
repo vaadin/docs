@@ -1,11 +1,13 @@
 package com.vaadin.demo.component.tabs;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Route;
 
+@JsModule("@vaadin/vaadin-lumo-styles/badge")
 @Route("tabs-vertical")
 public class TabsVertical extends Div {
 

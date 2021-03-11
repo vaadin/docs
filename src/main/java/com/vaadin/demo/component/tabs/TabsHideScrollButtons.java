@@ -17,9 +17,11 @@ public class TabsHideScrollButtons extends Div {
 		Tab dashboards = new Tab("Dashboards");
 		Tab documents = new Tab("Documents");
 		Tab orders = new Tab("Orders");
+		Tab products = new Tab("Products");
+		Tab tasks = new Tab("Tasks");
 
 		Tabs tabs = new Tabs(
-			analytics, customers, dashboards, documents, orders
+			analytics, customers, dashboards, documents, orders, products, tasks
 		);
 		tabs.addThemeVariants(TabsVariant.LUMO_HIDE_SCROLL_BUTTONS);
 		// end::snippet[]
