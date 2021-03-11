@@ -1,6 +1,7 @@
 import '../../../init'; // hidden-full-source-line
 import { customElement, html, internalProperty, LitElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-text-field/vaadin-text-field';
 
 // tag::snippet[]
 @customElement('value-changed-view')
