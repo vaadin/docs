@@ -47,5 +47,5 @@ clonePromise.then(() => {
   execSync('npm run lint', { cwd: '../', stdio: 'inherit' });
 
   console.log('Building documentation site...');
-  execSync('DOCS_CONTENT_ROOT=../../ npx gatsby build --prefix-paths', { cwd: './docs-app', stdio: 'inherit' });
+  execSync('DOCS_CONTENT_ROOT=../../ npx --unhandled-rejections=strict gatsby build --prefix-paths', { cwd: './docs-app', stdio: 'inherit' });
 });
