@@ -3,9 +3,16 @@ import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-lin
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-time-picker/vaadin-time-picker';
+import { applyTheme } from 'generated/theme';
 
 @customElement('time-picker-auto-open')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->

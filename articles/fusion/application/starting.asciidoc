@@ -1,0 +1,132 @@
+---
+title: Starting the Application
+order: 65
+layout: page
+---
+
+
+= Starting the Application
+
+Client-side bootstrapping allows creating parts of the application UI in TypeScript.
+It also allows starting an app without creating a connected server-side `UI` instance, which means applications can be stateless.
+
+This is one of the building blocks that enable starting an application and navigating between views when offline, and creating applications that are easy to scale because they do not consume server resources for each user session.
+
+.Experimental feature
+[WARNING]
+This feature is experimental and it *may change* before the next Long-Term-Supported Vaadin version.
+If you have an idea how to make it more useful for you, please share it on link:https://github.com/vaadin/flow/issues/new/[GitHub^].
+
+.frontend/index.ts
+[source, typescript]
+----
+import {Router} from '@vaadin/router';
+export const router = new Router(document.querySelector('#outlet'));
+
+import {Flow} from '@vaadin/flow-frontend';
+const {serverSideRoutes} = new Flow({
+  imports: () => import('../target/frontend/generated-flow-imports')
+});
+
+router.setRoutes(serverSideRoutes);
+----
+
+For applications where the UI is built in Java and does not include any client-side views the client-side bootstrapping process is transparent.
+A default `index.html` / `index.ts` pair is generated during the build, and loads the server-side `UI` when the application starts.
+Client-side views can be added incrementally to the application later, with minimal modifications.
+See more details on this in the <<default-bootstrap-template-and-entry-point,Default Bootstrap Template and Entry Point>> section below.
+
+[NOTE]
+If you are upgrading from an earlier version of Vaadin, check the <<{articles}/guide/upgrading#,Upgrading Guide>>.
+
+
+== Starting a Flow Application from Client Side Code
+
+When using client-side bootstrapping, Vaadin does not load the Flow client or create a server-side `UI` instance until that is explicitly triggered from the client-side code.
+The Flow TypeScript API includes a `flow.serverSideRoutes` property that allows integrating Flow routes with Vaadin Router, by adding them directly into the routes configuration:
+
+[source, typescript]
+----
+router.setRoutes([
+    ...serverSideRoutes
+]);
+----
+
+
+Client-side routing can improve the first load/startup of the application, by minimizing the content delivered to the browser on initial load.
+
+
+== Bootstrap Page Template [[bootstrap-page-template]]
+
+When using client-side bootstrapping, the Vaadin servlet uses the `frontend/index.html` file as a template to generate the bootstrap page response.
+The servlet processes the template and injects the following information:
+
+  - `<base href='./relative/to/root'>`: Vaadin calculates the relative path from the current request path to the root path of the application.
+  That is required for relative links in view templates to work correctly.
+
+  - Bundled script: Vaadin automatically adds the bundled and optimized script generated from the `frontend/index.ts` file.
+  It uses a pre-configured link:https://webpack.js.org/[webpack^] instance that's included together with `vaadin-maven-plugin` as a module bundler.
+  Therefore, the `frontend/index.html` template does not need to include the `index.ts` (or `index.js`) script explicitly.
+
+NOTE: The frontend directory can be customized by providing the property `vaadin.frontend.frontend.folder` when running the Maven goals `prepare-frontend`  or `build-frontend` from `vaadin-maven-plugin`.
+
+=== Default Bootstrap Template and Entry Point [[default-bootstrap-template-and-entry-point]]
+
+If the `index.html` or `index.ts` files in the frontend folder are missing, `vaadin-maven-plugin` generates a default corresponding file in the `target` folder.
+In that case the application uses server-side routing only.
+You can take control of these files by moving them into the `frontend` folder.
+By default these files look similar to the following:
+
+.Default `index.html`
+[source,html]
+----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body, #outlet {
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+    }
+  </style>
+  <!-- index.ts is included here automatically (either by the dev server or during the build) -->
+</head>
+<body>
+  <!-- vaadin-router in index.ts needs an outlet for displaying the views -->
+  <div id="outlet"></div>
+</body>
+</html>
+----
+
+.Default `index.ts` [[default-index-ts]]
+[source,typescript]
+----
+// import Vaadin client-router to handle client-side and server-side navigation
+import {Router} from '@vaadin/router';
+
+// import Flow module to enable navigation to Vaadin server-side views
+import {Flow} from '@vaadin/flow-frontend';
+
+const {serverSideRoutes} = new Flow({
+  imports: () => import('../target/frontend/generated-flow-imports')
+});
+
+const routes = [
+  // for client-side, place routes below (more info https://vaadin.com/docs/latest/fusion/routing/routing-defining/)
+
+  // for server-side, the next magic line sends all unmatched routes:
+  ...serverSideRoutes // IMPORTANT: this must be the last entry in the array
+];
+
+// Vaadin router needs an outlet in the index.html page to display views
+export const router = new Router(document.querySelector('#outlet'));
+router.setRoutes(routes);
+----
+
+.The defaults are best for Flow applications
+[NOTE]
+The autogenerated bootstrap template works best for server-side applications.
+To add client-side views into the application, follow the <<../quick-start-tutorial#, Quick Start Tutorial>>.

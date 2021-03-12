@@ -9,26 +9,26 @@ import com.vaadin.flow.router.Route;
 
 @Route("application-events-basic")
 public class EventsBasic extends Div {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public EventsBasic() {
+    public EventsBasic() {
         // tag::snippet[]
         Button button = new Button("Click me!");
 
         class MyClickListener implements ComponentEventListener<ClickEvent<Button>> {
-          int count = 0;
-          @Override
+            int count = 0;
+            @Override
             public void onComponentEvent(ClickEvent<Button> event) {
-              event.getSource().setText("You have clicked the button " +
-                                        (++count) + " times");
+                event.getSource().setText("You have clicked me " +
+                        (++count) + " times");
             }
         }
         button.addClickListener(new MyClickListener());
 
         add(button);
         // end::snippet[]
-      }
-    
-      public static class Exporter extends DemoExporter<EventsBasic> { // hidden-full-source-line
-      } // hidden-full-source-line    
+    }
+
+    public static class Exporter extends DemoExporter<EventsBasic> { // hidden-full-source-line
+    } // hidden-full-source-line    
 }

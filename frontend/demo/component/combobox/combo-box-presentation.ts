@@ -7,9 +7,16 @@ import { getPeople } from '../../domain/DataService';
 import { ComboBoxItemModel } from '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { render } from 'lit-html';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'generated/theme';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private allItems: Person[] = [];
 
@@ -17,7 +24,7 @@ export class Example extends LitElement {
   private filteredItems: Person[] = [];
 
   async firstUpdated() {
-    this.allItems = this.filteredItems = (await getPeople()).map(person => {
+    this.allItems = this.filteredItems = (await getPeople()).people.map(person => {
       return {
         ...person,
         displayName: `${person.firstName} ${person.lastName}`

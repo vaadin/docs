@@ -7,15 +7,23 @@ import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from '../../domain/DataService';
 import { render, html } from 'lit-html';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'generated/theme';
 
 // tag::snippet[]
 @customElement('grid-basic')
-export class GridBasic extends LitElement {
+export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private items: Person[] = [];
 
   async firstUpdated() {
-    this.items = await getPeople();
+    const { people } = await getPeople();
+    this.items = people;
   }
 
   render() {

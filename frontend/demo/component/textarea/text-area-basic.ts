@@ -2,9 +2,16 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
+import { applyTheme } from 'generated/theme';
 
 @customElement('text-area-basic')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   private charLimit = 140;
 
   @internalProperty()

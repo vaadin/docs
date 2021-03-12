@@ -13,9 +13,16 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
     labelsPosition: 'aside'
   }
 ];
+import { applyTheme } from 'generated/theme';
 
 @customElement('number-field-stepper-controls')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <vaadin-form-layout .responsiveSteps=${layoutSteps}>

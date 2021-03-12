@@ -3,9 +3,16 @@ import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
+import { applyTheme } from 'generated/theme';
 
 @customElement('combo-box-custom-entry-2')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private items = ['Chrome', 'Edge', 'Firefox', 'Safari'];
 

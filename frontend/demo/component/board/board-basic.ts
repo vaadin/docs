@@ -2,9 +2,16 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-board/vaadin-board';
+import { applyTheme } from 'generated/theme';
 
 @customElement('board-basic')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   // tag::snippet[]
   render() {
     return html`

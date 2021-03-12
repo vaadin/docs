@@ -1,55 +1,53 @@
 import '../../init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-app-layout/vaadin-app-layout';
 import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-icons/vaadin-icons';
+import { applyTheme } from 'generated/theme';
 
 @customElement('app-layout-navbar')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
+  static get styles() {
+    return css`
+      h1 {
+        margin: 0 var(--lumo-space-s);
+        font-size: var(--lumo-font-size-l);
+      }
+
+      vaadin-tabs {
+        box-shadow: none;
+      }
+    `;
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-app-layout>
-        <vaadin-drawer-toggle slot="navbar"></vaadin-drawer-toggle>
-        <img
-          slot="navbar"
-          src="https://i.imgur.com/GPpnszs.png"
-          alt="Vaadin Logo"
-          width="100"
-          height="31"
-          referrerpolicy="no-referrer"
-        />
-        <vaadin-tabs
-          slot="drawer"
-          orientation="vertical"
-          theme="minimal"
-          style="margin: 0 auto; flex: 1;"
-        >
+        <h1 slot="navbar">MyApp</h1>
+        <vaadin-tabs slot="navbar" style="margin: 0 auto;">
           <vaadin-tab>
-            <iron-icon icon="vaadin:home"></iron-icon>
-            Page 1
+            <a tabindex="-1" target="_self">Dashboards</a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:list"></iron-icon>
-            Page 2
+            <a tabindex="-1" target="_self">Orders</a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:options"></iron-icon>
-            Page 3
+            <a tabindex="-1" target="_self">Customers</a>
           </vaadin-tab>
           <vaadin-tab>
-            <iron-icon icon="vaadin:question"></iron-icon>
-            Page 4
+            <a tabindex="-1" target="_self">Products</a>
           </vaadin-tab>
         </vaadin-tabs>
-
-        <div class="content">
-          <h3>Page title</h3>
-          <p>Page content</p>
-        </div>
       </vaadin-app-layout>
       <!-- end::snippet[] -->
     `;

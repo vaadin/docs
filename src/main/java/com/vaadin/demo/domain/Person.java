@@ -1,5 +1,7 @@
 package com.vaadin.demo.domain;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
 
 @JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
@@ -12,6 +14,8 @@ public class Person {
 
   private String email;
 
+  private Date birthday;
+
   private Integer id;
 
   private boolean subscriber;
@@ -21,6 +25,12 @@ public class Person {
   private String pictureUrl;
 
   private String profession;
+
+  private Address address;
+
+  private Integer managerId;
+
+  private boolean manager;
 
   public String getFirstName() {
     return firstName;
@@ -44,6 +54,14 @@ public class Person {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public Date getBirthday() {
+    return birthday;
+  }
+
+  public void setBirthday(Date birthday) {
+    this.birthday = birthday;
   }
 
   public boolean isSubscriber() {
@@ -78,6 +96,14 @@ public class Person {
     this.profession = profession;
   }
 
+  public Address getAddress() {
+    return address;
+  }
+
+  public void setAddress(Address address) {
+    this.address = address;
+  }
+
   public Integer getId() {
     return id;
   }
@@ -101,6 +127,22 @@ public class Person {
     }
     Person other = (Person) obj;
     return id == other.id;
+  }
+
+  public Integer getManagerId() {
+    return managerId;
+  }
+
+  public void setManagerId(Integer managerId) {
+    this.managerId = managerId;
+  }
+
+  public boolean isManager() {
+    return manager;
+  }
+
+  public void setManager(boolean manager) {
+    this.manager = manager;
   }
 }
 // end::snippet[]

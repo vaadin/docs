@@ -1,0 +1,156 @@
+---
+title: Overview
+order: 1
+layout: page
+---
+
+[[application.overview]]
+= Creating a Flow Application
+
+Vaadin Flow lets a server-side Java application build a user interface from components in Java, which are connected to web components running in the browser.
+Flow manages relaying user interaction back to the server side application, which can handle it with event listeners.
+
+Application views and their components are typically used to display and input application data, often stored in a backend service such as database.
+Application logic is often created with application frameworks such as Spring.
+
+image::images/application-architecture.png[]
+
+
+== Topics
+
+The basic aspects of a Flow application are as follows:
+
+<<ui#, Building a UI>>::
+An application consists of one or more views built hierarchically from user interface components.
+Views can be nested, such as a main view displaying sub-views.
+
+<<events#, Handling Events>>::
+Flow relays user interaction back to the server-side as component events, which the application can handle in Java code using an event handler.
+An event handler is an implementation of an event listener interface, such as a lambda expression or an anonymous class, and you can also use handler methods.
+
+<<routing-navigation#, Basic Routing and Navigation>>::
+Each view has a route through which it can be accessed by a URL.
+Interaction with the application includes navigation between the different views.
++
+Routing and Navigation are further described in <<../routing/overview#, Routing and Navigation>>.
+
+<<main-view#, Creating a Main View>>::
+Applications often have a main view with a menu bar to show a selection of sub-views.
+When the user clicks on a menu item, the sub-view is displayed.
+The [classname]#AppLayout# component allows creating such views easily, supporting navigation and responsive layouts.
+
+<<resources#, Images and Icons>>::
+Images and icons are basic visual features of an application.
+Vaadin Design System comes with <<../../ds/foundation/icons#, two sets of icons>> that you can use in your application.
+
+<<errors#, Handling Errors>>::
+User input, backend failures, and other reasons can cause various types of application errors.
+An application should handle them in a robust way.
+
+== Technology Stacks
+
+Vaadin starter and demo projects are available in three different technology stacks.
+All of them follow the same application architecture, where you have the UI layer as an application view, with a service-layer back-end.
+
+Spring Boot::
+Spring Boot is a Java framework for creating web services that you can deploy and run easily.
+It enables using Spring Framework, the popular enterprise application framework for Java EE, with minimal configuration.
++
+The application has a main view, which gets access to the business model service by autowiring.
++
+.`MainView.java`
+[source, java]
+----
+public class MainView extends VerticalLayout {
+    public MainView(@Autowired GreetService service) {
+----
++
+The service is a simple Spring service:
++
+.`GreetService.java`
+[source, java]
+----
+@Service
+public class GreetService implements Serializable {
+    public String greet(String name) {
+        if (name == null || name.isEmpty()) {
+            return "Hello anonymous user";
+        } else {
+            return "Hello " + name;
+        }
+    }
+}
+----
+
+CDI and Java EE::
+The Java Enterprise Edition (EE) includes many features for creating enterprise applications.
+CDI or _context dependency injection_ is the Java EE way to manage service objects and inject them into applications, in our case Vaadin UIs.
+CDI requires a Java EE -enabled web container; the starter projects use Apache TomEE.
++
+The starter project includes an example service that handles business data and logic.
+It is injected in the main view, and can be injected in similar way to other views or elsewhere.
++
+[source, Java]
+.`MainView.java`
+----
+public class MainView extends VerticalLayout {
+    @Inject
+    private GreetService greetService;
+----
++
+The service is scoped to the Vaadin session, so each user session has its own service instance.
++
+.`GreetService.java`
+[source, java]
+----
+@VaadinSessionScoped
+public class GreetService {
+    public String greet(String name) {
+        if (name == null || name.isEmpty()) {
+            return "Hello anonymous user";
+        } else {
+            return "Hello " + name;
+        }
+    }
+}
+----
+
+Plain Java servlet::
+You can also choose to develop the application as a plain Java servlet, which you can deploy to any Java web container, which does not need to support Java EE or its features.
++
+In a similar way to the Spring and CDI starters, the plain Java application also has a service to handle business data and logic, but you need to manage access to it by your own.
++
+.`MainView.java`
+[source, java]
+----
+public class MainView extends VerticalLayout {
+
+    public MainView() {
+        // Use TextField for standard text input
+        TextField textField = new TextField("Your name");
+
+        // Button click listeners can be defined as lambda expressions
+        GreetService greetService = new GreetService();
+        Button button = new Button("Say hello",
+            e -> Notification.show(greetService.greet(textField.getValue())));
+----
++
+In the plain Java servlet, the service is an ordinary object:
++
+.`GreetService.java`
+[source, java]
+----
+public class GreetService {
+    public String greet(String name) {
+        if (name == null || name.isEmpty()) {
+            return "Hello anonymous user";
+        } else {
+            return "Hello " + name;
+        }
+    }
+}
+----
+
+If you use the web tools to create a project, you then need to import it in your IDE as a Maven project.
+We will go through that with each major IDE: IntelliJ IDEA, Eclipse IDE, and NetBeans IDE.
+You can also create, compile, and run the projects on the command-line.

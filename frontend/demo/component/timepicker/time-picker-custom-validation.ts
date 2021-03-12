@@ -5,9 +5,16 @@ import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-time-picker/vaadin-time-picker';
 import { Binder, field } from '@vaadin/form';
 import AppointmentModel from '../../../generated/com/vaadin/demo/domain/AppointmentModel';
+import { applyTheme } from 'generated/theme';
 
 @customElement('time-picker-custom-validation')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   // tag::snippet[]
   private binder = new Binder(this, AppointmentModel);
 

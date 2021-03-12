@@ -1,5 +1,5 @@
-SVG = routing-navigation
-RASTERIMAGES = routing-navigation
+SVG = routing-navigation application-architecture
+RASTERIMAGES = routing-navigation application-architecture
 
 RASTERSRCIMAGES := $(foreach file, $(RASTERIMAGES), $(file).svg)
 RASTERIMAGES := $(foreach file, $(RASTERIMAGES), ../images/$(file).png)

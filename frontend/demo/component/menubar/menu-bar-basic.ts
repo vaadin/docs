@@ -4,10 +4,17 @@ import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-li
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
+import { applyTheme } from 'generated/theme';
 
 // tag::snippet[]
 @customElement('menu-bar-basic')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   @internalProperty()
   private items = [
     {

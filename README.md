@@ -2,15 +2,17 @@
 
 Official documentation and code examples for Vaadin.
 
-> **NOTICE**
->
-> This repository is work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts of the Vaadin platform.
+> **CONTENT ONLY**  
+> This repository does not generate the vaadin.com/docs website. It only contains the content for it.
+
+> **BETA**  
+> This repository is work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts Vaadin.
 
 ## Branches
 
 All official documentation version branches (listed below) can and should contain documentation for pre-release features once they are available in a Vaadin pre-release. Remember to indicate new features with a “since version” indicator in Asciidoc, for example, `[role="since:com.vaadin:vaadin@V18"]`.
 
-### `master`
+### `latest`
 
 Documentation for the latest major Vaadin version, including all previous major versions since the latest LTS version. If in doubt, make documentation updates against this branch.
 
@@ -47,8 +49,8 @@ Project related scripts (tests, validation builds, preview deployment, etc).
 
 ### `.github`
 
-Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](<https://github.com/vaadin/docs/wiki/Writing-style-guide-checks>).
+Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](https://github.com/vaadin/docs/wiki/Writing-style-guide-checks).
 
 ### `versions.json`
 
-Describes the publicly available documentation versions. These versions will appear in the published website, as options for the users. This file is only relevant in the `master` branch.
+Describes the publicly available documentation versions. These versions will appear in the published website, as options for the users. This file is only relevant in the `latest` branch.
