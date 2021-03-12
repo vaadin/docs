@@ -1,10 +1,8 @@
 import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
-import '@vaadin/vaadin-icons/vaadin-icons';
-import '@polymer/iron-icon';
+import '@vaadin/vaadin-list-box';
 import { applyTheme } from 'generated/theme';
 
 @customElement('list-box-separators')
@@ -24,7 +22,7 @@ export class Example extends LitElement {
         <vaadin-item>Show status</vaadin-item>
         <hr />
         <vaadin-item>Show thumbnail</vaadin-item>
-        <vaadin-item>Show review</vaadin-item>
+        <vaadin-item>Show preview</vaadin-item>
       </vaadin-list-box>
       <!-- end::snippet[] -->
     `;
