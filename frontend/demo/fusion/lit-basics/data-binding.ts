@@ -22,8 +22,7 @@ class DataBindingView extends LitElement {
     `;
   }
 
-  // It is not necessary to bind the property in the constructor because of the
-  // LitElement design.
+  // No `this` binding required
   private _onClick() {
     this.active = !this.active;
   }
