@@ -5,6 +5,8 @@ import '@vaadin/vaadin-messages/vaadin-message-list';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import MessageListItem from './MessageListItem';
+import { format, subDays, subMinutes } from 'date-fns';
+import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-full-source-line
 
 @customElement('message-list-component')
 export class Example extends LitElement {
@@ -20,19 +22,20 @@ export class Example extends LitElement {
   async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
     const person = people[0];
+    const isoMinutes = 'yyyy-MM-dd HH:mm';
+    const yesterday = format(subDays(new Date(), 1), isoMinutes);
+    const fiftyMinutesAgo = format(subMinutes(new Date(), 50), isoMinutes);
     this.items = [
       {
-        text: 'Hello list',
-        time: 'yesterday',
+        text: 'Linsey, could you check if the details with the order are okay?',
+        time: yesterday,
         userName: 'Matt Mambo',
-        userAbbr: 'MM',
-        userColorIndex: 1,
+        userColorIndex: 1
       },
       {
-        text: 'Another message',
-        time: 'right now',
+        text: 'All good. Ship it.',
+        time: fiftyMinutesAgo,
         userName: 'Linsey Listy',
-        userAbbr: 'LL',
         userColorIndex: 2,
         userImg: person.pictureUrl,
       },
