@@ -6,6 +6,7 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
 @Route("avatar-image")
 public class AvatarImage extends Div {
@@ -21,7 +22,10 @@ public class AvatarImage extends Div {
     user.setImage(pictureUrl);
 
     Avatar company = new Avatar("Company Inc.");
-    company.setImage("images/company-logo.png");
+    StreamResource imageResource = new StreamResource(
+      "company-logo.png",
+      () -> getClass().getResourceAsStream("/images/company-logo.png"));
+    company.setImageResource(imageResource);
     // end::snippet[]
 
     add(user, company);
