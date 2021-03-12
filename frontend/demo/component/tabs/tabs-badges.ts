@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, css, unsafeCSS } from 'lit-element';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
-import '@vaadin/vaadin-lumo-styles/badge.js';
+import '@vaadin/vaadin-lumo-styles/badge';
 
 @customElement('tabs-badges')
 export class Example extends LitElement {
