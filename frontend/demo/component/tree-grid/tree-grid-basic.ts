@@ -20,20 +20,15 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
-    let results: Person[];
+    // The requested page and the full length of the corresponding
+    // hierarhcy level is requested from the data service
+    const { people, hierarhcyLevelSize } = await getPeople({
+      count: params.pageSize,
+      startIndex: params.page * params.pageSize,
+      managerId: params.parentItem ? (params.parentItem as Person).id : null
+    });
 
-    if (params.parentItem) {
-      const manager = params.parentItem as Person;
-      results = await getPeople({ managerId: manager.id });
-    } else {
-      results = await getPeople({ managerId: null });
-    }
-
-    const startIndex = params.page * params.pageSize;
-    const pageItems = results.slice(startIndex, startIndex + params.pageSize);
-    // Inform grid of the requested tree level's full size
-    const treeLevelSize = results.length;
-    callback(pageItems, treeLevelSize);
+    callback(people, hierarhcyLevelSize);
   }
 
   render() {
