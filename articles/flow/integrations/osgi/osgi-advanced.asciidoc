@@ -137,41 +137,6 @@ Otherwise would be considered as a static route that is registered always regard
 [[osgi.advanced.declarative.services]]
 == Declarative Services and Vaadin Components
 
-As it's said above: it impossible to use Declarative Services directly with Vaadin Components.
-So the following example **won't work**:
-
-[source, Java]
-----
-@Route("")
-public class MainView extends Div {
-
-    @Reference
-    private SomeService service;
-
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        // do something with the service
-    }
-
-}
-----
-
-This would allow to avoid the boilerplate code to get a service programmatically and to make a fallback handler.
-
-But there are several reasons why this is not supported:
-* This cannot properly work via OSGi Declarative Services: `MainView` needs to be a service by itself which requires quite error prone boilerplate code: `@Component(scope=ServiceScope.PROTOTYPE, service=SomeDedicatedService.class)`
-* It's easy to make two mistakes in the `@Component` declaration: 
-** The `scope` has to be prototype. Any other scope is invalid for the component.
-** The `service` has to be a dedicated type. It could have been for example `HasElement`  but this is another way to make a mistake to forget specify the service at all.
-* Such feature becomes self-contradictory and confusing: `@Route` makes a component registered statically/unconditionally in Flow.
-But in OSGi having `MainView` as a service would make it impossible to register the route statically: it should be registered only when `MainView` becomes available as a service (which depends on `SomeService` service).
-Thus `@Route` semantic should be changed for OSGi. But this is impossible (see the next item).
-* Navigation target annotated with `@Route` is not an OSGi service and should still work (it should be statically registered as a navigation target).
-It is necessary to support regular use case: web application which works without OSGi should work inside OSGi without any changes.
-* If you want to use some OSGi lifecycle methods (like `activate`/`deactivate`) or other methods published via Declarative Services annotations you should be aware
-that they are not called from the HTTP request dispatcher thread and it's necessary to use `UI::access` or `VaadinSession::access` to invoke methods on UI objects.
-This is rather error prone.
-
 It is possible to use OSGi Declarative Services with Vaadin components only indirectly:
 
 [source, Java]
@@ -293,8 +258,7 @@ public class MainView extends Div {
 }
 ----
 
-It's still possible to use a component as a Declarative Service but it requires
-some boilerplate code which helps avoiding mistakes.
+Using a component as a Declarative Service is possible, but it requires some boilerplate code which helps avoiding mistakes.
 
 The code in the example may work "on the fly": if the page is already opened in the browser
 and service becomes available then the view is be updated automatically _if_ `Push` is used in the project.
@@ -304,3 +268,40 @@ And as it has been discussed already above: if there is no point to show an empt
 or some fallback component until the service is unavailable, then the route may be registered dynamically
 in the same way (and then there is no need to have tracker inside the `MainViewWrapper`).
 The code can be adopted to support this.
+
+=== Challenges with Declarative Services with Vaadin 
+
+As it's said above: it impossible to use Declarative Services directly with Vaadin Components.
+So the following example **won't work**:
+
+[source, Java]
+----
+@Route("")
+public class MainView extends Div {
+
+    @Reference
+    private SomeService service;
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        // do something with the service
+    }
+
+}
+----
+
+This would allow to avoid the boilerplate code to get a service programmatically and to make a fallback handler.
+
+But there are several reasons why this is not supported:
+* This cannot properly work via OSGi Declarative Services: `MainView` needs to be a service by itself which requires quite error prone boilerplate code: `@Component(scope=ServiceScope.PROTOTYPE, service=SomeDedicatedService.class)`
+* It's easy to make two mistakes in the `@Component` declaration: 
+** The `scope` has to be prototype. Any other scope is invalid for the component.
+** The `service` has to be a dedicated type. It could have been for example `HasElement`  but this is another way to make a mistake to forget specify the service at all.
+* Such feature becomes self-contradictory and confusing: `@Route` makes a component registered statically/unconditionally in Flow.
+But in OSGi having `MainView` as a service would make it impossible to register the route statically: it should be registered only when `MainView` becomes available as a service (which depends on `SomeService` service).
+Thus `@Route` semantic should be changed for OSGi. But this is impossible (see the next item).
+* Navigation target annotated with `@Route` is not an OSGi service and should still work (it should be statically registered as a navigation target).
+It is necessary to support regular use case: web application which works without OSGi should work inside OSGi without any changes.
+* If you want to use some OSGi lifecycle methods (like `activate`/`deactivate`) or other methods published via Declarative Services annotations you should be aware
+that they are not called from the HTTP request dispatcher thread and it's necessary to use `UI::access` or `VaadinSession::access` to invoke methods on UI objects.
+This is rather error prone.
