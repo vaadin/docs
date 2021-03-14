@@ -1,18 +1,18 @@
 ---
-title: Advanced Using Vaadin with OSGi
+title: Using Services With Vaadin
 order: 2
 layout: page
 ---
 
 [[osgi.advanced]]
-= Advanced Using Vaadin with OSGi
+= Using Services with Vaadin
 
-Vaadin bundle being deployed to OSGi container may use any functionality provided by OSGi container via API.
+A Vaadin bundle being deployed to an OSGi container may use any functionality provided by OSGi container via API.
 It's not possible to use Declarative Services directly: Vaadin components (including navigation targets) are not declared as services.
-But it's possible to use services via OSGi API which allows to use Decalrative Services indirectly.
+But it's possible to use services via OSGi API which allows to use Declarative Services indirectly.
 
 [[osgi.advanced.services]]
-== Using Services with Vaadin Components
+== Using Services With Vaadin Components
 
 OSGi provides a generic API which can be used everywhere to get a service:
 
@@ -34,7 +34,7 @@ public class MainView extends Div {
 }
 ----
 
-This code can be written in any class regardless the class nature: doesn't matter whether it's a `Component`, navigation target or just a helper class.
+This code works in any class: it doesn't matter whether it's a `Component`, navigation target or just a helper class.
 
 One thing is assumed here: the service `SomeService` is registered at the time when the component is attached.
 It's developer responsibility to decide which fallback should be used if the service is not registered yet:
@@ -48,23 +48,22 @@ protected void onAttach(AttachEvent attachEvent) {
             .getServiceReference(SomeService.class);
     if (reference == null){
         // fallback to alternative action
-    }
-    else {
+    } else {
         SomeService service = bundleContext.getService(reference);
         // do something with the service
     }
 }
 ----
 
-It might be that the service is always registered at the point when it's requested (the application logic is written that way).
+It might be that the service is always registered at the point when it's requested (due to the application logic).
 In this case there is no need to care about fallback. 
 Otherwise it's necessary to handle this case specifically.
 
 It's important to understand that in this case the route path `""` with navigation target `MainView` is available unconditionally:
-regardless of `SomeService` presence the route is registered.
+the route is registered regardless of the precense of `SomeService`.
 
-It might be there is no any point to provide a fallback when the service is not available: the route should not be even available in that case.
-It is possible to handle such usecase as well but dynamic route registration should be used in this case.
+It might be there is no point to provide a fallback when the service is not available: the route should not be even available in that case.
+It is possible to handle this use case as well by using the dynamic route registration.
 Some boilerplate code is required to track the service and register a route when the service becomes available:
 
 
@@ -128,18 +127,18 @@ public class SomeView extends Div {
 }
 ----
 
-The service tracker in this example registers the `SomeView` navigation target when service 
-becomes available and unregisters the route when service is unregistered.
+The service tracker in this example registers the `SomeView` navigation target when the service
+becomes available and the route is unregistered when the service is unregistered.
 
 [NOTE]
-The `SomeView` class in the example is not annotated with `@Route` at all. Otherwise it's considered as a static route and
-will be registered unconditionally.
+The `SomeView` class in the example is not annotated with `@Route` at all.
+Otherwise would be considered as a static route that is registered always regardless of the presense of the service.
 
 [[osgi.advanced.declarative.services]]
-== Using Declarative Services with Vaadin Components
+== Declarative Services and Vaadin Components
 
-As it's said above: it not possible to use Declarative Services directly with Vaadin Components.
-So the following example won't work:
+As it's said above: it impossible to use Declarative Services directly with Vaadin Components.
+So the following example **won't work**:
 
 [source, Java]
 ----
@@ -157,24 +156,23 @@ public class MainView extends Div {
 }
 ----
 
-As you may assume this would allow to avoid the boilerplate code to get a service programmatically
-and necessity to make a fallback handler.
+This would allow to avoid the boilerplate code to get a service programmatically and to make a fallback handler.
 
-There are a number of reasons why this is not supported:
-* There is no any way to make it properly work via OSGi Declarative Services: `MainView` needs to be a service by itself which requires quite error-prone boilerplate code: `@Component(scope=ServiceScope.PROTOTYPE, service=SomeDedicatedService.class)`
-* It's extremely easy to make two mistakes in the `@Component` declaration: 
-** the `scope` has to be prototype. Any other scope is invalid for the component. It's extremely easy to make a mistake here
-** the `service` has to be a dedicated type. It could have been e.g. `HasElement`  but this is another easy way to make a mistake to forget specify the service at all.
+But there are several reasons why this is not supported:
+* This cannot properly work via OSGi Declarative Services: `MainView` needs to be a service by itself which requires quite error prone boilerplate code: `@Component(scope=ServiceScope.PROTOTYPE, service=SomeDedicatedService.class)`
+* It's easy to make two mistakes in the `@Component` declaration: 
+** The `scope` has to be prototype. Any other scope is invalid for the component.
+** The `service` has to be a dedicated type. It could have been for example `HasElement`  but this is another way to make a mistake to forget specify the service at all.
 * Such feature becomes self-contradictory and confusing: `@Route` makes a component registered statically/unconditionally in Flow.
-But in OSGi having `MainView` as a service we may not register the route statically: it should be registered only when  `MainView` becomes available as a service
-(which depends on `SomeService` service). So `@Route` semantic should have been changed in OSGi. But this is impossible (see the next item).
-* Navigation target annotated with `@Route`  which is not an OSGi service should still work (it should be statically registered as a navigation target).
-It is necessary to support regular usecase: web application which works without OSGi should work inside OSGi without any changes.
+But in OSGi having `MainView` as a service would make it impossible to register the route statically: it should be registered only when `MainView` becomes available as a service (which depends on `SomeService` service).
+Thus `@Route` semantic should be changed for OSGi. But this is impossible (see the next item).
+* Navigation target annotated with `@Route` is not an OSGi service and should still work (it should be statically registered as a navigation target).
+It is necessary to support regular use case: web application which works without OSGi should work inside OSGi without any changes.
 * If you want to use some OSGi lifecycle methods (like `activate`/`deactivate`) or other methods published via Declarative Services annotations you should be aware
-that they are not called from the HTTP request dispatcher thread and it's necessary to use `UI::access` or `VaadinSession::access` to invoke
-methods on UI objects. It's too easy to forget about this.
+that they are not called from the HTTP request dispatcher thread and it's necessary to use `UI::access` or `VaadinSession::access` to invoke methods on UI objects.
+This is rather error prone.
 
-It's quite easy to modify the above example to use OSGi Declarative Services indirectly though:
+It is possible to use OSGi Declarative Services with Vaadin components only indirectly:
 
 [source, Java]
 ----
@@ -219,9 +217,8 @@ public class PairedOSGiService {
 }
 ----
 
-In this example the `MainView` class is responsible for UI actions and `PairedOSGiService` 
-is responsible for OSGi related functionality. The border is quite clear: every time when
-OSGi wants mutate `UI` state it should call a command via `UI::access`.
+In this example the `MainView` class handles UI actions and `PairedOSGiService` is handles OSGi related functionality.
+The border is quite clear: every time when OSGi wants mutate `UI` state it should call a command via `UI::access`.
 
 You should be aware again about `PairedOSGiService` absence: if `SomeService` is not activated yet then `PairedOSGiService` won't be available as well.
 Then fallback with a static route or dynamic route registration can be used as described above.
@@ -296,15 +293,14 @@ public class MainView extends Div {
 }
 ----
 
-So it's still possible to use a component as a Declarative Service but it requires
-some boilerplate code which (on the other hand) allows to avoid mistakes.
+It's still possible to use a component as a Declarative Service but it requires
+some boilerplate code which helps avoiding mistakes.
 
 The code in the example may work "on the fly": if the page is already opened in the browser
-and service becomes available then the view will be updated automatically _if_ `Push` is used
-in the project. Otherwise the browser needs to be refreshed to show the content of the `MainView`.
+and service becomes available then the view is be updated automatically _if_ `Push` is used in the project.
+Otherwise the browser needs to be refreshed to show the content of the `MainView`.
 
 And as it has been discussed already above: if there is no point to show an empty navigation target page (as in the example) 
-or some fallback component until the service is unavailable then the route may be registered dynamically
-in the same way (and then there is no need to have tracker inside the `MainViewWrapper`): it's easy to 
-see how to adapt the code for this case.
-
+or some fallback component until the service is unavailable, then the route may be registered dynamically
+in the same way (and then there is no need to have tracker inside the `MainViewWrapper`).
+The code can be adopted to support this.
