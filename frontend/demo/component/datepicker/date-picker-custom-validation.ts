@@ -4,7 +4,8 @@ import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'generated/theme';
-import { DatePickerElement } from '@vaadin/vaadin-date-picker/vaadin-date-picker';
+import { Binder, field } from '@vaadin/form';
+import AppointmentModel from '../../../generated/com/vaadin/demo/domain/AppointmentModel';
 
 @customElement('date-picker-custom-validation')
 export class Example extends LitElement {
@@ -14,29 +15,28 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  private binder = new Binder(this, AppointmentModel);
+
+  firstUpdated() {
+    this.binder.for(this.binder.model.startDate).addValidator({
+      message: 'The selected day of week is not available',
+      validate: (startDate: string) => {
+        const date = new Date(`${startDate} `);
+        const validWeekDay = date.getDay() >= 1 && date.getDay() <= 5;
+        return validWeekDay;
+      }
+    });
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <x-date-picker-working-days
+      <vaadin-date-picker
         label="Meeting date"
         helper-text="Mondays-Fridays only"
-      ></x-date-picker-working-days>
+        ...="${field(this.binder.model.startDate)}"
+      ></vaadin-date-picker>
       <!-- end::snippet[] -->
     `;
   }
 }
-
-// tag::custom-validation[]
-@customElement('x-date-picker-working-days')
-class DatePickerWorkingDays extends DatePickerElement {
-  checkValidity() {
-    if (this._inputValue === '') {
-      return true;
-    }
-
-    const dayOfTheWeek = new Date(this._inputValue).getDay();
-
-    return dayOfTheWeek > 0 && dayOfTheWeek < 6;
-  }
-}
-// end::custom-validation[]
