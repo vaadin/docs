@@ -1,4 +1,4 @@
-import 'Frontend/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
