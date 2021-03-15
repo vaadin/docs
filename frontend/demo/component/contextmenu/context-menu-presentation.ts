@@ -30,7 +30,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   async firstUpdated() {
-    this.gridItems = await getPeople();
+    this.gridItems = (await getPeople()).people;
     const itemsArray = this.createItemsArray(this.gridItems.slice(0, 6));
 
     this.items = [
