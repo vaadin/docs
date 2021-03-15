@@ -4,6 +4,7 @@ import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'generated/theme';
+import { addDays, formatISO } from 'date-fns';
 
 @customElement('date-picker-min-max')
 export class Example extends LitElement {
@@ -20,15 +21,10 @@ export class Example extends LitElement {
   private upperLimit = '';
 
   firstUpdated() {
-    this.today = this.fromDateToISOString(new Date());
+    this.today = formatISO(Date.now(), { representation: 'date' });
 
-    const upperLimit = new Date();
-    upperLimit.setDate(upperLimit.getDate() + 60);
-    this.upperLimit = this.fromDateToISOString(upperLimit);
-  }
-
-  fromDateToISOString(date: Date): string {
-    return date.toISOString().split('T')[0];
+    const upperLimit = addDays(Date.now(), 60);
+    this.upperLimit = formatISO(upperLimit, { representation: 'date' });
   }
 
   render() {
