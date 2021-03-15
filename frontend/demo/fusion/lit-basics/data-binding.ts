@@ -22,7 +22,6 @@ class DataBindingView extends LitElement {
     `;
   }
 
-  // No `this` binding required
   private _onClick() {
     this.active = !this.active;
   }
