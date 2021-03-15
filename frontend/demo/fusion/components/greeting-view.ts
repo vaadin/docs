@@ -23,12 +23,15 @@ export class GreetingView extends LitElement {
         value="Hi"
       ></vaadin-combo-box>
       <vaadin-checkbox id="custom" @checked-changed="${this.checkboxChanged}"
-        >Custom greeting</vaadin-checkbox
+        >Type Custom greeting</vaadin-checkbox
       >
     `;
   }
 
   checkboxChanged() {
     this.greeting.allowCustomValue = this.custom.checked;
+    if (!this.greeting.allowCustomValue) {
+      this.greeting.value = this.greeting.items[0];
+    }
   }
 }
