@@ -19,7 +19,7 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    this.items = await getPeople();
+    this.items = (await getPeople()).people;
     // tag::snippet[]
     const crud = this.shadowRoot?.querySelector('vaadin-crud');
     if (crud) {
