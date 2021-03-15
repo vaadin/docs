@@ -7,26 +7,26 @@ layout: page
 = LitElement Basics
 
 For creating views on the frontend side, Vaadin Fusion uses web components, a native technology that allows creating custom HTML elements.
-It is almost like a framework built into the browser, so in most cases it is faster and smaller than any other framework, while still shares their advantages.
+It is almost like a framework built into the browser, and usually faster and smaller than any other framework, while still sharing their advantages.
 
-However, since the in-browser implementation of the web components is low-level, to make them more convenient, it is recommended to use a LitElement library.
+The LitElement library is convenient way of authoring web components, and recommended over the low-level native browser APIs.
 
-LitElement provides a simple base class, and a set of tools to create reactive web components.
-Under the hood, it uses link:https://lit-html.polymer-project.org[lit-html], a tiny library to render and re-render HTML templates in the most efficient and declarative way.
+LitElement provides a base class and a set of tools to create reactive web components.
+Under the hood, it uses link:https://lit-html.polymer-project.org[lit-html], a tiny library to render and re-render HTML templates in an efficient and declarative way.
 
 == Minimal LitElement Component
 
 === Templates
 
-A class that inherits the LitElement base class must implement a method called `render()` which returns a `TemplateResult` instance produced by the `html` tag.
+A class that inherits the LitElement base class must implement the `render()` method and return a `TemplateResult` instance produced by the `html` tag.
 The string tagged with the `html` tag is displayed in the browser as the component's content.
 
-More about tags and tagged template literals you can find in link:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates[MDN documentation].
+Learn more about tags and tagged template literals from link:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates[MDN Web Docs].
 
 === Custom Element Definition
 
-A class that pretends to be a web component must be added to the component registry and assigned with the HTML element name.
-With LitElement, you may do it with the `@customElement` decorator.
+A web component class must be added to the browser's custom element registry and assigned a unique element name.
+The `@customElement` decorator is a convenient way of doing that with LitElement.
 It receives an HTML element name which should contain at least one dash `-`.
 For example, `my-view`, `x-button` or `vaadin-checkbox`.
 
@@ -49,16 +49,19 @@ No specific requirements for naming exist, but you may want to follow a conventi
 === Properties
 
 Components can have properties that receive data from the outside (from HTML or HTML templating system) or preserve the internal state.
-Changing those properties triggers asynchronous re-render to fill the template with the new data.
+Changing those properties triggers an asynchronous re-render of the component to fill the template with the new data.
 
 LitElement provides two decorators that can transform a regular class field to a component data property.
 
-* `@property` - makes a field a data property that is allowed to receive data from the outside.
+`@property`::
+Makes a field a data property that is allowed to receive data from the outside.
 It means that you can send the data to the component via one of the following options:
-  ** Using the `html` tag from LitElement: `html++`++<my-view .myProperty=${"myValue"}></my-view>``
-  ** As an attribute to an instance of the component: `document.querySelector('my-view').setAttribute('myProperty', 'myValue')`.
-  ** As a property to an instance of the component: `document.querySelector('my-view').myProperty = 'myValue'`.
-* `@internalProperty` - makes a field a data property that contains an internal state of the component.
+ * Using the `html` tag from LitElement: `html++`++<my-view .myProperty=${"myValue"}></my-view>``
+ * As an attribute to an instance of the component: `document.querySelector('my-view').setAttribute('myProperty', 'myValue')`.
+ * As a property to an instance of the component: `document.querySelector('my-view').myProperty = 'myValue'`.
+
+`@internalProperty`::
+Makes a field a data property that contains an internal state of the component.
 Those properties must not be used from outside.
 You can use it for example if you need to trigger re-render on some events fired by children.
 
@@ -69,28 +72,33 @@ Read more about data properties in the link:https://lit-element.polymer-project.
 The `html` function is designed to assign JavaScript values to HTML elements in an obvious and easy way.
 LitElement considers four ways to do that:
 
-* Assign to an attribute.
+Assign to an attribute::
 Only values of simple types can be assigned to an attribute: `String`, `Number` or `Boolean`.
 The value is converted to the string (`Boolean` values are corrected directly to their string representations) and also reflected in the HTML code.
 For that approach, you can use the regular HTML attribute syntax.
-* Assign to a property.
+
+Assign to a property::
 Allows any value type.
 Value is not reflected in the HTML code.
 It is recommended to use that approach over the assigning to an attribute because it is simpler and more performant.
 For that approach, you must add a dot `.` before the property name: `.property`.
-* Assign a boolean attribute.
+
+Assign a boolean attribute::
 Allows only boolean values.
 The only difference from the attribute assigning is that the attribute is empty and instead of the direct assigning is removed and added again depending on the value.
 For that approach, you must add a question mark `?` before the property name.
-* Listen to an event by the name.
+
+Listen to an event by the name::
 Allows only functions.
 When the element fires an event, the function assigned to the name is called with the event as an argument.
 For that approach, you must add an at sign `@` before the event name: `@event`.
 
-**NOTE**: You don't need to bind `this` to the event listener method.
-LitElement calls any listener with the correct `this` by design.
+.Correct `this` reference in event listeners
+[NOTE]
+You don't need to bind `this` to the event listener method.
+It refers to the component class in LitElement listeners automatically.
 
-More about how to write templates in the link:https://lit-element.polymer-project.org/guide/templates[LitElement documentation].
+Learn about how to write templates from the link:https://lit-element.polymer-project.org/guide/templates[LitElement documentation].
 
 === Example
 
@@ -101,64 +109,70 @@ include::{root}/frontend/demo/fusion/lit-basics/data-binding.ts[]
 
 == Lifecycle
 
-Each component has lifecycle methods that may be overridden to execute some code at a specific time.
-To the standard web component lifecycle, LitElement adds its own methods to handle the asynchronous `render` calls.
+Each component has lifecycle methods that you can overridde to execute code at a specific time.
+LitElement adds its own methods to handle the asynchronous `render` calls to the standard web component lifecycle.
 
-Here is the list of LitElement lifecycle methods.
-More about them you can read in the link:https://lit-element.polymer-project.org/guide/lifecycle[LitElement documentation].
 
-* `constructor`
-
-**Specificity**: JavaScript class
-
+.List of lifecycle callbacks
+`constructor`::
++
+*Specificity*: JavaScript class
++
 The constructor is invoked when a class is instantiated.
 For a component, it happens when `document.createElement('my-view')` is called.
-
++
 In most cases, you don't need a `constructor` because LitElement handles everything important.
 However, if you do, try to avoid performing any heavy work: the element might be discarded after invoking the constructor.
++
+.The element needs to be connected to run the `render` callback.
+[NOTE]
+When the element is created, no render happens.
 
-**NOTE**: when the element is created, no render happens.
-The element needs to be connected to run the `render` callback.
-
-* `connectedCallback`
-
-**Specificity**: Web Components
-
+`connectedCallback`::
++
+*Specificity*: Web Components
++
 This callback is invoked each time the element is connected to the DOM.
-
++
 In most cases, the `connectedCallback` is used for setting up component-level event listeners, etc.
-
-**NOTE**: since `render` is asynchronous it does not over when the `connectedCallback` finishes.
-Use <<first-updated,`firstUpdated`>> callback to execute the code after the first render.
-
-**NOTE**: you must call `super.connectedCallback()` in your `connectedCallback` method.
++
+.Use <<first-updated,`first-updated`>> callback to execute the code after the first render
+[NOTE]
+Since `render` is asynchronous it does not over when the `connectedCallback` finishes.
++
+.Remember to call the `super.connectedCallback()`
+[NOTE]
+You must call `super.connectedCallback()` in your `connectedCallback` method.
 Otherwise, you may lose the default LitElement lifecycle.
 
-* `disconnectedCallback`
-
-**Specificity**: Web Components
-
+`disconnectedCallback`::
++
+*Specificity*: Web Components
++
 This callback is invoked each time the element is disconnected from the DOM.
-
++
 The default role of the `disconnectedCallback` is to remove or close everything that is set up during the `connectedCallback`.
-
-**NOTE**: this callback is invoked __after__ the element is disconnected from the DOM.
-You do not have access to the DOM from within the component in this callback.
-
-**NOTE**: you must call `super.disconnectedCallback()` in your `disconnectedCallback` method.
++
+.No DOM access
+[NOTE]
+This callback is invoked _after_ the element is disconnected from the DOM.
++
+.Remember to call the `super.disconnectedCallback()`
+[NOTE]
+You must call `super.disconnectedCallback()` in your `disconnectedCallback` method.
 Otherwise, you may lose the default LitElement lifecycle.
 
-* `firstUpdated` [[first-updated]]
-
-**Specificity**: LitElement
-
+[[first-updated]]`firstUpdated`::
++
+*Specificity*: LitElement
++
 This callback is invoked right after the first render is over and before the first `updated` callback.
 It receives an object that contains all changed properties.
 
-* `updated`
-
-**Specificity**: LitElement
-
+`updated`::
++
+*Specificity*: LitElement
++
 This callback is invoked after each render; for the first render, it is invoked right after the `firstUpdated` callback.
 Just like `firstUpdate`, it receives an object that contains all properties changed after the previous render.
 
@@ -167,13 +181,14 @@ Just like `firstUpdate`, it receives an object that contains all properties chan
 include::{root}/frontend/demo/fusion/lit-basics/lifecycle.ts[]
 ----
 
+Read more about the LitElement-specific lifecycle methods in the link:https://lit-element.polymer-project.org/guide/lifecycle[LitElement documentation].
+
 == Styling
 
 For styling, LitElement provides a static property `styles`.
-You may use either a stylesheet imported from the `.css` file or define it in the component directly using the `css` tagged function.
+You can use either a style sheet imported from a `.css` file or define an inline style sheet using the `css` tagged function.
 
-You may specify multiple styles for the `styles` property.
-Just use the array instead of a direct assigning.
+The `styles` property also accepts an array of style sheets.
 
 [source,typescript]
 ----
@@ -209,11 +224,11 @@ To enable Light DOM for the LitElement component, add a `createRenderRoot() { re
 include::{root}/frontend/demo/fusion/lit-basics/light-dom.ts[]
 ----
 
-=== Usage Advice
+=== Best Practices
 
-It is recommended to use Shadow DOM only for design components (checkboxes, text fields, combo-boxes, etc.) and Light DOM for any other components like views or their parts.
-It would allow avoiding possible performance issues that might happen due to multiple nesting of shadow trees.
+Shadow DOM is recommended only for "leaf" components (checkboxes, text fields, combo boxes, etc.) and Light DOM for other components like views or their parts.
+Deeply nested shadow trees can impact performance negatively.
 
 == Using in Routes
 
-About how to use components in the Vaadin Router you can read in the <<{articles}/fusion/routing/router#,Vaadin Router>> documentation.
+Read more about how to use components together with Vaadin Router in the <<{articles}/fusion/routing/router#,Vaadin Router>> documentation.
