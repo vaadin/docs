@@ -31,7 +31,7 @@ export class GreetingView extends LitElement {
   checkboxChanged() {
     this.greeting.allowCustomValue = this.custom.checked;
     if (!this.greeting.allowCustomValue) {
-      this.greeting.value = this.greeting.items[0];
+      this.greeting.value = this.greeting.items![0] as string;
     }
   }
 }
