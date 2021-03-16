@@ -1,12 +1,13 @@
 import '../../init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
-import { html, LitElement, customElement, internalProperty, query } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid';
+import { CrudEditedItemChanged } from '@vaadin/vaadin-crud';
 
 @customElement('crud-open-editor')
 export class Example extends LitElement {
@@ -19,8 +20,8 @@ export class Example extends LitElement {
   @internalProperty()
   private items: Person[] = [];
 
-  @query('vaadin-grid')
-  private grid?: GridElement;
+  @internalProperty()
+  private editedItem?: Person;
 
   async firstUpdated() {
     this.items = (await getPeople()).people;
@@ -29,7 +30,13 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-crud include="firstName, lastName, email, profession" .items=${this.items}>
+      <vaadin-crud
+        include="firstName, lastName, email, profession"
+        .items=${this.items}
+        .editedItem=${this.editedItem}
+        @edited-item-changed=${(e: CrudEditedItemChanged<Person>) =>
+          (this.editedItem = e.detail.value)}
+      >
         <vaadin-grid slot="grid" @dblclick="${this.onDblClick}">
           <vaadin-grid-column path="firstName" header="First name"></vaadin-grid-column>
           <vaadin-grid-column path="lastName" header="Last name"></vaadin-grid-column>
@@ -42,9 +49,7 @@ export class Example extends LitElement {
   }
 
   onDblClick(e: MouseEvent) {
-    const item = (this.grid?.getEventContext(e) as GridEventContext).item;
-    if (item) {
-      this.grid?.dispatchEvent(new CustomEvent('edit', { detail: { item: item } }));
-    }
+    this.editedItem = ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext)
+      .item as Person;
   }
 }
