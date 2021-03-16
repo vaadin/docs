@@ -1,10 +1,10 @@
 import { EndpointError } from '@vaadin/flow-frontend';
 
-import * as dataEndpoint from 'Frontend/generated/DataEndpoint';
+import { DataEndpoint } from 'Frontend/generated/DataEndpoint';
 
 export async function callEndpoint() {
   try {
-    await dataEndpoint.getViewData();
+    await DataEndpoint.getViewData();
   } catch (error) {
     console.warn(error.message); // "Not implemented"
     if (error instanceof EndpointError) {
