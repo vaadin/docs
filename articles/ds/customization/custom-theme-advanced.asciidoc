@@ -1,0 +1,249 @@
+---
+title: Creating a Custom Theme II
+order: 27
+layout: page
+---
+
+= Creating a Custom Theme II
+:toclevels: 2
+
+[role="since:com.vaadin:vaadin@V19 standalone"]
+--
+--
+
+[.lead]
+This article describes some further cases when working with custom themes.
+
+<<reuse-packaging, Packaging a Theme for Reuse>>::
+Package a custom theme into a JAR file for use in multiple applications.
+
+<<configuration, Custom Theme Configuration>>::
+Include style sheets and other assets, as well as extend custom themes by defining a configuration file.
+
+
+[[reuse-packaging]]
+== Packaging a Theme for Reuse
+
+A custom theme can be packaged into a JAR file for use in multiple applications as follows:
+
+. Create a new Maven project with the following structure and add your theme files to the theme folder (1):
++
+[source, filesystem]
+----
+[project root]
+├── src
+│   └── main
+│       └── resources
+│           └── META-INF
+│               └── resources
+│                   └── themes
+│                       └── my-theme  <1>
+└── pom.xml
+----
+
+. Update [filename]#pom.xml# as follows:
+** Add the Vaadin version property:
++
+.`pom.xml`
+[source, XML]
+----
+<vaadin.version>19.0.0</vaadin.version>
+----
+
+** Add dependency management:
++
+[source, XML]
+----
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-bom</artifactId>
+      <version>${vaadin.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+----
+
+** Update dependencies to only contain the following:
++
+[source, XML]
+----
+<dependency>
+  <groupId>com.vaadin</groupId>
+  <artifactId>vaadin</artifactId>
+  <scope>provided</scope>
+</dependency>
+----
+
+. If the theme uses npm assets, as described in <<configuration.stylesheets, Style Sheets From npm Packages>>, add a [filename]#Dependencies.java# class (1) with the corresponding [classname]#@NpmPackage# annotations:
++
+[source, filesystem]
+----
+[project root]
+└── src
+    └── main
+        └── java
+            └── com
+                └── vaadin
+                    └── flow
+                        └── theme
+                            └── Dependencies.java  (1)
+----
++
+.Dependency class package
+[NOTE]
+The package in which the java class is placed does not have to be [classname]#com.vaadin.flow.theme# package as in the example above, but it is recommended for themes that are going to be used in Vaadin Spring Boot applications, as it is always automatically scanned.
+Other recommended packages are [classname]#com.vaadin.flow.component# and [classname]#com.vaadin.shrinkwrap#.
+See Vaadin’s <<{articles}/flow/integrations/spring/configuration#special-configuration-parameters, Spring package scanning documentation>> for using other custom packages.
+
+. Create the JAR with `mvn install`.
+
+To use the packaged theme in an application, add the JAR as a dependency and apply the theme using the @Theme annotation.
+
+
+[[configuration]]
+== Custom Theme Configuration
+
+By configuring a custom theme, you can do the following:
+
+* <<configuration.stylesheets, Include style sheets from npm packages>>
+* <<configuration.assets, Include other assets from npm packages>>
+* <<configuration.extending, Extend custom themes>>
+
+You can configure these features through a [filename]#theme.json# configuration file (1) in the theme folder:
+
+[source, filesystem]
+----
+frontend
+└── themes              
+    └── my-theme        
+        ├── components/ 
+        └── styles.css  
+        └── theme.json  <1>
+----
+
+[[configuration.stylesheets]]
+=== Style Sheets From npm Packages
+
+You can configure a custom theme to import style sheets from npm packages included as dependencies in the project by defining them in an `importCss` array in [filename]#theme.json#:
+
+.Sample [filename]#theme.json# for importing CSS from npm packages
+[source, json]
+----
+{
+  "importCss": [
+    "@fortawesome/fontawesome-free/css/regular.css",
+    "@fortawesome/fontawesome-free/css/all.min.css"
+  ]
+}
+----
+
+This loads the external style sheets as if they were imported as local style sheets through [filename]#styles.css#.
+
+.npm packages must be added to the project
+[NOTE]
+The `importCss` configuration does not import the npm packages themselves to the project.
+You need to do that by using the [classname]#@NpmPackage# annotation.
+
+Similarly to the document root style sheet, style sheets can be forced to the document root for <<{articles}/flow/integrations/embedding/overview#, embedded Flow application or component>> use cases through a corresponding `documentCss` array, which can be useful for font-face declarations in npm packages:
+
+The following example [filename]#theme.json# defines importing of CSS from npm packages into doc root:
+
+.[filename]#theme.json#
+[source, JSON]
+----
+{
+  "documentCss": ["@fortawesome/fontawesome-free/css/all.min.css"]
+}
+----
+
+[[configuration.assets]]
+=== Other Assets From npm Packages
+
+In addition to style sheets, other assets like fonts, images, and icons can also be included from npm packages added to the project, by mapping them from the dependency to local URIs in an assets block in [filename]#theme.json#.
+
+Syntax for mapping assets from npm package to local URIs goes as follows:
+
+.[filename]#theme.json#
+[source, JSON]
+----
+{
+  "assets": {
+    "package-name": {
+      "asset/glob/pattern": "local/target/path"
+    }
+  }
+}
+----
+
+For example, to use SVG icons from `@fortawesome/fontawesome-free` npm package, the SVG files should be mapped to some local path as follows:
+
+.Sample [filename]#theme.json# for mapping assets from npm packages.
+[source, JSON]
+----
+{
+  "assets": {
+    "@fortawesome/fontawesome-free": {
+      "svgs/regular/**": "fontawesome/icons"
+    }
+  }
+}
+----
+
+.npm packages must be added to the project
+[NOTE]
+The assets configuration does not import the npm packages themselves to the project.
+You need to do that by using the [classname]#@NpmPackage# annotation.
+
+The SVG images mapped by the example above are now available on the path `fontawesome/icons` relative to the theme’s root folder, so they can be referenced in [filename]#styles.css# as follows:
+
+.[filename]#styles.css# usage of assets mapped from npm package
+[source, CSS]
+----
+.icon-snowflake {
+  background-image: url('fontawesome/icons/snowflake.svg');
+}
+----
+
+The assets block supports multiple packages and multiple mappings per package.
+
+.Sample [filename]#theme.json# mapping multiple packages and assets per package
+[source, JSON]
+----
+{
+  "assets": {
+    "@fortawesome/fontawesome-free": {
+      "svgs/regular/**": "fortawesome/icons",
+      "webfonts/**": "webfonts"
+    },
+    "@fortawesome/free-solid-svg-icons": {
+      "*.js": "solids"
+    }
+  }
+}
+----
+
+[[configuration.extending]]
+=== Extending Custom Themes
+
+A custom theme can extend another custom theme by configuring a “parent theme” in [filename]#theme.json#.
+This can be useful for splitting your styles into a base theme shared by all applications, and multiple “sub-themes” for different applications or sub-brands.
+The parent theme can be in the same project as the sub-theme, or in a separate dependency.
+
+.Sample [filename]#theme.json# for parent theme configuration
+[source, JSON]
+----
+{
+  "parent": "my-base-theme"
+}
+----
+
+With a parent and sub theme configuration like this, the CSS load order is as follows:
+
+. Lumo styles
+. Parent theme styles
+. Sub-theme styles
+. Manually loaded additional style sheets (for example, using [filename]#@CssImport# in Flow)

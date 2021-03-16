@@ -1,158 +1,109 @@
 ---
-title: Theme Variants
+title: Component Variants
 order: 50
 layout: page
 ---
 
-= Theme Variants
-ifdef::web[]
-endif::web[]
+= Component Variants
 
-Variants are opt-in features of each theme which affect the visual presentation of components.
-They do not affect their behavior or functionality.
+[.lead]
+Many Vaadin components have so-called theme variants that provide different styles for the component.
+These are defined as part of the built-in Lumo and Material themes, and documented for each component.
 
-Examples of variants include light and dark modes, density presets (compact, small, large), and visual prominence (primary, tertiary, no-borders).
-
-Themes can define global and component-specific variants.
-Theme variants can be used across all <<style-scopes#,Style Scopes>> – you don’t need to define or import them individually for each style scope.
-
-ifdef::web[]
-endif::web[]
-
-== Global Variants
-
-Global variants affect all component instances in an application.
-Light and dark modes are good examples of global variants.
-
-[.example]
---
-In server-side views (Java), use the `variant` attribute of the [classname]#@Theme# annotation.
-
-[source, Java]
-----
-@Theme(themeClass = Lumo.class, variant = Lumo.DARK)
-----
-
-In client-side views (TypeScript/HTML), set the `theme` attribute on the `<html>` element.
-
-[source, TypeScript]
-----
-document.documentElement.setAttribute("theme", "dark");
-----
-
-[source, HTML]
-----
-<html theme="dark">
-----
---
-
-
-== Component Variants
-
-Component variants affect selected component instances.
-Primary buttons, and small buttons and text fields are common examples of component variants.
-You can combine multiple variants together for a single component, for example a "small primary" button.
-
-Many components have built-in variants in both the Lumo and the Material theme.
+For example, Button has a "primary" variant, which can be used as follows:
 
 [.example]
 --
 
-Components which have built-in variants implement the [classname]#HasTheme# interface and have convenient Java APIs for using them.
-For other components, use the <<{articles}/flow/element-api/properties-attributes#,Element API>> and the [methodname]#setAttribute# method.
-
+.Java
 [source, Java]
 ----
-// Using the high-level HasTheme API
-Button button = new Button("Themed button");
-button.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
-        ButtonVariant.LUMO_SMALL);
-
-Button button = new Button("Themed button");
-button.getThemeNames().addAll(Arrays.asList("primary", "small"));
-
-// Using the low-level Element API
-Button button = new Button("Themed button");
-String themeAttributeName = "theme";
-String oldValue = button.getElement().getAttribute(themeAttributeName);
-String variantsToAdd = "primary small";
-button.getElement().setAttribute(themeAttributeName,
-        oldValue == null || oldValue.isEmpty() ? variantsToAdd
-                : ' ' + variantsToAdd);
+Button btn = new Button(“Primary variant”);
+btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 ----
 
-In client-side TypeScript/HTML views, set the [propertyname]#theme# attribute value.
-
+.TypeScript
 [source, TypeScript]
 ----
-const button = document.createElement('vaadin-button');
-button.textContent = 'Themed button';
-button.setAttribute('theme', 'primary small');
+<vaadin-button theme="primary">Primary variant</vaadin-button>
 ----
 
-[source, HTML]
-----
-<vaadin-button theme="primary small">Themed button</vaadin-button>
-----
 --
 
-
-== Sub-Component Variants
-
-Theme variants propagate to sub-components.
-For example, the Combo Box component internally contains the Text Field component.
-Setting a theme variant on a Combo Box applies it on the internal Text Field component.
-
-This also means, that even though Combo Box does not have a built-in “small” variant of its own, it can still use the built-in “small” variant of the Text Field component.
-For example:
+Multiple theme variants can be simultaneously applied to a component, although not all variants are designed to be used together.
 
 [.example]
 --
-In server-side views (Java):
 
 [source, Java]
 ----
-ComboBox comboBox = new ComboBox();
-comboBox.getElement().setAttribute("theme", TextFieldVariant.LUMO_SMALL.getVariantName());
+Button btn = new Button(“Primary + Small”);
+btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
 ----
-
-In client-side views (TypeScript/HTML):
 
 [source, TypeScript]
 ----
-const comboBox = document.createElement('vaadin-combo-box');
-comboBox.setAttribute('theme', 'small');
-----
-
-[source, HTML]
-----
-<vaadin-combo-box theme="small"></vaadin-combo-box>
+<vaadin-button theme=”primary small”>Primary + Small</vaadin-button>
 ----
 --
 
-See <<styling-components#sub-components,Styling Components>> to learn about the hierarchy of built-in Vaadin components, so you can use variants more effectively and know which exact components you need to target to customize components with sub-components.
+== Variant Inheritance
 
+Theme variants differ from CSS class names mainly in that they are automatically applied to sub-components within the shadow DOM of the component to which they are applied.
+For example, <<../components/combo-box#, Combo Box>> contains a <<../components/text-field#, Text Field>> in its shadow DOM, so theme variants applied to a Combo Box are automatically passed down to the Text Field inside.
+This means that you can apply Text Field variants to a Combo Box even though Combo Box doesn’t have any variants of its own.
+
+[.example]
+--
+
+[example, Java]
+----
+ComboBox cb = new ComboBox(“Small Combo Box”);
+
+// Components without their own theme variant API have to
+// use a different syntax for applying them:
+cb.getThemeList().add(TextFieldVariant.LUMO_SMALL.getVariantName());
+----
+
+[example, TypeScript]
+----
+<vaadin-combo-box theme=”small”></vaadin-combo-box>
+----
+--
+
+Variant inheritance only works for sub-components in the shadow DOM, not with regular “light DOM” children of a component.
+For example, Accordion Panel components inside an Accordion need to have their variants <<{articles}/ds/components/accordion/#theme-variants, applied to each panel>>.
 
 == Custom Variants
 
-Custom variants allow you to customize the visual appearance of components.
-You can define custom variants in a stylesheet you import as component styles.
-See <<custom-theme#,Creating a Custom Theme>> to learn more.
-Technically, custom variants work like built-in variants.
+You can define your own component theme variants using component-specific style sheets in a <<custom-theme#, custom theme>>.
 
-To create a custom variant, first you need to write the styles for that variant.
-For example, to create a new variant for Button, the following CSS would work:
-
-[source, css]
+.[filename]#vaadin-button.css#
+[example, CSS]
 ----
-:host([theme~="my-custom-variant"]) {
-  /* Set the CSS properties you want to customize */
+:host([theme~=”rounded”]) {
+  border-radius: 1em;
 }
 ----
 
-To learn how to target internal parts of components and how to write the correct CSS selectors, see <<styling-components#,Styling Components>>.
+You can then apply the theme variant similarly to the built-in variants:
 
-Then, you need to import the style sheet into the corresponding component’s style scope.
-See <<custom-theme#,Creating a Custom Theme>> to learn more.
+[.example]
+--
 
-Then, you can use the `my-custom-variant` on a Button component, as shown before.
+[source, Java]
+----
+Button btn = new Button(“Rounded”);
+btn.getThemeList().add(“rounded”);
+----
+
+[source,TypeScript]
+----
+<vaadin-button theme=”rounded”>Rounded</vaadin-button>
+----
+--
+
+These are inherited to sub-components similarly to the built-in variants.
+
+See <<styling-components#, Styling Components>> to learn how to target the internal parts of Vaadin components.
+
