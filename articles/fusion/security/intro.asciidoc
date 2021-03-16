@@ -1,0 +1,71 @@
+---
+title: Security in Fusion applications
+order: 70
+layout: page
+---
+
+= Security in Fusion applications
+
+See the <<{articles}/flow/security/intro#, corresponding article for Vaadin Flow>>.
+
+== Architecture
+
+In contrast to Vaadin Flow applications, where all application logic (including authentication and authorization) is processed on server side, Vaadin Fusion applications involve server and client-side security orchestration.
+While the technical details are taken care of by the framework, it is important to understand how to design the application so that the server responds to client requests in a secure way.
+
+=== Authentication
+
+Most applications need to ensure that only eligible users can access sensitive data.
+The client side authenticates by first obtaining an access token identifying the server session, which contains among other attributes the principal (current user), and then including the token in subsequent endpoint calls.
+In Fusion, the token is a `JESSIONID` cookie obtained either via the Spring provided login form or an authentication helper method.
+This is further described in <<spring-login#, Adding a Login Form with Spring Security>> and <<custom-spring-login#, Adding a Custom Login Form with Spring Security>>.
+
+=== Authorization
+
+In addition to authenticating users, applications may need to enforce some restrictions on who can view what data.
+When an HTTP request targeting an endpoint reaches the server, Fusion first checks whether the accessing user is authorized to invoke that endpoint based on the standard role-based access control (RBAC) scheme.
+The application developer can specify RBAC access rules as annotations for the endpoint class or its individual methods.
+For example:
+
+.MyEndpoint.java
+[source, Java]
+----
+@Endpoint
+@DenyAll
+public class MyEndpoint {
+  @PermitAll
+  public void permittedToAllMethod() {
+    // Any authenticated user can access
+  }
+
+  @RolesAllowed("ROLE_ADMIN")
+  public void permittedToRoleMethod() {
+    // Only users with admin role can access
+  }
+}
+----
+
+In the above example, all endpoints in the `MyEndpoint` class would be denied by default (`@DenyAll`), with the annotations `@PermitAll` and `@RolesAllowed` loosening this restriction on the two methods.
+Endpoints can also be made available for unauthenticated requests.
+See <<configuring#, Configuring Security>> for more details and code examples on endpoint security.
+
+=== Configuring Other Authentication Providers
+
+TODO
+
+== Security Notes
+
+=== Application Security means Endpoint Security
+
+Once an application has been delivered to the browser, the server can no longer make any assumptions about its behavior.
+This means that validation of data received at endpoints must be done on the server side, regardless of what happens on the client side.
+
+=== Cross-Site Request Forgery (CSRF) protection
+
+A CSRF token is delivered to the browser when the Fusion app is first loaded as part of the initial bootstrap HTML.
+The CSRF token is included in each endpoint call and validated by the server to protect the session from HTTP requests not originating from the application client code.
+
+=== Cached Data
+
+Fusion-based PWAs may choose to cache data retrieved from the server on the client side, using for example browser local storage, in order for a data-centric application to work offline.
+The developer must make an informed decision whether the data is safe to store or not, and possibly also implement the cleanup of local data (for example at logout).
