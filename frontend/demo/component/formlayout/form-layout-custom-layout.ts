@@ -26,10 +26,6 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <p>
-        Use the draggable split handle to resize Form Layout's available space and test its
-        responsiveness;
-      </p>
       <vaadin-split-layout>
         <vaadin-form-layout .responsiveSteps=${this.responsiveSteps}>
           <vaadin-text-field label="First name"></vaadin-text-field>
