@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
@@ -18,7 +18,7 @@ enum StrengthColor {
   moderate = '#e7c200',
   strong = 'var(--lumo-success-color)'
 }
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('input-field-helper')
 export class Example extends LitElement {

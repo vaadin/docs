@@ -60,8 +60,7 @@ module.exports = function (config) {
       : // false not supported in Webpack 4, let's use a resource that would get included anyway
         applyThemePath;
 
-  config.resolve.alias['themes/theme-generated.js'] = applyThemePath;
-  config.resolve.alias['generated/theme'] = applyThemePath;
+  config.resolve.alias['Frontend/generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
   const frontendFolder = path.resolve(__dirname, 'frontend');
   config.resolve.alias['Frontend'] = frontendFolder;

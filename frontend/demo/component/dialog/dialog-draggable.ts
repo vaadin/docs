@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';
@@ -11,7 +11,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-draggable')
 export class Example extends LitElement {

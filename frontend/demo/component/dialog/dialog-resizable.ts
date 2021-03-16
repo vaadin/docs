@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';
@@ -9,9 +9,9 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
-import { applyTheme } from 'generated/theme';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { getPeople } from '../../domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 
 @customElement('dialog-resizable')
 export class Example extends LitElement {

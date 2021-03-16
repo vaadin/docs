@@ -1,13 +1,13 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import { getPeople } from '../../domain/DataService';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import { ComboBoxItemModel } from '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { render } from 'lit-html';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {
