@@ -1,0 +1,182 @@
+---
+title: Creating a Custom Theme
+order: 25
+layout: page
+---
+
+= Creating a Custom Theme
+:toclevels: 2
+
+[role="since:com.vaadin:vaadin@V14.6 standalone"]
+--
+--
+
+A custom theme is the easiest way to provide a custom look and feel for your entire application.
+It can be packaged as a dependency for reuse in multiple applications, as described in <<custom-theme-packaging#, Packaging a Theme for Reuse>>.
+The CSS in a custom theme is always applied on top of the default Lumo theme.
+
+[NOTE]
+Custom theme feature is only for NPM mode and will not be applied for compatibility mode.
+
+== Theme Folder Structure
+
+For use in a single application, a custom theme is implemented as a folder inside frontend/themes, with the following minimal structure:
+
+[source, filesystem]
+----
+frontend
+└── themes              <1>
+    └── my-theme        <2>
+        ├── components/ <3>
+        └── styles.css  <4>
+----
+<1> The [filename]#themes# folder can contain multiple custom themes (but only one can be applied to the application at a time).
+<2> Each theme is in its own sub-folder.
+The name of this folder is provided as a parameter to the [classname]#@Theme# annotation to apply the theme to the application.
+<3> The [filename]#components# sub-folder is for <<styling-components#, component style sheets>> that target the (local CSS) internals of Vaadin components.
+<4> [filename]#styles.css# is the theme’s master style sheet that is automatically loaded when the theme is applied.
+
+See <<style-scopes#, Style Scopes>> for details on global vs local CSS.
+
+
+== Applying a Custom Theme
+
+You can apply a different theme using the [classname]#@Theme# annotation on the <<../routing/tutorial-routing-annotation#,root navigation>> class or the <<../routing/tutorial-router-layout#,router layout>> defined in the [classname]#@Route# annotation.
+
+An application may only have one such class and you need to define any similar configuration annotations in the same class, such as [classname]#@PWA# or [classname]#PageTitle#.
+
+For example, in a Spring Boot application, you could have an application configuration class such as the following:
+
+[source, Java]
+----
+@Route("")
+@Theme(themeFolder = "my-theme")
+public class LumoApplication extends Div {
+  ...
+}
+----
+
+Changes to the theme folder’s contents are automatically picked up during development.
+If the application has live reload enabled, the UI should reload automatically.
+Otherwise a page reload may be needed to see the changes.
+Sometimes, compilation throws an error (“no such file or directory”) when files or folders are removed from the theme folder while the application is running, but a page reload should resolve it.
+
+== Master Style Sheet
+
+When a custom theme is applied to the application, the master style sheet [filename]#styles.css# is loaded automatically as global CSS.
+Other style sheets, except for Vaadin component styles in the components folder, need to be included through the master style sheet using CSS `@import` statements.
+
+The master style sheet typically contains:
+
+. Imports of other global style sheets within the theme folder.
+. Overrides of default Lumo properties and declarations of custom CSS properties.
+. Styles applied to UI elements through class names and other CSS selectors.
+
+
+.`styles.css`
+[source, CSS]
+----
+@import other-styles.css        <1>
+
+html, :host {                   <2>
+  --lumo-border-radius: 0.5em; 
+  --my-brand-color: purple;
+}
+
+.application-header {           <3>
+  background: white;
+  border-bottom: 1px solid gray;
+}
+----
+
+CSS custom properties (for example, for overriding Lumo defaults) are recommended to use the selector “`html,:host`“, as in the example above, to ensure that they are applied when the theme is applied to an <<{articles}/flow/integrations/embedding/tutorial-webcomponent-intro#, embedded Flow application or component>>, or when used with the Design System Publisher tool.
+
+.Restriction on `@import` statements
+[NOTE]
+At the moment all `@import` statements need to be in the theme root folder.
+See https://github.com/vaadin/flow/issues/9794[Vaadin Flow issue 9794].
+
+== Vaadin Component Styles
+
+As the internal styling of Vaadin components is <<style-scopes#, isolated from the global CSS inside the component’s shadow DOM>>, the easiest way to customize their styles is through the CSS properties available in the built-in themes (see Foundation section for details), and by injecting custom CSS directly into the shadow DOM of the components by placing them in the components sub-folder.
+
+To inject CSS into the shadow DOM of a Vaadin component, create a style sheet whose name matches the web component HTML element name of the component in the components sub-folder.
+As an example, to apply styling to the `vaadin-button` component, create a style sheet called [filename]#vaadin-button.css#.
+
+[source, filesystem]
+----
+frontend
+└── themes
+    └── my-theme
+        ├── components
+        │   ├── vaadin-button.css
+        │   └── vaadin-text-field.css
+        └── styles.css
+----
+
+See <<styling-components#, Styling Components>> for details on writing CSS for Vaadin components.
+
+This style injection is based on a feature used by Vaadin components called https://github.com/vaadin/vaadin-themable-mixin[Themable Mixin].
+You can create your own web components that use the same feature to make them support this theming mechanism.
+
+Components that do not use shadow DOM, such as custom Flow-based components, can be styled using regular global CSS placed in [filename]#styles.css# or any other style sheet imported through it.
+
+== Other Theme Assets
+
+In addition to style sheets, themes often need other assets like fonts, images, and icons.
+These can be included in the theme folder, either in the root or in sub-folders as desired.
+
+In the following example, a couple of images are included in an [filename]#img# sub-folder (1), and a font file is included in the theme root (2).
+
+[source, filesystem]
+----
+frontend
+└── themes
+    └── my-theme
+        ├── components/
+        ├── img                <1>
+        │   ├── logo.png
+        │   └── background.jpg
+        ├── my-font.woff       <2>
+        └── styles.css
+----
+
+These assets can be used in the theme’s style sheets through URIs relative to the style sheet’s location:
+
+.`styles.css`
+[source, CSS]
+----
+@font-face {
+  font-family: "My Font";
+  src: url('./my-font.woff') format("woff");
+}
+
+.application-logo {
+  background-image: url('./img/logo.png');
+}
+----
+
+== Document Root Style Sheet
+
+To ensure that certain styles are always applied to the document root rather than the shadow root of an embedded Flow application or component, they can be placed in a special style sheet in the theme folder root called [filename]#document.css#.
+This is mainly needed for `@font-face` declarations that are not supported inside web component shadow DOM, and only when the theme is going to be used with <<{articles}/flow/integrations/embedding/tutorial-webcomponent-intro#, embedded Flow applications or components>> inside another application or used with Design System Publisher.
+
+== Style Loading Order
+
+When using a custom theme, CSS is loaded in a Vaadin application in the following order:
+
+. Lumo styles
+. Custom theme styles
+. Manually loaded additional style sheets (for example, using [classname]#@CssImport# in Flow)
+
+== Limitations
+
+The following limitations apply to custom themes:
+
+* The theme cannot be switched run-time.
+* Using the built-in Material theme is not currently supported.
+Custom themes are always loaded on top of the Lumo theme.
+* At the moment all @import statements need to be in style sheets in the theme root folder.
+
+See https://github.com/vaadin/flow/issues/9794[Vaadin Flow issue 9794].
+
