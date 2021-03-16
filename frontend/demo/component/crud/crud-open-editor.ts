@@ -1,13 +1,13 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid';
 import { CrudEditedItemChanged } from '@vaadin/vaadin-crud';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('crud-open-editor')
 export class Example extends LitElement {
