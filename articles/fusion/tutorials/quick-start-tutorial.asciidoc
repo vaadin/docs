@@ -60,7 +60,7 @@ VS Code should automatically suggest these for you when you open the project.
 Vaadin Fusion projects are based on https://spring.io/projects/spring-boot[Spring Boot^] and use https://maven.apache.org/[Maven^] for project management.
 
 .Fusion project structure
-image::images/quickstart-project-structure.png[Project Structure]
+image::../images/quickstart-project-structure.png[Project Structure,width=250]
 
 The two important folders to know are:
 
@@ -176,7 +176,7 @@ On the following builds `mvn` does not download dependencies and builds are much
 
 When the build has finished, you should see the application running on http://localhost:8080.
 
-image::images/quickstart-running-1.png[Running project]
+image::../images/quickstart-running-1.png[Running project]
 
 
 ==  Create a Typed Server Endpoint
@@ -227,218 +227,14 @@ You should see log output from the reload (that ends with a `Frontend compiled s
 
 If you did not have the server running, or if something failed, (re)start the server with the `mvn` command.
 
-== An Introduction to Building Reactive UIs
-
-Building reactive views and components may take some getting used to if you are coming from Vaadin Flow, jQuery, or any other imperative model.
-Reactive views have fewer moving parts and because of this they are easier to understand and debug.
-In reactive UI programming, your UI is a function of the component's state.
-Whenever the state changes, the UI is re-rendered.
-
-In imperative UI programming, there are two states: the data model and the UI.
-It is your responsibility as a developer to keep them in sync.
-In reactive programming, there is only one state: the data.
-The UI always reflects that state.
-
-As a concrete example, consider a form with a submit button that should be disabled whenever the form is invalid.
-With an imperative model, you need to track the form state and set the button state whenever the form state changes.
-With a reactive model, your UI template defines that the button should be disabled whenever the form is invalid.
-That means only need to update the form state, the UI is updated automatically.
+include::_reactive-intro.adoc[]
 
 == LitElement Basics
 
 Vaadin Fusion uses the https://lit-element.polymer-project.org/[LitElement] library for client-side views.
 It is a lightweight and highly performant library for building reactive components with declarative templates.
 
-=== Creating a Component
-
-LitElement components are custom HTML elements built using https://developer.mozilla.org/en-US/docs/Web/Web_Components[web component] standards.
-You create components by defining a class extending `LitElement` and giving it a HTML tag name with `@customElement("tag-name")`.
-The tag name needs to contain a dash.
-
-[source,typescript]
-----
-@customElement('todo-view')
-export class TodoView extends LitElement {
-}
-----
-
-=== Managing the Component State Using Properties
-
-LitElement uses _properties_ to track component state.
-Use `@property()` for properties that make up the public API and `@internalProperty()` for internal state properties.
-The HTML template is re-rendered every time a property changes.
-
-[source,typescript]
-----
-@property({ type: String })
-name = '';
-@internalProperty()
-private todos: Todo[] = [];
-----
-
-_The change detection only observes changes to the assigned objects, not to their values_.
-Consider the properties as immutable data and remember to always create a new object or array when changing them.
-
-JavaScript https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax[spread syntax] is a convenient way to create copies of objects and arrays.
-It may take some getting used to if you haven't used it before.
-
-As an example, here are three properties you can use to understand how property-change detection works:
-
-[source,typescript]
-----
-@internalProperty()
-private task = '';
-@property({type: Object})
-todo: Todo;
-@property({type: Array})
-todos: Todo[] = [];
-----
-
-Here's how you should update them to trigger a re-render.
-
-[source,typescript]
-----
-// 👍 - changing the string instance
-this.task = 'Do things';
-
-// 👎 - updating a property on an object
-this.todo.task = 'Do things';
-// 👍 - replacing task with an updated object
-this.todo = {...this.todo, task: 'Do things'};
-
-// 👎 - pushing items to an array
-this.todos.push(this.todo);
-// 👍 - replacing the array with an updated array
-this.todos = [...this.todos, this.todo];
-----
-
-Read more about LitElement properties in the https://lit-element.polymer-project.org/guide/properties[LitElement documentation].
-
-=== Defining the UI Template
-
-You define your HTML template in the `render()` method of your component.
-The method should return a https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals[template literal] containing the template.
-Remember to prefix the template literal with `html`.
-
-[source,typescript]
-----
-render() {
- return html`<h1>Hello world!</h1>`;
-}
-----
-
-==== Data Binding
-
-You can use TypeScript expressions inside the HTML template using the `${...}` syntax.
-
-LitElement uses different syntax for binding, depending on the type of property or event you are binding to:
-
-- Text content: `<h1>${...}</h1>`
-- Attribute: `<div id=${...}></div>`
-- Boolean attribute: `?hidden=${...}`
-- Property: `.value=${...}`
-- Event handler: `@event=${...}`
-
-Here is an example using each kind of binding:
-
-[source,typescript]
-----
-html`
-   <h1>Hello ${this.name}</h1> <!-- Text -->
-   <vaadin-combo-box
-      label="${this.selectLabel /* Attribute */}"
-      .items="${this.todos /* Property */}"
-      ?disabled="${this.todos.length===0  /* Boolean */}"
-      @change="${this.handleChange /* Event */}"
-   ></vaadin-combo-box>
-`
-----
-
-==== Looping Over Data
-
-You can repeat templates for an array of data by using the `map` operator and returning an `html` template for each item.
-
-[source,typescript]
-----
-<ul>
- ${this.todos.map(todo => html`
-   <li>${todo.task}</li>
- `)}
-</ul>
-----
-
-==== Showing Content Conditionally
-
-You can show content conditionally by using the conditional operator.
-
-[source, typescript]
-----
-<p>
- ${this.todos.length ?
-   html`You have <b>${this.todos.length}</b> things to do.` :
-   html`<b>Freedom!!</b>`}
-</p>
-----
-
-Such a clause can return a `nothing` (import from `lit-html`) if one of
-the conditional branches does not return a value.
-
-==== Further Reading
-
-Read more about LitElement templating in the https://lit-element.polymer-project.org/guide/templates[LitElement documentation].
-
-=== Styling With CSS
-
-You can add styles to a LitElement with a static `styles` property.
-You can either assign it to a single `css` template literal, or an array of `css`.
-The latter is useful if you need to include styles that are shared between components.
-Because the styles are defined in a static field, they are shared among all instances of the component.
-
-LitElement components use the https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM[shadow DOM] for encapsulating their content.
-This means all CSS you define in the `styles` block is automatically scoped to the component.
-The component is shielded from outside CSS.
-For more about scoping styles, see <<{articles}/ds/customization/style-scopes#, Style Scopes>>.
-
-Web Components are `display: inline` by default.
-For application views `display: block`, `flex`, or `grid` is often more appropriate.
-Use the  https://developer.mozilla.org/en-US/docs/Web/CSS/:host()[`:host` selector] to target the component you are in.
-
-
-[source,typescript]
-----
-static styles = css`
- :host {
-   display: block;
- }
-`;
-----
-
-=== Component Lifecycle
-
-LitElement components support all standard web component lifecycle callbacks, and also have several convenient non-standard ones
-
-The most commonly used lifecycle callbacks are:
-
-- `connectedCallback` - called when the component is added to the DOM.
-
-- `disconnectedCallback` - called when the component is removed from the DOM.
-
-- `firstUpdated` - called after the first render of the component.
-
-You need to remember to call the superclass method in all lifecycle callbacks.
-
-In the following is an example of using `connectedCallback()` for initializing component state:
-
-[source, typescript]
-----
-async connectedCallback() {
- super.connectedCallback();
- this.todos = await getTodos();
-}
-----
-
-You can find more information on lifecycle callbacks in the https://lit-element.polymer-project.org/guide/lifecycle[LitElement documentation].
-
+You can learn the basics of LitElement in the <<../application/lit-element#, LitElement basics article>>.
 
 == Building the Todo View Component
 
@@ -707,7 +503,7 @@ Start your server with the `mvn` command if you do not already have it running.
 Open http://localhost:8080 in your browser and you should now have a fully functional todo application.
 Notice that you can refresh the browser and it keeps the same todo items as they are persisted in the database.
 
-image::images/quickstart-running-2.png[Running project]
+image::../images/quickstart-running-2.png[Running project]
 
 
 == Next Steps and Helpful Links
