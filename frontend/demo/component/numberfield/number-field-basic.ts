@@ -1,9 +1,9 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-number-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('number-field-basic')
 export class Example extends LitElement {

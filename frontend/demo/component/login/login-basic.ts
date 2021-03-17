@@ -1,8 +1,8 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-login/vaadin-login-form';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-basic')
 export class Example extends LitElement {

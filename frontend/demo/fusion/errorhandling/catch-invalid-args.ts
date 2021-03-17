@@ -1,11 +1,11 @@
 import { EndpointValidationError } from '@vaadin/flow-frontend';
 
-import * as dateEndpoint from 'Frontend/generated/DateEndpoint';
+import { DateEndpoint } from 'Frontend/generated/DateEndpoint';
 
 export async function callEndpoint() {
   try {
     // pass an illegal date
-    const tomorrow = await dateEndpoint.getTomorrow('2021-02-29');
+    const tomorrow = await DateEndpoint.getTomorrow('2021-02-29');
     console.log(tomorrow);
     // handle result...
   } catch (error) {

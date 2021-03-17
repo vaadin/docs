@@ -1,5 +1,5 @@
 import { customElement, LitElement, html, css, unsafeCSS, property } from 'lit-element';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import { LoginI18n } from '@vaadin/vaadin-login';
 
