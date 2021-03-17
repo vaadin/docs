@@ -1,10 +1,10 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-messages/vaadin-message-list';
 import '@vaadin/vaadin-messages/vaadin-message-input';
-import { applyTheme } from 'generated/theme';
-import { getPeople } from '../../domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import MessageListItem from './MessageListItem';
 
 @customElement('message-basic')

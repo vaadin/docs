@@ -32,10 +32,10 @@ module.exports = merge(flowDefaults, {
     // so we need to direct the applyTheme function to use the version
     // bundled with docs-app. Otherwise we'd end up with conflicting imports
     // (Vaadin/Polymer) originating from two separate bundles loaded on the same page.
-    // We'll do this by declaring generated/theme as an external,
+    // We'll do this by declaring Frontend/generated/theme as an external,
     // which gets registered to the global namespace by docs-app bundle
     // (in frontend/demo/example-resources.ts).
-    'generated/theme': '__applyTheme'
+    'Frontend/generated/theme': '__applyTheme'
   },
   plugins: [
     function(compiler) {

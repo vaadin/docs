@@ -1,10 +1,10 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
-import { applyTheme } from 'generated/theme';
-import { getPeople } from '../../domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import { MenuBarItem } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { AvatarElement } from '@vaadin/vaadin-avatar/vaadin-avatar';
 

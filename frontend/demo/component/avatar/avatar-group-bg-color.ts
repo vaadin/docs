@@ -1,8 +1,8 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar-group';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import { AvatarGroupItem } from '@vaadin/vaadin-avatar/src/interfaces';
 
 @customElement('avatar-group-bg-color')
