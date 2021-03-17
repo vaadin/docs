@@ -21,13 +21,11 @@ export class Example extends LitElement {
     { name: 'Linus Torvalds', colorIndex: 3 },
     { name: 'Tim Berners-Lee ', colorIndex: 4 },
     { name: 'Steve Wozniak', colorIndex: 5 },
-    { name: 'Ken Thompson', colorIndex: 6 }
+    { name: 'Ken Thompson', colorIndex: 6 },
   ];
 
   render() {
-    return html`
-      <vaadin-avatar-group .items=${this.people}></vaadin-avatar-group>
-    `;
+    return html`<vaadin-avatar-group .items=${this.people}></vaadin-avatar-group>`;
   }
   //end::snippet[]
 }

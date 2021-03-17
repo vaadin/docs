@@ -30,7 +30,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-list-box multiple .selectedValues=${[0, 2]}>
         ${this.items.map(
-          person => html`
+          (person) => html`
             <vaadin-item>
               <div style="display: flex;">
                 <img
