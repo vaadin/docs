@@ -6,10 +6,10 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.DataService;
 
-@Route("rich-text-editor-read-only")
-public class RichTextEditorReadOnly extends Div {
+@Route("rich-text-editor-auto-height")
+public class RichTextEditorAutoHeight extends Div {
 
-    public RichTextEditorReadOnly() {
+    public RichTextEditorAutoHeight() {
         // tag::snippet[]
         RichTextEditor rte = new RichTextEditor();
         rte.getStyle().set("max-height", "400px");
@@ -19,6 +19,6 @@ public class RichTextEditorReadOnly extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<RichTextEditorReadOnly> { // hidden-full-source-line
+    public static class Exporter extends DemoExporter<RichTextEditorAutoHeight> { // hidden-full-source-line
     } // hidden-full-source-line
 }
