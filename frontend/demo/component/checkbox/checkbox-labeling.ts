@@ -1,8 +1,8 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('checkbox-labeling')
@@ -14,9 +14,7 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`
-      <vaadin-checkbox>Yes, I agree</vaadin-checkbox>
-    `;
+    return html`<vaadin-checkbox>Yes, I agree</vaadin-checkbox>`;
   }
 }
 // end::snippet[]

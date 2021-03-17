@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
@@ -10,10 +10,10 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
   {
     minWidth: 0,
     columns: 1,
-    labelsPosition: 'aside'
-  }
+    labelsPosition: 'aside',
+  },
 ];
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-text-alignment')
 export class Example extends LitElement {

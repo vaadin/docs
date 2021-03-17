@@ -1,8 +1,8 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-login/vaadin-login-overlay';
-import { applyTheme } from 'themes/theme-generated.js';
+import { html, LitElement, customElement, css } from 'lit-element';
+import '@vaadin/vaadin-login/vaadin-login-form';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-basic')
 export class Example extends LitElement {
@@ -12,10 +12,21 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  static get styles() {
+    return css`
+      :host {
+        display: flex !important;
+        justify-content: center;
+        background-color: var(--lumo-contrast-5pct);
+        padding: var(--lumo-space-m);
+      }
+    `;
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-login-overlay></vaadin-login-overlay>
+      <vaadin-login-form></vaadin-login-form>
       <!-- end::snippet[] -->
     `;
   }

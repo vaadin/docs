@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
@@ -10,15 +10,15 @@ import '@polymer/iron-icon';
 enum StrengthText {
   weak = 'weak',
   moderate = 'moderate',
-  strong = 'strong'
+  strong = 'strong',
 }
 
 enum StrengthColor {
   weak = 'var(--lumo-error-color)',
   moderate = '#e7c200',
-  strong = 'var(--lumo-success-color)'
+  strong = 'var(--lumo-success-color)',
 }
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('input-field-helper')
 export class Example extends LitElement {

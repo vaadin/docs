@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { render } from 'lit-html';
 import { html, LitElement, customElement } from 'lit-element';
@@ -34,7 +34,7 @@ export class Example extends LitElement {
           );
         })}"
         theme="success"
-        position="bottom-start"
+        position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -57,7 +57,7 @@ export class Example extends LitElement {
           );
         })}"
         theme="error"
-        position="bottom-start"
+        position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -77,7 +77,7 @@ export class Example extends LitElement {
             root
           );
         })}"
-        position="bottom-start"
+        position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
@@ -104,7 +104,7 @@ export class Example extends LitElement {
             root
           );
         })}"
-        position="bottom-start"
+        position="middle"
       ></vaadin-notification>
       <!-- end::snippet[] -->
 
@@ -114,12 +114,8 @@ export class Example extends LitElement {
       <vaadin-button @click="${this.open.bind(this, 2)}" theme="error primary">
         Try it
       </vaadin-button>
-      <vaadin-button @click="${this.open.bind(this, 3)}" theme="contrast">
-        Try it
-      </vaadin-button>
-      <vaadin-button @click="${this.open.bind(this, 4)}" theme="success">
-        Try it
-      </vaadin-button>
+      <vaadin-button @click="${this.open.bind(this, 3)}" theme="contrast">Try it</vaadin-button>
+      <vaadin-button @click="${this.open.bind(this, 4)}" theme="success">Try it</vaadin-button>
     `;
   }
 

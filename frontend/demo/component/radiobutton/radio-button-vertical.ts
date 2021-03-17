@@ -1,9 +1,9 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-vertical')
 export class Example extends LitElement {

@@ -1,8 +1,9 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-login/vaadin-login-overlay';
-import { applyTheme } from 'themes/theme-generated.js';
+import { html, LitElement, customElement, css } from 'lit-element';
+import '@vaadin/vaadin-login/vaadin-login-form';
+import { LoginI18n } from '@vaadin/vaadin-login';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-internationalization')
 export class Example extends LitElement {
@@ -12,11 +13,34 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  render() {
-    return html`
-      <!-- tag::snippet[] -->
-      <vaadin-login-overlay></vaadin-login-overlay>
-      <!-- end::snippet[] -->
+  static get styles() {
+    return css`
+      :host {
+        display: flex !important;
+        justify-content: center;
+        background-color: var(--lumo-contrast-5pct);
+        padding: var(--lumo-space-m);
+      }
     `;
   }
+
+  //tag::snippet[]
+  private i18n: LoginI18n = {
+    form: {
+      title: 'Kirjaudu sisään',
+      username: 'Käyttäjänimi',
+      password: 'Salasana',
+      submit: 'Kirjaudu sisään',
+      forgotPassword: 'Unohtuiko salasana?',
+    },
+    errorMessage: {
+      title: 'Väärä käyttäjätunnus tai salasana',
+      message: 'Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.',
+    },
+  };
+
+  render() {
+    return html`<vaadin-login-form .i18n=${this.i18n}></vaadin-login-form>`;
+  }
+  //end::snippet[]
 }

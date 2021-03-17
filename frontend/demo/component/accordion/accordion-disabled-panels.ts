@@ -1,10 +1,10 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-accordion/vaadin-accordion';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('accordion-disabled-panels')
 export class Example extends LitElement {

@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, css, customElement } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
@@ -39,7 +39,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-notification-card theme="success">
+      <vaadin-notification-card theme="success" slot="middle">
         <iron-icon icon="lumo:checkmark" class="checkmark"></iron-icon>
         <div>Application submitted!</div>
         <div style="width: 2em"></div>
@@ -49,7 +49,7 @@ export class Example extends LitElement {
         </vaadin-button>
       </vaadin-notification-card>
 
-      <vaadin-notification-card theme="error">
+      <vaadin-notification-card theme="error" slot="middle">
         <iron-icon icon="vaadin:warning" class="warning"></iron-icon>
         <div>Failed to generate report</div>
         <div style="width: 2em"></div>
@@ -59,7 +59,7 @@ export class Example extends LitElement {
         </vaadin-button>
       </vaadin-notification-card>
 
-      <vaadin-notification-card>
+      <vaadin-notification-card slot="middle">
         <vaadin-avatar name="Jason Bailey"></vaadin-avatar>
         <div><b>Jason Bailey</b> mentioned you in <a href="#">Project Q4</a></div>
         <vaadin-button theme="tertiary-inline">
@@ -67,7 +67,7 @@ export class Example extends LitElement {
         </vaadin-button>
       </vaadin-notification-card>
 
-      <vaadin-notification-card>
+      <vaadin-notification-card slot="middle">
         <iron-icon icon="lumo:checkmark" class="checkmark"></iron-icon>
         <div>
           <b style="color: var(--lumo-success-text-color);">Upload successful</b>

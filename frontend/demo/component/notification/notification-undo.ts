@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
@@ -49,6 +49,7 @@ export class Example extends LitElement {
         })}"
         theme="contrast"
         duration="10000"
+        position="middle"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;

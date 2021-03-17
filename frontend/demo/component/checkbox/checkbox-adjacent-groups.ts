@@ -1,10 +1,9 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import { applyTheme } from 'themes/theme-generated.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('checkbox-adjacent-groups')
 export class Example extends LitElement {
   constructor() {
@@ -15,6 +14,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-vertical-layout>
         <vaadin-checkbox-group label="Manufacturer" theme="vertical">
           <vaadin-checkbox value="0">Akuchi</vaadin-checkbox>
@@ -28,7 +28,7 @@ export class Example extends LitElement {
           <vaadin-checkbox value="2">Cancelled</vaadin-checkbox>
         </vaadin-checkbox-group>
       </vaadin-vertical-layout>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]

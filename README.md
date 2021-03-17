@@ -6,8 +6,7 @@ Official documentation and code examples for Vaadin.
 > This repository does not generate the vaadin.com/docs website. It only contains the content for it.
 
 > **BETA**  
-> This repository is work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts of the Vaadin platform.
-
+> This repository is work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts Vaadin.
 
 ## Branches
 
@@ -50,8 +49,8 @@ Project related scripts (tests, validation builds, preview deployment, etc).
 
 ### `.github`
 
-Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](<https://github.com/vaadin/docs/wiki/Writing-style-guide-checks>).
+Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](https://github.com/vaadin/docs/wiki/Writing-style-guide-checks).
 
 ### `versions.json`
 
-Describes the publicly available documentation versions. These versions will appear in the published website, as options for the users. This file is only relevant in the `master` branch.
+Describes the publicly available documentation versions. These versions will appear in the published website, as options for the users. This file is only relevant in the `latest` branch.

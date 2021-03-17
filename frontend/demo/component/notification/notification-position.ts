@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { render } from 'lit-html';
 import { html, LitElement, customElement, css } from 'lit-element';
@@ -6,7 +6,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import {
   NotificationElement,
-  NotificationPosition
+  NotificationPosition,
 } from '@vaadin/vaadin-notification/vaadin-notification';
 
 @customElement('notification-position')

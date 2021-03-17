@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/selectConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty, query } from 'lit-element';
@@ -6,9 +6,9 @@ import { render } from 'lit-html';
 import { SelectElement } from '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'themes/theme-generated.js';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-presentation')
 export class Example extends LitElement {
@@ -25,7 +25,8 @@ export class Example extends LitElement {
   private select?: SelectElement;
 
   async firstUpdated() {
-    this.people = await getPeople(4);
+    const { people } = await getPeople({ count: 4 });
+    this.people = people;
     // Need to manually re-run the bound renderer whenever the item set changes dynamiclly
     // to have the new items available for keyboard selection (with the overlay closed)
     this.select?.render();
@@ -45,7 +46,7 @@ export class Example extends LitElement {
       html`
         <vaadin-list-box>
           ${this.people.map(
-            person => html`
+            (person) => html`
               <vaadin-item value="${person.id}">
                 <!--
                   NOTE

@@ -1,13 +1,13 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { getPeople } from '../../domain/DataService';
-import { applyTheme } from 'themes/theme-generated.js';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('list-box-custom-item-presentation')
 export class Example extends LitElement {
@@ -21,7 +21,8 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    this.items = await getPeople(5);
+    const { people } = await getPeople({ count: 5 });
+    this.items = people;
   }
 
   render() {
@@ -29,7 +30,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-list-box multiple .selectedValues=${[0, 2]}>
         ${this.items.map(
-          person => html`
+          (person) => html`
             <vaadin-item>
               <div style="display: flex;">
                 <img
