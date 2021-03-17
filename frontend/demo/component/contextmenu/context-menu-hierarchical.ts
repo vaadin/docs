@@ -1,7 +1,6 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
-import './hint-badge'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
@@ -41,7 +40,6 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <hint-badge></hint-badge>
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>

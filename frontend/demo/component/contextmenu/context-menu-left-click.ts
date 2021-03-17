@@ -1,7 +1,6 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
-import './hint-badge'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
@@ -36,7 +35,6 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <hint-badge message="Open the Context Menu by clicking a Grid row."></hint-badge>
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu
         open-on="click"
