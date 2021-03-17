@@ -36,8 +36,8 @@ export class Example extends LitElement {
         userName: 'Linsey Listy',
         userAbbr: 'LL',
         userColorIndex: 2,
-        userImg: person.pictureUrl
-      }
+        userImg: person.pictureUrl,
+      },
     ];
   }
 
@@ -50,7 +50,7 @@ export class Example extends LitElement {
     `;
   }
 
-  _handleSubmit(e: { detail: { value: any } }) {
+  _handleSubmit(e: CustomEvent) {
     this.items = [
       ...this.items,
       {
@@ -58,8 +58,8 @@ export class Example extends LitElement {
         time: 'seconds ago',
         userName: 'Milla Sting',
         userAbbr: 'MS',
-        userColorIndex: 3
-      }
+        userColorIndex: 3,
+      },
     ];
     console.log('hello world');
   }
