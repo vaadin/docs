@@ -1,0 +1,134 @@
+---
+title: Production build, database, and cloud deployment
+order: 140
+layout: page
+---
+
+= Production mode and cloud deployment to Heroku
+
+In this last chapter, we prepare the CRM application for production and deploy it to Heroku. We have chosen to use Heroku because it's simple and comes with a free tier that does not require a credit card when signing up. The free tier also includes PostgreSQL support. 
+
+NOTE: You can deploy Vaadin applications on any cloud provider or hosting service that supports Java. The project also contains a `Dockerfile` that you can use for container deployments. https://vaadin.com/learn/tutorials/cloud-deployment/[Learn more about deploying to different cloud providers.] 
+
+In this chapter, we cover:
+
+- Vaadin production builds.
+- Creating a Heroku account. 
+- Installing the Heroku CLI.
+- Creating and deploying a Heroku app.
+
+== Preparing the application for production
+It's important to build a separate production-optimized version of the application before deploying it. In development mode, Vaadin has a live-reload widget, debug logging, and uses a quick, but unoptimized, frontend build that includes source maps for easy debugging. Unoptimized frontend bundles can contain several megabytes of JavaScript. 
+
+The `pom.xml` build includes a `production` profile configuration that prepares an optimized build that's ready for production. 
+
+=== Using a PostgreSQL database in production
+During development, we have used an in-memory H2 database. It is convenient and works well for a single user. In production, we want to use something more robust. Heroku's free tier supports PostgreSQL, so let's configure our application to use that. 
+
+First, add the PostgreSQL dependency in the production profile of `pom.xml`:
+
+.pom.xml
+[source,xml,highlight=4-9]
+----
+<profile>
+ <id>production</id>
+ <!-- Omitted -->
+ <dependencies>
+   <dependency>
+     <groupId>org.postgresql</groupId>
+     <artifactId>postgresql</artifactId>
+   </dependency>
+ </dependencies>
+</profile>
+----
+
+Next, configure how JPA should handle schema generation. Add the following two properties to the end of `application.properties`. 
+
+.src/main/java/resources/application.properties
+[source]
+----
+spring.jpa.generate-ddl=true
+spring.jpa.hibernate.ddl-auto=create-drop
+----
+
+WARNING: This setup recreates the database on every deployment. If you are working with actual data, you should use `ddl-auto=none` and instead use a database migration tool like https://www.liquibase.org/[Liquibase] or https://flywaydb.org/[Flyway] so you can evolve the database schema without losing data. 
+
+=== Building a production-optimized JAR
+Build the application with the `production` profile: 
+
+[source,bash]
+----
+mvn clean package -Pproduction
+----
+
+This will build a production-optimized JAR file in the `target` folder. 
+
+== Creating a Heroku account and installing Heroku CLI
+Complete the following steps to create a Heroku account and install the Heroku CLI. 
+
+1. Go to https://signup.heroku.com/, create a new account, and verify your email.
+2. Go to https://devcenter.heroku.com/articles/heroku-cli and follow the instructions for installing the CLI on your operating system.
+
+== Deploying a Vaadin app to Heroku
+Use the Heroku CLI to create and deploy your application. 
+
+1. Log in: 
++
+[source]
+----
+heroku login
+----
+2. Install the Heroku Java plugin:
++ 
+[source]
+----
+heroku plugins:install java
+----
+3. Create a new app. Replace APPNAME with a name of your choice.  APPNAME will be part of the URL, like https://APPNAME.herokuapp.com, so choose a name that's unique and easy to remember. 
++ 
+[source]
+----
+heroku create APPNAME
+----
+4. Enable the PostgreSQL plugin for the newly-created app:
++ 
+[source]
+----
+heroku addons:create heroku-postgresql -a APPNAME
+----
+5. Deploy the production-optimized JAR file you created in the previous section.
++
+[source]
+----
+heroku deploy:jar target/fusioncrmtutorial-1.0-SNAPSHOT.jar -a APPNAME
+----
+6. Open the application in your browser.
++
+[source]
+----
+heroku open
+----
+7. View the application logs, if anything goes wrong. 
++
+[source]
+----
+heroku logs --tail
+----
+
+== Conclusion and next steps
+Congratulations, you have now built a full-stack PWA and deployed it in the cloud! 
+
+Did you like the tutorial? Did you find anything that didn’t seem right? Reach out to me on Twitter https://twitter.com/marcushellberg[@marcushellberg]. 
+
+Now that you have a running application, you can use it to experiment further or use it as a foundation for your next idea. 
+
+Happy hacking, and ping us https://twitter.com/vaadin[@vaadin] on Twitter to show off the cool stuff you've built!
+
+=== Helpful links 
+
+- https://github.com/vaadin-learning-center/fusion-crm-tutorial[Source code GitHub repository]
+- https://discord.gg/vaadin[Vaadin Discord chat]
+- https://vaadin.com/forum[Vaadin Forum]
+- https://vaadin.com/docs[Vaadin Docs]
+- https://vaadin.com/components[Vaadin Components]
+- https://vaadin.com/comparison[Compare Vaadin with React, Angular, and Vue]
