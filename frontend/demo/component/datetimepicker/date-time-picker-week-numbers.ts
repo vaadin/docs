@@ -1,11 +1,11 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-line
 
 import { customElement, html, LitElement, query } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 import { DateTimePickerElement } from '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-week-numbers')
 export class Example extends LitElement {
@@ -23,7 +23,7 @@ export class Example extends LitElement {
     if (this.dateTimePicker) {
       this.dateTimePicker.i18n = {
         ...this.dateTimePicker.i18n,
-        firstDayOfWeek: 1
+        firstDayOfWeek: 1,
       };
     }
   }

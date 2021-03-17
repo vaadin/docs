@@ -1,4 +1,4 @@
-import '../../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
 
@@ -6,9 +6,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 @customElement('click-view')
 export class ClickView extends LitElement {
   render() {
-    return html`
-      <vaadin-button @click="${this.sayHello}">Say hello</vaadin-button>
-    `;
+    return html`<vaadin-button @click="${this.sayHello}">Say hello</vaadin-button>`;
   }
 
   private sayHello() {

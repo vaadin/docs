@@ -21,8 +21,8 @@ export class LoginView extends LitElement {
       return this.overlayResult;
     }
     const overlay = new this();
-    return (this.overlayResult = new Promise(resolve => {
-      overlay.onSuccess = result => {
+    return (this.overlayResult = new Promise((resolve) => {
+      overlay.onSuccess = (result) => {
         this.overlayResult = undefined;
         overlay.remove();
         resolve(result);

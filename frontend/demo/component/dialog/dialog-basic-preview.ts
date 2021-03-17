@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, css } from 'lit-element';
 import '@vaadin/vaadin-lumo-styles/icons';
@@ -53,20 +53,14 @@ export class Example extends LitElement {
       <div class="overlay">
         <div class="content">
           <vaadin-vertical-layout theme="spacing" style="align-items: stretch;">
-            <h2 style="margin: var(--lumo-space-m) 0 0 0;">
-              New employee
-            </h2>
+            <h2 style="margin: var(--lumo-space-m) 0 0 0;">New employee</h2>
             <vaadin-vertical-layout style="align-items: stretch;">
               <vaadin-text-field label="First name"></vaadin-text-field>
               <vaadin-text-field label="Last name"></vaadin-text-field>
             </vaadin-vertical-layout>
             <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
-              <vaadin-button>
-                Cancel
-              </vaadin-button>
-              <vaadin-button theme="primary">
-                Save changes
-              </vaadin-button>
+              <vaadin-button>Cancel</vaadin-button>
+              <vaadin-button theme="primary">Save changes</vaadin-button>
             </vaadin-horizontal-layout>
           </vaadin-vertical-layout>
         </div>

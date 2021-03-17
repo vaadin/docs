@@ -1,13 +1,13 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { getPeople } from '../../domain/DataService';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import { CheckboxElement } from '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
@@ -36,10 +36,10 @@ export class Example extends LitElement {
         <vaadin-checkbox
           .checked=${this.selectedIds.length === this.items.length}
           .indeterminate=${this.selectedIds.length > 0 &&
-            this.selectedIds.length < this.items.length}
+          this.selectedIds.length < this.items.length}
           @change=${(e: Event) =>
             (this.selectedIds = (e.target as CheckboxElement).checked
-              ? this.items.map(person => String(person.id))
+              ? this.items.map((person) => String(person.id))
               : [])}
         >
           Notify users
@@ -51,7 +51,7 @@ export class Example extends LitElement {
           .value=${this.selectedIds}
           @value-changed=${(e: CustomEvent) => (this.selectedIds = e.detail.value)}
         >
-          ${this.items.map(person => {
+          ${this.items.map((person) => {
             return html`
               <vaadin-checkbox .value=${String(person.id)}>
                 ${person.firstName} ${person.lastName}

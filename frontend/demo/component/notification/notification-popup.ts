@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { render } from 'lit-html';
 import { html, LitElement, customElement, css, unsafeCSS } from 'lit-element';
@@ -27,7 +27,7 @@ export class Example2 extends LitElement {
           position: absolute;
           transform: translate(-40%, -30%);
         }
-      `
+      `,
     ];
   }
 
@@ -44,11 +44,6 @@ export class Example2 extends LitElement {
   }
 
   menuRenderer = (root: HTMLElement) =>
-    render(
-      html`
-        <div style="padding: var(--lumo-space-l);">Show notifications here</div>
-      `,
-      root
-    );
+    render(html`<div style="padding: var(--lumo-space-l);">Show notifications here</div>`, root);
   // end::snippet[]
 }

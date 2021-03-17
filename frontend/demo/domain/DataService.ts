@@ -1,13 +1,13 @@
-import Country from '../../generated/com/vaadin/demo/domain/Country';
-import Person from '../../generated/com/vaadin/demo/domain/Person';
-import Card from '../../generated/com/vaadin/demo/domain/Card';
+import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 
 const datasetCache: { [key: string]: any[] } = {};
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
   if (!datasetCache[fileName]) {
     datasetCache[fileName] = (await import('../../../src/main/resources/data/' + fileName)).default;
   }
-  return datasetCache[fileName].slice(0, count).map(item => {
+  return datasetCache[fileName].slice(0, count).map((item) => {
     // Create deep clones to avoid sharing the same item instances between examples
     return { ...item };
   });
@@ -42,7 +42,7 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   let people = [...allPeople];
 
   if (options?.managerId !== undefined) {
-    people = people.filter(person => person.managerId == options?.managerId);
+    people = people.filter((person) => person.managerId == options?.managerId);
   }
 
   const hierarhcyLevelSize = people.length;
@@ -54,11 +54,11 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
     return {
       ...person,
       pictureUrl: peopleImages[index % peopleImages.length],
-      manager: allPeople.some(p => p.managerId === person.id)
+      manager: allPeople.some((p) => p.managerId === person.id),
     };
   });
   return {
     people,
-    hierarhcyLevelSize
+    hierarhcyLevelSize,
   };
 }

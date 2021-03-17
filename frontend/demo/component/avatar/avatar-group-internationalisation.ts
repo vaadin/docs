@@ -1,8 +1,8 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar-group';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import { AvatarGroupItem, AvatarGroupI18n } from '@vaadin/vaadin-avatar/src/interfaces';
 
 @customElement('avatar-group-internationalistion')
@@ -20,8 +20,8 @@ export class Example extends LitElement {
     anonymous: 'Anonyymi',
     activeUsers: {
       one: 'Yksi käyttäjä aktiivisena',
-      many: '{count} käyttäjää aktiivisena'
-    }
+      many: '{count} käyttäjää aktiivisena',
+    },
   };
 
   render() {

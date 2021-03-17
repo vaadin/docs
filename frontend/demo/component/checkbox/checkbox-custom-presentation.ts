@@ -1,10 +1,10 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('checkbox-custom-presentation')
@@ -26,7 +26,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-checkbox-group label="Invitees" theme="vertical">
-        ${this.items.map(person => {
+        ${this.items.map((person) => {
           return html`
             <vaadin-checkbox .value=${String(person.id)}>
               <div style="display: flex;">

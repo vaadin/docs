@@ -1,7 +1,7 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
 
 @customElement('login-validation')
@@ -13,8 +13,6 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`
-      <login-overlay-mockup error></login-overlay-mockup>
-    `;
+    return html`<login-overlay-mockup error></login-overlay-mockup>`;
   }
 }

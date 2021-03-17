@@ -1,10 +1,10 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-messages/vaadin-message-list';
 import '@vaadin/vaadin-messages/vaadin-message-input';
-import { applyTheme } from 'generated/theme';
-import { getPeople } from '../../domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import MessageListItem from './MessageListItem';
 
 @customElement('message-basic')
@@ -27,7 +27,7 @@ export class Example extends LitElement {
         time: 'yesterday',
         userName: 'Matt Mambo',
         userAbbr: 'MM',
-        userColorIndex: 1
+        userColorIndex: 1,
       },
       {
         text:
@@ -36,8 +36,8 @@ export class Example extends LitElement {
         userName: 'Linsey Listy',
         userAbbr: 'LL',
         userColorIndex: 2,
-        userImg: person.pictureUrl
-      }
+        userImg: person.pictureUrl,
+      },
     ];
   }
 
@@ -58,8 +58,8 @@ export class Example extends LitElement {
         time: 'seconds ago',
         userName: 'Milla Sting',
         userAbbr: 'MS',
-        userColorIndex: 3
-      }
+        userColorIndex: 3,
+      },
     ];
     console.log('hello world');
   }

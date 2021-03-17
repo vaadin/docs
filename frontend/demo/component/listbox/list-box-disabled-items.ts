@@ -1,11 +1,11 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('list-box-disabled-items')
 export class Example extends LitElement {

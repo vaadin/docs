@@ -2,19 +2,19 @@ import './init-flow-namespace';
 import '@vaadin/flow-frontend/dndConnector-es6.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 // @ts-ignore
-import Appointment from '../generated/com/vaadin/demo/domain/Appointment';
-import AppointmentModel from '../generated/com/vaadin/demo/domain/AppointmentModel';
-import PersonModel from '../generated/com/vaadin/demo/domain/PersonModel';
+import Appointment from 'Frontend/generated/com/vaadin/demo/domain/Appointment';
+import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
+import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 // @ts-ignore
-import Person from '../generated/com/vaadin/demo/domain/Person';
-import AddressModel from '../generated/com/vaadin/demo/domain/AddressModel';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import AddressModel from 'Frontend/generated/com/vaadin/demo/domain/AddressModel';
 // @ts-ignore
-import Address from '../generated/com/vaadin/demo/domain/Address';
-import CardModel from '../generated/com/vaadin/demo/domain/CardModel';
+import Address from 'Frontend/generated/com/vaadin/demo/domain/Address';
+import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 // @ts-ignore
-import Card from '../generated/com/vaadin/demo/domain/Card';
-import client from '../generated/connect-client.default';
-import { applyTheme } from 'generated/theme';
+import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import client from 'Frontend/generated/connect-client.default';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // Make sure custom component styles get registered
 const div = document.createElement('div');

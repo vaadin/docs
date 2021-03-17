@@ -1,10 +1,10 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('menu-bar-basic')
@@ -23,15 +23,15 @@ export class Example extends LitElement {
         { text: 'Users', children: [{ text: 'List' }, { text: 'Add' }] },
         {
           text: 'Billing',
-          children: [{ text: 'Invoices' }, { text: 'Balance Events' }]
-        }
-      ]
+          children: [{ text: 'Invoices' }, { text: 'Balance Events' }],
+        },
+      ],
     },
     {
       text: 'Account',
-      children: [{ text: 'Edit Profile' }, { text: 'Privacy Settings' }]
+      children: [{ text: 'Edit Profile' }, { text: 'Privacy Settings' }],
     },
-    { text: 'Sign Out' }
+    { text: 'Sign Out' },
   ];
 
   @internalProperty()

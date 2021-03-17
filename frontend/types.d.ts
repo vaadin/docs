@@ -8,5 +8,4 @@ declare module '*.jpg' {
   export = value;
 }
 
-declare module 'themes/theme-generated.js';
-declare module 'generated/theme';
+declare module 'Frontend/generated/theme';

@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
 import { customElement, internalProperty, LitElement } from 'lit-element';
@@ -8,9 +8,9 @@ import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-button/vaadin-button';
 import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-column')
 export class Example extends LitElement {
@@ -29,7 +29,7 @@ export class Example extends LitElement {
     const { people, hierarhcyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null
+      managerId: params.parentItem ? (params.parentItem as Person).id : null,
     });
 
     if (!params.parentItem) {
