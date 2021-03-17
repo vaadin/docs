@@ -36,10 +36,10 @@ export class Example extends LitElement {
         <vaadin-checkbox
           .checked=${this.selectedIds.length === this.items.length}
           .indeterminate=${this.selectedIds.length > 0 &&
-            this.selectedIds.length < this.items.length}
+          this.selectedIds.length < this.items.length}
           @change=${(e: Event) =>
             (this.selectedIds = (e.target as CheckboxElement).checked
-              ? this.items.map(person => String(person.id))
+              ? this.items.map((person) => String(person.id))
               : [])}
         >
           Notify users
@@ -51,7 +51,7 @@ export class Example extends LitElement {
           .value=${this.selectedIds}
           @value-changed=${(e: CustomEvent) => (this.selectedIds = e.detail.value)}
         >
-          ${this.items.map(person => {
+          ${this.items.map((person) => {
             return html`
               <vaadin-checkbox .value=${String(person.id)}>
                 ${person.firstName} ${person.lastName}

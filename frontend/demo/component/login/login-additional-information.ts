@@ -20,15 +20,13 @@ export class Example extends LitElement {
     if (this.login && this.login.i18n) {
       this.login.i18n = {
         ...this.login.i18n,
-        additionalInformation: `Please, contact admin@company.com if you're experiecing issues logging into your account`
+        additionalInformation: `Please, contact admin@company.com if you're experiecing issues logging into your account`,
       };
     }
   }
 
   render() {
-    return html`
-      <vaadin-login-overlay opened></vaadin-login-overlay>
-    `;
+    return html`<vaadin-login-overlay opened></vaadin-login-overlay>`;
   }
   //end::snippet[]
 }

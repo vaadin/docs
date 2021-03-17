@@ -8,9 +8,7 @@ import '@vaadin/vaadin-cookie-consent/vaadin-cookie-consent';
 @customElement('cookie-consent-theming')
 export class Example extends LitElement {
   render() {
-    return html`
-      <vaadin-cookie-consent></vaadin-cookie-consent>
-    `;
+    return html`<vaadin-cookie-consent></vaadin-cookie-consent>`;
   }
 }
 // end::snippet[]

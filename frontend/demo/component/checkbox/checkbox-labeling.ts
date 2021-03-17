@@ -14,9 +14,7 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`
-      <vaadin-checkbox>Yes, I agree</vaadin-checkbox>
-    `;
+    return html`<vaadin-checkbox>Yes, I agree</vaadin-checkbox>`;
   }
 }
 // end::snippet[]
