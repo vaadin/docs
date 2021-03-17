@@ -36,8 +36,8 @@ export class Example extends LitElement {
         userName: 'Linsey Listy',
         userAbbr: 'LL',
         userColorIndex: 2,
-        userImg: person.pictureUrl,
-      },
+        userImg: person.pictureUrl
+      }
     ];
   }
 
@@ -45,7 +45,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-message-list .items=${this.items}></vaadin-message-list>
-      <vaadin-message-input @submit="${this._handleSubmit}"></vaadin-message>
+      <vaadin-message-input @submit="${this._handleSubmit}"></vaadin-message-input>
       <!-- end::snippet[] -->
     `;
   }
@@ -58,8 +58,8 @@ export class Example extends LitElement {
         time: 'seconds ago',
         userName: 'Milla Sting',
         userAbbr: 'MS',
-        userColorIndex: 3,
-      },
+        userColorIndex: 3
+      }
     ];
     console.log('hello world');
   }
