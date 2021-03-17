@@ -122,6 +122,7 @@ export class Example extends LitElement {
   }
 
   onContextMenu(e: MouseEvent) {
+    // Prevent opening context menu on header row.
     if (
       ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
     ) {

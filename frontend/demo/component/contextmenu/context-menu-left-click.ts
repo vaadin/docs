@@ -54,6 +54,7 @@ export class Example extends LitElement {
   }
 
   onClick(e: MouseEvent) {
+    // Prevent opening context menu on header row click.
     if (
       !this.contextMenuOpened &&
       ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
