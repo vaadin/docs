@@ -1,9 +1,9 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, query } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import { DatePickerElement } from '@vaadin/vaadin-date-picker/vaadin-date-picker';
 
 @customElement('date-picker-week-numbers')

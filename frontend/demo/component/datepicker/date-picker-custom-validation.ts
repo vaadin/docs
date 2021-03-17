@@ -1,11 +1,11 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import { Binder, field } from '@vaadin/form';
-import AppointmentModel from '../../../generated/com/vaadin/demo/domain/AppointmentModel';
+import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 
 @customElement('date-picker-custom-validation')
 export class Example extends LitElement {
