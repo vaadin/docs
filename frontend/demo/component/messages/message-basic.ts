@@ -45,12 +45,12 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-message-list .items=${this.items}></vaadin-message-list>
-      <vaadin-message-input @submit="${this._handleSubmit}"></vaadin-message>
+      <vaadin-message-input @submit="${this._handleSubmit}"></vaadin-message-input>
       <!-- end::snippet[] -->
     `;
   }
 
-  _handleSubmit(e: { detail: { value: any } }) {
+  _handleSubmit(e: CustomEvent) {
     this.items = [
       ...this.items,
       {
