@@ -25,8 +25,6 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`
-      <login-overlay-mockup></login-overlay-mockup>
-    `;
+    return html`<login-overlay-mockup></login-overlay-mockup>`;
   }
 }

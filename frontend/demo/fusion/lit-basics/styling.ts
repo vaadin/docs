@@ -13,9 +13,7 @@ class MyView extends LitElement {
   ];
 
   render() {
-    return html`
-      <h1>My View</h1>
-    `;
+    return html`<h1>My View</h1>`;
   }
 }
 

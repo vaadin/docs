@@ -26,9 +26,7 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`
-      <vaadin-login-overlay opened></vaadin-login-overlay>
-    `;
+    return html`<vaadin-login-overlay opened></vaadin-login-overlay>`;
   }
   //end::snippet[]
 }

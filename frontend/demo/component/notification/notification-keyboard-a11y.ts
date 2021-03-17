@@ -37,9 +37,7 @@ export class Example extends LitElement {
                 Undo
                 <!-- Ideally, this should also be hidden if the
                      device does not have a physical keyboard -->
-                <span aria-hidden="true">
-                  &nbsp; ${this.isMac ? '⌘' : 'Ctrl-'}Z
-                </span>
+                <span aria-hidden="true"> &nbsp; ${this.isMac ? '⌘' : 'Ctrl-'}Z </span>
               </vaadin-button>
             `,
             root

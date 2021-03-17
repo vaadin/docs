@@ -29,9 +29,7 @@ export class Example extends LitElement {
         <vaadin-tab>Shipping</vaadin-tab>
       </vaadin-tabs>
 
-      <div class="content">
-        ${this.content}
-      </div>
+      <div class="content">${this.content}</div>
       <!-- end::snippet[] -->
     `;
   }

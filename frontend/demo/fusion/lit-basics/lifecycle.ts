@@ -16,9 +16,7 @@ class MyButton extends LitElement {
   }
 
   render() {
-    return html`
-      <button>Some button</button>
-    `;
+    return html`<button>Some button</button>`;
   }
 
   private onClick() {

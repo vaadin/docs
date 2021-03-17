@@ -6,9 +6,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 @customElement('click-view')
 export class ClickView extends LitElement {
   render() {
-    return html`
-      <vaadin-button @click="${this.sayHello}">Say hello</vaadin-button>
-    `;
+    return html`<vaadin-button @click="${this.sayHello}">Say hello</vaadin-button>`;
   }
 
   private sayHello() {

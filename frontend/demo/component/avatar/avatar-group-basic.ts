@@ -21,9 +21,7 @@ export class Example extends LitElement {
   ];
 
   render() {
-    return html`
-      <vaadin-avatar-group .items=${this.people}></vaadin-avatar-group>
-    `;
+    return html`<vaadin-avatar-group .items=${this.people}></vaadin-avatar-group>`;
   }
   //end::snippet[]
 }

@@ -35,9 +35,8 @@ export class Example extends LitElement {
         <!-- tag::snippet[] -->
         <vaadin-checkbox
           .checked=${this.selectedIds.length === this.items.length}
-          .indeterminate=${
-            this.selectedIds.length > 0 && this.selectedIds.length < this.items.length
-          }
+          .indeterminate=${this.selectedIds.length > 0 &&
+          this.selectedIds.length < this.items.length}
           @change=${(e: Event) =>
             (this.selectedIds = (e.target as CheckboxElement).checked
               ? this.items.map((person) => String(person.id))

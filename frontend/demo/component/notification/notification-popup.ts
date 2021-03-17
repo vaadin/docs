@@ -44,11 +44,6 @@ export class Example2 extends LitElement {
   }
 
   menuRenderer = (root: HTMLElement) =>
-    render(
-      html`
-        <div style="padding: var(--lumo-space-l);">Show notifications here</div>
-      `,
-      root
-    );
+    render(html`<div style="padding: var(--lumo-space-l);">Show notifications here</div>`, root);
   // end::snippet[]
 }
