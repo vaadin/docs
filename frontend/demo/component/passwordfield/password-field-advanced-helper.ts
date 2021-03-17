@@ -8,13 +8,13 @@ import '@polymer/iron-icon';
 enum StrengthText {
   weak = 'weak',
   moderate = 'moderate',
-  strong = 'strong'
+  strong = 'strong',
 }
 
 enum StrengthColor {
   weak = 'var(--lumo-error-color)',
   moderate = '#e7c200',
-  strong = 'var(--lumo-success-color)'
+  strong = 'var(--lumo-success-color)',
 }
 import { applyTheme } from 'Frontend/generated/theme';
 

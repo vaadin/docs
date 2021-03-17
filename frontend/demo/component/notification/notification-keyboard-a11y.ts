@@ -54,7 +54,7 @@ export class Example extends LitElement {
   }
 
   firstUpdated() {
-    document.addEventListener('keydown', e => {
+    document.addEventListener('keydown', (e) => {
       if (this.notificationOpen && (e.metaKey || e.ctrlKey) && e.key == 'z') {
         // Handle your custom undo logic here
         // Avoid triggering the native undo action

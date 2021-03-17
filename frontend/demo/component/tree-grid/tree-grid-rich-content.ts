@@ -13,7 +13,7 @@ import {
   GridColumnElement,
   GridDataProviderCallback,
   GridDataProviderParams,
-  GridItemModel
+  GridItemModel,
 } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -36,7 +36,7 @@ export class Example extends LitElement {
     const { people, hierarhcyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null
+      managerId: params.parentItem ? (params.parentItem as Person).id : null,
     });
 
     callback(people, hierarhcyLevelSize);
@@ -61,7 +61,7 @@ export class Example extends LitElement {
                 if (e.detail.value) {
                   this.expandedItems = [...this.expandedItems, person];
                 } else {
-                  this.expandedItems = this.expandedItems.filter(p => p.id !== person.id);
+                  this.expandedItems = this.expandedItems.filter((p) => p.id !== person.id);
                 }
               }}
               .expanded=${!!model.expanded}

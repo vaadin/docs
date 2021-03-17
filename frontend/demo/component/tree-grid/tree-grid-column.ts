@@ -29,7 +29,7 @@ export class Example extends LitElement {
     const { people, hierarhcyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null
+      managerId: params.parentItem ? (params.parentItem as Person).id : null,
     });
 
     if (!params.parentItem) {

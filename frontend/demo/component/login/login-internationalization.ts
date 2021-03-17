@@ -31,12 +31,12 @@ export class Example extends LitElement {
       username: 'Käyttäjänimi',
       password: 'Salasana',
       submit: 'Kirjaudu sisään',
-      forgotPassword: 'Unohtuiko salasana?'
+      forgotPassword: 'Unohtuiko salasana?',
     },
     errorMessage: {
       title: 'Väärä käyttäjätunnus tai salasana',
-      message: 'Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.'
-    }
+      message: 'Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.',
+    },
   };
 
   render() {

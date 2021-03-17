@@ -27,7 +27,7 @@ export class Example2 extends LitElement {
           position: absolute;
           transform: translate(-40%, -30%);
         }
-      `
+      `,
     ];
   }
 

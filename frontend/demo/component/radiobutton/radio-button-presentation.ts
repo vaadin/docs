@@ -32,7 +32,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-radio-group label="Payment method" theme="vertical" .value=${this.value}>
         ${this.items.map(
-          card => html`
+          (card) => html`
             <vaadin-radio-button .value=${String(card.id)}>
               <div>
                 <vaadin-horizontal-layout theme="spacing">

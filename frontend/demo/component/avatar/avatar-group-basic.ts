@@ -17,7 +17,7 @@ export class Example extends LitElement {
   private people: AvatarGroupItem[] = [
     { name: 'Ada Lovelace' },
     { name: 'Katherine Johnson' },
-    { name: 'Tim Berners-Lee ' }
+    { name: 'Tim Berners-Lee ' },
   ];
 
   render() {
