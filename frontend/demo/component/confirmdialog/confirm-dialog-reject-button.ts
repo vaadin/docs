@@ -20,9 +20,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click=${() => (this.dialogOpened = true)}>
-        Open confirm dialog
-      </vaadin-button>
+      <vaadin-button @click=${() => (this.dialogOpened = true)}> Open cofirm dialog </vaadin-button>
 
       <!-- tag::snippet[] -->
       <vaadin-confirm-dialog
