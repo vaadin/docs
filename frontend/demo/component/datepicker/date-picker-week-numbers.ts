@@ -22,7 +22,7 @@ export class Example extends LitElement {
     if (this.datePicker) {
       this.datePicker.i18n = {
         ...this.datePicker.i18n,
-        firstDayOfWeek: 1
+        firstDayOfWeek: 1,
       };
     }
   }

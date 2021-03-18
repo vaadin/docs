@@ -24,7 +24,7 @@ export class Example extends LitElement {
         const date = new Date(`${startDate} `);
         const validWeekDay = date.getDay() >= 1 && date.getDay() <= 5;
         return validWeekDay;
-      }
+      },
     });
   }
 

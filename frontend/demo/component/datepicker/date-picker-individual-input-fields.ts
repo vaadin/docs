@@ -27,7 +27,7 @@ export class Example extends LitElement {
     'September',
     'October',
     'November',
-    'December'
+    'December',
   ];
 
   private years = Array.from({ length: 100 }, (_, k) => new Date().getFullYear() - 99 + k);
