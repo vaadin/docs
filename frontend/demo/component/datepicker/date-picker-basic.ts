@@ -15,9 +15,7 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`
-      <vaadin-date-picker label="Birthday"></vaadin-date-picker>
-    `;
+    return html`<vaadin-date-picker label="Birthday"></vaadin-date-picker>`;
   }
 }
 // end::snippet[]

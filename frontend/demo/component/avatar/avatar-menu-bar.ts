@@ -31,19 +31,19 @@ export class Example extends LitElement {
         component: avatarElement,
         children: [
           {
-            text: 'Profile'
+            text: 'Profile',
           },
           {
-            text: 'Settings'
+            text: 'Settings',
           },
           {
-            text: 'Help'
+            text: 'Help',
           },
           {
-            text: 'Sign out'
-          }
-        ]
-      }
+            text: 'Sign out',
+          },
+        ],
+      },
     ];
   }
 

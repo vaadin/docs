@@ -26,7 +26,7 @@ export class Example extends LitElement {
         time: 'yesterday',
         userName: 'Matt Mambo',
         userAbbr: 'MM',
-        userColorIndex: 1
+        userColorIndex: 1,
       },
       {
         text: 'Another message',
@@ -34,8 +34,8 @@ export class Example extends LitElement {
         userName: 'Linsey Listy',
         userAbbr: 'LL',
         userColorIndex: 2,
-        userImg: person.pictureUrl
-      }
+        userImg: person.pictureUrl,
+      },
     ];
   }
 

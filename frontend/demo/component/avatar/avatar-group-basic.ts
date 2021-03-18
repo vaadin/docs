@@ -17,13 +17,11 @@ export class Example extends LitElement {
   private people: AvatarGroupItem[] = [
     { name: 'Ada Lovelace' },
     { name: 'Katherine Johnson' },
-    { name: 'Tim Berners-Lee ' }
+    { name: 'Tim Berners-Lee ' },
   ];
 
   render() {
-    return html`
-      <vaadin-avatar-group .items=${this.people}></vaadin-avatar-group>
-    `;
+    return html`<vaadin-avatar-group .items=${this.people}></vaadin-avatar-group>`;
   }
   //end::snippet[]
 }

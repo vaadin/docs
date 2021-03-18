@@ -4,7 +4,7 @@ import {
   LitElement,
   property,
   internalProperty,
-  TemplateResult
+  TemplateResult,
 } from 'lit-element';
 
 @customElement('data-binding-view')

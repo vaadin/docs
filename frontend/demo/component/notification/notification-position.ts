@@ -6,7 +6,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import {
   NotificationElement,
-  NotificationPosition
+  NotificationPosition,
 } from '@vaadin/vaadin-notification/vaadin-notification';
 
 @customElement('notification-position')

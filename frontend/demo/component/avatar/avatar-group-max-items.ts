@@ -18,7 +18,7 @@ export class Example extends LitElement {
     { name: 'Katherine Johnson' },
     { name: 'Alan Turing' },
     { name: 'Linus Torvalds' },
-    { name: 'Tim Berners-Lee ' }
+    { name: 'Tim Berners-Lee ' },
   ];
 
   render() {

@@ -20,8 +20,8 @@ export class Example extends LitElement {
     anonymous: 'Anonyymi',
     activeUsers: {
       one: 'Yksi käyttäjä aktiivisena',
-      many: '{count} käyttäjää aktiivisena'
-    }
+      many: '{count} käyttäjää aktiivisena',
+    },
   };
 
   render() {
