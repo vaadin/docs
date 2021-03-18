@@ -4,9 +4,9 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 
 import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-text-field/vaadin-email-field';
-import '@vaadin/vaadin-text-field/vaadin-text-area';
+import '@vaadin/vaadin-text-field/vaadin-password-field';
 import { applyTheme } from 'Frontend/generated/theme';
+import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 
 @customElement('form-layout-basic')
 export class Example extends LitElement {
@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   private responsiveSteps: FormLayoutResponsiveStep[] = [
     { minWidth: 0, columns: 1 },
-    { minWidth: '20em', columns: 2 }
+    { minWidth: '20em', columns: 2 },
   ];
 
   render() {

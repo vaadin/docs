@@ -20,7 +20,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   private responsiveSteps: FormLayoutResponsiveStep[] = [
     { minWidth: 0, columns: 1 },
-    { minWidth: '20em', columns: 3 }
+    { minWidth: '20em', columns: 3 },
   ];
 
   render() {
