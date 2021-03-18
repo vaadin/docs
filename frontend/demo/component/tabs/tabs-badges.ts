@@ -17,7 +17,7 @@ export class Example extends LitElement {
         span[theme~='badge'] {
           margin-inline-start: var(--lumo-space-xs);
         }
-      `
+      `,
     ];
   }
 

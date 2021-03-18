@@ -17,26 +17,24 @@ export class Example extends LitElement {
   private i18n: LoginI18n = {
     header: {
       title: 'Sovelluksen nimi',
-      description: 'Sovelluksen kuvaus'
+      description: 'Sovelluksen kuvaus',
     },
     form: {
       title: 'Kirjaudu sisään',
       username: 'Käyttäjänimi',
       password: 'Salasana',
       submit: 'Kirjaudu sisään',
-      forgotPassword: 'Unohtuiko salasana?'
+      forgotPassword: 'Unohtuiko salasana?',
     },
     errorMessage: {
       title: 'Väärä käyttäjätunnus tai salasana',
-      message: 'Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.'
+      message: 'Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.',
     },
-    additionalInformation: 'Jos tarvitset lisätietoja käyttäjälle.'
+    additionalInformation: 'Jos tarvitset lisätietoja käyttäjälle.',
   };
 
   render() {
-    return html`
-      <vaadin-login-overlay .i18n=${this.i18n} opened></vaadin-login-overlay>
-    `;
+    return html`<vaadin-login-overlay .i18n=${this.i18n} opened></vaadin-login-overlay>`;
   }
   //end::snippet[]
 }

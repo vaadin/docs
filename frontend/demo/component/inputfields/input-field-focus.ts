@@ -16,7 +16,7 @@ export class Example extends LitElement {
 
   steps = [
     { minWidth: '0', columns: 1 },
-    { minWidth: '30em', columns: 2 }
+    { minWidth: '30em', columns: 2 },
   ];
 
   render() {

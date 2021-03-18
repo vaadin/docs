@@ -9,13 +9,11 @@ class MyView extends LitElement {
       h1 {
         color: red;
       }
-    `
+    `,
   ];
 
   render() {
-    return html`
-      <h1>My View</h1>
-    `;
+    return html`<h1>My View</h1>`;
   }
 }
 

@@ -23,15 +23,15 @@ export class Example extends LitElement {
         { text: 'Users', children: [{ text: 'List' }, { text: 'Add' }] },
         {
           text: 'Billing',
-          children: [{ text: 'Invoices' }, { text: 'Balance Events' }]
-        }
-      ]
+          children: [{ text: 'Invoices' }, { text: 'Balance Events' }],
+        },
+      ],
     },
     {
       text: 'Account',
-      children: [{ text: 'Edit Profile' }, { text: 'Privacy Settings' }]
+      children: [{ text: 'Edit Profile' }, { text: 'Privacy Settings' }],
     },
-    { text: 'Sign Out' }
+    { text: 'Sign Out' },
   ];
 
   @internalProperty()

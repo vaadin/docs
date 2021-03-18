@@ -26,7 +26,7 @@ export class Example extends LitElement {
           (startTime >= '08:00' && startTime <= '12:00') ||
           (startTime >= '13:00' && startTime <= '16:00')
         );
-      }
+      },
     });
   }
 
