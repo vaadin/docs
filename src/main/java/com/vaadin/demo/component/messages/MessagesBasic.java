@@ -51,6 +51,7 @@ public class MessagesBasic extends Div {
         chatLayout.setHeight("500px");
         chatLayout.setWidth("400px");
         chatLayout.expand(list);
+        add(chatLayout);
         // end::snippet[]
     }
 
