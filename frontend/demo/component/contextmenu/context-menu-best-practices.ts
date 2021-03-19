@@ -29,6 +29,17 @@ export class Example extends LitElement {
     { filename: 'Financials.xlsx', size: '42 MB' }
   ];
 
+  private menuBarRenderer = (root: HTMLElement) => {
+    if (root.firstElementChild) {
+      return;
+    }
+
+    const menuBar = document.createElement('vaadin-menu-bar');
+    menuBar.items = [{ component: this.makeIcon('vaadin:ellipsis-dots-v'), children: this.items }];
+    menuBar.setAttribute('theme', 'icon tertiary');
+    root.appendChild(menuBar);
+  };
+
   render() {
     return html`
       <!-- tag::snippethtml[] -->
@@ -39,23 +50,12 @@ export class Example extends LitElement {
           <vaadin-grid-column
             width="80px"
             flex-grow="0"
-            .renderer="${this.menuBarRenderer.bind(this)}"
+            .renderer="${this.menuBarRenderer}"
           ></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;
-  }
-
-  menuBarRenderer(root: HTMLElement) {
-    if (root.firstElementChild) {
-      return;
-    }
-
-    const menuBar = document.createElement('vaadin-menu-bar');
-    menuBar.items = [{ component: this.makeIcon('vaadin:ellipsis-dots-v'), children: this.items }];
-    menuBar.setAttribute('theme', 'icon');
-    root.appendChild(menuBar);
   }
 
   makeIcon(iconName: string) {

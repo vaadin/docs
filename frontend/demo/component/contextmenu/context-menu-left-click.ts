@@ -29,6 +29,16 @@ export class Example extends LitElement {
 
   private contextMenuOpened?: boolean;
 
+  private onClick = (e: MouseEvent) => {
+    // Prevent opening context menu on header row click.
+    if (
+      !this.contextMenuOpened &&
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+    ) {
+      e.stopPropagation();
+    }
+  };
+
   async firstUpdated() {
     this.gridItems = (await getPeople()).people;
   }
@@ -42,7 +52,7 @@ export class Example extends LitElement {
         @opened-changed=${(e: ContextMenuOpenedChanged) =>
           (this.contextMenuOpened = e.detail.value)}
       >
-        <vaadin-grid .items=${this.gridItems} @click=${this.onClick.bind(this)}>
+        <vaadin-grid .items=${this.gridItems} @click=${this.onClick}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
           <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
           <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
@@ -51,15 +61,5 @@ export class Example extends LitElement {
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;
-  }
-
-  onClick(e: MouseEvent) {
-    // Prevent opening context menu on header row click.
-    if (
-      !this.contextMenuOpened &&
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
-    ) {
-      e.stopPropagation();
-    }
   }
 }
