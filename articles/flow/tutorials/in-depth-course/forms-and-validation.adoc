@@ -1,0 +1,264 @@
+---
+title: Forms and validation
+order: 80
+---
+
+= Vaadin Forms: Data Binding and Validation
+
+In the previous chapter, you started building a reusable form component. 
+In this chapter, you define the form component API and use data binding to make the form functional.
+
+video::k-DxZ1reIdM[youtube]
+
+== Binding Object Properties to Input Fields
+
+A form is a collection of input fields that are connected to a data model, a `Contact` in this case. 
+Forms validate user input and make it easy to get an object populated with input values from the UI. 
+
+Vaadin users the <<../../binding-data/tutorial-flow-components-binder#,`Binder`>> class to build forms. 
+It binds UI fields to data object fields by name. 
+For instance, it takes a UI field named `firstName` and maps it to the `firstName` field of the data object, and the `lastName` field to the `lastName` field, and so on. 
+This is why the field names in `Contact` and `ContactForm` are the same. 
+
+.Advanced Binder API
+[NOTE]
+====
+Binder also supports an <<../../binding-data/tutorial-flow-components-binder-validation#,advanced API>> where you can configure data conversions and additional validation rules, but for this application, the simple API is sufficient. 
+
+Binder can use validation rules that are defined on the data object in the UI. 
+This means you can run the same validations in both the browser and before saving to the database, without duplicating code. 
+====
+
+== Creating the Binder
+
+The first step is to create a new binder field in the contact form. 
+
+To do this, add the `BeanValidationBinder` field to `ContactForm` as follows:
+
+.`ContactForm.java`
+[source,java]
+----
+// Other fields omitted
+Binder<Contact> binder = new BeanValidationBinder<>(Contact.class); <1>
+
+public ContactForm() {
+    addClassName("contact-form");
+    binder.bindInstanceFields(this); <2>
+    // Rest of constructor omitted
+}
+----
+<1> `BeanValidationBinder` is a `Binder` that is aware of bean validation annotations. 
+By passing it in the `Contact.class`, you define the type of object you are binding to.
+<2> `bindInstanceFields` matches fields in `Contact` and `ContactForm` based on their names.
+
+With these two lines of code, you've made the UI fields ready to be connected to a contact. 
+That's the next step.
+
+== Decoupling Components
+
+In object-oriented programming you often want to decouple objects to increase their re-usability. 
+
+In this app, you have a form component and use it in the `MainView`. 
+The most straightforward approach would appear to be to let the form call methods on `MainView` directly to save a contact. 
+But what happens if you need the same form in another view? 
+Or if you want to write a test to verify that the form works as intended? 
+In both cases, the dependency on `MainView` makes it more complex than is necessary. 
+Coupling a component to a specific parent typically makes it more difficult to reuse and test. 
+
+Instead, you should aim to make components that work in the same way as the Vaadin `Button` component: you can use them anywhere. 
+You configure the component by setting properties, and the component notifies you of events through listeners. 
+
+Creating a reusable component is as simple as making sure it can be configured through setters, and that it fires events whenever something happens. 
+Using the component should not have side effects, for instance it shouldn't change anything in the database by itself.
+
+== Defining the Form Component API
+
+With the visual part of the component complete, the next step is to define the form component API. 
+This is how developers interact with the form.
+
+A good rule of thumb when designing an API for a reusable component is: *_properties in, events out_*. 
+Users should be able to fully configure a component by setting properties.
+They should be notified of all relevant events, without the need to manually call getters to see if things have changed. 
+
+With this in mind, here's what the API consists of:
+
+*Properties in:*
+
+* Set the contact. 
+* Set the list of companies.
+
+*Events out:*
+
+* Save.
+* Delete.
+* Close.
+
+== Setting the Company and Contact Status
+
+The two properties that need to be handled are the contact shown in the form and the list of companies shown in the dropdown. 
+
+To set the company and contact status:
+
+. In `ContactForm`, add the company list as a constructor parameter. 
+Do this first, because the company list is needed before a contact can be edited.
++
+.`ContactForm.java`
+[source,java]
+----
+public ContactForm(List<Company> companies) { <1>
+  addClassName("contact-form");
+  binder.bindInstanceFields(this);
+
+  company.setItems(companies); <2>
+  company.setItemLabelGenerator(Company::getName); <3>
+  status.setItems(Contact.Status.values()); <4>
+ 
+   //omitted
+}
+----
+<1> Adds a list of `Company` objects as a parameter to the constructor.
+<2> Sets the list of `companies` as the items in the company combo box.
+<3> Tells the combo box to use the name of the company as the display value.
+<4> Populates the status dropdown with the values from the `Contact.Status` enum.
++
+**You will get a compilation error if you build the application at this point.** This is because you have not yet passed a list of companies in `MainView`. 
+
+. In `MainView`, update the constructor to take `CompanyService` as a parameter, and then use this service to pass a list of all companies.
++
+.`MainView.java`
+[source,java]
+----
+public MainView(ContactService contactService,
+                CompanyService companyService) { <1>
+    this.contactService = contactService;
+    addClassName("list-view");
+    setSizeFull();
+
+    configureGrid();
+    configureFilter();
+
+    form = new ContactForm(companyService.findAll()); <2>
+
+    add(filterText, grid, form);
+    updateList();
+}
+----
+<1> Auto wires (injects) `CompanyService` as a constructor parameter.
+<2> Finds all companies and passes them to `ContactForm`.
+
+== Updating the Contact
+
+Next, you need to create a setter for the `contact` because it can change over time as a user browses through the contacts. 
+
+To do this, add the following in the `ContactForm` class: 
+
+.`ContactForm.java`
+[source,java]
+----
+public class ContactForm extends FormLayout {
+    private Contact contact;
+
+    // other methods and fields omitted
+
+    public void setContact(Contact contact) {
+        this.contact = contact; <1>
+        binder.readBean(contact); <2>
+    }
+}
+----
+<1> Save a reference to the contact so you can save the form values back into it later.
+<2> Calls `binder.readBean` to bind the values from the contact to the UI fields. 
+`readBean` copies the values from the Contact to an internal model, that way you don't overwrite values if you cancel editing.
+
+== Setting Up Events
+
+Vaadin comes with an event-handling system for components. 
+You have already used it to listen to value-change events from the filter Text Field in the main view. 
+The form component should have a similar way of informing parent components of events. 
+
+To do this, add the following at the end of the `ContactForm` class:
+
+.`ContactForm.java`
+[source,java]
+----
+// Events
+public static abstract class ContactFormEvent extends ComponentEvent<ContactForm> {
+  private Contact contact;
+
+  protected ContactFormEvent(ContactForm source, Contact contact) { <1>
+    super(source, false);
+    this.contact = contact;
+  }
+
+  public Contact getContact() {
+    return contact;
+  }
+}
+
+public static class SaveEvent extends ContactFormEvent {
+  SaveEvent(ContactForm source, Contact contact) {
+    super(source, contact);
+  }
+}
+
+public static class DeleteEvent extends ContactFormEvent {
+  DeleteEvent(ContactForm source, Contact contact) {
+    super(source, contact);
+  }
+
+}
+
+public static class CloseEvent extends ContactFormEvent {
+  CloseEvent(ContactForm source) {
+    super(source, null);
+  }
+}
+
+public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
+    ComponentEventListener<T> listener) { <2>
+  return getEventBus().addListener(eventType, listener);
+}
+----
+<1> `ContactFormEvent` is a common superclass for all the events. 
+It contains the `contact` that was edited or deleted. 
+<2> The `addListener` method uses Vaadin's event bus to register the custom event types. 
+Select the `com.vaadin` import for `Registration` if IntelliJ asks.
+
+== Saving, Deleting, and Closing the Form
+
+With the event types defined, you can now inform anyone using `ContactForm` of relevant events.
+
+To add `save`, `delete` and `close` event listeners, add the following to the `ContactForm` class:
+
+.`ContactForm.java`
+[source,java]
+----
+private Component createButtonsLayout() {
+  // omitted
+
+  save.addClickListener(event -> validateAndSave()); <1> 
+  delete.addClickListener(event -> fireEvent(new DeleteEvent(this, contact))); <2>
+  close.addClickListener(event -> fireEvent(new CloseEvent(this))); <3>
+
+
+  binder.addStatusChangeListener(e -> save.setEnabled(binder.isValid())); <4>
+  return new HorizontalLayout(save, delete, close);
+}
+
+private void validateAndSave() {
+  try {
+    binder.writeBean(contact); <5>
+    fireEvent(new SaveEvent(this, contact)); <6>
+  } catch (ValidationException e) {
+    e.printStackTrace();
+  }
+}
+----
+<1> The save button calls the `validateAndSave` method
+<2> The delete  button fires a delete event and passes the active contact.
+<3> The cancel button fires a close event.
+<4> Validates the form every time it changes. If it is invalid, it disables the save button to avoid invalid submissions.
+<5> Write the form contents back to the original `contact`.
+<6> Fire a save event so the parent component can handle the action.
+
+In the next tutorial, you'll connect the form to the main view so that the selected contact in the form can be edited.
