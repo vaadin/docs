@@ -62,3 +62,58 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
     hierarchyLevelSize,
   };
 }
+
+export type UserPermissions = Readonly<{
+  comment: boolean;
+  edit: boolean;
+  name: string;
+  view: boolean;
+}>;
+
+export const getUserPermissions = async (): Promise<readonly UserPermissions[]> =>
+  getDataset<UserPermissions>('permissions.json');
+
+export enum ReportStatus {
+  Completed,
+  InProgress,
+  Cancelled,
+  OnHold,
+}
+
+export type Report = Readonly<{
+  assignee: string;
+  due: Date;
+  report: string;
+  status: ReportStatus;
+}>;
+
+type RawReport = Readonly<{
+  assignee: string;
+  due: string;
+  report: string;
+  status: string;
+}>;
+
+const getReportStatus = (status: string): ReportStatus => {
+  switch (status) {
+    case 'Completed':
+      return ReportStatus.Completed;
+    case 'In Progress':
+      return ReportStatus.InProgress;
+    case 'Cancelled':
+      return ReportStatus.Cancelled;
+    default:
+      return ReportStatus.OnHold;
+  }
+};
+
+export const getReports = async (): Promise<readonly Report[]> =>
+  (await getDataset<RawReport>('reports.json')).map(({ assignee, due, report, status }) => ({
+    assignee,
+    due: new Date(due),
+    report,
+    status: getReportStatus(status),
+  }));
+
+export const getProfessions = async (): Promise<readonly string[]> =>
+  getDataset<string>('professions.json');

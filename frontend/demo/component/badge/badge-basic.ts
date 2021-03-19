@@ -15,7 +15,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <span theme="badge pill contrast">Badge</span>
+      <span theme="badge">Pending</span>
+      <span theme="badge success">Confirmed</span>
+      <span theme="badge error">Denied</span>
       <!-- end::snippet[] -->
     `;
   }
