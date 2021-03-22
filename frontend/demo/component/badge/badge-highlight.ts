@@ -5,7 +5,7 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import type { GridItemModel } from '@vaadin/vaadin-grid';
 import type { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
-import { css, customElement, html, LitElement } from 'lit-element';
+import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
 import { render } from 'lit-html';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -80,7 +80,7 @@ export class Example extends LitElement {
     }
   `;
 
-  private _items: readonly Report[] = [];
+  @internalProperty() private _items: readonly Report[] = [];
 
   constructor() {
     super();

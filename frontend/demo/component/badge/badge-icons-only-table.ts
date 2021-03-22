@@ -6,7 +6,7 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import type { GridItemModel } from '@vaadin/vaadin-grid';
 import type { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
-import { css, customElement, html, LitElement } from 'lit-element';
+import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
 import { render } from 'lit-html';
 
 const renderBoolean = (
@@ -58,7 +58,7 @@ export class Example extends LitElement {
     }
   `;
 
-  private _items: readonly UserPermissions[] = [];
+  @internalProperty() private _items: readonly UserPermissions[] = [];
 
   constructor() {
     super();

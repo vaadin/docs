@@ -31,7 +31,7 @@ export class Example extends LitElement {
     }
   `;
 
-  private _items: readonly string[] = [];
+  @internalProperty() private _items: readonly string[] = [];
 
   @internalProperty() private _selectedProfessions: readonly string[] = [];
 
