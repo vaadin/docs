@@ -1,7 +1,9 @@
 import '../../init'; // hidden-full-source-line
-
-import { customElement, html, LitElement } from 'lit-element';
+import { createFakeUploadFiles } from './upload-demo-helpers'; // hidden-full-source-line
+// hidden-full-source-line
+import { customElement, html, LitElement, query } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
+import type { UploadElement } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-auto-upload-disabled')
@@ -12,11 +14,40 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
+  @query('vaadin-upload')
+  private upload?: UploadElement;
+
+  firstUpdated() {
+    if (this.upload?.i18n) {
+      this.upload.i18n.addFiles.many = 'Select Files...';
+      this.upload.i18n = { ...this.upload.i18n };
+    }
+    // end::snippet[]
+    this.setFakeStatus();
+    // tag::snippet[]
+  }
+
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-upload></vaadin-upload>
+      <vaadin-upload no-auto></vaadin-upload>
       <!-- end::snippet[] -->
+      <div style="text-align: center; margin-top: var(--lumo-space-l)">
+        <vaadin-button @click="${this.setFakeStatus}">Reset demo</vaadin-button>
+      </div>
+      <!-- tag::snippet[] -->
     `;
+  }
+  // end::snippet[]
+
+  setFakeStatus() {
+    const upload = this.shadowRoot!.querySelector('vaadin-upload');
+    upload!.files = createFakeUploadFiles([
+      {
+        name: 'Workflow.pdf',
+        status: 'Queued',
+        held: true,
+      },
+    ]);
   }
 }
