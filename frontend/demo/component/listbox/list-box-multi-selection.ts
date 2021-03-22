@@ -21,7 +21,7 @@ export class Example extends LitElement {
       <vaadin-list-box
         multiple
         style="height: calc(var(--lumo-size-l) * 5)"
-        .selectedValues="${[0, 3]}"
+        .selectedValues="${['0', '3']}"
       >
         <vaadin-item>Aria Bailey</vaadin-item>
         <vaadin-item>Aaliyah Butler</vaadin-item>
