@@ -1,9 +1,9 @@
 import { getReports, Report, ReportStatus } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import 'Frontend/demo/init'; // hidden-full-source-line
 
+import '@vaadin/vaadin-grid/vaadin-grid';
 import type { GridItemModel } from '@vaadin/vaadin-grid';
 import type { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, LitElement } from 'lit-element';
 import { render } from 'lit-html';

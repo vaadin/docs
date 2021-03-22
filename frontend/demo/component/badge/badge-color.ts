@@ -6,15 +6,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-color')
 export class Example extends LitElement {
-  static styles = css`
-    .color {
-      width: calc(var(--lumo-space-xl) * 10);
-      display: grid;
-      grid-template-rows: 1fr 1fr;
-      grid-gap: var(--lumo-space-s) var(--lumo-space-m);
-      grid-template-columns: repeat(4, max-content);
-    }
-  `;
+  static get styles() {
+    return css`
+      .color {
+        width: calc(var(--lumo-space-xl) * 10);
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        grid-gap: var(--lumo-space-s) var(--lumo-space-m);
+        grid-template-columns: repeat(4, max-content);
+      }
+    `;
+  }
 
   constructor() {
     super();

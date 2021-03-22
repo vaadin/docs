@@ -1,5 +1,6 @@
 import { getUserPermissions, UserPermissions } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import 'Frontend/demo/init'; // hidden-full-source-line
+import './init'; // hidden-full-source-line
 
 import '@vaadin/vaadin-grid/vaadin-grid';
 import type { GridItemModel } from '@vaadin/vaadin-grid';

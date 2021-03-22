@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
+import './init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
