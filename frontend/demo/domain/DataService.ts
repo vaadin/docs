@@ -1,6 +1,10 @@
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import Profession from 'Frontend/generated/com/vaadin/demo/domain/Profession';
+import Report from 'Frontend/generated/com/vaadin/demo/domain/Report';
+import ReportStatus from 'Frontend/generated/com/vaadin/demo/domain/ReportStatus';
+import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 
 const datasetCache: { [key: string]: any[] } = {};
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
@@ -63,33 +67,13 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   };
 }
 
-export type UserPermissions = Readonly<{
-  comment: boolean;
-  edit: boolean;
-  name: string;
-  view: boolean;
-}>;
-
 export const getUserPermissions = async (): Promise<readonly UserPermissions[]> =>
   getDataset<UserPermissions>('permissions.json');
-
-export enum ReportStatus {
-  Completed,
-  InProgress,
-  Cancelled,
-  OnHold,
-}
-
-export type Report = Readonly<{
-  assignee: string;
-  due: Date;
-  report: string;
-  status: ReportStatus;
-}>;
 
 type RawReport = Readonly<{
   assignee: string;
   due: string;
+  id: number;
   report: string;
   status: string;
 }>;
@@ -97,23 +81,24 @@ type RawReport = Readonly<{
 const getReportStatus = (status: string): ReportStatus => {
   switch (status) {
     case 'Completed':
-      return ReportStatus.Completed;
+      return ReportStatus.COMPLETED;
     case 'In Progress':
-      return ReportStatus.InProgress;
+      return ReportStatus.IN_PROGRESS;
     case 'Cancelled':
-      return ReportStatus.Cancelled;
+      return ReportStatus.CANCELLED;
     default:
-      return ReportStatus.OnHold;
+      return ReportStatus.ON_HOLD;
   }
 };
 
 export const getReports = async (): Promise<readonly Report[]> =>
-  (await getDataset<RawReport>('reports.json')).map(({ assignee, due, report, status }) => ({
+  (await getDataset<RawReport>('reports.json')).map(({ assignee, due, id, report, status }) => ({
     assignee,
-    due: new Date(due),
+    due,
+    id,
     report,
     status: getReportStatus(status),
   }));
 
-export const getProfessions = async (): Promise<readonly string[]> =>
-  getDataset<string>('professions.json');
+export const getProfessions = async (): Promise<readonly Profession[]> =>
+  getDataset<Profession>('professions.json');

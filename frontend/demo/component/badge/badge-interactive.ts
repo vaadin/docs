@@ -1,11 +1,13 @@
 import { getProfessions } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import 'Frontend/demo/init'; // hidden-full-source-line
+import Profession from 'Frontend/generated/com/vaadin/demo/domain/Profession'; // hidden-full-source-line
 import './init'; // hidden-full-source-line
 
-import { ButtonElement } from '@vaadin/vaadin-button';
-import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
+import '@vaadin/vaadin-combo-box';
+import '@vaadin/vaadin-button';
+import type { ButtonElement } from '@vaadin/vaadin-button';
+import type { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import { html, LitElement, customElement, css, internalProperty } from 'lit-element';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import { applyTheme } from 'Frontend/generated/theme';
 import { repeat } from 'lit-html/directives/repeat';
 
@@ -31,9 +33,9 @@ export class Example extends LitElement {
     }
   `;
 
-  @internalProperty() private _items: readonly string[] = [];
+  @internalProperty() private _items: readonly Profession[] = [];
 
-  @internalProperty() private _selectedProfessions: readonly string[] = [];
+  @internalProperty() private _selectedProfessions: readonly Profession[] = [];
 
   constructor() {
     super();
@@ -60,15 +62,15 @@ export class Example extends LitElement {
         <div>
           ${repeat(
             this._selectedProfessions,
-            (prof) => prof,
-            (prof) => html`
+            ({ id }) => id,
+            ({ id, name }) => html`
               <span class="badge" theme="badge contrast">
-                ${prof}
+                ${name}
                 <vaadin-button
                   class="badge-btn"
-                  data-prof=${prof}
-                  title="Clear filter: ${prof}"
-                  aria-label="Clear filter: ${prof}"
+                  data-profession=${id}
+                  title="Clear filter: ${name}"
+                  aria-label="Clear filter: ${name}"
                   @click=${this._onClick}
                   theme="contrast tertiary-inline"
                 >
@@ -86,13 +88,24 @@ export class Example extends LitElement {
   private _onChange({ target }: Event) {
     const { value } = target as ComboBoxElement;
 
-    if (!this._selectedProfessions.includes(value)) {
-      this._selectedProfessions = [...this._selectedProfessions, value];
+    if (!value) {
+      return;
+    }
+
+    const changedId = parseInt(value, 10);
+    const changedProfession = this._items.find(({ id }) => id === changedId);
+
+    if (!this._selectedProfessions.find(({ id }) => id === changedId) && changedProfession) {
+      this._selectedProfessions = [...this._selectedProfessions, changedProfession];
     }
   }
 
   private _onClick({ target }: Event) {
-    const { prof } = (target as ButtonElement).dataset;
-    this._selectedProfessions = this._selectedProfessions.filter((p) => p !== prof);
+    const { profession } = (target as ButtonElement).dataset;
+
+    if (profession) {
+      const professionId = parseInt(profession, 10);
+      this._selectedProfessions = this._selectedProfessions.filter(({ id }) => id !== professionId);
+    }
   }
 }

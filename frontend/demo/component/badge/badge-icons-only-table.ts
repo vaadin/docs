@@ -1,10 +1,11 @@
-import { getUserPermissions, UserPermissions } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
+import { getUserPermissions } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import 'Frontend/demo/init'; // hidden-full-source-line
-import './init'; // hidden-full-source-line
+import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions'; // hidden-full-source-line
 
-import '@vaadin/vaadin-grid/vaadin-grid';
-import type { GridItemModel } from '@vaadin/vaadin-grid';
-import type { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-grid';
+import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-lumo-styles/icons';
+import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
 import { render } from 'lit-html';

@@ -1,9 +1,10 @@
-import { getReports, Report, ReportStatus } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
+import { getReports } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import 'Frontend/demo/init'; // hidden-full-source-line
+import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-full-source-line
+import ReportStatus from 'Frontend/generated/com/vaadin/demo/domain/ReportStatus'; // hidden-full-source-line
 
-import '@vaadin/vaadin-grid/vaadin-grid';
-import type { GridItemModel } from '@vaadin/vaadin-grid';
-import type { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-grid';
+import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
 import { render } from 'lit-html';
@@ -19,7 +20,7 @@ const renderDate = (root: HTMLElement, column?: GridColumnElement, model?: GridI
     return;
   }
 
-  render(html`${dateFormatter.format((model.item as Report).due)}`, root);
+  render(html`${dateFormatter.format(new Date((model.item as Report).due))}`, root);
 };
 
 const renderStatus = (root: HTMLElement, column?: GridColumnElement, model?: GridItemModel) => {
@@ -34,17 +35,17 @@ const renderStatus = (root: HTMLElement, column?: GridColumnElement, model?: Gri
   let theme: string;
 
   switch (status) {
-    case ReportStatus.Completed:
+    case ReportStatus.COMPLETED:
       icon = 'lumo:checkmark';
       title = 'Completed';
       theme = 'success';
       break;
-    case ReportStatus.InProgress:
+    case ReportStatus.IN_PROGRESS:
       icon = 'lumo:cog';
       title = 'In Progress';
       theme = '';
       break;
-    case ReportStatus.Cancelled:
+    case ReportStatus.CANCELLED:
       icon = 'lumo:cross';
       title = 'Cancelled';
       theme = 'error';
