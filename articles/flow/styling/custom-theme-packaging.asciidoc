@@ -1,0 +1,91 @@
+---
+title: Packaging a Theme
+order: 27
+layout: page
+---
+
+= Packaging a Theme for Reuse
+:toclevels: 2
+
+[role="since:com.vaadin:vaadin@V14.6 standalone"]
+--
+--
+
+A custom theme can be packaged into a JAR file for use in multiple applications as follows:
+
+. Create a new Maven project with the following structure and add your theme files to the theme folder (1):
++
+[source, filesystem]
+----
+[project root]
+├── src
+│   └── main
+│       └── resources
+│           └── META-INF
+│               └── resources
+│                   └── themes
+│                       └── my-theme  <1>
+└── pom.xml
+----
+
+. Update [filename]#pom.xml# as follows:
+** Add the Vaadin version property:
++
+.`pom.xml`
+[source, XML]
+----
+<vaadin.version>14.6.0</vaadin.version>
+----
+
+** Add dependency management:
++
+[source, XML]
+----
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-bom</artifactId>
+      <version>${vaadin.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+----
+
+** Update dependencies to only contain the following:
++
+[source, XML]
+----
+<dependency>
+  <groupId>com.vaadin</groupId>
+  <artifactId>vaadin</artifactId>
+  <scope>provided</scope>
+</dependency>
+----
+
+. If the theme uses npm assets, as described in <<custom-theme-configuration#stylesheets, Style Sheets From npm Packages>>, add a [filename]#Dependencies.java# class (1) with the corresponding [classname]#@NpmPackage# annotations:
++
+[source, filesystem]
+----
+[project root]
+└── src
+    └── main
+        └── java
+            └── com
+                └── vaadin
+                    └── flow
+                        └── theme
+                            └── Dependencies.java  (1)
+----
++
+.Dependency class package
+[NOTE]
+The package in which the java class is placed does not have to be [classname]#com.vaadin.flow.theme# package as in the example above, but it is recommended for themes that are going to be used in Vaadin Spring Boot applications, as it is always automatically scanned.
+Other recommended packages are [classname]#com.vaadin.flow.component# and [classname]#com.vaadin.shrinkwrap#.
+See Vaadin’s <<{articles}/flow/integrations/spring/tutorial-spring-configuration#special-configuration-parameters, Spring package scanning documentation>> for using other custom packages.
+
+. Create the JAR with `mvn install`.
+
+To use the packaged theme in an application, add the JAR as a dependency and apply the theme using the @Theme annotation.
