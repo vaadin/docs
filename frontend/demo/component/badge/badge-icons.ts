@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('badge-icons')
 export class Example extends LitElement {
   static styles = css`
-    :host {
+    .container {
       width: calc(var(--lumo-space-xl) * 7.5);
       display: grid;
       grid-template-columns: repeat(3, max-content);
@@ -25,32 +25,34 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <span theme="badge">
-        <iron-icon icon="lumo:clock"></iron-icon>
-        <span>Pending</span>
-      </span>
-      <span theme="badge success">
-        <iron-icon icon="lumo:checkmark"></iron-icon>
-        <span>Confirmed</span>
-      </span>
-      <span theme="badge error">
-        <iron-icon icon="lumo:error"></iron-icon>
-        <span>Denied</span>
-      </span>
-      <span theme="badge">
-        <span>Pending</span>
-        <iron-icon icon="lumo:clock"></iron-icon>
-      </span>
-      <span theme="badge success">
-        <span>Confirmed</span>
-        <iron-icon icon="lumo:checkmark"></iron-icon>
-      </span>
-      <span theme="badge error">
-        <span>Denied</span>
-        <iron-icon icon="lumo:error"></iron-icon>
-      </span>
-      <!-- end::snippet[] -->
+      <section class="container">
+        <!-- tag::snippet[] -->
+        <span theme="badge">
+          <iron-icon icon="lumo:clock"></iron-icon>
+          <span>Pending</span>
+        </span>
+        <span theme="badge success">
+          <iron-icon icon="lumo:checkmark"></iron-icon>
+          <span>Confirmed</span>
+        </span>
+        <span theme="badge error">
+          <iron-icon icon="lumo:error"></iron-icon>
+          <span>Denied</span>
+        </span>
+        <span theme="badge">
+          <span>Pending</span>
+          <iron-icon icon="lumo:clock"></iron-icon>
+        </span>
+        <span theme="badge success">
+          <span>Confirmed</span>
+          <iron-icon icon="lumo:checkmark"></iron-icon>
+        </span>
+        <span theme="badge error">
+          <span>Denied</span>
+          <iron-icon icon="lumo:error"></iron-icon>
+        </span>
+        <!-- end::snippet[] -->
+      </section>
     `;
   }
 }

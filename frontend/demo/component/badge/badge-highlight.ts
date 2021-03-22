@@ -70,12 +70,12 @@ const renderStatus = (root: HTMLElement, column?: GridColumnElement, model?: Gri
 @customElement('badge-highlight')
 export class Example extends LitElement {
   static styles = css`
-    :host {
+    .container {
       box-sizing: border-box;
       width: calc(var(--lumo-space-xl) * 15);
     }
 
-    :host vaadin-grid {
+    .container vaadin-grid {
       height: calc(var(--lumo-space-xl) * 5.125);
     }
   `;
@@ -94,14 +94,16 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-grid .items=${this._items}>
-        <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
-        <vaadin-grid-column header="Due Date" .renderer=${renderDate}></vaadin-grid-column>
-        <vaadin-grid-column path="assignee" header="Assignee"></vaadin-grid-column>
-        <vaadin-grid-column header="Status" .renderer=${renderStatus}></vaadin-grid-column>
-      </vaadin-grid>
-      <!-- end::snippet[] -->
+      <section class="container">
+        <!-- tag::snippet[] -->
+        <vaadin-grid .items=${this._items}>
+          <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
+          <vaadin-grid-column header="Due Date" .renderer=${renderDate}></vaadin-grid-column>
+          <vaadin-grid-column path="assignee" header="Assignee"></vaadin-grid-column>
+          <vaadin-grid-column header="Status" .renderer=${renderStatus}></vaadin-grid-column>
+        </vaadin-grid>
+        <!-- end::snippet[] -->
+      </section>
     `;
   }
 }

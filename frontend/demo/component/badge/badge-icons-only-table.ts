@@ -48,12 +48,12 @@ const renderBoolean = (
 @customElement('badge-icons-only-table')
 export class Example extends LitElement {
   static styles = css`
-    :host {
+    .container {
       box-sizing: border-box;
       width: calc(var(--lumo-space-xl) * 15);
     }
 
-    :host vaadin-grid {
+    .container vaadin-grid {
       height: calc(var(--lumo-space-xl) * 4.25);
     }
   `;
@@ -72,18 +72,28 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-grid .items=${this._items}>
-        <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
-        <vaadin-grid-column id="view" header="View" .renderer=${renderBoolean}></vaadin-grid-column>
-        <vaadin-grid-column
-          id="comment"
-          header="Comment"
-          .renderer=${renderBoolean}
-        ></vaadin-grid-column>
-        <vaadin-grid-column id="edit" header="Edit" .renderer=${renderBoolean}></vaadin-grid-column>
-      </vaadin-grid>
-      <!-- end::snippet[] -->
+      <section class="container">
+        <!-- tag::snippet[] -->
+        <vaadin-grid .items=${this._items}>
+          <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
+          <vaadin-grid-column
+            id="view"
+            header="View"
+            .renderer=${renderBoolean}
+          ></vaadin-grid-column>
+          <vaadin-grid-column
+            id="comment"
+            header="Comment"
+            .renderer=${renderBoolean}
+          ></vaadin-grid-column>
+          <vaadin-grid-column
+            id="edit"
+            header="Edit"
+            .renderer=${renderBoolean}
+          ></vaadin-grid-column>
+        </vaadin-grid>
+        <!-- end::snippet[] -->
+      </section>
     `;
   }
 }

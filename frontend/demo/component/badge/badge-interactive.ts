@@ -12,7 +12,7 @@ import { repeat } from 'lit-html/directives/repeat';
 @customElement('badge-interactive')
 export class Example extends LitElement {
   static styles = css`
-    :host {
+    .container {
       display: flex;
       flex-direction: column;
     }
@@ -47,37 +47,39 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-combo-box
-        class="combobox"
-        label="Profession"
-        .itemLabelPath="name"
-        .itemValuePath="id"
-        .items="${this._items}"
-        @change=${this._onChange}
-      ></vaadin-combo-box>
-      <div>
-        ${repeat(
-          this._selectedProfessions,
-          (prof) => prof,
-          (prof) => html`
-            <span class="badge" theme="badge contrast">
-              ${prof}
-              <vaadin-button
-                class="badge-btn"
-                data-prof=${prof}
-                title="Clear filter: ${prof}"
-                aria-label="Clear filter: ${prof}"
-                @click=${this._onClick}
-                theme="contrast tertiary-inline"
-              >
-                <iron-icon icon="lumo:cross"></iron-icon>
-              </vaadin-button>
-            </span>
-          `
-        )}
-      </div>
-      <!-- end::snippet[] -->
+      <section class="container">
+        <!-- tag::snippet[] -->
+        <vaadin-combo-box
+          class="combobox"
+          label="Profession"
+          .itemLabelPath="name"
+          .itemValuePath="id"
+          .items="${this._items}"
+          @change=${this._onChange}
+        ></vaadin-combo-box>
+        <div>
+          ${repeat(
+            this._selectedProfessions,
+            (prof) => prof,
+            (prof) => html`
+              <span class="badge" theme="badge contrast">
+                ${prof}
+                <vaadin-button
+                  class="badge-btn"
+                  data-prof=${prof}
+                  title="Clear filter: ${prof}"
+                  aria-label="Clear filter: ${prof}"
+                  @click=${this._onClick}
+                  theme="contrast tertiary-inline"
+                >
+                  <iron-icon icon="lumo:cross"></iron-icon>
+                </vaadin-button>
+              </span>
+            `
+          )}
+        </div>
+        <!-- end::snippet[] -->
+      </section>
     `;
   }
 
