@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 export class Example extends LitElement {
   static get styles() {
     return css`
-      .color {
+      :host {
         width: calc(var(--lumo-space-xl) * 10);
         display: grid;
         grid-template-rows: 1fr 1fr;

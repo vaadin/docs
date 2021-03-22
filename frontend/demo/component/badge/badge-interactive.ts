@@ -31,8 +31,6 @@ export class Example extends LitElement {
     }
   `;
 
-  public ['constructor']: typeof Example;
-
   private _items: readonly string[] = [];
 
   @internalProperty() private _selectedProfessions: readonly string[] = [];

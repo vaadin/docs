@@ -1,11 +1,18 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-list-box';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-counter')
 export class Example extends LitElement {
+  static styles = css`
+    vaadin-item {
+      display: flex;
+      justify-content: space-between;
+    }
+  `;
+
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
