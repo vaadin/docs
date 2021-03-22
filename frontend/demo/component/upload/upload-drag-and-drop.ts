@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-drag-and-drop')
 export class Example extends LitElement {
