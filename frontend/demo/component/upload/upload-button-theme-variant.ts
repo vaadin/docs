@@ -28,7 +28,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-upload max-files="1">
+      <vaadin-upload max-files="1" accept="application/pdf,.pdf">
         <vaadin-button slot="add-button" theme="primary">Upload PDF...</vaadin-button>
       </vaadin-upload>
       <!-- end::snippet[] -->

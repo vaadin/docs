@@ -42,7 +42,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <h4>Upload report</h4>
       <p>Accepted file formats: PDF (.pdf)</p>
-      <vaadin-upload accept="application/pdf" max-files="1"></vaadin-upload>
+      <vaadin-upload accept="application/pdf,.pdf" max-files="1"></vaadin-upload>
       <!-- end::snippet[] -->
     `;
   }
