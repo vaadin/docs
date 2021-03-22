@@ -3,7 +3,7 @@ import './upload-demo-helpers'; // hidden-full-source-line
 // hidden-full-source-line
 import { customElement, html, LitElement, query } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadElement } from '@vaadin/vaadin-upload/vaadin-upload';
+import type { UploadElement, UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-labelling')
@@ -27,7 +27,17 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`<vaadin-upload max-files="1" accept="application/pdf,.pdf"></vaadin-upload>`;
+    return html`
+      <vaadin-upload
+        max-files="1"
+        accept="application/pdf,.pdf"
+        @file-reject="${this.fileRejectHandler}"
+      ></vaadin-upload>
+    `;
   }
   // end::snippet[]
+
+  fileRejectHandler(event: UploadFileReject) {
+    window.alert(event.detail.file.name + ' error: ' + event.detail.error);
+  }
 }

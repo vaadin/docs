@@ -3,6 +3,7 @@ import './upload-demo-helpers'; // hidden-full-source-line
 // hidden-full-source-line
 import { css, customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
+import type { UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-size')
@@ -32,8 +33,16 @@ export class Example extends LitElement {
     return html`
       <h4>Upload file</h4>
       <p>Maximum file size: ${maxFileSizeInMB} MB</p>
-      <vaadin-upload .maxFileSize="${maxFileSizeInBytes}" max-files="1"></vaadin-upload>
+      <vaadin-upload
+        max-files="1"
+        .maxFileSize="${maxFileSizeInBytes}"
+        @file-reject="${this.fileRejectHandler}"
+      ></vaadin-upload>
     `;
   }
   // end::snippet[]
+
+  fileRejectHandler(event: UploadFileReject) {
+    window.alert(event.detail.file.name + ' error: ' + event.detail.error);
+  }
 }

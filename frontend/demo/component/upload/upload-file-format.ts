@@ -3,7 +3,7 @@ import './upload-demo-helpers'; // hidden-full-source-line
 // hidden-full-source-line
 import { css, customElement, html, LitElement, query } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadElement } from '@vaadin/vaadin-upload/vaadin-upload';
+import type { UploadElement, UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-format')
@@ -42,8 +42,16 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <h4>Upload report</h4>
       <p>Accepted file formats: PDF (.pdf)</p>
-      <vaadin-upload accept="application/pdf,.pdf" max-files="1"></vaadin-upload>
+      <vaadin-upload
+        accept="application/pdf,.pdf"
+        max-files="1"
+        @file-reject="${this.fileRejectHandler}"
+      ></vaadin-upload>
       <!-- end::snippet[] -->
     `;
+  }
+
+  fileRejectHandler(event: UploadFileReject) {
+    window.alert(event.detail.file.name + ' error: ' + event.detail.error);
   }
 }

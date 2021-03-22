@@ -3,6 +3,7 @@ import './upload-demo-helpers'; // hidden-full-source-line
 // hidden-full-source-line
 import { css, customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
+import type { UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-count')
@@ -31,8 +32,15 @@ export class Example extends LitElement {
     return html`
       <h4>Upload files</h4>
       <p>Maximum of ${maxFiles} files allowed</p>
-      <vaadin-upload .maxFiles="${maxFiles}"></vaadin-upload>
+      <vaadin-upload
+        .maxFiles="${maxFiles}"
+        @file-reject="${this.fileRejectHandler}"
+      ></vaadin-upload>
     `;
   }
   // end::snippet[]
+
+  fileRejectHandler(event: UploadFileReject) {
+    window.alert(event.detail.file.name + ' error: ' + event.detail.error);
+  }
 }
