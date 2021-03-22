@@ -1,4 +1,5 @@
 import '../../init'; // hidden-full-source-line
+import '@vaadin/flow-frontend/contextMenuConnector'; // hidden-full-source-line
 import '@vaadin/flow-frontend/menubarConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
