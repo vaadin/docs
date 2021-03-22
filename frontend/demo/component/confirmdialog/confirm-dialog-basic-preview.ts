@@ -67,23 +67,15 @@ export class Example extends LitElement {
       <div class="overlay">
         <div class="content">
           <vaadin-vertical-layout theme="spacing" style="align-items: stretch;">
-            <h3 style="margin: var(--lumo-space-l) 0 0 0;">
-              Unsaved changes
-            </h3>
+            <h3 style="margin: var(--lumo-space-l) 0 0 0;">Unsaved changes</h3>
             <p style="margin-bottom: 0;">
               There are unsaved changes. Do you want to discard or save them?
             </p>
             <vaadin-horizontal-layout id="footer">
-              <vaadin-button theme="tertiary">
-                Cancel
-              </vaadin-button>
+              <vaadin-button theme="tertiary">Cancel</vaadin-button>
               <div style="flex-grow: 1;"></div>
-              <vaadin-button theme="error tertiary">
-                Discard
-              </vaadin-button>
-              <vaadin-button theme="primary">
-                Save
-              </vaadin-button>
+              <vaadin-button theme="error tertiary">Discard</vaadin-button>
+              <vaadin-button theme="primary">Save</vaadin-button>
             </vaadin-horizontal-layout>
           </vaadin-vertical-layout>
         </div>
