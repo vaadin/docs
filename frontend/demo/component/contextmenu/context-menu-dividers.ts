@@ -36,7 +36,7 @@ export class Example extends LitElement {
           { text: 'Delete' },
           { component: 'hr' },
           { text: 'Email' },
-          { text: 'Call' }
+          { text: 'Call' },
         ]}
       >
         <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>

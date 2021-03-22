@@ -27,19 +27,19 @@ export class Example extends LitElement {
       children: [
         { text: 'PDF Document', disabled: true },
         { text: 'Rich Text Format' },
-        { text: 'Plain Text' }
-      ]
+        { text: 'Plain Text' },
+      ],
     },
     { text: 'Share', children: [{ text: 'Copy link' }, { text: 'Vaadin' }] },
     { component: 'hr' },
-    { text: 'Delete' }
+    { text: 'Delete' },
   ];
   // end::snippet[]
 
   @internalProperty()
   private gridItems = [
     { filename: 'Annual Report.pdf', size: '23 MB' },
-    { filename: 'Financials.xlsx', size: '42 MB' }
+    { filename: 'Financials.xlsx', size: '42 MB' },
   ];
 
   render() {

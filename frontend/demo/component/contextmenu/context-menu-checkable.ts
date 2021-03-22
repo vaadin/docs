@@ -6,7 +6,7 @@ import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import { applyTheme } from 'Frontend/generated/theme';
 import {
   ContextMenuItem,
-  ContextMenuItemSelected
+  ContextMenuItemSelected,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
 @customElement('context-menu-checkable')
@@ -24,7 +24,7 @@ export class Example extends LitElement {
     { text: 'Allison Torres' },
     { text: 'Anna Myers' },
     { text: 'Lauren Wright' },
-    { text: 'Tamaki Ryushi' }
+    { text: 'Tamaki Ryushi' },
   ];
 
   @internalProperty()
@@ -35,7 +35,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu
-        .items=${this.items.map(item => {
+        .items=${this.items.map((item) => {
           return { ...item, checked: item === this.selectedItem };
         })}
         @item-selected=${this.itemSelected}
@@ -49,7 +49,7 @@ export class Example extends LitElement {
   // tag::snippetselected[]
   itemSelected(e: ContextMenuItemSelected) {
     this.selectedItem = this.items.find(
-      item => item.text === e.detail.value.text
+      (item) => item.text === e.detail.value.text
     ) as ContextMenuItem;
   }
   // end::snippetselected[]

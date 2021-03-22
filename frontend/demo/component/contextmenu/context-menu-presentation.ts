@@ -44,15 +44,15 @@ export class Example extends LitElement {
           { text: 'Senior Managers', component: this.createHeader() },
           { component: itemsArray[3] },
           { component: itemsArray[4] },
-          { component: itemsArray[5] }
-        ]
+          { component: itemsArray[5] },
+        ],
       },
       {
         component: this.createItem('vaadin:clipboard-check', 'Status'),
-        children: [{ text: 'Assigned' }, { text: 'Promoted' }]
+        children: [{ text: 'Assigned' }, { text: 'Promoted' }],
       },
       { component: 'hr' },
-      { component: this.createItem('vaadin:trash', 'Delete') }
+      { component: this.createItem('vaadin:trash', 'Delete') },
     ];
   }
   // end::snippet[]
