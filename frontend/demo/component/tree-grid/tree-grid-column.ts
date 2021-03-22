@@ -3,11 +3,11 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 
 import { customElement, internalProperty, LitElement } from 'lit-element';
 import { html } from 'lit-html';
+import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-grid/vaadin-grid';
+import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-button/vaadin-button';
-import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -26,7 +26,7 @@ export class Example extends LitElement {
     params: GridDataProviderParams,
     callback: GridDataProviderCallback
   ) => {
-    const { people, hierarhcyLevelSize } = await getPeople({
+    const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
       managerId: params.parentItem ? (params.parentItem as Person).id : null,
@@ -36,7 +36,7 @@ export class Example extends LitElement {
       this.managers = people;
     }
 
-    callback(people, hierarhcyLevelSize);
+    callback(people, hierarchyLevelSize);
   };
 
   // tag::snippet[]
@@ -45,8 +45,11 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing">
-        <h2 style="flex: 1; margin-bottom: 0; margin-top: 0;">Employee</h2>
+      <vaadin-horizontal-layout
+        style="align-items: center; height: var(--lumo-size-xl);"
+        theme="spacing"
+      >
+        <h3 style="flex-grow: 1; margin: 0;">Employee</h3>
         <vaadin-button @click=${() => (this.expandedItems = [...this.managers])}>
           Expand All
         </vaadin-button>

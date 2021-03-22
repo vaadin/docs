@@ -3,6 +3,7 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 
 import { customElement, internalProperty, LitElement } from 'lit-element';
 import { html } from 'lit-html';
+import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
@@ -33,13 +34,13 @@ export class Example extends LitElement {
   private expandedItems: Person[] = [];
 
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
-    const { people, hierarhcyLevelSize } = await getPeople({
+    const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
       managerId: params.parentItem ? (params.parentItem as Person).id : null,
     });
 
-    callback(people, hierarhcyLevelSize);
+    callback(people, hierarchyLevelSize);
   }
 
   // tag::snippet[]
@@ -65,19 +66,22 @@ export class Example extends LitElement {
                 }
               }}
               .expanded=${!!model.expanded}
-            ></vaadin-grid-tree-toggle>
-
-            <img
-              .src=${person.pictureUrl}
-              style="height: var(--lumo-size-m); width: var(--lumo-size-m); align-self: center;"
-            />
-
-            <vaadin-vertical-layout>
-              <span>${person.firstName} ${person.lastName}</span>
-              <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-contrast-70pct);">
-                ${person.profession}
-              </span>
-            </vaadin-vertical-layout>
+            >
+            </vaadin-grid-tree-toggle>
+            <vaadin-horizontal-layout theme="spacing">
+              <vaadin-avatar
+                img=${person.pictureUrl}
+                name=${`${person.firstName} ${person.lastName}`}
+              ></vaadin-avatar>
+              <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+                <span>${person.firstName} ${person.lastName}</span>
+                <span
+                  style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+                >
+                  ${person.profession}
+                </span>
+              </vaadin-vertical-layout>
+            </vaadin-horizontal-layout>
           </vaadin-horizontal-layout>
         `,
         root
@@ -91,16 +95,22 @@ export class Example extends LitElement {
       render(
         html`
           <vaadin-vertical-layout
-            style="color: var(--lumo-primary-color); font-size: var(--lumo-font-size-s);"
+            style="font-size: var(--lumo-font-size-s); line-height: var(--lumo-line-height-m);"
           >
-            <div>
-              <iron-icon icon="vaadin:envelope" style="height: var(--lumo-font-size-m)"></iron-icon>
+            <a href="mailto:${person.email}" style="align-items: center; display: flex;">
+              <iron-icon
+                icon="vaadin:envelope"
+                style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+              ></iron-icon>
               <span>${person.email}</span>
-            </div>
-            <div>
-              <iron-icon icon="vaadin:phone" style="height: var(--lumo-font-size-m)"></iron-icon>
+            </a>
+            <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
+              <iron-icon
+                icon="vaadin:phone"
+                style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+              ></iron-icon>
               <span>${person.address.phone}</span>
-            </div>
+            </a>
           </vaadin-vertical-layout>
         `,
         root

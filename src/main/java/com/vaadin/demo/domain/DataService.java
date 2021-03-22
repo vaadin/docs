@@ -35,9 +35,9 @@ public class DataService {
     return getPeople().subList(0, count);
   }
 
-  public static List<Person> getPeople(int count, Integer managarId) {
+  public static List<Person> getPeople(int count, Integer managerId) {
     List<Person> people = getPeople();
-    people.removeIf((Person person) -> person.getManagerId() != managarId);
+    people.removeIf((Person person) -> person.getManagerId() != managerId);
     return people.subList(0, count);
   }
 

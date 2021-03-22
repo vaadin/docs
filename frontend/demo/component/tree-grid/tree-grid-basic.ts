@@ -21,14 +21,14 @@ export class Example extends LitElement {
   // tag::snippet[]
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
     // The requested page and the full length of the corresponding
-    // hierarhcy level is requested from the data service
-    const { people, hierarhcyLevelSize } = await getPeople({
+    // hierarchy level is requested from the data service
+    const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
       managerId: params.parentItem ? (params.parentItem as Person).id : null,
     });
 
-    callback(people, hierarhcyLevelSize);
+    callback(people, hierarchyLevelSize);
   }
 
   render() {
