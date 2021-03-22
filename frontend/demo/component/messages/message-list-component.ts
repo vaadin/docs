@@ -1,9 +1,9 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-messages/vaadin-message-list';
-import { applyTheme } from 'generated/theme';
-import { getPeople } from '../../domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import MessageListItem from './MessageListItem';
 
 @customElement('message-list-component')
@@ -18,7 +18,7 @@ export class Example extends LitElement {
   private items: MessageListItem[] = [];
 
   async firstUpdated() {
-    const people = await getPeople(1);
+    const { people } = await getPeople({ count: 1 });
     const person = people[0];
     this.items = [
       {
@@ -26,7 +26,7 @@ export class Example extends LitElement {
         time: 'yesterday',
         userName: 'Matt Mambo',
         userAbbr: 'MM',
-        userColorIndex: 1
+        userColorIndex: 1,
       },
       {
         text: 'Another message',
@@ -34,8 +34,8 @@ export class Example extends LitElement {
         userName: 'Linsey Listy',
         userAbbr: 'LL',
         userColorIndex: 2,
-        userImg: person.pictureUrl
-      }
+        userImg: person.pictureUrl,
+      },
     ];
   }
 

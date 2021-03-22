@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
@@ -37,9 +37,7 @@ export class Example extends LitElement {
                 Undo
                 <!-- Ideally, this should also be hidden if the
                      device does not have a physical keyboard -->
-                <span aria-hidden="true">
-                  &nbsp; ${this.isMac ? '⌘' : 'Ctrl-'}Z
-                </span>
+                <span aria-hidden="true"> &nbsp; ${this.isMac ? '⌘' : 'Ctrl-'}Z </span>
               </vaadin-button>
             `,
             root
@@ -54,7 +52,7 @@ export class Example extends LitElement {
   }
 
   firstUpdated() {
-    document.addEventListener('keydown', e => {
+    document.addEventListener('keydown', (e) => {
       if (this.notificationOpen && (e.metaKey || e.ctrlKey) && e.key == 'z') {
         // Handle your custom undo logic here
         // Avoid triggering the native undo action

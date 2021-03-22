@@ -1,11 +1,11 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import { getCountries } from '../../domain/DataService';
-import Country from '../../../generated/com/vaadin/demo/domain/Country';
-import { applyTheme } from 'generated/theme';
+import { getCountries } from 'Frontend/demo/domain/DataService';
+import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('combo-box-filtering-2')
@@ -40,7 +40,7 @@ export class Example extends LitElement {
 
   private filterChanged(e: CustomEvent) {
     const filter = e.detail.value as string;
-    this.filteredItems = this.allItems.filter(country => {
+    this.filteredItems = this.allItems.filter((country) => {
       return country.name.toLowerCase().startsWith(filter.toLowerCase());
     });
   }

@@ -1,12 +1,12 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-line
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 import { Binder, field } from '@vaadin/form';
-import AppointmentModel from '../../../generated/com/vaadin/demo/domain/AppointmentModel';
-import { applyTheme } from 'generated/theme';
+import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-custom-validation')
 export class Example extends LitElement {
@@ -26,7 +26,7 @@ export class Example extends LitElement {
         const date = new Date(startDateTime);
         const validWeekDay = date.getDay() >= 1 && date.getDay() <= 5;
         return validWeekDay;
-      }
+      },
     });
     this.binder.for(this.binder.model.startDateTime).addValidator({
       message: 'The selected time is not available',
@@ -35,7 +35,7 @@ export class Example extends LitElement {
         const validTime =
           (time >= '08:00' && time <= '12:00') || (time >= '13:00' && time <= '16:00');
         return validTime;
-      }
+      },
     });
   }
 

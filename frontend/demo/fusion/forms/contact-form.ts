@@ -3,9 +3,9 @@ import { customElement, html, LitElement, property } from 'lit-element';
 import '@vaadin/vaadin-upload';
 import '@vaadin/vaadin-button';
 
-import Contact from '../../../generated/com/vaadin/demo/fusion/forms/Contact';
-import ContactModel from '../../../generated/com/vaadin/demo/fusion/forms/ContactModel';
-import { saveContact } from '../../../generated/ContactEndpoint';
+import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
+import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
+import { ContactEndpoint } from 'Frontend/generated/ContactEndpoint';
 
 import { Binder } from '@vaadin/form';
 
@@ -42,6 +42,6 @@ export class ContactForm extends LitElement {
   }
 
   async save() {
-    await this.binder.submitTo(saveContact);
+    await this.binder.submitTo(ContactEndpoint.saveContact);
   }
 }

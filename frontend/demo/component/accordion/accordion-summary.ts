@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
@@ -10,16 +10,16 @@ import '@vaadin/vaadin-text-field/vaadin-email-field';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import '@vaadin/vaadin-button/vaadin-button';
 import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout';
-import Country from '../../../generated/com/vaadin/demo/domain/Country';
-import { getCountries } from '../../domain/DataService';
+import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import { getCountries } from 'Frontend/demo/domain/DataService';
 import { Binder, field } from '@vaadin/form';
-import PersonModel from '../../../generated/com/vaadin/demo/domain/PersonModel';
-import CardModel from '../../../generated/com/vaadin/demo/domain/CardModel';
-import { applyTheme } from 'generated/theme';
+import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
+import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
+import { applyTheme } from 'Frontend/generated/theme';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },
-  { minWidth: '20em', columns: 2 }
+  { minWidth: '20em', columns: 2 },
 ];
 
 @customElement('accordion-summary')
@@ -104,8 +104,10 @@ export class Example extends LitElement {
               >
 
               <span
-                >${// @ts-ignore Workaround a Binder issue
-                this.personBinder.value.address?.country?.name}</span
+                >${
+                  // @ts-ignore Workaround a Binder issue
+                  this.personBinder.value.address?.country?.name
+                }</span
               >
             </vaadin-vertical-layout>
           </div>

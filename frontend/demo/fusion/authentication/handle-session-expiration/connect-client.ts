@@ -7,7 +7,7 @@ const client = new ConnectClient({
       setSessionExpired();
       const { LoginView } = await import('./login-overlay');
       return LoginView.showOverlay();
-    })
-  ]
+    }),
+  ],
 });
 export default client;
