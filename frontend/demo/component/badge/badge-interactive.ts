@@ -1,10 +1,11 @@
 import { getProfessions } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import 'Frontend/demo/init'; // hidden-full-source-line
 import Profession from 'Frontend/generated/com/vaadin/demo/domain/Profession'; // hidden-full-source-line
-import './init'; // hidden-full-source-line
 
-import '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-button';
+import '@vaadin/vaadin-combo-box';
+import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-lumo-styles/icons';
 import type { ButtonElement } from '@vaadin/vaadin-button';
 import type { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import { html, LitElement, customElement, css, internalProperty } from 'lit-element';
