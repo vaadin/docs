@@ -68,7 +68,7 @@ export class Example extends LitElement {
               .expanded=${!!model.expanded}
             >
             </vaadin-grid-tree-toggle>
-            <vaadin-horizontal-layout theme="spacing">
+            <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
               <vaadin-avatar
                 img=${person.pictureUrl}
                 name=${`${person.firstName} ${person.lastName}`}
