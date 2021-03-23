@@ -1,19 +1,11 @@
 import '../../init'; // hidden-full-source-line
-import { createFakeUploadFiles } from './upload-demo-helpers'; // hidden-full-source-line
-import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
+import { fakeErrorResponse, fakeErrorResponseWrapper } from './upload-demo-helpers'; // hidden-full-source-line
+/* prettier-ignore */ import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-full-source-line
+import { internalProperty } from 'lit-element'; // hidden-full-source-line
+import { css, customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
-
-function createFakeFilesA() {
-  return createFakeUploadFiles([{ name: 'Financials.xlsx', error: 'Unexpected Server Error' }]);
-}
-
-function createFakeFilesB() {
-  return createFakeUploadFiles([
-    { name: 'Financials.xlsx', error: "File couldn't be uploaded, please try again" },
-  ]);
-}
 
 @customElement('upload-error-messages')
 export class Example extends LitElement {
@@ -39,27 +31,13 @@ export class Example extends LitElement {
     super();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
-    this.uploadResponseHandler = this.fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-full-source-line
+    this.uploadResponseHandler = fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-full-source-line
   }
+  @internalProperty() // hidden-full-source-line
+  private filesA = createFakeFilesUploadErrorMessagesA(); // hidden-full-source-line
+  @internalProperty() // hidden-full-source-line
+  private filesB = createFakeFilesUploadErrorMessagesB(); // hidden-full-source-line
 
-  @internalProperty()
-  private filesA = createFakeFilesA();
-
-  @internalProperty()
-  private filesB = createFakeFilesB();
-
-  fakeErrorResponse(event: UploadResponse) {
-    // eslint-disable-line -- hidden-full-source-line
-    (event.detail.xhr.status as any) = 500; // hidden-full-source-line
-  } // hidden-full-source-line
-  fakeErrorResponseWrapper(callback: (event: UploadResponse) => void) {
-    // eslint-disable-line -- hidden-full-source-line
-    return (event: UploadResponse) => {
-      // eslint-disable-line -- hidden-full-source-line
-      this.fakeErrorResponse(event); // hidden-full-source-line
-      callback(event); // hidden-full-source-line
-    }; // hidden-full-source-line
-  } // hidden-full-source-line
   // tag::snippet[]
   render() {
     return html`
@@ -67,9 +45,9 @@ export class Example extends LitElement {
         <div>
           <vaadin-upload
             nodrop
-            .files=${this.filesA}
             .__dummy1=${'' /* end::snippet[] */}
-            @upload-response="${this.fakeErrorResponse /* hidden-full-source-line */}"
+            .files=${this.filesA /* hidden-full-source-line */}
+            @upload-response="${fakeErrorResponse /* hidden-full-source-line */}"
             .__dummy2=${'' /* tag::snippet[] */}
           ></vaadin-upload>
           <p>Caution</p>
@@ -77,8 +55,10 @@ export class Example extends LitElement {
         <div>
           <vaadin-upload
             nodrop
-            .files=${this.filesB}
             @upload-response="${this.uploadResponseHandler}"
+            .__dummy1=${'' /* end::snippet[] */}
+            .files=${this.filesB /* hidden-full-source-line */}
+            .__dummy2=${'' /* tag::snippet[] */}
           ></vaadin-upload>
           <p>Do</p>
         </div>

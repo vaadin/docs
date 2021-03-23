@@ -1,20 +1,10 @@
 import '../../init'; // hidden-full-source-line
-import { createFakeUploadFiles } from './upload-demo-helpers'; // hidden-full-source-line
-import { customElement, html, internalProperty, LitElement } from 'lit-element';
+import './upload-demo-helpers'; // hidden-full-source-line
+import { createFakeFilesUploadBasic } from './upload-demo-mock-files'; // hidden-full-source-line
+import { internalProperty } from 'lit-element'; // hidden-full-source-line
+import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
-
-function createFakeFiles() {
-  return createFakeUploadFiles([
-    { name: 'Annual Report.docx', complete: true },
-    {
-      name: 'Workflow.pdf',
-      progress: 60,
-      status: '19.7 MB: 60% (remaining time: 00:12:34)',
-    },
-    { name: 'Financials.xlsx', error: 'An error occurred' },
-  ]);
-}
 
 @customElement('upload-basic')
 export class Example extends LitElement {
@@ -23,14 +13,17 @@ export class Example extends LitElement {
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
-
-  @internalProperty()
-  private files = createFakeFiles();
+  @internalProperty() // hidden-full-source-line
+  private files = createFakeFilesUploadBasic(); // hidden-full-source-line
 
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-upload .files=${this.files}></vaadin-upload>
+      <vaadin-upload
+        .__dummy1=${'' /* end::snippet[] */}
+        .files=${this.files /* hidden-full-source-line */}
+        .__dummy2=${'' /* tag::snippet[] */}
+      ></vaadin-upload>
       <!-- end::snippet[] -->
     `;
   }
