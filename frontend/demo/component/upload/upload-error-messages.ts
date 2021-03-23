@@ -69,9 +69,7 @@ export class Example extends LitElement {
             nodrop
             .files=${this.filesA}
             .__dummy1=${'' /* end::snippet[] */}
-            @upload-response="${
-              this.fakeErrorResponse /* eslint-disable-line -- hidden-full-source-line */
-            }"
+            @upload-response="${this.fakeErrorResponse /* hidden-full-source-line */}"
             .__dummy2=${'' /* tag::snippet[] */}
           ></vaadin-upload>
           <p>Caution</p>
