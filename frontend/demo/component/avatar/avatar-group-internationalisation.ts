@@ -1,11 +1,10 @@
-import '../../init'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import { AvatarGroupI18n } from '@vaadin/vaadin-avatar/src/interfaces';
 import '@vaadin/vaadin-avatar/vaadin-avatar-group';
-import { applyTheme } from 'generated/theme';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
+import { AvatarGroupI18n } from '@vaadin/vaadin-avatar/src/interfaces';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-group-internationalistion')
 export class Example extends LitElement {
@@ -19,17 +18,17 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    this.items = await getPeople(2);
+    const { people } = await getPeople({ count: 2 });
 
     // Add an anonymous user
-    this.items.unshift({
+    people.unshift({
       address: {
         city: '',
         country: '',
         phone: '',
         state: '',
         street: '',
-        zip: ''
+        zip: '',
       },
       birthday: '',
       email: '',
@@ -39,8 +38,12 @@ export class Example extends LitElement {
       membership: '',
       pictureUrl: '',
       profession: '',
-      subscriber: false
+      subscriber: false,
+      manager: false,
+      managerId: -1,
     });
+
+    this.items = people;
   }
 
   //tag::snippet[]
@@ -48,17 +51,17 @@ export class Example extends LitElement {
     anonymous: 'Anonyymi',
     activeUsers: {
       one: 'Yksi käyttäjä aktiivisena',
-      many: '{count} käyttäjää aktiivisena'
-    }
+      many: '{count} käyttäjää aktiivisena',
+    },
   };
 
   render() {
     return html`
       <vaadin-avatar-group
         .i18n=${this.i18n}
-        .items=${this.items.map(person => {
+        .items=${this.items.map((person) => {
           return {
-            name: `${person.firstName} ${person.lastName}`
+            name: `${person.firstName} ${person.lastName}`,
           };
         })}
       >

@@ -1,10 +1,9 @@
-import '../../init'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar-group';
-import { applyTheme } from 'generated/theme';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-group-bg-color')
 export class Example extends LitElement {
@@ -18,7 +17,8 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    this.items = await getPeople(6);
+    const { people } = await getPeople({ count: 6 });
+    this.items = people;
   }
 
   render() {
@@ -28,7 +28,7 @@ export class Example extends LitElement {
         .items=${this.items.map((person, colorIndex) => {
           return {
             name: `${person.firstName} ${person.lastName}`,
-            colorIndex: colorIndex
+            colorIndex: colorIndex,
           };
         })}
       >
