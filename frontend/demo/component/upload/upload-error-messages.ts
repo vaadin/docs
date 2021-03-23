@@ -12,12 +12,11 @@ export class Example extends LitElement {
       .flex {
         display: flex;
         flex-wrap: wrap;
-        align-items: stretch;
-        margin: calc(-1 * var(--lumo-space-m));
+        margin: calc(-0.5 * var(--lumo-space-l));
       }
 
       .flex > div {
-        margin: var(--lumo-space-m);
+        margin: calc(0.5 * var(--lumo-space-l));
         display: flex;
         flex: 1 1 15rem;
         flex-direction: column;
