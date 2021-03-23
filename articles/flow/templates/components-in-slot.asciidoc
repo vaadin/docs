@@ -1,0 +1,122 @@
+---
+title: Dynamically Adding Server-side Components
+order: 6
+layout: page
+---
+
+= Dynamically Adding Server-side Components to Templates
+
+A client-side template cannot render child templates created using the `Component` or `Element` API, because it uses the shadow DOM that renders the *shadow tree*, instead of the element's children that are in the light DOM.
+
+To overcome this, you can add a `<slot>` element to mark the place where the light DOM elements should be rendered.
+
+== Using the <slot> Element
+
+*Example*: `<slot>` element in a TypeScript LitElement template.
+
+[source,js]
+----
+import {LitElement, html} from 'lit-element';
+
+class ComponentContainer extends LitElement {
+    get render() {
+        return html`
+            <div>
+                <slot></slot>
+            </div>`;
+    }
+}
+
+customElements.define('component-container', ComponentContainer);
+----
+
+*Example*: Mapped Java template class.
+
+[source,java]
+----
+@Tag("component-container")
+@JsModule("./com/example/component-container.ts")
+public class ComponentContainer extends LitTemplate {
+
+    public ComponentContainer() {
+        Element label = ElementFactory.createLabel("Main layout header");
+        Element button = ElementFactory.createButton("Click me");
+
+        getElement().appendChild(label, button);
+    }
+}
+
+----
+* Without the `<slot>` tag in the LitElement template, the `label` and `button` would not be visible to the user, even though they can be located in the DOM.
+* You can add multiple components that will display in the slot when added to a template element with an open `<slot></slot>`.
+* You can remove any element from a `<slot>`.
+It will work as expected and no longer display in the main element.
+
+== Using Default Content in the <slot> Element
+
+The `<slot>` tag can contain default content that is displayed only if nothing else is set from the light DOM.
+
+*Example*: `<slot>` element with default content in a client-side template.
+
+[source,js]
+----
+<div style="border: 1px solid black; padding: 10px; margin: 10px;">
+    <slot>No components added</slot>
+</div>
+----
+* 'No components added' displays initially, and is replaced when at least one child element is added.
+
+== Naming <slot> Elements
+
+You can name `<slot>` elements using the `name` attribute to ensure that only wanted content is added to a particular slot.
+
+*Example* Using the `name` attribute in the `<slot>` element in a client-side template.
+
+[source,js]
+----
+<h1><slot name="title"></slot></h1>
+
+<div style="border: 1px solid black; margin: 5px;padding: 5px;">
+    <slot>No content given!</slot>
+</div>
+----
+* A `<label slot="title">Main header</label>` element, for example, will now NOT be positioned in the default `"No content given!"` slot, but rather in the `<h1><slot name="title">...` slot.
+
+== Nesting <slot> Elements
+
+You can also nest named slots inside the main slot.
+
+*Example*: Nested slot elements in a client-side template.
+
+[source,js]
+----
+<slot name="fullName">
+    <slot name="firstName"></slot>, <slot name="lastName"></slot>
+</slot>
+----
+* The slot shows data for the light DOM `<slot="firstName">` and `<slot="lastName">` elements, if no `<slot="fullName">` element is available. If you add an element to the `<slot="fullName">` slot, it overrides and replaces the `firstName and lastName` data.
+
+== Adding Multiple <slot> Elements
+
+The default slot and any named slot can contain multiple elements.
+
+*Example*: Defining multiple elements for the default slot and multiple named slots in a TypeScript LitElement template.
+
+[source,java]
+----
+@Tag("name-element")
+@JsModule("./com/example/name-element.ts")
+public class NameElement extends LitTemplate {
+    public NameElement() {
+        Element firstName = ElementFactory.createSpan("Jack");
+        Element middleName = ElementFactory.createSpan(" James");
+        Element surName = ElementFactory.createSpan("Christobald");
+
+        firstName.setAttribute("slot", "firstName");
+        middleName.setAttribute("slot", "middleName");
+        surName.setAttribute("slot", "lastName");
+
+        getElement().appendChild(firstName, middleName, surName);
+    }
+}
+----
