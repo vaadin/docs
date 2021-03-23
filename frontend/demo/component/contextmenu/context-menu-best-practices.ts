@@ -4,13 +4,12 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
-@customElement('context-menu-basic')
+@customElement('context-menu-best-practices')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -24,25 +23,45 @@ export class Example extends LitElement {
   // end::snippet[]
 
   @internalProperty()
-  private gridItems: Person[] = [];
+  private gridItems = [
+    { filename: 'Annual Report.pdf', size: '23 MB' },
+    { filename: 'Financials.xlsx', size: '42 MB' },
+  ];
 
-  async firstUpdated() {
-    this.gridItems = (await getPeople()).people;
-  }
+  private menuBarRenderer = (root: HTMLElement) => {
+    if (root.firstElementChild) {
+      return;
+    }
+
+    const menuBar = document.createElement('vaadin-menu-bar');
+    menuBar.items = [{ component: this.makeIcon(), children: this.items }];
+    menuBar.setAttribute('theme', 'icon tertiary');
+    root.appendChild(menuBar);
+  };
 
   render() {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
-          <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
-          <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
-          <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
-          <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
+          <vaadin-grid-column label="Filename" path="filename"></vaadin-grid-column>
+          <vaadin-grid-column label="Size" path="size"></vaadin-grid-column>
+          <vaadin-grid-column
+            auto-width
+            flex-grow="0"
+            .renderer="${this.menuBarRenderer}"
+          ></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;
+  }
+
+  makeIcon() {
+    const item = window.document.createElement('vaadin-context-menu-item');
+    item.textContent = '•••';
+    item.setAttribute('aria-label', 'open menu');
+    return item;
   }
 
   onContextMenu(e: MouseEvent) {

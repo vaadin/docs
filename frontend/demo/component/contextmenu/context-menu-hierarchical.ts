@@ -5,12 +5,10 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
-@customElement('context-menu-basic')
+@customElement('context-menu-hierarchical')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -20,25 +18,33 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @internalProperty()
-  private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
+  private items = [
+    { text: 'Preview' },
+    { text: 'Edit' },
+    { component: 'hr' },
+    {
+      text: 'Export',
+      children: [{ text: 'PDF Document' }, { text: 'Rich Text Format' }, { text: 'Plain Text' }],
+    },
+    { text: 'Share', children: [{ text: 'Copy link' }, { text: 'Vaadin' }] },
+    { component: 'hr' },
+    { text: 'Delete' },
+  ];
   // end::snippet[]
 
   @internalProperty()
-  private gridItems: Person[] = [];
-
-  async firstUpdated() {
-    this.gridItems = (await getPeople()).people;
-  }
+  private gridItems = [
+    { filename: 'Annual Report.pdf', size: '23 MB' },
+    { filename: 'Financials.xlsx', size: '42 MB' },
+  ];
 
   render() {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
-          <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
-          <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
-          <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
-          <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
+          <vaadin-grid-column path="filename"></vaadin-grid-column>
+          <vaadin-grid-column path="size"></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
