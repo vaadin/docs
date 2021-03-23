@@ -25,7 +25,7 @@ export class Example extends LitElement {
   @internalProperty()
   private gridItems = [
     { filename: 'Annual Report.pdf', size: '23 MB' },
-    { filename: 'Financials.xlsx', size: '42 MB' }
+    { filename: 'Financials.xlsx', size: '42 MB' },
   ];
 
   private menuBarRenderer = (root: HTMLElement) => {
