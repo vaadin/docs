@@ -4,7 +4,6 @@ import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-confirm-dialog/vaadin-confirm-dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
   constructor() {
@@ -21,17 +20,30 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click=${() => (this.dialogOpened = true)}> Open dialog </vaadin-button>
+      <vaadin-button @click=${() => (this.dialogOpened = true)}>
+        Open confirm dialog
+      </vaadin-button>
 
+      <!-- tag::snippet[] -->
       <vaadin-confirm-dialog
-        header="Meeting starting"
-        confirm-text="OK"
+        cancel
+        reject
+        header="Unsaved changes"
+        confirm-text="Save"
+        reject-text="Discard"
         .opened=${this.dialogOpened}
         @opened-changed=${this.openedChanged}
-        @confirm=${() => (this.status = 'Confirmed')}
+        @confirm=${() => (this.status = 'Saved')}
+        @reject=${() => {
+          this.status = 'Discarded';
+        }}
+        @cancel=${() => {
+          this.status = 'Canceled';
+        }}
       >
-        Your next meeting starts in 5 minutes
+        Do you want to save or discard your changes before navigating away?
       </vaadin-confirm-dialog>
+      <!-- end::snippet[] -->
 
       <span>${this.status}</span>
     `;
@@ -44,4 +56,3 @@ export class Example extends LitElement {
     }
   }
 }
-// end::snippet[]
