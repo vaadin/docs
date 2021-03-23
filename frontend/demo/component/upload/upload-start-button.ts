@@ -29,11 +29,6 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`
-      <vaadin-upload></vaadin-upload>
-      <div style="text-align: center; margin-top: var(--lumo-space-l)">
-        <vaadin-button @click="${this.setFakeStatus}">Reset demo</vaadin-button>
-      </div>
-    `;
+    return html`<vaadin-upload></vaadin-upload>`;
   }
 }

@@ -29,14 +29,7 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`
-      <vaadin-upload no-auto></vaadin-upload>
-      <!-- end::snippet[] -->
-      <div style="text-align: center; margin-top: var(--lumo-space-l)">
-        <vaadin-button @click="${this.setFakeStatus}">Reset demo</vaadin-button>
-      </div>
-      <!-- tag::snippet[] -->
-    `;
+    return html`<vaadin-upload no-auto></vaadin-upload>`;
   }
   // end::snippet[]
 

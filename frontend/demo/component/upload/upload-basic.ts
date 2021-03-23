@@ -3,7 +3,6 @@ import { createFakeUploadFiles } from './upload-demo-helpers'; // hidden-full-so
 // hidden-full-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import '@vaadin/vaadin-button/vaadin-button';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-basic')
@@ -36,9 +35,6 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-upload></vaadin-upload>
       <!-- end::snippet[] -->
-      <div style="text-align: center; margin-top: var(--lumo-space-l)">
-        <vaadin-button @click="${this.setFakeStatus}">Reset demo</vaadin-button>
-      </div>
     `;
   }
 }
