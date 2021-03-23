@@ -35,11 +35,11 @@ export class Example extends LitElement {
       <div class="flex">
         <!-- tag::snippet[] -->
         <div>
-          <vaadin-upload ?nodrop="${false}"></vaadin-upload>
+          <vaadin-upload .nodrop="${false}"></vaadin-upload>
           <p>Drag and drop enabled</p>
         </div>
         <div>
-          <vaadin-upload ?nodrop="${true}"></vaadin-upload>
+          <vaadin-upload nodrop></vaadin-upload>
           <p>Drag and drop disabled</p>
         </div>
         <!-- end::snippet[] -->
