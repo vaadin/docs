@@ -7,7 +7,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('badge-counter')
 export class Example extends LitElement {
   static styles = css`
-    vaadin-item {
+    .content {
       display: flex;
       justify-content: space-between;
     }
@@ -24,18 +24,24 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-list-box>
         <vaadin-item>
-          <span>Tasks</span>
-          <span theme="badge contrast pill">12</span>
+          <div class="content">
+            <span>Tasks</span>
+            <span theme="badge contrast pill">12</span>
+          </div>
         </vaadin-item>
         <hr />
         <vaadin-item>
-          <span>Messages</span>
-          <span theme="badge contrast pill">2</span>
+          <div class="content">
+            <span>Messages</span>
+            <span theme="badge contrast pill">2</span>
+          </div>
         </vaadin-item>
         <hr />
         <vaadin-item>
-          <span>Settings</span>
-          <span theme="badge error primary pill">1</span>
+          <div class="content">
+            <span>Settings</span>
+            <span theme="badge error primary pill">1</span>
+          </div>
         </vaadin-item>
       </vaadin-list-box>
       <!-- end::snippet[] -->
