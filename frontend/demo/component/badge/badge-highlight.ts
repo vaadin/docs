@@ -1,7 +1,6 @@
-import { getReports } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
+import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import 'Frontend/demo/init'; // hidden-full-source-line
 import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-full-source-line
-import ReportStatus from 'Frontend/generated/com/vaadin/demo/domain/ReportStatus'; // hidden-full-source-line
 
 import '@vaadin/vaadin-grid';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';

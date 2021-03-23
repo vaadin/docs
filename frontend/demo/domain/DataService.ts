@@ -2,8 +2,7 @@ import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import Profession from 'Frontend/generated/com/vaadin/demo/domain/Profession';
-import Report from 'Frontend/generated/com/vaadin/demo/domain/Report';
-import ReportStatus from 'Frontend/generated/com/vaadin/demo/domain/ReportStatus';
+import RawReport from 'Frontend/generated/com/vaadin/demo/domain/Report';
 import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 
 const datasetCache: { [key: string]: any[] } = {};
@@ -70,35 +69,20 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
 export const getUserPermissions = async (): Promise<readonly UserPermissions[]> =>
   getDataset<UserPermissions>('permissions.json');
 
-type RawReport = Readonly<{
-  assignee: string;
-  due: string;
-  id: number;
-  report: string;
-  status: string;
-}>;
+export enum ReportStatus {
+  COMPLETED = 'Completed',
+  IN_PROGRESS = 'In Progress',
+  CANCELLED = 'Cancelled',
+  ON_HOLD = 'On Hold',
+}
 
-const getReportStatus = (status: string): ReportStatus => {
-  switch (status) {
-    case 'Completed':
-      return ReportStatus.COMPLETED;
-    case 'In Progress':
-      return ReportStatus.IN_PROGRESS;
-    case 'Cancelled':
-      return ReportStatus.CANCELLED;
-    default:
-      return ReportStatus.ON_HOLD;
-  }
-};
+export type Report = Omit<RawReport, 'status'> &
+  Readonly<{
+    status: ReportStatus;
+  }>;
 
 export const getReports = async (): Promise<readonly Report[]> =>
-  (await getDataset<RawReport>('reports.json')).map(({ assignee, due, id, report, status }) => ({
-    assignee,
-    due,
-    id,
-    report,
-    status: getReportStatus(status),
-  }));
+  await getDataset<Report>('reports.json');
 
 export const getProfessions = async (): Promise<readonly Profession[]> =>
   getDataset<Profession>('professions.json');

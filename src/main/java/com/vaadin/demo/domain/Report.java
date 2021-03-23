@@ -15,7 +15,7 @@ public class Report {
 
     private String report;
 
-    private ReportStatus status;
+    private String status;
 
     public String getAssignee() {
         return assignee;
@@ -49,11 +49,11 @@ public class Report {
         this.report = report;
     }
 
-    public ReportStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(ReportStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
