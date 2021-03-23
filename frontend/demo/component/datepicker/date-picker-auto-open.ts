@@ -5,7 +5,7 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('date-picker-basic')
+@customElement('date-picker-auto-open')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -16,7 +16,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-date-picker label="Start date"></vaadin-date-picker>
+      <vaadin-date-picker label="Start date" auto-open-disabled></vaadin-date-picker>
       <!-- end::snippet[] -->
     `;
   }
