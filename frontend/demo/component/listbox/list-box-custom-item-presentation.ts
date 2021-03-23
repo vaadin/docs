@@ -28,7 +28,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box multiple .selectedValues=${['0', '2']}>
+      <vaadin-list-box multiple .selectedValues=${[0, 2]}>
         ${this.items.map(
           (person) => html`
             <vaadin-item>

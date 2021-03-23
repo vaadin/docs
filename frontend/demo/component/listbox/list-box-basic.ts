@@ -18,7 +18,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box multiple .selectedValues="${['0', '2']}">
+      <vaadin-list-box multiple .selectedValues="${[0, 2]}">
         <vaadin-item>Show assignee</vaadin-item>
         <vaadin-item>Show due date</vaadin-item>
         <vaadin-item>Show status</vaadin-item>
