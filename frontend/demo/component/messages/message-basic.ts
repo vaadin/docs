@@ -61,6 +61,5 @@ export class Example extends LitElement {
         userColorIndex: 3,
       },
     ];
-    console.log('hello world');
   }
 }
