@@ -1,6 +1,8 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
-import { css, customElement, html, LitElement, query } from 'lit-element';
+import { css, customElement, html, internalProperty, LitElement, query } from 'lit-element';
+import { guard } from 'lit-html/directives/guard';
+import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadElement, UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -25,6 +27,12 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  @internalProperty()
+  private errorMessage = '';
+
+  @internalProperty()
+  private notificationOpened = false;
+
   @query('vaadin-upload')
   private upload?: UploadElement;
 
@@ -47,10 +55,20 @@ export class Example extends LitElement {
         @file-reject="${this.fileRejectHandler}"
       ></vaadin-upload>
       <!-- end::snippet[] -->
+      <vaadin-notification
+        theme="error"
+        position="middle"
+        .opened="${this.notificationOpened}"
+        @opened-changed="${(e: CustomEvent) => (this.notificationOpened = e.detail.value)}"
+        .renderer="${guard([this.errorMessage], () => (root: HTMLElement) => {
+          root.textContent = this.errorMessage;
+        })}"
+      ></vaadin-notification>
     `;
   }
 
   fileRejectHandler(event: UploadFileReject) {
-    window.alert(event.detail.file.name + ' error: ' + event.detail.error);
+    this.errorMessage = `Error: ${event.detail.error} '${event.detail.file.name}'`;
+    this.notificationOpened = true;
   }
 }
