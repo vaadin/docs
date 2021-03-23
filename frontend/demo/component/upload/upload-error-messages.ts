@@ -1,9 +1,19 @@
 import '../../init'; // hidden-full-source-line
 import { createFakeUploadFiles } from './upload-demo-helpers'; // hidden-full-source-line
-import { css, customElement, html, LitElement } from 'lit-element';
+import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
+
+function createFakeFilesA() {
+  return createFakeUploadFiles([{ name: 'Financials.xlsx', error: 'Unexpected Server Error' }]);
+}
+
+function createFakeFilesB() {
+  return createFakeUploadFiles([
+    { name: 'Financials.xlsx', error: "File couldn't be uploaded, please try again" },
+  ]);
+}
 
 @customElement('upload-error-messages')
 export class Example extends LitElement {
@@ -32,47 +42,46 @@ export class Example extends LitElement {
     this.uploadResponseHandler = this.fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-full-source-line
   }
 
-  firstUpdated() {
-    this.setFakeStatus();
-    const uploads = this.shadowRoot!.querySelectorAll('vaadin-upload'); // hidden-full-source-line
-    uploads[0].addEventListener('upload-response', this.fakeErrorResponse); // hidden-full-source-line
-  }
-  /* eslint-disable ------------------------------------------------------ hidden-full-source-line */
+  @internalProperty()
+  private filesA = createFakeFilesA();
+
+  @internalProperty()
+  private filesB = createFakeFilesB();
+
   fakeErrorResponse(event: UploadResponse) {
-    // hidden-full-source-line
+    // eslint-disable-line -- hidden-full-source-line
     (event.detail.xhr.status as any) = 500; // hidden-full-source-line
   } // hidden-full-source-line
-  // hidden-full-source-line
   fakeErrorResponseWrapper(callback: (event: UploadResponse) => void) {
-    // hidden-full-source-line
+    // eslint-disable-line -- hidden-full-source-line
     return (event: UploadResponse) => {
-      // hidden-full-source-line
+      // eslint-disable-line -- hidden-full-source-line
       this.fakeErrorResponse(event); // hidden-full-source-line
       callback(event); // hidden-full-source-line
     }; // hidden-full-source-line
   } // hidden-full-source-line
-  /* eslint-enable ------------------------------------------------------- hidden-full-source-line */
-
-  setFakeStatus() {
-    const uploads = this.shadowRoot!.querySelectorAll('vaadin-upload');
-    uploads[0].files = createFakeUploadFiles([
-      { name: 'Financials.xlsx', error: uploads[0].i18n.uploading.error.unexpectedServerError },
-    ]);
-    uploads[1].files = createFakeUploadFiles([
-      { name: 'Financials.xlsx', error: "File couldn't be uploaded, please try again" },
-    ]);
-  }
-
   // tag::snippet[]
   render() {
     return html`
       <div class="flex">
         <div>
-          <vaadin-upload nodrop></vaadin-upload>
+          <vaadin-upload
+            nodrop
+            .files=${this.filesA}
+            .__dummy1=${'' /* end::snippet[] */}
+            @upload-response="${
+              this.fakeErrorResponse /* eslint-disable-line -- hidden-full-source-line */
+            }"
+            .__dummy2=${'' /* tag::snippet[] */}
+          ></vaadin-upload>
           <p>Caution</p>
         </div>
         <div>
-          <vaadin-upload nodrop @upload-response="${this.uploadResponseHandler}"></vaadin-upload>
+          <vaadin-upload
+            nodrop
+            .files=${this.filesB}
+            @upload-response="${this.uploadResponseHandler}"
+          ></vaadin-upload>
           <p>Do</p>
         </div>
       </div>
