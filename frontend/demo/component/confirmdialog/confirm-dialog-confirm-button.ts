@@ -26,22 +26,14 @@ export class Example extends LitElement {
 
       <!-- tag::snippet[] -->
       <vaadin-confirm-dialog
-        cancel
-        reject
-        header="Unsaved changes"
-        confirm-text="Save"
-        reject-text="Discard"
+        header="Export failed"
+        confirm-text="OK"
         .opened=${this.dialogOpened}
         @opened-changed=${this.openedChanged}
-        @confirm=${() => (this.status = 'Saved')}
-        @reject=${() => {
-          this.status = 'Discarded';
-        }}
-        @cancel=${() => {
-          this.status = 'Canceled';
-        }}
+        @confirm=${() => (this.status = 'Acknowledged')}
       >
-        Do you want to save or discard your changes before navigating away?
+        An error occurred while exporting <b>Report Q4.</b> Please try again. If the problem
+        persists, please contact support@company.com.
       </vaadin-confirm-dialog>
       <!-- end::snippet[] -->
 
