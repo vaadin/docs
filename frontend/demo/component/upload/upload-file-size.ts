@@ -1,8 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
-import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
-import { guard } from 'lit-html/directives/guard';
-import '@vaadin/vaadin-notification/vaadin-notification';
+import { css, customElement, html, LitElement } from 'lit-element';
+import { showErrorNotification } from '@vaadin/flow-frontend/a-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -27,12 +26,6 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
-  private errorMessage = '';
-
-  @internalProperty()
-  private notificationOpened = false;
-
   // tag::snippet[]
   render() {
     const maxFileSizeInMB = 100;
@@ -45,23 +38,11 @@ export class Example extends LitElement {
         .maxFileSize="${maxFileSizeInBytes}"
         @file-reject="${this.fileRejectHandler}"
       ></vaadin-upload>
-      <!-- end::snippet[] -->
-      <vaadin-notification
-        theme="error"
-        position="middle"
-        .opened="${this.notificationOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.notificationOpened = e.detail.value)}"
-        .renderer="${guard([this.errorMessage], () => (root: HTMLElement) => {
-          root.textContent = this.errorMessage;
-        })}"
-      ></vaadin-notification>
-      <!-- tag::snippet[] -->
     `;
   }
   // end::snippet[]
 
   fileRejectHandler(event: UploadFileReject) {
-    this.errorMessage = `Error: ${event.detail.error} '${event.detail.file.name}'`;
-    this.notificationOpened = true;
+    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }

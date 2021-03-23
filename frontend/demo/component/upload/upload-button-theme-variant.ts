@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
 import { customElement, html, internalProperty, LitElement, query } from 'lit-element';
-import { guard } from 'lit-html/directives/guard';
+import { showErrorNotification } from '@vaadin/flow-frontend/a-notification';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type {
@@ -26,12 +26,6 @@ export class Example extends LitElement {
   @internalProperty()
   private maxFilesReached = false;
 
-  @internalProperty()
-  private errorMessage = '';
-
-  @internalProperty()
-  private notificationOpened = false;
-
   firstUpdated() {
     if (this.upload?.i18n) {
       this.upload.i18n.dropFiles.one = 'Drop PDF here';
@@ -54,20 +48,10 @@ export class Example extends LitElement {
         </vaadin-button>
       </vaadin-upload>
       <!-- end::snippet[] -->
-      <vaadin-notification
-        theme="error"
-        position="middle"
-        .opened="${this.notificationOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.notificationOpened = e.detail.value)}"
-        .renderer="${guard([this.errorMessage], () => (root: HTMLElement) => {
-          root.textContent = this.errorMessage;
-        })}"
-      ></vaadin-notification>
     `;
   }
 
   fileRejectHandler(event: UploadFileReject) {
-    this.errorMessage = `Error: ${event.detail.error} '${event.detail.file.name}'`;
-    this.notificationOpened = true;
+    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }
