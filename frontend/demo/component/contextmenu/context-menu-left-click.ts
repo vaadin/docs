@@ -9,8 +9,9 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import { ContextMenuOpenedChanged } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
-@customElement('context-menu-basic')
+@customElement('context-menu-left-click')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -26,6 +27,18 @@ export class Example extends LitElement {
   @internalProperty()
   private gridItems: Person[] = [];
 
+  private contextMenuOpened?: boolean;
+
+  private onClick = (e: MouseEvent) => {
+    // Prevent opening context menu on header row click.
+    if (
+      !this.contextMenuOpened &&
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+    ) {
+      e.stopPropagation();
+    }
+  };
+
   async firstUpdated() {
     this.gridItems = (await getPeople()).people;
   }
@@ -33,8 +46,13 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-context-menu .items=${this.items}>
-        <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
+      <vaadin-context-menu
+        open-on="click"
+        .items=${this.items}
+        @opened-changed=${(e: ContextMenuOpenedChanged) =>
+          (this.contextMenuOpened = e.detail.value)}
+      >
+        <vaadin-grid .items=${this.gridItems} @click=${this.onClick}>
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
           <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
           <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
@@ -43,14 +61,5 @@ export class Example extends LitElement {
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;
-  }
-
-  onContextMenu(e: MouseEvent) {
-    // Prevent opening context menu on header row.
-    if (
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
-    ) {
-      e.stopPropagation();
-    }
   }
 }
