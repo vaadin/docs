@@ -1,6 +1,5 @@
 import '../../init'; // hidden-full-source-line
 import { createFakeUploadFiles } from './upload-demo-helpers'; // hidden-full-source-line
-// hidden-full-source-line
 import { css, customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
