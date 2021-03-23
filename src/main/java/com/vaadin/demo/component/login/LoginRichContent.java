@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.login;
 
-import com.vaadin.flow.component.login.LoginOverlay;
+import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
@@ -10,11 +10,13 @@ public class LoginRichContent extends Div {
 
     public LoginRichContent() {
         // tag::snippet[]
-        LoginOverlay loginOverlay = new LoginOverlay();
-        add(loginOverlay);
-        // end::snippet[]
-    }
+        // See login-rich-content.css
+        addClassName("login-rich-content");
 
-    public static class Exporter extends DemoExporter<LoginRichContent> { // hidden-full-source-line
-    } // hidden-full-source-line
+        LoginForm loginForm = new LoginForm();
+        loginForm.getElement().getThemeList().add("dark");
+        // end::snippet[]
+        add(loginForm);
+    }
+    public static class Exporter extends DemoExporter<LoginRichContent> {} // hidden-full-source-line
 }

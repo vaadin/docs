@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
 import { LoginI18n } from '@vaadin/vaadin-login/vaadin-login-overlay';
 
-@customElement('login-modal-overlay-internationalization')
+@customElement('login-overlay-internationalization')
 export class Example extends LitElement {
   constructor() {
     super();

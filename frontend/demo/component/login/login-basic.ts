@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -15,10 +14,10 @@ export class Example extends LitElement {
   static get styles() {
     return css`
       :host {
+        background-color: var(--lumo-contrast-5pct);
         display: flex !important;
         justify-content: center;
-        background-color: var(--lumo-contrast-5pct);
-        padding: var(--lumo-space-m);
+        padding: var(--lumo-space-l);
       }
     `;
   }

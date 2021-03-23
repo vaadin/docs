@@ -9,12 +9,12 @@ import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 public class LoginValidation extends Div {
 
     public LoginValidation() {
-        // tag::snippet[]
         LoginOverlay loginOverlay = new LoginOverlay();
-        add(loginOverlay);
+        // tag::snippet[]
+        loginOverlay.setError(true);
         // end::snippet[]
+        add(loginOverlay);
+        loginOverlay.setOpened(true);
     }
-
-    public static class Exporter extends DemoExporter<LoginValidation> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<LoginValidation> {} // hidden-full-source-line
 }

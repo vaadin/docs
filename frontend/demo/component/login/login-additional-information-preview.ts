@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { html, LitElement, customElement, query } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
