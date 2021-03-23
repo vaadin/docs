@@ -55,8 +55,9 @@ export class Example extends LitElement {
         <vaadin-combo-box
           class="combobox"
           label="Profession"
-          .itemLabelPath="name"
-          .itemValuePath="id"
+          .itemIdPath=${'id'}
+          .itemLabelPath=${'name'}
+          .itemValuePath=${'id'}
           .items="${this._items}"
           @change=${this._onChange}
         ></vaadin-combo-box>
@@ -87,16 +88,18 @@ export class Example extends LitElement {
   }
 
   private _onChange({ target }: Event) {
-    const { value } = target as ComboBoxElement;
+    const { selectedItem } = target as ComboBoxElement;
 
-    if (!value) {
+    if (selectedItem == null) {
       return;
     }
 
-    const changedId = parseInt(value, 10);
-    const changedProfession = this._items.find(({ id }) => id === changedId);
+    const changedProfession = this._items.find(({ id }) => id === (selectedItem as Profession).id);
 
-    if (!this._selectedProfessions.find(({ id }) => id === changedId) && changedProfession) {
+    if (
+      !this._selectedProfessions.find(({ id }) => id === (selectedItem as Profession).id) &&
+      changedProfession
+    ) {
       this._selectedProfessions = [...this._selectedProfessions, changedProfession];
     }
   }
