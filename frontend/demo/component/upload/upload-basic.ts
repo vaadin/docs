@@ -19,10 +19,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
+      <!-- hidden-source-line --><!-- prettier-ignore -->
       <vaadin-upload
-        .__dummy1=${'' /* end::snippet[] */}
-        .files=${this.files /* hidden-full-source-line */}
-        .__dummy2=${'' /* tag::snippet[] */}
+        .files=${this.files /* hidden-source-line */}
       ></vaadin-upload>
       <!-- end::snippet[] -->
     `;

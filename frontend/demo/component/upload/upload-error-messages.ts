@@ -45,10 +45,8 @@ export class Example extends LitElement {
         <div>
           <vaadin-upload
             nodrop
-            .__dummy1=${'' /* end::snippet[] */}
-            .files=${this.filesA /* hidden-full-source-line */}
-            @upload-response="${fakeErrorResponse /* hidden-full-source-line */}"
-            .__dummy2=${'' /* tag::snippet[] */}
+            .files=${this.filesA /* hidden-source-line */}
+            @upload-response="${fakeErrorResponse /* hidden-source-line */}"
           ></vaadin-upload>
           <p>Caution</p>
         </div>
@@ -56,9 +54,7 @@ export class Example extends LitElement {
           <vaadin-upload
             nodrop
             @upload-response="${this.uploadResponseHandler}"
-            .__dummy1=${'' /* end::snippet[] */}
-            .files=${this.filesB /* hidden-full-source-line */}
-            .__dummy2=${'' /* tag::snippet[] */}
+            .files=${this.filesB /* hidden-source-line */}
           ></vaadin-upload>
           <p>Do</p>
         </div>
