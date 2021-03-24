@@ -2,31 +2,20 @@ import '../../init'; // hidden-full-source-line
 import { fakeErrorResponse, fakeErrorResponseWrapper } from './upload-demo-helpers'; // hidden-full-source-line
 /* prettier-ignore */ import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-full-source-line
 import { internalProperty } from 'lit-element'; // hidden-full-source-line
-import { css, customElement, html, LitElement } from 'lit-element';
+import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
+import '@vaadin/vaadin-form-layout/vaadin-form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+
+const layoutSteps: FormLayoutResponsiveStep[] = [
+  { minWidth: 0, columns: 1, labelsPosition: 'top' },
+  { minWidth: '540px', columns: 2, labelsPosition: 'top' },
+];
 
 @customElement('upload-error-messages')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      .flex {
-        display: flex;
-        flex-wrap: wrap;
-        margin: calc(-0.5 * var(--lumo-space-l));
-      }
-
-      .flex > div {
-        margin: calc(0.5 * var(--lumo-space-l));
-        display: flex;
-        flex: 1 1 15rem;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-    `;
-  }
-
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
@@ -41,24 +30,28 @@ export class Example extends LitElement {
   // tag::snippet[]
   render() {
     return html`
-      <div class="flex">
+      <!-- end::snippet[] -->
+      <vaadin-form-layout .responsiveSteps=${layoutSteps}>
         <div>
+          <strong>Caution</strong>
           <vaadin-upload
             nodrop
             .files=${this.filesA /* hidden-source-line */}
             @upload-response="${fakeErrorResponse /* hidden-source-line */}"
           ></vaadin-upload>
-          <p>Caution</p>
         </div>
         <div>
+          <strong>Do</strong>
+          <!-- tag::snippet[] -->
           <vaadin-upload
             nodrop
             @upload-response="${this.uploadResponseHandler}"
             .files=${this.filesB /* hidden-source-line */}
           ></vaadin-upload>
-          <p>Do</p>
+          <!-- end::snippet[] -->
         </div>
-      </div>
+      </vaadin-form-layout>
+      <!-- tag::snippet[] -->
     `;
   }
 
