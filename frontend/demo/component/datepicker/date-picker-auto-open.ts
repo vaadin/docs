@@ -1,0 +1,23 @@
+import 'Frontend/demo/init'; // hidden-full-source-line
+import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
+
+import { html, LitElement, customElement } from 'lit-element';
+import '@vaadin/vaadin-date-picker/vaadin-date-picker';
+import { applyTheme } from 'Frontend/generated/theme';
+
+@customElement('date-picker-auto-open')
+export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
+  render() {
+    return html`
+      <!-- tag::snippet[] -->
+      <vaadin-date-picker label="Start date" auto-open-disabled></vaadin-date-picker>
+      <!-- end::snippet[] -->
+    `;
+  }
+}
