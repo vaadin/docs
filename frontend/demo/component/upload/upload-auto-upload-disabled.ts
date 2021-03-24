@@ -1,7 +1,6 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
 import { createFakeFilesUploadAutoUploadDisabled } from './upload-demo-mock-files'; // hidden-full-source-line
-import { internalProperty } from 'lit-element'; // hidden-full-source-line
 import { customElement, html, LitElement, query } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadElement } from '@vaadin/vaadin-upload/vaadin-upload';
@@ -14,7 +13,6 @@ export class Example extends LitElement {
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
-  @internalProperty() // hidden-full-source-line
   private files = createFakeFilesUploadAutoUploadDisabled(); // hidden-full-source-line
 
   // tag::snippet[]

@@ -1,7 +1,6 @@
 import '../../init'; // hidden-full-source-line
 import { fakeErrorResponse, fakeErrorResponseWrapper } from './upload-demo-helpers'; // hidden-full-source-line
 /* prettier-ignore */ import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-full-source-line
-import { internalProperty } from 'lit-element'; // hidden-full-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
@@ -22,9 +21,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
     this.uploadResponseHandler = fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-full-source-line
   }
-  @internalProperty() // hidden-full-source-line
   private filesA = createFakeFilesUploadErrorMessagesA(); // hidden-full-source-line
-  @internalProperty() // hidden-full-source-line
   private filesB = createFakeFilesUploadErrorMessagesB(); // hidden-full-source-line
 
   // tag::snippet[]
