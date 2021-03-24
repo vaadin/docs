@@ -10,7 +10,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.DataService;
 
-@Route("grid-column-alignment")
+@Route("grid-column-freezing")
 public class GridColumnFreezing extends Div {
 
     public GridColumnFreezing() {
