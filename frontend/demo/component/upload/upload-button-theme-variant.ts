@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
 import { customElement, html, internalProperty, LitElement, query } from 'lit-element';
-import { showErrorNotification } from '@vaadin/flow-frontend/a-notification';
+import { showErrorNotification } from 'Frontend/demo/notification-helper';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type {
