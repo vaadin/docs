@@ -21,8 +21,6 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
     this.uploadResponseHandler = fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-full-source-line
   }
-  private filesA = createFakeFilesUploadErrorMessagesA(); // hidden-full-source-line
-  private filesB = createFakeFilesUploadErrorMessagesB(); // hidden-full-source-line
 
   // tag::snippet[]
   render() {
@@ -33,7 +31,7 @@ export class Example extends LitElement {
           <strong>Caution</strong>
           <vaadin-upload
             nodrop
-            .files=${this.filesA /* hidden-source-line */}
+            .files=${createFakeFilesUploadErrorMessagesA() /* hidden-source-line */}
             @upload-response="${fakeErrorResponse /* hidden-source-line */}"
           ></vaadin-upload>
         </div>
@@ -43,7 +41,7 @@ export class Example extends LitElement {
           <vaadin-upload
             nodrop
             @upload-response="${this.uploadResponseHandler}"
-            .files=${this.filesB /* hidden-source-line */}
+            .files=${createFakeFilesUploadErrorMessagesB() /* hidden-source-line */}
           ></vaadin-upload>
           <!-- end::snippet[] -->
         </div>

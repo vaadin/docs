@@ -13,7 +13,6 @@ export class Example extends LitElement {
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
-  private files = createFakeFilesUploadAllFiles(); // hidden-full-source-line
 
   // tag::snippet[]
   @query('vaadin-upload')
@@ -30,10 +29,9 @@ export class Example extends LitElement {
   // tag::snippet[]
   render() {
     return html`
-      <!-- hidden-source-line --><!-- prettier-ignore -->
       <vaadin-upload
         no-auto
-        .files=${this.files /* hidden-source-line */}
+        .files=${createFakeFilesUploadAllFiles() /* hidden-source-line */}
       ></vaadin-upload>
       <p>
         <vaadin-button theme="primary" @click="${this.uploadFiles}">

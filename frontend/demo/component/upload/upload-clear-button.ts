@@ -23,9 +23,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  private files = createFakeFiles();
-
   render() {
-    return html`<vaadin-upload .files=${this.files}></vaadin-upload>`;
+    return html`<vaadin-upload .files=${createFakeFiles()}></vaadin-upload>`;
   }
 }

@@ -12,14 +12,12 @@ export class Example extends LitElement {
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
-  private files = createFakeFilesUploadBasic(); // hidden-full-source-line
 
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <!-- hidden-source-line --><!-- prettier-ignore -->
       <vaadin-upload
-        .files=${this.files /* hidden-source-line */}
+        .files=${createFakeFilesUploadBasic() /* hidden-source-line */}
       ></vaadin-upload>
       <!-- end::snippet[] -->
     `;
