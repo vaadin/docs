@@ -1,7 +1,6 @@
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
-import Profession from 'Frontend/generated/com/vaadin/demo/domain/Profession';
 import RawReport from 'Frontend/generated/com/vaadin/demo/domain/Report';
 import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 
@@ -83,6 +82,3 @@ export type Report = Omit<RawReport, 'status'> &
 
 export const getReports = async (): Promise<readonly Report[]> =>
   await getDataset<Report>('reports.json');
-
-export const getProfessions = async (): Promise<readonly Profession[]> =>
-  getDataset<Profession>('professions.json');
