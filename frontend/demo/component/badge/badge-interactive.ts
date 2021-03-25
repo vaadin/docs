@@ -1,6 +1,5 @@
-import { getProfessions } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
-import 'Frontend/demo/init'; // hidden-full-source-line
-import Profession from 'Frontend/generated/com/vaadin/demo/domain/Profession'; // hidden-full-source-line
+import { getPeople } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
+import 'Frontend/demo/init';
 
 import '@vaadin/vaadin-button';
 import '@vaadin/vaadin-combo-box';
@@ -12,31 +11,37 @@ import { html, LitElement, customElement, css, internalProperty } from 'lit-elem
 import { applyTheme } from 'Frontend/generated/theme';
 import { repeat } from 'lit-html/directives/repeat';
 
+type Profession = string;
+
 @customElement('badge-interactive')
 export class Example extends LitElement {
-  static styles = css`
-    .container {
-      display: flex;
-      flex-direction: column;
-    }
+  static get styles() {
+    return css`
+      .container {
+        display: flex;
+        flex-direction: column;
+      }
 
-    .combobox {
-      width: calc(var(--lumo-space-xl) * 5);
-    }
+      .combobox {
+        width: calc(var(--lumo-space-xl) * 5);
+      }
 
-    .badge {
-      margin-right: var(--lumo-space-xs);
-      margin-bottom: var(--lumo-space-xs);
-    }
+      .badge {
+        margin-right: var(--lumo-space-xs);
+        margin-bottom: var(--lumo-space-xs);
+      }
 
-    .badge-btn {
-      margin-left: var(--lumo-space-xs);
-    }
-  `;
+      .badge-btn {
+        margin-left: var(--lumo-space-xs);
+      }
+    `;
+  }
 
-  @internalProperty() private _items: readonly Profession[] = [];
+  @internalProperty()
+  private items: readonly Profession[] = [];
 
-  @internalProperty() private _selectedProfessions: readonly Profession[] = [];
+  @internalProperty()
+  private selectedProfessions: readonly Profession[] = [];
 
   constructor() {
     super();
@@ -45,7 +50,8 @@ export class Example extends LitElement {
   }
 
   async firstUpdated() {
-    this._items = await getProfessions();
+    const { people } = await getPeople();
+    this.items = [...new Set(people.map(({ profession }) => profession))];
   }
 
   render() {
@@ -55,25 +61,22 @@ export class Example extends LitElement {
         <vaadin-combo-box
           class="combobox"
           label="Profession"
-          .itemIdPath=${'id'}
-          .itemLabelPath=${'name'}
-          .itemValuePath=${'id'}
-          .items="${this._items}"
-          @change=${this._onChange}
+          .items="${this.items}"
+          @change=${this.onChange}
         ></vaadin-combo-box>
         <div>
           ${repeat(
-            this._selectedProfessions,
-            ({ id }) => id,
-            ({ id, name }) => html`
+            this.selectedProfessions,
+            (profession) => profession,
+            (profession) => html`
               <span class="badge" theme="badge contrast">
-                ${name}
+                ${profession}
                 <vaadin-button
                   class="badge-btn"
-                  data-profession=${id}
-                  title="Clear filter: ${name}"
-                  aria-label="Clear filter: ${name}"
-                  @click=${this._onClick}
+                  data-profession=${profession}
+                  title="Clear filter: ${profession}"
+                  aria-label="Clear filter: ${profession}"
+                  @click=${this.onClick}
                   theme="contrast tertiary-inline"
                 >
                   <iron-icon icon="lumo:cross"></iron-icon>
@@ -87,29 +90,23 @@ export class Example extends LitElement {
     `;
   }
 
-  private _onChange({ target }: Event) {
+  private onChange({ target }: Event) {
     const { selectedItem } = target as ComboBoxElement;
 
     if (selectedItem == null) {
       return;
     }
 
-    const changedProfession = this._items.find(({ id }) => id === (selectedItem as Profession).id);
-
-    if (
-      !this._selectedProfessions.find(({ id }) => id === (selectedItem as Profession).id) &&
-      changedProfession
-    ) {
-      this._selectedProfessions = [...this._selectedProfessions, changedProfession];
+    if (!this.selectedProfessions.includes(selectedItem as Profession)) {
+      this.selectedProfessions = [...this.selectedProfessions, selectedItem as Profession];
     }
   }
 
-  private _onClick({ target }: Event) {
+  private onClick({ target }: Event) {
     const { profession } = (target as ButtonElement).dataset;
 
     if (profession) {
-      const professionId = parseInt(profession, 10);
-      this._selectedProfessions = this._selectedProfessions.filter(({ id }) => id !== professionId);
+      this.selectedProfessions = this.selectedProfessions.filter((p) => p !== profession);
     }
   }
 }

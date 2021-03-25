@@ -6,12 +6,14 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-counter')
 export class Example extends LitElement {
-  static styles = css`
-    .content {
-      display: flex;
-      justify-content: space-between;
-    }
-  `;
+  static get styles() {
+    return css`
+      .content {
+        display: flex;
+        justify-content: space-between;
+      }
+    `;
+  }
 
   constructor() {
     super();

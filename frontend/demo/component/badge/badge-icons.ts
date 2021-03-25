@@ -7,15 +7,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-icons')
 export class Example extends LitElement {
-  static styles = css`
-    .container {
-      width: calc(var(--lumo-space-xl) * 7.5);
-      display: grid;
-      grid-template-columns: repeat(3, max-content);
-      grid-template-rows: 1fr 1fr;
-      grid-gap: var(--lumo-space-s) var(--lumo-space-m);
-    }
-  `;
+  static get styles() {
+    return css`
+      .container {
+        width: calc(var(--lumo-space-xl) * 7.5);
+        display: grid;
+        grid-template-columns: repeat(3, max-content);
+        grid-template-rows: 1fr 1fr;
+        grid-gap: var(--lumo-space-s) var(--lumo-space-m);
+      }
+    `;
+  }
 
   constructor() {
     super();

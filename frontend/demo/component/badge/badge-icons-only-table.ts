@@ -48,18 +48,21 @@ const renderBoolean = (
 
 @customElement('badge-icons-only-table')
 export class Example extends LitElement {
-  static styles = css`
-    .container {
-      box-sizing: border-box;
-      width: calc(var(--lumo-space-xl) * 15);
-    }
+  static get styles() {
+    return css`
+      .container {
+        box-sizing: border-box;
+        width: calc(var(--lumo-space-xl) * 15);
+      }
 
-    .container vaadin-grid {
-      height: calc(var(--lumo-space-xl) * 4.25);
-    }
-  `;
+      .container vaadin-grid {
+        height: calc(var(--lumo-space-xl) * 4.25);
+      }
+    `;
+  }
 
-  @internalProperty() private _items: readonly UserPermissions[] = [];
+  @internalProperty()
+  private items: readonly UserPermissions[] = [];
 
   constructor() {
     super();
@@ -68,14 +71,14 @@ export class Example extends LitElement {
   }
 
   async firstUpdated() {
-    this._items = await getUserPermissions();
+    this.items = await getUserPermissions();
   }
 
   render() {
     return html`
       <section class="container">
         <!-- tag::snippet[] -->
-        <vaadin-grid .items=${this._items}>
+        <vaadin-grid .items=${this.items}>
           <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
           <vaadin-grid-column
             id="view"
