@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-app-layout/vaadin-app-layout';
 import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
-import '@vaadin/vaadin-tabs/vaadin-tabs';
-import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-tabs/vaadin-tab';
+import '@vaadin/vaadin-tabs/vaadin-tabs';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-navbar')
@@ -19,13 +18,15 @@ export class Example extends LitElement {
   static get styles() {
     return css`
       h1 {
-        margin: 0 var(--lumo-space-s);
         font-size: var(--lumo-font-size-l);
+        left: var(--lumo-space-l);
+        margin: 0;
+        position: absolute;
       }
-
+      
       vaadin-tabs {
-        box-shadow: none;
-      }
+        margin: auto;
+      )
     `;
   }
 
@@ -34,18 +35,18 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-app-layout>
         <h1 slot="navbar">MyApp</h1>
-        <vaadin-tabs slot="navbar" style="margin: 0 auto;">
+        <vaadin-tabs slot="navbar">
           <vaadin-tab>
-            <a tabindex="-1" target="_self">Dashboards</a>
+            <a tabindex="-1">Dashboard</a>
           </vaadin-tab>
           <vaadin-tab>
-            <a tabindex="-1" target="_self">Orders</a>
+            <a tabindex="-1">Orders</a>
           </vaadin-tab>
           <vaadin-tab>
-            <a tabindex="-1" target="_self">Customers</a>
+            <a tabindex="-1">Customers</a>
           </vaadin-tab>
           <vaadin-tab>
-            <a tabindex="-1" target="_self">Products</a>
+            <a tabindex="-1">Products</a>
           </vaadin-tab>
         </vaadin-tabs>
       </vaadin-app-layout>
