@@ -13,23 +13,20 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.router.RouterLink;
 
 @Route("app-layout-basic")
-// tag::snippet1[]
 public class AppLayoutBasic extends AppLayout {
 
   public AppLayoutBasic() {
+    // tag::snippet[]
     DrawerToggle toggle = new DrawerToggle();
 
     H1 title = new H1("MyApp");
-    // end::snippet1[]
     title.getStyle()
       .set("font-size", "var(--lumo-font-size-l)")
       .set("margin", "0");
 
-    // tag::snippet2[]
     Tabs tabs = new Tabs();
     tabs.add(
       createTab(VaadinIcon.DASHBOARD, "Dashboard"),
-      // end::snippet2[]
       createTab(VaadinIcon.CART, "Orders"),
       createTab(VaadinIcon.USER_HEART, "Customers"),
       createTab(VaadinIcon.PACKAGE, "Products"),
@@ -39,11 +36,10 @@ public class AppLayoutBasic extends AppLayout {
     );
     tabs.setOrientation(Tabs.Orientation.VERTICAL);
 
-    // tag::snippet3[]
     addToDrawer(tabs);
     addToNavbar(toggle, title);
+    // end::snippet[]
   }
-  // end::snippet3[]
 
   private Tab createTab(VaadinIcon viewIcon, String viewName) {
     Icon icon = viewIcon.create();

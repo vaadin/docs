@@ -33,7 +33,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet1[] -->
+      <!-- tag::snippet[] -->
       <vaadin-app-layout>
         <vaadin-drawer-toggle slot="navbar"></vaadin-drawer-toggle>
         <h1 slot="navbar">MyApp</h1>
@@ -44,7 +44,6 @@ export class Example extends LitElement {
               <span>Dashboard</span>
             </a>
           </vaadin-tab>
-          <!-- end::snippet1[] -->
           <vaadin-tab>
             <a tabindex="-1">
               <iron-icon icon="vaadin:cart"></iron-icon>
@@ -81,10 +80,9 @@ export class Example extends LitElement {
               <span>Analytics</span>
             </a>
           </vaadin-tab>
-          <!-- tag::snippet2[] -->
         </vaadin-tabs>
       </vaadin-app-layout>
-      <!-- end::snippet2[] -->
+      <!-- end::snippet[] -->
     `;
   }
 }

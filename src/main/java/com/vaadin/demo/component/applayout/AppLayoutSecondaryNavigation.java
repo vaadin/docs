@@ -10,9 +10,9 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 
@@ -55,12 +55,16 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
       new Tab("Cancelled")
     );
 
-    HorizontalLayout viewHeader = new HorizontalLayout(toggle, viewTitle);
-    viewHeader.setAlignItems(FlexComponent.Alignment.CENTER);
+    HorizontalLayout wrapper = new HorizontalLayout(toggle, viewTitle);
+    wrapper.setAlignItems(FlexComponent.Alignment.CENTER);
+    wrapper.setSpacing(false);
+
+    VerticalLayout viewHeader = new VerticalLayout(wrapper, subViews);
+    viewHeader.setPadding(false);
     viewHeader.setSpacing(false);
 
     addToDrawer(appTitle, views);
-    addToNavbar(viewHeader, subViews);
+    addToNavbar(viewHeader);
 
     setPrimarySection(Section.DRAWER);
     // end::snippet[]
