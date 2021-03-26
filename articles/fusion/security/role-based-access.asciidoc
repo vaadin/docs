@@ -1,0 +1,112 @@
+---
+title: Role-Based Access Control for Views
+order: 100
+layout: page
+---
+
+= Role-Based Access Control for Views
+
+[role="since:com.vaadin:vaadin@V20 standalone"]
+--
+--
+
+This page describes how to restrict access for selected Fusion views based on roles defined for the logged-in user.
+
+== Starting Point
+
+To follow examples in this article you need a Fusion application with authentication enabled.
+Follow the <<spring-login#, Authentication With Spring Security>> article to get prepared.
+
+== Define Roles for Users with Spring Security
+
+Roles are, in the nutshell, a set of string attributes representing authorities that are assigned for a user.
+
+In Spring Security, the user details used for authentication also provide roles.
+Typically, roles are stored as `ROLE_` prefixed string authorities.
+After successful authentication, the `GrantedAuthority` objects returned `Authentication.getAuthorities()` represent those.
+See the <<spring-login#, Authentication With Spring Security>> article for the configuration examples.
+
+== Using Roles in TypeScript
+
+For using roles for access control of TypeScript views, it is convenient add a Fusion endpoint, that obtains user information with roles from Java during authentication.
+
+First, define a bean representing the information about the user:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=snippet]
+----
+
+After that, add the endpoint to get `UserInfo` with authorities for the logged-in user in the client side:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfoEndpoint.java[tags=snippet;]
+----
+
+Then, change the authentication implementation in TypeScript to get the user information from the endpoint and store it in the browser’s `localStorage`.
+Change the `auth.ts` defined in the <<spring-login#client-configuration, Authentication With Spring Security>> article as follows:
+
+.`auth.ts`
+----
+include::{root}/frontend/demo/fusion/authentication/auth.ts[tags=timestamp-userinfo;]
+----
+
+The above also defines `isUserInRole` helper, which enables role-based access control checks for the UI.
+
+Because the authentication data containing username and authorities is stored in local storage, it is possible to access user roles offline.
+
+== Routes With Access Control
+
+Use `isUserInRole` in the route action helper:
+
+.`routes.ts`
+[source,typescript]
+----
+// Enable declaring additional data on the routes
+export type ViewRoute = Route & {
+  title?: string;
+  children?: ViewRoute[]
+  rolesAllowed?: string[]
+};
+
+export function isAuthorizedViewRoute(route: ViewRoute) {
+  if (route.rolesAllowed) {
+    return route.rolesAllowed.find(role => isUserInRole(role));
+  }
+
+  return true;
+}
+
+export const routes: ViewRoute[] = [
+  {
+    path: 'products',
+    component: 'products-view',
+    title: 'Products',
+    rolesAllowed: ['ADMIN'],
+    action: async (context, commands: Router.Commands) => {
+      const route = context.route as ViewRoute;
+      if (!isAuthorizedViewRoute(route)) {
+        return commands.prevent();
+      }
+      await import('./views/products/products-view');
+      return undefined;
+    },
+  },
+  ...
+];
+----
+
+== Hiding Unauthorized Menu Items
+
+Filter the route list using `isAuthorizedViewRoute` helper defined above.
+Then use the filtered list of routes as menu items:
+
+.`main-view.ts`
+[source,typescript]
+----
+// Use routes that have title and are authorized
+const menuRoutes = routes
+  .filter(route => route.title)
+  .filter(isAuthorizedViewRoute);
+----
