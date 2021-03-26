@@ -1,6 +1,5 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
-// hidden-full-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@polymer/iron-icon';
 import '@vaadin/vaadin-icons/vaadin-icons';

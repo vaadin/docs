@@ -1,9 +1,14 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
-// hidden-full-source-line
-import { customElement, html, LitElement, query } from 'lit-element';
+import { customElement, html, internalProperty, LitElement, query } from 'lit-element';
+import { showErrorNotification } from 'Frontend/demo/notification-helper';
+import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadElement, UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
+import type {
+  UploadElement,
+  UploadFileReject,
+  UploadMaxFilesReachedChanged,
+} from '@vaadin/vaadin-upload/vaadin-upload';
 import '@vaadin/vaadin-button/vaadin-button';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -17,6 +22,9 @@ export class Example extends LitElement {
 
   @query('vaadin-upload')
   private upload?: UploadElement;
+
+  @internalProperty()
+  private maxFilesReached = false;
 
   firstUpdated() {
     if (this.upload?.i18n) {
@@ -32,14 +40,18 @@ export class Example extends LitElement {
         max-files="1"
         accept="application/pdf,.pdf"
         @file-reject="${this.fileRejectHandler}"
+        @max-files-reached-changed="${(e: UploadMaxFilesReachedChanged) =>
+          (this.maxFilesReached = e.detail.value)}"
       >
-        <vaadin-button slot="add-button" theme="primary">Upload PDF...</vaadin-button>
+        <vaadin-button slot="add-button" theme="primary" ?disabled="${this.maxFilesReached}">
+          Upload PDF...
+        </vaadin-button>
       </vaadin-upload>
       <!-- end::snippet[] -->
     `;
   }
 
   fileRejectHandler(event: UploadFileReject) {
-    window.alert(event.detail.file.name + ' error: ' + event.detail.error);
+    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }
