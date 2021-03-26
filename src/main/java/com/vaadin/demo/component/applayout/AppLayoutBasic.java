@@ -13,10 +13,10 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.router.RouterLink;
 
 @Route("app-layout-basic")
+// tag::snippet[]
 public class AppLayoutBasic extends AppLayout {
 
   public AppLayoutBasic() {
-    // tag::snippet[]
     DrawerToggle toggle = new DrawerToggle();
 
     H1 title = new H1("MyApp");
@@ -24,6 +24,14 @@ public class AppLayoutBasic extends AppLayout {
       .set("font-size", "var(--lumo-font-size-l)")
       .set("margin", "0");
 
+    Tabs tabs = getTabs();
+
+    addToDrawer(tabs);
+    addToNavbar(toggle, title);
+  }
+  // end::snippet[]
+
+  private Tabs getTabs() {
     Tabs tabs = new Tabs();
     tabs.add(
       createTab(VaadinIcon.DASHBOARD, "Dashboard"),
@@ -35,10 +43,7 @@ public class AppLayoutBasic extends AppLayout {
       createTab(VaadinIcon.CHART, "Analytics")
     );
     tabs.setOrientation(Tabs.Orientation.VERTICAL);
-
-    addToDrawer(tabs);
-    addToNavbar(toggle, title);
-    // end::snippet[]
+    return tabs;
   }
 
   private Tab createTab(VaadinIcon viewIcon, String viewName) {
@@ -58,4 +63,6 @@ public class AppLayoutBasic extends AppLayout {
     return new Tab(link);
   }
   public static class Exporter extends DemoExporter<AppLayoutBasic> {} // hidden-source-line
+  // tag::snippet[]
 }
+// end::snippet[]

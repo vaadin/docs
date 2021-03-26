@@ -42,12 +42,14 @@ export class Example extends LitElement {
           <vaadin-tab>
             <a tabindex="-1">Orders</a>
           </vaadin-tab>
+          <!-- end::snippet[] -->
           <vaadin-tab>
             <a tabindex="-1">Customers</a>
           </vaadin-tab>
           <vaadin-tab>
             <a tabindex="-1">Products</a>
           </vaadin-tab>
+          <!-- tag::snippet[] -->
         </vaadin-tabs>
       </vaadin-app-layout>
       <!-- end::snippet[] -->

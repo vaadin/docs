@@ -9,10 +9,10 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 
 @Route("app-layout-navbar")
+// tag::snippet[]
 public class AppLayoutNavbar extends AppLayout {
 
   public AppLayoutNavbar() {
-    // tag::snippet[]
     H1 title = new H1("MyApp");
     title.getStyle()
       .set("font-size", "var(--lumo-font-size-l)")
@@ -20,6 +20,13 @@ public class AppLayoutNavbar extends AppLayout {
       .set("margin", "0")
       .set("position", "absolute");
 
+    Tabs tabs = getTabs();
+
+    addToNavbar(title, tabs);
+  }
+  // end::snippet[]
+
+  private Tabs getTabs() {
     Tabs tabs = new Tabs();
     tabs.getStyle().set("margin", "auto");
     tabs.add(
@@ -28,9 +35,7 @@ public class AppLayoutNavbar extends AppLayout {
       createTab("Customers"),
       createTab("Products")
     );
-
-    addToNavbar(title, tabs);
-    // end::snippet[]
+    return tabs;
   }
 
   private Tab createTab(String viewName) {
@@ -43,4 +48,6 @@ public class AppLayoutNavbar extends AppLayout {
     return new Tab(link);
   }
   public static class Exporter extends DemoExporter<AppLayoutNavbar> {} // hidden-source-line
+  // tag::snippet[]
 }
+// end::snippet[]

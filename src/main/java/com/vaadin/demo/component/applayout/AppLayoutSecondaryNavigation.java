@@ -17,28 +17,17 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 
 @Route("app-layout-secondary-navigation")
+// tag::snippet[]
 public class AppLayoutSecondaryNavigation extends AppLayout {
 
   public AppLayoutSecondaryNavigation() {
-    // tag::snippet[]
     H1 appTitle = new H1("MyApp");
     appTitle.getStyle()
       .set("font-size", "var(--lumo-font-size-l)")
       .set("line-height", "var(--lumo-size-l)")
       .set("margin", "0 var(--lumo-space-m)");
 
-    Tabs views = new Tabs();
-    views.add(
-      createTab(VaadinIcon.DASHBOARD, "Dashboard"),
-      createTab(VaadinIcon.CART, "Orders"),
-      createTab(VaadinIcon.USER_HEART, "Customers"),
-      createTab(VaadinIcon.PACKAGE, "Products"),
-      createTab(VaadinIcon.RECORDS, "Documents"),
-      createTab(VaadinIcon.LIST, "Tasks"),
-      createTab(VaadinIcon.CHART, "Analytics")
-    );
-    views.setOrientation(Tabs.Orientation.VERTICAL);
-    views.setSelectedIndex(1);
+    Tabs views = getPrimaryNavigation();
 
     DrawerToggle toggle = new DrawerToggle();
 
@@ -47,13 +36,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
       .set("font-size", "var(--lumo-font-size-l)")
       .set("margin", "0");
 
-    Tabs subViews = new Tabs();
-    subViews.add(
-      new Tab("All"),
-      new Tab("Open"),
-      new Tab("Completed"),
-      new Tab("Cancelled")
-    );
+    Tabs subViews = getSecondaryNavigation();
 
     HorizontalLayout wrapper = new HorizontalLayout(toggle, viewTitle);
     wrapper.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -67,7 +50,23 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
     addToNavbar(viewHeader);
 
     setPrimarySection(Section.DRAWER);
-    // end::snippet[]
+  }
+  // end::snippet[]
+
+  private Tabs getPrimaryNavigation() {
+    Tabs tabs = new Tabs();
+    tabs.add(
+      createTab(VaadinIcon.DASHBOARD, "Dashboard"),
+      createTab(VaadinIcon.CART, "Orders"),
+      createTab(VaadinIcon.USER_HEART, "Customers"),
+      createTab(VaadinIcon.PACKAGE, "Products"),
+      createTab(VaadinIcon.RECORDS, "Documents"),
+      createTab(VaadinIcon.LIST, "Tasks"),
+      createTab(VaadinIcon.CHART, "Analytics")
+    );
+    tabs.setOrientation(Tabs.Orientation.VERTICAL);
+    tabs.setSelectedIndex(1);
+    return tabs;
   }
 
   private Tab createTab(VaadinIcon viewIcon, String viewName) {
@@ -85,5 +84,18 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
 
     return new Tab(link);
   }
+
+  private Tabs getSecondaryNavigation() {
+    Tabs tabs = new Tabs();
+    tabs.add(
+            new Tab("All"),
+            new Tab("Open"),
+            new Tab("Completed"),
+            new Tab("Cancelled")
+    );
+    return tabs;
+  }
   public static class Exporter extends DemoExporter<AppLayoutSecondaryNavigation> {} // hidden-source-line
+  // tag::snippet[]
 }
+// end::snippet[]

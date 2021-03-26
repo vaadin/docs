@@ -59,6 +59,7 @@ export class Example extends LitElement {
               <iron-icon icon="vaadin:cart"></iron-icon>
             </a>
           </vaadin-tab>
+          <!-- end::snippet[] -->
           <vaadin-tab>
             <a tabindex="-1">
               <iron-icon icon="vaadin:user-heart"></iron-icon>
@@ -69,6 +70,7 @@ export class Example extends LitElement {
               <iron-icon icon="vaadin:package"></iron-icon>
             </a>
           </vaadin-tab>
+          <!-- tag::snippet[] -->
         </vaadin-tabs>
         <div class="content">
           <h2>View title</h2>

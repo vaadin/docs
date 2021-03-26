@@ -50,6 +50,7 @@ export class Example extends LitElement {
               <span>Orders</span>
             </a>
           </vaadin-tab>
+          <!-- end::snippet[] -->
           <vaadin-tab>
             <a tabindex="-1">
               <iron-icon icon="vaadin:user-heart"></iron-icon>
@@ -80,6 +81,7 @@ export class Example extends LitElement {
               <span>Analytics</span>
             </a>
           </vaadin-tab>
+          <!-- tag::snippet[] -->
         </vaadin-tabs>
       </vaadin-app-layout>
       <!-- end::snippet[] -->

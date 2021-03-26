@@ -14,10 +14,10 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 
 @Route("app-layout-navbar-placement")
+// tag::snippet[]
 public class AppLayoutNavbarPlacement extends AppLayout {
 
   public AppLayoutNavbarPlacement() {
-    // tag::snippet[]
     DrawerToggle toggle = new DrawerToggle();
 
     H1 title = new H1("MyApp");
@@ -25,6 +25,14 @@ public class AppLayoutNavbarPlacement extends AppLayout {
       .set("font-size", "var(--lumo-font-size-l)")
       .set("margin", "0");
 
+    Tabs tabs = getTabs();
+
+    addToDrawer(tabs);
+    addToNavbar(toggle, title);
+  }
+  // end::snippet[]
+
+  private Tabs getTabs() {
     Tabs tabs = new Tabs();
     tabs.add(
       createTab(VaadinIcon.DASHBOARD, "Dashboard"),
@@ -35,12 +43,8 @@ public class AppLayoutNavbarPlacement extends AppLayout {
       createTab(VaadinIcon.LIST, "Tasks"),
       createTab(VaadinIcon.CHART, "Analytics")
     );
-    tabs.addThemeVariants(TabsVariant.LUMO_MINIMAL);
     tabs.setOrientation(Tabs.Orientation.VERTICAL);
-
-    addToDrawer(tabs);
-    addToNavbar(toggle, title);
-    // end::snippet[]
+    return tabs;
   }
 
   private Tab createTab(VaadinIcon viewIcon, String viewName) {
@@ -60,4 +64,6 @@ public class AppLayoutNavbarPlacement extends AppLayout {
     return new Tab(link);
   }
   public static class Exporter extends DemoExporter<AppLayoutNavbarPlacement> {} // hidden-source-line
+  // tag::snippet[]
 }
+// end::snippet[]

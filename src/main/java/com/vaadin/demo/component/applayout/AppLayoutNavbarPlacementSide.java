@@ -13,10 +13,10 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 
 @Route("app-layout-navbar-placement-side")
+// tag::snippet[]
 public class AppLayoutNavbarPlacementSide extends AppLayout {
 
   public AppLayoutNavbarPlacementSide() {
-    // tag::snippet[]
     DrawerToggle toggle = new DrawerToggle();
 
     H1 title = new H1("Dashboard");
@@ -24,6 +24,16 @@ public class AppLayoutNavbarPlacementSide extends AppLayout {
       .set("font-size", "var(--lumo-font-size-l)")
       .set("margin", "0");
 
+    Tabs tabs = getTabs();
+
+    addToDrawer(tabs);
+    addToNavbar(toggle, title);
+
+    setPrimarySection(Section.DRAWER);
+  }
+  // end::snippet[]
+
+  private Tabs getTabs() {
     Tabs tabs = new Tabs();
     tabs.add(
       createTab(VaadinIcon.DASHBOARD, "Dashboard"),
@@ -35,12 +45,7 @@ public class AppLayoutNavbarPlacementSide extends AppLayout {
       createTab(VaadinIcon.CHART, "Analytics")
     );
     tabs.setOrientation(Tabs.Orientation.VERTICAL);
-
-    addToDrawer(tabs);
-    addToNavbar(toggle, title);
-
-    setPrimarySection(Section.DRAWER);
-    // end::snippet[]
+    return tabs;
   }
 
   private Tab createTab(VaadinIcon viewIcon, String viewName) {
@@ -59,4 +64,6 @@ public class AppLayoutNavbarPlacementSide extends AppLayout {
     return new Tab(link);
   }
   public static class Exporter extends DemoExporter<AppLayoutNavbarPlacementSide> {} // hidden-source-line
+  // tag::snippet[]
 }
+// end::snippet[]

@@ -15,25 +15,17 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 
 @Route("app-layout-bottom-navbar")
+// tag::snippet[]
 public class AppLayoutBottomNavbar extends AppLayout {
 
   public AppLayoutBottomNavbar() {
-    // tag::snippet[]
-    getElement().getStyle().set("--vaadin-app-layout-touch-optimized", "true");
-
+    getElement().getStyle().set("--vaadin-app-layout-touch-optimized", "true"); // hidden-source-line
     H1 title = new H1("MyApp");
     title.getStyle()
       .set("font-size", "var(--lumo-font-size-l)")
       .set("margin", "var(--lumo-space-m) var(--lumo-space-l)");
 
-    Tabs tabs = new Tabs();
-    tabs.add(
-      createTab(VaadinIcon.DASHBOARD, "Dashboard"),
-      createTab(VaadinIcon.CART, "Orders"),
-      createTab(VaadinIcon.USER_HEART, "Customers"),
-      createTab(VaadinIcon.PACKAGE, "Products")
-    );
-    tabs.addThemeVariants(TabsVariant.LUMO_EQUAL_WIDTH_TABS);
+    Tabs tabs = getTabs();
 
     H2 viewTitle = new H2("View title");
     Paragraph viewContent = new Paragraph("View content");
@@ -46,7 +38,19 @@ public class AppLayoutBottomNavbar extends AppLayout {
     addToNavbar(true, tabs);
 
     setContent(content);
-    // end::snippet[]
+  }
+  // end::snippet[]
+
+  private Tabs getTabs() {
+    Tabs tabs = new Tabs();
+    tabs.add(
+      createTab(VaadinIcon.DASHBOARD, "Dashboard"),
+      createTab(VaadinIcon.CART, "Orders"),
+      createTab(VaadinIcon.USER_HEART, "Customers"),
+      createTab(VaadinIcon.PACKAGE, "Products")
+    );
+    tabs.addThemeVariants(TabsVariant.LUMO_EQUAL_WIDTH_TABS);
+    return tabs;
   }
 
   private Tab createTab(VaadinIcon viewIcon, String viewName) {
@@ -63,4 +67,6 @@ public class AppLayoutBottomNavbar extends AppLayout {
     return new Tab(link);
   }
   public static class Exporter extends DemoExporter<AppLayoutBottomNavbar> {} // hidden-source-line
+  // tag::snippet[]
 }
+// end::snippet[]

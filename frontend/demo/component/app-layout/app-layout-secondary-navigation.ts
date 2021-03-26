@@ -56,6 +56,7 @@ export class Example extends LitElement {
               <span>Orders</span>
             </a>
           </vaadin-tab>
+          <!-- end::snippet[] -->
           <vaadin-tab>
             <a tabindex="-1">
               <iron-icon icon="vaadin:user-heart"></iron-icon>
@@ -86,6 +87,7 @@ export class Example extends LitElement {
               <span>Analytics</span>
             </a>
           </vaadin-tab>
+          <!-- tag::snippet[] -->
         </vaadin-tabs>
         <vaadin-vertical-layout slot="navbar">
           <vaadin-horizontal-layout style="align-items: center;">
@@ -99,12 +101,14 @@ export class Example extends LitElement {
             <vaadin-tab>
               <a tabindex="-1">Open</a>
             </vaadin-tab>
+            <!-- end::snippet[] -->
             <vaadin-tab>
               <a tabindex="-1">Completed</a>
             </vaadin-tab>
             <vaadin-tab>
               <a tabindex="-1">Cancelled</a>
             </vaadin-tab>
+            <!-- tag::snippet[] -->
           </vaadin-tabs>
         </vaadin-vertical-layout>
       </vaadin-app-layout>
