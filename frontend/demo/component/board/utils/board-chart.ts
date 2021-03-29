@@ -2,7 +2,7 @@ import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-full
 import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-full-source-line
 
 import '@vaadin/vaadin-charts';
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -28,6 +28,7 @@ const chartOptions = {
 
 @customElement('board-chart')
 export class Example extends LitElement {
+  @internalProperty()
   private events: readonly ViewEvent[] = [];
 
   constructor() {

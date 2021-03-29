@@ -1,4 +1,6 @@
 import '@vaadin/vaadin-ordered-layout';
+import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-lumo-styles/icons';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, LitElement, property } from 'lit-element';
 
@@ -8,19 +10,19 @@ export class BoardCard extends LitElement {
     return css`
       .title {
         margin: 0;
-        font-size: 0.8rem;
-        font-weight: bold;
+        font-size: var(--lumo-font-size-xs);
+        font-weight: 700;
         color: var(--lumo-contrast-50pct);
       }
 
       .current {
-        font-size: 2rem;
-        font-weight: bold;
+        font-size: var(--lumo-font-size-xl);
+        font-weight: 700;
       }
 
       .icon iron-icon {
-        --iron-icon-width: 0.8rem;
-        --iron-icon-height: 0.8rem;
+        --iron-icon-width: var(--lumo-font-size-xs);
+        --iron-icon-height: var(--lumo-font-size-xs);
       }
     `;
   }
