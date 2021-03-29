@@ -5,9 +5,10 @@ import '@vaadin/vaadin-button';
 import '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-ordered-layout';
 import type { ButtonElement } from '@vaadin/vaadin-button';
 import type { ComboBoxElement } from '@vaadin/vaadin-combo-box';
-import { html, LitElement, customElement, css, internalProperty } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import { repeat } from 'lit-html/directives/repeat';
 
@@ -15,28 +16,6 @@ type Profession = string;
 
 @customElement('badge-interactive')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      .container {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .combobox {
-        width: calc(var(--lumo-space-xl) * 5);
-      }
-
-      .badge {
-        margin-right: var(--lumo-space-xs);
-        margin-bottom: var(--lumo-space-xs);
-      }
-
-      .badge-btn {
-        margin-left: var(--lumo-space-xs);
-      }
-    `;
-  }
-
   @internalProperty()
   private items: readonly Profession[] = [];
 
@@ -56,21 +35,20 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <section class="container">
-        <!-- tag::snippet[] -->
+      <!-- tag::snippet[] -->
+      <vaadin-vertical-layout theme="spacing">
         <vaadin-combo-box
-          class="combobox"
           label="Profession"
           .items="${this.items}"
           @change=${this.onChange}
         ></vaadin-combo-box>
-        <div>
+        <vaadin-horizontal-layout theme="spacing">
           ${repeat(
             this.selectedProfessions,
             (profession) => profession,
             (profession) => html`
               <span class="badge" theme="badge contrast">
-                ${profession}
+                <span>${profession}</span>
                 <vaadin-button
                   class="badge-btn"
                   data-profession=${profession}
@@ -84,9 +62,9 @@ export class Example extends LitElement {
               </span>
             `
           )}
-        </div>
-        <!-- end::snippet[] -->
-      </section>
+        </vaadin-horizontal-layout>
+      </vaadin-vertical-layout>
+      <!-- end::snippet[] -->
     `;
   }
 

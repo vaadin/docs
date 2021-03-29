@@ -5,9 +5,10 @@ import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermi
 import '@vaadin/vaadin-grid';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-ordered-layout';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
-import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
+import { customElement, html, internalProperty, LitElement } from 'lit-element';
 import { render } from 'lit-html';
 
 const renderBoolean = (
@@ -48,19 +49,6 @@ const renderBoolean = (
 
 @customElement('badge-icons-only-table')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      .container {
-        box-sizing: border-box;
-        width: calc(var(--lumo-space-xl) * 15);
-      }
-
-      .container vaadin-grid {
-        height: calc(var(--lumo-space-xl) * 4.25);
-      }
-    `;
-  }
-
   @internalProperty()
   private items: readonly UserPermissions[] = [];
 
@@ -76,28 +64,18 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <section class="container">
-        <!-- tag::snippet[] -->
-        <vaadin-grid .items=${this.items}>
-          <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
-          <vaadin-grid-column
-            id="view"
-            header="View"
-            .renderer=${renderBoolean}
-          ></vaadin-grid-column>
-          <vaadin-grid-column
-            id="comment"
-            header="Comment"
-            .renderer=${renderBoolean}
-          ></vaadin-grid-column>
-          <vaadin-grid-column
-            id="edit"
-            header="Edit"
-            .renderer=${renderBoolean}
-          ></vaadin-grid-column>
-        </vaadin-grid>
-        <!-- end::snippet[] -->
-      </section>
+      <!-- tag::snippet[] -->
+      <vaadin-grid .items=${this.items}>
+        <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
+        <vaadin-grid-column id="view" header="View" .renderer=${renderBoolean}></vaadin-grid-column>
+        <vaadin-grid-column
+          id="comment"
+          header="Comment"
+          .renderer=${renderBoolean}
+        ></vaadin-grid-column>
+        <vaadin-grid-column id="edit" header="Edit" .renderer=${renderBoolean}></vaadin-grid-column>
+      </vaadin-grid>
+      <!-- end::snippet[] -->
     `;
   }
 }

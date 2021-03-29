@@ -1,20 +1,12 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
+import '@vaadin/vaadin-ordered-layout';
 import '@vaadin/vaadin-list-box';
-import { html, LitElement, customElement, css } from 'lit-element';
+import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-counter')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      .content {
-        display: flex;
-        justify-content: space-between;
-      }
-    `;
-  }
-
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
@@ -26,24 +18,24 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-list-box>
         <vaadin-item>
-          <div class="content">
+          <vaadin-vertical-layout theme="spacing">
             <span>Tasks</span>
             <span theme="badge contrast pill">12</span>
-          </div>
+          </vaadin-vertical-layout>
         </vaadin-item>
         <hr />
         <vaadin-item>
-          <div class="content">
+          <vaadin-vertical-layout theme="spacing">
             <span>Messages</span>
             <span theme="badge contrast pill">2</span>
-          </div>
+          </vaadin-vertical-layout>
         </vaadin-item>
         <hr />
         <vaadin-item>
-          <div class="content">
+          <vaadin-vertical-layout theme="spacing">
             <span>Settings</span>
             <span theme="badge error primary pill">1</span>
-          </div>
+          </vaadin-vertical-layout>
         </vaadin-item>
       </vaadin-list-box>
       <!-- end::snippet[] -->
