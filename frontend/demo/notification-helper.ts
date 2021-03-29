@@ -4,7 +4,7 @@
  * with minor fixes to satisfy prettier and fix missing types.
  */
 import '@vaadin/vaadin-notification';
-import type { NotificationElement, NotificationPosition } from '@vaadin/vaadin-notification';
+import type { NotificationOpenedChanged, NotificationPosition } from '@vaadin/vaadin-notification';
 
 interface Options {
   position?: NotificationPosition;
@@ -22,32 +22,8 @@ export const showErrorNotification = (
   _showNotification(text, options);
 };
 
-export type NotificationOpenedChanged = CustomEvent<{ opened: boolean }>;
-
-export interface NotificationElementEventMap {
-  'opened-changed': NotificationOpenedChanged;
-}
-
-export interface NotificationEventMap extends HTMLElementEventMap, NotificationElementEventMap {}
-
-interface Notification extends NotificationElement {
-  _container: HTMLElement;
-
-  addEventListener<K extends keyof NotificationEventMap>(
-    type: K,
-    listener: (this: NotificationElement, ev: NotificationEventMap[K]) => void,
-    options?: boolean | AddEventListenerOptions
-  ): void;
-
-  removeEventListener<K extends keyof NotificationEventMap>(
-    type: K,
-    listener: (this: NotificationElement, ev: NotificationEventMap[K]) => void,
-    options?: boolean | EventListenerOptions
-  ): void;
-}
-
 const _showNotification = (text: string, options: Options) => {
-  const n = document.createElement('vaadin-notification') as Notification;
+  const n = document.createElement('vaadin-notification');
   const tpl = document.createElement('template');
   const span = document.createElement('span');
   span.innerText = text;
@@ -56,10 +32,11 @@ const _showNotification = (text: string, options: Options) => {
   document.body.appendChild(n);
   n.opened = true;
   n.addEventListener('opened-changed', (e: NotificationOpenedChanged) => {
-    if (!e.detail.opened) {
+    if (!e.detail.value) {
       document.body.removeChild(n);
     }
   });
+  // @ts-expect-error using private API
   n._container.addEventListener('click', () => {
     n.opened = false;
   });
