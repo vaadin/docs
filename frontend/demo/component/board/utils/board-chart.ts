@@ -1,0 +1,55 @@
+import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
+import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-full-source-line
+
+import '@vaadin/vaadin-board/vaadin-board';
+import { html, LitElement, customElement } from 'lit-element';
+import { repeat } from 'lit-html/directives/repeat';
+import { applyTheme } from 'Frontend/generated/theme';
+
+const monthNames: readonly string[] = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+const chartOptions = {
+  xAxis: { crosshair: true },
+  yAxis: { min: 0 },
+} as const;
+
+@customElement('board-chart')
+export class Example extends LitElement {
+  private events: readonly ViewEvent[] = [];
+
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
+  async firstUpdated() {
+    this.events = await getViewEvents();
+  }
+
+  render() {
+    return html`
+      <vaadin-chart .additionalOptions=${chartOptions} .categories=${monthNames} type="area">
+        ${repeat(
+          this.events,
+          ({ id }) => id,
+          ({ city, data }) =>
+            html`<vaadin-chart-series .title=${city} .values=${data}></vaadin-chart-series>`
+        )}
+      </vaadin-chart>
+    `;
+  }
+}
