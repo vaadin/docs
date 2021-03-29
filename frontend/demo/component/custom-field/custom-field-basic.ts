@@ -32,7 +32,7 @@ export class Example extends LitElement {
       },
     });
     this.binder.for(this.binder.model.enrollmentPeriod).addValidator({
-      message: 'From date should not be after to date',
+      message: 'The first date should not be after the second date',
       validate: (enrollmentPeriod: string) => {
         const [from, to] = enrollmentPeriod.split('\t');
 
