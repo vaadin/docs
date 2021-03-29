@@ -18,24 +18,24 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-list-box>
         <vaadin-item>
-          <vaadin-vertical-layout theme="spacing">
+          <vaadin-horizontal-layout theme="spacing">
             <span>Tasks</span>
             <span theme="badge contrast pill">12</span>
-          </vaadin-vertical-layout>
+          </vaadin-horizontal-layout>
         </vaadin-item>
         <hr />
         <vaadin-item>
-          <vaadin-vertical-layout theme="spacing">
+          <vaadin-horizontal-layout theme="spacing">
             <span>Messages</span>
             <span theme="badge contrast pill">2</span>
-          </vaadin-vertical-layout>
+          </vaadin-horizontal-layout>
         </vaadin-item>
         <hr />
         <vaadin-item>
-          <vaadin-vertical-layout theme="spacing">
+          <vaadin-horizontal-layout theme="spacing">
             <span>Settings</span>
             <span theme="badge error primary pill">1</span>
-          </vaadin-vertical-layout>
+          </vaadin-horizontal-layout>
         </vaadin-item>
       </vaadin-list-box>
       <!-- end::snippet[] -->

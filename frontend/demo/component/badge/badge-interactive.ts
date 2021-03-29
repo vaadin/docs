@@ -8,7 +8,7 @@ import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-ordered-layout';
 import type { ButtonElement } from '@vaadin/vaadin-button';
 import type { ComboBoxElement } from '@vaadin/vaadin-combo-box';
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import { repeat } from 'lit-html/directives/repeat';
 
@@ -16,6 +16,21 @@ type Profession = string;
 
 @customElement('badge-interactive')
 export class Example extends LitElement {
+  static get styles() {
+    return css`
+      .professions {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .professions vaadin-button {
+        margin-inline-start: var(--lumo-space-xs);
+        margin-block-end: var(--lumo-space-xs);
+      }
+    `;
+  }
+
   @internalProperty()
   private items: readonly Profession[] = [];
 
@@ -39,15 +54,15 @@ export class Example extends LitElement {
       <vaadin-vertical-layout theme="spacing">
         <vaadin-combo-box
           label="Profession"
-          .items="${this.items}"
+          .items=${this.items}
           @change=${this.onChange}
         ></vaadin-combo-box>
-        <vaadin-horizontal-layout theme="spacing">
+        <div class="professions">
           ${repeat(
             this.selectedProfessions,
             (profession) => profession,
             (profession) => html`
-              <span class="badge" theme="badge contrast">
+              <span theme="badge contrast">
                 <span>${profession}</span>
                 <vaadin-button
                   class="badge-btn"
