@@ -2,8 +2,8 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import './utils/board-card'; // hidden-full-source-line
 import './utils/board-chart'; // hidden-full-source-line
 
-import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-board/vaadin-board';
+import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('board-basic')

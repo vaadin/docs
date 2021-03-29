@@ -1,3 +1,4 @@
+import '@vaadin/vaadin-ordered-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, LitElement, property } from 'lit-element';
 

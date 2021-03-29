@@ -1,7 +1,7 @@
 import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-full-source-line
 
-import '@vaadin/vaadin-board/vaadin-board';
+import '@vaadin/vaadin-charts';
 import { html, LitElement, customElement } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
 import { applyTheme } from 'Frontend/generated/theme';
