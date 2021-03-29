@@ -20,13 +20,16 @@ export class Example extends LitElement {
     return css`
       .professions {
         display: flex;
-        justify-content: space-between;
         flex-wrap: wrap;
       }
 
+      .professions > span {
+        margin-inline-end: var(--lumo-space-m);
+        margin-block-end: var(--lumo-space-m);
+      }
+
       .professions vaadin-button {
-        margin-inline-start: var(--lumo-space-xs);
-        margin-block-end: var(--lumo-space-xs);
+        margin-inline-start: var(--lumo-space-s);
       }
     `;
   }
