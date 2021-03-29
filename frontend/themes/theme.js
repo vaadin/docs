@@ -1,1 +1,1 @@
-export { applyTheme } from './docs/docs.generated.js';
+export { applyTheme } from 'Frontend/generated/theme-docs.generated.js';
