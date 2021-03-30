@@ -91,7 +91,7 @@ module.exports = function (config) {
         path.resolve(__dirname, 'target'),
         path.resolve(__dirname, 'node_modules'),
         path.resolve(__dirname, 'src', 'main', 'java'),
-        path.resolve(__dirname, 'frontend', 'themes', 'docs', 'docs.generated.js'),
+        path.resolve(__dirname, 'frontend', 'generated', 'theme-docs.generated.js'),
         path.resolve(__dirname, 'frontend', 'generated')
       ]
     }
