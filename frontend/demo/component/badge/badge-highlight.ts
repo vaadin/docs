@@ -94,5 +94,6 @@ export class Example extends LitElement {
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
+    // end::snippet[]
   }
 }
