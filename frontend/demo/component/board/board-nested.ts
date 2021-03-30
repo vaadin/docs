@@ -4,7 +4,6 @@ import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import './utils/board-card';
-import './utils/board-chart';
 import './utils/board-statistics';
 
 @customElement('board-nested')
@@ -19,16 +18,8 @@ export class Example extends LitElement {
         flex-wrap: nowrap;
       }
 
-      .board > vaadin-board-row:first-child {
-        border-block-end: var(--board-border);
-      }
-
-      .board board-chart,
       .board board-statistics {
         padding: var(--lumo-space-m);
-      }
-
-      .board board-statistics {
         border-inline-end: var(--board-border);
       }
 
@@ -66,9 +57,6 @@ export class Example extends LitElement {
               <span slot="difference">3.9%</span>
             </board-card>
           </vaadin-board-row>
-        </vaadin-board-row>
-        <vaadin-board-row>
-          <board-chart></board-chart>
         </vaadin-board-row>
       </vaadin-board>
       <!-- end::snippet[] -->
