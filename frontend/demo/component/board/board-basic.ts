@@ -15,7 +15,7 @@ export class Example extends LitElement {
       }
 
       .board vaadin-board-row {
-        padding: 0 2rem;
+        flex-wrap: nowrap;
       }
 
       .board vaadin-board-row:not(:last-child) {
@@ -43,28 +43,26 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-board class="board">
         <vaadin-board-row>
-          <vaadin-horizontal-layout>
-            <board-card type="+">
-              Current users
-              <span slot="current">745</span>
-              <span slot="difference">33.7%</span>
-            </board-card>
-            <board-card type="-">
-              View events
-              <span slot="current">54.6k</span>
-              <span slot="difference">112.45%</span>
-            </board-card>
-            <board-card type="+">
-              Conversion rate
-              <span slot="current">18%</span>
-              <span slot="difference">3.9%</span>
-            </board-card>
-            <board-card type="±">
-              Custom metric
-              <span slot="current">-123.45</span>
-              <span slot="difference">0.0%</span>
-            </board-card>
-          </vaadin-horizontal-layout>
+          <board-card type="+">
+            Current users
+            <span slot="current">745</span>
+            <span slot="difference">33.7%</span>
+          </board-card>
+          <board-card type="-">
+            View events
+            <span slot="current">54.6k</span>
+            <span slot="difference">112.45%</span>
+          </board-card>
+          <board-card type="+">
+            Conversion rate
+            <span slot="current">18%</span>
+            <span slot="difference">3.9%</span>
+          </board-card>
+          <board-card type="±">
+            Custom metric
+            <span slot="current">-123.45</span>
+            <span slot="difference">0.0%</span>
+          </board-card>
         </vaadin-board-row>
         <vaadin-board-row>
           <board-chart></board-chart>
