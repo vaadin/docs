@@ -57,8 +57,8 @@ export class Example extends LitElement {
       <vaadin-vertical-layout theme="spacing">
         <vaadin-combo-box
           label="Profession"
-          .items=${this.items}
-          @change=${this.onChange}
+          .items="${this.items}"
+          @change="${this.onChange}"
         ></vaadin-combo-box>
         <div class="professions">
           ${repeat(
@@ -69,10 +69,10 @@ export class Example extends LitElement {
                 <span>${profession}</span>
                 <vaadin-button
                   class="badge-btn"
-                  data-profession=${profession}
+                  data-profession="${profession}"
                   title="Clear filter: ${profession}"
                   aria-label="Clear filter: ${profession}"
-                  @click=${this.onClick}
+                  @click="${this.onClick}"
                   theme="contrast tertiary-inline"
                 >
                   <iron-icon icon="lumo:cross"></iron-icon>

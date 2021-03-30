@@ -32,7 +32,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items="${this.items}">
         <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due Date"
@@ -84,7 +84,7 @@ export class Example extends LitElement {
             render(
               html`
                 <span theme="badge ${theme} primary">
-                  <iron-icon icon=${icon}></iron-icon>
+                  <iron-icon icon="${icon}"></iron-icon>
                   <span>${title}</span>
                 </span>
               `,

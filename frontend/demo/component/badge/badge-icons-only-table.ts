@@ -37,10 +37,10 @@ const renderBoolean = (
   render(
     html`
       <iron-icon
-        icon=${icon}
+        icon="${icon}"
         theme="badge ${theme} pill"
-        title=${title}
-        aria-label=${title}
+        title="${title}"
+        aria-label="${title}"
       ></iron-icon>
     `,
     root
@@ -65,15 +65,23 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items="${this.items}">
         <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
-        <vaadin-grid-column id="view" header="View" .renderer=${renderBoolean}></vaadin-grid-column>
+        <vaadin-grid-column
+          id="view"
+          header="View"
+          .renderer="${renderBoolean}"
+        ></vaadin-grid-column>
         <vaadin-grid-column
           id="comment"
           header="Comment"
-          .renderer=${renderBoolean}
+          .renderer="${renderBoolean}"
         ></vaadin-grid-column>
-        <vaadin-grid-column id="edit" header="Edit" .renderer=${renderBoolean}></vaadin-grid-column>
+        <vaadin-grid-column
+          id="edit"
+          header="Edit"
+          .renderer="${renderBoolean}"
+        ></vaadin-grid-column>
       </vaadin-grid>
       <!-- end::snippet[] -->
     `;
