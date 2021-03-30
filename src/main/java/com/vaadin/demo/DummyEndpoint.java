@@ -5,6 +5,7 @@ import com.vaadin.flow.server.connect.Endpoint;
 
 @Endpoint
 public class DummyEndpoint {
+
     public void savePerson(Person person) {
 
     }
@@ -29,6 +30,10 @@ public class DummyEndpoint {
 
     }
     public void saveViewEvent(ViewEvent viewEvent) {
+
+    }
+
+    public void saveServiceHealth(ServiceHealth serviceHealth) {
 
     }
 

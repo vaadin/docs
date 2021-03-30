@@ -2,7 +2,7 @@ import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-full
 import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-full-source-line
 
 import '@vaadin/vaadin-charts';
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -28,6 +28,16 @@ const chartOptions = {
 
 @customElement('board-chart')
 export class Example extends LitElement {
+  static get styles() {
+    return css`
+      .title {
+        font-size: var(--lumo-font-size-xl);
+        font-weight: 700;
+        margin-block-end: var(--lumo-space-m);
+      }
+    `;
+  }
+
   @internalProperty()
   private events: readonly ViewEvent[] = [];
 
@@ -43,6 +53,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <header class="title">View events</header>
       <vaadin-chart .additionalOptions=${chartOptions} .categories=${monthNames} type="area">
         ${repeat(
           this.events,

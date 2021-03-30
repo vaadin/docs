@@ -1,11 +1,22 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-board/vaadin-board';
+import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
+import './utils/board-card';
+import './utils/board-chart';
+import './utils/board-statistics';
 
 @customElement('board-nested')
 export class Example extends LitElement {
+  static get styles() {
+    return css`
+      .board vaadin-board-row {
+        flex-wrap: nowrap;
+      }
+    `;
+  }
+
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
@@ -15,36 +26,29 @@ export class Example extends LitElement {
   // tag::snippet[]
   render() {
     return html`
-      <vaadin-board>
+      <vaadin-board class="board">
         <vaadin-board-row>
-          <div class="cell">Cell 1</div>
-          <div class="cell">Cell 2</div>
-          <div class="cell">Cell 3</div>
-          <div class="cell">Cell 4</div>
+          <board-chart></board-chart>
+          <board-statistics></board-statistics>
+          <section>
+            <vaadin-board-row>
+              <board-card type="+">
+                Current users
+                <span slot="current">745</span>
+                <span slot="difference">33.7%</span>
+              </board-card>
+            </vaadin-board-row>
+            <vaadin-board-row>
+              <board-card type="+">
+                Conversion rate
+                <span slot="current">18%</span>
+                <span slot="difference">3.9%</span>
+              </board-card>
+            </vaadin-board-row>
+          </section>
         </vaadin-board-row>
       </vaadin-board>
     `;
   }
   // end::snippet[]
-  static get styles() {
-    return css`
-      .cell {
-        padding: 1em;
-        text-align: center;
-        color: white;
-      }
-      .cell:nth-child(1) {
-        background: #003e53;
-      }
-      .cell:nth-child(2) {
-        background: #00506b;
-      }
-      .cell:nth-child(3) {
-        background: #006c90;
-      }
-      .cell:nth-child(4) {
-        background: #0090c0;
-      }
-    `;
-  }
 }
