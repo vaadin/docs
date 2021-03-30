@@ -19,9 +19,16 @@ export class Example extends LitElement {
         flex-wrap: nowrap;
       }
 
+      .board > vaadin-board-row:first-child {
+        border-block-end: var(--board-border);
+      }
+
       .board board-chart,
       .board board-statistics {
         padding: var(--lumo-space-m);
+      }
+
+      .board board-statistics {
         border-inline-end: var(--board-border);
       }
 
