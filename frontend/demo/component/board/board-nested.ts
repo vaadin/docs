@@ -46,7 +46,6 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-board class="board">
         <vaadin-board-row>
-          <board-chart></board-chart>
           <board-statistics></board-statistics>
           <vaadin-board-row>
             <board-card type="+">
@@ -60,6 +59,9 @@ export class Example extends LitElement {
               <span slot="difference">3.9%</span>
             </board-card>
           </vaadin-board-row>
+        </vaadin-board-row>
+        <vaadin-board-row>
+          <board-chart></board-chart>
         </vaadin-board-row>
       </vaadin-board>
       <!-- end::snippet[] -->
