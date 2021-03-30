@@ -52,8 +52,8 @@ export class Example extends LitElement {
   }
 
   render() {
+    // tag::snippet[]
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-vertical-layout theme="spacing">
         <vaadin-combo-box
           label="Profession"
@@ -82,8 +82,8 @@ export class Example extends LitElement {
           )}
         </vaadin-horizontal-layout>
       </vaadin-vertical-layout>
-      <!-- end::snippet[] -->
     `;
+    // end::snippet[]
   }
 
   private onChange({ target }: Event) {

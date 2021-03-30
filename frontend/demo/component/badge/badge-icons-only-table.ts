@@ -11,42 +11,6 @@ import { applyTheme } from 'Frontend/generated/theme';
 import { customElement, html, internalProperty, LitElement } from 'lit-element';
 import { render } from 'lit-html';
 
-const renderBoolean = (
-  root: HTMLElement,
-  column?: GridColumnElement,
-  model?: GridItemModel
-): void => {
-  if (!column || !model) {
-    return;
-  }
-
-  let icon: string;
-  let title: string;
-  let theme: string;
-
-  if ((model.item as UserPermissions)[column.id as keyof UserPermissions]) {
-    icon = 'vaadin:check-circle';
-    title = 'Confirmed';
-    theme = 'success';
-  } else {
-    icon = 'vaadin:close-circle';
-    title = 'Cancelled';
-    theme = 'error';
-  }
-
-  render(
-    html`
-      <iron-icon
-        icon="${icon}"
-        theme="badge ${theme} pill"
-        title="${title}"
-        aria-label="${title}"
-      ></iron-icon>
-    `,
-    root
-  );
-};
-
 @customElement('badge-icons-only-table')
 export class Example extends LitElement {
   @internalProperty()
@@ -63,8 +27,44 @@ export class Example extends LitElement {
   }
 
   render() {
+    // tag::snippet[]
+    const renderBoolean = (
+      root: HTMLElement,
+      column?: GridColumnElement,
+      model?: GridItemModel
+    ): void => {
+      if (!column || !model) {
+        return;
+      }
+
+      let icon: string;
+      let title: string;
+      let theme: string;
+
+      if ((model.item as UserPermissions)[column.id as keyof UserPermissions]) {
+        icon = 'vaadin:check-circle';
+        title = 'Confirmed';
+        theme = 'success';
+      } else {
+        icon = 'vaadin:close-circle';
+        title = 'Cancelled';
+        theme = 'error';
+      }
+
+      render(
+        html`
+          <iron-icon
+            icon="${icon}"
+            theme="badge ${theme} pill"
+            title="${title}"
+            aria-label="${title}"
+          ></iron-icon>
+        `,
+        root
+      );
+    };
+
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-column path="name" header="Name"></vaadin-grid-column>
         <vaadin-grid-column
@@ -83,7 +83,7 @@ export class Example extends LitElement {
           .renderer="${renderBoolean}"
         ></vaadin-grid-column>
       </vaadin-grid>
-      <!-- end::snippet[] -->
     `;
+    // end::snippet[]
   }
 }
