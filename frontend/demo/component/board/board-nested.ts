@@ -11,8 +11,26 @@ import './utils/board-statistics';
 export class Example extends LitElement {
   static get styles() {
     return css`
-      .board vaadin-board-row {
+      .board {
+        --board-border: 0.0625rem solid var(--lumo-contrast-10pct);
+      }
+
+      .board > vaadin-board-row {
         flex-wrap: nowrap;
+      }
+
+      .board board-chart,
+      .board board-statistics {
+        padding: var(--lumo-space-m);
+        border-inline-end: var(--board-border);
+      }
+
+      .board board-card {
+        padding: var(--lumo-space-l);
+      }
+
+      .board board-card:first-child {
+        border-block-end: var(--board-border);
       }
     `;
   }
@@ -20,35 +38,31 @@ export class Example extends LitElement {
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(this.shadowRoot!);
   }
 
-  // tag::snippet[]
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-board class="board">
         <vaadin-board-row>
           <board-chart></board-chart>
           <board-statistics></board-statistics>
-          <section>
-            <vaadin-board-row>
-              <board-card type="+">
-                Current users
-                <span slot="current">745</span>
-                <span slot="difference">33.7%</span>
-              </board-card>
-            </vaadin-board-row>
-            <vaadin-board-row>
-              <board-card type="+">
-                Conversion rate
-                <span slot="current">18%</span>
-                <span slot="difference">3.9%</span>
-              </board-card>
-            </vaadin-board-row>
-          </section>
+          <vaadin-board-row>
+            <board-card type="+">
+              Current users
+              <span slot="current">745</span>
+              <span slot="difference">33.7%</span>
+            </board-card>
+            <board-card type="+">
+              Conversion rate
+              <span slot="current">18%</span>
+              <span slot="difference">3.9%</span>
+            </board-card>
+          </vaadin-board-row>
         </vaadin-board-row>
       </vaadin-board>
+      <!-- end::snippet[] -->
     `;
   }
-  // end::snippet[]
 }

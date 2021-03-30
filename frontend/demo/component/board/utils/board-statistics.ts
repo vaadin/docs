@@ -4,7 +4,7 @@ import '@vaadin/vaadin-lumo-styles/icons';
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
 import ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
 import { applyTheme } from 'Frontend/generated/theme';
-import { css, customElement, html, LitElement } from 'lit-element';
+import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
 
 @customElement('board-statistics')
@@ -19,8 +19,8 @@ export class BoardStatistics extends LitElement {
 
       .level::before {
         content: '';
-        width: var(--lumo-font-size-m);
-        height: var(--lumo-font-size-m);
+        width: var(--lumo-font-size-xxs);
+        height: var(--lumo-font-size-xxs);
         border-radius: 50%;
       }
 
@@ -41,6 +41,8 @@ export class BoardStatistics extends LitElement {
       }
 
       .legend label {
+        display: flex;
+        align-items: center;
         margin-inline-end: var(--lumo-space-m);
       }
 
@@ -49,16 +51,22 @@ export class BoardStatistics extends LitElement {
       }
 
       .title {
-        font-size: var(--lumo-font-size-xl);
+        font-size: var(--lumo-font-size-l);
         font-weight: 700;
       }
 
       .table {
+        width: 100%;
         margin-block-start: var(--lumo-space-s);
+      }
+
+      .table .number {
+        text-align: end;
       }
     `;
   }
 
+  @internalProperty()
   private serviceHealth: readonly ServiceHealth[] = [];
 
   constructor() {
@@ -101,10 +109,12 @@ export class BoardStatistics extends LitElement {
             ({ id }) => id,
             ({ city, input, output }) => html`
               <tr>
-                <td class="level ok"></td>
+                <td>
+                  <span class="level ok"></span>
+                </td>
                 <td>${city}</td>
-                <td>${input}</td>
-                <td>${output}</td>
+                <td class="number">${input}</td>
+                <td class="number">${output}</td>
               </tr>
             `
           )}

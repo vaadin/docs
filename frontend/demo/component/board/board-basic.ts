@@ -23,7 +23,7 @@ export class Example extends LitElement {
       }
 
       .board board-card {
-        padding: 1rem;
+        padding: var(--lumo-space-m);
       }
 
       .board board-card:not(:last-child) {

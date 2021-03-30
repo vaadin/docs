@@ -31,7 +31,7 @@ export class Example extends LitElement {
   static get styles() {
     return css`
       .title {
-        font-size: var(--lumo-font-size-xl);
+        font-size: var(--lumo-font-size-l);
         font-weight: 700;
         margin-block-end: var(--lumo-space-m);
       }
