@@ -25,6 +25,7 @@ export class BoardResizeInfo extends LitElement {
       span {
         margin-inline-start: var(--lumo-space-m);
         flex: 1;
+        font-size: var(--lumo-font-size-xs);
       }
     `;
   }
@@ -38,7 +39,7 @@ export class BoardResizeInfo extends LitElement {
   render() {
     return html`
       <iron-icon icon="vaadin:info-circle"></iron-icon>
-      <span>Drag the split handle to resize the board layout</span>
+      <span>Resize with the split handle</span>
     `;
   }
 }
