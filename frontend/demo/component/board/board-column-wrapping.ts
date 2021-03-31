@@ -1,50 +1,39 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, css } from 'lit-element';
-import '@vaadin/vaadin-board/vaadin-board';
+import '@vaadin/vaadin-board';
+import '@vaadin/vaadin-split-layout';
+import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
+import './utils/board-resize-info';
+import { boardCellColorsCSS, boardCellCSS } from './utils/shared-styles';
 
 @customElement('board-column-wrapping')
 export class Example extends LitElement {
+  static get styles() {
+    return [boardCellColorsCSS, boardCellCSS];
+  }
+
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
 
-  // tag::snippet[]
   render() {
     return html`
-      <vaadin-board>
-        <vaadin-board-row>
-          <div class="cell">Cell 1</div>
-          <div class="cell">Cell 2</div>
-          <div class="cell">Cell 3</div>
-          <div class="cell">Cell 4</div>
-        </vaadin-board-row>
-      </vaadin-board>
-    `;
-  }
-  // end::snippet[]
-  static get styles() {
-    return css`
-      .cell {
-        padding: 1em;
-        text-align: center;
-        color: white;
-      }
-      .cell:nth-child(1) {
-        background: #003e53;
-      }
-      .cell:nth-child(2) {
-        background: #00506b;
-      }
-      .cell:nth-child(3) {
-        background: #006c90;
-      }
-      .cell:nth-child(4) {
-        background: #0090c0;
-      }
+      <!-- tag::snippet[] -->
+      <vaadin-split-layout>
+        <vaadin-board>
+          <vaadin-board-row class="row">
+            <div class="cell">Cell 1</div>
+            <div class="cell">Cell 2</div>
+            <div class="cell">Cell 3</div>
+            <div class="cell">Cell 4</div>
+          </vaadin-board-row>
+        </vaadin-board>
+        <board-resize-info></board-resize-info>
+      </vaadin-split-layout>
+      <!-- end::snippet[] -->
     `;
   }
 }

@@ -1,50 +1,65 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init';
+import {
+  boardCellColorsCSS,
+  boardCellCSS,
+} from 'Frontend/demo/component/board/utils/shared-styles'; // hidden-full-source-line
 
+import '@vaadin/vaadin-board';
+import '@vaadin/vaadin-split-layout';
 import { html, LitElement, customElement, css } from 'lit-element';
-import '@vaadin/vaadin-board/vaadin-board';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('board-breakpoints')
 export class Example extends LitElement {
+  static get styles() {
+    return [
+      boardCellColorsCSS,
+      boardCellCSS,
+      css`
+        :host {
+          --vaadin-board-width-small: 50%;
+          --vaadin-board-width-medium: 70%;
+        }
+
+        vaadin-board-row.large > div {
+          font-size: var(--lumo-font-size-s);
+          padding: var(--lumo-space-l);
+        }
+
+        vaadin-board-row.medium > div {
+          font-size: var(--lumo-font-size-m);
+          padding: var(--lumo-space-m);
+        }
+
+        vaadin-board-row.small > div {
+          font-size: var(--lumo-font-size-l);
+          padding: var(--lumo-space-s);
+        }
+      `,
+    ];
+  }
+
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(this.shadowRoot!);
   }
 
-  // tag::snippet[]
   render() {
     return html`
-      <vaadin-board>
-        <vaadin-board-row>
-          <div class="cell">Cell 1</div>
-          <div class="cell">Cell 2</div>
-          <div class="cell">Cell 3</div>
-          <div class="cell">Cell 4</div>
-        </vaadin-board-row>
-      </vaadin-board>
-    `;
-  }
-  // end::snippet[]
-  static get styles() {
-    return css`
-      .cell {
-        padding: 1em;
-        text-align: center;
-        color: white;
-      }
-      .cell:nth-child(1) {
-        background: #003e53;
-      }
-      .cell:nth-child(2) {
-        background: #00506b;
-      }
-      .cell:nth-child(3) {
-        background: #006c90;
-      }
-      .cell:nth-child(4) {
-        background: #0090c0;
-      }
+      <!-- tag::snippet[] -->
+      <vaadin-split-layout>
+        <vaadin-board style="width: 80%">
+          <vaadin-board-row>
+            <div class="cell">Cell 1</div>
+            <div class="cell">Cell 2</div>
+            <div class="cell">Cell 3</div>
+            <div class="cell">Cell 4</div>
+          </vaadin-board-row>
+        </vaadin-board>
+        <board-resize-info style="20%"></board-resize-info>
+      </vaadin-split-layout>
+      <!-- end::snippet[] -->
     `;
   }
 }

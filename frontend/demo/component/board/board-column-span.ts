@@ -1,50 +1,97 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init';
 
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-board/vaadin-board';
 import { applyTheme } from 'Frontend/generated/theme';
+import { boardCellColorsCSS } from './utils/shared-styles';
 
 @customElement('board-column-span')
 export class Example extends LitElement {
+  static get styles() {
+    return [
+      boardCellColorsCSS,
+      css`
+        :host {
+          --board-inner-border: 1px dashed white;
+        }
+
+        vaadin-board {
+          padding: var(--lumo-space-m) 0;
+        }
+
+        .cell {
+          padding: 1em;
+          text-align: center;
+          color: white;
+          background: var(--board-blue-20);
+        }
+
+        .cell[board-cols='3'] {
+          background: var(--board-blue-40);
+        }
+
+        .cell[board-cols='2'] {
+          background: var(--board-blue-30);
+        }
+
+        .cell:not(:last-child) {
+          border-inline-end: var(--board-inner-border);
+        }
+
+        .board vaadin-board-row:not(:last-child) .cell {
+          border-block-end: var(--board-inner-border);
+        }
+      `,
+    ];
+  }
+
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(this.shadowRoot!);
   }
 
-  // tag::snippet[]
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-board>
         <vaadin-board-row>
-          <div class="cell">Cell 1</div>
-          <div class="cell">Cell 2</div>
-          <div class="cell">Cell 3</div>
-          <div class="cell">Cell 4</div>
+          <div class="cell" board-cols="2">Span 2</div>
+          <div class="cell">Span 1</div>
+          <div class="cell">Span 1</div>
+        </vaadin-board-row>
+        <vaadin-board-row>
+          <div class="cell">Span 1</div>
+          <div class="cell" board-cols="2">Span 2</div>
+          <div class="cell">Span 1</div>
+        </vaadin-board-row>
+        <vaadin-board-row>
+          <div class="cell">Span 1</div>
+          <div class="cell">Span 1</div>
+          <div class="cell" board-cols="2">Span 2</div>
         </vaadin-board-row>
       </vaadin-board>
-    `;
-  }
-  // end::snippet[]
-  static get styles() {
-    return css`
-      .cell {
-        padding: 1em;
-        text-align: center;
-        color: white;
-      }
-      .cell:nth-child(1) {
-        background: #003e53;
-      }
-      .cell:nth-child(2) {
-        background: #00506b;
-      }
-      .cell:nth-child(3) {
-        background: #006c90;
-      }
-      .cell:nth-child(4) {
-        background: #0090c0;
-      }
+      <vaadin-board class="board">
+        <vaadin-board-row>
+          <div class="cell" board-cols="3">Span 3</div>
+          <div class="cell">Span 1</div>
+        </vaadin-board-row>
+        <vaadin-board-row>
+          <div class="cell">Span 1</div>
+          <div class="cell" board-cols="3">Span 3</div>
+        </vaadin-board-row>
+      </vaadin-board>
+      <vaadin-board class="board">
+        <vaadin-board-row>
+          <div class="cell" board-cols="2">Span 2</div>
+          <div class="cell">Span 1</div>
+        </vaadin-board-row>
+        <vaadin-board-row>
+          <div class="cell">Span 1</div>
+          <div class="cell" board-cols="2">Span 2</div>
+        </vaadin-board-row>
+      </vaadin-board>
+      <!-- end::snippet[] -->
     `;
   }
 }

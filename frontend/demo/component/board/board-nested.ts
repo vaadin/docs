@@ -1,36 +1,33 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import '@vaadin/vaadin-board/vaadin-board';
+import '@vaadin/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import './utils/board-card';
 import './utils/board-statistics';
+import { boardBorderCSS, boardExampleBreakpointsCSS } from './utils/shared-styles';
 
 @customElement('board-nested')
 export class Example extends LitElement {
   static get styles() {
-    return css`
-      .board {
-        --board-border: 0.0625rem solid var(--lumo-contrast-10pct);
-      }
+    return [
+      boardBorderCSS,
+      boardExampleBreakpointsCSS,
+      css`
+        board-statistics {
+          padding: var(--lumo-space-m);
+          border-inline-end: var(--board-border);
+        }
 
-      .board > vaadin-board-row {
-        flex-wrap: nowrap;
-      }
+        board-card {
+          padding: var(--lumo-space-l);
+        }
 
-      .board board-statistics {
-        padding: var(--lumo-space-m);
-        border-inline-end: var(--board-border);
-      }
-
-      .board board-card {
-        padding: var(--lumo-space-l);
-      }
-
-      .board board-card:first-child {
-        border-block-end: var(--board-border);
-      }
-    `;
+        board-card:first-child {
+          border-block-end: var(--board-border);
+        }
+      `,
+    ];
   }
 
   constructor() {
@@ -42,7 +39,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-board class="board">
+      <vaadin-board>
         <vaadin-board-row>
           <board-statistics></board-statistics>
           <vaadin-board-row>
