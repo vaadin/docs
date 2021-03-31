@@ -1,26 +1,16 @@
-// tag::timestamp[]
-// tag::userinfo[]
 // Uses the Vaadin provided login an logout helper methods
 import { login as loginImpl, LoginResult, logout as logoutImpl } from '@vaadin/flow-frontend';
-// end::timestamp[]
+// tag::userinfo[]
 import { UserInfoEndpoint } from 'Frontend/generated/UserInfoEndpoint';
 import UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
 // end::userinfo[]
-// tag::timestamp[]
 
 interface Authentication {
-  timestamp: number;
-}
-// end::timestamp[]
-// tag::userinfo[]
-
-interface Authentication {
+  // tag::userinfo[]
   user: UserInfo;
+  // end::userinfo[]
   timestamp: number;
 }
-// end::userinfo[]
-// tag::timestamp[]
-// tag::userinfo[]
 
 let authentication: Authentication | undefined = undefined;
 
@@ -66,20 +56,16 @@ export async function login(username: string, password: string): Promise<LoginRe
   // Use the Vaadin provided login helper method to obtain the login result
   const result = await loginImpl(username, password);
   if (!result.error) {
-    // end::userinfo[]
-    // end::timestamp[]
-    // @ts-ignore - missing user key in Authentication when UserInfo is not used
-    // tag::timestamp[]
-    authentication = { timestamp: new Date().getTime() };
-    // end::timestamp[]
     // tag::userinfo[]
     // Get user info from endpoint
     const user = await UserInfoEndpoint.getUserInfo();
+    // end::userinfo[]
     authentication = {
+      // tag::userinfo[]
       user,
+      // end::userinfo[]
       timestamp: new Date().getTime(),
     };
-    // tag::timestamp[]
 
     // Save the authentication to local storage
     localStorage.setItem(AUTHENTICATION_KEY, JSON.stringify(authentication));
@@ -106,7 +92,7 @@ export async function logout() {
 export function isLoggedIn() {
   return !!authentication;
 }
-// end::timestamp[]
+// tag::userinfo[]
 
 /**
  * Checks if the user is logged in.
