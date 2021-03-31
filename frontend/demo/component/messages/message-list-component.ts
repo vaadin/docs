@@ -30,7 +30,7 @@ export class Example extends LitElement {
         text: 'Linsey, could you check if the details with the order are okay?',
         time: yesterday,
         userName: 'Matt Mambo',
-        userColorIndex: 1
+        userColorIndex: 1,
       },
       {
         text: 'All good. Ship it.',
