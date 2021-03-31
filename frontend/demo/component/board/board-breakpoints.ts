@@ -6,6 +6,7 @@ import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import cellColorsCSS from './shared-styles/board-cell-color';
 import defaultCellCSS from './shared-styles/board-cell-default';
+import './utils/board-resize-info';
 
 @customElement('board-breakpoints')
 export class Example extends LitElement {
