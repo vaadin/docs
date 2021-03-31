@@ -27,9 +27,10 @@ public class MessageListComponent extends Div {
         MessageListItem message1 = new MessageListItem(
                 "Linsey, could you check if the details with the order are okay?",
                 yesterday, "Matt Mambo");
+        message1.setUserColorIndex(1);
         MessageListItem message2 = new MessageListItem("All good. Ship it.",
-                fiftyMinsAgo, "Linsey Listy");
-
+                fiftyMinsAgo, "Linsey Listy", person.getPictureUrl());
+        message2.setUserColorIndex(2);
         list.setItems(Arrays.asList(message1, message2));
         add(list);
         // end::snippet[]

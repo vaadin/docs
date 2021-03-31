@@ -3,6 +3,7 @@ package com.vaadin.demo.component.messages;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,7 +28,8 @@ public class MessagesBasic extends Div {
             MessageListItem newMessage = new MessageListItem(
                     submitEvent.getValue(), Instant.now(), "Milla Sting");
             newMessage.setUserAbbreviation("MS");
-            List<MessageListItem> items = list.getItems();
+            newMessage.setUserColorIndex(3);
+            List<MessageListItem> items = new ArrayList<>(list.getItems());
             items.add(newMessage);
             list.setItems(items);
         });
