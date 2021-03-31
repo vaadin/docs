@@ -18,7 +18,7 @@ export const boardCellColorsCSS = css`
 export const boardExampleBreakpointsCSS = css`
   :host {
     --vaadin-board-width-small: 300px;
-    --vaadin-board-width-medium: 500px;
+    --vaadin-board-width-medium: 400px;
   }
 `;
 
