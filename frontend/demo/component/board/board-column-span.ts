@@ -3,12 +3,13 @@ import 'Frontend/demo/init';
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-board/vaadin-board';
 import { applyTheme } from 'Frontend/generated/theme';
-import { boardCellColorsCSS } from './utils/shared-styles';
+import { boardCellColorsCSS, boardExampleBreakpointsCSS } from './utils/shared-styles';
 
 @customElement('board-column-span')
 export class Example extends LitElement {
   static get styles() {
     return [
+      boardExampleBreakpointsCSS,
       boardCellColorsCSS,
       css`
         :host {

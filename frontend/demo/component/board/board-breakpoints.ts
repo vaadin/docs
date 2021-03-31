@@ -17,8 +17,8 @@ export class Example extends LitElement {
       boardCellCSS,
       css`
         :host {
-          --vaadin-board-width-small: 50%;
-          --vaadin-board-width-medium: 70%;
+          --vaadin-board-width-small: 300px;
+          --vaadin-board-width-medium: 500px;
         }
 
         vaadin-board-row.large > div {

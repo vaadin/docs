@@ -5,12 +5,16 @@ import '@vaadin/vaadin-split-layout';
 import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import './utils/board-resize-info';
-import { boardCellColorsCSS, boardCellCSS } from './utils/shared-styles';
+import {
+  boardCellColorsCSS,
+  boardCellCSS,
+  boardExampleBreakpointsCSS,
+} from './utils/shared-styles';
 
 @customElement('board-column-wrapping')
 export class Example extends LitElement {
   static get styles() {
-    return [boardCellColorsCSS, boardCellCSS];
+    return [boardExampleBreakpointsCSS, boardCellColorsCSS, boardCellCSS];
   }
 
   constructor() {

@@ -11,8 +11,8 @@ import { boardBorderCSS, boardExampleBreakpointsCSS } from './utils/shared-style
 export class Example extends LitElement {
   static get styles() {
     return [
-      boardBorderCSS,
       boardExampleBreakpointsCSS,
+      boardBorderCSS,
       css`
         vaadin-board-row:not(:last-child) {
           border-block-end: var(--board-border);
