@@ -39,7 +39,7 @@ export class Example extends LitElement {
           border-inline-end: var(--board-inner-border);
         }
 
-        .board vaadin-board-row:not(:last-child) .cell {
+        vaadin-board-row:not(:last-child) .cell {
           border-block-end: var(--board-inner-border);
         }
       `,
@@ -72,7 +72,7 @@ export class Example extends LitElement {
           <div class="cell" board-cols="2">Span 2</div>
         </vaadin-board-row>
       </vaadin-board>
-      <vaadin-board class="board">
+      <vaadin-board>
         <vaadin-board-row>
           <div class="cell" board-cols="3">Span 3</div>
           <div class="cell">Span 1</div>
@@ -82,7 +82,7 @@ export class Example extends LitElement {
           <div class="cell" board-cols="3">Span 3</div>
         </vaadin-board-row>
       </vaadin-board>
-      <vaadin-board class="board">
+      <vaadin-board>
         <vaadin-board-row>
           <div class="cell" board-cols="2">Span 2</div>
           <div class="cell">Span 1</div>
