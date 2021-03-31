@@ -3,16 +3,17 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
+import borderCSS from './shared-styles/board-border';
+import defaultBreakpointsCSS from './shared-styles/board-default-breakpoints';
 import './utils/board-card';
 import './utils/board-chart';
-import { boardBorderCSS, boardExampleBreakpointsCSS } from './utils/shared-styles';
 
 @customElement('board-basic')
 export class Example extends LitElement {
   static get styles() {
     return [
-      boardExampleBreakpointsCSS,
-      boardBorderCSS,
+      defaultBreakpointsCSS,
+      borderCSS,
       css`
         vaadin-board-row:not(:last-child) {
           border-block-end: var(--board-border);

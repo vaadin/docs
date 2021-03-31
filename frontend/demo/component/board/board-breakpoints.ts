@@ -1,20 +1,18 @@
-import 'Frontend/demo/init';
-import {
-  boardCellColorsCSS,
-  boardCellCSS,
-} from 'Frontend/demo/component/board/utils/shared-styles'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import '@vaadin/vaadin-board';
 import '@vaadin/vaadin-split-layout';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
+import cellColorsCSS from './shared-styles/board-cell-color';
+import defaultCellCSS from './shared-styles/board-cell-default';
 
 @customElement('board-breakpoints')
 export class Example extends LitElement {
   static get styles() {
     return [
-      boardCellColorsCSS,
-      boardCellCSS,
+      cellColorsCSS,
+      defaultCellCSS,
       css`
         :host {
           --vaadin-board-width-small: 300px;

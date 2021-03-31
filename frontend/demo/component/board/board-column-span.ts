@@ -1,16 +1,17 @@
-import 'Frontend/demo/init';
+import 'Frontend/demo/init'; // hidden-full-source-line
 
+import '@vaadin/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
-import '@vaadin/vaadin-board/vaadin-board';
 import { applyTheme } from 'Frontend/generated/theme';
-import { boardCellColorsCSS, boardExampleBreakpointsCSS } from './utils/shared-styles';
+import cellColorsCSS from './shared-styles/board-cell-color';
+import defaultCellCSS from './shared-styles/board-default-breakpoints';
 
 @customElement('board-column-span')
 export class Example extends LitElement {
   static get styles() {
     return [
-      boardExampleBreakpointsCSS,
-      boardCellColorsCSS,
+      defaultCellCSS,
+      cellColorsCSS,
       css`
         :host {
           --board-inner-border: 1px dashed white;
