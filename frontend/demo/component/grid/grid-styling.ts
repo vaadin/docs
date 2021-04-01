@@ -12,22 +12,22 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('grid-styling')
 export class Example extends LitElement {
-    constructor() {
-        super();
-        // Apply custom theme (only supported if your app uses one)
-        applyTheme(this.shadowRoot);
-    }
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
 
-    @internalProperty()
-    private items: Person[] = [];
+  @internalProperty()
+  private items: Person[] = [];
 
-    async firstUpdated() {
-        const { people } = await getPeople();
-        this.items = people;
-    }
+  async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people;
+  }
 
-    render() {
-        return html`
+  render() {
+    return html`
       <vaadin-grid .items=${this.items}>
         <vaadin-grid-column
           header="Image"
@@ -40,19 +40,19 @@ export class Example extends LitElement {
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
     `;
-    }
+  }
 
-    private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-        render(
-            html`
+  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+    render(
+      html`
         <img
           style="height: var(--lumo-size-m)"
           src=${(model.item as Person).pictureUrl}
           alt="User avatar"
         />
       `,
-            root
-        );
-    };
+      root
+    );
+  };
 }
 // end::snippet[]

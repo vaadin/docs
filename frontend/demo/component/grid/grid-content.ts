@@ -109,10 +109,11 @@ export class Example extends LitElement {
   };
 
   private statusRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    render(html` <span class="badge success">Available</span> `, root);
+    const person = model.item as Person;
+    render(html` <span class="badge success">Available ${person.id}</span> `, root);
   };
 
-  private manageRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+  private manageRenderer = (root: HTMLElement) => {
     render(
       html`
         <vaadin-button theme="tertiary">
