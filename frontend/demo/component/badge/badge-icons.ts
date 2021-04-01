@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
