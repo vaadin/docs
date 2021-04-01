@@ -5,7 +5,6 @@ import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('date-picker-basic')
 export class Example extends LitElement {
   constructor() {
@@ -15,7 +14,10 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`<vaadin-date-picker label="Birthday"></vaadin-date-picker>`;
+    return html`
+      <!-- tag::snippet[] -->
+      <vaadin-date-picker label="Start date"></vaadin-date-picker>
+      <!-- end::snippet[] -->
+    `;
   }
 }
-// end::snippet[]
