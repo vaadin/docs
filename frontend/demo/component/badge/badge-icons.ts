@@ -2,7 +2,8 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
-import '@vaadin/vaadin-ordered-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 
