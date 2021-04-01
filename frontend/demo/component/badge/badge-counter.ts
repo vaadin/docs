@@ -41,7 +41,9 @@ export class Example extends LitElement {
         <vaadin-item>
           <div class="item">
             <span>Settings</span>
-            <span theme="badge error primary pill">1</span>
+            <span aria-label="Settings require attention!" theme="badge error primary pill">
+              1
+            </span>
           </div>
         </vaadin-item>
       </vaadin-list-box>

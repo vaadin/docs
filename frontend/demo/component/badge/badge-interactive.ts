@@ -64,7 +64,7 @@ export class Example extends LitElement {
             this.selectedProfessions,
             (profession) => profession,
             (profession) => html`
-              <span theme="badge contrast">
+              <span theme="badge pill contrast">
                 <span>${profession}</span>
                 <vaadin-button
                   class="badge-btn"
