@@ -2,6 +2,7 @@ import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // 
 import 'Frontend/demo/init'; // hidden-full-source-line
 import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-full-source-line
 import '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-lumo-styles/icons';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { customElement, html, internalProperty, LitElement } from 'lit-element';

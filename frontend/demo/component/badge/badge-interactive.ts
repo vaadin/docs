@@ -2,7 +2,6 @@ import { getPeople } from 'Frontend/demo/domain/DataService'; // hidden-full-sou
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';

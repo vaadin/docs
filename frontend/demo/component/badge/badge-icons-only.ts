@@ -1,6 +1,5 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/vaadin-icons/vaadin-icons';
-import '@vaadin/vaadin-lumo-styles/icons';
 import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 

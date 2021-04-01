@@ -3,7 +3,6 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions'; // hidden-full-source-line
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import '@vaadin/vaadin-lumo-styles/icons';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { customElement, html, internalProperty, LitElement } from 'lit-element';
