@@ -5,7 +5,6 @@ import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermi
 import '@vaadin/vaadin-grid';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
-import '@vaadin/vaadin-ordered-layout';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { customElement, html, internalProperty, LitElement } from 'lit-element';
