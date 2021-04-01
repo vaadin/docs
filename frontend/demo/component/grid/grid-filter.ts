@@ -1,58 +1,92 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty } from 'lit-element';
+import { customElement, LitElement, internalProperty, html } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-avatar/vaadin-avatar';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render, html } from 'lit-html';
+import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
+import { TextFieldElement } from '@vaadin/vaadin-text-field';
 
 // tag::snippet[]
+
+type PersonEnhanced = Person & { displayName: string };
 @customElement('grid-filter')
 export class Example extends LitElement {
-    constructor() {
-        super();
-        // Apply custom theme (only supported if your app uses one)
-        applyTheme(this.shadowRoot);
-    }
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
 
-    @internalProperty()
-    private items: Person[] = [];
+  @internalProperty()
+  private filteredItems: PersonEnhanced[] = [];
 
-    async firstUpdated() {
-        const { people } = await getPeople();
-        this.items = people;
-    }
+  private items: PersonEnhanced[] = [];
 
-    render() {
-        return html`
-      <vaadin-grid .items=${this.items}>
-        <vaadin-grid-column
-          header="Image"
-          .renderer=${this.avatarRenderer}
-          flex-grow="0"
-          auto-width
-        ></vaadin-grid-column>
-        <vaadin-grid-column path="firstName"></vaadin-grid-column>
-        <vaadin-grid-column path="lastName"></vaadin-grid-column>
-        <vaadin-grid-column path="email"></vaadin-grid-column>
-      </vaadin-grid>
+  async firstUpdated() {
+    const people = (await getPeople()).people.map((person) => ({
+      ...person,
+      displayName: `${person.firstName} ${person.lastName}`,
+    }));
+    this.items = this.filteredItems = people;
+  }
+
+  render() {
+    return html`
+      <vaadin-vertical-layout theme="spacing">
+        <vaadin-text-field
+          placeholder="Search"
+          style="width: 50%;"
+          @keyup="${(e: KeyboardEvent) => {
+            const value = (e.target as TextFieldElement).value || '';
+            const filters = value
+              .trim()
+              .split(' ')
+              .map((filter) => new RegExp(filter, 'i'));
+
+            this.filteredItems = this.items.filter(({ displayName, email, profession }) =>
+              filters.some(
+                (filter) =>
+                  filter.test(displayName) || filter.test(email) || filter.test(profession)
+              )
+            );
+          }}"
+        >
+          <iron-icon slot="prefix" icon="vaadin:search"></iron-icon>
+        </vaadin-text-field>
+        <vaadin-grid .items=${this.filteredItems}>
+          <vaadin-grid-column
+            header="Name"
+            .renderer=${this.nameRenderer}
+            flex-grow="0"
+            auto-width
+          ></vaadin-grid-column>
+          <vaadin-grid-column path="email"></vaadin-grid-column>
+          <vaadin-grid-column path="profession"></vaadin-grid-column>
+        </vaadin-grid>
+      </vaadin-vertical-layout>
     `;
-    }
+  }
 
-    private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-        render(
-            html`
-        <img
-          style="height: var(--lumo-size-m)"
-          src=${(model.item as Person).pictureUrl}
-          alt="User avatar"
-        />
+  private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+    const person = model.item as Person & { displayName: string };
+    render(
+      html`
+        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+          <vaadin-avatar img=${person.pictureUrl} .name="${person.displayName}"></vaadin-avatar>
+          <span> ${person.displayName} </span>
+        </vaadin-horizontal-layout>
       `,
-            root
-        );
-    };
+      root
+    );
+  };
 }
 // end::snippet[]

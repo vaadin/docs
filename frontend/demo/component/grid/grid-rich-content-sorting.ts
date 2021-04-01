@@ -1,58 +1,100 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty } from 'lit-element';
+import { customElement, LitElement, internalProperty, html } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-grid/vaadin-grid-sorter';
+import '@vaadin/vaadin-avatar/vaadin-avatar';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render, html } from 'lit-html';
+import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
+import { differenceInYears, format, parseISO } from 'date-fns';
 
 // tag::snippet[]
 @customElement('grid-rich-content-sorting')
 export class Example extends LitElement {
-    constructor() {
-        super();
-        // Apply custom theme (only supported if your app uses one)
-        applyTheme(this.shadowRoot);
-    }
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
 
-    @internalProperty()
-    private items: Person[] = [];
+  @internalProperty()
+  private items: Person[] = [];
 
-    async firstUpdated() {
-        const { people } = await getPeople();
-        this.items = people;
-    }
+  async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people;
+  }
 
-    render() {
-        return html`
+  render() {
+    return html`
       <vaadin-grid .items=${this.items}>
         <vaadin-grid-column
           header="Image"
-          .renderer=${this.avatarRenderer}
-          flex-grow="0"
-          auto-width
+          .renderer="${this.employeeRenderer}"
+          .headerRenderer="${this.employeeHeaderRenderer}"
         ></vaadin-grid-column>
-        <vaadin-grid-column path="firstName"></vaadin-grid-column>
-        <vaadin-grid-column path="lastName"></vaadin-grid-column>
-        <vaadin-grid-column path="email"></vaadin-grid-column>
+        <vaadin-grid-column
+          .renderer="${this.birthdayRenderer}"
+          .headerRenderer="${this.birthdayHeaderRenderer}"
+        ></vaadin-grid-column>
       </vaadin-grid>
     `;
-    }
+  }
 
-    private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-        render(
-            html`
-        <img
-          style="height: var(--lumo-size-m)"
-          src=${(model.item as Person).pictureUrl}
-          alt="User avatar"
-        />
+  private employeeHeaderRenderer = (root: HTMLElement) => {
+    render(html`<vaadin-grid-sorter path="lastName">Employee</vaadin-grid-sorter>`, root);
+  };
+  private employeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+    const person = model.item as Person;
+    render(
+      html`
+        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+          <vaadin-avatar
+            img="${person.pictureUrl}"
+            name="${person.firstName} ${person.lastName}"
+            alt="User avatar"
+          ></vaadin-avatar>
+          <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+            <span> ${person.firstName} ${person.lastName} </span>
+            <span
+              style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+            >
+              ${person.email}
+            </span>
+          </vaadin-vertical-layout>
+        </vaadin-horizontal-layout>
       `,
-            root
-        );
-    };
+      root
+    );
+  };
+
+  private birthdayHeaderRenderer = (root: HTMLElement) => {
+    render(html`<vaadin-grid-sorter path="lastName">Birthdate</vaadin-grid-sorter>`, root);
+  };
+  private birthdayRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+    const person = model.item as Person;
+    const birthday = parseISO(person.birthday);
+    render(
+      html`
+        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+          <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+            <span> ${format(birthday, 'P')} </span>
+            <span
+              style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+            >
+              Age: ${differenceInYears(Date.now(), birthday)}
+            </span>
+          </vaadin-vertical-layout>
+        </vaadin-horizontal-layout>
+      `,
+      root
+    );
+  };
 }
 // end::snippet[]
