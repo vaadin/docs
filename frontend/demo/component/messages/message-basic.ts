@@ -27,7 +27,6 @@ export class Example extends LitElement {
         text: 'Nature does not hurry, yet everything gets accomplished.',
         time: 'yesterday',
         userName: 'Matt Mambo',
-        userAbbr: 'MM',
         userColorIndex: 1,
       },
       {
@@ -35,7 +34,6 @@ export class Example extends LitElement {
           'Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.',
         time: 'right now',
         userName: 'Linsey Listy',
-        userAbbr: 'LL',
         userColorIndex: 2,
         userImg: person.pictureUrl,
       },

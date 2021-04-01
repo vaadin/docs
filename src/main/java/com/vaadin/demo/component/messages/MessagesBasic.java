@@ -39,13 +39,11 @@ public class MessagesBasic extends Div {
                 "Nature does not hurry, yet everything gets accomplished.",
                 LocalDateTime.now().minusDays(1).toInstant(ZoneOffset.UTC),
                 "Matt Mambo");
-        message1.setUserAbbreviation("MM");
         message1.setUserColorIndex(1);
         MessageListItem message2 = new MessageListItem(
                 "Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.",
                 LocalDateTime.now().minusMinutes(55).toInstant(ZoneOffset.UTC),
                 "Linsey Listy", person.getPictureUrl());
-        message2.setUserAbbreviation("LL");
         message2.setUserColorIndex(2);
         list.setItems(Arrays.asList(message1, message2));
 
