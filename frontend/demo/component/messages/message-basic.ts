@@ -5,7 +5,7 @@ import '@vaadin/vaadin-messages/vaadin-message-list';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import MessageListItem from './MessageListItem';
+import { MessageListItem } from '@vaadin/vaadin-messages/src/interfaces';
 import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-full-source-line
 
 @customElement('message-basic')
