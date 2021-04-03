@@ -1,6 +1,8 @@
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import RawReport from 'Frontend/generated/com/vaadin/demo/domain/Report';
+import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 
 const datasetCache: { [key: string]: any[] } = {};
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
@@ -62,3 +64,21 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
     hierarchyLevelSize,
   };
 }
+
+export const getUserPermissions = async (): Promise<readonly UserPermissions[]> =>
+  getDataset<UserPermissions>('permissions.json');
+
+export enum ReportStatus {
+  COMPLETED = 'Completed',
+  IN_PROGRESS = 'In Progress',
+  CANCELLED = 'Cancelled',
+  ON_HOLD = 'On Hold',
+}
+
+export type Report = Omit<RawReport, 'status'> &
+  Readonly<{
+    status: ReportStatus;
+  }>;
+
+export const getReports = async (): Promise<readonly Report[]> =>
+  await getDataset<Report>('reports.json');
