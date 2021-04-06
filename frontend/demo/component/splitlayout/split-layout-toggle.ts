@@ -20,13 +20,12 @@ export class Example extends LitElement {
   @internalProperty()
   private sidebarCollapsed = false;
 
-  @internalProperty()
-  private sidebarWidthPercentage = 40;
-
   render() {
+    const sidebarWidthPercentage = this.sidebarCollapsed ? 13 : 40;
+
     return html`
       <vaadin-split-layout style="max-height: 280px;">
-        <div style="overflow: hidden; width: ${this.sidebarWidthPercentage}%">
+        <div style="overflow: hidden; width: ${sidebarWidthPercentage}%">
           <vaadin-button
             theme="icon tertiary"
             aria-label="Expand/collapse sidebar"
@@ -39,14 +38,13 @@ export class Example extends LitElement {
           </vaadin-button>
           <master-content></master-content>
         </div>
-        <detail-content style="width: ${100 - this.sidebarWidthPercentage}%"></detail-content>
+        <detail-content style="width: ${100 - sidebarWidthPercentage}%"></detail-content>
       </vaadin-split-layout>
     `;
   }
 
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
-    this.sidebarWidthPercentage = this.sidebarCollapsed ? 13 : 40;
   }
   // end::snippet[]
 }
