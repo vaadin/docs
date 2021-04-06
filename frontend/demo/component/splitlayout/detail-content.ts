@@ -1,5 +1,4 @@
 import { css, customElement, html, LitElement } from 'lit-element';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('detail-content')
 export class DetailContent extends LitElement {
@@ -39,12 +38,6 @@ export class DetailContent extends LitElement {
         margin-top: var(--lumo-space-s);
       }
     `;
-  }
-
-  constructor() {
-    super();
-    // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
   }
 
   render() {

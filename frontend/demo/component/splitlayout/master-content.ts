@@ -1,5 +1,4 @@
 import { css, customElement, html, LitElement } from 'lit-element';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('master-content')
 export class MasterContent extends LitElement {
@@ -34,12 +33,6 @@ export class MasterContent extends LitElement {
         background: var(--lumo-contrast-5pct);
       }
     `;
-  }
-
-  constructor() {
-    super();
-    // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
   }
 
   render() {
