@@ -3,7 +3,7 @@ import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('split-layout-minimal-theme-variants')
+@customElement('split-layout-theme-minimal')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -14,7 +14,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-split-layout>
+      <vaadin-split-layout theme="minimal">
         <div>First content element</div>
         <div>Second content element</div>
       </vaadin-split-layout>

@@ -14,9 +14,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-split-layout>
-        <div>First content element</div>
-        <div>Second content element</div>
+      <vaadin-split-layout orientation="vertical">
+        <div>Top content element</div>
+        <div>Bottom content element</div>
       </vaadin-split-layout>
       <!-- end::snippet[] -->
     `;
