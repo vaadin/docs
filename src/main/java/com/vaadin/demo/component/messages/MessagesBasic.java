@@ -44,7 +44,7 @@ public class MessagesBasic extends Div {
                 LocalDateTime.now().minusMinutes(55).toInstant(ZoneOffset.UTC),
                 "Linsey Listy", person.getPictureUrl());
         message2.setUserColorIndex(2);
-        list.setItems(Arrays.asList(message1, message2));
+        list.setItems(message1, message2);
 
         VerticalLayout chatLayout = new VerticalLayout(list, input);
         chatLayout.setHeight("500px");
