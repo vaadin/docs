@@ -4,7 +4,6 @@ import '@vaadin/vaadin-board/vaadin-board';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import cellColorsCSS from './shared-styles/example-cell-color.css';
 import defaultCellCSS from './shared-styles/example-cell-default.css';
 import './utils/example-resize-info';
 
@@ -12,7 +11,6 @@ import './utils/example-resize-info';
 export class Example extends LitElement {
   static get styles() {
     return [
-      cellColorsCSS,
       defaultCellCSS,
       css`
         :host {
@@ -20,17 +18,17 @@ export class Example extends LitElement {
           --vaadin-board-width-medium: 400px;
         }
 
-        vaadin-board-row.large > div {
+        vaadin-board-row.large > .cell {
           background: var(--lumo-success-color-10pct);
           color: var(--lumo-success-color);
         }
 
-        vaadin-board-row.medium > div {
+        vaadin-board-row.medium > .cell {
           background: var(--lumo-primary-color-10pct);
           color: var(--lumo-primary-color);
         }
 
-        vaadin-board-row.small > div {
+        vaadin-board-row.small > .cell {
           background: var(--lumo-error-color-10pct);
           color: var(--lumo-error-color);
         }

@@ -19,11 +19,11 @@ export class Example extends LitElement {
           border-block-end: var(--board-border);
         }
 
-        example-card {
+        example-indicator {
           padding: var(--lumo-space-m);
         }
 
-        example-card:not(:last-child) {
+        example-indicator:not(:last-child) {
           border-inline-end: var(--board-border);
         }
       `,
@@ -41,10 +41,22 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-board>
         <vaadin-board-row>
-          <example-card current="745" change="+33.7%" title="Current users"></example-card>
-          <example-card current="54.6k" change="-112.45%" title="View events"></example-card>
-          <example-card current="18%" change="+3.9%" title="Conversion rate"></example-card>
-          <example-card current="-123.45" title="Custom metric"></example-card>
+          <example-indicator
+            current="745"
+            change="+33.7%"
+            title="Current users"
+          ></example-indicator>
+          <example-indicator
+            current="54.6k"
+            change="-112.45%"
+            title="View events"
+          ></example-indicator>
+          <example-indicator
+            current="18%"
+            change="+3.9%"
+            title="Conversion rate"
+          ></example-indicator>
+          <example-indicator current="-123.45" title="Custom metric"></example-indicator>
         </vaadin-board-row>
         <vaadin-board-row>
           <example-chart></example-chart>
