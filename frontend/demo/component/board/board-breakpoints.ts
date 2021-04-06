@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import '@vaadin/vaadin-board';
-import '@vaadin/vaadin-split-layout';
+import '@vaadin/vaadin-board/vaadin-board';
+import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import cellColorsCSS from './shared-styles/board-cell-color';
-import defaultCellCSS from './shared-styles/board-cell-default';
-import './utils/board-resize-info';
+import cellColorsCSS from './shared-styles/example-cell-color.css';
+import defaultCellCSS from './shared-styles/example-cell-default.css';
+import './utils/example-resize-info';
 
 @customElement('board-breakpoints')
 export class Example extends LitElement {
@@ -21,18 +21,18 @@ export class Example extends LitElement {
         }
 
         vaadin-board-row.large > div {
-          font-size: var(--lumo-font-size-s);
-          padding: var(--lumo-space-l);
+          background: var(--lumo-success-color-10pct);
+          color: var(--lumo-success-color);
         }
 
         vaadin-board-row.medium > div {
-          font-size: var(--lumo-font-size-m);
-          padding: var(--lumo-space-m);
+          background: var(--lumo-primary-color-10pct);
+          color: var(--lumo-primary-color);
         }
 
         vaadin-board-row.small > div {
-          font-size: var(--lumo-font-size-l);
-          padding: var(--lumo-space-s);
+          background: var(--lumo-error-color-10pct);
+          color: var(--lumo-error-color);
         }
       `,
     ];
@@ -41,7 +41,7 @@ export class Example extends LitElement {
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot!);
+    applyTheme(this.shadowRoot);
   }
 
   render() {
@@ -56,7 +56,7 @@ export class Example extends LitElement {
             <div class="cell">Cell 4</div>
           </vaadin-board-row>
         </vaadin-board>
-        <board-resize-info style="width: 20%"></board-resize-info>
+        <example-resize-info style="width: 20%"></example-resize-info>
       </vaadin-split-layout>
       <!-- end::snippet[] -->
     `;

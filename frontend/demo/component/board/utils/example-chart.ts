@@ -1,12 +1,12 @@
 import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
 import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-full-source-line
 
-import '@vaadin/vaadin-charts';
+import '@vaadin/vaadin-charts/vaadin-chart';
 import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
 import { applyTheme } from 'Frontend/generated/theme';
 
-const monthNames: readonly string[] = [
+const monthNames = [
   'Jan',
   'Feb',
   'Mar',
@@ -24,9 +24,9 @@ const monthNames: readonly string[] = [
 const chartOptions = {
   xAxis: { crosshair: true },
   yAxis: { min: 0 },
-} as const;
+};
 
-@customElement('board-chart')
+@customElement('example-chart')
 export class Example extends LitElement {
   static get styles() {
     return css`
@@ -39,7 +39,7 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private events: readonly ViewEvent[] = [];
+  private events: ViewEvent[] = [];
 
   constructor() {
     super();

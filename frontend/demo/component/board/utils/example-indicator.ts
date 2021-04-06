@@ -1,11 +1,10 @@
-import '@vaadin/vaadin-ordered-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import '@vaadin/vaadin-lumo-styles/icons';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, LitElement, property } from 'lit-element';
 
-@customElement('board-card')
-export class BoardCard extends LitElement {
+@customElement('example-indicator')
+export class ExampleIndicator extends LitElement {
   static get styles() {
     return css`
       .title {
@@ -28,36 +27,42 @@ export class BoardCard extends LitElement {
   }
 
   @property()
-  public type = '+';
+  public title = 'Unknown';
+
+  @property()
+  public current = '0';
+
+  @property()
+  public change = '±0.0%';
 
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot!);
+    applyTheme(this.shadowRoot);
   }
 
   render() {
     let theme;
     let icon;
 
-    if (this.type === '+') {
+    if (this.change[0] === '+') {
       theme = 'success';
       icon = 'arrow-up';
-    } else if (this.type === '±') {
-      theme = '';
-      icon = 'circle-thin';
-    } else {
+    } else if (this.change[0] === '-') {
       theme = 'error';
       icon = 'arrow-down';
+    } else {
+      theme = '';
+      icon = 'circle-thin';
     }
 
     return html`
       <vaadin-vertical-layout>
-        <slot class="title"></slot>
-        <slot class="current" name="current"></slot>
+        <div class="title">${this.title}</div>
+        <div class="current">${this.current}</div>
         <span class="icon" theme="badge ${theme}">
           <iron-icon icon="vaadin:${icon}"></iron-icon>
-          <span>${this.type}<slot name="difference"></slot></span>
+          <span>${this.change}</span>
         </span>
       </vaadin-vertical-layout>
     `;

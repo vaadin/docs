@@ -1,14 +1,11 @@
-import '@vaadin/vaadin-ordered-layout';
-import '@vaadin/vaadin-icons/vaadin-icons';
-import '@vaadin/vaadin-lumo-styles/icons';
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
 import ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
 
-@customElement('board-statistics')
-export class BoardStatistics extends LitElement {
+@customElement('example-statistics')
+export class ExampleStatistics extends LitElement {
   static get styles() {
     return css`
       .level {
@@ -67,12 +64,12 @@ export class BoardStatistics extends LitElement {
   }
 
   @internalProperty()
-  private serviceHealth: readonly ServiceHealth[] = [];
+  private serviceHealth: ServiceHealth[] = [];
 
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot!);
+    applyTheme(this.shadowRoot);
   }
 
   async firstUpdated() {

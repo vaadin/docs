@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import '@vaadin/vaadin-board';
+import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import cellColorsCSS from './shared-styles/board-cell-color';
-import defaultCellCSS from './shared-styles/board-default-breakpoints';
+import cellColorsCSS from './shared-styles/example-cell-color.css';
+import defaultCellCSS from './shared-styles/example-default-breakpoints.css';
 
 @customElement('board-column-span')
 export class Example extends LitElement {
@@ -50,7 +50,7 @@ export class Example extends LitElement {
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot!);
+    applyTheme(this.shadowRoot);
   }
 
   render() {

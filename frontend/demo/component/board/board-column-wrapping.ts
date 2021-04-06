@@ -1,13 +1,13 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import '@vaadin/vaadin-board';
-import '@vaadin/vaadin-split-layout';
+import '@vaadin/vaadin-board/vaadin-board';
+import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import cellColorsCSS from './shared-styles/board-cell-color';
-import defaultCellCSS from './shared-styles/board-cell-default';
-import defaultBreakpointsCSS from './shared-styles/board-default-breakpoints';
-import './utils/board-resize-info';
+import cellColorsCSS from './shared-styles/example-cell-color.css';
+import defaultCellCSS from './shared-styles/example-cell-default.css';
+import defaultBreakpointsCSS from './shared-styles/example-default-breakpoints.css';
+import './utils/example-resize-info';
 
 @customElement('board-column-wrapping')
 export class Example extends LitElement {
@@ -33,7 +33,7 @@ export class Example extends LitElement {
             <div class="cell">Cell 4</div>
           </vaadin-board-row>
         </vaadin-board>
-        <board-resize-info></board-resize-info>
+        <example-resize-info></example-resize-info>
       </vaadin-split-layout>
       <!-- end::snippet[] -->
     `;

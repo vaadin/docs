@@ -1,11 +1,9 @@
-import '@vaadin/vaadin-ordered-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import '@vaadin/vaadin-lumo-styles/icons';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, LitElement } from 'lit-element';
 
-@customElement('board-resize-info')
-export class BoardResizeInfo extends LitElement {
+@customElement('example-resize-info')
+export class ExampleResizeInfo extends LitElement {
   static get styles() {
     return css`
       :host {
@@ -33,7 +31,7 @@ export class BoardResizeInfo extends LitElement {
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot!);
+    applyTheme(this.shadowRoot);
   }
 
   render() {

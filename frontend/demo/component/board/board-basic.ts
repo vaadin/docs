@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import '@vaadin/vaadin-board';
+import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import borderCSS from './shared-styles/board-border';
-import defaultBreakpointsCSS from './shared-styles/board-default-breakpoints';
-import './utils/board-card';
-import './utils/board-chart';
+import borderCSS from './shared-styles/example-border.css';
+import defaultBreakpointsCSS from './shared-styles/example-default-breakpoints.css';
+import './utils/example-indicator';
+import './utils/example-chart';
 
 @customElement('board-basic')
 export class Example extends LitElement {
@@ -19,11 +19,11 @@ export class Example extends LitElement {
           border-block-end: var(--board-border);
         }
 
-        board-card {
+        example-card {
           padding: var(--lumo-space-m);
         }
 
-        board-card:not(:last-child) {
+        example-card:not(:last-child) {
           border-inline-end: var(--board-border);
         }
       `,
@@ -41,29 +41,13 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-board>
         <vaadin-board-row>
-          <board-card type="+">
-            Current users
-            <span slot="current">745</span>
-            <span slot="difference">33.7%</span>
-          </board-card>
-          <board-card type="-">
-            View events
-            <span slot="current">54.6k</span>
-            <span slot="difference">112.45%</span>
-          </board-card>
-          <board-card type="+">
-            Conversion rate
-            <span slot="current">18%</span>
-            <span slot="difference">3.9%</span>
-          </board-card>
-          <board-card type="±">
-            Custom metric
-            <span slot="current">-123.45</span>
-            <span slot="difference">0.0%</span>
-          </board-card>
+          <example-card current="745" change="+33.7%" title="Current users"></example-card>
+          <example-card current="54.6k" change="-112.45%" title="View events"></example-card>
+          <example-card current="18%" change="+3.9%" title="Conversion rate"></example-card>
+          <example-card current="-123.45" title="Custom metric"></example-card>
         </vaadin-board-row>
         <vaadin-board-row>
-          <board-chart></board-chart>
+          <example-chart></example-chart>
         </vaadin-board-row>
       </vaadin-board>
       <!-- end::snippet[] -->
