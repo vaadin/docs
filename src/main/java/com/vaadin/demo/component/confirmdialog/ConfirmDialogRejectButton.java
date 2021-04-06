@@ -1,5 +1,6 @@
 package com.vaadin.demo.component.confirmdialog;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.html.Div;
@@ -7,14 +8,13 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
-@Route("confirm-dialog-basic")
-public class ConfirmDialogBasic extends Div {
+@Route("confirm-dialog-reject-button")
+public class ConfirmDialogRejectButton extends Div {
 
   private Span status;
 
-  public ConfirmDialogBasic() {
+  public ConfirmDialogRejectButton() {
     HorizontalLayout layout = new HorizontalLayout();
     layout.setAlignItems(FlexComponent.Alignment.CENTER);
     layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
@@ -25,7 +25,7 @@ public class ConfirmDialogBasic extends Div {
 
     ConfirmDialog dialog = new ConfirmDialog();
     dialog.setHeader("Unsaved changes");
-    dialog.setText("There are unsaved changes. Do you want to discard or save them?");
+    dialog.setText("Do you want to discard or save your changes before navigating away?");
 
     dialog.setCancelable(true);
     dialog.addCancelListener(event -> setStatus("Canceled"));
@@ -52,5 +52,5 @@ public class ConfirmDialogBasic extends Div {
     status.setText("Status: " + value);
     status.setVisible(true);
   }
-  public static class Exporter extends DemoExporter<ConfirmDialogBasic> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ConfirmDialogRejectButton> {} // hidden-full-source-line
 }
