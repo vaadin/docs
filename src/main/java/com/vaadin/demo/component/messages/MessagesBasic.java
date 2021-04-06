@@ -27,7 +27,6 @@ public class MessagesBasic extends Div {
         input.addSubmitListener(submitEvent -> {
             MessageListItem newMessage = new MessageListItem(
                     submitEvent.getValue(), Instant.now(), "Milla Sting");
-            newMessage.setUserAbbreviation("MS");
             newMessage.setUserColorIndex(3);
             List<MessageListItem> items = new ArrayList<>(list.getItems());
             items.add(newMessage);
