@@ -6,6 +6,8 @@ import '@vaadin/vaadin-icons';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import type { SplitLayoutElement } from '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+import './master-content';
+import './detail-content';
 
 @customElement('split-layout-toggle')
 export class Example extends LitElement {
@@ -28,20 +30,21 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-split-layout>
-        <div>
-          left
+      <vaadin-split-layout style="max-height: 280px;">
+        <div style="overflow: hidden;">
           <vaadin-button
             theme="icon tertiary"
             aria-label="Expand/collapse sidebar"
             @click="${this.toggleSidebar}"
+            style="float: right;"
           >
             <iron-icon
               icon="${this.sidebarCollapsed ? 'vaadin:arrow-right' : 'vaadin:arrow-left'}"
             ></iron-icon>
           </vaadin-button>
+          <master-content></master-content>
         </div>
-        <div>right</div>
+        <detail-content></detail-content>
       </vaadin-split-layout>
       <!-- end::snippet[] -->
     `;
