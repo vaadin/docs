@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-import { customElement, html, internalProperty, LitElement, query } from 'lit-element';
+import { customElement, html, internalProperty, LitElement } from 'lit-element';
 import '@polymer/iron-icon';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
-import type { SplitLayoutElement } from '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import './master-content';
 import './detail-content';
@@ -17,21 +16,17 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  firstUpdated() {
-    this.updateSplitterPosition();
-  }
-
-  @query('vaadin-split-layout')
-  private splitLayout?: SplitLayoutElement;
-
+  // tag::snippet[]
   @internalProperty()
   private sidebarCollapsed = false;
 
+  @internalProperty()
+  private sidebarWidthPercentage = 40;
+
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-split-layout style="max-height: 280px;">
-        <div style="overflow: hidden;">
+        <div style="overflow: hidden; width: ${this.sidebarWidthPercentage}%">
           <vaadin-button
             theme="icon tertiary"
             aria-label="Expand/collapse sidebar"
@@ -44,28 +39,14 @@ export class Example extends LitElement {
           </vaadin-button>
           <master-content></master-content>
         </div>
-        <detail-content></detail-content>
+        <detail-content style="width: ${100 - this.sidebarWidthPercentage}%"></detail-content>
       </vaadin-split-layout>
-      <!-- end::snippet[] -->
     `;
-  }
-
-  setSplitterPosition(sidebarWidthPercentage: number) {
-    if (!this.splitLayout) throw 'splitLayout not ready';
-    const sidebar = this.splitLayout.children[0] as HTMLElement;
-    const contentArea = this.splitLayout.children[1] as HTMLElement;
-    sidebar.style.flex = '';
-    contentArea.style.flex = '';
-    sidebar.style.width = sidebarWidthPercentage + '%';
-    contentArea.style.width = 100 - sidebarWidthPercentage + '%';
-  }
-
-  updateSplitterPosition() {
-    this.setSplitterPosition(this.sidebarCollapsed ? 13 : 40);
   }
 
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
-    this.updateSplitterPosition();
+    this.sidebarWidthPercentage = this.sidebarCollapsed ? 13 : 40;
   }
+  // end::snippet[]
 }
