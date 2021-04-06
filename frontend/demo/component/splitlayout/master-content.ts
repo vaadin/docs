@@ -17,7 +17,7 @@ export class MasterContent extends LitElement {
       th,
       td {
         border-bottom: 1px solid currentColor;
-        padding: 0.66rem 1rem;
+        padding: var(--lumo-space-wide-m);
       }
 
       th::before,
@@ -26,8 +26,8 @@ export class MasterContent extends LitElement {
         display: inline-block;
         width: 8rem;
         background: currentColor;
-        border-radius: 1em;
-        font-size: 0.75rem;
+        border-radius: calc(var(--lumo-size-m) / 2);
+        font-size: var(--lumo-font-size-xxs);
       }
 
       th {

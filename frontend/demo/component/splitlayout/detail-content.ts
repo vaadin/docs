@@ -14,30 +14,29 @@ export class DetailContent extends LitElement {
         display: flex;
         flex-flow: row wrap;
         align-content: flex-start;
-        padding: 1rem 1.5rem;
         box-sizing: border-box;
       }
 
       .field {
         display: flex;
         flex-flow: column nowrap;
-        margin: 1rem 1rem 0.5rem 0;
+        margin: var(--lumo-space-wide-l);
         pointer-events: none;
       }
 
       label {
         width: 6rem;
         background: currentColor;
-        border-radius: 1em;
-        height: 0.75rem;
+        border-radius: calc(var(--lumo-size-m) / 2);
+        height: var(--lumo-font-size-xxs);
       }
 
       input {
         background: var(--lumo-contrast-10pct);
-        border-radius: 0.2em;
-        padding: 0.5rem 0;
+        border-radius: var(--lumo-border-radius-s);
+        padding: var(--lumo-space-s) 0;
         border: none;
-        margin-top: 0.5rem;
+        margin-top: var(--lumo-space-s);
       }
     `;
   }
