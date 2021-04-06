@@ -47,18 +47,18 @@ export class Example extends LitElement {
     `;
   }
 
-  setSplitterPosition(sidebarWidthInPx: number) {
+  setSplitterPosition(sidebarWidthPercentage: number) {
     if (!this.splitLayout) throw 'splitLayout not ready';
     const sidebar = this.splitLayout.children[0] as HTMLElement;
     const contentArea = this.splitLayout.children[1] as HTMLElement;
     sidebar.style.flex = '';
     contentArea.style.flex = '';
-    sidebar.style.width = sidebarWidthInPx + 'px';
-    contentArea.style.width = this.splitLayout.clientWidth - sidebarWidthInPx + 'px';
+    sidebar.style.width = sidebarWidthPercentage + '%';
+    contentArea.style.width = 100 - sidebarWidthPercentage + '%';
   }
 
   updateSplitterPosition() {
-    this.setSplitterPosition(this.sidebarCollapsed ? 80 : 230);
+    this.setSplitterPosition(this.sidebarCollapsed ? 13 : 40);
   }
 
   toggleSidebar() {
