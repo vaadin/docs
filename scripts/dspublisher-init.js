@@ -16,6 +16,12 @@ function copyTemplate(templateName, targetPath, replacements = {}) {
   fs.writeFileSync(targetPath, newContent);
 }
 
+function appendFrontMatter(articlePath, frontMatter) {
+  const tokens = fs.readFileSync(articlePath, 'utf-8').split('---');
+  tokens[1] = tokens[1] + frontMatter;
+  fs.writeFileSync(articlePath, tokens.join('---'));
+}
+
 module.exports = async function (config) {
   // Mark the repo to use sparsecheckout
   execSync('git config core.sparsecheckout true', { cwd: ROOT, stdio: 'inherit' });
@@ -48,6 +54,16 @@ module.exports = async function (config) {
 
   // CVDL license file
   copyTemplate('dsp-license-cvdl', path.resolve(ROOT, 'LICENSE'));
+
+  // Have components / foundation expanded by default
+  appendFrontMatter(
+    path.resolve(ROOT, 'articles/ds/components/index.asciidoc'),
+    'section-nav: expanded\n'
+  );
+  appendFrontMatter(
+    path.resolve(ROOT, 'articles/ds/foundation/index.asciidoc'),
+    'section-nav: expanded\n'
+  );
 
   // Update working directory
   execSync('git read-tree -m -u HEAD', { cwd: ROOT, stdio: 'inherit' });
