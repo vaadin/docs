@@ -1,5 +1,6 @@
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
+import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, LitElement, property } from 'lit-element';
 
 @customElement('example-indicator')
@@ -33,6 +34,12 @@ export class ExampleIndicator extends LitElement {
 
   @property()
   public change = 0;
+
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
 
   render() {
     let theme;

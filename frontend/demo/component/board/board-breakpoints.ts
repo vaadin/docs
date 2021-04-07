@@ -55,6 +55,7 @@ export class Example extends LitElement {
             <div class="cell">Cell 4</div>
           </vaadin-board-row>
         </vaadin-board>
+        <div></div>
       </vaadin-split-layout>
     `;
   }
