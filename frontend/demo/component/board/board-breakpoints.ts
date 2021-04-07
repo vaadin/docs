@@ -16,6 +16,10 @@ export class Example extends LitElement {
         --vaadin-board-width-medium: 400px;
       }
 
+      .cell {
+        padding: 1em;
+      }
+
       vaadin-board-row.large > .cell {
         background: var(--lumo-success-color-10pct);
         color: var(--lumo-success-color);
