@@ -1,11 +1,11 @@
 ---
-title: Adding a Login Form with Spring Security
+title: Authentication With Spring Security
 order: 90
 layout: page
 ---
 
 
-= Adding a Login Form with Spring Security
+= Authentication With Spring Security
 
 [role="since:com.vaadin:vaadin@V20 standalone"]
 --
@@ -17,7 +17,7 @@ Since the downloaded application is a link:https://spring.io/projects/spring-boo
 
 Add the following dependency to the project Maven file.
 
-.pom.xml
+.`pom.xml`
 [source,xml]
 ----
 <dependency>
@@ -30,7 +30,7 @@ Add the following dependency to the project Maven file.
 
 → *Step 1* - Create a new configuration class extending the link:https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/api/org/springframework/security/config/annotation/web/configuration/WebSecurityConfigurerAdapter.html[WebSecurityConfigurerAdapter] class, and annotate it to enable security.
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
@@ -41,11 +41,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 ----
 
 
-→ *Step 2* - Configure Spring `HttpSecurity` by enabling its built-in form login.
+→ *Step 2* - Configure Spring `HttpSecurity` to use a login view.
 
 At the same time, disable CSRF validation because Vaadin endpoints uses its own CSRF protection mechanism.
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
@@ -59,8 +59,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     VaadinSpringSecurity.configure(http);
     // Ignore the login processing url and vaadin endpoint calls
     http.csrf().ignoringAntMatchers("/login", "/connect/**");
-    // Use default spring login form
-    http.formLogin();
+    // specify the URL of the login view, the value of the parameter
+    // is the defined route for the login view component.
+    http.formLogin().loginPage("/login").permitAll();
   }
 }
 ----
@@ -68,7 +69,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 → *Step 3* - Allow public access to Vaadin static resources.
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
@@ -89,7 +90,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 In this example, a set of users in memory is used.
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
@@ -110,7 +111,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 → *Step 5* - Check that the final configuration class looks like:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
@@ -124,8 +125,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     VaadinSpringSecurity.configure(http);
     // Ignore the login processing url and vaadin endpoint calls
     http.csrf().ignoringAntMatchers("/login", "/connect/**");
-    // Use default spring login form
-    http.formLogin();
+    // specify the URL of the login view, the value of the parameter
+    // is the defined route for the login view component.
+    http.formLogin().loginPage("/login").permitAll();
   }
 
   @Override
@@ -149,27 +151,32 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 `VaadinSpringSecurity.configure(http)` configures HTTP security to bypass framework internal resources.
 If you prefer to roll your own configuration instead of using the helper, the matcher for these resources can be retrieved with `VaadinSpringSecurity.getDefaultHttpSecurityPermitMatcher()`.
-For example:
+For example, the `VaadinSpringSecurity.configure(http)` requires all the requests but the Vaadin internal ones to be authenticated,
+if you want to allow public access to certain views, you can configure it as following:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 public static void configure(HttpSecurity http) throws Exception {
     http.authorizeRequests()
-        .requestMatchers(getDefaultHttpSecurityPermitMatcher()).permitAll()
-        .antMatchers("public/**").permitAll() // custom matcher
+        .requestMatchers(
+          VaadinSpringSecurity.getDefaultHttpSecurityPermitMatcher()
+        ).permitAll()
+        .antMatchers("/public-view").permitAll() // custom matcher
+        .anyRequest().authenticated();
         ...
 }
 ----
 
 Analogously, the matcher for static resources to be ignored is available as `VaadinSpringSecurity.getDefaultWebSecurityIgnoreMatcher`:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 public static void configure(WebSecurity web) throws Exception {
     web.ignoring()
-       .requestMatchers(getDefaultWebSecurityIgnoreMatcher())
+       .requestMatchers(
+         VaadinSpringSecurity.getDefaultWebSecurityIgnoreMatcher())
        .antMatchers("static/**") // custom matcher
        ...
 }
@@ -177,39 +184,112 @@ public static void configure(WebSecurity web) throws Exception {
 
 == Client Configuration
 
-Add links in the main layout for login and logout.
+→ *Step 1* - Create a login view.
+The easiest way to make a login view is to use the `<vaadin-login-overlay>` component.
+Vaadin provides a login helper method for Spring Security based authentication that you can use for the login action.
 
-.frontend/main-layout.ts
+.`frontend/login-view.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/login-view.ts[]
+----
+
+→ *Step 2* - Configure the route for the login view.
+After the login view is defined, you should also define a route for the login view component, for example in the `routes.ts` file.
+Note, the `path` for the login view component should match the one defined in `SecurityConfig` for `http.formLogin().loginPage()`.
+
 [source, typescript]
 ----
-import { css, customElement, html, LitElement} from 'lit-element';
+const routes = [
+  {
+    path: '/login',
+    component: 'login-view'
+  },
+  // more routes
+}
+----
 
-@customElement('main-layout')
-export class MainLayoutElement extends LitElement {
-  static get styles() {...}
+→ *Step 3* - Access control in the UI.
+The access control for Vaadin views must be based on the UI, and not only on the URL filtering.
+To protect a view from unauthenticated requests, that is, redirect unauthenticated requests to the login view, you can use either route action on the route configuration or the `onBeforeEnter` lifecycle callback in the view.
 
-  render() {
-    return html`
-        <vaadin-tabs slot="navbar" ... >
-             ...
-             <vaadin-tab> <a href="#" @click="${this.login}">Login</a> </vaadin-tab>
-             <vaadin-tab> <a href="#" @click="${this.logout}">Logout</a> </vaadin-tab>
-           </vaadin-tabs>
-        </vaadin-tabs>
-    `;
+An example of using the route action:
+.`frontend/routes.ts`
+[source, typescript]
+----
+const routes = [
+  ...
+  {
+    path: '/my-view',
+    action: (_: Context, commands: Commands) => {
+      if (!isLoggedIn()) {
+        return commands.redirect('/login');
+      }
+      return undefined;
+    },
+    component: 'my-view'
   }
+  ...
+}
+----
+You can also add the route action to the parent layout, so that all the child views are protected.
+In this case, the login component should be outside of the main layout, that is, not a child of the main layout in the route configuration.
 
-  private login() {
-    // open Spring login form
-    window.location.replace('login');
+.`frontend/routes.ts`
+[source, typescript]
+----
+const routes = [
+  ...
+  {
+    path: '/',
+    action: (_: Context, commands: Commands) => {
+      if (!isLoggedIn()) {
+        return commands.redirect('/login');
+      }
+      return undefined;
+    },
+    component: 'main-layout',
+    children: [
+      ...
+    ]
   }
+  ...
+}
+----
 
-  private async logout() {
-    // call via ajax to the Spring logout form
-    await fetch('logout');
-    // clean the ui
-    window.location.reload();
-  }
+An example of using the `onBeforeEnter` lifecycle callback in the view:
+[source, typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/protected-view.ts[]
+----
+
+The `isLoggedIn()` method in the above code examples uses a `lastLoginTimestamp` variable stored in the
+https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage[localStorage] to check if the user is logged in. The `lastLoginTimestamp` variable needs to be reset when logging out.
+
+The authentication helper methods in the code examples are grouped in a separate TypeScript file as shown below.
+
+.`frontend/auth.ts`
+[source, typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/auth.ts[]
+----
+
+Using localStorage allows navigating to sub views without having to check authentication from the backend on every navigation so that the authentication check could also work offline.
+
+
+== Logout
+
+To avoid a full page reload the application needs to have a `/logout` route like the one below.
+It can be triggered with a link like `<a href="/logout">Log out</a>`.
+
+.`frontend/routes.ts`
+[source, typescript]
+----
+path: '/logout',
+action: async (_: Context, commands: Commands) => {
+  // use the logout helper method.
+  await logout();
+  return commands.redirect('/');
 }
 ----
 
@@ -221,7 +301,7 @@ The example using users in memory above is valid for test applications, though, 
 
 The following example demonstrates how to access a SQL database with tables for users and authorities.
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
@@ -250,7 +330,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 The next examples shows how to configure authentication by using an LDAP repository
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
@@ -276,7 +356,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 Do not forget to add the corresponding LDAP client dependency to the project:
 
-.pom.xml
+.`pom.xml`
 [source,xml]
 ----
 <dependency>

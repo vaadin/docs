@@ -1,0 +1,50 @@
+---
+title: Common Vulnerabilities
+order: 150
+layout: page
+---
+= Common Vulnerabilities
+
+include::{root}/articles/flow/security/vulnerabilities.asciidoc[tag=sql-injections]
+[source,typescript]
+----
+class ValueChangedView extends LitElement {
+  render() {
+    return html`
+      <vaadin-text-field label="Your name" @value-changed="${this.nameChanged}"></vaadin-text-field>
+    `;
+  }
+
+  private nameChanged(event: CustomEvent) {
+    nameEndpoint.updateName(envet.detail.value)
+  }
+}
+----
+[source,java]
+----
+@Endpoint
+public class NameEndpoint {
+    public void updateName(String value) {
+        // This is the correct way
+        String sql = "UPDATE app_users WHERE id=? SET name=?";
+
+        try {
+            // Use prepared statement to safely call the DB
+            PreparedStatement ps = dbConnection.prepareStatement(sql);
+
+            ps.setLong(1, user.getId());
+            ps.setString(2, value);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        // This is the INCORRECT way, DO NOT USE!
+        // sql = "UPDATE app_users WHERE id="+ user.getId() +" SET name=\"" + value +
+        // "\"";
+    }
+}
+----
+include::{root}/articles/flow/security/vulnerabilities.asciidoc[tag=csrf]
+
+include::{root}/articles/flow/security/vulnerabilities.asciidoc[tag=java-serialization]

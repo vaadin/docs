@@ -1,6 +1,8 @@
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import RawReport from 'Frontend/generated/com/vaadin/demo/domain/Report';
+import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 
 const datasetCache: { [key: string]: any[] } = {};
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
@@ -31,7 +33,7 @@ type PeopleOptions = {
 
 type PeopleResults = {
   people: Person[];
-  hierarhcyLevelSize: number;
+  hierarchyLevelSize: number;
 };
 export async function getPeople(options?: PeopleOptions): Promise<PeopleResults> {
   if (!peopleImages) {
@@ -45,7 +47,7 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
     people = people.filter((person) => person.managerId == options?.managerId);
   }
 
-  const hierarhcyLevelSize = people.length;
+  const hierarchyLevelSize = people.length;
   const startIndex = options?.startIndex || 0;
   const count = options?.count ? startIndex + options.count : undefined;
 
@@ -59,6 +61,24 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   });
   return {
     people,
-    hierarhcyLevelSize,
+    hierarchyLevelSize,
   };
 }
+
+export const getUserPermissions = async (): Promise<readonly UserPermissions[]> =>
+  getDataset<UserPermissions>('permissions.json');
+
+export enum ReportStatus {
+  COMPLETED = 'Completed',
+  IN_PROGRESS = 'In Progress',
+  CANCELLED = 'Cancelled',
+  ON_HOLD = 'On Hold',
+}
+
+export type Report = Omit<RawReport, 'status'> &
+  Readonly<{
+    status: ReportStatus;
+  }>;
+
+export const getReports = async (): Promise<readonly Report[]> =>
+  await getDataset<Report>('reports.json');
