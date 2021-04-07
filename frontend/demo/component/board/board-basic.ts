@@ -41,19 +41,15 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-board>
         <vaadin-board-row>
-          <example-indicator
-            current="745"
-            change="+33.7%"
-            title="Current users"
-          ></example-indicator>
+          <example-indicator current="745" change="+33.7" title="Current users"></example-indicator>
           <example-indicator
             current="54.6k"
-            change="-112.45%"
+            change="-112.45"
             title="View events"
           ></example-indicator>
           <example-indicator
             current="18%"
-            change="+3.9%"
+            change="+3.9"
             title="Conversion rate"
           ></example-indicator>
           <example-indicator current="-123.45" title="Custom metric"></example-indicator>

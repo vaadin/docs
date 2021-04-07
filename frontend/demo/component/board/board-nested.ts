@@ -46,12 +46,12 @@ export class Example extends LitElement {
           <vaadin-board-row>
             <example-indicator
               current="745"
-              change="+33.7%"
+              change="+33.7"
               title="Current users"
             ></example-indicator>
             <example-indicator
               current="18%"
-              change="+3.9%"
+              change="+3.9"
               title="Conversion rate"
             ></example-indicator>
           </vaadin-board-row>
