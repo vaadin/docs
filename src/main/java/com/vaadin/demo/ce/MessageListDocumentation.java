@@ -3,6 +3,7 @@ package com.vaadin.demo.ce;
 import com.vaadin.collaborationengine.CollaborationMessageInput;
 import com.vaadin.collaborationengine.CollaborationMessageList;
 import com.vaadin.collaborationengine.UserInfo;
+import com.vaadin.demo.domain.MessageService;
 import com.vaadin.demo.domain.User;
 import com.vaadin.demo.domain.User.UserService;
 import com.vaadin.flow.component.button.Button;
@@ -18,6 +19,10 @@ public class MessageListDocumentation extends VerticalLayout {
     private CollaborationMessageList messageList;
 
     private UserService userService;
+
+    private MessageService messageService;
+
+    private MyMessagePersister myMessagePersister;
 
     public MessageListDocumentation() {
         // tag::message-list-and-input[]
@@ -40,6 +45,16 @@ public class MessageListDocumentation extends VerticalLayout {
         messageInput.setWidthFull();
         add(chatLayout);
         // end::message-list-layout[]
+    }
+
+    private void setPersister() {
+        // tag::message-list-ctor-persister[]
+        CollaborationMessageList messageList = new CollaborationMessageList(
+                userInfo, "general", myMessagePersister);
+        // end::message-list-ctor-persister[]
+        // tag::message-list-set-persister[]
+        messageList.setTopic("general", myMessagePersister);
+        // end::message-list-set-persister[]
     }
 
     private void customSubmitter() {
