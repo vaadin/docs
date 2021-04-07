@@ -1,6 +1,5 @@
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
 import ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
-import { applyTheme } from 'Frontend/generated/theme';
 import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
 
@@ -65,12 +64,6 @@ export class ExampleStatistics extends LitElement {
 
   @internalProperty()
   private serviceHealth: ServiceHealth[] = [];
-
-  constructor() {
-    super();
-    // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
-  }
 
   async firstUpdated() {
     this.serviceHealth = await getServiceHealth();

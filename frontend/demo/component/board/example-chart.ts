@@ -4,7 +4,6 @@ import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // 
 import '@vaadin/vaadin-charts/vaadin-chart';
 import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
-import { applyTheme } from 'Frontend/generated/theme';
 
 const monthNames = [
   'Jan',
@@ -40,12 +39,6 @@ export class Example extends LitElement {
 
   @internalProperty()
   private events: ViewEvent[] = [];
-
-  constructor() {
-    super();
-    // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
-  }
 
   async firstUpdated() {
     this.events = await getViewEvents();
