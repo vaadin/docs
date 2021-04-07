@@ -33,27 +33,31 @@ export class ExampleIndicator extends LitElement {
   public current = '0';
 
   @property()
-  public change = '±0.0%';
+  public change = 0;
 
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(this.shadowRoot!);
   }
 
   render() {
     let theme;
     let icon;
+    let sign;
 
-    if (this.change[0] === '+') {
-      theme = 'success';
-      icon = 'arrow-up';
-    } else if (this.change[0] === '-') {
-      theme = 'error';
-      icon = 'arrow-down';
-    } else {
+    if (this.change === 0) {
       theme = '';
       icon = 'circle-thin';
+      sign = '±';
+    } else if (this.change < 0) {
+      theme = 'error';
+      icon = 'arrow-down';
+      sign = '-';
+    } else {
+      theme = 'success';
+      icon = 'arrow-up';
+      sign = '+';
     }
 
     return html`
@@ -62,7 +66,7 @@ export class ExampleIndicator extends LitElement {
         <div class="current">${this.current}</div>
         <span class="icon" theme="badge ${theme}">
           <iron-icon icon="vaadin:${icon}"></iron-icon>
-          <span>${this.change}</span>
+          <span>${sign}${Math.abs(this.change).toFixed(2)}%</span>
         </span>
       </vaadin-vertical-layout>
     `;
