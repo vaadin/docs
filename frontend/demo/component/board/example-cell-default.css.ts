@@ -5,6 +5,7 @@ export default css`
     padding: 1em;
     text-align: center;
     color: white;
+    white-space: nowrap;
   }
 
   .cell:nth-child(1) {

@@ -7,6 +7,10 @@ import { repeat } from 'lit-html/directives/repeat';
 export class ExampleStatistics extends LitElement {
   static get styles() {
     return css`
+      :host {
+        overflow: auto;
+      }
+
       .level {
         display: flex;
         justify-content: center;
@@ -51,13 +55,18 @@ export class ExampleStatistics extends LitElement {
         font-weight: 700;
       }
 
-      .table {
+      table {
         width: 100%;
         margin-block-start: var(--lumo-space-s);
       }
 
-      .table .number {
+      table .number {
         text-align: end;
+      }
+
+      table th,
+      table td {
+        white-space: nowrap;
       }
     `;
   }
@@ -86,7 +95,7 @@ export class ExampleStatistics extends LitElement {
           Failing
         </label>
       </section>
-      <table class="table">
+      <table>
         <thead>
           <th></th>
           <th>City</th>

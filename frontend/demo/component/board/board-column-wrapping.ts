@@ -24,7 +24,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-split-layout>
-        <vaadin-board>
+        <vaadin-board style="width: 100%">
           <vaadin-board-row class="row">
             <div class="cell">Cell 1</div>
             <div class="cell">Cell 2</div>
