@@ -27,7 +27,6 @@ export class Example extends LitElement {
       <!-- end::snippet[] -->
       <vaadin-notification
         id="notification"
-        theme="primary"
         position="middle"
         .opened="${this.notificationOpened}"
         @opened-changed="${(e: CustomEvent) => (this.notificationOpened = e.detail.value)}"
