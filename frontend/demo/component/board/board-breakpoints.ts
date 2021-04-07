@@ -9,6 +9,7 @@ import './utils/example-resize-info';
 
 @customElement('board-breakpoints')
 export class Example extends LitElement {
+  // tag::snippet[]
   static get styles() {
     return [
       defaultCellCSS,
@@ -35,6 +36,7 @@ export class Example extends LitElement {
       `,
     ];
   }
+  // end::snippet[]
 
   constructor() {
     super();
@@ -42,9 +44,9 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-split-layout>
         <vaadin-board style="width: 80%">
           <vaadin-board-row>
@@ -56,7 +58,7 @@ export class Example extends LitElement {
         </vaadin-board>
         <example-resize-info style="width: 20%"></example-resize-info>
       </vaadin-split-layout>
-      <!-- end::snippet[] -->
     `;
   }
+  // end::snippet[]
 }
