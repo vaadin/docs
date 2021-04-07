@@ -4,37 +4,33 @@ import '@vaadin/vaadin-board/vaadin-board';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import defaultCellCSS from './shared-styles/example-cell-default.css';
 import './utils/example-resize-info';
 
 @customElement('board-breakpoints')
 export class Example extends LitElement {
   // tag::snippet[]
   static get styles() {
-    return [
-      defaultCellCSS,
-      css`
-        :host {
-          --vaadin-board-width-small: 300px;
-          --vaadin-board-width-medium: 400px;
-        }
+    return css`
+      :host {
+        --vaadin-board-width-small: 300px;
+        --vaadin-board-width-medium: 400px;
+      }
 
-        vaadin-board-row.large > .cell {
-          background: var(--lumo-success-color-10pct);
-          color: var(--lumo-success-color);
-        }
+      vaadin-board-row.large > .cell {
+        background: var(--lumo-success-color-10pct);
+        color: var(--lumo-success-color);
+      }
 
-        vaadin-board-row.medium > .cell {
-          background: var(--lumo-primary-color-10pct);
-          color: var(--lumo-primary-color);
-        }
+      vaadin-board-row.medium > .cell {
+        background: var(--lumo-primary-color-10pct);
+        color: var(--lumo-primary-color);
+      }
 
-        vaadin-board-row.small > .cell {
-          background: var(--lumo-error-color-10pct);
-          color: var(--lumo-error-color);
-        }
-      `,
-    ];
+      vaadin-board-row.small > .cell {
+        background: var(--lumo-error-color-10pct);
+        color: var(--lumo-error-color);
+      }
+    `;
   }
   // end::snippet[]
 
