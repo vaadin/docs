@@ -38,7 +38,7 @@ export class ExampleIndicator extends LitElement {
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot!);
+    applyTheme(this.shadowRoot);
   }
 
   render() {

@@ -4,7 +4,6 @@ import '@vaadin/vaadin-board/vaadin-board';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import './utils/example-resize-info';
 
 @customElement('board-breakpoints')
 export class Example extends LitElement {
@@ -48,7 +47,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-split-layout>
-        <vaadin-board style="width: 80%">
+        <vaadin-board>
           <vaadin-board-row>
             <div class="cell">Cell 1</div>
             <div class="cell">Cell 2</div>
@@ -56,7 +55,6 @@ export class Example extends LitElement {
             <div class="cell">Cell 4</div>
           </vaadin-board-row>
         </vaadin-board>
-        <example-resize-info style="width: 20%"></example-resize-info>
       </vaadin-split-layout>
     `;
   }

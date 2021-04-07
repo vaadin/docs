@@ -3,8 +3,8 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import cellColorsCSS from './shared-styles/example-cell-color.css';
-import defaultCellCSS from './shared-styles/example-default-breakpoints.css';
+import cellColorsCSS from './example-cell-color.css';
+import defaultCellCSS from './example-default-breakpoints.css';
 
 @customElement('board-column-span')
 export class Example extends LitElement {

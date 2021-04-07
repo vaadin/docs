@@ -3,10 +3,10 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import borderCSS from './shared-styles/example-border.css';
-import defaultBreakpointsCSS from './shared-styles/example-default-breakpoints.css';
-import './utils/example-indicator';
-import './utils/example-statistics';
+import borderCSS from './example-border.css';
+import defaultBreakpointsCSS from './example-default-breakpoints.css';
+import './example-indicator';
+import './example-statistics';
 
 @customElement('board-nested')
 export class Example extends LitElement {
