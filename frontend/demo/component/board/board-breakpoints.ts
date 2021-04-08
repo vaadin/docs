@@ -12,7 +12,7 @@ export class Example extends LitElement {
     return css`
       :host {
         --vaadin-board-width-small: 150px;
-        --vaadin-board-width-medium: 250px;
+        --vaadin-board-width-medium: 220px;
       }
 
       .cell {
