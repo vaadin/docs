@@ -23,6 +23,12 @@ export class Example extends LitElement {
           padding: var(--lumo-space-m);
         }
 
+        @media (min-width: 1024px) {
+          example-indicator {
+            padding: var(--lumo-space-xxs);
+          }
+        }
+
         example-indicator:not(:last-child) {
           border-inline-end: var(--board-border);
         }

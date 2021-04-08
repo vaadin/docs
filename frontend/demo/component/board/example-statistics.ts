@@ -8,7 +8,7 @@ export class ExampleStatistics extends LitElement {
   static get styles() {
     return css`
       :host {
-        overflow: auto;
+        font-size: var(--lumo-font-size-s);
       }
 
       .level {
