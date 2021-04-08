@@ -21,7 +21,13 @@ export class Example extends LitElement {
         }
 
         example-indicator {
-          padding: var(--lumo-space-l);
+          padding: var(--lumo-space-m);
+        }
+
+        @media (min-width: 1024px) {
+          example-indicator {
+            padding: var(--lumo-space-l);
+          }
         }
 
         example-indicator:first-child {
