@@ -42,8 +42,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-board>
         <vaadin-board-row>
-          <example-statistics></example-statistics>
-          <vaadin-board-row>
+          <example-statistics board-cols="2"></example-statistics>
+          <vaadin-board-row board-cols="1">
             <example-indicator
               current="745"
               change="+33.7"

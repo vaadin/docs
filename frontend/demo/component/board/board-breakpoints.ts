@@ -25,6 +25,7 @@ export class Example extends LitElement {
       .cell {
         padding: 1em;
         white-space: nowrap;
+        text-align: center;
       }
 
       vaadin-board-row.large > .cell {
