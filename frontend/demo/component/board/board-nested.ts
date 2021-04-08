@@ -15,8 +15,8 @@ export class Example extends LitElement {
       defaultBreakpointsCSS,
       borderCSS,
       css`
-        board-statistics {
-          padding: var(--lumo-space-m);
+        example-statistics {
+          padding-inline-end: var(--lumo-space-m);
           border-inline-end: var(--board-border);
         }
 

@@ -8,6 +8,8 @@ export class ExampleStatistics extends LitElement {
   static get styles() {
     return css`
       :host {
+        display: flex;
+        flex-direction: column;
         font-size: var(--lumo-font-size-s);
       }
 
@@ -55,17 +57,22 @@ export class ExampleStatistics extends LitElement {
         font-weight: 700;
       }
 
-      table {
+      .table {
+        overflow: auto;
+        flex-grow: 1;
+      }
+
+      .table table {
         width: 100%;
         margin-block-start: var(--lumo-space-s);
       }
 
-      table .number {
+      .table .number {
         text-align: end;
       }
 
-      table th,
-      table td {
+      .table th,
+      .table td {
         white-space: nowrap;
       }
     `;
@@ -95,30 +102,32 @@ export class ExampleStatistics extends LitElement {
           Failing
         </label>
       </section>
-      <table>
-        <thead>
-          <th></th>
-          <th>City</th>
-          <th>Input</th>
-          <th>Output</th>
-        </thead>
-        <tbody>
-          ${repeat(
-            this.serviceHealth,
-            ({ id }) => id,
-            ({ city, input, output }) => html`
-              <tr>
-                <td>
-                  <span class="level ok"></span>
-                </td>
-                <td>${city}</td>
-                <td class="number">${input}</td>
-                <td class="number">${output}</td>
-              </tr>
-            `
-          )}
-        </tbody>
-      </table>
+      <div class="table">
+        <table>
+          <thead>
+            <th></th>
+            <th>City</th>
+            <th>Input</th>
+            <th>Output</th>
+          </thead>
+          <tbody>
+            ${repeat(
+              this.serviceHealth,
+              ({ id }) => id,
+              ({ city, input, output }) => html`
+                <tr>
+                  <td>
+                    <span class="level ok"></span>
+                  </td>
+                  <td>${city}</td>
+                  <td class="number">${input}</td>
+                  <td class="number">${output}</td>
+                </tr>
+              `
+            )}
+          </tbody>
+        </table>
+      </div>
     `;
   }
 }
