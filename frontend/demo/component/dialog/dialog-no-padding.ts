@@ -8,6 +8,7 @@ import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
+import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
@@ -37,19 +38,45 @@ export class Example extends LitElement {
             html`
               <vaadin-vertical-layout
                 theme="spacing"
-                style="width: 300px; max-width: 100%; align-items: stretch;"
+                style="width: 300px; max-width: 100%; max-height: 450px; align-items: stretch;"
               >
                 <vaadin-horizontal-layout
                   class="draggable"
                   style="border-bottom: 1px solid var(--lumo-contrast-20pct);"
                 >
-                  <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">New employee</h2>
+                  <h2
+                    style="margin: 0; font-size: 1.5em; font-weight: bold; width: 100%; text-align: center;"
+                  >
+                    New employee
+                  </h2>
                 </vaadin-horizontal-layout>
-                <vaadin-vertical-layout style="align-items: stretch;">
-                  <vaadin-text-field label="Title"></vaadin-text-field>
-                  <vaadin-text-area label="Description"></vaadin-text-area>
-                </vaadin-vertical-layout>
-                <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
+                <vaadin-scroller
+                  scroll-direction="vertical"
+                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); overflow: auto; max-height: 300px; padding: 0 var(--lumo-space-s); margin-top: 0"
+                >
+                  <section aria-labelledby="personal-title">
+                    <h3 id="personal-title">Personal information</h3>
+                    <vaadin-text-field style="width: 100%;" label="First name"></vaadin-text-field>
+                    <vaadin-text-field style="width: 100%;" label="Last name"></vaadin-text-field>
+                    <vaadin-date-picker
+                      initial-position="1990-01-01"
+                      label="Birthdate"
+                      style="width: 100%;"
+                    ></vaadin-date-picker>
+                  </section>
+                  <section aria-labelledby="employment-title">
+                    <h3 id="employment-title">Employment information</h3>
+                    <vaadin-text-field style="width: 100%;" label="Position"></vaadin-text-field>
+                    <vaadin-text-area
+                      style="width: 100%;"
+                      label="Additional information"
+                    ></vaadin-text-area>
+                  </section>
+                </vaadin-scroller>
+                <vaadin-horizontal-layout
+                  theme="spacing"
+                  style="justify-content: flex-end; margin-top: 0; padding: var(--lumo-space-s)"
+                >
                   <vaadin-button @click=${() => (this.dialogOpened = false)}>
                     Cancel
                   </vaadin-button>
