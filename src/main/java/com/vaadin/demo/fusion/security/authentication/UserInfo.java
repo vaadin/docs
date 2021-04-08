@@ -1,6 +1,7 @@
 package com.vaadin.demo.fusion.security.authentication;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * User information used in client-side authentication and authorization.
@@ -14,7 +15,7 @@ public class UserInfo {
 
     public UserInfo(String name, Collection<String> authorities) {
         this.name = name;
-        this.authorities = authorities;
+        this.authorities = Collections.unmodifiableCollection(authorities);
     }
 
     public String getName() {
