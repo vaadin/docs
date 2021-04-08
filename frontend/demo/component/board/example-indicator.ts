@@ -19,9 +19,24 @@ export class ExampleIndicator extends LitElement {
         font-weight: 700;
       }
 
+      .icon {
+        font-size: var(--lumo-font-size-xxs);
+      }
+
       .icon iron-icon {
-        --iron-icon-width: var(--lumo-font-size-xs);
-        --iron-icon-height: var(--lumo-font-size-xs);
+        --iron-icon-width: var(--lumo-font-size-xxs);
+        --iron-icon-height: var(--lumo-font-size-xxs);
+      }
+
+      @media (min-width: 1024px) {
+        .icon {
+          font-size: var(--lumo-font-size-m);
+        }
+
+        .icon iron-icon {
+          --iron-icon-width: var(--lumo-font-size-xs);
+          --iron-icon-height: var(--lumo-font-size-xs);
+        }
       }
     `;
   }

@@ -15,13 +15,6 @@ export class Example extends LitElement {
         --vaadin-board-width-medium: 250px;
       }
 
-      @media (min-width: 1024px) {
-        :host {
-          --vaadin-board-width-small: 300px;
-          --vaadin-board-width-medium: 400px;
-        }
-      }
-
       .cell {
         padding: 1em;
         white-space: nowrap;
@@ -41,6 +34,13 @@ export class Example extends LitElement {
       vaadin-board-row.small > .cell {
         background: var(--lumo-error-color-10pct);
         color: var(--lumo-error-color);
+      }
+
+      @media (min-width: 1024px) {
+        :host {
+          --vaadin-board-width-small: 300px;
+          --vaadin-board-width-medium: 400px;
+        }
       }
     `;
   }
