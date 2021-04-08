@@ -28,14 +28,14 @@ Add the following dependency to the project Maven file.
 
 == Server Configuration
 
-→ *Step 1* - Create a new configuration class extending the link:https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/api/org/springframework/security/config/annotation/web/configuration/WebSecurityConfigurerAdapter.html[WebSecurityConfigurerAdapter] class, and annotate it to enable security.
+→ *Step 1* - Create a new configuration class extending the `VaadinWebSecurityConfigurerAdapter` class and annotate it to enable security. `VaadinWebSecurityConfigurerAdapter` build on the default Spring Security link:https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/api/org/springframework/security/config/annotation/web/configuration/WebSecurityConfigurerAdapter.html[WebSecurityConfigurerAdapter] class and adds Vaadin specific configuration,
 
 .`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
 
 }
 ----
@@ -50,13 +50,13 @@ At the same time, disable CSRF validation because Vaadin endpoints uses its own 
 ----
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     // Set default security policy that permits Vaadin internal requests and
     // denies all other
-    VaadinSpringSecurity.configure(http);
+    super.configure(http);
     // Ignore the login processing url and vaadin endpoint calls
     http.csrf().ignoringAntMatchers("/login", "/connect/**");
     // specify the URL of the login view, the value of the parameter
@@ -67,26 +67,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 ----
 
 
-→ *Step 3* - Allow public access to Vaadin static resources.
-
-.`SecurityConfig.java`
-[source,java]
-----
-@EnableWebSecurity
-@Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
-  ...
-
-  @Override
-  public void configure(WebSecurity web) {
-    // Access to static resources, bypassing Spring security.
-    VaadinSpringSecurity.configure(web);
-  }
-}
-----
-
-
-→ *Step 4* - Finally, add the repository for valid users and roles.
+→ *Step 3* - Finally, add the repository for valid users and roles.
 
 In this example, a set of users in memory is used.
 
@@ -95,7 +76,7 @@ In this example, a set of users in memory is used.
 ----
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
   ...
 
   @Override
@@ -109,31 +90,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 ----
 
 
-→ *Step 5* - Check that the final configuration class looks like:
+→ *Step 4* - Check that the final configuration class looks like:
 
 .`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     // Set default security policy that permits Vaadin internal requests and
     // denies all other
-    VaadinSpringSecurity.configure(http);
+    super.configure(http);
     // Ignore the login processing url and vaadin endpoint calls
     http.csrf().ignoringAntMatchers("/login", "/connect/**");
     // specify the URL of the login view, the value of the parameter
     // is the defined route for the login view component.
     http.formLogin().loginPage("/login").permitAll();
-  }
-
-  @Override
-  public void configure(WebSecurity web) {
-    // Access to static resources, bypassing Spring security.
-    VaadinSpringSecurity.configure(web);
   }
 
   @Override
@@ -147,38 +122,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ----
 
-=== Alternatives to Using the Configuration Helper
+=== Adding public views and resources
 
-`VaadinSpringSecurity.configure(http)` configures HTTP security to bypass framework internal resources.
-If you prefer to roll your own configuration instead of using the helper, the matcher for these resources can be retrieved with `VaadinSpringSecurity.getDefaultHttpSecurityPermitMatcher()`.
-For example, the `VaadinSpringSecurity.configure(http)` requires all the requests but the Vaadin internal ones to be authenticated,
-if you want to allow public access to certain views, you can configure it as following:
+Public views need to be added the the configuration before calling `super.configure`, e.g.
 
 .`SecurityConfig.java`
 [source,java]
 ----
-public static void configure(HttpSecurity http) throws Exception {
-    http.authorizeRequests()
-        .requestMatchers(
-          VaadinSpringSecurity.getDefaultHttpSecurityPermitMatcher()
-        ).permitAll()
-        .antMatchers("/public-view").permitAll() // custom matcher
-        .anyRequest().authenticated();
-        ...
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http.antMatchers("/public-view").permitAll() // custom matcher
+    super.configure(http);
+    }
 }
 ----
 
-Analogously, the matcher for static resources to be ignored is available as `VaadinSpringSecurity.getDefaultWebSecurityIgnoreMatcher`:
+Public resources can be added by overriding `configure(WebSecurity web)`:
 
 .`SecurityConfig.java`
 [source,java]
 ----
-public static void configure(WebSecurity web) throws Exception {
-    web.ignoring()
-       .requestMatchers(
-         VaadinSpringSecurity.getDefaultWebSecurityIgnoreMatcher())
-       .antMatchers("static/**") // custom matcher
-       ...
+  @Override
+  protected void configure(WebSecurity web) throws Exception {
+    super.configure(web);
+    web.ignoring().antMatchers("static/**") // Allow anonymous requests to static/
 }
 ----
 
