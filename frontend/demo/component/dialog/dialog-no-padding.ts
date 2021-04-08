@@ -14,7 +14,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('dialog-draggable')
+@customElement('dialog-no-padding')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -74,8 +74,8 @@ export class Example extends LitElement {
                   </section>
                 </vaadin-scroller>
                 <vaadin-horizontal-layout
-                  theme="spacing"
-                  style="justify-content: flex-end; margin-top: 0; padding: var(--lumo-space-s)"
+                  theme="spacing padding"
+                  style="justify-content: flex-end; margin-top: 0"
                 >
                   <vaadin-button @click=${() => (this.dialogOpened = false)}>
                     Cancel
