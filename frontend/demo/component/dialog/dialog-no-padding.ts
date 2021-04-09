@@ -15,7 +15,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-area';
 
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('dialog-draggable')
+@customElement('dialog-no-padding')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -37,7 +37,9 @@ export class Example extends LitElement {
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <vaadin-vertical-layout style="align-items: stretch; height: 100%; width: 320px;">
+              <vaadin-vertical-layout
+                style="align-items: stretch; height: 100%; max-height: 420px; width: 320px;"
+              >
                 <header
                   class="draggable"
                   style="border-bottom: 1px solid var(--lumo-contrast-10pct); padding: var(--lumo-space-m) var(--lumo-space-l);"
