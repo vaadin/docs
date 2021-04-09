@@ -34,7 +34,7 @@ export class Example extends LitElement {
 
     const menuBar = document.createElement('vaadin-menu-bar');
     menuBar.items = [{ component: this.makeIcon(), children: this.items }];
-    menuBar.setAttribute('theme', 'icon tertiary');
+    menuBar.setAttribute('theme', 'tertiary');
     root.appendChild(menuBar);
   };
 
