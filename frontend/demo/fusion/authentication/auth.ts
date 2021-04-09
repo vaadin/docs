@@ -1,4 +1,4 @@
-// tag::impl[]
+// tag::implt[]
 // Uses the Vaadin provided login an logout helper methods
 import { login as loginImpl, LoginResult, logout as logoutImpl } from '@vaadin/flow-frontend';
 // end::impl[]
