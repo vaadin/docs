@@ -38,21 +38,21 @@ export class Example extends LitElement {
             html`
               <vaadin-vertical-layout
                 theme="spacing"
-                style="width: 300px; max-width: 100%; max-height: 450px; align-items: stretch;"
+                style="width: 320px; max-width: 100%; max-height: 450px; align-items: stretch;"
               >
                 <vaadin-horizontal-layout
                   class="draggable"
                   style="border-bottom: 1px solid var(--lumo-contrast-20pct);"
                 >
                   <h2
-                    style="margin: 0; font-size: 1.5em; font-weight: bold; width: 100%; text-align: center;"
+                    style="padding: 1.0rem; margin: 0; font-size: 1.5em; font-weight: bold; width: 100%; text-align: center;"
                   >
                     New employee
                   </h2>
                 </vaadin-horizontal-layout>
                 <vaadin-scroller
                   scroll-direction="vertical"
-                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); overflow: auto; max-height: 300px; padding: 0 var(--lumo-space-s); margin-top: 0"
+                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); overflow: auto; max-height: 300px; padding: var(--lumo-space-m); margin-top: 0"
                 >
                   <section aria-labelledby="personal-title">
                     <h3 id="personal-title">Personal information</h3>
@@ -64,7 +64,7 @@ export class Example extends LitElement {
                       style="width: 100%;"
                     ></vaadin-date-picker>
                   </section>
-                  <section aria-labelledby="employment-title">
+                  <section aria-labelledby="employment-title" style="margin-top: 1rem;">
                     <h3 id="employment-title">Employment information</h3>
                     <vaadin-text-field style="width: 100%;" label="Position"></vaadin-text-field>
                     <vaadin-text-area
