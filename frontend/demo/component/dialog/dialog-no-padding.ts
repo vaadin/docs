@@ -37,7 +37,7 @@ export class Example extends LitElement {
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <vaadin-vertical-layout style="align-items: stretch; height: 100%;">
+              <vaadin-vertical-layout style="align-items: stretch; height: 100%; width: 320px;">
                 <header
                   class="draggable"
                   style="border-bottom: 1px solid var(--lumo-contrast-10pct); padding: var(--lumo-space-m) var(--lumo-space-l);"
@@ -49,10 +49,14 @@ export class Example extends LitElement {
                   </h2>
                 </header>
                 <vaadin-scroller scroll-direction="vertical" style="padding: var(--lumo-space-l);">
-                  <vaadin-vertical-layout aria-labelledby="personal-title" role="region">
+                  <vaadin-vertical-layout
+                    aria-labelledby="personal-title"
+                    role="region"
+                    style="align-items: stretch; margin-bottom: var(--lumo-space-xl);"
+                  >
                     <h3
                       id="personal-title"
-                      style="font-size: var(--lumo-font-size-l); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0;"
+                      style="font-size: var(--lumo-font-size-l); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0 0 var(--lumo-space-s) 0;"
                     >
                       Personal information
                     </h3>
@@ -63,10 +67,14 @@ export class Example extends LitElement {
                       label="Birthdate"
                     ></vaadin-date-picker>
                   </vaadin-vertical-layout>
-                  <vaadin-vertical-layout aria-labelledby="employment-title" role="region">
+                  <vaadin-vertical-layout
+                    aria-labelledby="employment-title"
+                    role="region"
+                    style="align-items: stretch;"
+                  >
                     <h3
                       id="employment-title"
-                      style="font-size: var(--lumo-font-size-l); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0;"
+                      style="font-size: var(--lumo-font-size-l); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0 0 var(--lumo-space-s) 0;"
                     >
                       Employment information
                     </h3>
