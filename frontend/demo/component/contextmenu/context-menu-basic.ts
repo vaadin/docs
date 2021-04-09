@@ -38,10 +38,10 @@ export class Example extends LitElement {
           .items=${this.gridItems}
           @vaadin-contextmenu=${this.onContextMenu}
         >
-          <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
-          <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
-          <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
-          <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
+          <vaadin-grid-column path="firstName"></vaadin-grid-column>
+          <vaadin-grid-column path="lastName"></vaadin-grid-column>
+          <vaadin-grid-column path="email"></vaadin-grid-column>
+          <vaadin-grid-column header="Phone number" path="address.phone"></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->

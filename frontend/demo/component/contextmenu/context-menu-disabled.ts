@@ -24,21 +24,21 @@ export class Example extends LitElement {
     {
       text: 'Export',
       children: [
-        { text: 'Portable Document Format (.pdf)' },
+        { text: 'Portable Document Format (.pdf)', disabled: true },
         { text: 'Rich Text Format (.rtf)' },
         { text: 'Plain text (.txt)' },
       ],
     },
     { text: 'Share', children: [{ text: 'Copy link' }, { text: 'Email' }] },
     { component: 'hr' },
-    { text: 'Delete' },
+    { text: 'Delete', disabled: true },
   ];
   // end::snippet[]
 
   @internalProperty()
   private gridItems = [
-    { name: 'Annual Report.docx', size: '24 MB' },
-    { name: 'Financials.xlsx', size: '42 MB' },
+    { name: 'Annual Report.pdf', size: '24 MB' },
+    { name: 'Financials.pdf', size: '42 MB' },
   ];
 
   render() {

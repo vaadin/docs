@@ -41,22 +41,11 @@ export class Example extends LitElement {
       {
         component: this.createItem('vaadin:user-check', 'Assign'),
         children: [
-          { text: 'Managers', component: this.createHeader() },
           { component: itemsArray[0] },
           { component: itemsArray[1] },
-          { text: 'Senior Managers', component: this.createHeader() },
           { component: itemsArray[2] },
           { component: itemsArray[3] },
           { component: itemsArray[4] },
-        ],
-      },
-      {
-        component: this.createItem('vaadin:clipboard-check', 'Status'),
-        children: [
-          { text: 'Approved' },
-          { text: 'Denied' },
-          { text: 'In progress' },
-          { text: 'Not started' },
         ],
       },
       { component: 'hr' },
@@ -78,8 +67,8 @@ export class Example extends LitElement {
             header="Applicant"
             .renderer=${this.nameRenderer}
           ></vaadin-grid-column>
-          <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
-          <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
+          <vaadin-grid-column path="email"></vaadin-grid-column>
+          <vaadin-grid-column header="Phone number" path="address.phone"></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
@@ -129,13 +118,6 @@ export class Example extends LitElement {
     item.appendChild(icon);
     text && item.appendChild(window.document.createTextNode(text));
     return item;
-  }
-
-  createHeader() {
-    const header = document.createElement('h3');
-    header.style.fontSize = 'var(--lumo-font-size-s)';
-    header.style.margin = 'var(--lumo-space-s) var(--lumo-space-l)';
-    return header;
   }
 
   onContextMenu(e: MouseEvent) {

@@ -31,9 +31,9 @@ public class ContextMenuBasic extends Div {
 
     // tag::snippet[]
     GridContextMenu<Person> menu = grid.addContextMenu();
-    menu.addItem("View", event -> { /* event.getItem() */ });
-    menu.addItem("Edit", event -> { /* event.getItem() */ });
-    menu.addItem("Delete", event -> { /* event.getItem() */ });
+    menu.addItem("View", event -> {});
+    menu.addItem("Edit", event -> {});
+    menu.addItem("Delete", event -> {});
     // end::snippet[]
 
     add(grid);

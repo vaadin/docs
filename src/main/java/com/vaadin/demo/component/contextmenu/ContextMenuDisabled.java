@@ -11,7 +11,7 @@ import com.vaadin.flow.router.Route;
 
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
-@Route("context-menu-hierarchical")
+@Route("context-menu-disabled")
 public class ContextMenuDisabled extends Div {
 
   public ContextMenuDisabled() {
@@ -24,36 +24,40 @@ public class ContextMenuDisabled extends Div {
     grid.addColumn(File::getDisplaySize)
         .setHeader("Size");
 
-    // tag::snippet[]
+    // tag::snippet1[]
     GridContextMenu<File> menu = grid.addContextMenu();
-    // end::snippet[]
-    menu.addItem("Preview", event -> { /* event.getItem() */ });
-    menu.addItem("Edit", event -> { /* event.getItem() */ });
+    // end::snippet1[]
+    menu.addItem("Preview", event -> {});
+    menu.addItem("Edit", event -> {});
     menu.add(new Hr());
 
-    // tag::snippet[]
-    GridMenuItem<File> export = menu.addItem("Export", event -> { /* event.getItem() */ });
+    // tag::snippet2[]
+    GridMenuItem<File> export = menu.addItem("Export");
     GridSubMenu<File> exportSubMenu = export.getSubMenu();
-    exportSubMenu.addItem("Portable Document Format (.pdf)", event -> { /* event.getItem() */ });
-    exportSubMenu.addItem("Rich Text Format (.rtf)", event -> { /* event.getItem() */ });
-    exportSubMenu.addItem("Plain text (.txt)", event -> { /* event.getItem() */ });
-    // end::snippet[]
+    GridMenuItem<File> exportPDF = exportSubMenu.addItem("Portable Document Format (.pdf)", event -> {});
+    exportPDF.setEnabled(false);
+    // end::snippet2[]
+    exportSubMenu.addItem("Rich Text Format (.rtf)", event -> {});
+    exportSubMenu.addItem("Plain text (.txt)", event -> {});
 
-    GridMenuItem<File> share = menu.addItem("Share", event -> { /* event.getItem() */ });
+    GridMenuItem<File> share = menu.addItem("Share");
     GridSubMenu<File> shareSubMenu = share.getSubMenu();
-    shareSubMenu.addItem("Copy link", event -> { /* event.getItem() */ });
-    shareSubMenu.addItem("Email", event -> { /* event.getItem() */ });
-
+    shareSubMenu.addItem("Copy link", event -> {});
+    shareSubMenu.addItem("Email", event -> {});
     menu.add(new Hr());
-    menu.addItem("Delete", event -> { /* event.getItem() */ });
+
+    // tag::snippet3[]
+    GridMenuItem<File> delete = menu.addItem("Delete", event -> {});
+    delete.setEnabled(false);
+    // end::snippet3[]
 
     add(grid);
   }
 
   private File[] getFiles() {
     return new File[] {
-      new File("Annual Report.docx", 25165824),
-      new File("Financials.xlsx", 44040192)
+      new File("Annual Report.pdf", 25165824),
+      new File("Financials.pdf", 44040192)
     };
   }
 
@@ -79,6 +83,5 @@ public class ContextMenuDisabled extends Div {
       return byteCountToDisplaySize(size);
     }
   }
-
   public static class Exporter extends DemoExporter<ContextMenuDisabled> {} // hidden-full-source-line
 }

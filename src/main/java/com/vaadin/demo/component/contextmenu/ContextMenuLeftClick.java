@@ -6,17 +6,16 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
 
-@Route("context-menu-dividers")
-public class ContextMenuDividers extends Div {
+@Route("context-menu-left-click")
+public class ContextMenuLeftClick extends Div {
 
   private List<Person> people = DataService.getPeople(5);
 
-  public ContextMenuDividers() {
+  public ContextMenuLeftClick() {
     Grid<Person> grid = new Grid();
     grid.setHeightByRows(true);
     grid.setItems(people);
@@ -32,16 +31,13 @@ public class ContextMenuDividers extends Div {
 
     // tag::snippet[]
     GridContextMenu<Person> menu = grid.addContextMenu();
+    menu.setOpenOnClick(true);
     menu.addItem("View", event -> {});
-    menu.add(new Hr());
     menu.addItem("Edit", event -> {});
     menu.addItem("Delete", event -> {});
-    menu.add(new Hr());
-    menu.addItem("Email", event -> {});
-    menu.addItem("Call", event -> {});
     // end::snippet[]
 
     add(grid);
   }
-  public static class Exporter extends DemoExporter<ContextMenuDividers> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ContextMenuLeftClick> {} // hidden-full-source-line
 }
