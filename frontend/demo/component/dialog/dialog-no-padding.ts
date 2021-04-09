@@ -90,11 +90,11 @@ export class Example extends LitElement {
                   <vaadin-button
                     theme="tertiary"
                     style="margin-inline-end: var(--lumo-space-m);"
-                    @click=${() => (this.dialogOpened = false)}
+                    @click="${() => (this.dialogOpened = false)}"
                   >
                     Cancel
                   </vaadin-button>
-                  <vaadin-button theme="primary" @click=${() => (this.dialogOpened = false)}>
+                  <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
                     Save
                   </vaadin-button>
                 </footer>
@@ -105,7 +105,7 @@ export class Example extends LitElement {
         })}"
       ></vaadin-dialog>
       <!-- end::snippet[]  -->
-      <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
+      <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }
 }
