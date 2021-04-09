@@ -4,13 +4,14 @@ import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';
 import { guard } from 'lit-html/directives/guard';
 
-import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
+import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-scroller';
+import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/vaadin-text-field/vaadin-text-area';
 
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -36,54 +37,57 @@ export class Example extends LitElement {
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <vaadin-vertical-layout
-                theme="spacing"
-                style="width: 300px; max-width: 100%; max-height: 450px; align-items: stretch;"
-              >
-                <vaadin-horizontal-layout
+              <vaadin-vertical-layout style="align-items: stretch; height: 100%;">
+                <header
                   class="draggable"
-                  style="border-bottom: 1px solid var(--lumo-contrast-20pct);"
+                  style="border-bottom: 1px solid var(--lumo-contrast-10pct); padding: var(--lumo-space-m) var(--lumo-space-l);"
                 >
                   <h2
-                    style="margin: 0; font-size: 1.5em; font-weight: bold; width: 100%; text-align: center;"
+                    style="font-size: var(--lumo-font-size-xl); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0;"
                   >
                     New employee
                   </h2>
-                </vaadin-horizontal-layout>
-                <vaadin-scroller
-                  scroll-direction="vertical"
-                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); overflow: auto; max-height: 300px; padding: 0 var(--lumo-space-s); margin-top: 0"
-                >
-                  <section aria-labelledby="personal-title">
-                    <h3 id="personal-title">Personal information</h3>
-                    <vaadin-text-field style="width: 100%;" label="First name"></vaadin-text-field>
-                    <vaadin-text-field style="width: 100%;" label="Last name"></vaadin-text-field>
+                </header>
+                <vaadin-scroller scroll-direction="vertical" style="padding: var(--lumo-space-l);">
+                  <vaadin-vertical-layout aria-labelledby="personal-title" role="region">
+                    <h3
+                      id="personal-title"
+                      style="font-size: var(--lumo-font-size-l); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0;"
+                    >
+                      Personal information
+                    </h3>
+                    <vaadin-text-field label="First name"></vaadin-text-field>
+                    <vaadin-text-field label="Last name"></vaadin-text-field>
                     <vaadin-date-picker
                       initial-position="1990-01-01"
                       label="Birthdate"
-                      style="width: 100%;"
                     ></vaadin-date-picker>
-                  </section>
-                  <section aria-labelledby="employment-title">
-                    <h3 id="employment-title">Employment information</h3>
-                    <vaadin-text-field style="width: 100%;" label="Position"></vaadin-text-field>
-                    <vaadin-text-area
-                      style="width: 100%;"
-                      label="Additional information"
-                    ></vaadin-text-area>
-                  </section>
+                  </vaadin-vertical-layout>
+                  <vaadin-vertical-layout aria-labelledby="employment-title" role="region">
+                    <h3
+                      id="employment-title"
+                      style="font-size: var(--lumo-font-size-l); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0;"
+                    >
+                      Employment information
+                    </h3>
+                    <vaadin-text-field label="Position"></vaadin-text-field>
+                    <vaadin-text-area label="Additional information"></vaadin-text-area>
+                  </vaadin-vertical-layout>
                 </vaadin-scroller>
-                <vaadin-horizontal-layout
-                  theme="spacing"
-                  style="justify-content: flex-end; margin-top: 0; padding: var(--lumo-space-s)"
+                <footer
+                  style="background-color: var(--lumo-contrast-5pct); padding: var(--lumo-space-s) var(--lumo-space-m); text-align: right;"
                 >
-                  <vaadin-button @click=${() => (this.dialogOpened = false)}>
+                  <vaadin-button
+                    theme="tertiary"
+                    style="margin-inline-end: var(--lumo-space-m);"
+                    @click=${() => (this.dialogOpened = false)}
+                  >
                     Cancel
                   </vaadin-button>
                   <vaadin-button theme="primary" @click=${() => (this.dialogOpened = false)}>
-                    Add note
+                    Save
                   </vaadin-button>
-                </vaadin-horizontal-layout>
+                </footer>
               </vaadin-vertical-layout>
             `,
             root
