@@ -24,7 +24,7 @@ export class Example extends LitElement {
         <vaadin-select
           theme="small"
           style="width: 6em;"
-          .renderer=${guard([], () => (root: HTMLElement) =>
+          .renderer="${guard([], () => (root: HTMLElement) =>
             render(
               html`
                 <vaadin-list-box>
@@ -35,7 +35,7 @@ export class Example extends LitElement {
               `,
               root
             )
-          )}
+          )}"
         ></vaadin-select>
       </vaadin-custom-field>
 
