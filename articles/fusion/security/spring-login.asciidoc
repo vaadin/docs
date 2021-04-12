@@ -214,6 +214,41 @@ It can be triggered with a link like `<a href="/logout">Log out</a>`.
 }
 ----
 
+=== Alternatives to Using the Configuration Helper
+
+`VaadinWebSecurityConfigurerAdapter.configure(http)` configures HTTP security to bypass framework internal resources.
+If you prefer to roll your own configuration instead of using the helper, the matcher for these resources can be retrieved with `VaadinWebSecurityConfigurerAdapter.getDefaultHttpSecurityPermitMatcher()`.
+For example, the `VaadinWebSecurityConfigurerAdapter.configure(http)` requires all the requests but the Vaadin internal ones to be authenticated,
+if you want to allow public access to certain views, you can configure it as following:
+
+.`SecurityConfig.java`
+[source,java]
+----
+public static void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests()
+        .requestMatchers(
+          VaadinWebSecurityConfigurerAdapter.getDefaultHttpSecurityPermitMatcher()
+        ).permitAll()
+        .antMatchers("/public-view").permitAll() // custom matcher
+        .anyRequest().authenticated();
+        ...
+}
+----
+
+Analogously, the matcher for static resources to be ignored is available as `VaadinWebSecurityConfigurerAdapter.getDefaultWebSecurityIgnoreMatcher`:
+
+.`SecurityConfig.java`
+[source,java]
+----
+public static void configure(WebSecurity web) throws Exception {
+    web.ignoring()
+       .requestMatchers(
+         VaadinWebSecurityConfigurerAdapter.getDefaultWebSecurityIgnoreMatcher())
+       .antMatchers("static/**") // custom matcher
+       ...
+}
+----
+
 == Appendix: Production Data Sources
 
 The example using users in memory above is valid for test applications, though, Spring Security offers other implementations for production scenarios.
