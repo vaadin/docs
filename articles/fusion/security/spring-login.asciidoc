@@ -26,24 +26,13 @@ Add the following dependency to the project Maven file.
 </dependency>
 ----
 
+The application is now protected by a default Spring login view just adding the Spring Security dependency.
+By default it has a single user: ‘user’ username and random password, printed in the console when the application starts up after adding `logging.level.org.springframework.security = DEBUG` to the `application.properties` file.
+
 == Server Configuration
 
-→ *Step 1* - Create a new configuration class extending the `VaadinWebSecurityConfigurerAdapter` class and annotate it to enable security. `VaadinWebSecurityConfigurerAdapter` build on the default Spring Security link:https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/api/org/springframework/security/config/annotation/web/configuration/WebSecurityConfigurerAdapter.html[WebSecurityConfigurerAdapter] class and adds Vaadin specific configuration,
-
-.`SecurityConfig.java`
-[source,java]
-----
-@EnableWebSecurity
-@Configuration
-public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
-
-}
-----
-
-
-→ *Step 2* - Configure Spring `HttpSecurity` to use a login view.
-
-At the same time, disable CSRF validation because Vaadin endpoints uses its own CSRF protection mechanism.
+To have your own security configuraiton, create a new configuration class extending the `VaadinWebSecurityConfigurerAdapter` class, and annotate it to enable security.
+The `VaadinWebSecurityConfigurerAdapter` is a helper wich extends from the link:https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/api/org/springframework/security/config/annotation/web/configuration/WebSecurityConfigurerAdapter.html[WebSecurityConfigurerAdapter] class. It takes care of the configuration for Vaadin requests, so that you can concentrate on your application specific configuraitons.
 
 .`SecurityConfig.java`
 [source,java]
@@ -57,58 +46,8 @@ public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
     // Set default security policy that permits Vaadin internal requests and
     // denies all other
     super.configure(http);
-    // Ignore the login processing url and vaadin endpoint calls
-    http.csrf().ignoringAntMatchers("/login", "/connect/**");
-    // specify the URL of the login view, the value of the parameter
-    // is the defined route for the login view component.
-    http.formLogin().loginPage("/login").permitAll();
-  }
-}
-----
-
-
-→ *Step 3* - Finally, add the repository for valid users and roles.
-
-In this example, a set of users in memory is used.
-
-.`SecurityConfig.java`
-[source,java]
-----
-@EnableWebSecurity
-@Configuration
-public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
-  ...
-
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    auth.inMemoryAuthentication()
-        .withUser("user").password("{noop}user").roles("USER")
-        .and()
-        .withUser("admin").password("{noop}admin").roles("ADMIN", "USER");
-  }
-}
-----
-
-
-→ *Step 4* - Check that the final configuration class looks like:
-
-.`SecurityConfig.java`
-[source,java]
-----
-@EnableWebSecurity
-@Configuration
-public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
-
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    // Set default security policy that permits Vaadin internal requests and
-    // denies all other
-    super.configure(http);
-    // Ignore the login processing url and vaadin endpoint calls
-    http.csrf().ignoringAntMatchers("/login", "/connect/**");
-    // specify the URL of the login view, the value of the parameter
-    // is the defined route for the login view component.
-    http.formLogin().loginPage("/login").permitAll();
+    // use a form based login
+    http.formLogin();
   }
 
   @Override
@@ -121,6 +60,8 @@ public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
   }
 }
 ----
+
+include::{root}/articles/fusion/tutorials/in-depth-course/login-and-authentication.adoc[tag=warning-hard-coded-credentials]
 
 === Adding Public Views and Resources
 
@@ -149,11 +90,11 @@ Public resources can be added by overriding `configure(WebSecurity web)`:
 }
 ----
 
-== Client Configuration
+== Use a Fusion Login View
 
-→ *Step 1* - Create a login view.
-The easiest way to make a login view is to use the `<vaadin-login-overlay>` component.
-Vaadin provides a login helper method for Spring Security based authentication that you can use for the login action.
+To use a Fusion Login view instead of the default one from Spring, follow these steps:
+
+The easiest way to make a Fusion login view is to use the `<vaadin-login-overlay>` component.
 
 .`frontend/login-view.ts`
 [source,typescript]
@@ -161,12 +102,21 @@ Vaadin provides a login helper method for Spring Security based authentication t
 include::{root}/frontend/demo/fusion/authentication/login-view.ts[]
 ----
 
-→ *Step 2* - Configure the route for the login view.
-After the login view is defined, you should also define a route for the login view component, for example in the `routes.ts` file.
-Note, the `path` for the login view component should match the one defined in `SecurityConfig` for `http.formLogin().loginPage()`.
+The authentication helper methods in the code examples are grouped in a separate TypeScript file as shown below.
+It utilises a Fusion `login()` helper method for Spring Security based authentication.
+
+.`frontend/auth.ts`
+[source, typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/auth.ts[]
+----
+
+After the login view is defined, you should also define a route for the login view component, for example in the `routes.ts` file. Don't forget to import the `login-view` component, othersie the login view is not visible.
 
 [source, typescript]
 ----
+import './login-view';
+...
 const routes = [
   {
     path: '/login',
@@ -176,14 +126,24 @@ const routes = [
 }
 ----
 
-→ *Step 3* - Access control in the UI.
-The access control for Vaadin views must be based on the UI, and not only on the URL filtering.
-To protect a view from unauthenticated requests, that is, redirect unauthenticated requests to the login view, you can use either route action on the route configuration or the `onBeforeEnter` lifecycle callback in the view.
+Update the the `SecurityConfig` to configure the login page as
+`http.formLogin().loginPage("/login").permitAll();`
+Note, the `path` for the login view component should match the one defined in `SecurityConfig` for `http.formLogin().loginPage()`.
+
+== How to Protect a Fuion View
+
+The access control for Fusion views must be based on the UI, and not only on the URL filtering.
+The Fusion view templates are always in the bundle and can be accessed by anybody, so it is important not to store any sensitive data into the view template, the data should come endpoints, and the endpoints should be protected instead.
+Read <<./configuring#, Configuring Security>> on how to proecte endpoints.
+Howevery, you can still achive a better user expereince by redirecting unauthenticated requests to the login view with the route action.
 
 An example of using the route action:
 .`frontend/routes.ts`
 [source, typescript]
 ----
+import { Commands, Context, Route } from '@vaadin/router';
+import './my-view';
+...
 const routes = [
   ...
   {
@@ -205,8 +165,15 @@ In this case, the login component should be outside of the main layout, that is,
 .`frontend/routes.ts`
 [source, typescript]
 ----
+import { Commands, Context, Route } from '@vaadin/router';
+import './login-view';
+...
 const routes = [
   ...
+  {
+    path: '/login',
+    component: 'login-view'
+  },
   {
     path: '/',
     action: (_: Context, commands: Commands) => {
@@ -224,25 +191,10 @@ const routes = [
 }
 ----
 
-An example of using the `onBeforeEnter` lifecycle callback in the view:
-[source, typescript]
-----
-include::{root}/frontend/demo/fusion/authentication/protected-view.ts[]
-----
-
 The `isLoggedIn()` method in the above code examples uses a `lastLoginTimestamp` variable stored in the
 https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage[localStorage] to check if the user is logged in. The `lastLoginTimestamp` variable needs to be reset when logging out.
 
-The authentication helper methods in the code examples are grouped in a separate TypeScript file as shown below.
-
-.`frontend/auth.ts`
-[source, typescript]
-----
-include::{root}/frontend/demo/fusion/authentication/auth.ts[]
-----
-
 Using localStorage allows navigating to sub views without having to check authentication from the backend on every navigation so that the authentication check could also work offline.
-
 
 == Logout
 
@@ -252,11 +204,13 @@ It can be triggered with a link like `<a href="/logout">Log out</a>`.
 .`frontend/routes.ts`
 [source, typescript]
 ----
-path: '/logout',
-action: async (_: Context, commands: Commands) => {
-  // use the logout helper method.
-  await logout();
-  return commands.redirect('/');
+{
+  path: '/logout',
+  action: async (_: Context, commands: Commands) => {
+    // use the logout helper method.
+    await logout();
+    return commands.redirect('/');
+  }
 }
 ----
 
