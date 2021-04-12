@@ -2,25 +2,15 @@ import { css } from 'lit-element';
 
 export default css`
   .cell {
-    padding: 1em;
+    padding: 1em 0.3em;
     text-align: center;
     color: white;
     white-space: nowrap;
   }
 
-  .cell:nth-child(1) {
-    background: var(--board-blue-40);
-  }
-
-  .cell:nth-child(2) {
-    background: var(--board-blue-30);
-  }
-
-  .cell:nth-child(3) {
-    background: var(--board-blue-20);
-  }
-
-  .cell:nth-child(4) {
-    background: var(--board-blue-10);
+  @media (min-width: 1024px) {
+    .cell {
+      padding: 1em;
+    }
   }
 `;

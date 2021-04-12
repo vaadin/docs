@@ -4,7 +4,6 @@ import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import borderCSS from './example-border.css';
-import defaultBreakpointsCSS from './example-default-breakpoints.css';
 import './example-indicator';
 import './example-chart';
 
@@ -12,25 +11,34 @@ import './example-chart';
 export class Example extends LitElement {
   static get styles() {
     return [
-      defaultBreakpointsCSS,
       borderCSS,
       css`
+        :host {
+          --vaadin-board-width-small: 200px;
+          --vaadin-board-width-medium: 400px;
+        }
+
         vaadin-board-row:not(:last-child) {
           border-block-end: var(--board-border);
         }
 
         example-indicator {
-          padding: var(--lumo-space-s);
+          padding: var(--lumo-space-m);
+        }
+
+        example-indicator:not(:nth-child(2n)) {
+          border-inline-end: var(--board-border);
         }
 
         @media (min-width: 1024px) {
-          example-indicator {
-            padding: var(--lumo-space-m);
+          :host {
+            --vaadin-board-width-small: 300px;
+            --vaadin-board-width-medium: 400px;
           }
-        }
 
-        example-indicator:not(:last-child) {
-          border-inline-end: var(--board-border);
+          example-indicator:not(:last-child) {
+            border-inline-end: var(--board-border);
+          }
         }
       `,
     ];

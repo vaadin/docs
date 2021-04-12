@@ -9,13 +9,13 @@ export class ExampleIndicator extends LitElement {
     return css`
       .title {
         margin: 0;
-        font-size: var(--lumo-font-size-xs);
+        font-size: var(--lumo-font-size-xxs);
         font-weight: 700;
         color: var(--lumo-contrast-50pct);
       }
 
       .current {
-        font-size: var(--lumo-font-size-xl);
+        font-size: var(--lumo-font-size-m);
         font-weight: 700;
       }
 
@@ -29,6 +29,14 @@ export class ExampleIndicator extends LitElement {
       }
 
       @media (min-width: 1024px) {
+        .title {
+          font-size: var(--lumo-font-size-xxs);
+        }
+
+        .current {
+          font-size: var(--lumo-font-size-xl);
+        }
+
         .icon {
           font-size: var(--lumo-font-size-m);
         }

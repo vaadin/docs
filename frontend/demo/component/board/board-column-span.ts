@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
-import cellColorsCSS from './example-cell-color.css';
+import defaultColorsCSS from './example-color-default.css';
 import defaultCellCSS from './example-default-breakpoints.css';
 
 @customElement('board-column-span')
@@ -11,7 +11,7 @@ export class Example extends LitElement {
   static get styles() {
     return [
       defaultCellCSS,
-      cellColorsCSS,
+      defaultColorsCSS,
       css`
         :host {
           --board-inner-border: 1px dashed white;
