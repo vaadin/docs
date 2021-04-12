@@ -1,5 +1,6 @@
 package com.vaadin.demo.fusion.security.authentication;
 
+import javax.annotation.security.PermitAll;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import com.vaadin.flow.server.connect.Endpoint;
 @Endpoint
 public class UserInfoEndpoint {
 
+    @PermitAll
     public UserInfo getUserInfo() {
         Authentication auth = SecurityContextHolder.getContext()
                 .getAuthentication();
