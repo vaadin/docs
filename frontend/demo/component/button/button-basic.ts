@@ -4,7 +4,6 @@ import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('button-basic')
 export class Example extends LitElement {
   constructor() {
@@ -14,17 +13,18 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private clickedText = '';
+  private counter = 0;
 
   render() {
     return html`
-      <vaadin-button @click=${this.clickListener}>Button</vaadin-button>
-      ${this.clickedText}
+      <!-- tag::snippet[] -->
+      <vaadin-button @click=${this.clickListener}>Vaadin Button</vaadin-button>
+      &nbsp; Button has been clicked ${this.counter} times
+      <!-- end::snippet[] -->
     `;
   }
 
   clickListener() {
-    this.clickedText = 'The button was clicked';
+    this.counter++;
   }
 }
-// end::snippet[]
