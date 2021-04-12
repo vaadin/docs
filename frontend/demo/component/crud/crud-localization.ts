@@ -36,18 +36,18 @@ export class Example extends LitElement {
             content: 'Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.',
             button: {
               confirm: 'Poista',
-              dismiss: 'Peruuta'
-            }
+              dismiss: 'Peruuta',
+            },
           },
           cancel: {
             title: 'Hylkää muutokset',
             content: 'Kohteessa on tallentamattomia muutoksia',
             button: {
               confirm: 'Hylkää',
-              dismiss: 'Peruuta'
-            }
-          }
-        }
+              dismiss: 'Peruuta',
+            },
+          },
+        },
       };
     }
     // end::snippet[]
@@ -76,7 +76,7 @@ export class Example extends LitElement {
           <vaadin-combo-box
             path="profession"
             label="Ammatti"
-            .items="${[...new Set(this.items.map(i => i.profession))]}"
+            .items="${[...new Set(this.items.map((i) => i.profession))]}"
           ></vaadin-combo-box>
         </vaadin-form-layout>
       </vaadin-crud>

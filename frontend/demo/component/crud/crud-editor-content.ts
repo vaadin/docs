@@ -37,7 +37,7 @@ export class Example extends LitElement {
           <vaadin-combo-box
             path="profession"
             label="Profession"
-            .items="${[...new Set(this.items.map(i => i.profession))]}"
+            .items="${[...new Set(this.items.map((i) => i.profession))]}"
           ></vaadin-combo-box>
         </vaadin-form-layout>
       </vaadin-crud>
