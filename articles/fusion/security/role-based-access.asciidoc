@@ -63,43 +63,28 @@ include::{root}/frontend/demo/fusion/authentication/auth.ts[tags=isUserInRole]
 
 == Routes With Access Control
 
-Use `isUserInRole` in the route action helper:
+Define an extended type `ViewRoute` that `rolesAllowed` string to enable specifying allowed roles on the view routes:
 
 .`routes.ts`
 [source,typescript]
 ----
-// Enable declaring additional data on the routes
-export type ViewRoute = Route & {
-  title?: string;
-  children?: ViewRoute[]
-  rolesAllowed?: string[]
-};
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=ViewRoute]
+----
 
-export function isAuthorizedViewRoute(route: ViewRoute) {
-  if (route.rolesAllowed) {
-    return route.rolesAllowed.find(role => isUserInRole(role));
-  }
+Add a method for checking access for the given route by iterating `rolesAllowed` using `isUserInRole`:
 
-  return true;
-}
+.`routes.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=isAuthorizedViewRoute]
+----
 
-export const routes: ViewRoute[] = [
-  {
-    path: 'products',
-    component: 'products-view',
-    title: 'Products',
-    rolesAllowed: ['ADMIN'],
-    action: async (context, commands: Router.Commands) => {
-      const route = context.route as ViewRoute;
-      if (!isAuthorizedViewRoute(route)) {
-        return commands.prevent();
-      }
-      await import('./views/products/products-view');
-      return undefined;
-    },
-  },
-  ...
-];
+Then use the method added in the route action to redirect on unauthorized access:
+
+.`routes.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=routes]
 ----
 
 == Hiding Unauthorized Menu Items
@@ -110,8 +95,5 @@ Then use the filtered list of routes as menu items:
 .`main-view.ts`
 [source,typescript]
 ----
-// Use routes that have title and are authorized
-const menuRoutes = routes
-  .filter(route => route.title)
-  .filter(isAuthorizedViewRoute);
+include::{root}/frontend/demo/fusion/authentication/main-view.ts[tags=menuRoutes]
 ----
