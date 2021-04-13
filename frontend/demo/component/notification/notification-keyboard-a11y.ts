@@ -5,6 +5,7 @@ import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import { NotificationOpenedChanged } from "@vaadin/vaadin-notification";
 
 @customElement('notification-keyboard-a11y')
 export class Example extends LitElement {
@@ -27,7 +28,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-notification
         .opened="${this.notificationOpen}"
-        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
+        @opened-changed="${(e: NotificationOpenedChanged) => (this.notificationOpen = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`

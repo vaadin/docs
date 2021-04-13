@@ -6,6 +6,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
+import { NotificationOpenedChanged } from "@vaadin/vaadin-notification";
 
 @customElement('notification-primary')
 export class Example extends LitElement {
@@ -32,7 +33,7 @@ export class Example extends LitElement {
         theme="primary"
         position="middle"
         .opened="${this.notificationOpen}"
-        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
+        @opened-changed="${(e: NotificationOpenedChanged) => (this.notificationOpen = e.detail.value)}"
         .renderer="${this.renderer}"
       ></vaadin-notification>
       <!-- end::snippet[] -->

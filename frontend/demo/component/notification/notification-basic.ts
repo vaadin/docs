@@ -6,6 +6,7 @@ import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import { NotificationOpenedChanged } from "@vaadin/vaadin-notification";
 
 @customElement('notification-basic')
 export class Example extends LitElement {
@@ -25,7 +26,7 @@ export class Example extends LitElement {
       <vaadin-notification
         position="middle"
         .opened="${this.notificationOpen}"
-        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
+        @opened-changed="${(e: NotificationOpenedChanged) => (this.notificationOpen = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
