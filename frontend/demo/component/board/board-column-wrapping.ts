@@ -6,7 +6,7 @@ import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import defaultColorCSS from './example-color-default.css';
 import defaultCellCSS from './example-cell-default.css';
-import defaultBreakpointsCSS from './example-default-breakpoints.css';
+import defaultBreakpointsCSS from './example-breakpoint-default.css';
 
 @customElement('board-column-wrapping')
 export class Example extends LitElement {

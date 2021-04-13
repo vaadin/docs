@@ -4,12 +4,14 @@ import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import defaultColorsCSS from './example-color-default.css';
-import defaultCellCSS from './example-default-breakpoints.css';
+import defaultCellCSS from './example-cell-default.css';
+import defaultBreakpointCSS from './example-breakpoint-default.css';
 
 @customElement('board-column-span')
 export class Example extends LitElement {
   static get styles() {
     return [
+      defaultBreakpointCSS,
       defaultCellCSS,
       defaultColorsCSS,
       css`
@@ -22,9 +24,6 @@ export class Example extends LitElement {
         }
 
         .cell {
-          padding: 1em;
-          text-align: center;
-          color: white;
           background: var(--board-blue-20);
         }
 

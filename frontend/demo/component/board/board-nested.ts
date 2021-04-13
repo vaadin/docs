@@ -4,7 +4,7 @@ import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement, customElement, css } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import borderCSS from './example-border.css';
-import defaultBreakpointsCSS from './example-default-breakpoints.css';
+import defaultBreakpointsCSS from './example-breakpoint-default.css';
 import './example-indicator';
 import './example-statistics';
 
