@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-progress-bar/vaadin-progress-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-disable-long-action')
