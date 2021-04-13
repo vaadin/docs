@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-cookie-consent/vaadin-cookie-consent';
+import '@vaadin/vaadin-cookie-consent';
 
 // tag::snippet[]
 @customElement('cookie-consent-basic')
