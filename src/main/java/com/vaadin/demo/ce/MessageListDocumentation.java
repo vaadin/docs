@@ -54,9 +54,6 @@ public class MessageListDocumentation extends VerticalLayout {
         CollaborationMessageList messageList = new CollaborationMessageList(
                 userInfo, "general", myMessagePersister);
         // end::message-list-ctor-persister[]
-        // tag::message-list-set-persister[]
-        messageList.setTopic("general", myMessagePersister);
-        // end::message-list-set-persister[]
     }
 
     private void customSubmitter() {
