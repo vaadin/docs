@@ -33,7 +33,7 @@ export class Example extends LitElement {
       <vaadin-crud
         include="firstName, lastName, email, profession"
         .items=${this.items}
-        .editedItem=${this.editedItem}
+        .editedItem=${this.editedItem as any}
         @edited-item-changed=${(e: CrudEditedItemChanged<Person>) =>
           (this.editedItem = e.detail.value)}
       >
