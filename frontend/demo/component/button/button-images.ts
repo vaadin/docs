@@ -5,7 +5,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import { applyTheme } from 'Frontend/generated/theme';
 import * as img from '../../../../src/main/resources/images/vaadin-logo-dark.png';
 
-@customElement('button-icons')
+@customElement('button-images')
 export class Example extends LitElement {
   constructor() {
     super();
