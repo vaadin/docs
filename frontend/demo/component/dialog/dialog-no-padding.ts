@@ -12,6 +12,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-scroller';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
+import { DialogOpenedChanged } from "@vaadin/vaadin-dialog";
 
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -33,7 +34,7 @@ export class Example extends LitElement {
         theme="no-padding"
         aria-label="simple"
         .opened=${this.dialogOpened}
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
+        @opened-changed=${(e: DialogOpenedChanged) => (this.dialogOpened = e.detail.value)}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`

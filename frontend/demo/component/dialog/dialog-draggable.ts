@@ -10,6 +10,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import { DialogOpenedChanged } from "@vaadin/vaadin-dialog";
 
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -31,7 +32,7 @@ export class Example extends LitElement {
         aria-label="simple"
         draggable
         .opened=${this.dialogOpened}
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
+        @opened-changed=${(e: DialogOpenedChanged) => (this.dialogOpened = e.detail.value)}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`

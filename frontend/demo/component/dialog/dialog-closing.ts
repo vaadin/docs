@@ -9,6 +9,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import { DialogOpenedChanged } from "@vaadin/vaadin-dialog";
 
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -29,7 +30,7 @@ export class Example extends LitElement {
       <vaadin-dialog
         aria-label="simple"
         .opened=${this.dialogOpened}
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
+        @opened-changed=${(e: DialogOpenedChanged) => (this.dialogOpened = e.detail.value)}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`

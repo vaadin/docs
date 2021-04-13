@@ -12,6 +12,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { DialogOpenedChanged } from "@vaadin/vaadin-dialog";
 
 @customElement('dialog-resizable')
 export class Example extends LitElement {
@@ -40,7 +41,7 @@ export class Example extends LitElement {
         resizable
         draggable
         .opened=${this.dialogOpened}
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
+        @opened-changed=${(e: DialogOpenedChanged) => (this.dialogOpened = e.detail.value)}
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
