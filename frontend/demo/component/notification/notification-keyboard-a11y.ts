@@ -5,7 +5,7 @@ import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
-import { NotificationOpenedChanged } from "@vaadin/vaadin-notification";
+import { NotificationOpenedChanged } from '@vaadin/vaadin-notification';
 
 @customElement('notification-keyboard-a11y')
 export class Example extends LitElement {

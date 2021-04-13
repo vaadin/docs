@@ -12,7 +12,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { DialogOpenedChanged } from "@vaadin/vaadin-dialog";
+import { DialogOpenedChanged } from '@vaadin/vaadin-dialog';
 
 @customElement('dialog-resizable')
 export class Example extends LitElement {

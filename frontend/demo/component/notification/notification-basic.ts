@@ -6,7 +6,7 @@ import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
-import { NotificationOpenedChanged } from "@vaadin/vaadin-notification";
+import { NotificationOpenedChanged } from '@vaadin/vaadin-notification';
 
 @customElement('notification-basic')
 export class Example extends LitElement {

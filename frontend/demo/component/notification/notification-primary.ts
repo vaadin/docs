@@ -6,7 +6,7 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
-import { NotificationOpenedChanged } from "@vaadin/vaadin-notification";
+import { NotificationOpenedChanged } from '@vaadin/vaadin-notification';
 
 @customElement('notification-primary')
 export class Example extends LitElement {

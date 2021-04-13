@@ -16,6 +16,7 @@ import { Binder, field } from '@vaadin/form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 import { applyTheme } from 'Frontend/generated/theme';
+import { AccordionOpenedChanged } from '@vaadin/vaadin-accordion';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },
@@ -49,7 +50,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-accordion
         .opened=${this.openedPanelIndex}
-        @opened-changed=${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value)}
+        @opened-changed=${(e: AccordionOpenedChanged) => (this.openedPanelIndex = e.detail.value)}
       >
         <vaadin-accordion-panel>
           <div slot="summary">

@@ -5,7 +5,7 @@ import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
-import { NotificationOpenedChanged } from "@vaadin/vaadin-notification";
+import { NotificationOpenedChanged } from '@vaadin/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-contrast')

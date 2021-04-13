@@ -10,7 +10,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { DialogOpenedChanged } from "@vaadin/vaadin-dialog";
+import { DialogOpenedChanged } from '@vaadin/vaadin-dialog';
 
 import { applyTheme } from 'Frontend/generated/theme';
 
