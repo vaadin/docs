@@ -2,7 +2,9 @@ import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import RawReport from 'Frontend/generated/com/vaadin/demo/domain/Report';
+import ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
 import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
+import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
 
 const datasetCache: { [key: string]: any[] } = {};
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
@@ -82,3 +84,11 @@ export type Report = Omit<RawReport, 'status'> &
 
 export const getReports = async (): Promise<readonly Report[]> =>
   await getDataset<Report>('reports.json');
+
+export async function getServiceHealth(): Promise<ServiceHealth[]> {
+  return getDataset<ServiceHealth>('serviceHealth.json');
+}
+
+export async function getViewEvents(): Promise<ViewEvent[]> {
+  return getDataset<ViewEvent>('viewEvents.json');
+}
