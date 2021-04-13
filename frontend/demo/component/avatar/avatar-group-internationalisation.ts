@@ -53,6 +53,8 @@ export class Example extends LitElement {
       one: 'Yksi käyttäjä aktiivisena',
       many: '{count} käyttäjää aktiivisena',
     },
+    joined: 'liittyi',
+    left: 'lähti',
   };
 
   render() {
