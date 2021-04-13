@@ -3,6 +3,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-confirm-dialog/vaadin-confirm-dialog';
 import { applyTheme } from 'Frontend/generated/theme';
+import { ConfirmDialogOpenedChanged } from '@vaadin/vaadin-confirm-dialog';
 
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
@@ -45,7 +46,7 @@ export class Example extends LitElement {
     `;
   }
 
-  openedChanged(e: CustomEvent) {
+  openedChanged(e: ConfirmDialogOpenedChanged) {
     this.dialogOpened = e.detail.value;
     if (this.dialogOpened) {
       this.status = '';
