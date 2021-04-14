@@ -3,11 +3,12 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
+import '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('crud-basic')
+@customElement('crud-grid-replacement')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -19,17 +20,21 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    const { people } = await getPeople();
-    this.items = people;
+    this.items = (await getPeople()).people;
   }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-crud
-        include="firstName, lastName, email, profession"
-        .items=${this.items}
-      ></vaadin-crud>
+      <vaadin-crud include="firstName, lastName, email, profession" .items=${this.items}>
+        <vaadin-grid slot="grid">
+          <vaadin-crud-edit-column></vaadin-crud-edit-column>
+          <vaadin-grid-column path="firstName" header="First name"></vaadin-grid-column>
+          <vaadin-grid-column path="lastName" header="Last name"></vaadin-grid-column>
+          <vaadin-grid-column path="email" header="Email"></vaadin-grid-column>
+          <vaadin-grid-column path="profession" header="Profession"></vaadin-grid-column>
+        </vaadin-grid>
+      </vaadin-crud>
       <!-- end::snippet[] -->
     `;
   }

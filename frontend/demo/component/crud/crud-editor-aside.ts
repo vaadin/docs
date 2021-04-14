@@ -7,7 +7,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('crud-basic')
+@customElement('crud-editor-aside')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -19,14 +19,14 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    const { people } = await getPeople();
-    this.items = people;
+    this.items = (await getPeople()).people;
   }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-crud
+        editor-position="aside"
         include="firstName, lastName, email, profession"
         .items=${this.items}
       ></vaadin-crud>

@@ -1,13 +1,13 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('crud-basic')
+@customElement('crud-editor-bottom')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -15,18 +15,26 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  static get styles() {
+    return css`
+      vaadin-crud {
+        --vaadin-crud-editor-max-height: 60%;
+      }
+    `;
+  }
+
   @internalProperty()
   private items: Person[] = [];
 
   async firstUpdated() {
-    const { people } = await getPeople();
-    this.items = people;
+    this.items = (await getPeople()).people;
   }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-crud
+        editor-position="bottom"
         include="firstName, lastName, email, profession"
         .items=${this.items}
       ></vaadin-crud>
