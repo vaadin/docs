@@ -11,7 +11,7 @@ export class Example extends ExampleMixin(LitElement) {
   connectedCallback() {
     const style = document.createElement('style');
     style.innerHTML = `
-      div.cc-window.cc-banner {
+      div.cc-window.cc-theme-block {
         background-color: var(--lumo-base-color);
         box-shadow: var(--lumo-box-shadow-s);
         color: var(--lumo-body-text-color);
