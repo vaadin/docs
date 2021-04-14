@@ -67,10 +67,6 @@ export function setSessionExpired() {
  */
 // tag::login[]
 export async function login(username: string, password: string): Promise<LoginResult> {
-  if (authentication) {
-    return { error: false } as LoginResult;
-  }
-
   const result = await loginImpl(username, password);
   if (!result.error) {
     // tag::userinfo[]
