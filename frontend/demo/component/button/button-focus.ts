@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -10,6 +10,14 @@ export class Example extends LitElement {
     super();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
+  }
+
+  static get styles() {
+    return css`
+      vaadin-button {
+        outline: #8dbbf6 solid 2px;
+      }
+    `;
   }
 
   render() {
