@@ -71,21 +71,23 @@ export class Example extends LitElement {
   }
 
   clearPrimaryEmail(): void {
-    const primaryEmailField = this.shadowRoot.querySelector('#primary-email') as TextFieldElement;
-    primaryEmailField.value = '';
+    const field = this.shadowRoot?.querySelector('#primary-email') as TextFieldElement;
+    if (field) {
+      field.value = '';
+    }
   }
 
   clearSecondaryEmail1(): void {
-    const primaryEmailField = this.shadowRoot.querySelector(
-      '#secondary-email-1'
-    ) as TextFieldElement;
-    primaryEmailField.value = '';
+    const field = this.shadowRoot?.querySelector('#secondary-email-1') as TextFieldElement;
+    if (field) {
+      field.value = '';
+    }
   }
 
   clearSecondaryEmail2(): void {
-    const primaryEmailField = this.shadowRoot.querySelector(
-      '#secondary-email-2'
-    ) as TextFieldElement;
-    primaryEmailField.value = '';
+    const field = this.shadowRoot?.querySelector('#secondary-email-2') as TextFieldElement;
+    if (field) {
+      field.value = '';
+    }
   }
 }

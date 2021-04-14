@@ -7,7 +7,7 @@ import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { FormLayoutElement } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 
-@customElement('button-form')
+@customElement('button-dialog')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -27,10 +27,13 @@ export class Example extends LitElement {
           colspan="2"
         ></vaadin-text-field>
       </vaadin-form-layout>
-      <vaadin-horizontal-layout theme="spacing" style="margin-top: 1rem;">
-        <vaadin-button theme="primary">Create account</vaadin-button>
-        <vaadin-button theme="secondary">Cancel</vaadin-button>
-      </vaadin-horizontal-layout>
+      <div style="margin-top: 1rem;">
+        <vaadin-button theme="secondary error">Cancel</vaadin-button>
+        <vaadin-horizontal-layout theme="spacing" style="float: right;">
+          <vaadin-button theme="secondary">Cancel</vaadin-button>
+          <vaadin-button theme="primary">Create account</vaadin-button>
+        </vaadin-horizontal-layout>
+      </div>
       <!-- end::snippet[] -->
     `;
   }
