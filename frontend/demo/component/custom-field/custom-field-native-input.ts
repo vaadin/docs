@@ -21,7 +21,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-custom-field
         label="Payment"
-        @change=${(e: CustomFieldValueChanged) => (this.customFieldValue = e.detail.value)}
+        @change="${(e: CustomFieldValueChanged) => (this.customFieldValue = e.detail.value)}"
       >
         <input type="text" placeholder="Card number" maxlength="16" />
         <input type="text" placeholder="CVV" style="width: 6em" maxlength="3" />
