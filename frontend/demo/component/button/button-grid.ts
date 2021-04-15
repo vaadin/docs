@@ -9,7 +9,6 @@ import '@vaadin/vaadin-grid/vaadin-grid-column';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { GridSelectedItemsChanged } from '@vaadin/vaadin-grid/vaadin-grid';
 
 @customElement('button-grid')
 export class Example extends LitElement {
