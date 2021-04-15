@@ -65,7 +65,7 @@ export class Example extends LitElement {
       <div
         id="#footer"
         style="margin-top: var(--lumo-space-s)"
-        .hidden="${this.selectedItems.length !== 1}"
+        ?hidden="${this.selectedItems.length !== 1}"
       >
         <vaadin-button>Edit profile</vaadin-button>
         <vaadin-button>Manage permissions</vaadin-button>
