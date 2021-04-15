@@ -9,6 +9,7 @@ import '@vaadin/vaadin-grid/vaadin-grid-column';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { GridSelectedItemsChanged } from '@vaadin/vaadin-grid/vaadin-grid';
 
 @customElement('button-grid')
 export class Example extends LitElement {
@@ -44,17 +45,7 @@ export class Example extends LitElement {
     if (grid) {
       // select the third item just to show how it looks like
       grid.selectedItems = [this.items[2]];
-      this.refresh();
     }
-    // refresh this component whenever the selection of items changes
-    grid?.addEventListener('selected-items-changed', this.refresh);
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    // remove the listener to avoid memory leaks
-    const grid = this.shadowRoot?.querySelector('vaadin-grid');
-    grid?.removeEventListener('selected-items-changed', this.refresh);
   }
 
   render() {
@@ -66,7 +57,7 @@ export class Example extends LitElement {
         </h2>
         <vaadin-button style="margin: 0 0 var(--lumo-space-m) 0;">Add user</vaadin-button>
       </div>
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items=${this.items} @selected-items-changed=${() => this.refresh()}>
         <vaadin-grid-selection-column width="60px"></vaadin-grid-selection-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
