@@ -1,19 +1,16 @@
 import { customElement, html, internalProperty, LitElement } from 'lit-element';
 import { LoginResult } from '@vaadin/flow-frontend';
 import { login } from './auth';
-import { Router, AfterEnterObserver, RouterLocation } from '@vaadin/router';
+import { Router } from '@vaadin/router';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
 
 @customElement('login-view')
-export class LoginView extends LitElement implements AfterEnterObserver {
+export class LoginView extends LitElement {
   @internalProperty()
   private error = false;
 
-  // the url to redirect to after a successful login
-  private returnUrl = '/';
-
-  private onSuccess = (_: LoginResult) => {
-    Router.go(this.returnUrl);
+  private onSuccess = (result: LoginResult) => {
+    Router.go(result.redirectUrl!);
   };
 
   render() {
@@ -35,9 +32,5 @@ export class LoginView extends LitElement implements AfterEnterObserver {
     }
 
     return result;
-  }
-
-  onAfterEnter(location: RouterLocation) {
-    this.returnUrl = location.redirectFrom || this.returnUrl;
   }
 }
