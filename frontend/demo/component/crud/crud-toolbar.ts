@@ -3,11 +3,13 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
+import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-button/vaadin-button';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('crud-basic')
+@customElement('crud-toolbar')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -19,17 +21,23 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    const { people } = await getPeople();
-    this.items = people;
+    this.items = (await getPeople()).people;
   }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-crud
-        include="firstName, lastName, email, profession"
+        include="firstName, lastName"
         .items=${this.items}
-      ></vaadin-crud>
+        @size-changed=${() => this.requestUpdate()}
+      >
+        <div slot="toolbar" style="flex: 1;">Total: <b>${this.items.length}</b> employees</div>
+        <vaadin-button theme="tertiary" slot="toolbar" new-button>
+          <iron-icon slot="prefix" icon="vaadin:plus"></iron-icon>
+          New employee
+        </vaadin-button>
+      </vaadin-crud>
       <!-- end::snippet[] -->
     `;
   }
