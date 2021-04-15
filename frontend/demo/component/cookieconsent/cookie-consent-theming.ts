@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
+import './example-cleanup'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-cookie-consent/vaadin-cookie-consent';
-import ExampleMixin from './example-base';
 
 @customElement('cookie-consent-theming')
-export class Example extends ExampleMixin(LitElement) {
+export class Example extends LitElement {
   // tag::snippet[]
   connectedCallback() {
     const style = document.createElement('style');
@@ -19,7 +19,7 @@ export class Example extends ExampleMixin(LitElement) {
         font-size: var(--lumo-font-size-m);
       }
 
-      a.cc-link {
+      a.cc-link[role=button] {
         color: var(--lumo-primary-text-color);
         opacity: 1;
         padding: 0 var(--lumo-space-s);

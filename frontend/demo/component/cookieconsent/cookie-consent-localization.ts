@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
+import './example-cleanup'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-cookie-consent/vaadin-cookie-consent';
-import ExampleMixin from './example-base';
 
 @customElement('cookie-consent-localization')
-export class Example extends ExampleMixin(LitElement) {
+export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
