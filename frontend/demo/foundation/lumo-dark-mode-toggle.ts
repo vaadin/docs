@@ -8,7 +8,7 @@ export default class LumoDarkModeToggle extends DarkModeToggle {
 
   parseCss(css: string): string {
     // Strip everything else than the first [theme~="dark"] selector to avoid global style collisions
-    return `[theme~="dark"] ${css.split('[theme~="dark"]')[1].split('}')[0]} }`;
+    return `[theme~="dark"] ${css.split("[theme~='dark']")[1].split('}')[0]} }`;
   }
 }
 
