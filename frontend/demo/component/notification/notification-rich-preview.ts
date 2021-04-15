@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { html, LitElement, css, customElement } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-rich-preview')
 export class Example extends LitElement {
@@ -36,6 +36,10 @@ export class Example extends LitElement {
       margin-bottom: var(--lumo-space-m);
     }
   `;
+  constructor() {
+    super();
+    applyTheme(this.shadowRoot);
+  }
 
   render() {
     return html`
