@@ -27,7 +27,7 @@ export class Example extends LitElement {
           colspan="2"
         ></vaadin-text-field>
       </vaadin-form-layout>
-      <div style="margin-top: 1rem;">
+      <div style="margin-top: var(--lumo-space-m);">
         <vaadin-button theme="secondary error">Cancel</vaadin-button>
         <vaadin-horizontal-layout theme="spacing" style="float: right;">
           <vaadin-button theme="secondary">Cancel</vaadin-button>
@@ -40,6 +40,8 @@ export class Example extends LitElement {
 
   firstUpdated() {
     const formLayout = this.shadowRoot?.querySelector('vaadin-form-layout') as FormLayoutElement;
-    formLayout.responsiveSteps = [{ columns: 2 }];
+    if (formLayout) {
+      formLayout.responsiveSteps = [{ columns: 2 }];
+    }
   }
 }
