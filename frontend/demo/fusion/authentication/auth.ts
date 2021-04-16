@@ -1,4 +1,4 @@
-// tag::implt[]
+// tag::impl[]
 // Uses the Vaadin provided login an logout helper methods
 import { login as loginImpl, LoginResult, logout as logoutImpl } from '@vaadin/flow-frontend';
 // end::impl[]
@@ -21,9 +21,12 @@ let authentication: Authentication | undefined = undefined;
 
 // end::basic[]
 // tag::offline[]
+// tag::storage-defs[]
 const AUTHENTICATION_KEY = 'authentication';
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+// end::storage-defs[]
 
+// tag::restore[]
 // Get authentication from local storage
 const storedAuthenticationJson = localStorage.getItem(AUTHENTICATION_KEY);
 if (storedAuthenticationJson !== null) {
@@ -40,6 +43,7 @@ if (storedAuthenticationJson !== null) {
   }
 }
 
+// end::restore[]
 // end::offline[]
 /**
  * Forces the session to expire and removes user information stored in
@@ -63,10 +67,6 @@ export function setSessionExpired() {
  */
 // tag::login[]
 export async function login(username: string, password: string): Promise<LoginResult> {
-  if (authentication) {
-    return { error: false } as LoginResult;
-  }
-
   const result = await loginImpl(username, password);
   if (!result.error) {
     // tag::userinfo[]
@@ -112,7 +112,7 @@ export function isLoggedIn() {
   return !!authentication;
 }
 
-// tag::isLoggedIn[]
+// end::isLoggedIn[]
 /**
  * Checks if the user has the role.
  */

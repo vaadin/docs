@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-keyboard-a11y')
 export class Example extends LitElement {
@@ -14,6 +14,12 @@ export class Example extends LitElement {
   @internalProperty()
   private isMac =
     ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'].indexOf(window.navigator.platform) > -1;
+
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
 
   render() {
     return html`
