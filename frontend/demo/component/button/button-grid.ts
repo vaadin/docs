@@ -27,23 +27,6 @@ export class Example extends LitElement {
   async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
-
-    this.selectedItems = [this.items[2]];
-  }
-
-  updateItems(ev: CustomEvent): void {
-    const splices = ev.detail.value?.indexSplices;
-    const items = splices ? splices[0].object : undefined;
-    if (items) {
-      this.selectedItems = [...items];
-    }
-  }
-
-  selectAll(ev: CustomEvent): void {
-    const allSelected = ev.detail.value;
-    if (allSelected) {
-      this.selectedItems = [...this.items];
-    }
   }
 
   render() {
@@ -58,12 +41,13 @@ export class Example extends LitElement {
 
       <vaadin-grid
         .items=${this.items}
-        .selectedItems="${this.selectedItems}"
-        @selected-items-changed="${this.updateItems}"
+        @selected-items-changed="${(ev: any) =>
+          (this.selectedItems = ev.target ? [...ev.target.selectedItems] : this.selectedItems)}"
       >
         <vaadin-grid-selection-column
           width="60px"
-          @select-all-changed="${this.selectAll}"
+          @select-all-changed="${(ev: CustomEvent) =>
+            (this.selectedItems = ev.detail.value ? this.items : this.selectedItems)}"
         ></vaadin-grid-selection-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
