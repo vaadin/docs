@@ -14,19 +14,18 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private progressBarValue = 0;
-
-  @internalProperty()
-  private disableButton = false;
+  private progress: number | undefined = undefined;
 
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button ?disabled="${this.disableButton}" @click=${this.performAction}
+      <vaadin-button
+        ?disabled="${this.progress !== undefined && this.progress < 1}"
+        @click=${this.performAction}
         >Perform action</vaadin-button
       >
       <vaadin-progress-bar
-        value="${this.progressBarValue}"
+        value="${this.progress}"
         style="display: inline-block; width: 350px;"
       ></vaadin-progress-bar>
       <!-- end::snippet[] -->
@@ -34,15 +33,14 @@ export class Example extends LitElement {
   }
 
   performAction() {
-    // disable the button
-    this.disableButton = true;
-    this.progressBarValue = 0;
+    this.progress = 0;
     // simulate a long running process
     const breakInterval = setInterval(() => {
-      this.progressBarValue += 0.005;
-      if (this.progressBarValue >= 1) {
-        this.disableButton = false;
-        clearInterval(breakInterval);
+      if (this.progress !== undefined) {
+        this.progress += 0.005;
+        if (this.progress >= 1) {
+          clearInterval(breakInterval);
+        }
       }
     }, 25);
   }
