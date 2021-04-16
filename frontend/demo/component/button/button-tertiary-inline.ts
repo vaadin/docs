@@ -15,7 +15,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button theme="tertiary-inline">Tertiary Inline</vaadin-button>
+      <vaadin-button theme="tertiary-inline">Tertiary inline</vaadin-button>
       <!-- end::snippet[] -->
     `;
   }

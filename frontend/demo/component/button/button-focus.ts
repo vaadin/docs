@@ -23,7 +23,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button>Perform Action</vaadin-button>
+      <vaadin-button>Perform action</vaadin-button>
       <!-- end::snippet[] -->
     `;
   }

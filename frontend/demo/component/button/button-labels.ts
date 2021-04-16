@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { css, html, LitElement, customElement } from 'lit-element';
+import { css, html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import { TextFieldElement } from '@vaadin/vaadin-text-field/vaadin-text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-labels')
@@ -15,6 +14,15 @@ export class Example extends LitElement {
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
+
+  @internalProperty()
+  private primaryEmail = 'foo@example.com';
+
+  @internalProperty()
+  private secondaryEmail1 = 'bar@example.com';
+
+  @internalProperty()
+  private secondaryEmail2 = 'baz@example.com';
 
   static get styles() {
     return css`
@@ -35,9 +43,11 @@ export class Example extends LitElement {
           <vaadin-text-field
             id="primary-email"
             label="Primary email address"
-            value="foo@example.com"
+            .value="${this.primaryEmail}"
           ></vaadin-text-field>
-          <vaadin-button arial-label="Remove primary email address" @click=${this.clearPrimaryEmail}
+          <vaadin-button
+            arial-label="Remove primary email address"
+            @click="${this.clearPrimaryEmail}"
             >Remove</vaadin-button
           >
         </vaadin-horizontal-layout>
@@ -45,11 +55,11 @@ export class Example extends LitElement {
           <vaadin-text-field
             id="secondary-email-1"
             label="Secondary email address 1"
-            value="bar@example.com"
+            .value="${this.secondaryEmail1}"
           ></vaadin-text-field>
           <vaadin-button
             arial-label="Remove secondary email address 1"
-            @click=${this.clearSecondaryEmail1}
+            @click="${this.clearSecondaryEmail1}"
             >Remove</vaadin-button
           >
         </vaadin-horizontal-layout>
@@ -57,11 +67,11 @@ export class Example extends LitElement {
           <vaadin-text-field
             id="secondary-email-2"
             label="Secondary email address 2"
-            value="baz@example.com"
+            .value="${this.secondaryEmail2}"
           ></vaadin-text-field>
           <vaadin-button
             arial-label="Remove secondary email address 2"
-            @click=${this.clearSecondaryEmail2}
+            @click="${() => this.clearSecondaryEmail2()}"
             >Remove</vaadin-button
           >
         </vaadin-horizontal-layout>
@@ -71,23 +81,15 @@ export class Example extends LitElement {
   }
 
   clearPrimaryEmail(): void {
-    const field = this.shadowRoot?.querySelector('#primary-email') as TextFieldElement;
-    if (field) {
-      field.value = '';
-    }
+    this.primaryEmail = '';
   }
 
   clearSecondaryEmail1(): void {
-    const field = this.shadowRoot?.querySelector('#secondary-email-1') as TextFieldElement;
-    if (field) {
-      field.value = '';
-    }
+    this.secondaryEmail1 = '';
   }
 
   clearSecondaryEmail2(): void {
-    const field = this.shadowRoot?.querySelector('#secondary-email-2') as TextFieldElement;
-    if (field) {
-      field.value = '';
-    }
+    console.log('clearing secondary email 2...');
+    this.secondaryEmail2 = '';
   }
 }
