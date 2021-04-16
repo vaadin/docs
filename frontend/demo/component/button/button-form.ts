@@ -5,7 +5,6 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import { FormLayoutElement } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 
 @customElement('button-form')
 export class Example extends LitElement {
@@ -18,7 +17,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-form-layout>
+      <vaadin-form-layout .responsiveSteps="${[{ columns: 2 }]}">
         <vaadin-text-field label="First name" value="John"></vaadin-text-field>
         <vaadin-text-field label="Last name" value="Smith"></vaadin-text-field>
         <vaadin-text-field
@@ -33,10 +32,5 @@ export class Example extends LitElement {
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;
-  }
-
-  firstUpdated() {
-    const formLayout = this.shadowRoot?.querySelector('vaadin-form-layout') as FormLayoutElement;
-    formLayout.responsiveSteps = [{ columns: 2 }];
   }
 }

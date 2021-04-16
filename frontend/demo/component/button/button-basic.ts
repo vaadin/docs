@@ -18,13 +18,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button @click=${this.clickListener}>Vaadin Button</vaadin-button>
+      <vaadin-button @click=${() => this.counter++}>Vaadin Button</vaadin-button>
       &nbsp; Button has been clicked ${this.counter} times
       <!-- end::snippet[] -->
     `;
-  }
-
-  clickListener() {
-    this.counter++;
   }
 }

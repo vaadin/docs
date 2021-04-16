@@ -22,7 +22,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button ?disabled=${this.disableButton} @click=${this.performAction}
+      <vaadin-button ?disabled="${this.disableButton}" @click=${this.performAction}
         >Perform action</vaadin-button
       >
       <vaadin-progress-bar
@@ -37,7 +37,7 @@ export class Example extends LitElement {
     // disable the button
     this.disableButton = true;
     this.progressBarValue = 0;
-    // we need an interval to update the progress-bar
+    // simulate a long running process
     const breakInterval = setInterval(() => {
       this.progressBarValue += 0.005;
       if (this.progressBarValue >= 1) {

@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -12,18 +12,16 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  @internalProperty()
+  private disableButton = false;
+
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button @click=${this.performAction}>Perform Action</vaadin-button>
+      <vaadin-button ?disabled="${this.disableButton}" @click="${() => (this.disableButton = true)}"
+        >Perform Action</vaadin-button
+      >
       <!-- end::snippet[] -->
     `;
-  }
-
-  performAction() {
-    const button = this.shadowRoot?.querySelector('vaadin-button');
-    if (button) {
-      button.disabled = true;
-    }
   }
 }

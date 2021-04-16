@@ -15,6 +15,14 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  static get styles() {
+    return css`
+      vaadin-horizontal-layout {
+        align-items: baseline;
+      }
+    `;
+  }
+
   @internalProperty()
   private primaryEmail = 'foo@example.com';
 
@@ -24,72 +32,51 @@ export class Example extends LitElement {
   @internalProperty()
   private secondaryEmail2 = 'baz@example.com';
 
-  static get styles() {
-    return css`
-      vaadin-horizontal-layout {
-        align-items: baseline;
-      }
-      vaadin-button {
-        margin-left: 0.5rem;
-      }
-    `;
-  }
-
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout>
-        <vaadin-horizontal-layout>
+        <vaadin-horizontal-layout theme="spacing">
           <vaadin-text-field
             id="primary-email"
             label="Primary email address"
             .value="${this.primaryEmail}"
+            @value-changed="${(e: CustomEvent) => (this.primaryEmail = e.detail.value)}"
           ></vaadin-text-field>
           <vaadin-button
             arial-label="Remove primary email address"
-            @click="${this.clearPrimaryEmail}"
+            @click="${() => (this.primaryEmail = '')}"
             >Remove</vaadin-button
           >
         </vaadin-horizontal-layout>
-        <vaadin-horizontal-layout>
+        <vaadin-horizontal-layout theme="spacing">
           <vaadin-text-field
             id="secondary-email-1"
             label="Secondary email address 1"
             .value="${this.secondaryEmail1}"
+            @value-changed="${(e: CustomEvent) => (this.secondaryEmail1 = e.detail.value)}"
           ></vaadin-text-field>
           <vaadin-button
             arial-label="Remove secondary email address 1"
-            @click="${this.clearSecondaryEmail1}"
+            @click="${() => (this.secondaryEmail1 = '')}"
             >Remove</vaadin-button
           >
         </vaadin-horizontal-layout>
-        <vaadin-horizontal-layout>
+        <vaadin-horizontal-layout theme="spacing">
           <vaadin-text-field
             id="secondary-email-2"
             label="Secondary email address 2"
             .value="${this.secondaryEmail2}"
+            @value-changed="${(e: CustomEvent) => (this.secondaryEmail2 = e.detail.value)}"
           ></vaadin-text-field>
           <vaadin-button
             arial-label="Remove secondary email address 2"
-            @click="${() => this.clearSecondaryEmail2()}"
+            @click="${() => (this.secondaryEmail2 = '')}"
             >Remove</vaadin-button
           >
         </vaadin-horizontal-layout>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->
     `;
-  }
-
-  clearPrimaryEmail(): void {
-    this.primaryEmail = '';
-  }
-
-  clearSecondaryEmail1(): void {
-    this.secondaryEmail1 = '';
-  }
-
-  clearSecondaryEmail2(): void {
-    console.log('clearing secondary email 2...');
-    this.secondaryEmail2 = '';
   }
 }
