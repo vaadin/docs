@@ -26,6 +26,7 @@ export class Example extends LitElement {
           colspan="2"
         ></vaadin-text-field>
       </vaadin-form-layout>
+
       <div style="margin-top: var(--lumo-space-m);">
         <vaadin-button theme="secondary error">Cancel</vaadin-button>
         <vaadin-horizontal-layout theme="spacing" style="float: right;">

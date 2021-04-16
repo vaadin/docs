@@ -24,6 +24,7 @@ export class Example extends LitElement {
         @click=${this.performAction}
         >Perform action</vaadin-button
       >
+
       <vaadin-progress-bar
         .value="${this.progress}"
         style="display: inline-block; width: 350px;"

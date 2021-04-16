@@ -49,6 +49,7 @@ export class Example extends LitElement {
             >Remove</vaadin-button
           >
         </vaadin-horizontal-layout>
+
         <vaadin-horizontal-layout theme="spacing">
           <vaadin-text-field
             id="secondary-email-1"
@@ -62,6 +63,7 @@ export class Example extends LitElement {
             >Remove</vaadin-button
           >
         </vaadin-horizontal-layout>
+
         <vaadin-horizontal-layout theme="spacing">
           <vaadin-text-field
             id="secondary-email-2"

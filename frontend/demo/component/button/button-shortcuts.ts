@@ -61,6 +61,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout>
         <vaadin-button @click="${this.increaseGlobalCounter}">Global Enter shortcut</vaadin-button>
+
         <vaadin-text-field
           label="First name"
           .value="${this.firstName}"
@@ -68,6 +69,7 @@ export class Example extends LitElement {
           @keydown="${this.clearFieldsShortcutListener}"
         >
         </vaadin-text-field>
+
         <vaadin-text-field
           label="Last name"
           .value="${this.lastName}"
@@ -75,9 +77,11 @@ export class Example extends LitElement {
           @keydown="${this.clearFieldsShortcutListener}"
         >
         </vaadin-text-field>
+
         <vaadin-button id="clear-fields-btn" @click="${this.clearFields}"
           >Clear fields</vaadin-button
         >
+
         <p>
           Button "Clear fields"'s shortcut <kbd>ALT</kbd>+<kbd>L</kbd> works only within the text
           fields.

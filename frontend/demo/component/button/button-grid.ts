@@ -24,26 +24,25 @@ export class Example extends LitElement {
   @internalProperty()
   private selectedItems: Person[] = [];
 
-  // The bottom row of buttons should only show when a single item is selected.
-  // this component must be updated when the grid's selection changes.
-  private refresh = () => {
-    const grid = this.shadowRoot?.querySelector('vaadin-grid');
-    if (grid) {
-      this.selectedItems = grid.selectedItems as Person[];
-    }
-    this.requestUpdate();
-  };
-
   async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
 
-    // we need to manually refresh the component when selection changes
-    // so that the buttons at the bottom hide or show when we want them to
-    const grid = this.shadowRoot?.querySelector('vaadin-grid');
-    if (grid) {
-      // select the third item just to show how it looks like
-      grid.selectedItems = [this.items[2]];
+    this.selectedItems = [this.items[2]];
+  }
+
+  updateItems(ev: CustomEvent): void {
+    const splices = ev.detail.value?.indexSplices;
+    const items = splices ? splices[0].object : undefined;
+    if (items) {
+      this.selectedItems = [...items];
+    }
+  }
+
+  selectAll(ev: CustomEvent): void {
+    const allSelected = ev.detail.value;
+    if (allSelected) {
+      this.selectedItems = [...this.items];
     }
   }
 
@@ -56,20 +55,26 @@ export class Example extends LitElement {
         </h2>
         <vaadin-button style="margin: 0 0 var(--lumo-space-m) 0;">Add user</vaadin-button>
       </div>
-      <vaadin-grid .items=${this.items} @selected-items-changed=${() => this.refresh()}>
-        <vaadin-grid-selection-column width="60px"></vaadin-grid-selection-column>
+
+      <vaadin-grid
+        .items=${this.items}
+        .selectedItems="${this.selectedItems}"
+        @selected-items-changed="${this.updateItems}"
+      >
+        <vaadin-grid-selection-column
+          width="60px"
+          @select-all-changed="${this.selectAll}"
+        ></vaadin-grid-selection-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
-      <div
-        id="#footer"
-        style="margin-top: var(--lumo-space-s)"
-        ?hidden="${this.selectedItems.length !== 1}"
-      >
+
+      <div style="margin-top: var(--lumo-space-s)" ?hidden="${this.selectedItems.length !== 1}">
         <vaadin-button>Edit profile</vaadin-button>
         <vaadin-button>Manage permissions</vaadin-button>
         <vaadin-button>Reset password</vaadin-button>
+
         <vaadin-horizontal-layout style="float: right">
           <vaadin-button theme="error" style="float: right">Delete</vaadin-button>
         </vaadin-horizontal-layout>

@@ -19,13 +19,16 @@ export class Example extends LitElement {
       <vaadin-button theme="icon" aria-label="Add item">
         <iron-icon icon="vaadin:plus"></iron-icon>
       </vaadin-button>
+
       <vaadin-button theme="icon" aria-label="Close">
         <iron-icon icon="vaadin:close-small"></iron-icon>
       </vaadin-button>
+
       <vaadin-button>
         <iron-icon icon="vaadin:arrow-left" slot="prefix"></iron-icon>
         Left
       </vaadin-button>
+
       <vaadin-button>
         Right
         <iron-icon icon="vaadin:arrow-right" slot="suffix"></iron-icon>
