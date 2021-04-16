@@ -26,7 +26,7 @@ export class Example extends LitElement {
   // shortcut listener for the global enter button
   private globalEnterListener = (ev: KeyboardEvent) => {
     if (ev.key === 'Enter') {
-      this.shadowRoot?.querySelector('vaadin-button')?.click();
+      this.increaseGlobalCounter();
     }
   };
 
