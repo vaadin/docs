@@ -49,12 +49,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <div style="display: flex; justify-content: space-between;">
-        <h2 style="margin: 0 0 var(--lumo-space-m) 0; font-size: 1.5em; font-weight: bold;">
-          Users
-        </h2>
-        <vaadin-button style="margin: 0 0 var(--lumo-space-m) 0;">Add user</vaadin-button>
-      </div>
+      <vaadin-horizontal-layout
+        style="display: flex; justify-content: space-between; margin: 0 0 var(--lumo-space-m) 0;"
+      >
+        <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">Users</h2>
+        <vaadin-button style="margin: 0;">Add user</vaadin-button>
+      </vaadin-horizontal-layout>
 
       <vaadin-grid
         .items=${this.items}
