@@ -14,7 +14,7 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private progress: number | undefined = undefined;
+  private progress?: number;
 
   render() {
     return html`
@@ -25,7 +25,7 @@ export class Example extends LitElement {
         >Perform action</vaadin-button
       >
       <vaadin-progress-bar
-        value="${this.progress}"
+        .value="${this.progress}"
         style="display: inline-block; width: 350px;"
       ></vaadin-progress-bar>
       <!-- end::snippet[] -->

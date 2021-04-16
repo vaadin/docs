@@ -5,7 +5,6 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import { ButtonElement } from '@vaadin/vaadin-button/vaadin-button';
 
 @customElement('button-shortcuts')
 export class Example extends LitElement {
@@ -18,6 +17,12 @@ export class Example extends LitElement {
   @internalProperty()
   private globalClickCounter = 0;
 
+  @internalProperty()
+  private firstName = '';
+
+  @internalProperty()
+  private lastName = '';
+
   // shortcut listener for the global enter button
   private globalEnterListener = (ev: KeyboardEvent) => {
     if (ev.key === 'Enter') {
@@ -25,38 +30,30 @@ export class Example extends LitElement {
     }
   };
 
-  // shortcut listener for the clear field button
-  private clearFieldListener = (ev: KeyboardEvent) => {
-    if (ev.altKey && ev.code === 'KeyL') {
-      ev.preventDefault();
-      const clearFieldsBtn = this.shadowRoot?.querySelector('#clear-fields-btn') as ButtonElement;
-      clearFieldsBtn?.click();
-    }
-  };
-
   firstUpdated() {
-    // add shortcut listeners to all buttons
+    // add global shortcut listener to first button
     document.addEventListener('keydown', this.globalEnterListener);
-    this.shadowRoot?.querySelectorAll('vaadin-text-field').forEach((textField) => {
-      textField.addEventListener('keydown', this.clearFieldListener);
-    });
   }
 
   disconnectedCallback(): void {
-    // clear event listeners to avoid memory leaks
+    // clear global event listener to avoid memory leak
     document.removeEventListener('keydown', this.globalEnterListener);
-    this.shadowRoot?.querySelectorAll('vaadin-text-field').forEach((textField) => {
-      textField.removeEventListener('keydown', this.clearFieldListener);
-    });
-  }
-
-  clearFields(): void {
-    const fields = this.shadowRoot?.querySelectorAll('vaadin-text-field');
-    fields?.forEach((field) => field.clear());
   }
 
   increaseGlobalCounter(): void {
     this.globalClickCounter++;
+  }
+
+  clearFields(): void {
+    this.firstName = '';
+    this.lastName = '';
+  }
+
+  clearFieldsShortcutListener(ev: KeyboardEvent): void {
+    if (ev.altKey && ev.code === 'KeyL') {
+      ev.preventDefault();
+      this.clearFields();
+    }
   }
 
   render() {
@@ -64,8 +61,20 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout>
         <vaadin-button @click="${this.increaseGlobalCounter}">Global Enter shortcut</vaadin-button>
-        <vaadin-text-field label="First name"></vaadin-text-field>
-        <vaadin-text-field label="Last name"></vaadin-text-field>
+        <vaadin-text-field
+          label="First name"
+          .value="${this.firstName}"
+          @value-changed="${(ev: CustomEvent) => (this.firstName = ev.detail.value)}"
+          @keydown="${this.clearFieldsShortcutListener}"
+        >
+        </vaadin-text-field>
+        <vaadin-text-field
+          label="Last name"
+          .value="${this.lastName}"
+          @value-changed="${(ev: CustomEvent) => (this.lastName = ev.detail.value)}"
+          @keydown="${this.clearFieldsShortcutListener}"
+        >
+        </vaadin-text-field>
         <vaadin-button id="clear-fields-btn" @click="${this.clearFields}"
           >Clear fields</vaadin-button
         >
