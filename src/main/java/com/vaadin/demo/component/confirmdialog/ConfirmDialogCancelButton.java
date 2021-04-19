@@ -1,5 +1,6 @@
 package com.vaadin.demo.component.confirmdialog;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.html.Div;
@@ -7,14 +8,13 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
-@Route("confirm-dialog-basic")
-public class ConfirmDialogBasic extends Div {
+@Route("confirm-dialog-cancel-button")
+public class ConfirmDialogCancelButton extends Div {
 
   private Span status;
 
-  public ConfirmDialogBasic() {
+  public ConfirmDialogCancelButton() {
     HorizontalLayout layout = new HorizontalLayout();
     layout.setAlignItems(FlexComponent.Alignment.CENTER);
     layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
@@ -24,18 +24,15 @@ public class ConfirmDialogBasic extends Div {
     status.setVisible(false);
 
     ConfirmDialog dialog = new ConfirmDialog();
-    dialog.setHeader("Unsaved changes");
-    dialog.setText("There are unsaved changes. Do you want to discard or save them?");
+    dialog.setHeader("Delete \"Report Q4\"?");
+    dialog.setText("Are you sure you want to permanently delete this item?");
 
     dialog.setCancelable(true);
     dialog.addCancelListener(event -> setStatus("Canceled"));
 
-    dialog.setRejectable(true);
-    dialog.setRejectText("Discard");
-    dialog.addRejectListener(event -> setStatus("Discarded"));
-
-    dialog.setConfirmText("Save");
-    dialog.addConfirmListener(event -> setStatus("Saved"));
+    dialog.setConfirmText("Delete");
+    dialog.setConfirmButtonTheme("error primary");
+    dialog.addConfirmListener(event -> setStatus("Deleted"));
 
     Button button = new Button("Open confirm dialog");
     button.addClickListener(event -> {
@@ -52,5 +49,5 @@ public class ConfirmDialogBasic extends Div {
     status.setText("Status: " + value);
     status.setVisible(true);
   }
-  public static class Exporter extends DemoExporter<ConfirmDialogBasic> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ConfirmDialogCancelButton> {} // hidden-full-source-line
 }
