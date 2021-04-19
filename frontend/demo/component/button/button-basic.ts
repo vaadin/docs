@@ -19,8 +19,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button @click=${() => this.counter++}>Vaadin Button</vaadin-button>
-      Clicked ${this.counter} times
+      <vaadin-horizontal-layout theme="spacing" style="align-items: baseline">
+        <vaadin-button @click=${() => this.counter++}>Vaadin Button</vaadin-button>
+        <div>Clicked ${this.counter} times</div>
+      </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;
   }
