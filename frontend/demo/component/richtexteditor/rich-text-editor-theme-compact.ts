@@ -23,7 +23,7 @@ export class Example extends LitElement {
       <vaadin-rich-text-editor
         style="height: 400px;"
         theme="compact"
-        value=${this.richText}
+        .value=${this.richText}
       ></vaadin-rich-text-editor>
       <!-- end::snippet[] -->
     `;

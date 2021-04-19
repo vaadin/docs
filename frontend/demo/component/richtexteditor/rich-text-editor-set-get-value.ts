@@ -20,10 +20,10 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  htmlValue = '<p>Html value of the editor</p>';
+  private htmlValue = '<p>Html value of the editor</p>';
 
   @query('vaadin-rich-text-editor')
-  richTextEditor?: RichTextEditorElement;
+  private richTextEditor?: RichTextEditorElement;
 
   render() {
     return html`
