@@ -27,7 +27,7 @@ public class ConfirmDialogConfirmButton extends Div {
     ConfirmDialog dialog = new ConfirmDialog();
     dialog.setHeader("Export failed");
     dialog.setText(
-      new Html("An error occurred while exporting <b>Report Q4</b>. Please try again. If the problem persists, please contact <a href=\"mailto:support@company.com\">support@company.com</a>.")
+      new Html("<p>An error occurred while exporting <b>Report Q4</b>. Please try again. If the problem persists, please contact <a href=\"mailto:support@company.com\">support@company.com</a>.</p>")
     );
 
     dialog.setConfirmText("OK");
