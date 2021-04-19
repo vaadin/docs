@@ -50,7 +50,7 @@ public class TreeGridRichContent extends Div {
             row.setAlignItems(FlexComponent.Alignment.CENTER);
             row.setSpacing(true);
             return row;
-        });
+        }).setHeader("Employee");
 
         treeGrid.addComponentColumn(person -> {
             Icon emailIcon = createIcon(VaadinIcon.ENVELOPE);
