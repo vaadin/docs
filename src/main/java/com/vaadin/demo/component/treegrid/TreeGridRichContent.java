@@ -80,7 +80,7 @@ public class TreeGridRichContent extends Div {
             column.setPadding(false);
             column.setSpacing(false);
             return column;
-        });
+        }).setHeader("Contact");
         // end::snippet[]
 
         add(treeGrid);
