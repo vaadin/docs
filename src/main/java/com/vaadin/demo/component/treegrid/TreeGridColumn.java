@@ -22,9 +22,9 @@ public class TreeGridColumn extends Div {
     public TreeGridColumn() {
         TreeGrid<Person> treeGrid = new TreeGrid<>();
         treeGrid.setItems(getManagers(), this::getStaff);
-        treeGrid.addHierarchyColumn(Person::getFirstName);
-        treeGrid.addColumn(Person::getLastName);
-        treeGrid.addColumn(Person::getEmail);
+        treeGrid.addHierarchyColumn(Person::getFirstName).setHeader("First name");
+        treeGrid.addColumn(Person::getLastName).setHeader("Last name");
+        treeGrid.addColumn(Person::getEmail).setHeader("Email");
 
         H3 employees = new H3("Employees");
         employees.getStyle().set("margin", "0");
