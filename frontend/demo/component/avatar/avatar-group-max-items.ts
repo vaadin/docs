@@ -25,12 +25,12 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-avatar-group
-        .maxItemsVisible=${3}
-        .items=${this.items.map((person) => {
+        .maxItemsVisible="${3}"
+        .items="${this.items.map((person) => {
           return {
             name: `${person.firstName} ${person.lastName}`,
           };
-        })}
+        })}"
       >
       </vaadin-avatar-group>
       <!-- end::snippet[] -->
