@@ -27,13 +27,13 @@ export class Example extends LitElement {
         ></vaadin-text-field>
       </vaadin-form-layout>
 
-      <div style="margin-top: var(--lumo-space-m);">
-        <vaadin-button theme="secondary error">Cancel</vaadin-button>
-        <vaadin-horizontal-layout theme="spacing" style="float: right;">
-          <vaadin-button theme="secondary">Cancel</vaadin-button>
-          <vaadin-button theme="primary">Create account</vaadin-button>
-        </vaadin-horizontal-layout>
-      </div>
+      <vaadin-horizontal-layout theme="spacing" style="margin-top: var(--lumo-space-m);">
+        <vaadin-button theme="secondary error" style="margin-inline-end: auto;"
+          >Delete</vaadin-button
+        >
+        <vaadin-button theme="secondary">Cancel</vaadin-button>
+        <vaadin-button theme="primary">Create account</vaadin-button>
+      </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;
   }

@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-progress-bar/vaadin-progress-bar';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -19,16 +20,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button
-        ?disabled="${this.progress !== undefined && this.progress < 1}"
-        @click=${this.performAction}
-        >Perform action</vaadin-button
-      >
-
-      <vaadin-progress-bar
-        .value="${this.progress}"
-        style="display: inline-block; width: 350px;"
-      ></vaadin-progress-bar>
+      <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+        <vaadin-button @click="${this.performAction}" style="flex: none;"
+          >Perform Action</vaadin-button
+        >
+        <vaadin-progress-bar .value="${this.progress}"></vaadin-progress-bar>
+      </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;
   }
