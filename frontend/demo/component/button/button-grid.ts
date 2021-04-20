@@ -54,15 +54,17 @@ export class Example extends LitElement {
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
 
-      <vaadin-horizontal-layout
-        theme="spacing"
-        style="margin-top: var(--lumo-space-s)"
-        ?hidden="${this.selectedItems.length !== 1}"
-      >
-        <vaadin-button>Edit profile</vaadin-button>
-        <vaadin-button>Manage permissions</vaadin-button>
-        <vaadin-button>Reset password</vaadin-button>
-        <div style="flex-grow: 1">
+      <vaadin-horizontal-layout theme="spacing" style="margin-top: var(--lumo-space-s)">
+        <vaadin-horizontal-layout
+          theme="spacing"
+          style="overflow-x: auto;"
+          ?hidden="${this.selectedItems.length !== 1}"
+        >
+          <vaadin-button>Edit profile</vaadin-button>
+          <vaadin-button>Manage permissions</vaadin-button>
+          <vaadin-button>Reset password</vaadin-button>
+        </vaadin-horizontal-layout>
+        <div style="flex-grow: 1" ?hidden="${this.selectedItems.length === 0}">
           <vaadin-button theme="error" style="float: right;">Delete</vaadin-button>
         </div>
       </vaadin-horizontal-layout>
