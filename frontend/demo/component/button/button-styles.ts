@@ -15,13 +15,13 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing">
+        <!-- tag::snippet[] -->
         <vaadin-button theme="primary">Primary</vaadin-button>
         <vaadin-button theme="secondary">Secondary</vaadin-button>
         <vaadin-button theme="tertiary">Tertiary</vaadin-button>
+        <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
-      <!-- end::snippet[] -->
     `;
   }
 }

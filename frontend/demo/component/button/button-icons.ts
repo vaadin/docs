@@ -16,8 +16,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing">
+        <!-- tag::snippet[] -->
         <vaadin-button theme="icon" aria-label="Add item">
           <iron-icon icon="vaadin:plus"></iron-icon>
         </vaadin-button>
@@ -35,8 +35,8 @@ export class Example extends LitElement {
           Right
           <iron-icon icon="vaadin:arrow-right" slot="suffix"></iron-icon>
         </vaadin-button>
+        <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
-      <!-- end::snippet[] -->
     `;
   }
 }
