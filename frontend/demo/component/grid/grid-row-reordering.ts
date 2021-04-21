@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 
 import { customElement, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import { GridDropMode, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -21,6 +21,9 @@ export class Example extends LitElement {
   @internalProperty()
   private items: Person[] = [];
 
+  @internalProperty()
+  private draggedItem?: Person;
+
   async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
@@ -28,7 +31,32 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items}>
+      <!-- tag::snippet[] -->
+      <vaadin-grid
+        .items=${this.items}
+        ?rows-draggable="${true}"
+        drop-mode="between"
+        @grid-dragstart="${(event: CustomEvent) => {
+          this.draggedItem = event.detail.draggedItems[0];
+        }}"
+        @grid-dragend="${() => {
+          delete this.draggedItem;
+        }}"
+        @grid-drop="${(event: CustomEvent) => {
+          const { dropTargetItem, dropLocation } = event.detail;
+          if (dropTargetItem !== this.draggedItem) {
+            // remove the item from its previous position
+            const draggedItemIndex = this.items.indexOf(this.draggedItem as Person);
+            this.items.splice(draggedItemIndex, 1);
+            // re-insert the item at its new position
+            const dropIndex =
+              this.items.indexOf(dropTargetItem) + (dropLocation === 'below' ? 1 : 0);
+            this.items.splice(dropIndex, 0, this.draggedItem as Person);
+            // re-assign the array to refresh the grid
+            this.items = [...this.items];
+          }
+        }}"
+      >
         <vaadin-grid-column
           header="Image"
           .renderer=${this.avatarRenderer}
@@ -39,6 +67,7 @@ export class Example extends LitElement {
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
+      <!-- end::snippet[] -->
     `;
   }
 
