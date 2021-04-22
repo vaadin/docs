@@ -3,9 +3,8 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 
 import { customElement, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render, html } from 'lit-html';
+import { html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -29,12 +28,6 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid .items=${this.items} theme="compact">
-        <vaadin-grid-column
-          header="Image"
-          .renderer=${this.avatarRenderer}
-          flex-grow="0"
-          auto-width
-        ></vaadin-grid-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
@@ -42,17 +35,4 @@ export class Example extends LitElement {
       <!-- end::snippet[] -->
     `;
   }
-
-  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    render(
-      html`
-        <img
-          style="height: var(--lumo-size-m)"
-          src=${(model.item as Person).pictureUrl}
-          alt="User avatar"
-        />
-      `,
-      root
-    );
-  };
 }
