@@ -71,24 +71,28 @@ If both are present, the server startup parameter is used.
 === Configuring the Data Directory in Project Files
 
 Storing the path into the project files is a good way if you always deploy your application into the same environment and the folder does not change.
-You can set the path as a system property in a `VaadinServiceInitListener`, which runs once on server startup.
 
 ==== Spring Applications
 
-If you have a Spring application, you can register a `VaadinServiceInitListener` by implementing the interface and annotating the class as a `@SpringComponent`.
-In the `serviceInit` method, you can then set `vaadin.ce.dataDir` as a system property.
+If you have a Spring application, you can provide a bean of type `CollaborationEngineConfiguration` from your main Spring class by annotating a method with the `@Bean` annotation and returning a configuration instance with the data directory path set using the `setDataDir` method.
 
-.`com.company.myapp.MyVaadinInitListener.java`
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/ce/MyVaadinInitListener.java[tags=init-listener;!*,indent=0]
+include::{root}/src/main/java/com/vaadin/demo/ce/SpringBeanProvider.java[tags=spring-bean,indent=0]
 ----
 
 ==== Other Applications
 
-If you have a non-Spring application, you can implement the `VaadinServiceInitListener` in the same way as seen above, except that you can't use the `@SpringComponent` annotation.
-Instead, you need to register it through the Java Service Provider Interface (SPI) loading facility.
-You can do that by providing a file, `src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener` with a fully qualified class name to your listener as content, for example, `com.company.myapp.MyVaadinInitListener`.
+If you have a non-Spring application, you can implement a `VaadinServiceInitListener` where you create a `CollaborationEngineConfiguration` instance and set it using the `CollaborationEngine.configure()` method.
+
+.`com.company.myapp.MyVaadinInitListener.java`
+[source, Java, subs="+macros"]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/MyVaadinInitListener.java[tags=init-listener;configuration;event-handler;event-handler-ref;!*,indent=0]
+----
+
+Then, you need to register the listener via Java SPI loading facility.
+You do this by providing a file, `src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener` with a fully qualified class name to your listener as content, for example, `com.company.myapp.MyVaadinInitListener`.
 
 .The location of the configuration file
 image::images/service-init-listener.png[The location of the configuration file]
@@ -197,16 +201,11 @@ One potential way to handle the event is to send a message to any existing appli
 Another option is to send an email to the relevant people, for example, those who maintain the deployment and those who are responsible of the Collaboration Engine license.
 You need to ensure that your application notices and handles the events.
 
-The listener can be configured in a `VaadinServiceInitListener` in the same way as the `vaadin.ce.dataDir` property,
-if you're setting that property in Java code, as described earlier.
+The listener can be configured when creating the `CollaborationEngineConfiguration` as described earlier in <<ce.production.data-dir-in-project-files>>.
 
-The following example is a Spring project, so the `VaadinServiceInitListener` is registered by adding the `@SpringComponent` annotation.
-If you are not using Spring, you can register the service init listener in the same way as described in <<ce.production.data-dir-in-project-files>>.
-
-.`com.company.myapp.MyVaadinInitListener.java`
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/ce/MyVaadinInitListener.java[tags=init-listener;!send-email,indent=0]
+include::{root}/src/main/java/com/vaadin/demo/ce/MyVaadinInitListener.java[tags=event-handler;!event-handler-ref,indent=0]
 ----
 
 In the above example, the license event handler logs the event messages using the SLF4J logging API, and sends an email.

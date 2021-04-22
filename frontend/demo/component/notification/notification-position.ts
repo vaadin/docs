@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { render } from 'lit-html';
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
@@ -8,9 +7,16 @@ import {
   NotificationElement,
   NotificationPosition,
 } from '@vaadin/vaadin-notification/vaadin-notification';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-position')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   // tag::snippet[]
   render() {
     return html`

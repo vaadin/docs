@@ -24,13 +24,13 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-avatar .name=${`${this.person?.firstName} ${this.person?.lastName}`} theme="xlarge">
+      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}" theme="xlarge">
       </vaadin-avatar>
-      <vaadin-avatar .name=${`${this.person?.firstName} ${this.person?.lastName}`} theme="large">
+      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}" theme="large">
       </vaadin-avatar>
-      <vaadin-avatar .name=${`${this.person?.firstName} ${this.person?.lastName}`} theme="small">
+      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}" theme="small">
       </vaadin-avatar>
-      <vaadin-avatar .name=${`${this.person?.firstName} ${this.person?.lastName}`} theme="xsmall">
+      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}" theme="xsmall">
       </vaadin-avatar>
       <!-- end::snippet[] -->
     `;

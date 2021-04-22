@@ -25,10 +25,11 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-avatar></vaadin-avatar>
-      <vaadin-avatar .name=${`${this.person?.firstName} ${this.person?.lastName}`}> </vaadin-avatar>
+      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}">
+      </vaadin-avatar>
       <vaadin-avatar
-        .img=${this.person?.pictureUrl}
-        .name=${`${this.person?.firstName} ${this.person?.lastName}`}
+        .img="${this.person?.pictureUrl}"
+        .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
       >
       </vaadin-avatar>
       <!-- end::snippet[] -->
