@@ -46,35 +46,40 @@ include::{root}/pom.xml[tag=spring-version, indent=0]
 
 These instructions apply when upgrading from a version before Vaadin 20.
 
-=== Spring Security Configuration Helpers
+=== Endpoints Access is Denied by Default
 
-Two new helper methods, `VaadinSpringSecurity::configure(HttpSecurity)` and `VaadinSpringSecurity::configure(WebSecurity)`, are available for configuring Spring Security.
-Use the methods as a starting point for your own configuration:
+Previously, endpoints (methods in classes with `@Endpoint` annotation) without security annotations (one of `@DenyAll`, `@PermitAll`, `@RolesAllowed`, `@AnonymousAllowed`) were accessible by all authenticated users.
+To avoid inadvertent exposure of methods as endpoints, `@DenyAll` is now the default.
+This means meaning that you need to add explicit security annotations the endpoints you want to make accessible (either at the class level or the method level).
+
+
+=== Default Spring Security Configuration
+
+A default class for Spring Security configuration is available as `VaadinWebSecurityConfigurerAdapter`. Extend this class instead of the default `WebSecurityConfigurerAdapter` to automatically get a configuration that allows Vaadin specific requests to pass through security while requiring authorization for all other requests:
 
 .`SecurityConfiguration.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
 
-    @Override
     protected void configure(HttpSecurity http) throws Exception {
-        VaadinSpringSecurity.configure(http);
-        // app's own HttpSecurity configuration...
+        super.configure(http);
+        // app's own HttpSecurity configuration as needed ...
     }
 
     @Override
     protected void configure(WebSecurity web) throws Exception {
-        VaadinSpringSecurity.configure(web);
-        // app's own WebSecurity configuration...
+        super.configure(web);
+        // app's own WebSecurity configuration as needed...
     }
 }
 ----
 
-`VaadinSpringSecurity::configure(HttpSecurity)`  configures authentication for all routes by default.
+`VaadinWebSecurityConfigurerAdapter` configures authentication for all routes by default.
 Modify this behavior with your own followup configuration as needed.
-The helpers also bypass framework internal and static resources (`/VAADIN/**`, `sw.js` ...).
+It also bypasses framework internal and static resources (`/VAADIN/**`, `sw.js` ...).
 Previously, these had to be explicitly matched and ignored in the app.
 
 == Changes in Vaadin 19
@@ -91,7 +96,7 @@ If you do not have any own modifications in this file, you can delete the old
 `tsconfig.json` file.
 `vaadin-maven-plugin` creates the file automatically with the new defaults next time when building the project or running the development mode.
 
-You can also manually enable `Frontent` import path prefix in the existing
+You can also manually enable `Frontend` import path prefix in the existing
 `tsconfig.json` file by adding the following compiler options:
 
 .`tsconfig.json`

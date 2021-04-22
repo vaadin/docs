@@ -5,7 +5,8 @@ import '@vaadin/vaadin-messages/vaadin-message-list';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import MessageListItem from './MessageListItem';
+import { MessageListItem } from '@vaadin/vaadin-messages/src/interfaces';
+import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-full-source-line
 
 @customElement('message-basic')
 export class Example extends LitElement {
@@ -26,7 +27,6 @@ export class Example extends LitElement {
         text: 'Nature does not hurry, yet everything gets accomplished.',
         time: 'yesterday',
         userName: 'Matt Mambo',
-        userAbbr: 'MM',
         userColorIndex: 1,
       },
       {
@@ -34,7 +34,6 @@ export class Example extends LitElement {
           'Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.',
         time: 'right now',
         userName: 'Linsey Listy',
-        userAbbr: 'LL',
         userColorIndex: 2,
         userImg: person.pictureUrl,
       },

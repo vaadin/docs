@@ -2,11 +2,14 @@ package com.vaadin.demo.domain;
 
 import java.util.List;
 
+import com.vaadin.flow.spring.annotation.SpringComponent;
+
 /**
  * User entity class used in documentation examples.
  */
 public class User {
 
+    @SpringComponent
     public static class UserService {
         public User getCurrentUser() {
             return new User();
