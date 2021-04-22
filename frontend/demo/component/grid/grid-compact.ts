@@ -9,7 +9,6 @@ import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-compact')
 export class Example extends LitElement {
   constructor() {
@@ -28,7 +27,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items}>
+      <!-- tag::snippet[] -->
+      <vaadin-grid .items=${this.items} theme="compact">
         <vaadin-grid-column
           header="Image"
           .renderer=${this.avatarRenderer}
@@ -39,6 +39,7 @@ export class Example extends LitElement {
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
+      <!-- end::snippet[] -->
     `;
   }
 
@@ -55,4 +56,3 @@ export class Example extends LitElement {
     );
   };
 }
-// end::snippet[]
