@@ -1,7 +1,9 @@
 package com.vaadin.demo.component.crud;
 
 import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -16,8 +18,8 @@ import com.vaadin.flow.router.Route;
 import java.util.Arrays;
 import java.util.List;
 
-@Route("crud-basic")
-public class CrudBasic extends Div {
+@Route("crud-editor-content")
+public class CrudEditorContent extends Div {
 
   private Crud<Person> crud;
 
@@ -27,20 +29,23 @@ public class CrudBasic extends Div {
   private String PROFESSION = "profession";
   private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudBasic() {
-    // tag::snippet[]
+  private List<String> professions = DataService.getProfessions();
+
+  public CrudEditorContent() {
+    // tag::snippet1[]
     crud = new Crud<>(
       Person.class,
       createEditor()
     );
+    // end::snippet1[]
 
     setupGrid();
     setupDataProvider();
 
     add(crud);
-    // end::snippet[]
   }
 
+  // tag::snippet2[]
   private CrudEditor<Person> createEditor() {
     TextField firstName = new TextField("First name");
     firstName.setRequiredIndicatorVisible(true);
@@ -51,10 +56,18 @@ public class CrudBasic extends Div {
     EmailField email = new EmailField("Email");
     email.setRequiredIndicatorVisible(true);
 
-    TextField profession = new TextField("Profession");
+    ComboBox<String> profession = new ComboBox<>("Profession");
+    profession.setItems(professions);
     profession.setRequiredIndicatorVisible(true);
 
     FormLayout form = new FormLayout(firstName, lastName, email, profession);
+    form.setColspan(email, 2);
+    form.setColspan(profession, 2);
+    form.setMaxWidth("480px");
+    form.setResponsiveSteps(
+      new FormLayout.ResponsiveStep("0", 1),
+      new FormLayout.ResponsiveStep("30em", 2)
+    );
 
     Binder<Person> binder = new Binder<>(Person.class);
     binder.bind(firstName, Person::getFirstName, Person::setFirstName);
@@ -64,6 +77,7 @@ public class CrudBasic extends Div {
 
     return new BinderCrudEditor<>(binder, form);
   }
+  // end::snippet2[]
 
   private void setupGrid() {
     Grid<Person> grid = crud.getGrid();
@@ -103,5 +117,5 @@ public class CrudBasic extends Div {
       dataProvider.persist(saveEvent.getItem())
     );
   }
-  public static class Exporter extends DemoExporter<CrudBasic> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CrudEditorContent> {} // hidden-full-source-line
 }

@@ -5,6 +5,7 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -16,18 +17,18 @@ import com.vaadin.flow.router.Route;
 import java.util.Arrays;
 import java.util.List;
 
-@Route("crud-basic")
-public class CrudBasic extends Div {
+@Route("crud-columns")
+public class CrudColumns extends Div {
 
   private Crud<Person> crud;
 
   private String FIRST_NAME = "firstName";
-  private String LAST_NAME = "lastName";
   private String EMAIL = "email";
   private String PROFESSION = "profession";
+  private String BIRTHDAY = "birthday";
   private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudBasic() {
+  public CrudColumns() {
     // tag::snippet[]
     crud = new Crud<>(
       Person.class,
@@ -38,15 +39,11 @@ public class CrudBasic extends Div {
     setupDataProvider();
 
     add(crud);
-    // end::snippet[]
   }
 
   private CrudEditor<Person> createEditor() {
     TextField firstName = new TextField("First name");
     firstName.setRequiredIndicatorVisible(true);
-
-    TextField lastName = new TextField("Last name");
-    lastName.setRequiredIndicatorVisible(true);
 
     EmailField email = new EmailField("Email");
     email.setRequiredIndicatorVisible(true);
@@ -54,13 +51,16 @@ public class CrudBasic extends Div {
     TextField profession = new TextField("Profession");
     profession.setRequiredIndicatorVisible(true);
 
-    FormLayout form = new FormLayout(firstName, lastName, email, profession);
+    DatePicker birthday = new DatePicker("Birthday");
+    birthday.setRequiredIndicatorVisible(true);
+
+    FormLayout form = new FormLayout(firstName, email, profession, birthday);
 
     Binder<Person> binder = new Binder<>(Person.class);
     binder.bind(firstName, Person::getFirstName, Person::setFirstName);
-    binder.bind(lastName, Person::getLastName, Person::setLastName);
     binder.bind(email, Person::getEmail, Person::setEmail);
     binder.bind(profession, Person::getProfession, Person::setProfession);
+    // binder.bind(birthday, Person::getBirthday, Person::setBirthday);
 
     return new BinderCrudEditor<>(binder, form);
   }
@@ -68,12 +68,13 @@ public class CrudBasic extends Div {
   private void setupGrid() {
     Grid<Person> grid = crud.getGrid();
 
+    // tag::snippet[]
     // Only show these columns (all columns shown by default):
     List<String> visibleColumns = Arrays.asList(
       FIRST_NAME,
-      LAST_NAME,
       EMAIL,
       PROFESSION,
+      BIRTHDAY,
       EDIT_COLUMN
     );
     grid.getColumns().forEach(column -> {
@@ -82,13 +83,14 @@ public class CrudBasic extends Div {
         grid.removeColumn(column);
       }
     });
+    // end::snippet[]
 
     // Reorder the columns (alphabetical by default)
     grid.setColumnOrder(
       grid.getColumnByKey(FIRST_NAME),
-      grid.getColumnByKey(LAST_NAME),
       grid.getColumnByKey(EMAIL),
       grid.getColumnByKey(PROFESSION),
+      grid.getColumnByKey(BIRTHDAY),
       grid.getColumnByKey(EDIT_COLUMN)
     );
   }
@@ -103,5 +105,5 @@ public class CrudBasic extends Div {
       dataProvider.persist(saveEvent.getItem())
     );
   }
-  public static class Exporter extends DemoExporter<CrudBasic> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CrudColumns> {} // hidden-full-source-line
 }

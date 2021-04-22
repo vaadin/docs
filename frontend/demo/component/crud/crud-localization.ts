@@ -1,6 +1,5 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
-
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -63,11 +62,11 @@ export class Example extends LitElement {
         .items=${this.items}
       >
         <vaadin-grid slot="grid">
-          <vaadin-crud-edit-column></vaadin-crud-edit-column>
           <vaadin-grid-column path="firstName" header="Etunimi"></vaadin-grid-column>
           <vaadin-grid-column path="lastName" header="Sukunimi"></vaadin-grid-column>
           <vaadin-grid-column path="email" header="Sähköposti"></vaadin-grid-column>
           <vaadin-grid-column path="profession" header="Ammatti"></vaadin-grid-column>
+          <vaadin-crud-edit-column></vaadin-crud-edit-column>
         </vaadin-grid>
         <vaadin-form-layout slot="form">
           <vaadin-text-field path="firstName" label="Etunimi" required></vaadin-text-field>

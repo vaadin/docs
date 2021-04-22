@@ -1,6 +1,7 @@
 package com.vaadin.demo.domain;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,6 +40,18 @@ public class DataService {
     List<Person> people = getPeople();
     people.removeIf((Person person) -> person.getManagerId() != managarId);
     return people.subList(0, count);
+  }
+
+  public static List<String> getProfessions() {
+    List<Person> people = Arrays.asList(getItems(Person[].class, "people.json"));
+    ArrayList<String> professions = new ArrayList<>();
+    for (Person person : people) {
+      String profession = person.getProfession();
+      if (!professions.contains(profession)) {
+        professions.add(profession);
+      }
+    }
+    return professions;
   }
 
   public static Templates getTemplates() {

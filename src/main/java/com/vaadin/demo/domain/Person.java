@@ -1,5 +1,6 @@
 package com.vaadin.demo.domain;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line

@@ -1,6 +1,5 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
-
 import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
 import { getPeople } from 'Frontend/demo/domain/DataService';
