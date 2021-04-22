@@ -28,7 +28,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items=${this.items} theme="wrap-cell-content">
         <vaadin-grid-column
           header="Image"
           .renderer=${this.avatarRenderer}
@@ -37,7 +37,10 @@ export class Example extends LitElement {
         ></vaadin-grid-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
-        <vaadin-grid-column path="email"></vaadin-grid-column>
+        <vaadin-grid-column
+          header="Address"
+          .renderer="${this.addressRenderer}"
+        ></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
@@ -50,6 +53,18 @@ export class Example extends LitElement {
           src=${(model.item as Person).pictureUrl}
           alt="User avatar"
         />
+      `,
+      root
+    );
+  };
+
+  private addressRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+    render(
+      html`
+        <span
+          >${(model.item as Person).address.street} ${(model.item as Person).address.city}
+          ${(model.item as Person).address.zip} ${(model.item as Person).address.state}</span
+        >
       `,
       root
     );
