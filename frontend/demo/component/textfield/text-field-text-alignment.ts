@@ -10,8 +10,8 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
   {
     minWidth: 0,
     columns: 1,
-    labelsPosition: 'aside'
-  }
+    labelsPosition: 'aside',
+  },
 ];
 import { applyTheme } from 'Frontend/generated/theme';
 

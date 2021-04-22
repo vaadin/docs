@@ -1,14 +1,20 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { render } from 'lit-html';
 import { html, LitElement, customElement, css, unsafeCSS } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-lumo-styles/badge.js';
 import '@vaadin/vaadin-lumo-styles/icons';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-popup')
 export class Example2 extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   static get styles() {
     return [
       // Workaround for applying `lumo-badge` styles,
@@ -27,7 +33,7 @@ export class Example2 extends LitElement {
           position: absolute;
           transform: translate(-40%, -30%);
         }
-      `
+      `,
     ];
   }
 
@@ -44,11 +50,6 @@ export class Example2 extends LitElement {
   }
 
   menuRenderer = (root: HTMLElement) =>
-    render(
-      html`
-        <div style="padding: var(--lumo-space-l);">Show notifications here</div>
-      `,
-      root
-    );
+    render(html`<div style="padding: var(--lumo-space-l);">Show notifications here</div>`, root);
   // end::snippet[]
 }

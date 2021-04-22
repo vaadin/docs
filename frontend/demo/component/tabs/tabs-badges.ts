@@ -17,12 +17,11 @@ export class Example extends LitElement {
         span[theme~='badge'] {
           margin-inline-start: var(--lumo-space-xs);
         }
-
         vaadin-tab[selected] span[theme~='badge'] {
           background-color: var(--lumo-primary-color-10pct);
           color: var(--lumo-primary-text-color);
         }
-      `
+      `,
     ];
   }
 

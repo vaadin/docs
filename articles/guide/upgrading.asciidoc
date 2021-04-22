@@ -21,7 +21,7 @@ These steps apply regardless of what version you are upgrading from.
 
 . Edit the `pom.xml` file and change the Vaadin version to `{vaadin-version}`:
 +
-[source, XML]
+[source,xml]
 ----
 include::{root}/pom.xml[tag=vaadin-version, indent=0]
 ----
@@ -35,60 +35,93 @@ Click the "Expand code" button to view a complete reference `pom.xml` file.
 Vaadin is compatible with Spring 5.2.0 or newer, and Spring Boot 2.2.0 or newer.
 If your application uses an older version of Spring, update it to a compatible version:
 +
-[source, XML]
+[source,xml]
 ----
 include::{root}/pom.xml[tag=spring-version, indent=0]
 ----
 
 . Run `mvn clean install`
 
-
 == Changes in Vaadin 20
 
 These instructions apply when upgrading from a version before Vaadin 20.
 
-=== Spring Security Configuration Helpers
+=== Endpoints Access is Denied by Default
 
-Two new helper methods, `VaadinSpringSecurity::configure(HttpSecurity)` and `VaadinSpringSecurity::configure(WebSecurity)`, are available for configuring Spring Security.
-Use the methods as a starting point for your own configuration:
+Previously, endpoints (methods in classes with `@Endpoint` annotation) without security annotations (one of `@DenyAll`, `@PermitAll`, `@RolesAllowed`, `@AnonymousAllowed`) were accessible by all authenticated users.
+To avoid inadvertent exposure of methods as endpoints, `@DenyAll` is now the default.
+This means meaning that you need to add explicit security annotations the endpoints you want to make accessible (either at the class level or the method level).
+
+
+=== Default Spring Security Configuration
+
+A default class for Spring Security configuration is available as `VaadinWebSecurityConfigurerAdapter`. Extend this class instead of the default `WebSecurityConfigurerAdapter` to automatically get a configuration that allows Vaadin specific requests to pass through security while requiring authorization for all other requests:
 
 .`SecurityConfiguration.java`
-[source, Java]
+[source,java]
 ----
 @EnableWebSecurity
 @Configuration
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
 
-    @Override
     protected void configure(HttpSecurity http) throws Exception {
-        VaadinSpringSecurity.configure(http);
-        // app's own HttpSecurity configuration...
+        super.configure(http);
+        // app's own HttpSecurity configuration as needed ...
     }
 
     @Override
     protected void configure(WebSecurity web) throws Exception {
-        VaadinSpringSecurity.configure(web);
-        // app's own WebSecurity configuration...
+        super.configure(web);
+        // app's own WebSecurity configuration as needed...
     }
 }
 ----
 
-`VaadinSpringSecurity::configure(HttpSecurity)`  configures authentication for all routes by default.
+`VaadinWebSecurityConfigurerAdapter` configures authentication for all routes by default.
 Modify this behavior with your own followup configuration as needed.
-The helpers also bypass framework internal and static resources (`/VAADIN/**`, `sw.js` ...).
+It also bypasses framework internal and static resources (`/VAADIN/**`, `sw.js` ...).
 Previously, these had to be explicitly matched and ignored in the app.
-
 
 == Changes in Vaadin 19
 
 These instructions apply when upgrading from a version before Vaadin 19.
+
+=== TypeScript Configuration Now Includes Frontend Path Alias
+
+The default `tsconfig.json` content was changed to introduce the `Frontend` import path alias.
+
+The content of the `tsconfig.json` file is not updated automatically if it existed before the migration.
+
+If you do not have any own modifications in this file, you can delete the old
+`tsconfig.json` file.
+`vaadin-maven-plugin` creates the file automatically with the new defaults next time when building the project or running the development mode.
+
+You can also manually enable `Frontend` import path prefix in the existing
+`tsconfig.json` file by adding the following compiler options:
+
+.`tsconfig.json`
+[source,json]
+----
+{
+  "compilerOptions": {
+    ...
+    "baseUrl": "frontend",
+    "paths": {
+      "Frontend/*": [
+        "*"
+      ]
+    }
+  },
+  ...
+}
+----
 
 === Generated @Id Field Is Now of Optional Type in TypeScript
 A field with `@Id` annotation in Java is now of optional type in the generated TypeScript code.
 Given an entity with an `id` field:
 
 .`Entity.java`
-[source, Java]
+[source,java]
 ----
 public class Entity {
     @Id
@@ -102,7 +135,7 @@ Now in the TypeScript files, instead of using `endpoint.getEntity(entity.id)`, y
 You need to ignore one more static file, `/sw-runtime-resources-precache.js`, if you use `HttpSecurity.authorizeRequests()` to do role-based authorization in your security configuration as follows:
 
 .`SecurityConfiguration.java`
-[source, Java]
+[source,java]
 ----
 @Override
 protected void configure(HttpSecurity http) throws Exception {
@@ -115,7 +148,7 @@ protected void configure(HttpSecurity http) throws Exception {
 In such case, you need to add one more file `/sw-runtime-resources-precache.js` to the static resource list that Spring Security bypasses:
 
 .`SecurityConfiguration.java`
-[source, Java]
+[source,java]
 ----
 @Override
 public void configure(WebSecurity web) {
@@ -139,7 +172,7 @@ Another potential Spring Security related breaking change is about using `HttpSe
 An example of using `HttpSecurity.requestCache()`:
 
 .`SecurityConfiguration.java`
-[source, Java]
+[source,java]
 ----
 @Override
 protected void configure(HttpSecurity http) throws Exception {
@@ -165,7 +198,7 @@ This can be done by inspecting the `Referer` header of the request.
 The `SecurityUtils::isFrameworkInternalRequest()` can be updated as follows to also include the service worker initiated requests:
 
 .`SecurityUtils.java`
-[source, Java]
+[source,java]
 ----
 static boolean isFrameworkInternalRequest(HttpServletRequest request) {
     final String parameterValue = request
@@ -182,7 +215,6 @@ static boolean isFrameworkInternalRequest(HttpServletRequest request) {
 }
 ----
 
-
 == Changes in Vaadin 15
 
 These instructions apply when upgrading from a version before Vaadin 15.
@@ -191,7 +223,7 @@ These instructions apply when upgrading from a version before Vaadin 15.
 
 Several annotations typically placed on the `MainLayout` / `MainView` class must be moved to a class that implements the `AppShellConfigurator` interface, for example:
 
-[source, Java]
+[source,java]
 ----
 @PWA(name = "My Vaadin App", shortName = "my-app")
 public class AppShell implements AppShellConfigurator {

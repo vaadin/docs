@@ -7,7 +7,6 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('crud-basic')
 export class Example extends LitElement {
   constructor() {
@@ -26,8 +25,12 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-crud include="firstName, lastName" .items=${this.items}></vaadin-crud>
+      <!-- tag::snippet[] -->
+      <vaadin-crud
+        include="firstName, lastName, email, profession"
+        .items=${this.items}
+      ></vaadin-crud>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]

@@ -1,5 +1,6 @@
 package com.vaadin.demo.domain;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -12,6 +13,10 @@ public class Appointment {
   private LocalTime startTime;
 
   private LocalDateTime startDateTime;
+
+  private LocalDate startDate;
+
+  private String enrollmentPeriod;
 
   private Integer id;
 
@@ -54,6 +59,22 @@ public class Appointment {
     }
     Appointment other = (Appointment) obj;
     return id == other.id;
+  }
+
+  public LocalDate getStartDate() {
+    return startDate;
+  }
+
+  public void setStartDate(LocalDate startDate) {
+    this.startDate = startDate;
+  }
+
+  public String getEnrollmentPeriod() {
+    return enrollmentPeriod;
+  }
+
+  public void setEnrollmentPeriod(String enrollmentPeriod) {
+    this.enrollmentPeriod = enrollmentPeriod;
   }
 }
 // end::snippet[]

@@ -26,17 +26,17 @@ export class Example extends LitElement {
     params: GridDataProviderParams,
     callback: GridDataProviderCallback
   ) => {
-    const { people, hierarhcyLevelSize } = await getPeople({
+    const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null
+      managerId: params.parentItem ? (params.parentItem as Person).id : null,
     });
 
     if (!params.parentItem) {
       this.managers = people;
     }
 
-    callback(people, hierarhcyLevelSize);
+    callback(people, hierarchyLevelSize);
   };
 
   // tag::snippet[]

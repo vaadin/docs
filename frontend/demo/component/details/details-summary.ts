@@ -31,7 +31,7 @@ export class Example extends LitElement {
   @internalProperty()
   private responsiveSteps: FormLayoutResponsiveStep[] = [
     { minWidth: 0, columns: 1 },
-    { minWidth: '20em', columns: 2 }
+    { minWidth: '20em', columns: 2 },
   ];
 
   async firstUpdated() {

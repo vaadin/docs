@@ -1,11 +1,15 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import '@vaadin/vaadin-grid/vaadin-grid';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
+import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
-// tag::snippet[]
 @customElement('context-menu-basic')
 export class Example extends LitElement {
   constructor() {
@@ -14,24 +18,39 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   @internalProperty()
-  private items = [{ text: 'Menu Item 1' }, { text: 'Menu Item 2' }];
+  private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
+  // end::snippet[]
 
   @internalProperty()
-  private selectedItem?: { text: string };
+  private gridItems: Person[] = [];
+
+  async firstUpdated() {
+    this.gridItems = (await getPeople()).people;
+  }
 
   render() {
     return html`
-      <vaadin-context-menu .items=${this.items} @item-selected=${this.itemSelected}>
-        <p>Right click (or long touch on mobile) this text to open the context menu.</p>
+      <!-- tag::snippethtml[] -->
+      <vaadin-context-menu .items=${this.items}>
+        <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
+          <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
+          <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
+          <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
+          <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
+        </vaadin-grid>
       </vaadin-context-menu>
-
-      <div>Selected: ${this.selectedItem?.text}</div>
+      <!-- end::snippethtml[] -->
     `;
   }
 
-  itemSelected(e: CustomEvent) {
-    this.selectedItem = e.detail.value;
+  onContextMenu(e: MouseEvent) {
+    // Prevent opening context menu on header row.
+    if (
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+    ) {
+      e.stopPropagation();
+    }
   }
 }
-// end::snippet[]

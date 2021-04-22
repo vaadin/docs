@@ -19,7 +19,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },
-  { minWidth: '20em', columns: 2 }
+  { minWidth: '20em', columns: 2 },
 ];
 
 @customElement('accordion-summary')
@@ -104,8 +104,10 @@ export class Example extends LitElement {
               >
 
               <span
-                >${// @ts-ignore Workaround a Binder issue
-                this.personBinder.value.address?.country?.name}</span
+                >${
+                  // @ts-ignore Workaround a Binder issue
+                  this.personBinder.value.address?.country?.name
+                }</span
               >
             </vaadin-vertical-layout>
           </div>

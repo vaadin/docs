@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import { applyTheme } from 'Frontend/generated/theme';
-import { getPeople } from 'Frontend/demo/domain/DataService';
+import { getPeople } from '../../domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import * as img from '../../../../src/main/resources/images/company-logo.png';
+import * as companyLogo from '../../../../src/main/resources/images/company-logo.png';
 
 @customElement('avatar-image')
 export class Example extends LitElement {
@@ -27,10 +26,11 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-avatar
-        .name=${`${this.person?.firstName} ${this.person?.lastName}`}
-        .img=${this.person?.pictureUrl}
-      ></vaadin-avatar>
-      <vaadin-avatar .img=${img} name="Company Inc."></vaadin-avatar>
+        .img="${this.person?.pictureUrl}"
+        .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
+      >
+      </vaadin-avatar>
+      <vaadin-avatar .img="${companyLogo}" name="Company Inc."> </vaadin-avatar>
       <!-- end::snippet[] -->
     `;
   }

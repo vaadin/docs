@@ -26,7 +26,7 @@ export class Example extends LitElement {
         const date = new Date(startDateTime);
         const validWeekDay = date.getDay() >= 1 && date.getDay() <= 5;
         return validWeekDay;
-      }
+      },
     });
     this.binder.for(this.binder.model.startDateTime).addValidator({
       message: 'The selected time is not available',
@@ -35,7 +35,7 @@ export class Example extends LitElement {
         const validTime =
           (time >= '08:00' && time <= '12:00') || (time >= '13:00' && time <= '16:00');
         return validTime;
-      }
+      },
     });
   }
 

@@ -24,10 +24,10 @@ export class Example extends LitElement {
   private filteredItems: Person[] = [];
 
   async firstUpdated() {
-    this.allItems = this.filteredItems = (await getPeople()).people.map(person => {
+    this.allItems = this.filteredItems = (await getPeople()).people.map((person) => {
       return {
         ...person,
-        displayName: `${person.firstName} ${person.lastName}`
+        displayName: `${person.firstName} ${person.lastName}`,
       };
     });
   }

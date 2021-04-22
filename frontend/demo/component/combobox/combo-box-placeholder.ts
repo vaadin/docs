@@ -19,10 +19,10 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    this.items = (await getPeople()).people.map(person => {
+    this.items = (await getPeople()).people.map((person) => {
       return {
         ...person,
-        displayName: `${person.firstName} ${person.lastName}`
+        displayName: `${person.firstName} ${person.lastName}`,
       };
     });
   }
