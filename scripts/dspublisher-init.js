@@ -55,6 +55,11 @@ module.exports = async function (config) {
   // CVDL license file
   copyTemplate('dsp-license-cvdl', path.resolve(ROOT, 'LICENSE'));
 
+  // Readme
+  copyTemplate('dsp-readme.md', path.resolve(ROOT, 'README.md'), {
+    title: config.dsName || 'Design System',
+  });
+
   // Have components / foundation expanded by default
   appendFrontMatter(
     path.resolve(ROOT, 'articles/ds/components/index.asciidoc'),
