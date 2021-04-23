@@ -53,17 +53,19 @@ export class Example extends LitElement {
       one: 'Yksi käyttäjä aktiivisena',
       many: '{count} käyttäjää aktiivisena',
     },
+    joined: 'liittyi',
+    left: 'lähti',
   };
 
   render() {
     return html`
       <vaadin-avatar-group
-        .i18n=${this.i18n}
-        .items=${this.items.map((person) => {
+        .i18n="${this.i18n}"
+        .items="${this.items.map((person) => {
           return {
             name: `${person.firstName} ${person.lastName}`,
           };
-        })}
+        })}"
       >
       </vaadin-avatar-group>
     `;

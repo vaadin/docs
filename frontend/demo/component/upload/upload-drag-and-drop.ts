@@ -1,30 +1,18 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
-// hidden-full-source-line
-import { css, customElement, html, LitElement } from 'lit-element';
+import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
+import '@vaadin/vaadin-form-layout/vaadin-form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+
+const layoutSteps: FormLayoutResponsiveStep[] = [
+  { minWidth: 0, columns: 1, labelsPosition: 'top' },
+  { minWidth: '520px', columns: 2, labelsPosition: 'top' },
+];
 
 @customElement('upload-drag-and-drop')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      .flex {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: stretch;
-        margin: calc(-1 * var(--lumo-space-m));
-      }
-
-      .flex > div {
-        margin: var(--lumo-space-m);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-    `;
-  }
-
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
@@ -33,18 +21,20 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <div class="flex">
-        <!-- tag::snippet[] -->
+      <vaadin-form-layout .responsiveSteps=${layoutSteps}>
         <div>
-          <vaadin-upload ?nodrop="${false}"></vaadin-upload>
-          <p>Drag and drop enabled</p>
+          <!-- tag::snippet[] -->
+          <strong>Drag and drop enabled</strong>
+          <vaadin-upload .nodrop="${false}"></vaadin-upload>
+          <!-- end::snippet[] -->
         </div>
         <div>
-          <vaadin-upload ?nodrop="${true}"></vaadin-upload>
-          <p>Drag and drop disabled</p>
+          <!-- tag::snippet[] -->
+          <strong>Drag and drop disabled</strong>
+          <vaadin-upload nodrop></vaadin-upload>
+          <!-- end::snippet[] -->
         </div>
-        <!-- end::snippet[] -->
-      </div>
+      </vaadin-form-layout>
     `;
   }
 }

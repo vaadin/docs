@@ -16,6 +16,8 @@ public class Appointment {
 
   private LocalDate startDate;
 
+  private String enrollmentPeriod;
+
   private Integer id;
 
   public LocalTime getStartTime() {
@@ -65,6 +67,14 @@ public class Appointment {
 
   public void setStartDate(LocalDate startDate) {
     this.startDate = startDate;
+  }
+
+  public String getEnrollmentPeriod() {
+    return enrollmentPeriod;
+  }
+
+  public void setEnrollmentPeriod(String enrollmentPeriod) {
+    this.enrollmentPeriod = enrollmentPeriod;
   }
 }
 // end::snippet[]

@@ -1,7 +1,7 @@
 import '../../init'; // hidden-full-source-line
 import './upload-demo-helpers'; // hidden-full-source-line
-// hidden-full-source-line
 import { css, customElement, html, LitElement } from 'lit-element';
+import { showErrorNotification } from 'Frontend/demo/notification-helper';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -41,6 +41,6 @@ export class Example extends LitElement {
   // end::snippet[]
 
   fileRejectHandler(event: UploadFileReject) {
-    window.alert(event.detail.file.name + ' error: ' + event.detail.error);
+    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }

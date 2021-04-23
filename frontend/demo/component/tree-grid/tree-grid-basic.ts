@@ -21,7 +21,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
     // The requested page and the full length of the corresponding
-    // hierarchy level is requested from the data service
+    // hierarhcy level is requested from the data service
     const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
