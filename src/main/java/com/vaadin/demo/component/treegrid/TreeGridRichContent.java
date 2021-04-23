@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.treegrid;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -16,16 +16,15 @@ import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Route("tree-grid-rich-content")
 public class TreeGridRichContent extends Div {
 
-    private List<Person> people = DataService.getPeople();
+    private List<Person> managers = DataService.getManagers();
 
     public TreeGridRichContent() {
         TreeGrid<Person> treeGrid = new TreeGrid<>();
-        treeGrid.setItems(getManagers(), this::getStaff);
+        treeGrid.setItems(managers, this::getStaff);
 
         // tag::snippet[]
         treeGrid.addComponentHierarchyColumn(person -> {
@@ -94,14 +93,8 @@ public class TreeGridRichContent extends Div {
         return icon;
     }
 
-    private List<Person> getManagers() {
-        return people.stream().filter(person -> person.getManagerId() == null).collect(Collectors.toList());
-    }
-
     public List<Person> getStaff(Person manager) {
-        return people.stream().filter(person -> person.getManagerId() == manager.getId()).collect(Collectors.toList());
+        return DataService.getPeople(manager.getManagerId());
     }
-
-    public static class Exporter extends DemoExporter<TreeGridRichContent> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<TreeGridRichContent> {} // hidden-full-source-line
 }
