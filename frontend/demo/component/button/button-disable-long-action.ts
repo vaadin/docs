@@ -21,7 +21,10 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
-        <vaadin-button @click="${this.performAction}" style="flex: none;"
+        <vaadin-button
+          .disabled="${this.progress !== undefined}"
+          @click="${this.performAction}"
+          style="flex: none;"
           >Perform Action</vaadin-button
         >
         <vaadin-progress-bar .value="${this.progress}"></vaadin-progress-bar>
@@ -37,6 +40,7 @@ export class Example extends LitElement {
       if (this.progress !== undefined) {
         this.progress += 0.005;
         if (this.progress >= 1) {
+          this.progress = undefined;
           clearInterval(breakInterval);
         }
       }
