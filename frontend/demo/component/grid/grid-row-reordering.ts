@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 
 import { customElement, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridDropMode, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -33,7 +33,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid
-        .items=${this.items}
+        .items="${this.items}"
         ?rows-draggable="${true}"
         drop-mode="between"
         @grid-dragstart="${(event: CustomEvent) => {
@@ -59,7 +59,7 @@ export class Example extends LitElement {
       >
         <vaadin-grid-column
           header="Image"
-          .renderer=${this.avatarRenderer}
+          .renderer="${this.avatarRenderer}"
           flex-grow="0"
           auto-width
         ></vaadin-grid-column>
