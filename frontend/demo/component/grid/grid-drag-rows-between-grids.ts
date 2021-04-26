@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty } from 'lit-element';
+import { customElement, LitElement, internalProperty, css } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -18,41 +18,115 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  static get styles() {
+    return css`
+      .grids-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+
+      .grid1,
+      .grid2 {
+        width: 300px;
+        height: 300px;
+        margin-left: 0.5rem;
+        margin-top: 0.5rem;
+        align-self: unset;
+      }
+    `;
+  }
+
   @internalProperty()
-  private items: Person[] = [];
+  private draggedItem?: Person;
+
+  @internalProperty()
+  private grid1Items: Person[] = [];
+
+  @internalProperty()
+  private grid2Items: Person[] = [];
 
   async firstUpdated() {
-    const { people } = await getPeople();
-    this.items = people;
+    const { people } = await getPeople({ count: 10 });
+    this.grid1Items = [...people].slice(0, 5);
+    this.grid2Items = [...people].slice(5);
   }
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items}>
-        <vaadin-grid-column
-          header="Image"
-          .renderer=${this.avatarRenderer}
-          flex-grow="0"
-          auto-width
-        ></vaadin-grid-column>
-        <vaadin-grid-column path="firstName"></vaadin-grid-column>
-        <vaadin-grid-column path="lastName"></vaadin-grid-column>
-        <vaadin-grid-column path="email"></vaadin-grid-column>
-      </vaadin-grid>
+      <div class="grids-container">
+        <vaadin-grid
+          .items="${this.grid1Items}"
+          class="grid1"
+          ?rows-draggable="${true}"
+          drop-mode="on-grid"
+          @grid-dragstart="${(event: CustomEvent) => {
+            this.draggedItem = event.detail.draggedItems[0];
+          }}"
+          @grid-dragend="${() => {
+            delete this.draggedItem;
+          }}"
+          @grid-drop="${(event: CustomEvent) => {
+            const { dropTargetItem } = event.detail;
+            if (dropTargetItem !== this.draggedItem) {
+              const draggedItemIndex = this.grid2Items.indexOf(this.draggedItem as Person);
+              if (draggedItemIndex >= 0) {
+                // remove the item from its previous position
+                this.grid2Items.splice(draggedItemIndex, 1);
+                //re-assign the array to refresh the grid
+                this.grid2Items = [...this.grid2Items];
+                // re-assign the array to refresh the grid
+                this.grid1Items = [...this.grid1Items, this.draggedItem as Person];
+              }
+            }
+          }}"
+        >
+          <vaadin-grid-column
+            header="Full name"
+            .renderer="${this.fullNameRenderer}"
+          ></vaadin-grid-column>
+          <vaadin-grid-column path="profession"></vaadin-grid-column>
+        </vaadin-grid>
+
+        <vaadin-grid
+          .items="${this.grid2Items}"
+          class="grid2"
+          ?rows-draggable="${true}"
+          drop-mode="on-grid"
+          @grid-dragstart="${(event: CustomEvent) => {
+            this.draggedItem = event.detail.draggedItems[0];
+          }}"
+          @grid-dragend="${() => {
+            delete this.draggedItem;
+          }}"
+          @grid-drop="${(event: CustomEvent) => {
+            const { dropTargetItem } = event.detail;
+            if (dropTargetItem !== this.draggedItem) {
+              const draggedItemIndex = this.grid1Items.indexOf(this.draggedItem as Person);
+              if (draggedItemIndex >= 0) {
+                // remove the item from its previous position
+                this.grid1Items.splice(draggedItemIndex, 1);
+                //re-assign the array to refresh the grid
+                this.grid1Items = [...this.grid1Items];
+                // re-assign the array to refresh the grid
+                this.grid2Items = [...this.grid2Items, this.draggedItem as Person];
+              }
+            }
+          }}"
+        >
+          <vaadin-grid-column
+            header="Full name"
+            .renderer="${this.fullNameRenderer}"
+          ></vaadin-grid-column>
+          <vaadin-grid-column path="profession"></vaadin-grid-column>
+        </vaadin-grid>
+      </div>
     `;
   }
 
-  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    render(
-      html`
-        <img
-          style="height: var(--lumo-size-m)"
-          src=${(model.item as Person).pictureUrl}
-          alt="User avatar"
-        />
-      `,
-      root
-    );
+  private fullNameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+    const person: Person = model.item as Person;
+    render(html`${person.firstName} ${person.lastName}`, root);
   };
 }
 // end::snippet[]
