@@ -17,7 +17,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-upload
-        .files=${createFakeFilesUploadBasic() /* hidden-source-line-trim */}
+        .files="${createFakeFilesUploadBasic() /* hidden-source-line-trim */}"
       ></vaadin-upload>
       <!-- end::snippet[] -->
     `;

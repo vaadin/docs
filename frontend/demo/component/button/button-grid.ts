@@ -40,7 +40,7 @@ export class Example extends LitElement {
         </vaadin-horizontal-layout>
 
         <vaadin-grid
-          .items=${this.items}
+          .items="${this.items}"
           @selected-items-changed="${(ev: any) =>
             (this.selectedItems = ev.target ? [...ev.target.selectedItems] : this.selectedItems)}"
         >

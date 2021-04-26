@@ -27,7 +27,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-crud
         exclude="lastName, address, id, subscribe, membership, pictureUrl, manager"
-        .items=${this.items}
+        .items="${this.items}"
       ></vaadin-crud>
       <!-- end::snippet[] -->
     `;

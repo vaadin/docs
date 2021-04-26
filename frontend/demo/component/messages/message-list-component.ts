@@ -31,7 +31,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-message-list
-        .items=${[
+        .items="${[
           {
             text: 'Linsey, could you check if the details with the order are okay?',
             time: this.yesterday,
@@ -45,7 +45,7 @@ export class Example extends LitElement {
             userColorIndex: 2,
             userImg: this.person ? this.person.pictureUrl : undefined,
           },
-        ]}
+        ]}"
       ></vaadin-message-list>
       <!-- end::snippet[] -->
     `;

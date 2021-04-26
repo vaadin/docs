@@ -122,7 +122,7 @@ export class LoginOverlayMockupElement extends LitElement {
             <p part="description">${this.description}</p>
           </div>
           <div part="form">
-            <vaadin-login-form .error=${this.error} .i18n=${this.i18n}></vaadin-login-form>
+            <vaadin-login-form .error="${this.error}" .i18n="${this.i18n}"></vaadin-login-form>
           </div>
         </section>
       </div>
