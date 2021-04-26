@@ -73,7 +73,7 @@ export class Example extends LitElement {
               if (draggedItemIndex >= 0) {
                 // remove the item from its previous position
                 this.grid2Items.splice(draggedItemIndex, 1);
-                //re-assign the array to refresh the grid
+                // re-assign the array to refresh the grid
                 this.grid2Items = [...this.grid2Items];
                 // re-assign the array to refresh the grid
                 this.grid1Items = [...this.grid1Items, this.draggedItem as Person];
@@ -106,7 +106,7 @@ export class Example extends LitElement {
               if (draggedItemIndex >= 0) {
                 // remove the item from its previous position
                 this.grid1Items.splice(draggedItemIndex, 1);
-                //re-assign the array to refresh the grid
+                // re-assign the array to refresh the grid
                 this.grid1Items = [...this.grid1Items];
                 // re-assign the array to refresh the grid
                 this.grid2Items = [...this.grid2Items, this.draggedItem as Person];
