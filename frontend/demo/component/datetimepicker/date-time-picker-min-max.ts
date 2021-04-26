@@ -26,9 +26,9 @@ export class Example extends LitElement {
       <vaadin-date-time-picker
         label="Appointment date and time"
         helper-text="Must be within 60 days from today"
-        .value=${initialValue}
-        .min=${minValue}
-        .max=${maxValue}
+        .value="${initialValue}"
+        .min="${minValue}"
+        .max="${maxValue}"
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->
     `;

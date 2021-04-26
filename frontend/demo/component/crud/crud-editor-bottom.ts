@@ -36,7 +36,7 @@ export class Example extends LitElement {
       <vaadin-crud
         editor-position="bottom"
         include="firstName, lastName, email, profession"
-        .items=${this.items}
+        .items="${this.items}"
       ></vaadin-crud>
       <!-- end::snippet[] -->
     `;

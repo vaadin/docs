@@ -24,7 +24,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-form-layout .responsiveSteps=${this.responsiveSteps}>
+      <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
         <vaadin-text-field colspan="1" label="First name"></vaadin-text-field>
         <vaadin-text-field colspan="1" label="Last name"></vaadin-text-field>
         <vaadin-text-field colspan="2" label="Username"></vaadin-text-field>

@@ -29,7 +29,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-upload
         no-auto
-        .files=${createFakeFilesUploadAutoUploadDisabled() /* hidden-source-line */}
+        .files="${createFakeFilesUploadAutoUploadDisabled() /* hidden-source-line */}"
       ></vaadin-upload>
     `;
   }

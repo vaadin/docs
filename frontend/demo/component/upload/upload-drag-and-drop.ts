@@ -21,7 +21,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-form-layout .responsiveSteps=${layoutSteps}>
+      <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <div>
           <!-- tag::snippet[] -->
           <strong>Drag and drop enabled</strong>

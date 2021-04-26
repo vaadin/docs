@@ -55,20 +55,20 @@ export class Example extends LitElement {
         html`
           <vaadin-horizontal-layout>
             <vaadin-grid-tree-toggle
-              .leaf=${!person.manager}
-              .level=${model.level || 0}
-              @expanded-changed=${(e: GridTreeToggleExpandedChanged) => {
+              .leaf="${!person.manager}"
+              .level="${model.level || 0}"
+              @expanded-changed="${(e: GridTreeToggleExpandedChanged) => {
                 if (e.detail.value) {
                   this.expandedItems = [...this.expandedItems, person];
                 } else {
                   this.expandedItems = this.expandedItems.filter((p) => p.id !== person.id);
                 }
-              }}
-              .expanded=${!!model.expanded}
+              }}"
+              .expanded="${!!model.expanded}"
             ></vaadin-grid-tree-toggle>
 
             <img
-              .src=${person.pictureUrl}
+              .src="${person.pictureUrl}"
               style="height: var(--lumo-size-m); width: var(--lumo-size-m); align-self: center;"
             />
 
@@ -109,16 +109,16 @@ export class Example extends LitElement {
   }
   render() {
     return html`
-      <vaadin-grid .dataProvider=${this.dataProvider} .expandedItems=${this.expandedItems}>
+      <vaadin-grid .dataProvider="${this.dataProvider}" .expandedItems="${this.expandedItems}">
         <vaadin-grid-column
           auto-width
           header="Employee"
-          .renderer=${this.employeeRenderer}
+          .renderer="${this.employeeRenderer}"
         ></vaadin-grid-column>
         <vaadin-grid-column
           auto-width
           header="Contact"
-          .renderer=${this.contactRenderer}
+          .renderer="${this.contactRenderer}"
         ></vaadin-grid-column>
       </vaadin-grid>
     `;

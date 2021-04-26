@@ -47,12 +47,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <header class="title">View events</header>
-      <vaadin-chart .additionalOptions=${chartOptions} .categories=${monthNames} type="area">
+      <vaadin-chart .additionalOptions="${chartOptions}" .categories="${monthNames}" type="area">
         ${repeat(
           this.events,
           ({ id }) => id,
           ({ city, data }) =>
-            html`<vaadin-chart-series .title=${city} .values=${data}></vaadin-chart-series>`
+            html`<vaadin-chart-series .title="${city}" .values="${data}"></vaadin-chart-series>`
         )}
       </vaadin-chart>
     `;
