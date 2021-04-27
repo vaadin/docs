@@ -43,7 +43,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-message-list .items=${this.items}></vaadin-message-list>
+      <vaadin-message-list .items="${this.items}"></vaadin-message-list>
       <vaadin-message-input @submit="${this._handleSubmit}"></vaadin-message-input>
       <!-- end::snippet[] -->
     `;

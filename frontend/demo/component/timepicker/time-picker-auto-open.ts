@@ -19,7 +19,7 @@ export class Example extends LitElement {
       <vaadin-time-picker
         label="Alarm"
         value="05:30"
-        .step=${60 * 30}
+        .step="${60 * 30}"
         auto-open-disabled
       ></vaadin-time-picker>
       <!-- end::snippet[] -->

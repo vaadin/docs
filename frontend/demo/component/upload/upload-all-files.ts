@@ -31,7 +31,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-upload
         no-auto
-        .files=${createFakeFilesUploadAllFiles() /* hidden-source-line */}
+        .files="${createFakeFilesUploadAllFiles() /* hidden-source-line */}"
       ></vaadin-upload>
       <p>
         <vaadin-button theme="primary" @click="${this.uploadFiles}">

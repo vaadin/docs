@@ -32,8 +32,8 @@ export class Example extends LitElement {
       <vaadin-dialog
         theme="no-padding"
         aria-label="simple"
-        .opened=${this.dialogOpened}
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
+        .opened="${this.dialogOpened}"
+        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`

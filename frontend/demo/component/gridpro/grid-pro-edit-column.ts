@@ -31,15 +31,15 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid-pro .items=${this.items} enter-next-row>
+      <vaadin-grid-pro .items="${this.items}" enter-next-row>
         <vaadin-grid-column
           header="Name (read-only)"
-          .renderer=${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
             if (model?.item) {
               const { firstName, lastName } = model.item as Person;
               root.textContent = `${firstName} ${lastName}`;
             }
-          }}
+          }}"
         ></vaadin-grid-column>
         <vaadin-grid-pro-edit-column
           header="Profession (editable)"

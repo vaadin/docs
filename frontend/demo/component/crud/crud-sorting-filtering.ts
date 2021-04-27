@@ -29,7 +29,7 @@ export class Example extends LitElement {
         include="firstName, lastName, profession"
         no-sort
         no-filter
-        .items=${this.items}
+        .items="${this.items}"
       ></vaadin-crud>
       <!-- end::snippet[] -->
     `;
