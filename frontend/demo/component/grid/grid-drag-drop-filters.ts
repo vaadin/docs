@@ -25,7 +25,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private grid?: GridElement;
+  private grid!: GridElement;
 
   @internalProperty()
   private draggedItem?: Person;
@@ -40,7 +40,7 @@ export class Example extends LitElement {
     const { people } = await getPeople();
     this.items = people;
     this.managers = this.items.filter((item) => item.manager);
-    this.grid?.clearCache();
+    this.grid.clearCache();
   }
 
   private dataProvider = async (
@@ -77,7 +77,7 @@ export class Example extends LitElement {
           const { dropTargetItem: manager } = event.detail;
           if (this.draggedItem) {
             this.draggedItem.managerId = manager.id;
-            this.grid?.clearCache();
+            this.grid.clearCache();
           }
         }}"
         .dragFilter="${(model: GridItemModel) => {
