@@ -34,7 +34,7 @@ export class Example extends LitElement {
         <vaadin-grid-column path="profession"></vaadin-grid-column>
         <vaadin-grid-column
           header="Customer rating (0-10)"
-          .renderer=${this.ratingRenderer}
+          .renderer="${this.ratingRenderer}"
         ></vaadin-grid-column>
       </vaadin-grid>
     `;

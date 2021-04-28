@@ -62,10 +62,10 @@ export class Example extends LitElement {
         >
           <iron-icon slot="prefix" icon="vaadin:search"></iron-icon>
         </vaadin-text-field>
-        <vaadin-grid .items=${this.filteredItems}>
+        <vaadin-grid .items="${this.filteredItems}">
           <vaadin-grid-column
             header="Name"
-            .renderer=${this.nameRenderer}
+            .renderer="${this.nameRenderer}"
             flex-grow="0"
             auto-width
           ></vaadin-grid-column>
@@ -81,7 +81,7 @@ export class Example extends LitElement {
     render(
       html`
         <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-          <vaadin-avatar img=${person.pictureUrl} .name="${person.displayName}"></vaadin-avatar>
+          <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
           <span> ${person.displayName} </span>
         </vaadin-horizontal-layout>
       `,

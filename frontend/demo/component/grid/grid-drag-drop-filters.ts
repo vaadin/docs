@@ -62,9 +62,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid
-        .dataProvider=${this.dataProvider}
-        .itemIdPath=${'id'}
-        .expandedItems=${this.expandedItems}
+        .dataProvider="${this.dataProvider}"
+        .itemIdPath="${'id'}"
+        .expandedItems="${this.expandedItems}"
         ?rows-draggable="${true}"
         drop-mode="on-top"
         @grid-dragstart="${(event: CustomEvent) => {

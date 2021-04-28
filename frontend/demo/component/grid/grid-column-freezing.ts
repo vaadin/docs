@@ -37,7 +37,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items="${this.items}">
         <vaadin-grid-column
           header="Name"
           .renderer="${this.nameRenderer}"

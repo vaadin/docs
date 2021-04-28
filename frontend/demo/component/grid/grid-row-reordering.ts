@@ -78,7 +78,7 @@ export class Example extends LitElement {
       html`
         <img
           style="height: var(--lumo-size-m)"
-          src=${(model.item as Person).pictureUrl}
+          src="${(model.item as Person).pictureUrl}"
           alt="User avatar"
         />
       `,

@@ -41,11 +41,11 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items="${this.items}">
         <vaadin-grid-selection-column></vaadin-grid-selection-column>
         <vaadin-grid-column
           header="Employee"
-          .renderer=${this.empolyeeRenderer}
+          .renderer="${this.empolyeeRenderer}"
           flex-grow="0"
           auto-width
         ></vaadin-grid-column>

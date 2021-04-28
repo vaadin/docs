@@ -27,7 +27,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items} column-reordering-allowed>
+      <vaadin-grid .items="${this.items}" column-reordering-allowed>
         <vaadin-grid-column-group header="Name">
           <vaadin-grid-column path="firstName" resizable></vaadin-grid-column>
           <vaadin-grid-column path="lastName" resizable></vaadin-grid-column>

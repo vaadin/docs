@@ -28,10 +28,10 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items} theme="wrap-cell-content">
+      <vaadin-grid .items="${this.items}" theme="wrap-cell-content">
         <vaadin-grid-column
           header="Image"
-          .renderer=${this.avatarRenderer}
+          .renderer="${this.avatarRenderer}"
           flex-grow="0"
           auto-width
         ></vaadin-grid-column>
@@ -50,7 +50,7 @@ export class Example extends LitElement {
       html`
         <img
           style="height: var(--lumo-size-m)"
-          src=${(model.item as Person).pictureUrl}
+          src="${(model.item as Person).pictureUrl}"
           alt="User avatar"
         />
       `,

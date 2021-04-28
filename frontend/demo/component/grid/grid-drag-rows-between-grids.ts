@@ -48,8 +48,8 @@ export class Example extends LitElement {
 
   async firstUpdated() {
     const { people } = await getPeople({ count: 10 });
-    this.grid1Items = [...people].slice(0, 5);
-    this.grid2Items = [...people].slice(5);
+    this.grid1Items = people.slice(0, 5);
+    this.grid2Items = people.slice(5);
   }
 
   render() {
@@ -68,15 +68,16 @@ export class Example extends LitElement {
           }}"
           @grid-drop="${(event: CustomEvent) => {
             const { dropTargetItem } = event.detail;
-            if (dropTargetItem !== this.draggedItem) {
-              const draggedItemIndex = this.grid2Items.indexOf(this.draggedItem as Person);
+            const draggedPerson = this.draggedItem as Person;
+            if (dropTargetItem !== draggedPerson) {
+              const draggedItemIndex = this.grid2Items.indexOf(draggedPerson);
               if (draggedItemIndex >= 0) {
                 // remove the item from its previous position
                 this.grid2Items.splice(draggedItemIndex, 1);
                 // re-assign the array to refresh the grid
                 this.grid2Items = [...this.grid2Items];
                 // re-assign the array to refresh the grid
-                this.grid1Items = [...this.grid1Items, this.draggedItem as Person];
+                this.grid1Items = [...this.grid1Items, draggedPerson];
               }
             }
           }}"
@@ -101,15 +102,16 @@ export class Example extends LitElement {
           }}"
           @grid-drop="${(event: CustomEvent) => {
             const { dropTargetItem } = event.detail;
-            if (dropTargetItem !== this.draggedItem) {
-              const draggedItemIndex = this.grid1Items.indexOf(this.draggedItem as Person);
+            const draggedPerson = this.draggedItem as Person;
+            if (dropTargetItem !== draggedPerson) {
+              const draggedItemIndex = this.grid1Items.indexOf(draggedPerson);
               if (draggedItemIndex >= 0) {
                 // remove the item from its previous position
                 this.grid1Items.splice(draggedItemIndex, 1);
                 // re-assign the array to refresh the grid
                 this.grid1Items = [...this.grid1Items];
                 // re-assign the array to refresh the grid
-                this.grid2Items = [...this.grid2Items, this.draggedItem as Person];
+                this.grid2Items = [...this.grid2Items, draggedPerson];
               }
             }
           }}"

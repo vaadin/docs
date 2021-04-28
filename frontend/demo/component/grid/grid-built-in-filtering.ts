@@ -34,11 +34,11 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items="${this.items}">
         <vaadin-grid-filter-column
           header="Name"
           path="displayName"
-          .renderer=${this.nameRenderer}
+          .renderer="${this.nameRenderer}"
           flex-grow="0"
           auto-width
         ></vaadin-grid-filter-column>
@@ -53,7 +53,7 @@ export class Example extends LitElement {
     render(
       html`
         <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-          <vaadin-avatar img=${person.pictureUrl} .name="${person.displayName}"></vaadin-avatar>
+          <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
           <span> ${person.displayName} </span>
         </vaadin-horizontal-layout>
       `,

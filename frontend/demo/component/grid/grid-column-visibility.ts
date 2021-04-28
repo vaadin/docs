@@ -67,7 +67,7 @@ export class Example extends LitElement {
         </vaadin-context-menu>
       </vaadin-horizontal-layout>
 
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items="${this.items}">
         <vaadin-grid-column
           path="firstName"
           .hidden="${!this.visibleColumns.firstName}"

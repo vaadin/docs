@@ -31,7 +31,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid
-        .items=${this.items}
+        .items="${this.items}"
         .selectedItems="${this.selectedPerson}"
         @active-item-changed="${(e: GridActiveItemChanged) => {
           const item = e.detail.value as Person;

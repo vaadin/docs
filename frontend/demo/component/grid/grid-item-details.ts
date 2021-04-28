@@ -39,7 +39,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-grid
         theme="row-stripes"
-        .items=${this.items}
+        .items="${this.items}"
         .detailsOpenedItems="${this.detailsOpenedItem}"
         @active-item-changed="${(e: GridActiveItemChanged) =>
           (this.detailsOpenedItem = [e.detail.value])}"

@@ -64,7 +64,7 @@ export class Example extends LitElement {
           }
         )}"
       >
-        <vaadin-grid .items=${this.items} @vaadin-contextmenu="${this.onContextMenu}">
+        <vaadin-grid .items="${this.items}" @vaadin-contextmenu="${this.onContextMenu}">
           <vaadin-grid-column path="firstName"></vaadin-grid-column>
           <vaadin-grid-column path="lastName"></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>

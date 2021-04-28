@@ -71,10 +71,10 @@ export class Example extends LitElement {
           >
             No invitation has been sent
           </div>`
-        : html`<vaadin-grid .items=${this.invitedPeople} height-by-rows>
+        : html`<vaadin-grid .items="${this.invitedPeople}" height-by-rows>
             <vaadin-grid-column
               header="Name"
-              .renderer=${this.nameRenderer}
+              .renderer="${this.nameRenderer}"
               auto-width
             ></vaadin-grid-column>
             <vaadin-grid-column path="email"></vaadin-grid-column>

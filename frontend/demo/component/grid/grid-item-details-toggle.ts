@@ -44,7 +44,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-grid
         theme="row-stripes"
-        .items=${this.items}
+        .items="${this.items}"
         .detailsOpenedItems="${this.detailsOpenedItem}"
         .rowDetailsRenderer="${guard(
           [],
