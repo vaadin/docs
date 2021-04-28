@@ -44,14 +44,15 @@ export class Example extends LitElement {
         }}"
         @grid-drop="${(event: CustomEvent) => {
           const { dropTargetItem, dropLocation } = event.detail;
-          if (dropTargetItem !== this.draggedItem) {
+          const draggedPerson = this.draggedItem as Person;
+          if (dropTargetItem !== draggedPerson) {
             // remove the item from its previous position
-            const draggedItemIndex = this.items.indexOf(this.draggedItem as Person);
+            const draggedItemIndex = this.items.indexOf(draggedPerson);
             this.items.splice(draggedItemIndex, 1);
             // re-insert the item at its new position
             const dropIndex =
               this.items.indexOf(dropTargetItem) + (dropLocation === 'below' ? 1 : 0);
-            this.items.splice(dropIndex, 0, this.draggedItem as Person);
+            this.items.splice(dropIndex, 0, draggedPerson);
             // re-assign the array to refresh the grid
             this.items = [...this.items];
           }
