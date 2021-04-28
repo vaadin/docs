@@ -10,6 +10,10 @@ import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
+interface PersonWithRating extends Person {
+  customerRating: number;
+}
+
 @customElement('grid-styling')
 export class Example extends LitElement {
   constructor() {
@@ -19,7 +23,12 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private items: Person[] = [];
+  private items: PersonWithRating[] = [];
+
+  private ratingFormatter = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   async firstUpdated() {
     const { people } = await getPeople();
@@ -45,21 +54,23 @@ export class Example extends LitElement {
     _column?: GridColumnElement,
     model?: GridItemModel
   ) => {
-    const rating = (model?.item as any).customerRating.toFixed(2);
+    const item = model?.item as PersonWithRating;
+    const rating = this.ratingFormatter.format(item.customerRating);
     render(html` <span>${rating}</span> `, root);
   };
 
   private cellClassNameGenerator(column: GridColumnElement, model: GridItemModel) {
+    const item = model.item as PersonWithRating;
     let classes = '';
     // make the customer rating column bold
     if (column.header?.startsWith('Customer rating')) {
       classes += ' font-weight-bold';
     }
     // add high-rating class to customer ratings of 8 or higher
-    if ((model.item as any).customerRating >= 8.0) {
+    if (item.customerRating >= 8.0) {
       classes += ' high-rating';
       // add low-rating class to customer ratings of 4 or lower
-    } else if ((model.item as any).customerRating <= 4.0) {
+    } else if (item.customerRating <= 4.0) {
       classes += ' low-rating';
     }
     return classes;
