@@ -59,11 +59,12 @@ export class Example extends LitElement {
   };
 
   private addressRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+    const item = model.item as Person;
     render(
       html`
         <span
-          >${(model.item as Person).address.street} ${(model.item as Person).address.city}
-          ${(model.item as Person).address.zip} ${(model.item as Person).address.state}</span
+          >${item.address.street} ${item.address.city} ${item.address.zip}
+          ${item.address.state}</span
         >
       `,
       root
