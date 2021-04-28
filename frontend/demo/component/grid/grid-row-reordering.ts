@@ -45,6 +45,7 @@ export class Example extends LitElement {
         @grid-drop="${(event: CustomEvent) => {
           const { dropTargetItem, dropLocation } = event.detail;
           const draggedPerson = this.draggedItem as Person;
+          // only act when dropping on another item
           if (dropTargetItem !== draggedPerson) {
             // remove the item from its previous position
             const draggedItemIndex = this.items.indexOf(draggedPerson);
