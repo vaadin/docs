@@ -1,9 +1,10 @@
-import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
+import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-full-source-line
+import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
+import '@vaadin/vaadin-icons/vaadin-icons';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-basic')
@@ -17,10 +18,10 @@ export class Example extends LitElement {
   // tag::snippet[]
   @internalProperty()
   private items = [
-    { text: 'View' },
-    { text: 'Edit' },
+    { component: this.createItem('eye', 'View') },
+    { component: this.createItem('pencil', 'Edit') },
     {
-      text: 'Share',
+      component: this.createItem('share', 'Share'),
       children: [
         {
           text: 'On social media',
@@ -35,31 +36,30 @@ export class Example extends LitElement {
       ],
     },
     { 
-      text: 'Move',
+      component: this.createItem('folder', 'Move'),
       children: [
         { text: 'To folder' },
         { text: 'To trash' },
       ]
     },
-    { text: 'Duplicate' }
+    { component: this.createItem('copy', 'Duplicate') }
   ];
-
-  @internalProperty()
-  private selectedItem?: { text: string };
   // end::snippet[]
 
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-menu-bar .items="${this.items}" @item-selected="${this.itemSelected}"></vaadin-menu-bar>
-
-      <div>Clicked item: ${this.selectedItem?.text}</div>
+      <vaadin-menu-bar theme="tertiary-inline" .items="${this.items}"></vaadin-menu-bar>
       <!-- end::snippethtml[] -->
     `;
   }
 
-  itemSelected(e: CustomEvent) {
-    this.selectedItem = e.detail.value;
+  createItem(iconName: string, ariaLabel: string) {
+    const item = window.document.createElement('vaadin-context-menu-item');
+    const icon = window.document.createElement('iron-icon');
+    item.setAttribute('aria-label', ariaLabel);
+    icon.setAttribute('icon', `vaadin:${iconName}`);
+    item.appendChild(icon);
+    return item;
   }
-
 }

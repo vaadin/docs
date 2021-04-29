@@ -1,9 +1,10 @@
-import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
+import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-full-source-line
+import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
+import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-basic')
@@ -43,23 +44,17 @@ export class Example extends LitElement {
     },
     { text: 'Duplicate' }
   ];
-
-  @internalProperty()
-  private selectedItem?: { text: string };
   // end::snippet[]
 
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-menu-bar .items="${this.items}" @item-selected="${this.itemSelected}"></vaadin-menu-bar>
-
-      <div>Clicked item: ${this.selectedItem?.text}</div>
+      <vaadin-split-layout>
+        <vaadin-menu-bar .items="${this.items}"></vaadin-menu-bar>
+        <div>Move the splitter to see overflow feature</div>
+      </vaadin-split-layout>
       <!-- end::snippethtml[] -->
     `;
-  }
-
-  itemSelected(e: CustomEvent) {
-    this.selectedItem = e.detail.value;
   }
 
 }
