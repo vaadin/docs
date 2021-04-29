@@ -36,6 +36,9 @@ export class Example extends LitElement {
   @internalProperty()
   private managers: Person[] = [];
 
+  @internalProperty()
+  private expandedItems: unknown[] = [];
+
   async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
@@ -50,14 +53,13 @@ export class Example extends LitElement {
     const { page, pageSize, parentItem } = params;
     const startIndex = page * pageSize;
     const endIndex = startIndex + pageSize;
+
     const result = parentItem
       ? this.items.filter((item) => item.managerId === (parentItem as Person).id)
       : this.managers.slice(startIndex, endIndex);
+
     callback(result, result.length);
   };
-
-  @internalProperty()
-  private expandedItems: unknown[] = [];
 
   render() {
     return html`
