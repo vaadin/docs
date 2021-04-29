@@ -5,11 +5,8 @@ import '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 
 import { applyTheme } from 'Frontend/generated/theme';
-import {
-  RichTextEditorElement,
-  RichTextEditorHtmlValueChanged,
-} from '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
-import { TextFieldValueChanged } from '@vaadin/vaadin-text-field';
+import { RichTextEditorElement } from '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
+import { TextAreaElement } from '@vaadin/vaadin-text-field/vaadin-text-area';
 
 @customElement('rich-text-editor-set-get-value')
 export class Example extends LitElement {
@@ -20,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private htmlValue = '<p>Html value of the editor</p>';
+  private htmlValue = '';
 
   @query('vaadin-rich-text-editor')
   private richTextEditor?: RichTextEditorElement;
@@ -30,17 +27,16 @@ export class Example extends LitElement {
       <!-- tag::htmlsnippet[] -->
       <vaadin-rich-text-editor
         style="height: 400px;"
-        @html-value-changed="${(e: RichTextEditorHtmlValueChanged) =>
-          (this.htmlValue = e.detail.value)}"
+        @change="${this.syncHtmlValue}"
       ></vaadin-rich-text-editor>
 
       <vaadin-text-area
-        @value-changed="${(e: TextFieldValueChanged) => this.setHtmlValue(e.detail.value)}"
+        label="Html Value"
+        @change="${(e: CustomEvent) => this.setHtmlValue((e.target as TextAreaElement).value)}"
         placeholder="Type html string here to set it as value to the Rich Text Editor above..."
         style="width: 100%;"
+        .value="${this.htmlValue}"
       ></vaadin-text-area>
-
-      <div><b>Html value of the editor:</b> ${this.htmlValue}</div>
       <!-- end::htmlsnippet[] -->
     `;
   }
@@ -48,6 +44,12 @@ export class Example extends LitElement {
   // tag::snippet[]
   setHtmlValue(htmlValue: string) {
     this.richTextEditor?.dangerouslySetHtmlValue(htmlValue);
+  }
+
+  syncHtmlValue() {
+    if (this.richTextEditor) {
+      this.htmlValue = this.richTextEditor.htmlValue || '';
+    }
   }
   // end::snippet[]
 }
