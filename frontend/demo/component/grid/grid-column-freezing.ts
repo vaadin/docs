@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty, html, query } from 'lit-element';
+import { customElement, LitElement, internalProperty, html } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import { GridElement, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -21,18 +21,11 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private items: Person[] = [];
-
-  @query('vaadin-grid')
-  private grid!: GridElement;
+  private items?: Person[];
 
   async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
-
-    requestAnimationFrame(() => {
-      this.grid.recalculateColumnWidths();
-    });
   }
 
   render() {
