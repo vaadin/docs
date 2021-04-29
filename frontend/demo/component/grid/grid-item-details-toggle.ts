@@ -5,12 +5,7 @@ import { customElement, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
-import {
-  GridActiveItemChanged,
-  GridColumnElement,
-  GridElement,
-  GridItemModel,
-} from '@vaadin/vaadin-grid/vaadin-grid';
+import { GridColumnElement, GridElement, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
