@@ -19,15 +19,15 @@ export class Example extends LitElement {
   @internalProperty()
   private items = [
     {
-      component: this.createItem("share", "Share"),
+      component: this.createItem('share', 'Share'),
       children: [
-        { component: this.createItem("share", "By email", true) },
-        { component: this.createItem("link", "Get link", true) },
+        { component: this.createItem('share', 'By email', true) },
+        { component: this.createItem('link', 'Get link', true) },
       ],
     },
     {
-      component: this.createItem("copy", ""),
-    }
+      component: this.createItem('copy', ''),
+    },
   ];
   // end::snippet[]
 
@@ -39,7 +39,7 @@ export class Example extends LitElement {
     `;
   }
 
-  createItem(iconName: string, text: string, isChild:boolean = false) {
+  createItem(iconName: string, text: string, isChild = false) {
     const item = window.document.createElement('vaadin-context-menu-item');
     const icon = window.document.createElement('iron-icon');
 
@@ -58,5 +58,4 @@ export class Example extends LitElement {
     text && item.appendChild(window.document.createTextNode(text));
     return item;
   }
-
 }

@@ -17,12 +17,13 @@ export class Example extends LitElement {
   // tag::snippet[]
   @internalProperty()
   private items = [
-    { text: 'John Smith',
+    {
+      text: 'John Smith',
       children: [
         { text: 'Profile' },
         { text: 'Account' },
         { text: 'Preferences' },
-        {component: 'hr'},
+        { component: 'hr' },
         { text: 'Sign out' },
       ],
     },
@@ -36,5 +37,4 @@ export class Example extends LitElement {
       <!-- end::snippethtml[] -->
     `;
   }
-
 }

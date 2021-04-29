@@ -21,10 +21,7 @@ export class Example extends LitElement {
     { text: 'Edit', disabled: true },
     {
       text: 'Share',
-      children: [
-        { text: 'By email', disabled: true },
-        { text: 'Get link' },
-      ],
+      children: [{ text: 'By email', disabled: true }, { text: 'Get link' }],
     },
   ];
   // end::snippet[]
@@ -36,5 +33,4 @@ export class Example extends LitElement {
       <!-- end::snippethtml[] -->
     `;
   }
-
 }

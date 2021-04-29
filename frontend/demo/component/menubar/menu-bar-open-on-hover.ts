@@ -24,24 +24,17 @@ export class Example extends LitElement {
       children: [
         {
           text: 'On social media',
-          children: [
-            { text: 'Facebook' },
-            { text: 'Twitter' },
-            { text: 'Instagram' },
-          ],
+          children: [{ text: 'Facebook' }, { text: 'Twitter' }, { text: 'Instagram' }],
         },
         { text: 'By email' },
         { text: 'Get link' },
       ],
     },
-    { 
+    {
       text: 'Move',
-      children: [
-        { text: 'To folder' },
-        { text: 'To trash' },
-      ]
+      children: [{ text: 'To folder' }, { text: 'To trash' }],
     },
-    { text: 'Duplicate' }
+    { text: 'Duplicate' },
   ];
   // end::snippet[]
 
@@ -52,5 +45,4 @@ export class Example extends LitElement {
       <!-- end::snippethtml[] -->
     `;
   }
-
 }

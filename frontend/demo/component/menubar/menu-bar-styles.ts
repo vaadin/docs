@@ -25,12 +25,22 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-menu-bar .items="${[{ text: 'Default', children: [{ text: 'Item' }]}]}"></vaadin-menu-bar>
-      <vaadin-menu-bar theme="tertiary" .items="${[{ text: 'Tertiary', children: [{ text: 'Item' }]}]}"></vaadin-menu-bar>
-      <vaadin-menu-bar theme="primary" .items="${[{ text: 'Primary', children: [{ text: 'Item' }]}]}"></vaadin-menu-bar>
-      <vaadin-menu-bar theme="small" .items="${[{ text: 'Small', children: [{ text: 'Item' }]}]}"></vaadin-menu-bar>
+      <vaadin-menu-bar
+        .items="${[{ text: 'Default', children: [{ text: 'Item' }] }]}"
+      ></vaadin-menu-bar>
+      <vaadin-menu-bar
+        theme="tertiary"
+        .items="${[{ text: 'Tertiary', children: [{ text: 'Item' }] }]}"
+      ></vaadin-menu-bar>
+      <vaadin-menu-bar
+        theme="primary"
+        .items="${[{ text: 'Primary', children: [{ text: 'Item' }] }]}"
+      ></vaadin-menu-bar>
+      <vaadin-menu-bar
+        theme="small"
+        .items="${[{ text: 'Small', children: [{ text: 'Item' }] }]}"
+      ></vaadin-menu-bar>
       <!-- end::snippet[] -->
     `;
   }
-
 }

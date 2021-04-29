@@ -21,20 +21,16 @@ export class Example extends LitElement {
     { text: 'Save' },
     {
       component: this.createItem(),
-      children: [
-        { text: 'Save as draft' },
-        { text: 'Save as copy' },
-        { text: 'Save and publish' },
-      ],
+      children: [{ text: 'Save as draft' }, { text: 'Save as copy' }, { text: 'Save and publish' }],
     },
   ];
   // end::snippet[]
 
   render() {
     return html`
-    <!-- tag::snippethtml[] -->
+      <!-- tag::snippethtml[] -->
       <vaadin-menu-bar theme="primary" .items="${this.items}"></vaadin-menu-bar>
-    <!-- end::snippethtml[] -->
+      <!-- end::snippethtml[] -->
     `;
   }
 
@@ -46,5 +42,4 @@ export class Example extends LitElement {
     item.appendChild(icon);
     return item;
   }
-
 }

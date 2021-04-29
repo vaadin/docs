@@ -24,24 +24,17 @@ export class Example extends LitElement {
       children: [
         {
           text: 'On social media',
-          children: [
-            { text: 'Facebook' },
-            { text: 'Twitter' },
-            { text: 'Instagram' },
-          ],
+          children: [{ text: 'Facebook' }, { text: 'Twitter' }, { text: 'Instagram' }],
         },
         { text: 'By email' },
         { text: 'Get link' },
       ],
     },
-    { 
+    {
       text: 'Move',
-      children: [
-        { text: 'To folder' },
-        { text: 'To trash' },
-      ]
+      children: [{ text: 'To folder' }, { text: 'To trash' }],
     },
-    { text: 'Duplicate' }
+    { text: 'Duplicate' },
   ];
 
   @internalProperty()
@@ -51,7 +44,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-menu-bar .items="${this.items}" @item-selected="${this.itemSelected}"></vaadin-menu-bar>
+      <vaadin-menu-bar
+        .items="${this.items}"
+        @item-selected="${this.itemSelected}"
+      ></vaadin-menu-bar>
 
       <div>Clicked item: ${this.selectedItem?.text}</div>
       <!-- end::snippethtml[] -->
@@ -61,5 +57,4 @@ export class Example extends LitElement {
   itemSelected(e: CustomEvent) {
     this.selectedItem = e.detail.value;
   }
-
 }

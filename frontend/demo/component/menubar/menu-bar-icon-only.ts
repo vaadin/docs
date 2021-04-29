@@ -25,24 +25,17 @@ export class Example extends LitElement {
       children: [
         {
           text: 'On social media',
-          children: [
-            { text: 'Facebook' },
-            { text: 'Twitter' },
-            { text: 'Instagram' },
-          ],
+          children: [{ text: 'Facebook' }, { text: 'Twitter' }, { text: 'Instagram' }],
         },
         { text: 'By email' },
         { text: 'Get link' },
       ],
     },
-    { 
+    {
       component: this.createItem('folder', 'Move'),
-      children: [
-        { text: 'To folder' },
-        { text: 'To trash' },
-      ]
+      children: [{ text: 'To folder' }, { text: 'To trash' }],
     },
-    { component: this.createItem('copy', 'Duplicate') }
+    { component: this.createItem('copy', 'Duplicate') },
   ];
   // end::snippet[]
 

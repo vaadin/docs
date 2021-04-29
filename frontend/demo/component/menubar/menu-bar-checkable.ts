@@ -17,11 +17,9 @@ export class Example extends LitElement {
   // tag::snippet[]
   @internalProperty()
   private items = [
-    { text: 'Options',
-      children: [
-        { text: 'Save automatically', checked: true},
-        { text: 'Notify watchers' },
-      ],
+    {
+      text: 'Options',
+      children: [{ text: 'Save automatically', checked: true }, { text: 'Notify watchers' }],
     },
   ];
   // end::snippet[]
@@ -29,7 +27,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-menu-bar .items="${this.items}" @item-selected="${this.itemSelected}"></vaadin-menu-bar>
+      <vaadin-menu-bar
+        .items="${this.items}"
+        @item-selected="${this.itemSelected}"
+      ></vaadin-menu-bar>
       <!-- end::snippethtml[] -->
     `;
   }
@@ -40,5 +41,4 @@ export class Example extends LitElement {
     item.checked = !item.checked;
   }
   // end::snippetselected[]
-
 }
