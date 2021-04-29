@@ -5,6 +5,7 @@ import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
+import { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 
 @customElement('menu-bar-basic')
 export class Example extends LitElement {
@@ -38,7 +39,7 @@ export class Example extends LitElement {
   ];
 
   @internalProperty()
-  private selectedItem?: { text: string };
+  private selectedItem?: MenuBarItem;
   // end::snippet[]
 
   render() {
@@ -54,7 +55,7 @@ export class Example extends LitElement {
     `;
   }
 
-  itemSelected(e: CustomEvent) {
+  itemSelected(e: MenuBarItemSelectedEvent) {
     this.selectedItem = e.detail.value;
   }
 }
