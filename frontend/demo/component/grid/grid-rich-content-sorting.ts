@@ -77,6 +77,7 @@ export class Example extends LitElement {
   private birthdayHeaderRenderer = (root: HTMLElement) => {
     render(html`<vaadin-grid-sorter path="lastName">Birthdate</vaadin-grid-sorter>`, root);
   };
+
   private birthdayRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
     const person = model.item as Person;
     const birthday = parseISO(person.birthday);
