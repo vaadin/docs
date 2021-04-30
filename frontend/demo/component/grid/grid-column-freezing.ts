@@ -11,7 +11,6 @@ import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-column-freezing')
 export class Example extends LitElement {
   constructor() {
@@ -31,13 +30,15 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid .items="${this.items}">
+        <!-- tag::snippet[] -->
         <vaadin-grid-column
+          frozen
           header="Name"
           .renderer="${this.nameRenderer}"
           auto-width
-          frozen
           flex-grow="0"
         ></vaadin-grid-column>
+        <!-- end::snippet[] -->
         <vaadin-grid-column path="email" auto-width></vaadin-grid-column>
         <vaadin-grid-column path="address.phone" auto-width></vaadin-grid-column>
         <vaadin-grid-column path="profession" auto-width></vaadin-grid-column>
@@ -64,4 +65,3 @@ export class Example extends LitElement {
     );
   };
 }
-// end::snippet[]
