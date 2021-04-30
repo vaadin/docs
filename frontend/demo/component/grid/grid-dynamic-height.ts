@@ -55,9 +55,10 @@ export class Example extends LitElement {
           theme="primary"
           @click="${() => {
             const value = this.selectedItem;
-            const person = this.items.find((p) => +p.id === +value);
-
-            if (person && !this.invitedPeople.includes(person)) {
+            const personIdx = this.items.findIndex((p) => +p.id === +value);
+            if (personIdx >= 0) {
+              const person = this.items.splice(personIdx, 1)[0];
+              this.items = [...this.items]; // re-assign the array to refresh the combo-box
               this.invitedPeople = [...this.invitedPeople, person];
               this.selectedItem = '';
             }
@@ -77,8 +78,12 @@ export class Example extends LitElement {
     render(
       html`
         <vaadin-button
-          theme="error tertiary"
-          @click="${() => (this.invitedPeople = this.invitedPeople.filter((p) => p.id !== id))}"
+          theme="error tertiary icon"
+          @click="${() => {
+            this.invitedPeople = this.invitedPeople.filter((p) => p.id !== id);
+            this.items.unshift(model.item as Person);
+            this.items = [...this.items]; // re-assign the array to refresh the combo-box
+          }}"
           ><iron-icon icon="vaadin:trash"></iron-icon
         ></vaadin-button>
       `,

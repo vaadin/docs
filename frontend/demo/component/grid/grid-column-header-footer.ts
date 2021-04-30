@@ -10,7 +10,6 @@ import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-column-header-footer')
 export class Example extends LitElement {
   constructor() {
@@ -19,6 +18,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   @internalProperty()
   private items: Person[] = [];
 
@@ -92,5 +92,5 @@ export class Example extends LitElement {
   membershipFooterRenderer = (root: HTMLElement) => {
     render(html`<span>103 regular, 71 premium , 66 VIP</span>`, root);
   };
+  // end::snippet[]
 }
-// end::snippet[]

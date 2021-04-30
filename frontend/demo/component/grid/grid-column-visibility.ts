@@ -14,7 +14,6 @@ import {
   ContextMenuItemSelected,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
-// tag::snippet[]
 @customElement('grid-column-visibility')
 export class Example extends LitElement {
   constructor() {
@@ -23,14 +22,11 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   @internalProperty()
   private items: Person[] = [];
 
-  async firstUpdated() {
-    const { people } = await getPeople();
-    this.items = people;
-  }
-
+  @internalProperty()
   private contextMenuItems: (ContextMenuItem & { key: string })[] = [
     { text: 'First name', checked: true, key: 'firstName' },
     { text: 'Last name', checked: true, key: 'lastName' },
@@ -39,14 +35,10 @@ export class Example extends LitElement {
     { text: 'Profession', checked: true, key: 'profession' },
   ];
 
-  @internalProperty()
-  private visibleColumns = {
-    firstName: true,
-    lastName: true,
-    email: true,
-    phone: true,
-    profession: true,
-  };
+  async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people;
+  }
 
   render() {
     return html`
@@ -60,7 +52,6 @@ export class Example extends LitElement {
             this.contextMenuItems = this.contextMenuItems.map((item) =>
               item.key === value.key ? { ...item, checked: !value.checked } : item
             );
-            this.visibleColumns = { ...this.visibleColumns, [value.key]: !value.checked };
           }}"
         >
           <vaadin-button theme="tertiary">Show/Hide Columns</vaadin-button>
@@ -70,26 +61,26 @@ export class Example extends LitElement {
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-column
           path="firstName"
-          .hidden="${!this.visibleColumns.firstName}"
+          .hidden="${!this.contextMenuItems[0].checked}"
         ></vaadin-grid-column>
         <vaadin-grid-column
           path="lastName"
-          .hidden="${!this.visibleColumns.lastName}"
+          .hidden="${!this.contextMenuItems[1].checked}"
         ></vaadin-grid-column>
         <vaadin-grid-column
           path="email"
-          .hidden="${!this.visibleColumns.email}"
+          .hidden="${!this.contextMenuItems[2].checked}"
         ></vaadin-grid-column>
         <vaadin-grid-column
           path="address.phone"
-          .hidden="${!this.visibleColumns.phone}"
+          .hidden="${!this.contextMenuItems[3].checked}"
         ></vaadin-grid-column>
         <vaadin-grid-column
           path="profession"
-          .hidden="${!this.visibleColumns.profession}"
+          .hidden="${!this.contextMenuItems[4].checked}"
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
+  // end::snippet[]
 }
-// end::snippet[]

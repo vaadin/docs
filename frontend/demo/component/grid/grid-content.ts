@@ -15,7 +15,6 @@ import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-content')
 export class Example extends LitElement {
   constructor() {
@@ -24,6 +23,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   @internalProperty()
   private items?: Person[];
 
@@ -96,15 +96,15 @@ export class Example extends LitElement {
   private manageRenderer = (root: HTMLElement) => {
     render(
       html`
-        <vaadin-button theme="tertiary">
+        <vaadin-button theme="tertiary icon">
           <iron-icon icon="vaadin:pencil"></iron-icon>
         </vaadin-button>
-        <vaadin-button theme="error tertiary">
+        <vaadin-button theme="error tertiary icon">
           <iron-icon icon="vaadin:trash"></iron-icon>
         </vaadin-button>
       `,
       root
     );
   };
+  // end::snippet[]
 }
-// end::snippet[]

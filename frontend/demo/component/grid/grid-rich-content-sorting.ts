@@ -14,7 +14,6 @@ import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 import { differenceInYears, format, parseISO } from 'date-fns';
 
-// tag::snippet[]
 @customElement('grid-rich-content-sorting')
 export class Example extends LitElement {
   constructor() {
@@ -23,6 +22,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   @internalProperty()
   private items: Person[] = [];
 
@@ -75,7 +75,7 @@ export class Example extends LitElement {
   };
 
   private birthdayHeaderRenderer = (root: HTMLElement) => {
-    render(html`<vaadin-grid-sorter path="lastName">Birthdate</vaadin-grid-sorter>`, root);
+    render(html`<vaadin-grid-sorter path="birthday">Birthdate</vaadin-grid-sorter>`, root);
   };
 
   private birthdayRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
@@ -97,5 +97,5 @@ export class Example extends LitElement {
       root
     );
   };
+  // end::snippet[]
 }
-// end::snippet[]

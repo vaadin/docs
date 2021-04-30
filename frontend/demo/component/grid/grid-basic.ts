@@ -7,7 +7,6 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-basic')
 export class Example extends LitElement {
   constructor() {
@@ -16,6 +15,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   @internalProperty()
   private items: Person[] = [];
 
@@ -34,5 +34,5 @@ export class Example extends LitElement {
       </vaadin-grid>
     `;
   }
+  // end::snippet[]
 }
-// end::snippet[]

@@ -8,7 +8,6 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-single-select-mode')
 export class Example extends LitElement {
   constructor() {
@@ -17,11 +16,12 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   @internalProperty()
   private items: Person[] = [];
 
   @internalProperty()
-  private selectedPerson: Person[] = [];
+  private selectedItems: Person[] = [];
 
   async firstUpdated() {
     const { people } = await getPeople();
@@ -32,10 +32,10 @@ export class Example extends LitElement {
     return html`
       <vaadin-grid
         .items="${this.items}"
-        .selectedItems="${this.selectedPerson}"
+        .selectedItems="${this.selectedItems}"
         @active-item-changed="${(e: GridActiveItemChanged) => {
           const item = e.detail.value as Person;
-          this.selectedPerson = item ? [item] : [];
+          this.selectedItems = item ? [item] : [];
         }}"
       >
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
@@ -44,5 +44,5 @@ export class Example extends LitElement {
       </vaadin-grid>
     `;
   }
+  // end::snippet[]
 }
-// end::snippet[]
