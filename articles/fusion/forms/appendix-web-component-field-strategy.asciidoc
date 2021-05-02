@@ -1,125 +1,58 @@
 ---
-title: Using a Field Web Component
+title: Binding Data to Custom Components
 order: 100
 layout: page
 ---
 
 
-= Binding a Field Web Component
+= Using Custom Web Components in a Form
 
 While Vaadin Components are supported out-of-the-box, the client-side <<overview#,Form binder>> can be configured to support any web component.
-This article explains how to configure the binder for using a custom text-field web component.
+This article explains how to create a form with a custom `<my-text-field>` web component.
+
+Using a custom web component in a form requires two steps:
+
+1. creating a _field strategy_ that tells the form binder how to get and set the component `value` and other properties such as `required` and `errorMessage`.
+2. creating a custom _binder_ subclass that associates the new custom field strategy with the custom web component tag.
 
 == Example of a Web Component
 
-Let us consider the following LitElement component for using in form binding:
+Let us consider the following LitElement component for using in form binding.
+Note that it does not expose properties like `required`, `invalid` and `errorMessage`, which is why the default field strategy that works for all Vaadin components would not work here.
 
-.Example web component field
+.Custom field Web component
 [source,typescript]
 ----
-import {LitElement, customElement, html, property} from 'lit-element';
-import '@vaadin/vaadin-custom-field';
-import '@vaadin/vaadin-text-field';
-
-@customElement('my-cc-field')
-export class MyTextField extends LitElement {
-  @property({type: String}) label = '';
-  @property({type: String}) value = '';
-  @property({type: Boolean}) required = false;
-  @property({type: Boolean}) invalid = false;
-  @property({type: String}) errorMessage = '';
-
-  onValueChanged(event) {
-    this.value = event.target.value;
-  }
-
-  render() {
-    return html`
-      <vaadin-custom-field
-       .label="${this.label}"
-       .value="${this.value}"
-       @value-changed="${this.onValueChanged}"
-       .required="${this.required}"
-       .invalid="${this.invalid}"
-       .errorMessage="${this.errorMessage}"
-      >
-        <vaadin-text-field></vaadin-text-field>
-      </vaadin-custom-field>
-    `;
-  }
-}
+include::{root}/frontend/demo/fusion/forms/field-strategy/my-text-field.ts[tags=snippet]
 ----
 
 == Defining a Field Strategy
 
 The first step towards using a web component as a field is to define a field strategy.
 
-You need to import and create a subclass of `AbstractFieldStrategy`, as in the example below:
+You need to implement the `FieldStrategy` interface, as in the example below:
 
 .Example field strategy
 [source,typescript]
 ----
-import {AbstractFieldStrategy} from '@vaadin/form';
-
-class MyTextFieldStrategy extends AbstractFieldStrategy {
-  set required(required: boolean) {
-    this.element.required = required;
-  }
-
-  set invalid(invalid: boolean) {
-    this.element.invalid = invalid;
-  }
-
-  set errorMessage(errorMessage: string) {
-    this.element.errorMessage = errorMessage;
-  }
-}
+include::{root}/frontend/demo/fusion/forms/field-strategy/my-text-field-strategy.ts[tags=snippet]
 ----
 
 == Using the Field Strategy
 
-Subclass the binder and override the `getFieldStrategy(element)` method to use a custom field strategy for the `my-text-field` component:
+Subclass the Binder class and override the `getFieldStrategy(element)` method to use a custom field strategy for any `my-text-field` components it finds in a form:
 
 .Using a custom field strategy in the binder
 [source,typescript]
 ----
-import {AbstractModel, Binder, FieldStrategy} from '@vaadin/form';
+include::{root}/frontend/demo/fusion/forms/field-strategy/my-binder.ts[]
 
-class MyBinder<T, M extends AbstractModel<T>> extends Binder<T, M> {
-  constructor(context: any, model: M) {
-    super(context, model);
-  }
-
-  getFieldStrategy(element: any): FieldStrategy {
-    if (element.localName === 'my-text-field') {
-      return new MyTextFieldStrategy(element);
-    }
-    return super.getFieldStrategy(element);
-  }
-}
 ----
+
+After that you can use `my-text-field` components in a form, provided that you use the extended `MyBinder` class to handle data binding in that form.
 
 .Using a field web component in a form
 [source,typescript]
 ----
-import {field} from '@vaadin/form';
-import 'my-text-field';
-import {MyBinder} from 'Frontend/my-binder';
-
-import PersonModel from 'Frontend/generated/com/example/application/PersonModel';
-
-class PersonForm extends LitElement {
-  // ...
-
-  private binder = new MyBinder(this, PersonModel);
-
-  render() {
-    return html`
-      <my-text-field
-       label="Full name"
-       ...="${field(this.binder.model.fullName)}"
-      ></my-text-field>
-    `;
-  }
-}
+include::{root}/frontend/demo/fusion/forms/field-strategy/my-form.ts[]
 ----
