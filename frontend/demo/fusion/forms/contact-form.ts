@@ -27,12 +27,12 @@ export class ContactForm extends LitElement {
         capture="camera"
         accept="image/*"
         max-files="1"
-        @upload-before=${async (e: CustomEvent) => {
+        @upload-before="${async (e: CustomEvent) => {
           const file = e.detail.file;
           e.preventDefault();
           const base64Image = await readAsDataURL(file);
           this.binder.for(this.binder.model.avatarBase64).value = base64Image;
-        }}
+        }}"
       ></vaadin-upload>
 
       <!-- other form fields -->

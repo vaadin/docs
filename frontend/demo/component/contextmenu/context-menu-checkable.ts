@@ -35,10 +35,10 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu
-        .items=${this.items.map((item) => {
+        .items="${this.items.map((item) => {
           return { ...item, checked: item === this.selectedItem };
-        })}
-        @item-selected=${this.itemSelected}
+        })}"
+        @item-selected="${this.itemSelected}"
       >
         <div>Assignee: <b>${this.selectedItem?.text}</b></div>
       </vaadin-context-menu>

@@ -39,7 +39,7 @@ export class Example extends LitElement {
   };
 
   render() {
-    return html`<vaadin-login-form .i18n=${this.i18n}></vaadin-login-form>`;
+    return html`<vaadin-login-form .i18n="${this.i18n}"></vaadin-login-form>`;
   }
   //end::snippet[]
 }

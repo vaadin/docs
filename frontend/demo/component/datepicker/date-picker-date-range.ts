@@ -25,13 +25,13 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-date-picker
         label="Departure date"
-        @value-changed=${(e: DatePickerValueChanged) => (this.departureDate = e.detail.value)}
-        .max=${this.returnDate}
+        @value-changed="${(e: DatePickerValueChanged) => (this.departureDate = e.detail.value)}"
+        .max="${this.returnDate}"
       ></vaadin-date-picker>
       <vaadin-date-picker
         label="Return date"
-        @value-changed=${(e: DatePickerValueChanged) => (this.returnDate = e.detail.value)}
-        .min=${this.departureDate}
+        @value-changed="${(e: DatePickerValueChanged) => (this.returnDate = e.detail.value)}"
+        .min="${this.departureDate}"
       ></vaadin-date-picker>
       <!-- end::snippet[] -->
     `;
