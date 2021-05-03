@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
-
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import { applyTheme } from 'Frontend/generated/theme';
 import {
   ContextMenuItem,
   ContextMenuItemSelected,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-checkable')
 export class Example extends LitElement {
@@ -35,12 +34,12 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu
-        .items=${this.items.map((item) => {
+        .items="${this.items.map((item) => {
           return { ...item, checked: item === this.selectedItem };
-        })}
-        @item-selected=${this.itemSelected}
+        })}"
+        @item-selected="${this.itemSelected}"
       >
-        <div>Assignee: <b>${this.selectedItem?.text}</b></div>
+        <span>Assignee: <b>${this.selectedItem?.text}</b></span>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;

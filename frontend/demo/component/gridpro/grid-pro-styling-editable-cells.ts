@@ -29,7 +29,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid-pro class="editable-custom-effect" .items=${this.items}>
+      <vaadin-grid-pro class="editable-custom-effect" .items="${this.items}">
         <vaadin-grid-column path="firstName"> </vaadin-grid-column>
         <vaadin-grid-column path="lastName"> </vaadin-grid-column>
         <vaadin-grid-column path="membership"></vaadin-grid-column>

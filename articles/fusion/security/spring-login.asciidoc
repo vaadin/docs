@@ -27,7 +27,7 @@ Add the following dependency to the project Maven file.
 ----
 
 The application is now protected by a default Spring login view just adding the Spring Security dependency.
-By default it has a single user: ‘user’ username and random password, printed in the console when the application starts up after adding `logging.level.org.springframework.security = DEBUG` to the `application.properties` file.
+By default it has a single user: 'user' username and random password, printed in the console when the application starts up after adding `logging.level.org.springframework.security = DEBUG` to the `application.properties` file.
 
 == Server Configuration
 
@@ -126,9 +126,17 @@ const routes = [
 }
 ----
 
-Update the `SecurityConfig` to configure the login page as
-`http.formLogin().loginPage("/login").permitAll();`
-Note, the `path` for the login view in `routes.ts` should match the one defined in `SecurityConfig` for `http.formLogin().loginPage()`.
+Update the `SecurityConfig` to use the `setLogin` helper which will set up everything needed for a Fusion based login view:
+[source,java]
+----
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    super.configure(http);
+    setLoginView(http, "/login");
+  }
+----
+
+Note, the `path` for the login view in `routes.ts` must match the one defined in `SecurityConfig`.
 
 == How to Protect a Fusion View
 
@@ -200,20 +208,13 @@ Using localStorage allows navigating to sub views without having to check authen
 
 == Logout
 
-To avoid a full page reload the application needs to have a `/logout` route like the one below.
-It can be triggered with a link like `<a href="/logout">Log out</a>`.
+To handle logging out, you can use the `logout()` helper defined in `auth.ts` above.
+You typically want to use a button for handling logout and not navigation and a route to avoid timing issues between rendering views and logging out.
+You can, for example, do the following:
 
-.`frontend/routes.ts`
-[source,typescript]
+[source,html]
 ----
-{
-  path: '/logout',
-  action: async (_: Context, commands: Commands) => {
-    // use the logout helper method.
-    await logout();
-    return commands.redirect('/');
-  }
-}
+<vaadin-button @click="${() => logout()}">Logout</vaadin-button>
 ----
 
 === Alternatives to Using the Configuration Helper

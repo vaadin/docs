@@ -29,7 +29,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-crud include="firstName, lastName, email, profession" .items=${this.items}>
+      <vaadin-crud include="firstName, lastName, email, profession" .items="${this.items}">
         <vaadin-form-layout slot="form">
           <vaadin-text-field path="firstName" label="First name" required></vaadin-text-field>
           <vaadin-text-field path="lastName" label="Last name" required></vaadin-text-field>

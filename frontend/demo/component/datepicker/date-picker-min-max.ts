@@ -31,8 +31,8 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-date-picker
-        .min=${this.today}
-        .max=${this.upperLimit}
+        .min="${this.today}"
+        .max="${this.upperLimit}"
         label="Appointment date"
         helper-text="Must be within 60 days from today"
       ></vaadin-date-picker>

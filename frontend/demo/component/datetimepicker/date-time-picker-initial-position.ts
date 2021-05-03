@@ -21,7 +21,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-date-time-picker
         label="Q4 deadline"
-        .initialPosition=${`${currentYear}-12-31`}
+        .initialPosition="${`${currentYear}-12-31`}"
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->
     `;

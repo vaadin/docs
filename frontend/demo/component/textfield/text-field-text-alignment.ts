@@ -25,7 +25,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-form-layout .responsiveSteps=${layoutSteps}>
+      <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <vaadin-form-item>
           <label slot="label">Left</label>
           <vaadin-text-field value="value"></vaadin-text-field>

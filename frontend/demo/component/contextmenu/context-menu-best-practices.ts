@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
-
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { applyTheme } from 'Frontend/generated/theme';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-best-practices')
 export class Example extends LitElement {
@@ -24,8 +23,8 @@ export class Example extends LitElement {
 
   @internalProperty()
   private gridItems = [
-    { filename: 'Annual Report.pdf', size: '23 MB' },
-    { filename: 'Financials.xlsx', size: '42 MB' },
+    { name: 'Annual Report.docx', size: '24 MB' },
+    { name: 'Financials.xlsx', size: '42 MB' },
   ];
 
   private menuBarRenderer = (root: HTMLElement) => {
@@ -35,7 +34,7 @@ export class Example extends LitElement {
 
     const menuBar = document.createElement('vaadin-menu-bar');
     menuBar.items = [{ component: this.makeIcon(), children: this.items }];
-    menuBar.setAttribute('theme', 'icon tertiary');
+    menuBar.setAttribute('theme', 'tertiary');
     root.appendChild(menuBar);
   };
 
@@ -43,9 +42,13 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
-        <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
-          <vaadin-grid-column label="Filename" path="filename"></vaadin-grid-column>
-          <vaadin-grid-column label="Size" path="size"></vaadin-grid-column>
+        <vaadin-grid
+          height-by-rows
+          .items=${this.gridItems}
+          @vaadin-contextmenu=${this.onContextMenu}
+        >
+          <vaadin-grid-column path="name"></vaadin-grid-column>
+          <vaadin-grid-column path="size"></vaadin-grid-column>
           <vaadin-grid-column
             auto-width
             flex-grow="0"
@@ -60,7 +63,7 @@ export class Example extends LitElement {
   makeIcon() {
     const item = window.document.createElement('vaadin-context-menu-item');
     item.textContent = '•••';
-    item.setAttribute('aria-label', 'open menu');
+    item.setAttribute('aria-label', 'More options');
     return item;
   }
 

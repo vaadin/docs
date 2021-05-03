@@ -67,7 +67,7 @@ export class Example extends LitElement {
         <div style="display: flex;">
           <img
             style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
-            src=${person.pictureUrl}
+            src="${person.pictureUrl}"
             alt="Portrait of ${person.firstName} ${person.lastName}"
           />
           <div>
