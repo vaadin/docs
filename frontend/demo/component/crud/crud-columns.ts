@@ -30,7 +30,7 @@ export class Example extends LitElement {
       <!-- Use 'include' or 'exclude' to select which fields to show -->
       <vaadin-crud
         exclude="lastName, address, id, subscribe, membership, pictureUrl, manager"
-        .items=${this.items}
+        .items="${this.items}"
       ></vaadin-crud>
       <!-- end::snippet[] -->
     `;

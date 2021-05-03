@@ -23,7 +23,7 @@ export class Example extends LitElement {
       <vaadin-select
         label="Size"
         placeholder="Select size"
-        .renderer=${guard([], () => (root: HTMLElement) =>
+        .renderer="${guard([], () => (root: HTMLElement) =>
           render(
             html`
               <vaadin-list-box>
@@ -36,7 +36,7 @@ export class Example extends LitElement {
             `,
             root
           )
-        )}
+        )}"
       ></vaadin-select>
       <!-- end::snippet[] -->
     `;

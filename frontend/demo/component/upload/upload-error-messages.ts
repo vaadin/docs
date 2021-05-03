@@ -26,12 +26,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- end::snippet[] -->
-      <vaadin-form-layout .responsiveSteps=${layoutSteps}>
+      <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <div>
           <strong>Caution</strong>
           <vaadin-upload
             nodrop
-            .files=${createFakeFilesUploadErrorMessagesA() /* hidden-source-line */}
+            .files="${createFakeFilesUploadErrorMessagesA() /* hidden-source-line */}"
             @upload-response="${fakeErrorResponse /* hidden-source-line */}"
           ></vaadin-upload>
         </div>
@@ -41,7 +41,7 @@ export class Example extends LitElement {
           <vaadin-upload
             nodrop
             @upload-response="${this.uploadResponseHandler}"
-            .files=${createFakeFilesUploadErrorMessagesB() /* hidden-source-line */}
+            .files="${createFakeFilesUploadErrorMessagesB() /* hidden-source-line */}"
           ></vaadin-upload>
           <!-- end::snippet[] -->
         </div>

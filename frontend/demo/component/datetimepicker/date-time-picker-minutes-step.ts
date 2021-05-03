@@ -20,7 +20,7 @@ export class Example extends LitElement {
       <vaadin-date-time-picker
         label="Meeting date and time"
         value="2020-06-12T12:30"
-        .step=${60 * 30}
+        .step="${60 * 30}"
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->
     `;

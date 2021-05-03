@@ -29,8 +29,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-crud
         include="firstName, lastName"
-        .items=${this.items}
-        @size-changed=${() => this.requestUpdate()}
+        .items="${this.items}"
+        @size-changed="${() => this.requestUpdate()}"
       >
         <vaadin-horizontal-layout
           slot="toolbar"

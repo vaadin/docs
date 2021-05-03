@@ -59,7 +59,7 @@ export class Example extends LitElement {
       <vaadin-crud
         editor-position="aside"
         include="firstName, lastName, email, profession"
-        .items=${this.items}
+        .items="${this.items}"
       >
         <vaadin-grid slot="grid">
           <vaadin-grid-column path="firstName" header="Etunimi"></vaadin-grid-column>

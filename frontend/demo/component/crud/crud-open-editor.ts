@@ -31,10 +31,10 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-crud
         include="firstName, lastName, email, profession"
-        .items=${this.items}
-        .editedItem=${this.editedItem as any}
-        @edited-item-changed=${(e: CrudEditedItemChanged<Person>) =>
-          (this.editedItem = e.detail.value)}
+        .items="${this.items}"
+        .editedItem="${this.editedItem as any}"
+        @edited-item-changed="${(e: CrudEditedItemChanged<Person>) =>
+          (this.editedItem = e.detail.value)}"
       >
         <vaadin-grid slot="grid" @dblclick="${this.onDblClick}">
           <vaadin-grid-column path="firstName" header="First name"></vaadin-grid-column>
