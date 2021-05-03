@@ -1,5 +1,5 @@
 import { customElement, LitElement, html, css, unsafeCSS, property } from 'lit-element';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import { LoginI18n } from '@vaadin/vaadin-login';
 
@@ -103,12 +103,12 @@ export class LoginOverlayMockupElement extends LitElement {
       username: 'Username',
       password: 'Password',
       submit: 'Log in',
-      forgotPassword: 'Forgot password'
+      forgotPassword: 'Forgot password',
     },
     errorMessage: {
       title: 'Incorrect username or password',
-      message: 'Check that you have entered the correct username and password and try again.'
-    }
+      message: 'Check that you have entered the correct username and password and try again.',
+    },
   };
 
   render() {
@@ -122,7 +122,7 @@ export class LoginOverlayMockupElement extends LitElement {
             <p part="description">${this.description}</p>
           </div>
           <div part="form">
-            <vaadin-login-form .error=${this.error} .i18n=${this.i18n}></vaadin-login-form>
+            <vaadin-login-form .error="${this.error}" .i18n="${this.i18n}"></vaadin-login-form>
           </div>
         </section>
       </div>

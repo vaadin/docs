@@ -6,7 +6,10 @@ layout: page
 ---
 
 = Starting a Vaadin Project With Gradle
-:experimental:
+
+[role="since:com.vaadin:vaadin@V20 standalone"]
+--
+--
 
 [.introText]
 Gradle is a popular build tool for Java, Groovy, Kotlin, and other projects.
@@ -14,9 +17,8 @@ It is an alternative to using Maven, and in many ways much more simple to use, w
 You can use it to build a Vaadin application, run it, and manage dependencies during development.
 
 This tutorial describes how to create, compile, and run a Vaadin application using the Vaadin Gradle Plugin.
-For running the application, we use the *Gretty Plugin* to run it in an embedded web server.
+For running the application, the *Gretty Plugin* is used to run it in an embedded web server.
 
-More information about the Vaadin Gradle Plugin is available at the https://github.com/vaadin/vaadin-gradle-plugin[Vaadin Gradle plugin repository].
 For information about the general usage of Gradle, please refer to the link:https://docs.gradle.org/current/userguide/userguide.html[Gradle User Manual].
 
 == Requirements
@@ -29,7 +31,7 @@ The Gradle plugin has the following requirements:
 ** Install it from https://gradle.org/install
 * Node.js and npm (can also be installed locally to project using the Vaadin Gradle Plugin)
 
-Except for Gradle, these are general Vaadin requirements, as described in <<../install#,Installing Development Tools>>.
+Except for Gradle, these are general Vaadin requirements, as described in <<{articles}/guide/install#,Installing Development Tools>>.
 
 == Creating a Vaadin Project
 
@@ -42,7 +44,8 @@ You can also take any existing Vaadin project and make a `build.gradle` file for
 The following starter repositories are available at the moment:
 
 `link:https://github.com/vaadin/base-starter-gradle[https://github.com/vaadin/base-starter-gradle]`::
-  A minimalistic web application project to be deployed as a WAR package.
+  A simple web application project to be deployed as a WAR package.
+This example can also be used for Java EE, by changing the servlet dependency into `javax:javaee-api` and potentially adding `com.vaadin:vaadin-cdi` dependency for CDI integration.
 +
 [subs="normal"]
 ----
@@ -78,17 +81,20 @@ The most important files and folders are as follows:
   See the README inside for more details.
 
 `frontend/styles/shared-styles.css`::
-  Application-specific style sheets to style the overall look of the application.
+  Application-specific style sheets to style the look of the application.
 
 `frontend/styles/vaadin-text-field-styles.css`::
-  An example to modify the style of the *TextField* component.
+  An example to modify the style of the `TextField` component.
 
 `build.gradle`::
-  The gradle build file as described below in <<build-file>>.
+  The Gradle build file as described below in <<build-file>>.
 
 `gradlew` and `gradlew.bat`::
   Gradle wrapper build scripts for Linux/Mac (`gradlew`) and Windows (`gradlew.bat`).
   The build scripts allow building the project without Gradle preinstalled.
+  As the recommended way to execute any Gradle build is with the help of the Gradle Wrapper, we also used `gradlew` instead of `gradle` throughout the documentation.
+  Though, `gradlew` and `gradle` commands can be used interchangeably if you have Gradle installed already, and you prefer to use your installed Gradle.
+  You can find out more about the benefits of using Gradle Wrapper on the https://docs.gradle.org/current/userguide/gradle_wrapper.html[Official Gradle Documentations].
 
 [[build-file]]
 == The Build File
@@ -97,30 +103,32 @@ The `build.gradle` file needs to at least enable the Vaadin Gradle Plugin:
 
 ----
 plugins {
-    id 'com.vaadin' version '0.6.0' <1>
+    id 'com.vaadin' version '20.0.0' <1>
 
     // Optional
-    id 'org.gretty' version '3.0.1' <2>
+    id 'org.gretty' version '3.0.3' <2>
     id 'war' <3>
     id 'groovy' <4>
 }
 ----
-<1> Use the plugin version of your choice.
+<1> Use the plugin version matching the Vaadin version.
 +
-Please see the releases at https://github.com/vaadin/vaadin-gradle-plugin/releases[github.com/vaadin/vaadin-gradle-plugin] for the latest release.
+Please see the releases at https://github.com/vaadin/platform/releases[github.com/vaadin/platform] for the latest release.
++
+To try the pre-release version of the plugin see <<pre-release,Using Plugin pre-release Version>>
 <2> Use the Gretty embedded web server for running the application during development.
 See <<running>> for details.
-<3> Build a WAR package to deploy to a traditional Servlet container.
+<3> Build a `WAR` package to deploy to a traditional Servlet container.
 You also need to define Servlet API using `providedCompile "javax.servlet:javax.servlet-api:3.1.0"` in the dependencies section.
 <4> By default the plugin supports Java.
-You can include Groovy or Kotlin with the optional plugin.
+You can include Groovy or Kotlin as an optional plugin.
 
 [[build-file.vaadin-options]]
 === Vaadin Plugin Configuration
 
 Vaadin Gradle Plugin options are configured in a `vaadin` block.
 
-Usually, you have it as follows during development:
+Usually it is as follows during development:
 
 ----
 vaadin {
@@ -128,77 +136,17 @@ vaadin {
 }
 ----
 
-If the parameter is set `true`, the front-end bundle is optimized for all supported browsers, but compilation is much slower.
+If the parameter is `true`, the frontend bundle is optimized for all supported browsers, but compilation is much slower.
 
-Other configuration options, with their default values, are as follows:
-
-`productionMode = false`::
-  Whether the project is compiled for production.
-  For production, the front-end is transpiled for older browsers and optimized, as described in <<../production#,Deploying to Production>>.
-  It is a slow, so it is not normally done during development.
-  Running the `vaadinBuildFrontend` task will automatically switch this to `true`, so there is no need for you to configure anything.
-
-`buildOutputDirectory = File(project.buildDir, "vaadin-generated")`::
-  The plugin will generate additional resource files in the given directory.
-  These files need to be present on the classpath, in order for Vaadin to be able to run, both in the develoment and production mode.
-  The plugin will automatically register it as an additional resource directory, which should then be picked up by the IDE.
-  That allows the application to be deployed, for example, to Tomcat in IntelliJ or Eclipse IDE.
-  For example, the `flow-build-info.json` goes in the directory.
-  See the `webpackOutputDirectory` parameter below for more details.
-
-`webpackOutputDirectory = File(buildOutputDirectory, "META-INF/VAADIN/")`::
-  The folder where webpack should output `index.js` and other generated files.
-  In the development mode, the `flow-build-info.json` file is generated here.
-
-`npmFolder: File = project.projectDir`::
-  The folder where the `package.json` file is located.
-  The file lists the npm packages and their versions your project depends on.
-  It is by default located at the project root directory.
-
-`webpackTemplate: String = "webpack.config.js"`::
-  Copy the `webapp.config.js` file from the specified URL if missing.
-  The default is a template provided by this plugin.
-  Set it to empty string to disable the feature.
-
-`webpackGeneratedTemplate = "webpack.generated.js"`::
-  Copy the webapp.generated.js from the specified URL.
-  Default is the template provided by this plugin.
-  Set it to empty string to disable the feature.
-
-`generatedFolder = File(project.projectDir, "target/frontend")`::
-  The folder where flow will put generated files that will be used by webpack.
-  Should be `build/frontend/`, but that is only supported in Vaadin 15+.
-
-`frontendDirectory = File(project.projectDir, "frontend")`::
-  The directory with the frontend source files of the project.
-
-`generateBundle = true`::
-  Whether to generate a bundle from the project frontend sources or not.
-
-`runNpmInstall = true`::
-  Whether to run npm install after updating dependencies.
-
-`generateEmbeddableWebComponents = true`::
-  Whether to generate embeddable web components from WebComponentExporter inheritors.
-
-`frontendResourcesDirectory = File(project.projectDir, "src/main/resources/META-INF/resources/frontend")`::
-  Defines the project frontend directory from where resources should be copied from for use with webpack.
-
-`optimizeBundle = true`::
-  Whether to use byte code scanner strategy to discover frontend components.
-
-`nodeVersion = "12.14.1"`::
-  This property specifies which node version to download.
-  Please see the list of all node.js releases.
-  Usually it is best to select the latest LTS release.
+For configuration options see <<all-options,plugin configuration options>>
 
 
 [[build-file.repositories]]
 === Configuring Repositories
 
 The `repositories` section defines the locations to search for packages.
-Normally, you need at least the a repository holding Vaadin libraries.
-They are available at least through `jcenter`.
+At least the repository holding Vaadin libraries is needed.
+They are available from `jcenter`.
 
 ----
 repositories {
@@ -212,22 +160,22 @@ See https://docs.gradle.org/current/userguide/declaring_repositories.html[Declar
 [[build-file.dependencies]]
 === Configuring Dependencies
 
-You need to add the `vaadin-core` library as a Java dependency:
+You need to add `vaadin-core` or `vaadin` library as a Java dependency:
 
 ----
 dependencies {
-  implementation "com.vaadin:vaadin-core:14.+"
+  implementation "com.vaadin:vaadin-core:20.+"
 }
 ----
 
-With `14.+` version specification, you choose to use the latest version of Vaadin 14, but you can also give exact version.
+With `20.+` version specification, you choose to use the latest version of Vaadin, but you can also give exact version.
 
 See https://docs.gradle.org/current/userguide/declaring_dependencies.html[Declaring dependencies] in Gradle documentation for further details.
 
 [[build-file.other]]
 === Other Configuration
 
-In the starter project, we define default targets for convenience, so that you can simply run `gradle` without specifying any tasks:
+In the starter project, default targets are defined for convenience, so that you can run `gradle` without specifying any tasks:
 
 ----
 defaultTasks("clean", "vaadinBuildFrontend", "build")
@@ -236,17 +184,28 @@ defaultTasks("clean", "vaadinBuildFrontend", "build")
 [[compiling]]
 == Compiling
 
-If you defined the default tasks as described above in <<build-file.other>>, you can simply do:
+If you defined the default tasks as described above in <<build-file.other>>, you can run:
 
 ----
-$ gradle
+$ ./gradlew
 ----
 
-Otherwise, you normally build the project with the standard `build` task.
+on Windows:
+
+----
+$ gradlew
+----
+
+.Unix style of running gradlew would be used for the rest of this document
+[NOTE]
+To avoid unnecessary verbosity, only Unix Systems style of running `./gradlew` is used for the rest of this documentation.
+Obviously, you must replace it with `gradlew` if you are on a Windows machine.
+
+Otherwise, the project builds with the standard `build` task.
 However, on the first time and also otherwise if it is necessary, you need to build the Vaadin frontend.
 
 ----
-$ gradle vaadinBuildFrontend build
+$ ./gradlew vaadinBuildFrontend build
 ----
 
 [[compiling.tasks]]
@@ -254,23 +213,23 @@ $ gradle vaadinBuildFrontend build
 
 The Vaadin-related tasks handled by the plugin are as follows:
 
+`vaadinPrepareFrontend`::
+  Checks that `node.js` and `npm` are installed, copies frontend resources, and creates or updates `package.json` and `webpack.config.json` files.
+  The frontend resources are inside `.jar` dependencies, and copied to `node_modules`.
+
 `vaadinBuildFrontend`::
-  Builds the front-end bundle with the webpack utility.
-  Vaadin front-end resources, such as HTML, JavaScript, CSS, and images, are bundled to optimize loading the front-end.
+  Builds the frontend bundle with the webpack utility.
+  Vaadin frontend resources, such as HTML, JavaScript, CSS, and images, are bundled to optimize loading the frontend.
   This task is not executed automatically on the `build` and other targets, so you need to run it explicitly.
 
 `vaadinClean`::
-  Cleans the project completely and removes `node_modules`, `package*.json`, and `webpack.*.js`.
+  Cleans the project and removes `node_modules`, `package-lock.json`, `webpack.generated.js`, `tsconfig.json`, `types.d.ts`, `pnpm-lock.yaml` and `pnpmfile.js`.
   You need to run this task if you upgrade Vaadin version and in other such situations.
-
-`vaadinPrepareFrontend`::
-  Checks that node.js and npm are installed, copies frontend resources, and creates or updates `package.json` and `webpack.config.json` files.
-  The frontend resources are inside `.jar` dependencies, and copied to `node_modules`.
 
 To get the complete list of tasks handled by the configured plugins, enter:
 
 ----
-$ gradle tasks
+$ ./gradlew tasks
 ----
 
 [[running]]
@@ -281,12 +240,12 @@ You can do that either in an IDE or at command-line as follows.
 
 See https://akhikhl.github.io/gretty-doc/index.html[Gretty documentation] for a complete reference on using Gretty.
 
-One way to enable the Gretty plugin is in the `plugin` section of the `gradle.build` file, as we do in the starter project:
+One way to enable the Gretty plugin is in the `plugin` section of the `gradle.build` file, as in the starter project:
 
 ----
 plugins {
   ...
-  id 'org.gretty' version '3.0.1'
+  id 'org.gretty' version '3.0.3'
 }
 ----
 
@@ -302,18 +261,18 @@ gretty {
 The default context path contains the project name, so the URL would be `http://localhost:8080/myproject` (or whatever your project name is).
 <2> Use Jetty as the servlet container, with the specified version.
 
-To run the application, simply run the `appRun` task:
+The application is started with the `appRun` task:
 
 ----
- $ gradle appRun
+ $ ./gradlew appRun
 ----
 
-The task compiles the application and starts the web server in `http://localhost:8080/` (assuming that you configured the root context path as described above).
+The task compiles the application and starts the web server in `http://localhost:8080/` (if the root context path is configured as described above).
 
 == Developing in the Eclipse IDE
 
 Gradle has first-class support at least in the Eclipse IDE, IDEA, NetBeans, and Android Studio.
-In the following, we go through how to create, import, and develop a Vaadin Gradle project in the Eclipse IDE.
+The following part explores how to create, import, and develop a Vaadin Gradle project in the Eclipse IDE.
 
 === Importing a New Project
 
@@ -324,7 +283,7 @@ You create a new Vaadin project either by cloning the repository on command-line
 . Enter or select the *Project root directory*.
 . Click *Finish*.
 
-The project should appear in the *Project Eplorer* and look like depicted in <<newproject-image>>.
+The project should appear in the *Project Explorer* and look like depicted in <<newproject-image>>.
 
 You should now see the *Gradle Tasks* tab; you can browse all the various available tasks.
 
@@ -347,7 +306,7 @@ You can run the project using Gretty in an embedded web server.
 To build a web application as a WAR package, you need the `war` plugin.
 You also need to enable it.
 
-In `build.gradle`, you need to include the plugin and enable WAR build:
+In `build.gradle`, you need to include the plugin and enable `WAR` build:
 ----
 plugins {
   ...
@@ -373,8 +332,137 @@ vaadin {
 At command-line:
 
 ----
-$ gradle -DproductionMode=true war
+$ ./gradlew -Pvaadin.productionMode=true war
 ----
+
+[[pre-release]]
+== Using Plugin Snapshot Version
+
+A snapshot version of the plugin is pushed to the pre-release repository.
+
+To use the pre-released plugin add the `vaadin-prereleases` repository to the project `settings.gradle` file.
+
+.Plugin repository added to settings file
+----
+pluginManagement {
+    repositories {
+        maven { url = 'https://maven.vaadin.com/vaadin-prereleases' }
+        gradlePluginPortal()
+    }
+}
+----
+
+Then the plugin needs to be defined and applied in the `build.gradle` file.
+
+.Define snapshot plugin
+----
+buildscript {
+    ...
+    dependencies {
+        classpath group: 'com.vaadin',
+                name: 'vaadin-gradle-plugin',
+                version: '20.0-SNAPSHOT'
+    }
+}
+
+plugins {
+    ...
+}
+
+apply plugin: 'com.vaadin'
+----
+
+[[all-options]]
+== Plugin Configuration Options
+
+In this list are all configuration options with their default values:
+
+`productionMode: Boolean = false`::
+Define if application is running in productionMode.
+Defaults to false.
+For production, the frontend is transpiled for older browsers and optimized, as described in <<{articles}/guide/production#,Deploying to Production>>.
+Running the `vaadinBuildFrontend` task automatically switches this to `true`, so there is no need to configure anything.
+
+`webpackOutputDirectory: File? = null`::
+The folder where webpack should output `index.js` and other generated files.
+Defaults to `null` which uses the automatically detected value of the main SourceSet, usually `build/resources/main/META-INF/VAADIN/webapp/`.
+
+`npmFolder: File = project.projectDir`::
+The folder where `package.json` file is located.
+Default is project root dir.
+
+`webpackTemplate: String = FrontendUtils.WEBPACK_CONFIG`::
+Copy the `webapp.config.js` from the specified URL if missing.
+Default is the template provided by this plugin.
+Set it to empty string to disable the feature.
+
+`webpackGeneratedTemplate: String = FrontendUtils.WEBPACK_GENERATED`::
+Copy the `webapp.generated.js` from the specified URL.
+Default is the template provided by this plugin.
+Set it to empty string to disable the feature.
+
+`generatedFolder: File(project.projectDir, "target/frontend")`::
+Target folder for generated files used by webpack.
+
+`frontendDirectory: File(project.projectDir, "frontend")`::
+The directory with the frontend source files of the project.
+
+`generateBundle: Boolean = true`::
+Generate a bundle from the project frontend sources if true.
+
+`runNpmInstall: Boolean = true`::
+Run `npm install` after updating dependencies.
+
+`generateEmbeddableWebComponents: Boolean = true`::
+Generate web components from WebComponentExporter inheritors.
+
+`frontendResourcesDirectory: File = File(project.projectDir, Constants.LOCAL_FRONTEND_RESOURCES_PATH)`::
+Defines the project frontend directory from where resources should be copied from for use with webpack.
+
+`optimizeBundle: Boolean = true`::
+Use byte code scanner strategy to discover frontend components.
+
+`pnpmEnable: Boolean = true`::
+Instructs to use pnpm for installing npm frontend resources.
+Default is true
+
+`requireHomeNodeExec: Boolean = false`::
+Whether vaadin home node executable usage is forced.
+If it's set to `true` then vaadin home 'node' is checked and installed if absent.
+This is then be used instead of globally or locally installed 'node'.
+
+`useDeprecatedV14Bootstrapping: Boolean = false`::
+Defines if the application should run in legacy V14 bootstrap mode.
+Defaults to false.
+
+`eagerServerLoad: Boolean = false`::
+Define if the initial UIDL object is added to the bootstrap `index.html`.
+Defaults to false.
+
+`applicationProperties: File = File(project.projectDir, "src/main/resources/application.properties")`::
+Application properties file in Spring project.
+
+`openApiJsonFile: File = File(project.buildDir, "generated-resources/openapi.json")`::
+Generated path of the OpenAPI JSON.
+
+`javaSourceFolder: File = File(project.projectDir, "src/main/java")`::
+Java source folders for connect scanning.
+
+`generatedTsFolder: File = File(project.projectDir, "frontend/generated")`::
+Folder where Flow puts TS API files for client projects.
+
+`nodeVersion: String = "v14.15.4"`::
+The `node.js` version to be used when `node.js` is installed automatically by Vaadin, for example `"v14.15.4"`.
+Defaults to `[FrontendTools.DEFAULT_NODE_VERSION]`.
+
+`nodeDownloadRoot: String = "https://nodejs.org/dist/"`::
+URL to download `node.js` from.
+This can be needed in corporate environments where the `node.js` download is provided from an intranet mirror.
+Defaults to `[NodeInstaller.DEFAULT_NODEJS_DOWNLOAD_ROOT]`.
+
+`resourceOutputDirectory: File = File(project.buildDir, "vaadin-generated")`::
+Define the output directory for generated non-served resources, such as the token file.
+Defaults to `build/vaadin-generated` folder.
 
 ////
 == Further Reading

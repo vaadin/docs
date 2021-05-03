@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';
@@ -10,7 +10,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-closing')
 export class Example extends LitElement {
@@ -28,8 +28,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-dialog
         aria-label="simple"
-        .opened=${this.dialogOpened}
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
+        .opened="${this.dialogOpened}"
+        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
@@ -45,7 +45,7 @@ export class Example extends LitElement {
                   apologise for any inconvenience.
                 </p>
                 <vaadin-button
-                  @click=${() => (this.dialogOpened = false)}
+                  @click="${() => (this.dialogOpened = false)}"
                   style="align-self: flex-end;"
                 >
                   Close
@@ -58,7 +58,7 @@ export class Example extends LitElement {
       ></vaadin-dialog>
       <!-- end::snippet[] -->
 
-      <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
+      <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }
 }

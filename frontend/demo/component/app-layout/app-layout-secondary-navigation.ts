@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-app-layout/vaadin-app-layout';
@@ -8,7 +8,7 @@ import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-secondary-navigation')
 export class Example extends LitElement {

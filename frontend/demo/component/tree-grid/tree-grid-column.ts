@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
 import { customElement, internalProperty, LitElement } from 'lit-element';
@@ -8,9 +8,9 @@ import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-button/vaadin-button';
 import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-column')
 export class Example extends LitElement {
@@ -26,17 +26,17 @@ export class Example extends LitElement {
     params: GridDataProviderParams,
     callback: GridDataProviderCallback
   ) => {
-    const { people, hierarhcyLevelSize } = await getPeople({
+    const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null
+      managerId: params.parentItem ? (params.parentItem as Person).id : null,
     });
 
     if (!params.parentItem) {
       this.managers = people;
     }
 
-    callback(people, hierarhcyLevelSize);
+    callback(people, hierarchyLevelSize);
   };
 
   // tag::snippet[]
@@ -47,16 +47,16 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <h2 style="flex: 1; margin-bottom: 0; margin-top: 0;">Employee</h2>
-        <vaadin-button @click=${() => (this.expandedItems = [...this.managers])}>
+        <vaadin-button @click="${() => (this.expandedItems = [...this.managers])}">
           Expand All
         </vaadin-button>
-        <vaadin-button @click=${() => (this.expandedItems = [])}>Collapse All</vaadin-button>
+        <vaadin-button @click="${() => (this.expandedItems = [])}">Collapse All</vaadin-button>
       </vaadin-horizontal-layout>
 
       <vaadin-grid
-        .dataProvider=${this.dataProvider}
-        .itemIdPath=${'id'}
-        .expandedItems=${this.expandedItems}
+        .dataProvider="${this.dataProvider}"
+        .itemIdPath="${'id'}"
+        .expandedItems="${this.expandedItems}"
       >
         <vaadin-grid-tree-column
           path="firstName"

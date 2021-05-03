@@ -1,13 +1,12 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('crud-basic')
 export class Example extends LitElement {
   constructor() {
@@ -26,8 +25,12 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-crud include="firstName, lastName" .items=${this.items}></vaadin-crud>
+      <!-- tag::snippet[] -->
+      <vaadin-crud
+        include="firstName, lastName, email, profession"
+        .items="${this.items}"
+      ></vaadin-crud>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]

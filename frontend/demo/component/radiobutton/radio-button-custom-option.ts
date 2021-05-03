@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
@@ -6,9 +6,9 @@ import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import { getCards } from '../../domain/DataService';
-import Card from '../../../generated/com/vaadin/demo/domain/Card';
-import { applyTheme } from 'generated/theme';
+import { getCards } from 'Frontend/demo/domain/DataService';
+import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-custom-option')
 export class Example extends LitElement {
@@ -36,14 +36,14 @@ export class Example extends LitElement {
         <vaadin-radio-group
           label="Payment method"
           theme="vertical"
-          .value=${this.value}
-          @value-changed=${(e: CustomEvent) => (this.value = e.detail.value)}
+          .value="${this.value}"
+          @value-changed="${(e: CustomEvent) => (this.value = e.detail.value)}"
         >
           ${this.items.map(
-            card => html`
-              <vaadin-radio-button .value=${String(card.id)}>
+            (card) => html`
+              <vaadin-radio-button .value="${String(card.id)}">
                 <vaadin-horizontal-layout theme="spacing">
-                  <img src=${card.pictureUrl} alt=${card.name} style="height: 1em;" />
+                  <img src="${card.pictureUrl}" alt="${card.name}" style="height: 1em;" />
                   <span>${card.accountNumber}</span>
                 </vaadin-horizontal-layout>
               </vaadin-radio-button>
@@ -52,7 +52,7 @@ export class Example extends LitElement {
           <vaadin-radio-button value="-1">Other</vaadin-radio-button>
         </vaadin-radio-group>
 
-        <vaadin-text-field label="Card number" .hidden=${this.value !== '-1'}></vaadin-text-field>
+        <vaadin-text-field label="Card number" .hidden="${this.value !== '-1'}"></vaadin-text-field>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->
     `;

@@ -1,9 +1,9 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-group-basic')
 export class Example extends LitElement {
@@ -21,8 +21,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-checkbox-group
         label="Export data"
-        .value=${this.value}
-        @value-changed=${(e: CustomEvent) => (this.value = e.detail.value)}
+        .value="${this.value}"
+        @value-changed="${(e: CustomEvent) => (this.value = e.detail.value)}"
         theme="vertical"
       >
         <vaadin-checkbox value="0">Order ID</vaadin-checkbox>

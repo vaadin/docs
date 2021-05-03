@@ -48,4 +48,6 @@ clonePromise.then(() => {
 
   console.log('Building documentation site...');
   execSync('DOCS_CONTENT_ROOT=../../ npx --unhandled-rejections=strict gatsby build --prefix-paths', { cwd: './docs-app', stdio: 'inherit' });
+}).catch(() => {
+  process.exit(1);
 });

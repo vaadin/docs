@@ -1,48 +1,52 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-messages/vaadin-message-list';
-import { applyTheme } from 'generated/theme';
-import { getPeople } from '../../domain/DataService';
-import MessageListItem from './MessageListItem';
+import { applyTheme } from 'Frontend/generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import { format, subDays, subMinutes } from 'date-fns';
+import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-full-source-line
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('message-list-component')
 export class Example extends LitElement {
+  private person: Person | undefined;
+  private isoMinutes = 'yyyy-MM-dd HH:mm';
+  private yesterday = format(subDays(new Date(), 1), this.isoMinutes);
+  private fiftyMinutesAgo = format(subMinutes(new Date(), 50), this.isoMinutes);
+
   constructor() {
     super();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
-  private items: MessageListItem[] = [];
-
   async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
-    const person = people[0];
-    this.items = [
-      {
-        text: 'Hello list',
-        time: 'yesterday',
-        userName: 'Matt Mambo',
-        userAbbr: 'MM',
-        userColorIndex: 1
-      },
-      {
-        text: 'Another message',
-        time: 'right now',
-        userName: 'Linsey Listy',
-        userAbbr: 'LL',
-        userColorIndex: 2,
-        userImg: person.pictureUrl
-      }
-    ];
+    this.person = people[0];
+    this.requestUpdate();
   }
 
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-message-list .items=${this.items}></vaadin-message-list>
+      <vaadin-message-list
+        .items="${[
+          {
+            text: 'Linsey, could you check if the details with the order are okay?',
+            time: this.yesterday,
+            userName: 'Matt Mambo',
+            userColorIndex: 1,
+          },
+          {
+            text: 'All good. Ship it.',
+            time: this.fiftyMinutesAgo,
+            userName: 'Linsey Listy',
+            userColorIndex: 2,
+            userImg: this.person ? this.person.pictureUrl : undefined,
+          },
+        ]}"
+      ></vaadin-message-list>
       <!-- end::snippet[] -->
     `;
   }

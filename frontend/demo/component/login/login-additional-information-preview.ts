@@ -1,7 +1,7 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, query } from 'lit-element';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
 import { LoginOverlayMockupElement } from './login-overlay-mockup';
 
@@ -19,14 +19,12 @@ export class Example extends LitElement {
     if (this.login && this.login.i18n) {
       this.login.i18n = {
         ...this.login.i18n,
-        additionalInformation: `Please, contact admin@company.com if you're experiecing issues logging into your account`
+        additionalInformation: `Please, contact admin@company.com if you're experiecing issues logging into your account`,
       };
     }
   }
 
   render() {
-    return html`
-      <login-overlay-mockup></login-overlay-mockup>
-    `;
+    return html`<login-overlay-mockup></login-overlay-mockup>`;
   }
 }

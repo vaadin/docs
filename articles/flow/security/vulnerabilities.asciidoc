@@ -3,24 +3,25 @@ title: Common Vulnerabilities
 order: 90
 layout: page
 ---
-
 = Common Vulnerabilities
 
-
+// tag::sql-injections[]
 == SQL Injections
 
-Since Vaadin is a backend-agnostic UI framework, it doesn’t directly deal with backend access; instead, choosing a backend framework (e.g. Spring Data) is left to the developer. Vaadin does not provide mitigation for SQL injections, this is left to the backend provider and developer.
+Since Vaadin is a backend-agnostic UI framework, it doesn't directly deal with backend access; instead, choosing a backend framework (for example, Spring Data) is left to the developer. 
+Vaadin does not provide mitigation for SQL injections, this is left to the backend provider and developer.
 
 However, following the data validation and escaping guidelines (see the XSS section), as well as standard secure database access practices, SQL injections can be completely blocked in Vaadin applications.
 
-Most providers have their own ways of dealing with injections out of the box and we recommend developers follow those guides. If the developer uses pure JDBC however, they will have to deal with injection risks themselves. Here is an example for pure JDBC demonstrating an SQL injection mitigation using the value from a `TextField` in a Prepared Statement:
-
+Most providers have their own ways of dealing with injections out of the box and we recommend developers follow those guides. If the developer uses pure JDBC however, they will have to deal with injection risks themselves. 
+Here is an example for pure JDBC demonstrating an SQL injection mitigation using the value from a `TextField` in a Prepared Statement:
+// end::sql-injections[]
 [source,java]
 ----
 new TextField("Set new username:", valueChangeEvent -> {
 
     String value = valueChangeEvent.getValue();
-    // ‘value’ can contain malicious content!
+    // 'value' can contain malicious content!
 
     // This is the correct way
     String sql = "UPDATE app_users WHERE id=? SET name=?";
@@ -41,10 +42,11 @@ new TextField("Set new username:", valueChangeEvent -> {
     // "\"";
 });
 ----
-
+// tag::csrf[]
 == Cross-Site Request Forgery (CSRF / XSRF)
 
-All requests between the client and the server are included with a user session specific CSRF token. All communication between the server and the client is handled by Vaadin, so you do not need to remember to include and verify the CSRF tokens manually.
+All requests between the client and the server are included with a user session specific CSRF token. 
+All communication between the server and the client is handled by Vaadin, so you do not need to remember to include and verify the CSRF tokens manually.
 
 The CSRF token is passed inside the JSON message in the request body:
 
@@ -61,17 +63,24 @@ Vaadin services requests, the CSRF token is passed in the `X-CSRF-Token` HTTP he
 X-CSRF-Token: 0bd61cf8-0231-455b-b39a-434f054352c5
 ----
 
-The CSRF token mechanism can be overridden on the server to enable e.g. repeatable load test scripts using Gatling or similar tools. This is strongly discouraged when running in production.
+The CSRF token mechanism can be overridden on the server to enable for example, repeatable load test scripts using Gatling or similar tools. 
+This is strongly discouraged when running in production.
 
+// end::csrf[]
 
+// tag::xss[]
 == Cross-Site Scripting (XSS)
 
-Vaadin has built-in protection against cross-site scripting (xss) attacks. Vaadin uses Browser APIs that make the browser render content as text instead of HTML, such as using `innerText` instead of `innerHTML`. This negates the chance to accidentally inserting e.g. `<script>` tags into the DOM by binding unsecure string values.
+Vaadin has built-in protection against cross-site scripting (XSS) attacks. 
+Vaadin uses Browser APIs that make the browser render content as text instead of HTML, such as using `innerText` instead of `innerHTML`. 
+This negates the chance to accidentally inserting for example, `<script>` tags into the DOM by binding unsecure string values.
 
-Some Vaadin components explicitly allow HTML content for certain attributes, in which case your application needs to ensure that the data does not contain XSS payloads. Allowing insecure HTML content is never the default, it is an explicit choice by developers. Vaadin recommends using e.g. JSoup for sanitation and escaping.
+Some Vaadin components explicitly allow HTML content for certain attributes, in which case your application needs to ensure that the data does not contain XSS payloads. 
+Allowing insecure HTML content is never the default, it is an explicit choice by developers. 
+Vaadin recommends using for example, JSoup for sanitation and escaping.
 
 Here are a few examples of built-in escaping and some where escaping is left for the developer:
-
+// end::xss[]
 [source,java]
 ----
 Div div = new Div();
@@ -87,18 +96,21 @@ div.add(new Html("<b>This IS bolded</b>"));
 
 new Checkbox().setLabelAsHtml("<b>This is bolded too</b>");
 ----
-
-The developer can use helpers to mitigate the risk when data is not trusted. Here is an example that transforms data that might have dangerous HTML to a safe format:
-
+// tag::xss-with-helper[]
+The developer can use helpers to mitigate the risk when data is not trusted. 
+Here is an example that transforms data that might have dangerous HTML to a safe format:
+// end::xss-with-helper[]
 [source,java]
 ----
 String safeHtml = Jsoup.clean(dangerousText, Whitelist.relaxed());
 new Checkbox().setLabelAsHtml(safeHtml);
 ----
 
-=== Running custom JavaScript
+=== Running Custom JavaScript
 
-Sometimes application developers need to run custom scripts inside the application. Running any script is an inherently unsafe operation because scripts have full access to the entire client side. It is especially dangerous if the script is stored somewhere else than the application code and loaded dynamically:
+Sometimes application developers need to run custom scripts inside the application. 
+Running any script is an inherently unsafe operation because scripts have full access to the entire client side. 
+It is especially dangerous if the script is stored somewhere else than the application code and loaded dynamically:
 
 [source,java]
 ----
@@ -106,12 +118,15 @@ Sometimes application developers need to run custom scripts inside the applicati
 UI.getCurrent().getPage().executeJs("window.alert('This method is inherently unsafe');");
 
 // This is especially dangerous!
-// We can’t know what the script contains, nor can we make it safe.
+// We can't know what the script contains, nor can we make it safe.
 String script = getExternalScript();
 UI.getCurrent().getPage().executeJs(script);
 ----
 
-Scripts can not be automatically escaped, since any escaping would make the script not work and that would defeat the purpose of running a script. Vaadin can not know which script is dangerous and which script isn’t. It is up to the application developer to make sure scripts that are run are safe. However, the developer can pass parameters to JS execution safely by using the following syntax:
+Scripts can not be automatically escaped, since any escaping would make the script not work and that would defeat the purpose of running a script. 
+Vaadin can not know which script is dangerous and which script isn't. 
+It is up to the application developer to make sure scripts that are run are safe. 
+However, the developer can pass parameters to JS execution safely by using the following syntax:
 
 [source,java]
 ----
@@ -125,16 +140,21 @@ UI.getCurrent().getPage().executeJs(script, scriptParam);
 
 === Using Templates
 
-When using Polymer Templates in Vaadin applications, the developer needs to be extra careful when inserting data into the DOM as well as using JavaScript. Vaadin automatically uses String values safely when using a `TemplateModel` from the server side, but the framework has no control over what the developers do using HTML or JavaScript inside the template itself. An example is binding a `TextField` with javascript value directly to client-side logic; there is no guarantee that the input is safe, and it should be sanitized before use.
+When using Polymer Templates in Vaadin applications, the developer needs to be extra careful when inserting data into the DOM as well as using JavaScript. 
+Vaadin automatically uses String values safely when using a `TemplateModel` from the server side, but the framework has no control over what the developers do using HTML or JavaScript inside the template itself. 
+An example is binding a `TextField` with JavaScript value directly to client-side logic; there is no guarantee that the input is safe, and it should be sanitized before use.
 
 Reading values from Template Models and receiving RPC calls in server side methods has the same caveats as discussed in the section Data Validation; the developer should never trust values sent from the client.
-
+// tag::java-serialization[]
 == Java Serialization Vulnerability
 
-A general security issue has been identified in programming language mechanics where the language allows execution of code that comes from serialized objects. The Java language is not immune to this; at least the Java Serialization framework, RMI, JMX and JMS features are vulnerable to this.
+A general security issue has been identified in programming language mechanics where the language allows execution of code that comes from serialized objects. 
+The Java language is not immune to this; at least the Java Serialization framework, RMI, JMX and JMS features are vulnerable to this.
 
-If the application is set up to de-serialize Java objects (e.g. using the libraries above) and an attacker can feed the system a malicious payload that gets de-serialized into Java objects. Then, the attacker can execute arbitrary code using specific language features (such as reflection).
+If the application is set up to de-serialize Java objects (for example, using the libraries above) and an attacker can feed the system a malicious payload that gets de-serialized into Java objects. 
+Then, the attacker can execute arbitrary code using specific language features (such as reflection).
 
 Vaadin has published a security alert for this vulnerability, <<https://v.vaadin.com/security-alert-for-java-deserialization-of-untrusted-data-in-vaadin-severity-level-moderate, please click here for the report>>.
 
 The vulnerability can not be fixed in Vaadin, but instead developers must mitigate the risk using methods described in the alert appendices.
+// end::java-serialization[]

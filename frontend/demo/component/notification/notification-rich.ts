@@ -1,5 +1,4 @@
-import '../../init'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-full-source-line
 import { render } from 'lit-html';
 import { html, LitElement, customElement } from 'lit-element';
 import { guard } from 'lit-html/directives/guard';
@@ -8,9 +7,16 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
 import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-rich')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->
@@ -114,12 +120,8 @@ export class Example extends LitElement {
       <vaadin-button @click="${this.open.bind(this, 2)}" theme="error primary">
         Try it
       </vaadin-button>
-      <vaadin-button @click="${this.open.bind(this, 3)}" theme="contrast">
-        Try it
-      </vaadin-button>
-      <vaadin-button @click="${this.open.bind(this, 4)}" theme="success">
-        Try it
-      </vaadin-button>
+      <vaadin-button @click="${this.open.bind(this, 3)}" theme="contrast">Try it</vaadin-button>
+      <vaadin-button @click="${this.open.bind(this, 4)}" theme="success">Try it</vaadin-button>
     `;
   }
 

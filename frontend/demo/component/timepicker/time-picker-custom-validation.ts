@@ -1,11 +1,11 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-time-picker/vaadin-time-picker';
 import { Binder, field } from '@vaadin/form';
-import AppointmentModel from '../../../generated/com/vaadin/demo/domain/AppointmentModel';
-import { applyTheme } from 'generated/theme';
+import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('time-picker-custom-validation')
 export class Example extends LitElement {
@@ -26,7 +26,7 @@ export class Example extends LitElement {
           (startTime >= '08:00' && startTime <= '12:00') ||
           (startTime >= '13:00' && startTime <= '16:00')
         );
-      }
+      },
     });
   }
 
@@ -37,7 +37,7 @@ export class Example extends LitElement {
         helper-text="Open 8:00-12:00, 13:00-16:00"
         min="08:00"
         max="16:00"
-        .step=${60 * 30}
+        .step="${60 * 30}"
         ...="${field(this.binder.model.startTime)}"
       ></vaadin-time-picker>
     `;

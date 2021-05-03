@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
 import { customElement, internalProperty, LitElement } from 'lit-element';
@@ -13,11 +13,11 @@ import {
   GridColumnElement,
   GridDataProviderCallback,
   GridDataProviderParams,
-  GridItemModel
+  GridItemModel,
 } from '@vaadin/vaadin-grid/vaadin-grid';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 import { GridTreeToggleExpandedChanged } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 import { render } from 'lit-html';
 
@@ -33,13 +33,13 @@ export class Example extends LitElement {
   private expandedItems: Person[] = [];
 
   async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
-    const { people, hierarhcyLevelSize } = await getPeople({
+    const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null
+      managerId: params.parentItem ? (params.parentItem as Person).id : null,
     });
 
-    callback(people, hierarhcyLevelSize);
+    callback(people, hierarchyLevelSize);
   }
 
   // tag::snippet[]
@@ -55,20 +55,20 @@ export class Example extends LitElement {
         html`
           <vaadin-horizontal-layout>
             <vaadin-grid-tree-toggle
-              .leaf=${!person.manager}
-              .level=${model.level || 0}
-              @expanded-changed=${(e: GridTreeToggleExpandedChanged) => {
+              .leaf="${!person.manager}"
+              .level="${model.level || 0}"
+              @expanded-changed="${(e: GridTreeToggleExpandedChanged) => {
                 if (e.detail.value) {
                   this.expandedItems = [...this.expandedItems, person];
                 } else {
-                  this.expandedItems = this.expandedItems.filter(p => p.id !== person.id);
+                  this.expandedItems = this.expandedItems.filter((p) => p.id !== person.id);
                 }
-              }}
-              .expanded=${!!model.expanded}
+              }}"
+              .expanded="${!!model.expanded}"
             ></vaadin-grid-tree-toggle>
 
             <img
-              .src=${person.pictureUrl}
+              .src="${person.pictureUrl}"
               style="height: var(--lumo-size-m); width: var(--lumo-size-m); align-self: center;"
             />
 
@@ -109,16 +109,16 @@ export class Example extends LitElement {
   }
   render() {
     return html`
-      <vaadin-grid .dataProvider=${this.dataProvider} .expandedItems=${this.expandedItems}>
+      <vaadin-grid .dataProvider="${this.dataProvider}" .expandedItems="${this.expandedItems}">
         <vaadin-grid-column
           auto-width
           header="Employee"
-          .renderer=${this.employeeRenderer}
+          .renderer="${this.employeeRenderer}"
         ></vaadin-grid-column>
         <vaadin-grid-column
           auto-width
           header="Contact"
-          .renderer=${this.contactRenderer}
+          .renderer="${this.contactRenderer}"
         ></vaadin-grid-column>
       </vaadin-grid>
     `;

@@ -1,7 +1,7 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
 import { LoginI18n } from '@vaadin/vaadin-login/vaadin-login-overlay';
 
@@ -16,28 +16,28 @@ export class Example extends LitElement {
   private i18n: LoginI18n = {
     header: {
       title: 'Sovelluksen nimi',
-      description: 'Sovelluksen kuvaus'
+      description: 'Sovelluksen kuvaus',
     },
     form: {
       title: 'Kirjaudu sisään',
       username: 'Käyttäjänimi',
       password: 'Salasana',
       submit: 'Kirjaudu sisään',
-      forgotPassword: 'Unohtuiko salasana?'
+      forgotPassword: 'Unohtuiko salasana?',
     },
     errorMessage: {
       title: 'Väärä käyttäjätunnus tai salasana',
-      message: 'Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.'
+      message: 'Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.',
     },
-    additionalInformation: 'Jos tarvitset lisätietoja käyttäjälle.'
+    additionalInformation: 'Jos tarvitset lisätietoja käyttäjälle.',
   };
 
   render() {
     return html`
       <login-overlay-mockup
-        .i18n=${this.i18n}
-        .headerTitle=${this.i18n.header?.title}
-        .description=${this.i18n.header?.description}
+        .i18n="${this.i18n}"
+        .headerTitle="${this.i18n.header?.title}"
+        .description="${this.i18n.header?.description}"
       ></login-overlay-mockup>
     `;
   }

@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';
@@ -9,9 +9,9 @@ import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
-import { applyTheme } from 'generated/theme';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { getPeople } from '../../domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 
 @customElement('dialog-resizable')
 export class Example extends LitElement {
@@ -39,8 +39,8 @@ export class Example extends LitElement {
         aria-label="simple"
         resizable
         draggable
-        .opened=${this.dialogOpened}
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
+        .opened="${this.dialogOpened}"
+        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
@@ -51,7 +51,7 @@ export class Example extends LitElement {
                 <h2 style="margin: var(--lumo-space-m) 0 0 0; font-size: 1.5em; font-weight: bold;">
                   Employees
                 </h2>
-                <vaadin-grid .items=${this.people}>
+                <vaadin-grid .items="${this.people}">
                   <vaadin-grid-column path="firstName" title="First name"></vaadin-grid-column>
                   <vaadin-grid-column path="lastName" title="Last name"></vaadin-grid-column>
                   <vaadin-grid-column path="email" title="Email"></vaadin-grid-column>
@@ -65,7 +65,7 @@ export class Example extends LitElement {
         })}"
       ></vaadin-dialog>
       <!-- end::snippet[]  -->
-      <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
+      <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }
 }

@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-text-field/vaadin-integer-field';
@@ -10,10 +10,10 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
   {
     minWidth: 0,
     columns: 1,
-    labelsPosition: 'aside'
-  }
+    labelsPosition: 'aside',
+  },
 ];
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('number-field-stepper-controls')
 export class Example extends LitElement {
@@ -25,7 +25,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-form-layout .responsiveSteps=${layoutSteps}>
+      <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <vaadin-form-item>
           <label slot="label">Adults</label>
           <!-- tag::snippet[] -->

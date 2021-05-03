@@ -10,11 +10,11 @@ When developing server-side views, endpoint access control is done by using regu
 
 This article describes all the pieces needed for securing client centric applications.
 
-== How to secure server-side endpoints
+== How to Secure Server-Side Endpoints
 
 The first step is to configure authorization of each endpoint that the application exposes.
 
-=== Default security options
+=== Default Security Options
 
 Consider the basic Vaadin endpoint defined in the following class:
 
@@ -22,6 +22,7 @@ Consider the basic Vaadin endpoint defined in the following class:
 [source,java]
 ----
 @Endpoint
+@PermitAll
 public class CounterEndpoint {
     public int addOne(int number) {
         return number + 1;
@@ -36,17 +37,18 @@ The `HttpServletRequest#getUserPrincipal()` Java API is used for the check.
 At this point, the servlet container or the application needs to be configured appropriately to handle user authentication.
 This is described in the <<spring-login#,Adding a Login Form with Spring Security>> and <<{articles}/flow/advanced/servlet-container-authentication#,Configuring Servlet-Container Authentication>> articles.
 
-== Other security options
+== Other Security Options
 
+By default, all anonymous and authenticated requests are denied.
 In order to change the default behavior, a security Java annotation should either be placed on the endpoint class or on the endpoint method.
-There are the following annotations:
+The following annotations are available:
 
 * `@PermitAll`
-Same as no annotations, allows any authenticated user to call a method via the request.
+Allows any authenticated user to call a method via the request.
 * `@RolesAllowed`
 Grants access to users having the roles specified in the annotation value. Roles are covered in the <<permissions,next section>>.
 * `@DenyAll`
-Disallows to call the method via the request by anyone.
+Disallows to call the method via the request by anyone. The default.
 * `@AnonymousAllowed`
 Permits anyone to call the method via the request without the authorization.
 
@@ -57,7 +59,7 @@ If there are multiple annotations specified on some entity, the following rules 
 
 - `DenyAll` overrides other annotations
 - `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`
--  `RolesAllowed` overrides `PermitAll`
+- `RolesAllowed` overrides `PermitAll`
 
 Example:
 
@@ -65,11 +67,15 @@ Example:
 [source,java]
 ----
 @Endpoint
-@DenyAll
+@PermitAll
 public class MyEndpoint {
 
+  @DenyAll
   public void deniedMethod() {
-    // Not possible to call by any request due to class-level annotation
+    // Not possible to call by any request. Since there
+    // is a `@PermitAll` annotation on the
+    // class, we specify this one on a method to override
+    // the class one.
   }
 
   @AnonymousAllowed
@@ -79,25 +85,20 @@ public class MyEndpoint {
     // overrides class-level one
   }
 
-  @PermitAll
   public void permittedToAllMethod() {
-    // Permitted to all authenticated users, same as if
-    // there were no security annotations on the class
-    // and the methods.
-    // Since there's a `@DenyAll` annotation is on the
-    // class, we specify this one on a method to override
-    // the class one.
+    // Permitted to all authenticated users as per the
+    // class annotation.
   }
 
   @RolesAllowed("ROLE_ADMIN")
   public void permittedToRoleMethod() {
-    // Permited to all authenticated users belonging
-    // to the ROLE_ADMIN
+    // Permitted to all authenticated users having the
+    // role ROLE_ADMIN.
   }
 }
 ----
 
-== Defining user permissions[[permissions]]
+== Defining User Permissions[[permissions]]
 
 As mentioned in the previous section, every user can have roles and may affect his ability to access some endpoint methods.
 This section explains how to specify those for each user.
@@ -106,7 +107,7 @@ Vaadin endpoints checks the existence of roles by using the `HttpServletRequest#
 
 Once the servlet container has been configured to handle user authentication, when the server receives a request for the secured endpoint, user and its roles are checked, and if everything is alright, the method is executed.
 
-== Accessing user information in an endpoint method
+== Accessing User Information in an Endpoint Method
 
 When access to the `UserPrincipal` is required in an endpoint, call the `VaadinRequest.getCurrent()` method to access the `HttpServletRequest` API.
 
@@ -124,18 +125,18 @@ public class EchoEndpoint {
 .frontend/index.ts
 [source,typescript]
 ----
-import * as endpoint from './generated/EchoEndpoint';
+import { EchoEndpoint } from 'Frontend/generated/EchoEndpoint';
 
-endpoint
+EchoEndpoint
     .saySomething("It's snowing in Turku")
     .then(response => console.log(response));
 ----
 
-== Checking authentication in client side
+== Checking Authentication in Client Side
 
 Please read the <<authentication#, Checking Authentication>> article if in the client side it is
 needed to know whether a user is authenticated.
 
-== CSRF protection of Vaadin endpoints
+== CSRF Protection of Vaadin Endpoints
 
 Vaadin endpoints are protected from CSRF attacks using the same approach with the rest of Vaadin. See the <<{articles}/flow/security/vulnerabilities#cross-site-request-forgery-csrf-xsrf, Cross-Site Request Forgery>> section in the security guide for more details.

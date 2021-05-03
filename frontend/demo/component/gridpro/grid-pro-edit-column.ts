@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
 
@@ -6,9 +6,9 @@ import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import '@vaadin/vaadin-grid/vaadin-grid-column';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'generated/theme';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 import { GridItemModel } from '@vaadin/vaadin-grid';
 import { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid-column';
 
@@ -31,15 +31,15 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid-pro .items=${this.items} enter-next-row>
+      <vaadin-grid-pro .items="${this.items}" enter-next-row>
         <vaadin-grid-column
           header="Name (read-only)"
-          .renderer=${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
             if (model?.item) {
               const { firstName, lastName } = model.item as Person;
               root.textContent = `${firstName} ${lastName}`;
             }
-          }}
+          }}"
         ></vaadin-grid-column>
         <vaadin-grid-pro-edit-column
           header="Profession (editable)"

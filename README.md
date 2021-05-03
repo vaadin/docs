@@ -5,9 +5,6 @@ Official documentation and code examples for Vaadin.
 > **CONTENT ONLY**  
 > This repository does not generate the vaadin.com/docs website. It only contains the content for it.
 
-> **BETA**  
-> This repository is work-in-progress, and will eventually replace the existing separate documentation repositories for the different parts Vaadin.
-
 ## Branches
 
 All official documentation version branches (listed below) can and should contain documentation for pre-release features once they are available in a Vaadin pre-release. Remember to indicate new features with a “since version” indicator in Asciidoc, for example, `[role="since:com.vaadin:vaadin@V18"]`.

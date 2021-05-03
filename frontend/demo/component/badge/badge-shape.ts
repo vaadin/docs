@@ -1,8 +1,6 @@
-import '../../init'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-full-source-line
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-shape')
 export class Example extends LitElement {
@@ -15,7 +13,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <span theme="badge pill contrast">Badge</span>
+      <span theme="badge pill">Pending</span>
+      <span theme="badge success pill">Confirmed</span>
+      <span theme="badge error pill">Denied</span>
+      <span theme="badge contrast pill">On hold</span>
       <!-- end::snippet[] -->
     `;
   }

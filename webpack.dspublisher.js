@@ -39,18 +39,28 @@ const themeOptions = {
 
 // this matches css files in the theme
 const themeCssRegex = /(\\|\/).*frontend(\\|\/)themes\1[\s\S]*?\.css/;
-
 const embeddedWcRegex = /(\\|\/).*target(\\|\/)frontend(\\|\/)[\s\S]*-wc.js/;
 
 const projectThemePath = path.resolve(__dirname, 'frontend/themes');
 const reusableThemesPath = path.resolve(__dirname, 'target/flow-frontend/themes');
-const hasReusableThemes = fs.existsSync(reusableThemesPath);
 
-const themesPath = hasReusableThemes ? reusableThemesPath : projectThemePath;
-const applyThemePath = path.resolve(
-  hasReusableThemes ? frontendGeneratedFolder : projectThemePath,
-  'theme.js'
+// List of all the directories under projectThemePath (frontend/themes)
+const projectThemeNames = fs.readdirSync(projectThemePath);
+
+// Content of the DemoExporter.java file (has the @Theme annotation)
+const demoExporterContent = fs.readFileSync(
+  path.resolve(__dirname, 'src/main/java/com/vaadin/demo/DemoExporter.java'),
+  'utf-8'
 );
+
+// Check if one of the project themes (default = "docs") is in use
+const themeLine = demoExporterContent.split('\n').find((line) => line.includes('@Theme'));
+const usesProjectTheme = projectThemeNames.some((themeName) =>
+  themeLine.includes(`"${themeName}"`)
+);
+
+const themesPath = usesProjectTheme ? projectThemePath : reusableThemesPath;
+const applyThemePath = path.resolve(frontendGeneratedFolder, 'theme.js');
 
 module.exports = function (config) {
   const allFlowImportsPath = path.resolve(__dirname, 'target/frontend/generated-flow-imports.js');
@@ -60,8 +70,7 @@ module.exports = function (config) {
       : // false not supported in Webpack 4, let's use a resource that would get included anyway
         applyThemePath;
 
-  config.resolve.alias['themes/theme-generated.js'] = applyThemePath;
-  config.resolve.alias['generated/theme'] = applyThemePath;
+  config.resolve.alias['Frontend/generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
   const frontendFolder = path.resolve(__dirname, 'frontend');
   config.resolve.alias['Frontend'] = frontendFolder;
@@ -90,8 +99,8 @@ module.exports = function (config) {
     watchOptions: {
       ignored: [
         path.resolve(__dirname, 'target'),
+        path.resolve(__dirname, 'node_modules'),
         path.resolve(__dirname, 'src', 'main', 'java'),
-        path.resolve(__dirname, 'frontend', 'themes', 'docs', 'docs.generated.js'),
         path.resolve(__dirname, 'frontend', 'generated')
       ]
     }

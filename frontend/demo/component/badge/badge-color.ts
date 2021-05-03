@@ -1,8 +1,8 @@
-import '../../init'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-full-source-line
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-color')
 export class Example extends LitElement {
@@ -15,7 +15,20 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <span theme="badge pill contrast">Badge</span>
+      <vaadin-vertical-layout theme="spacing">
+        <vaadin-horizontal-layout theme="spacing">
+          <span theme="badge">Pending</span>
+          <span theme="badge success">Confirmed</span>
+          <span theme="badge error">Denied</span>
+          <span theme="badge contrast">On hold</span>
+        </vaadin-horizontal-layout>
+        <vaadin-horizontal-layout theme="spacing">
+          <span theme="badge primary">Pending</span>
+          <span theme="badge success primary">Confirmed</span>
+          <span theme="badge error primary">Denied</span>
+          <span theme="badge contrast primary">On hold</span>
+        </vaadin-horizontal-layout>
+      </vaadin-vertical-layout>
       <!-- end::snippet[] -->
     `;
   }

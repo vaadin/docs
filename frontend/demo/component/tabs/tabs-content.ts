@@ -1,4 +1,4 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
@@ -24,14 +24,12 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs @selected-changed="${this.selectedChanged}">
-        <vaadin-tab>Details</vaadin-tab>
+        <vaadin-tab>Dashboard</vaadin-tab>
         <vaadin-tab>Payment</vaadin-tab>
         <vaadin-tab>Shipping</vaadin-tab>
       </vaadin-tabs>
 
-      <div class="content">
-        ${this.content}
-      </div>
+      <div class="content">${this.content}</div>
       <!-- end::snippet[] -->
     `;
   }

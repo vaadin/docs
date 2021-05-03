@@ -1,5 +1,4 @@
 import '../../init'; // hidden-full-source-line
-
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-list-box';

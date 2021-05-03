@@ -1,0 +1,194 @@
+---
+title: Navigation and code splitting
+order: 110
+layout: page
+---
+
+= Navigation, Child Views, and Code Splitting
+
+Until now, you have only had one view: the list view.
+In this chapter, you add a second, dashboard view, to the application.
+Besides this second view, you also add a parent layout that contains navigation links and a header.
+
+image::images/app-layout.png[A screenshot of the application with the header and sidebar highlighted.]
+
+This chapter covers:
+
+* Using Vaadin Router for navigating between views.
+* Defining a parent layout.
+* Updating the page title on navigation.
+* Optimizing the application performance with code splitting.
+
+== Creating a Parent App Layout
+
+Fusion comes with two parent classes for views: `View` and `Layout`.
+`Layout` uses https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM[Shadow DOM].
+This allows it to support child components through the https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot[`<slot>`] element.
+
+Note that Shadow DOM encapsulates CSS, which means that global CSS does not apply to content inside Layouts.
+Theme CSS defined in the `themes/fusioncrmtutorial/styles.css` file are available in views extending `Layout`.
+
+Create a new file, `frontend/main-layout.ts`:
+
+.`main-layout.ts`
+[source,typescript]
+----
+import { customElement, html } from 'lit-element';
+import { Layout } from './views/view';
+import '@vaadin/vaadin-app-layout';
+import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
+
+import { views } from './routes';
+
+@customElement('main-layout')
+export class MainLayout extends Layout {
+ connectedCallback() {
+   super.connectedCallback();
+   this.classList.add('flex', 'h-full', 'w-full');
+ }
+}
+----
+
+`MainLayout` extends `Layout` and adds CSS classes for full width and height.
+
+Define the template in the `render()` method:
+
+.`main-layout.ts`
+[source,typescript]
+----
+render() {
+ return html`
+   <vaadin-app-layout class="h-full w-full">
+     <header slot="navbar" class="w-full flex items-center px-m">
+       <vaadin-drawer-toggle></vaadin-drawer-toggle>
+       <h1 class="text-l m-m">Vaadin CRM</h1>
+     </header>
+
+     <div slot="drawer">
+       <div class="flex flex-col h-full m-l spacing-b-s">
+         ${views.map(
+           (view) => html` <a href="${view.path}"> ${view.title} </a> `
+         )}
+       </div>
+     </div>
+     <div class="h-full">
+       <slot><!-- The router puts views here --></slot>
+     </div>
+   </vaadin-app-layout>
+ `;
+}
+----
+
+The main layout uses Vaadin App Layout for the responsive layout with a hidable drawer.
+
+Pass in a `<header>` component to the app layout using `slot="navbar"`.
+The header contains a `<vaadin-drawer-toggle>` for showing and hiding the drawer.
+
+The drawer content is a div that maps over all `views` and creates links to them.
+
+Lastly, the main layout contains a `<slot></slot>` where child views are inserted.
+
+== Creating the Dashboard View
+
+Next, create a stub Dashboard view.
+You implement the view in the next chapter, but you need something you can navigate to already.
+
+Create a new view `frontend/views/dashboard/dashboard-view.ts` with the following content:
+
+.`dashboard-view.ts`
+[source,typescript]
+----
+import { customElement, html } from "lit-element";
+import { View } from "../view";
+
+@customElement("dashboard-view")
+export class DashboardView extends View {
+ connectedCallback() {
+   super.connectedCallback();
+   this.classList.add('flex', 'flex-col', 'items-center', 'pt-xl');
+ }
+
+ render() {
+   return html`
+     <h1>Dashboard view</h1>
+   `;
+ }
+}
+----
+
+For now, the view only contains a `<h1>` that is centered.
+
+== Updating Route Definitions
+
+With the main layout and dashboard view created, the next step is to update the route definition file to map them to URL paths.
+
+Update `routes.ts` with the following content:
+
+.`routes.ts`
+[source,typescript,highlight=3;13-20;23-28]
+----
+import { Route } from '@vaadin/router';
+import './views/list/list-view';
+import './main-layout.ts';
+
+export type ViewRoute = Route & { title?: string; children?: ViewRoute[] };
+
+export const views: ViewRoute[] = [
+ {
+   path: '',
+   component: 'list-view',
+   title: 'Contacts',
+ },
+ {
+   path: 'dashboard',
+   component: 'dashboard-view',
+   title: 'Dashboard',
+   action: async () => {
+     await import('./views/dashboard/dashboard-view');
+   },
+ },
+];
+
+export const routes: ViewRoute[] = [
+ {
+   path: '',
+   component: 'main-layout',
+   children: views,
+ },
+];
+----
+
+The dashboard view is added to the `views` array alongside the list view.
+The `routes` array is updated to use the main layout and pass the views array as its children.
+
+=== Code Splitting With Dynamic Imports
+
+You can import views in two ways: statically like `list-view` and `main-layout`, or dynamically with `import()` like `dashboard-view`.
+
+Dynamic imports help the build tool to split code into smaller chunks that get loaded when you navigate to that view.
+Using code splitting minimizes the amount of JavaScript the application needs to download when you start it, making it faster.
+Code splitting helps to keep an application performant, even if it contains a lot of views.
+
+A good rule of thumb when determining whether to use dynamic or static imports, is to use static imports for anything that's always needed for the initial render, and dynamic imports for other views.
+
+In this case, if you were to load `main-layout` and `list-view` dynamically, the browser would need to do 3 round trips to the server: first, to fetch the index page, second, the main layout, and third, the list-view, just to show the root path.
+
+== Updating the Page Title on Navigation
+
+The final navigation-related change is to update the page title on navigation.
+In `index.ts`, add `ViewRoute` to the routes import, then add a route-change listener:
+
+.`index.ts`
+[source,typescript]
+----
+window.addEventListener("vaadin-router-location-changed", (e) => {
+ const activeRoute = router.location.route as ViewRoute;
+ document.title = activeRoute.title ?? "Vaadin CRM";
+});
+----
+
+The listener checks if the active route has a `title` property, and uses it to update the document title.
+
+In your browser, verify that you now have a parent app layout and that you can navigate between views.
+
+image::images/app-layout-visible.png[The list view is now shown inside a parent layout with a header and navigation]

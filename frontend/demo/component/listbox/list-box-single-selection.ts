@@ -1,5 +1,4 @@
 import '../../init'; // hidden-full-source-line
-
 import { html, LitElement, customElement } from 'lit-element';
 import '@polymer/iron-icon';
 import '@vaadin/vaadin-icons/vaadin-icons';

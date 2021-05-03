@@ -1,9 +1,9 @@
-import '../../init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import '@vaadin/vaadin-notification/vaadin-notification';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import { guard } from 'lit-html/directives/guard';
 
 @customElement('message-input-component')
@@ -27,7 +27,6 @@ export class Example extends LitElement {
       <!-- end::snippet[] -->
       <vaadin-notification
         id="notification"
-        theme="primary"
         position="middle"
         .opened="${this.notificationOpened}"
         @opened-changed="${(e: CustomEvent) => (this.notificationOpened = e.detail.value)}"
