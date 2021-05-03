@@ -34,13 +34,13 @@ export class Example extends LitElement {
       <vaadin-vertical-layout theme="spacing">
         <!-- tag::snippet[] -->
         <vaadin-checkbox
-          .checked=${this.selectedIds.length === this.items.length}
-          .indeterminate=${this.selectedIds.length > 0 &&
-          this.selectedIds.length < this.items.length}
-          @change=${(e: Event) =>
+          .checked="${this.selectedIds.length === this.items.length}"
+          .indeterminate="${this.selectedIds.length > 0 &&
+          this.selectedIds.length < this.items.length}"
+          @change="${(e: Event) =>
             (this.selectedIds = (e.target as CheckboxElement).checked
               ? this.items.map((person) => String(person.id))
-              : [])}
+              : [])}"
         >
           Notify users
         </vaadin-checkbox>
@@ -48,12 +48,12 @@ export class Example extends LitElement {
         <vaadin-checkbox-group
           label="Users to notify"
           theme="vertical"
-          .value=${this.selectedIds}
-          @value-changed=${(e: CustomEvent) => (this.selectedIds = e.detail.value)}
+          .value="${this.selectedIds}"
+          @value-changed="${(e: CustomEvent) => (this.selectedIds = e.detail.value)}"
         >
           ${this.items.map((person) => {
             return html`
-              <vaadin-checkbox .value=${String(person.id)}>
+              <vaadin-checkbox .value="${String(person.id)}">
                 ${person.firstName} ${person.lastName}
               </vaadin-checkbox>
             `;

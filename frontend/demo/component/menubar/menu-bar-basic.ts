@@ -39,7 +39,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-menu-bar .items=${this.items} @item-selected=${this.itemSelected}> </vaadin-menu-bar>
+      <vaadin-menu-bar .items="${this.items}" @item-selected="${this.itemSelected}">
+      </vaadin-menu-bar>
 
       <div>Selected: ${this.selectedItem?.text}</div>
     `;

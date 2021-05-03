@@ -45,8 +45,8 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-context-menu .items=${this.items}>
-        <vaadin-grid .items=${this.gridItems} @vaadin-contextmenu=${this.onContextMenu}>
+      <vaadin-context-menu .items="${this.items}">
+        <vaadin-grid .items="${this.gridItems}" @vaadin-contextmenu="${this.onContextMenu}">
           <vaadin-grid-column path="filename"></vaadin-grid-column>
           <vaadin-grid-column path="size"></vaadin-grid-column>
         </vaadin-grid>

@@ -33,7 +33,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .dataProvider=${this.dataProvider}>
+      <vaadin-grid .dataProvider="${this.dataProvider}">
         <vaadin-grid-tree-column
           path="firstName"
           item-has-children-path="manager"

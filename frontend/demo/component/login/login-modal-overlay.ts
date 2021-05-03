@@ -18,12 +18,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button @click=${() => (this.loginOpened = true)} theme="primary">
+      <vaadin-button @click="${() => (this.loginOpened = true)}" theme="primary">
         Log in
       </vaadin-button>
       <vaadin-login-overlay
-        .opened=${this.loginOpened}
-        @login=${() => (this.loginOpened = false)}
+        .opened="${this.loginOpened}"
+        @login="${() => (this.loginOpened = false)}"
       ></vaadin-login-overlay>
       <!-- end::snippet[] -->
     `;

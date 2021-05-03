@@ -31,10 +31,10 @@ export class Example extends LitElement {
     return html`
       <vaadin-text-area
         label="Description"
-        .maxlength=${this.charLimit}
-        .value=${this.text}
+        .maxlength="${this.charLimit}"
+        .value="${this.text}"
         @value-changed="${(e: CustomEvent) => (this.text = e.detail.value)}"
-        .helperText=${`${this.text.length}/${this.charLimit}`}
+        .helperText="${`${this.text.length}/${this.charLimit}`}"
       >
       </vaadin-text-area>
     `;
