@@ -5,7 +5,7 @@ import '@vaadin/vaadin-messages/vaadin-message-list';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { MessageListItem } from '@vaadin/vaadin-messages/src/interfaces';
+import { MessageListItem } from '@vaadin/vaadin-messages';
 import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-full-source-line
 
 @customElement('message-basic')
@@ -43,7 +43,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-message-list .items=${this.items}></vaadin-message-list>
+      <vaadin-message-list .items="${this.items}"></vaadin-message-list>
       <vaadin-message-input @submit="${this._handleSubmit}"></vaadin-message-input>
       <!-- end::snippet[] -->
     `;

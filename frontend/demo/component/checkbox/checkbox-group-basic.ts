@@ -21,8 +21,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-checkbox-group
         label="Export data"
-        .value=${this.value}
-        @value-changed=${(e: CustomEvent) => (this.value = e.detail.value)}
+        .value="${this.value}"
+        @value-changed="${(e: CustomEvent) => (this.value = e.detail.value)}"
         theme="vertical"
       >
         <vaadin-checkbox value="0">Order ID</vaadin-checkbox>

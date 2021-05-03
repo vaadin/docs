@@ -22,7 +22,7 @@ export class Example extends LitElement {
         value="08:30"
         min="08:00"
         max="16:00"
-        .step=${60 * 30}
+        .step="${60 * 30}"
       ></vaadin-time-picker>
       <!-- end::snippet[] -->
     `;

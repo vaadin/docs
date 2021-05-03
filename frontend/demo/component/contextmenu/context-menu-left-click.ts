@@ -48,11 +48,11 @@ export class Example extends LitElement {
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu
         open-on="click"
-        .items=${this.items}
-        @opened-changed=${(e: ContextMenuOpenedChanged) =>
-          (this.contextMenuOpened = e.detail.value)}
+        .items="${this.items}"
+        @opened-changed="${(e: ContextMenuOpenedChanged) =>
+          (this.contextMenuOpened = e.detail.value)}"
       >
-        <vaadin-grid .items=${this.gridItems} @click=${this.onClick}>
+        <vaadin-grid .items="${this.gridItems}" @click="${this.onClick}">
           <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
           <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
           <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>

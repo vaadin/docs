@@ -23,6 +23,6 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`<vaadin-upload .files=${createFakeFiles()}></vaadin-upload>`;
+    return html`<vaadin-upload .files="${createFakeFiles()}"></vaadin-upload>`;
   }
 }

@@ -117,16 +117,16 @@ export class Example extends LitElement {
   }
   render() {
     return html`
-      <vaadin-grid .dataProvider=${this.dataProvider} .expandedItems=${this.expandedItems}>
+      <vaadin-grid .dataProvider="${this.dataProvider}" .expandedItems="${this.expandedItems}">
         <vaadin-grid-column
           auto-width
           header="Employee"
-          .renderer=${this.employeeRenderer}
+          .renderer="${this.employeeRenderer}"
         ></vaadin-grid-column>
         <vaadin-grid-column
           auto-width
           header="Contact"
-          .renderer=${this.contactRenderer}
+          .renderer="${this.contactRenderer}"
         ></vaadin-grid-column>
       </vaadin-grid>
     `;

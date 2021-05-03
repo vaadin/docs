@@ -25,7 +25,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-form-layout .responsiveSteps=${this.responsiveSteps}>
+      <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
         <vaadin-text-field label="Title" colspan="3"></vaadin-text-field>
         <vaadin-date-picker label="Date"></vaadin-date-picker>
         <vaadin-time-picker label="From"></vaadin-time-picker>
