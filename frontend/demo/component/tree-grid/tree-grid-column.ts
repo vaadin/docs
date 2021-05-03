@@ -57,9 +57,9 @@ export class Example extends LitElement {
       </vaadin-horizontal-layout>
 
       <vaadin-grid
-        .dataProvider=${this.dataProvider}
-        .itemIdPath=${'id'}
-        .expandedItems=${this.expandedItems}
+        .dataProvider="${this.dataProvider}"
+        .itemIdPath="${'id'}"
+        .expandedItems="${this.expandedItems}"
       >
         <vaadin-grid-tree-column
           path="firstName"

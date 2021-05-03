@@ -55,8 +55,8 @@ export class Example extends LitElement {
       render(
         html`
           <vaadin-grid-tree-toggle
-            .leaf=${!person.manager}
-            .level=${model.level || 0}
+            .leaf="${!person.manager}"
+            .level="${model.level || 0}"
             @expanded-changed=${(e: GridTreeToggleExpandedChanged) => {
               if (e.detail.value) {
                 this.expandedItems = [...this.expandedItems, person];
@@ -68,8 +68,8 @@ export class Example extends LitElement {
           >
             <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
               <vaadin-avatar
-                img=${person.pictureUrl}
-                name=${`${person.firstName} ${person.lastName}`}
+                img="${person.pictureUrl}"
+                name="${`${person.firstName} ${person.lastName}`}"
               ></vaadin-avatar>
               <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
                 <span>${person.firstName} ${person.lastName}</span>
