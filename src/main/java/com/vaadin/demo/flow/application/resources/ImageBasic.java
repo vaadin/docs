@@ -1,6 +1,6 @@
 package com.vaadin.demo.flow.application.resources;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.router.Route;
@@ -16,6 +16,6 @@ public class ImageBasic extends Div {
         // end::snippet[]
     }
 
-    public static class ImageBasicExporter extends DemoExporter<ImageBasic> { // hidden-full-source-line
-    } // hidden-full-source-line    
+    public static class ImageBasicExporter extends DemoExporter<ImageBasic> { // hidden-source-line
+    } // hidden-source-line    
 }

@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import {

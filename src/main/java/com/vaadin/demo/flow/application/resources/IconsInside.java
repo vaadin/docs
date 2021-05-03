@@ -1,6 +1,6 @@
 package com.vaadin.demo.flow.application.resources;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.html.Div;
@@ -28,6 +28,6 @@ public class IconsInside extends Div {
         // end::snippet[]
     }
 
-    public static class IconsInsideExporter extends DemoExporter<IconsInside> { // hidden-full-source-line
-    } // hidden-full-source-line    
+    public static class IconsInsideExporter extends DemoExporter<IconsInside> { // hidden-source-line
+    } // hidden-source-line    
 }

@@ -54,6 +54,6 @@ public class ScrollerMobile extends Section {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<ScrollerMobile> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ScrollerMobile> { // hidden-source-line
+  } // hidden-source-line
 }

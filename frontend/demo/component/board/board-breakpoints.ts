@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import '@vaadin/vaadin-board/vaadin-board';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
