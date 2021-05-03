@@ -24,7 +24,7 @@ export class Example extends LitElement {
         style="align-items: center; justify-content: center;"
         theme="spacing"
       >
-        <vaadin-button @click=${() => (this.dialogOpened = true)}>
+        <vaadin-button @click="${() => (this.dialogOpened = true)}">
           Open confirm dialog
         </vaadin-button>
 
@@ -32,14 +32,14 @@ export class Example extends LitElement {
         <vaadin-confirm-dialog
           header="Unsaved changes"
           cancel
-          @cancel=${() => (this.status = 'Canceled')}
+          @cancel="${() => (this.status = 'Canceled')}"
           reject
           reject-text="Discard"
-          @reject=${() => (this.status = 'Discarded')}
+          @reject="${() => (this.status = 'Discarded')}"
           confirm-text="Save"
-          @confirm=${() => (this.status = 'Saved')}
-          .opened=${this.dialogOpened}
-          @opened-changed=${this.openedChanged}
+          @confirm="${() => (this.status = 'Saved')}"
+          .opened="${this.dialogOpened}"
+          @opened-changed="${this.openedChanged}"
         >
           There are unsaved changes. Do you want to discard or save them?
         </vaadin-confirm-dialog>

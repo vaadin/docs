@@ -37,7 +37,7 @@ export class Example extends LitElement {
         helper-text="Open 8:00-12:00, 13:00-16:00"
         min="08:00"
         max="16:00"
-        .step=${60 * 30}
+        .step="${60 * 30}"
         ...="${field(this.binder.model.startTime)}"
       ></vaadin-time-picker>
     `;

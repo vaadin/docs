@@ -23,7 +23,7 @@ export class Example extends LitElement {
       <vaadin-select
         value="recent"
         label="Sort by"
-        .renderer=${guard([], () => (root: HTMLElement) =>
+        .renderer="${guard([], () => (root: HTMLElement) =>
           render(
             html`
               <vaadin-list-box>
@@ -38,7 +38,7 @@ export class Example extends LitElement {
             `,
             root
           )
-        )}
+        )}"
       ></vaadin-select>
       <!-- end::snippet[] -->
     `;
