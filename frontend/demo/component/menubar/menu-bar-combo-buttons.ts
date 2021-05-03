@@ -29,7 +29,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-menu-bar theme="primary" .items="${this.items}"></vaadin-menu-bar>
+      <vaadin-menu-bar theme="icon primary" .items="${this.items}"></vaadin-menu-bar>
       <!-- end::snippethtml[] -->
     `;
   }
