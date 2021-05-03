@@ -20,7 +20,7 @@ export class Example extends LitElement {
   private htmlValue = '';
 
   @query('vaadin-rich-text-editor')
-  private richTextEditor?: RichTextEditorElement;
+  private richTextEditor!: RichTextEditorElement;
 
   render() {
     return html`
@@ -43,13 +43,11 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   setHtmlValue(htmlValue: string) {
-    this.richTextEditor?.dangerouslySetHtmlValue(htmlValue);
+    this.richTextEditor.dangerouslySetHtmlValue(htmlValue);
   }
 
   syncHtmlValue() {
-    if (this.richTextEditor) {
-      this.htmlValue = this.richTextEditor.htmlValue || '';
-    }
+    this.htmlValue = this.richTextEditor.htmlValue || '';
   }
   // end::snippet[]
 }
