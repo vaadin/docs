@@ -7,7 +7,7 @@ import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('menu-bar-basic')
+@customElement('menu-bar-combo-buttons')
 export class Example extends LitElement {
   constructor() {
     super();

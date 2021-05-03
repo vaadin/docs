@@ -7,7 +7,7 @@ import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('menu-bar-basic')
+@customElement('menu-bar-overflow')
 export class Example extends LitElement {
   constructor() {
     super();

@@ -7,7 +7,7 @@ import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 import { MenuBarItemSelectedEvent } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 
-@customElement('menu-bar-basic')
+@customElement('menu-bar-checkable')
 export class Example extends LitElement {
   constructor() {
     super();

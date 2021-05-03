@@ -6,7 +6,7 @@ import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('menu-bar-basic')
+@customElement('menu-bar-disabled')
 export class Example extends LitElement {
   constructor() {
     super();
