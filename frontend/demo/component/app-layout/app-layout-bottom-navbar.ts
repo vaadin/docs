@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, customElement, css } from 'lit-element';
 import '@vaadin/vaadin-app-layout/vaadin-app-layout';
 import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
@@ -36,10 +36,10 @@ export class Example extends LitElement {
         width: 100%;
       }
 
-      /* hidden-full-source-line: the bottom navbar is forced on in the example */
-      vaadin-app-layout[overlay] /* hidden-full-source-line */ {
-        --vaadin-app-layout-touch-optimized: true; /* hidden-full-source-line */
-      } /* hidden-full-source-line */
+      /* hidden-source-line: the bottom navbar is forced on in the example */
+      vaadin-app-layout[overlay] /* hidden-source-line */ {
+        --vaadin-app-layout-touch-optimized: true; /* hidden-source-line */
+      } /* hidden-source-line */
     `;
   }
 

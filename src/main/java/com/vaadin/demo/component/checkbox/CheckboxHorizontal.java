@@ -4,7 +4,7 @@ import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("checkbox-horizontal")
 public class CheckboxHorizontal extends Div {
@@ -18,6 +18,6 @@ public class CheckboxHorizontal extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<CheckboxHorizontal> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxHorizontal> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -8,7 +8,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("confirm-dialog-confirm-button")
 public class ConfirmDialogConfirmButton extends Div {
@@ -48,5 +48,5 @@ public class ConfirmDialogConfirmButton extends Div {
     status.setText("Status: " + value);
     status.setVisible(true);
   }
-  public static class Exporter extends DemoExporter<ConfirmDialogConfirmButton> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ConfirmDialogConfirmButton> {} // hidden-source-line
 }
