@@ -18,7 +18,7 @@ import com.vaadin.demo.domain.Card;
 import com.vaadin.demo.domain.Country;
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("accordion-summary")
 public class AccordionSummary extends Div {
@@ -239,6 +239,6 @@ public class AccordionSummary extends Div {
         return layout;
     }
 
-    public static class Exporter extends DemoExporter<AccordionSummary> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<AccordionSummary> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -2,9 +2,9 @@ package com.vaadin.demo.domain;
 
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
 
-@JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
+@JsonIgnoreProperties(ignoreUnknown = true) // hidden-source-line
 // tag::snippet[]
 public class Person {
 
@@ -46,6 +46,10 @@ public class Person {
 
   public void setLastName(String lastName) {
     this.lastName = lastName;
+  }
+
+  public String getFullName() {
+    return firstName + " " + lastName;
   }
 
   public String getEmail() {

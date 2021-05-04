@@ -3,7 +3,7 @@ package com.vaadin.demo.component.passwordfield;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("password-field-basic")
 public class PasswordFieldBasic extends Div {
@@ -17,6 +17,6 @@ public class PasswordFieldBasic extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<PasswordFieldBasic> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<PasswordFieldBasic> { // hidden-source-line
+  } // hidden-source-line
 }

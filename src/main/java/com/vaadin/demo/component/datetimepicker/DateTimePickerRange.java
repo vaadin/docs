@@ -6,7 +6,7 @@ import com.vaadin.flow.router.Route;
 
 import java.time.LocalDateTime;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("date-time-picker-range")
 public class DateTimePickerRange extends Div {
@@ -27,6 +27,6 @@ public class DateTimePickerRange extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerRange> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<DateTimePickerRange> { // hidden-source-line
+    } // hidden-source-line
 }
