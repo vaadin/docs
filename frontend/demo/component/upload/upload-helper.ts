@@ -1,5 +1,5 @@
-import '../../init'; // hidden-full-source-line
-import './upload-demo-helpers'; // hidden-full-source-line
+import '../../init'; // hidden-source-line
+import './upload-demo-helpers'; // hidden-source-line
 import { css, customElement, html, LitElement, query } from 'lit-element';
 import { showErrorNotification } from 'Frontend/demo/notification-helper';
 import '@vaadin/vaadin-upload/vaadin-upload';

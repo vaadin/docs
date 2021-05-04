@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.avatar;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
@@ -18,5 +18,5 @@ public class AvatarAbbreviation extends Div {
 
     add(avatarName, avatarAbbr);
   }
-  public static class Exporter extends DemoExporter<AvatarAbbreviation> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<AvatarAbbreviation> {} // hidden-source-line
 }

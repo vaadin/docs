@@ -54,6 +54,6 @@ public class MessagesBasic extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<MessagesBasic> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<MessagesBasic> { // hidden-source-line
+    } // hidden-source-line
 }

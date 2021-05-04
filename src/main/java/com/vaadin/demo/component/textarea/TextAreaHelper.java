@@ -4,7 +4,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 
 @Route("text-area-helper")
@@ -28,6 +28,6 @@ public class TextAreaHelper extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<TextAreaHelper> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<TextAreaHelper> { // hidden-source-line
+  } // hidden-source-line
 }

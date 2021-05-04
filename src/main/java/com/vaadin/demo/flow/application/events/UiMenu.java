@@ -1,6 +1,6 @@
 package com.vaadin.demo.flow.application.events;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.tabs.Tab;
@@ -29,6 +29,6 @@ public class UiMenu extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<UiMenu> { // hidden-full-source-line
-    } // hidden-full-source-line    
+    public static class Exporter extends DemoExporter<UiMenu> { // hidden-source-line
+    } // hidden-source-line    
 }

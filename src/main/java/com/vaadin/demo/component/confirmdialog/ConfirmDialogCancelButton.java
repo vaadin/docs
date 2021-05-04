@@ -49,5 +49,5 @@ public class ConfirmDialogCancelButton extends Div {
     status.setText("Status: " + value);
     status.setVisible(true);
   }
-  public static class Exporter extends DemoExporter<ConfirmDialogCancelButton> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ConfirmDialogCancelButton> {} // hidden-source-line
 }
