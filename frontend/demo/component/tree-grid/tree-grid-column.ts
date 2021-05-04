@@ -50,10 +50,10 @@ export class Example extends LitElement {
         theme="spacing"
       >
         <h3 style="flex-grow: 1; margin: 0;">Employee</h3>
-        <vaadin-button @click=${() => (this.expandedItems = [...this.managers])}>
+        <vaadin-button @click="${() => (this.expandedItems = [...this.managers])}">
           Expand All
         </vaadin-button>
-        <vaadin-button @click=${() => (this.expandedItems = [])}>Collapse All</vaadin-button>
+        <vaadin-button @click="${() => (this.expandedItems = [])}">Collapse All</vaadin-button>
       </vaadin-horizontal-layout>
 
       <vaadin-grid
