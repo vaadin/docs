@@ -1,5 +1,5 @@
-import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
-import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-full-source-line
+import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-source-line
+import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-source-line
 
 import '@vaadin/vaadin-charts/vaadin-chart';
 import { html, LitElement, customElement, internalProperty, css } from 'lit-element';

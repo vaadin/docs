@@ -18,6 +18,6 @@ public class BadgeColor extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<BadgeColor> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<BadgeColor> { // hidden-source-line
+    } // hidden-source-line
 }

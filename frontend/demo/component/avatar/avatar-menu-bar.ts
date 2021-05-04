@@ -1,6 +1,6 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/contextMenuConnector'; // hidden-full-source-line
-import '@vaadin/flow-frontend/menubarConnector'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/contextMenuConnector'; // hidden-source-line
+import '@vaadin/flow-frontend/menubarConnector'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';

@@ -7,7 +7,7 @@ import com.vaadin.flow.router.Route;
 import java.time.Duration;
 import java.time.LocalTime;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("time-picker-min-max")
 public class TimePickerMinMax extends Div {
@@ -25,6 +25,6 @@ public class TimePickerMinMax extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<TimePickerMinMax> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<TimePickerMinMax> { // hidden-source-line
+    } // hidden-source-line
 }

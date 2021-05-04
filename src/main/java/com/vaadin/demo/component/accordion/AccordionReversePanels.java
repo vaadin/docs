@@ -7,7 +7,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("accordion-reverse-panels")
 public class AccordionReversePanels extends Div {
@@ -55,6 +55,6 @@ public class AccordionReversePanels extends Div {
         add(accordion);
     }
 
-    public static class Exporter extends DemoExporter<AccordionReversePanels> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<AccordionReversePanels> { // hidden-source-line
+    } // hidden-source-line
 }

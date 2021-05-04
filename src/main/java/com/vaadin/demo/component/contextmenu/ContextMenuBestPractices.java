@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.contextmenu;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
@@ -73,5 +73,5 @@ public class ContextMenuBestPractices extends Div {
       return byteCountToDisplaySize(size);
     }
   }
-  public static class Exporter extends DemoExporter<ContextMenuBestPractices> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ContextMenuBestPractices> {} // hidden-source-line
 }

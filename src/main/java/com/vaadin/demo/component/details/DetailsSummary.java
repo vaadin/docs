@@ -14,7 +14,7 @@ import com.vaadin.flow.dom.ElementConstants;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.domain.Country;
 import com.vaadin.demo.domain.DataService;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("details-summary")
 public class DetailsSummary extends Div {
@@ -69,6 +69,6 @@ public class DetailsSummary extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<DetailsSummary> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<DetailsSummary> { // hidden-source-line
+  } // hidden-source-line
 }

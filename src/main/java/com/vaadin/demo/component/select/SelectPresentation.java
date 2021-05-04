@@ -54,6 +54,6 @@ public class SelectPresentation extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectPresentation> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectPresentation> { // hidden-source-line
+  } // hidden-source-line
 }

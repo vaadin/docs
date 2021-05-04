@@ -6,7 +6,7 @@ import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.router.Route;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("details-disabled")
 public class DetailsDisabled extends Div {
@@ -32,6 +32,6 @@ public class DetailsDisabled extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<DetailsDisabled> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<DetailsDisabled> { // hidden-source-line
+  } // hidden-source-line
 }
