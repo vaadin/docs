@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement, customElement } from 'lit-element';
-import '@vaadin/vaadin-list-box';
+import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-item/vaadin-item';
-import '@vaadin/vaadin-icons/vaadin-icons';
-import '@polymer/iron-icon';
+import '@vaadin/vaadin-list-box';
 import { applyTheme } from 'Frontend/generated/theme';
+import { getPeople } from '../../domain/DataService';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('list-box-multi-selection')
 export class Example extends LitElement {
@@ -15,23 +14,21 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  @internalProperty()
+  private items: Person[] = [];
+
+  async firstUpdated() {
+    const { people } = await getPeople({ count: 20 });
+    this.items = people;
+  }
+
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box
-        multiple
-        style="height: calc(var(--lumo-size-l) * 5)"
-        .selectedValues="${[0, 3]}"
-      >
-        <vaadin-item>Aria Bailey</vaadin-item>
-        <vaadin-item>Aaliyah Butler</vaadin-item>
-        <vaadin-item>Eleanor Price</vaadin-item>
-        <vaadin-item>Allison Torres</vaadin-item>
-        <vaadin-item>Madeline Lewis</vaadin-item>
-        <vaadin-item>Lucas Edwards</vaadin-item>
-        <vaadin-item>Paul Gibbs</vaadin-item>
-        <vaadin-item>Hana Newton</vaadin-item>
-        <vaadin-item>Jane Stone</vaadin-item>
+      <vaadin-list-box multiple .selectedValues="${[0, 3]}" style="height: 200px">
+        ${this.items.map(
+          (person) => html` <vaadin-item> ${person.firstName} ${person.lastName} </vaadin-item> `
+        )}
       </vaadin-list-box>
       <!-- end::snippet[] -->
     `;
