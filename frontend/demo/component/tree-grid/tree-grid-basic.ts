@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { customElement, LitElement } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
@@ -33,7 +33,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .dataProvider=${this.dataProvider}>
+      <vaadin-grid .dataProvider="${this.dataProvider}">
         <vaadin-grid-tree-column
           path="firstName"
           item-has-children-path="manager"

@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
@@ -30,13 +30,13 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-radio-group label="Payment method" theme="vertical" .value=${this.value}>
+      <vaadin-radio-group label="Payment method" theme="vertical" .value="${this.value}">
         ${this.items.map(
           (card) => html`
-            <vaadin-radio-button .value=${String(card.id)}>
+            <vaadin-radio-button .value="${String(card.id)}">
               <div>
                 <vaadin-horizontal-layout theme="spacing">
-                  <img src=${card.pictureUrl} alt=${card.name} style="height: 1em;" />
+                  <img src="${card.pictureUrl}" alt="${card.name}" style="height: 1em;" />
                   <span>${card.accountNumber}</span>
                 </vaadin-horizontal-layout>
                 <div>Expiry date:${card.expiryDate}</div>

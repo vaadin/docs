@@ -1,5 +1,6 @@
 package com.vaadin.demo.ce;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -99,6 +100,10 @@ public class BinderDocumentation {
                         MaritalStatus.MARRIED::equals)
                 .bind("maritalStatus");
         // end::binder-converter[]
+
+        // tag::binder-expiration-timeout[]
+        binder.setExpirationTimeout(Duration.ofMinutes(15));
+        // end::binder-expiration-timeout[]
     }
 
     // tag::binder-topic[]

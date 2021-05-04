@@ -1,0 +1,99 @@
+---
+title: Role-Based Access Control for Views
+order: 100
+layout: page
+---
+
+= Role-Based Access Control for Views
+
+[role="since:com.vaadin:vaadin@V20 standalone"]
+--
+--
+
+This page describes how to restrict access for selected Fusion views based on roles defined for the logged-in user.
+
+== Starting Point
+
+To follow examples in this article you need a Fusion application with authentication enabled.
+Follow the <<spring-login#, Authentication With Spring Security>> article to get prepared.
+
+== Define Roles for Users with Spring Security
+
+Roles are, in the nutshell, a set of string attributes representing authorities that are assigned to a user.
+
+In Spring Security, the user details used for authentication also provide roles.
+Typically, roles are stored as `ROLE_` prefixed string authorities.
+After successful authentication, the `GrantedAuthority` objects returned by `Authentication.getAuthorities()` represent those.
+See the <<spring-login#, Authentication With Spring Security>> article for the configuration examples.
+
+== Using Roles in TypeScript
+
+For using roles for access control of TypeScript views, it is convenient to add a Fusion endpoint that obtains user information with roles from Java during authentication.
+
+First, define a bean representing the information about the user:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=snippet]
+----
+
+After that, add the endpoint to get `UserInfo` with authorities for the logged-in user in the client side:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfoEndpoint.java[tags=snippet]
+----
+
+Then, change the authentication implementation in TypeScript to get the user information from the endpoint.
+Change the `auth.ts` defined in the <<spring-login#client-configuration, Authentication With Spring Security>> article as follows:
+
+.`auth.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/auth.ts[tags=basic;login;userinfo;!offline]
+----
+
+Add `isUserInRole` helper, which enables role-based access control checks for the UI.
+
+.`auth.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/auth.ts[tags=isUserInRole]
+----
+
+== Routes With Access Control
+
+To enable specifying allowed roles on the view routes, define an extended type `ViewRoute` that has a `rolesAllowed` string as follows:
+
+.`routes.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=ViewRoute]
+----
+
+Add a method for checking access for the given route by iterating `rolesAllowed` using `isUserInRole`, as follows:
+
+.`routes.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=isAuthorizedViewRoute]
+----
+
+Then use the method added in the route action to redirect on unauthorized access, as follows:
+
+.`routes.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=routes]
+----
+
+== Hiding Unauthorized Menu Items
+
+Filter the route list using `isAuthorizedViewRoute` helper defined above.
+Then use the filtered list of routes as menu items:
+
+.`main-view.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/main-view.ts[tags=menuRoutes]
+----

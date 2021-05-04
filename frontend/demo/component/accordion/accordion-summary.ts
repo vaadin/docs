@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-accordion/vaadin-accordion';
@@ -48,8 +48,8 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-accordion
-        .opened=${this.openedPanelIndex}
-        @opened-changed=${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value)}
+        .opened="${this.openedPanelIndex}"
+        @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value)}"
       >
         <vaadin-accordion-panel>
           <div slot="summary">
@@ -85,7 +85,7 @@ export class Example extends LitElement {
               colspan="2"
             ></vaadin-text-field>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click=${() => (this.openedPanelIndex = 1)}>
+          <vaadin-button theme="primary" @click="${() => (this.openedPanelIndex = 1)}">
             Continue
           </vaadin-button>
         </vaadin-accordion-panel>
@@ -135,7 +135,7 @@ export class Example extends LitElement {
             >
             </vaadin-combo-box>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click=${() => (this.openedPanelIndex = 2)}>
+          <vaadin-button theme="primary" @click="${() => (this.openedPanelIndex = 2)}">
             Continue
           </vaadin-button>
         </vaadin-accordion-panel>
@@ -167,7 +167,7 @@ export class Example extends LitElement {
               ...="${field(this.cardBinder.model.cvv)}"
             ></vaadin-text-field>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click=${() => (this.openedPanelIndex = -1)}>
+          <vaadin-button theme="primary" @click="${() => (this.openedPanelIndex = -1)}">
             Finish
           </vaadin-button>
           <!-- tag::snippet[] -->

@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
@@ -21,7 +21,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-date-picker
         label="Q4 deadline"
-        .initialPosition=${formatISO(this.lastDayOfTheYear, { representation: 'date' })}
+        .initialPosition="${formatISO(this.lastDayOfTheYear, { representation: 'date' })}"
       ></vaadin-date-picker>
       <!-- end::snippet[] -->
     `;

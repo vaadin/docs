@@ -6,7 +6,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("notification-success")
 public class NotificationSuccess extends Div {
@@ -21,6 +21,6 @@ public class NotificationSuccess extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<NotificationSuccess> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<NotificationSuccess> { // hidden-source-line
+  } // hidden-source-line
 }

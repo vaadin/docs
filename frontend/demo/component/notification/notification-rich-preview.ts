@@ -1,41 +1,18 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-
-import { html, LitElement, css, customElement } from 'lit-element';
+import 'Frontend/demo/init'; // hidden-source-line
+import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-rich-preview')
 export class Example extends LitElement {
-  static styles = css`
-    .checkmark {
-      border-radius: 50%;
-      background-color: var(--lumo-success-color);
-      color: var(--lumo-success-contrast-color);
-    }
-
-    [theme='success'] .checkmark {
-      background-color: var(--lumo-success-contrast-color);
-      color: var(--lumo-success-color);
-    }
-
-    .checkmark,
-    .warning,
-    vaadin-avatar {
-      margin-right: var(--lumo-space-m);
-      flex: none;
-    }
-
-    b {
-      font-weight: 600;
-    }
-
-    vaadin-notification-card {
-      margin-bottom: var(--lumo-space-m);
-    }
-  `;
+  constructor() {
+    super();
+    applyTheme(this.shadowRoot);
+  }
 
   render() {
     return html`

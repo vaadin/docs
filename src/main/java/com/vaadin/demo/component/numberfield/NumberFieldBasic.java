@@ -4,7 +4,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("number-field-basic")
 public class NumberFieldBasic extends HorizontalLayout {
@@ -31,6 +31,6 @@ public class NumberFieldBasic extends HorizontalLayout {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<NumberFieldBasic> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<NumberFieldBasic> { // hidden-source-line
+    } // hidden-source-line
 }

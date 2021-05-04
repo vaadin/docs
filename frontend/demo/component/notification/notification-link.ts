@@ -1,16 +1,22 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-source-line
 import { render } from 'lit-html';
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-link')
 export class Example extends LitElement {
   @internalProperty()
   private notificationOpen = false;
+
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
+  }
 
   render() {
     return html`

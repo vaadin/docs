@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-source-line
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-time-picker/vaadin-time-picker';
@@ -37,7 +37,7 @@ export class Example extends LitElement {
         helper-text="Open 8:00-12:00, 13:00-16:00"
         min="08:00"
         max="16:00"
-        .step=${60 * 30}
+        .step="${60 * 30}"
         ...="${field(this.binder.model.startTime)}"
       ></vaadin-time-picker>
     `;

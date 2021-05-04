@@ -16,10 +16,8 @@ import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import client from 'Frontend/generated/connect-client.default';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// Make sure custom component styles get registered
-const div = document.createElement('div');
-div.attachShadow({ mode: 'open' });
-applyTheme(div.shadowRoot);
+// Apply the theme, so that overlay elements styles and custom property overrides work as expected
+applyTheme(document);
 
 // @ts-ignore
 client.prefix = __VAADIN_CONNECT_PREFIX__;

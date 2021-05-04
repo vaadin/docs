@@ -6,7 +6,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.dom.ElementConstants;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("details-content")
 public class DetailsContent extends Div {
@@ -59,6 +59,6 @@ public class DetailsContent extends Div {
     return anchor;
   }
 
-  public static class Exporter extends DemoExporter<DetailsContent> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<DetailsContent> { // hidden-source-line
+  } // hidden-source-line
 }

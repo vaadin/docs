@@ -1,7 +1,9 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+import './master-content';
+import './detail-content';
 
 @customElement('split-layout-initial-splitter-position')
 export class Example extends LitElement {
@@ -14,9 +16,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-split-layout>
-        <div>First content element</div>
-        <div>Second content element</div>
+      <vaadin-split-layout style="max-height: 280px;">
+        <master-content style="width: 50%;"></master-content>
+        <detail-content style="width: 50%;"></detail-content>
       </vaadin-split-layout>
       <!-- end::snippet[] -->
     `;

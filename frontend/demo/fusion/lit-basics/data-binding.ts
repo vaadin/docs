@@ -16,8 +16,12 @@ class DataBindingView extends LitElement {
 
   render(): TemplateResult {
     return html`
-      <example-template-header ?active=${this.active} name=${this.name} .message=${this.message}>
-        <button @click=${this._onClick}>Toggle</button>
+      <example-template-header
+        ?active="${this.active}"
+        name="${this.name}"
+        .message="${this.message}"
+      >
+        <button @click="${this._onClick}">Toggle</button>
       </example-template-header>
     `;
   }

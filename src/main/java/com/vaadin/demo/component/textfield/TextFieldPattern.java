@@ -3,7 +3,7 @@ package com.vaadin.demo.component.textfield;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("text-field-pattern")
 public class TextFieldPattern extends Div {
@@ -18,6 +18,6 @@ public class TextFieldPattern extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<TextFieldPattern> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<TextFieldPattern> { // hidden-source-line
+  } // hidden-source-line
 }
