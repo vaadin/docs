@@ -6,7 +6,7 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("form-layout-basic")
 public class FormLayoutBasic extends Div {
@@ -27,6 +27,6 @@ public class FormLayoutBasic extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<FormLayoutBasic> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<FormLayoutBasic> { // hidden-source-line
+  } // hidden-source-line
 }

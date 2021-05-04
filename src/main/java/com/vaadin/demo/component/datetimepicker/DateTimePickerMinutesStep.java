@@ -7,7 +7,7 @@ import com.vaadin.flow.router.Route;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("date-time-picker-minutes-step")
 public class DateTimePickerMinutesStep extends Div {
@@ -22,6 +22,6 @@ public class DateTimePickerMinutesStep extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerMinutesStep> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<DateTimePickerMinutesStep> { // hidden-source-line
+    } // hidden-source-line
 }

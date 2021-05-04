@@ -49,6 +49,6 @@ public class DataBinding extends VerticalLayout {
         // end::snippet[]
     }
 
-    public static class DataBindingExporter extends DemoExporter<DataBinding> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class DataBindingExporter extends DemoExporter<DataBinding> { // hidden-source-line
+    } // hidden-source-line
 }

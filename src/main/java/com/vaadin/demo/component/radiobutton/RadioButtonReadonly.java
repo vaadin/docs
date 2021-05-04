@@ -3,7 +3,7 @@ package com.vaadin.demo.component.radiobutton;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("radio-button-readonly")
 public class RadioButtonReadonly extends Div {
@@ -19,6 +19,6 @@ public class RadioButtonReadonly extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<RadioButtonReadonly> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<RadioButtonReadonly> { // hidden-source-line
+  } // hidden-source-line
 }

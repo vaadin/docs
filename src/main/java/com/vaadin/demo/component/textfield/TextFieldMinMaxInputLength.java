@@ -3,7 +3,7 @@ package com.vaadin.demo.component.textfield;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("text-field-min-max-input-length")
 public class TextFieldMinMaxInputLength extends HorizontalLayout {
@@ -27,6 +27,6 @@ public class TextFieldMinMaxInputLength extends HorizontalLayout {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<TextFieldMinMaxInputLength> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<TextFieldMinMaxInputLength> { // hidden-source-line
+  } // hidden-source-line
 }

@@ -5,7 +5,7 @@ import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep.LabelsPosi
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("number-field-stepper-controls")
 public class NumberFieldStepperControls extends FormLayout {
@@ -45,6 +45,6 @@ public class NumberFieldStepperControls extends FormLayout {
         addFormItem(infantsField, "Infants");
     }
 
-    public static class Exporter extends DemoExporter<NumberFieldStepperControls> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<NumberFieldStepperControls> { // hidden-source-line
+    } // hidden-source-line
 }

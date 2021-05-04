@@ -17,6 +17,6 @@ public class BadgeBasic extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<BadgeBasic> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<BadgeBasic> { // hidden-source-line
+    } // hidden-source-line
 }

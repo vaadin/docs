@@ -9,7 +9,7 @@ import com.vaadin.flow.router.Route;
 import java.util.HashSet;
 import java.util.List;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 
@@ -52,6 +52,6 @@ public class CheckboxIndeterminate extends VerticalLayout {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<CheckboxIndeterminate> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxIndeterminate> { // hidden-source-line
+    } // hidden-source-line
 }
