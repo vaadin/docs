@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { customElement, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
@@ -28,10 +28,10 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-grid .items=${this.items}>
+      <vaadin-grid .items="${this.items}">
         <vaadin-grid-column
           header="Image"
-          .renderer=${this.avatarRenderer}
+          .renderer="${this.avatarRenderer}"
           flex-grow="0"
           auto-width
         ></vaadin-grid-column>
@@ -47,7 +47,7 @@ export class Example extends LitElement {
       html`
         <img
           style="height: var(--lumo-size-m)"
-          src=${(model.item as Person).pictureUrl}
+          src="${(model.item as Person).pictureUrl}"
           alt="User avatar"
         />
       `,

@@ -27,7 +27,7 @@ Add the following dependency to the project Maven file.
 ----
 
 The application is now protected by a default Spring login view just adding the Spring Security dependency.
-By default it has a single user: ‘user’ username and random password, printed in the console when the application starts up after adding `logging.level.org.springframework.security = DEBUG` to the `application.properties` file.
+By default it has a single user: 'user' username and random password, printed in the console when the application starts up after adding `logging.level.org.springframework.security = DEBUG` to the `application.properties` file.
 
 == Server Configuration
 
@@ -72,7 +72,7 @@ Public views need to be added to the configuration before calling `super.configu
 ----
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.antMatchers("/public-view").permitAll() // custom matcher
+    http..authorizeRequests().antMatchers("/public-view").permitAll() // custom matcher
     super.configure(http);
     }
 }
@@ -83,11 +83,7 @@ Public resources can be added by overriding `configure(WebSecurity web)`:
 .`SecurityConfig.java`
 [source,java]
 ----
-  @Override
-  public void configure(WebSecurity web) throws Exception {
-    super.configure(web);
-    web.ignoring().antMatchers("/icons/**"); // Allow anonymous requests to icons/
-}
+include::{root}/src/main/java/com/vaadin/demo/SecurityConfig.java[tags=public-resources]
 ----
 
 == Use a Fusion Login View
@@ -104,7 +100,7 @@ The authentication helper methods in the code examples are grouped in a separate
 It utilises a Fusion `login()` helper method for Spring Security based authentication.
 
 .`frontend/auth.ts`
-[source, typescript]
+[source,typescript]
 ----
 include::{root}/frontend/demo/fusion/authentication/auth.ts[]
 ----
@@ -113,7 +109,7 @@ After the login view is defined, you should define a route for it in the `routes
 Don't forget to import the `login-view` component, otherwise the login view is not visible.
 
 .`frontend/routes.ts`
-[source, typescript]
+[source,typescript]
 ----
 import './login-view';
 ...
@@ -126,9 +122,13 @@ const routes = [
 }
 ----
 
-Update the `SecurityConfig` to configure the login page as
-`http.formLogin().loginPage("/login").permitAll();`
-Note, the `path` for the login view in `routes.ts` should match the one defined in `SecurityConfig` for `http.formLogin().loginPage()`.
+Update the `SecurityConfig` to use the `setLogin` helper which will set up everything needed for a Fusion based login view:
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/SecurityConfig.java[tags=login]
+----
+
+Note, the `path` for the login view in `routes.ts` must match the one defined in `SecurityConfig`.
 
 == How to Protect a Fusion View
 
@@ -141,7 +141,7 @@ However, you can still achieve a better user experience by redirecting unauthent
 An example of using the route action:
 
 .`frontend/routes.ts`
-[source, typescript]
+[source,typescript]
 ----
 import { Commands, Context, Route } from '@vaadin/router';
 import './my-view';
@@ -165,7 +165,7 @@ You can also add the route action to the parent layout, so that all the child vi
 In this case, the login component should be outside of the main layout, that is, not a child of the main layout in the route configuration.
 
 .`frontend/routes.ts`
-[source, typescript]
+[source,typescript]
 ----
 import { Commands, Context, Route } from '@vaadin/router';
 import './login-view';
@@ -200,20 +200,13 @@ Using localStorage allows navigating to sub views without having to check authen
 
 == Logout
 
-To avoid a full page reload the application needs to have a `/logout` route like the one below.
-It can be triggered with a link like `<a href="/logout">Log out</a>`.
+To handle logging out, you can use the `logout()` helper defined in `auth.ts` above.
+You typically want to use a button for handling logout and not navigation and a route to avoid timing issues between rendering views and logging out.
+You can, for example, do the following:
 
-.`frontend/routes.ts`
-[source, typescript]
+[source,html]
 ----
-{
-  path: '/logout',
-  action: async (_: Context, commands: Commands) => {
-    // use the logout helper method.
-    await logout();
-    return commands.redirect('/');
-  }
-}
+<vaadin-button @click="${() => logout()}">Logout</vaadin-button>
 ----
 
 === Alternatives to Using the Configuration Helper

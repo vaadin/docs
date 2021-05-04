@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { customElement, internalProperty, LitElement } from 'lit-element';
 import { html } from 'lit-html';
@@ -47,16 +47,16 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <h2 style="flex: 1; margin-bottom: 0; margin-top: 0;">Employee</h2>
-        <vaadin-button @click=${() => (this.expandedItems = [...this.managers])}>
+        <vaadin-button @click="${() => (this.expandedItems = [...this.managers])}">
           Expand All
         </vaadin-button>
-        <vaadin-button @click=${() => (this.expandedItems = [])}>Collapse All</vaadin-button>
+        <vaadin-button @click="${() => (this.expandedItems = [])}">Collapse All</vaadin-button>
       </vaadin-horizontal-layout>
 
       <vaadin-grid
-        .dataProvider=${this.dataProvider}
-        .itemIdPath=${'id'}
-        .expandedItems=${this.expandedItems}
+        .dataProvider="${this.dataProvider}"
+        .itemIdPath="${'id'}"
+        .expandedItems="${this.expandedItems}"
       >
         <vaadin-grid-tree-column
           path="firstName"

@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-confirm-dialog/vaadin-confirm-dialog';
@@ -20,32 +20,33 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button @click=${() => (this.dialogOpened = true)}>
-        Open confirm dialog
-      </vaadin-button>
-
-      <!-- tag::snippet[] -->
-      <vaadin-confirm-dialog
-        cancel
-        reject
-        header="Unsaved changes"
-        confirm-text="Save"
-        reject-text="Discard"
-        .opened=${this.dialogOpened}
-        @opened-changed=${this.openedChanged}
-        @confirm=${() => (this.status = 'Saved')}
-        @reject=${() => {
-          this.status = 'Discarded';
-        }}
-        @cancel=${() => {
-          this.status = 'Canceled';
-        }}
+      <vaadin-horizontal-layout
+        style="align-items: center; justify-content: center;"
+        theme="spacing"
       >
-        Do you want to save or discard your changes before navigating away?
-      </vaadin-confirm-dialog>
-      <!-- end::snippet[] -->
+        <vaadin-button @click="${() => (this.dialogOpened = true)}">
+          Open confirm dialog
+        </vaadin-button>
 
-      <span>${this.status}</span>
+        <!-- tag::snippet[] -->
+        <vaadin-confirm-dialog
+          header="Unsaved changes"
+          cancel
+          @cancel="${() => (this.status = 'Canceled')}"
+          reject
+          reject-text="Discard"
+          @reject="${() => (this.status = 'Discarded')}"
+          confirm-text="Save"
+          @confirm="${() => (this.status = 'Saved')}"
+          .opened="${this.dialogOpened}"
+          @opened-changed="${this.openedChanged}"
+        >
+          There are unsaved changes. Do you want to discard or save them?
+        </vaadin-confirm-dialog>
+        <!-- end::snippet[] -->
+
+        <span ?hidden="${this.status == ''}">Status: ${this.status}</span>
+      </vaadin-horizontal-layout>
     `;
   }
 

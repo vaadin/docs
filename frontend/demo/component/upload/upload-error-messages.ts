@@ -1,6 +1,6 @@
-import '../../init'; // hidden-full-source-line
-import { fakeErrorResponse, fakeErrorResponseWrapper } from './upload-demo-helpers'; // hidden-full-source-line
-/* prettier-ignore */ import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-full-source-line
+import '../../init'; // hidden-source-line
+import { fakeErrorResponse, fakeErrorResponseWrapper } from './upload-demo-helpers'; // hidden-source-line
+/* prettier-ignore */ import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
@@ -19,19 +19,19 @@ export class Example extends LitElement {
     super();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(this.shadowRoot);
-    this.uploadResponseHandler = fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-full-source-line
+    this.uploadResponseHandler = fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-source-line
   }
 
   // tag::snippet[]
   render() {
     return html`
       <!-- end::snippet[] -->
-      <vaadin-form-layout .responsiveSteps=${layoutSteps}>
+      <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <div>
           <strong>Caution</strong>
           <vaadin-upload
             nodrop
-            .files=${createFakeFilesUploadErrorMessagesA() /* hidden-source-line */}
+            .files="${createFakeFilesUploadErrorMessagesA() /* hidden-source-line */}"
             @upload-response="${fakeErrorResponse /* hidden-source-line */}"
           ></vaadin-upload>
         </div>
@@ -41,7 +41,7 @@ export class Example extends LitElement {
           <vaadin-upload
             nodrop
             @upload-response="${this.uploadResponseHandler}"
-            .files=${createFakeFilesUploadErrorMessagesB() /* hidden-source-line */}
+            .files="${createFakeFilesUploadErrorMessagesB() /* hidden-source-line */}"
           ></vaadin-upload>
           <!-- end::snippet[] -->
         </div>

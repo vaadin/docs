@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
@@ -22,7 +22,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-rich-text-editor
         style="max-height: 400px"
-        value=${this.richText}
+        value="${this.richText}"
       ></vaadin-rich-text-editor>
     `;
   }

@@ -14,4 +14,7 @@ import '@vaadin/vaadin-lumo-styles/spacing';
 // tag::style[]
 import '@vaadin/vaadin-lumo-styles/style';
 // end::style[]
-window.dispatchEvent(new CustomEvent('custom-properties-changed')); // hidden-full-source-line
+
+import { applyTheme } from 'Frontend/generated/theme'; // hidden-source-line
+applyTheme(document); // hidden-source-line
+window.dispatchEvent(new CustomEvent('custom-properties-changed')); // hidden-source-line

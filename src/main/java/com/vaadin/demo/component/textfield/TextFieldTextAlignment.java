@@ -5,7 +5,7 @@ import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep.LabelsPosi
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("text-field-text-alignment")
 public class TextFieldTextAlignment extends FormLayout {
@@ -30,6 +30,6 @@ public class TextFieldTextAlignment extends FormLayout {
         addFormItem(right, "Right");
     }
 
-    public static class Exporter extends DemoExporter<TextFieldTextAlignment> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<TextFieldTextAlignment> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';
@@ -28,8 +28,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-dialog
         aria-label="simple"
-        .opened=${this.dialogOpened}
-        @opened-changed=${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}
+        .opened="${this.dialogOpened}"
+        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
@@ -45,10 +45,10 @@ export class Example extends LitElement {
                   <vaadin-text-field label="Last name"></vaadin-text-field>
                 </vaadin-vertical-layout>
                 <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
-                  <vaadin-button @click=${() => (this.dialogOpened = false)}>
+                  <vaadin-button @click="${() => (this.dialogOpened = false)}">
                     Cancel
                   </vaadin-button>
-                  <vaadin-button theme="primary" @click=${() => (this.dialogOpened = false)}>
+                  <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
                     Save changes
                   </vaadin-button>
                 </vaadin-horizontal-layout>
@@ -60,7 +60,7 @@ export class Example extends LitElement {
       ></vaadin-dialog>
       <!-- end::snippet[] -->
 
-      <vaadin-button @click=${() => (this.dialogOpened = true)}> Show dialog </vaadin-button>
+      <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }
 }

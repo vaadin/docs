@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
@@ -28,9 +28,9 @@ export class Example extends LitElement {
       <vaadin-checkbox-group label="Invitees" theme="vertical">
         ${this.items.map((person) => {
           return html`
-            <vaadin-checkbox .value=${String(person.id)}>
+            <vaadin-checkbox .value="${String(person.id)}">
               <div style="display: flex;">
-                <img style="height: 2em" src=${person.pictureUrl} alt="User avatar" />
+                <img style="height: 2em" src="${person.pictureUrl}" alt="User avatar" />
                 <div>
                   ${person.firstName} ${person.lastName}
                   <div>${person.profession}</div>
