@@ -8,7 +8,7 @@ import com.vaadin.flow.router.Route;
 import java.time.Duration;
 import java.time.LocalTime;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.Appointment;
 
 @Route("date-time-picker-custom-validation")
@@ -37,6 +37,6 @@ public class DateTimePickerCustomValidation extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerCustomValidation> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<DateTimePickerCustomValidation> { // hidden-source-line
+    } // hidden-source-line
 }

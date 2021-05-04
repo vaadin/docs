@@ -6,7 +6,7 @@ import com.vaadin.flow.router.Route;
 
 import java.math.BigDecimal;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("number-field-big-decimal")
 public class NumberFieldBigDecimal extends Div {
@@ -21,6 +21,6 @@ public class NumberFieldBigDecimal extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<NumberFieldBigDecimal> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<NumberFieldBigDecimal> { // hidden-source-line
+    } // hidden-source-line
 }

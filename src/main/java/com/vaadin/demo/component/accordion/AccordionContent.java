@@ -9,7 +9,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.dom.ElementConstants;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("accordion-content")
 public class AccordionContent extends Div {
@@ -59,6 +59,6 @@ public class AccordionContent extends Div {
         return anchor;
     } 
 
-    public static class Exporter extends DemoExporter<AccordionContent> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<AccordionContent> { // hidden-source-line
+    } // hidden-source-line
 }

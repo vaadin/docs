@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.contextmenu;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.Html;
@@ -40,5 +40,5 @@ public class ContextMenuCheckable extends Div {
       "<span>Assignee: <b>" + person.getFullName() + "</b></span>"
     ));
   }
-  public static class Exporter extends DemoExporter<ContextMenuCheckable> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ContextMenuCheckable> {} // hidden-source-line
 }

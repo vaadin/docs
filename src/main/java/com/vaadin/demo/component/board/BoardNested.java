@@ -5,7 +5,7 @@ import com.vaadin.flow.component.board.Board;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("board-nested")
 public class BoardNested extends Div {
@@ -46,6 +46,6 @@ public class BoardNested extends Div {
 
     }
 
-    public static class Exporter extends DemoExporter<BoardBasic> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<BoardBasic> { // hidden-source-line
+    } // hidden-source-line
 }
