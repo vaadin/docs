@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { customElement, html, internalProperty, LitElement } from 'lit-element';
 import '@polymer/iron-icon';
 import '@vaadin/vaadin-button/vaadin-button';

@@ -4,7 +4,7 @@ import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("checkbox-adjacent-groups")
 public class CheckboxAdjacentGroups extends VerticalLayout {
@@ -28,6 +28,6 @@ public class CheckboxAdjacentGroups extends VerticalLayout {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<CheckboxAdjacentGroups> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxAdjacentGroups> { // hidden-source-line
+    } // hidden-source-line
 }

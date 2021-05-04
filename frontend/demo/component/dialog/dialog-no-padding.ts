@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import { render } from 'lit-html';

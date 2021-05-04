@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.cookieconsent;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.cookieconsent.CookieConsent;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
@@ -18,5 +18,5 @@ public class CookieConsentLocalization extends Div {
         add(cookieConsent);
         // end::snippet[]
     }
-    public static class Exporter extends DemoExporter<CookieConsentLocalization> {} // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CookieConsentLocalization> {} // hidden-source-line
 }

@@ -52,5 +52,5 @@ public class ConfirmDialogRejectButton extends Div {
     status.setText("Status: " + value);
     status.setVisible(true);
   }
-  public static class Exporter extends DemoExporter<ConfirmDialogRejectButton> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ConfirmDialogRejectButton> {} // hidden-source-line
 }

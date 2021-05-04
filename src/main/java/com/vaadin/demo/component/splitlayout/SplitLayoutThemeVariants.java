@@ -5,7 +5,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("split-layout-theme-variants")
 public class SplitLayoutThemeVariants extends Div {
@@ -17,6 +17,6 @@ public class SplitLayoutThemeVariants extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<SplitLayoutThemeVariants> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<SplitLayoutThemeVariants> { // hidden-source-line
+    } // hidden-source-line
 }

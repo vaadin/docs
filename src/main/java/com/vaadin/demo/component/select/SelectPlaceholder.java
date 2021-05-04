@@ -19,6 +19,6 @@ public class SelectPlaceholder extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectPlaceholder> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectPlaceholder> { // hidden-source-line
+  } // hidden-source-line
 }

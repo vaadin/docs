@@ -4,7 +4,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("input-field-helper-position")
 public class InputFieldHelperPosition extends Div {
@@ -20,6 +20,6 @@ public class InputFieldHelperPosition extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<InputFieldHelperPosition> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<InputFieldHelperPosition> { // hidden-source-line
+  } // hidden-source-line
 }

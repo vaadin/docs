@@ -4,7 +4,7 @@ import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("date-time-picker-input-format")
 public class DateTimePickerInputFormat extends Div {
@@ -20,6 +20,6 @@ public class DateTimePickerInputFormat extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerInputFormat> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<DateTimePickerInputFormat> { // hidden-source-line
+    } // hidden-source-line
 }
