@@ -1,6 +1,6 @@
 package com.vaadin.demo.flow.application.events;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
@@ -17,6 +17,6 @@ public class EventsLambda extends Div {
         // end::snippet[]
       }
     
-      public static class Exporter extends DemoExporter<EventsLambda> { // hidden-full-source-line
-      } // hidden-full-source-line    
+      public static class Exporter extends DemoExporter<EventsLambda> { // hidden-source-line
+      } // hidden-source-line    
 }

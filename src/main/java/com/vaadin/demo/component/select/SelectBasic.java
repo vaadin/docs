@@ -3,7 +3,7 @@ package com.vaadin.demo.component.select;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("select-basic")
 public class SelectBasic extends Div {
@@ -20,6 +20,6 @@ public class SelectBasic extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectBasic> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectBasic> { // hidden-source-line
+  } // hidden-source-line
 }

@@ -4,7 +4,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("list-box-separators")
 public class ListBoxSeparators extends Div {
@@ -27,6 +27,6 @@ public class ListBoxSeparators extends Div {
         add(listBox);
     }
 
-    public static class Exporter extends DemoExporter<ListBoxSeparators> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<ListBoxSeparators> { // hidden-source-line
+    } // hidden-source-line
 }

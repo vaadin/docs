@@ -7,7 +7,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 import java.util.List;
 
@@ -29,6 +29,6 @@ public class ListBoxMultiSelection extends Div {
         add(listBox);
     }
 
-    public static class Exporter extends DemoExporter<ListBoxMultiSelection> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<ListBoxMultiSelection> { // hidden-source-line
+    } // hidden-source-line
 }

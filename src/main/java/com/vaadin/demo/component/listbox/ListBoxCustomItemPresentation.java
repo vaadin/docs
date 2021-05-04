@@ -11,7 +11,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 import java.util.List;
 
@@ -51,6 +51,6 @@ public class ListBoxCustomItemPresentation extends Div {
         add(listBox);
     }
 
-    public static class Exporter extends DemoExporter<ListBoxCustomItemPresentation> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<ListBoxCustomItemPresentation> { // hidden-source-line
+    } // hidden-source-line
 }

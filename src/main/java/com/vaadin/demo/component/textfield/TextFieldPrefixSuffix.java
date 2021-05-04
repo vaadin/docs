@@ -7,7 +7,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("text-field-prefix-suffix")
 public class TextFieldPrefixSuffix extends HorizontalLayout {
@@ -32,6 +32,6 @@ public class TextFieldPrefixSuffix extends HorizontalLayout {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<TextFieldPrefixSuffix> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<TextFieldPrefixSuffix> { // hidden-source-line
+  } // hidden-source-line
 }

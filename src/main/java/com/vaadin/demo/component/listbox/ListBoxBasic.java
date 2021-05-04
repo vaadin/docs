@@ -3,7 +3,7 @@ package com.vaadin.demo.component.listbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("list-box-basic")
 public class ListBoxBasic extends Div {
@@ -21,6 +21,6 @@ public class ListBoxBasic extends Div {
         add(listBox);
     }
 
-    public static class Exporter extends DemoExporter<ListBoxBasic> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<ListBoxBasic> { // hidden-source-line
+    } // hidden-source-line
 }

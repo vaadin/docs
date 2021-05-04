@@ -23,15 +23,21 @@ For information about the general usage of Gradle, please refer to the link:http
 
 == Requirements
 
-The Gradle plugin has the following requirements:
+To use Vaadin Gradle Plugin, your environment has to meet the following requirements:
 
 * Windows, Mac, or Linux
 * Java SDK 8 or newer
-* Gradle 5 or 6 (or use provided wrapper from the example projects)
-** Install it from https://gradle.org/install
-* Node.js and npm (can also be installed locally to project using the Vaadin Gradle Plugin)
+* Gradle 5 or 6 (Optional, because of the provided wrapper in the starter projects)
+** If you prefer to install it directly, you can find the instructions at https://gradle.org/install
+* Node.js and npm (Optional, because they can also be installed locally to project using the Vaadin Gradle Plugin)
 
 Except for Gradle, these are general Vaadin requirements, as described in <<{articles}/guide/install#,Installing Development Tools>>.
+
+.Installing gradle is optional
+[NOTE]
+If you are going to use Vaadin's Gradle base starter projects, then there is no need to install Gradle on your machine.
+A Gradle Wrapper script is included in those starter projects which manage download and execution of Gradle locally for your project.
+For more information on using Gradle Wrapper, please refer to https://docs.gradle.org/current/userguide/gradle_wrapper.html[Official Gradle Documentations].
 
 == Creating a Vaadin Project
 
@@ -42,6 +48,11 @@ You can also take any existing Vaadin project and make a `build.gradle` file for
 === Cloning a Starter Repository
 
 The following starter repositories are available at the moment:
+
+.Clone the `master` branch of the starter projects
+[NOTE]
+Please note that the following repositories are default to V14 branch as you clone them.
+If you intend to use them with the latest version of Vaadin, you must clone the master branch, or simply change to master branch after you cloned either of the starter projects.
 
 `link:https://github.com/vaadin/base-starter-gradle[https://github.com/vaadin/base-starter-gradle]`::
   A simple web application project to be deployed as a WAR package.
@@ -67,6 +78,12 @@ Once cloned, the project should look as follows (imported in the Eclipse IDE):
 [#newproject-image]
 .Cloned Starter Project
 image::_images/gradle-project-created-annotated.png[Contents of a Gradle based project]
+
+.Only the content of simple web application starter is depicted
+[NOTE]
+Note that only the contents of *base-starter-gradle* (simple web application starter without Spring Boot) is presented in the above figure.
+Although, there is not much difference in the Spring Boot based starter project, other than having an additional class annotated with `@SpringBootApplication`.
+If this is your first time of trying Vaadin with Spring Boot, you may refer to the <<{articles}/flow/integrations/spring/spring-boot,Using Vaadin with Spring Boot>> for more information.
 
 The most important files and folders are as follows:
 
@@ -115,12 +132,12 @@ plugins {
 +
 Please see the releases at https://github.com/vaadin/platform/releases[github.com/vaadin/platform] for the latest release.
 +
-To try the pre-release version of the plugin see <<pre-release,Using Plugin pre-release Version>>
+To try the pre-release version of the Vaadin Gradle Plugin see <<pre-release,Using Plugin pre-release Version>>
 <2> Use the Gretty embedded web server for running the application during development.
 See <<running>> for details.
 <3> Build a `WAR` package to deploy to a traditional Servlet container.
 You also need to define Servlet API using `providedCompile "javax.servlet:javax.servlet-api:3.1.0"` in the dependencies section.
-<4> By default the plugin supports Java.
+<4> By default, the plugin supports Java.
 You can include Groovy or Kotlin as an optional plugin.
 
 [[build-file.vaadin-options]]
@@ -145,14 +162,28 @@ For configuration options see <<all-options,plugin configuration options>>
 === Configuring Repositories
 
 The `repositories` section defines the locations to search for packages.
-At least the repository holding Vaadin libraries is needed.
-They are available from `jcenter`.
+At least the repository holding Vaadin libraries is needed:
 
 ----
 repositories {
-  jcenter()
+    mavenCentral()
+    maven { url = "https://maven.vaadin.com/vaadin-addons" }
 }
 ----
+
+If you want to try the Vaadin platform pre-release versions you can add the following repository as well:
+
+----
+repositories {
+    maven { url = "https://maven.vaadin.com/vaadin-prereleases" }
+}
+----
+
+.Vaadin recommends to use final releases
+[NOTE]
+To avoid any inconsistencies, do not use any pre-release versions in your production environment, especially snapshots.
+Vaadin always recommends using the LTS or Final releases of the newer versions.
+Please visit the https://github.com/vaadin/platform/releases[Vaadin platform release] page for the latest releases of LTS and newer versions' Final releases.
 
 You can use any Gradle repository definitions in the block.
 See https://docs.gradle.org/current/userguide/declaring_repositories.html[Declaring repositories] in Gradle documentation for more information.
@@ -164,7 +195,7 @@ You need to add `vaadin-core` or `vaadin` library as a Java dependency:
 
 ----
 dependencies {
-  implementation "com.vaadin:vaadin-core:20.+"
+    implementation "com.vaadin:vaadin-core:20.+"
 }
 ----
 
@@ -234,18 +265,22 @@ $ ./gradlew tasks
 
 [[running]]
 == Running the Application
+If you are using a Spring Boot based starter (Vaadin with Spring Boot), for running the application during development, you would do it similar to any normal Spring Boot application.
+This means you can either run it from the class containing the `main` method (which normally annotated with `@SpringBootApplication`), or by using Spring Boot's Gradle Plugin `bootRun` task:
 
-For running the application during development, the Gradle plugin supports the Gretty plugin, which runs the application in an embedded web server.
-You can do that either in an IDE or at command-line as follows.
+----
+$ ./gradlew bootRun
+----
 
-See https://akhikhl.github.io/gretty-doc/index.html[Gretty documentation] for a complete reference on using Gretty.
+If you are using simple web application (Vaadin without Spring Boot), for running the application during development, the Gradle plugin supports the Gretty plugin, which runs the application in an embedded web server.
+You can do that either in an IDE or at command-line as follows:
 
 One way to enable the Gretty plugin is in the `plugin` section of the `gradle.build` file, as in the starter project:
 
 ----
 plugins {
-  ...
-  id 'org.gretty' version '3.0.3'
+    ...
+    id 'org.gretty' version '3.0.3'
 }
 ----
 
@@ -268,6 +303,18 @@ The application is started with the `appRun` task:
 ----
 
 The task compiles the application and starts the web server in `http://localhost:8080/` (if the root context path is configured as described above).
+
+Note that you might need to add `jcenter()` to the list of repositories to be able to run Gretty's tasks, depending on when you are following this documentation.
+Currently, still some artifacts from `jcenter()` haven't been moved to `mavenCentral()`, so this would be an unnecessary step in the future:
+
+----
+repositories {
+    // should be removed in the future as jcenter() is obsolete.
+    jcenter()
+}
+----
+
+See https://akhikhl.github.io/gretty-doc/index.html[Gretty documentation] for a complete reference on using Gretty.
 
 == Developing in the Eclipse IDE
 
@@ -314,15 +361,16 @@ plugins {
 }
 
 war {
-    enabled=true
+    enabled = true
 }
 ----
 
-When making a production-ready build, the Vaadin Gradle Plugin transpiles the client-side dependencies to legacy browsers, as described in <<{articles}/guide/production#,Deploying to Production>>.
+When making a production-ready build, the Vaadin Gradle Plugin transpiles the client-side dependencies to legacy browsers, as described in <<{articles}/guide/production#, Deploying to Production>>.
 You enable that by either setting it in `build.gradle` or at command-line when invoking Gradle.
 
 In `build.gradle`:
 
+.Enabling Vaadin production mode through build.gradle
 ----
 vaadin {
    productionMode = true
@@ -331,16 +379,49 @@ vaadin {
 
 At command-line:
 
+.Enabling Vaadin production mode through command line
 ----
 $ ./gradlew -Pvaadin.productionMode=true war
 ----
 
+.Spring Boot specific configurations
+[NOTE]
+If you are using Vaadin with Spring Boot, normally the default packaging for production would be the `jar`.
+But, if you intend to package a Spring Boot application as WAR to be deployed on a standalone container such as `tomcat`, there are two additional steps needed to take:
+
+* Your application class that is annotated with `@SpringBootApplication` should extend `SpringBootServletInitializer` and override the `configure` method:
+
+.Example of enabling SpringBootServletInitializer
+[source,java]
+----
+@SpringBootApplication
+public class DemoApplication extends SpringBootServletInitializer {
+    @Override
+    protected SpringApplicationBuilder configure(
+	                     SpringApplicationBuilder application) {
+        return application.sources(DemoApplication.class);
+    }
+}
+----
+
+* Adding the following dependency:
+
+.Dependency that should be added to the build.gradle
+----
+dependencies {
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+}
+----
+
 [[pre-release]]
-== Using Plugin Snapshot Version
+== Using Gradle Plugin Snapshot Versions
 
 A snapshot version of the plugin is pushed to the pre-release repository.
+Note that this section is about trying the pre-release and snapshot versions of the Vaadin Gradle Plugin itself, not the Vaadin platform.
 
 To use the pre-released plugin add the `vaadin-prereleases` repository to the project `settings.gradle` file.
+`settings.gradle` is mostly used within multi-module projects, but it comes handy for other configurations as well.
+Thus, if you don't have it already in your project, go ahead and create a plain text file called `settings.gradle` next to your `build.gradle` file (normally in project root folder).
 
 .Plugin repository added to settings file
 ----
@@ -371,6 +452,10 @@ plugins {
 
 apply plugin: 'com.vaadin'
 ----
+
+.Remember to update the `plugins` block
+[NOTE]
+Note that `id 'com.vaadin' version 'xyz'` should also be removed from the `plugins` block, and only `apply plugin: 'com.vaadin'` is applying the plugin (as demonstrated in the above).
 
 [[all-options]]
 == Plugin Configuration Options

@@ -5,7 +5,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("list-box-disabled-items")
 public class ListBoxDisabledItems extends Div {
@@ -50,6 +50,6 @@ public class ListBoxDisabledItems extends Div {
         add(listBox);
     }
 
-    public static class Exporter extends DemoExporter<ListBoxDisabledItems> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<ListBoxDisabledItems> { // hidden-source-line
+    } // hidden-source-line
 }

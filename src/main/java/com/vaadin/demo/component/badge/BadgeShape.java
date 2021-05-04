@@ -18,6 +18,6 @@ public class BadgeShape extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<BadgeShape> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<BadgeShape> { // hidden-source-line
+    } // hidden-source-line
 }
