@@ -32,8 +32,6 @@ public class Person {
 
   private boolean manager;
 
-  public String getFullName() { return firstName + " " + lastName; }
-
   public String getFirstName() {
     return firstName;
   }
