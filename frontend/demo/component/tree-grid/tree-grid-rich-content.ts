@@ -57,14 +57,14 @@ export class Example extends LitElement {
           <vaadin-grid-tree-toggle
             .leaf="${!person.manager}"
             .level="${model.level || 0}"
-            @expanded-changed=${(e: GridTreeToggleExpandedChanged) => {
+            @expanded-changed="${(e: GridTreeToggleExpandedChanged) => {
               if (e.detail.value) {
                 this.expandedItems = [...this.expandedItems, person];
               } else {
                 this.expandedItems = this.expandedItems.filter((p) => p.id !== person.id);
               }
-            }}
-            .expanded=${!!model.expanded}
+            }}"
+            .expanded="${!!model.expanded}"
           >
             <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
               <vaadin-avatar
