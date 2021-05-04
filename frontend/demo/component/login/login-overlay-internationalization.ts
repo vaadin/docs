@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -34,7 +34,7 @@ export class Example extends LitElement {
   };
 
   render() {
-    return html`<vaadin-login-overlay .i18n=${this.i18n} opened></vaadin-login-overlay>`;
+    return html`<vaadin-login-overlay .i18n="${this.i18n}" opened></vaadin-login-overlay>`;
   }
   //end::snippet[]
 }

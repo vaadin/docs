@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -35,9 +35,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <login-overlay-mockup
-        .i18n=${this.i18n}
-        .headerTitle=${this.i18n.header?.title}
-        .description=${this.i18n.header?.description}
+        .i18n="${this.i18n}"
+        .headerTitle="${this.i18n.header?.title}"
+        .description="${this.i18n.header?.description}"
       ></login-overlay-mockup>
     `;
   }

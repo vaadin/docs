@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
@@ -31,8 +31,8 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-date-picker
-        .min=${this.today}
-        .max=${this.upperLimit}
+        .min="${this.today}"
+        .max="${this.upperLimit}"
         label="Appointment date"
         helper-text="Must be within 60 days from today"
       ></vaadin-date-picker>

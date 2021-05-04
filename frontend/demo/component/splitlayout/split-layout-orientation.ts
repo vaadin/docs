@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { applyTheme } from 'Frontend/generated/theme';

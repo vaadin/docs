@@ -3,7 +3,7 @@ package com.vaadin.demo.component.login;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("login-modal-overlay")
 public class LoginModalOverlay extends Div {
@@ -15,6 +15,6 @@ public class LoginModalOverlay extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<LoginModalOverlay> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<LoginModalOverlay> { // hidden-source-line
+    } // hidden-source-line
 }

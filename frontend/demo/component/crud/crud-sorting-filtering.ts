@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
@@ -29,7 +29,7 @@ export class Example extends LitElement {
         include="firstName, lastName, profession"
         no-sort
         no-filter
-        .items=${this.items}
+        .items="${this.items}"
       ></vaadin-crud>
       <!-- end::snippet[] -->
     `;

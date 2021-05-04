@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-confirm-dialog/vaadin-confirm-dialog';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -23,7 +23,7 @@ export class Example extends LitElement {
         style="align-items: center; justify-content: center;"
         theme="spacing"
       >
-        <vaadin-button @click=${() => (this.dialogOpened = true)}>
+        <vaadin-button @click="${() => (this.dialogOpened = true)}">
           Open confirm dialog
         </vaadin-button>
 
@@ -31,12 +31,12 @@ export class Example extends LitElement {
         <vaadin-confirm-dialog
           header='Delete "Report Q4"?'
           cancel
-          @cancel=${() => (this.status = 'Canceled')}
+          @cancel="${() => (this.status = 'Canceled')}"
           confirm-text="Delete"
           confirm-theme="error primary"
-          @confirm=${() => (this.status = 'Deleted')}
-          .opened=${this.dialogOpened}
-          @opened-changed=${this.openedChanged}
+          @confirm="${() => (this.status = 'Deleted')}"
+          .opened="${this.dialogOpened}"
+          @opened-changed="${this.openedChanged}"
         >
           Are you sure you want to permanently delete this item?
         </vaadin-confirm-dialog>

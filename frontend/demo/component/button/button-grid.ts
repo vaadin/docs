@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
@@ -40,7 +40,7 @@ export class Example extends LitElement {
         </vaadin-horizontal-layout>
 
         <vaadin-grid
-          .items=${this.items}
+          .items="${this.items}"
           @selected-items-changed="${(ev: any) =>
             (this.selectedItems = ev.target ? [...ev.target.selectedItems] : this.selectedItems)}"
         >

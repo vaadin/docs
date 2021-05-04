@@ -1,6 +1,6 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-full-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-source-line
+import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
@@ -39,7 +39,8 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-menu-bar .items=${this.items} @item-selected=${this.itemSelected}> </vaadin-menu-bar>
+      <vaadin-menu-bar .items="${this.items}" @item-selected="${this.itemSelected}">
+      </vaadin-menu-bar>
 
       <div>Selected: ${this.selectedItem?.text}</div>
     `;

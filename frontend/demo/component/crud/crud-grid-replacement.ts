@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
@@ -26,7 +26,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-crud include="firstName, lastName, email, profession" .items=${this.items}>
+      <vaadin-crud include="firstName, lastName, email, profession" .items="${this.items}">
         <vaadin-grid slot="grid">
           <vaadin-crud-edit-column></vaadin-crud-edit-column>
           <vaadin-grid-column path="firstName" header="First name"></vaadin-grid-column>

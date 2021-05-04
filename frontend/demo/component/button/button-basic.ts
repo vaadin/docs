@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
@@ -20,7 +20,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing" style="align-items: baseline">
-        <vaadin-button @click=${() => this.counter++}>Button</vaadin-button>
+        <vaadin-button @click="${() => this.counter++}">Button</vaadin-button>
         <div>Clicked ${this.counter} times</div>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->

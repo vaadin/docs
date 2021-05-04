@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/datepickerConnector'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
@@ -25,13 +25,13 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-date-picker
         label="Departure date"
-        @value-changed=${(e: DatePickerValueChanged) => (this.departureDate = e.detail.value)}
-        .max=${this.returnDate}
+        @value-changed="${(e: DatePickerValueChanged) => (this.departureDate = e.detail.value)}"
+        .max="${this.returnDate}"
       ></vaadin-date-picker>
       <vaadin-date-picker
         label="Return date"
-        @value-changed=${(e: DatePickerValueChanged) => (this.returnDate = e.detail.value)}
-        .min=${this.departureDate}
+        @value-changed="${(e: DatePickerValueChanged) => (this.returnDate = e.detail.value)}"
+        .min="${this.departureDate}"
       ></vaadin-date-picker>
       <!-- end::snippet[] -->
     `;

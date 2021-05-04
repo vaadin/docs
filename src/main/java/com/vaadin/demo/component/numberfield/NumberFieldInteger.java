@@ -3,7 +3,7 @@ package com.vaadin.demo.component.numberfield;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("number-field-integer")
 public class NumberFieldInteger extends HorizontalLayout {
@@ -22,6 +22,6 @@ public class NumberFieldInteger extends HorizontalLayout {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<NumberFieldInteger> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<NumberFieldInteger> { // hidden-source-line
+    } // hidden-source-line
 }

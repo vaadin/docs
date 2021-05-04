@@ -1,6 +1,6 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
@@ -28,7 +28,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid-pro .items=${this.items} single-cell-edit>
+      <vaadin-grid-pro .items="${this.items}" single-cell-edit>
         <vaadin-grid-pro-edit-column path="firstName"> </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column path="lastName"> </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column path="email"></vaadin-grid-pro-edit-column>

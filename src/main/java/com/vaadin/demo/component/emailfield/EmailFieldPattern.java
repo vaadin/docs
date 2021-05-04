@@ -4,7 +4,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("email-field-pattern")
 public class EmailFieldPattern extends Div {
@@ -22,6 +22,6 @@ public class EmailFieldPattern extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<EmailFieldPattern> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<EmailFieldPattern> { // hidden-source-line
+  } // hidden-source-line
 }

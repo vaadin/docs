@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/selectConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/selectConnector.js'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty, query } from 'lit-element';
 import { render } from 'lit-html';
@@ -35,7 +35,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-select label="Choose doctor" .renderer=${this.renderer}></vaadin-select>
+      <vaadin-select label="Choose doctor" .renderer="${this.renderer}"></vaadin-select>
       <!-- end::snippet[] -->
     `;
   }
