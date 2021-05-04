@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-custom-field/vaadin-custom-field';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
