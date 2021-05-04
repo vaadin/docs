@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-list-box';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
@@ -25,13 +25,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box multiple .selectedValues=${[0, 3]} style="height: 200px">
+      <vaadin-list-box multiple .selectedValues="${[0, 3]}" style="height: 200px">
         ${this.items.map(
-          person => html`
-            <vaadin-item>
-              ${person.firstName} ${person.lastName}
-            </vaadin-item>
-          `
+          (person) => html` <vaadin-item> ${person.firstName} ${person.lastName} </vaadin-item> `
         )}
       </vaadin-list-box>
       <!-- end::snippet[] -->

@@ -2,7 +2,7 @@ import '../../init'; // hidden-full-source-line
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-list-box';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('list-box-separators')
 export class Example extends LitElement {

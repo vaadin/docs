@@ -6,7 +6,7 @@ import '@vaadin/vaadin-list-box';
 import '@vaadin/vaadin-lumo-styles/typography';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
@@ -29,20 +29,18 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-list-box multiple .selectedValues=${[0, 2]}>
+      <vaadin-list-box multiple .selectedValues="${[0, 2]}">
         ${this.items.map(
-          person => html`
+          (person) => html`
             <vaadin-item style="line-height: var(--lumo-line-height-m);">
               <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
                 <vaadin-avatar
-                  .img=${person.pictureUrl}
-                  .name=${`${person.firstName} ${person.lastName}`}
+                  .img="${person.pictureUrl}"
+                  .name="${`${person.firstName} ${person.lastName}`}"
                 >
                 </vaadin-avatar>
                 <vaadin-vertical-layout>
-                  <span>
-                    ${person.firstName} ${person.lastName}
-                  </span>
+                  <span> ${person.firstName} ${person.lastName} </span>
                   <span
                     style="color: var(--lumo-secondary-text-color); font-size: var(--lumo-font-size-s);"
                   >
