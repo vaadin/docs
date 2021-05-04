@@ -58,12 +58,16 @@ export class Example extends LitElement {
 
   subscriberHeaderRenderer = (root: HTMLElement) => {
     render(
-      html`<span>Suscriber</span>
-        <iron-icon
-          icon="vaadin:info-circle"
-          title="Suscriber are paying customers"
-          style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
-        ></iron-icon>`,
+      html`
+        <vaadin-horizontal-layout style="align-items: center;">
+          <span>Suscriber</span>
+          <iron-icon
+            icon="vaadin:info-circle"
+            title="Suscriber are paying customers"
+            style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
+          ></iron-icon>
+        </vaadin-horizontal-layout>
+      `,
       root
     );
   };
@@ -79,12 +83,16 @@ export class Example extends LitElement {
 
   membershipHeaderRenderer = (root: HTMLElement) => {
     render(
-      html`<span>Membership</span>
-        <iron-icon
-          icon="vaadin:info-circle"
-          title="Membership levels determines which features a client has access to"
-          style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
-        ></iron-icon>`,
+      html`
+        <vaadin-horizontal-layout style="align-items: center;">
+          <span>Membership</span>
+          <iron-icon
+            icon="vaadin:info-circle"
+            title="Membership levels determines which features a client has access to"
+            style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
+          ></iron-icon>
+        </vaadin-horizontal-layout>
+      `,
       root
     );
   };
