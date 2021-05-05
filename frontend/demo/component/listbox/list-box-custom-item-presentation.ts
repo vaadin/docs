@@ -1,13 +1,14 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import '@vaadin/vaadin-list-box';
+import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-item/vaadin-item';
-import '@vaadin/vaadin-icons/vaadin-icons';
-import '@polymer/iron-icon';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { getPeople } from 'Frontend/demo/domain/DataService';
+import '@vaadin/vaadin-list-box';
+import '@vaadin/vaadin-lumo-styles/typography';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+import { getPeople } from '../../domain/DataService';
+import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('list-box-custom-item-presentation')
 export class Example extends LitElement {
@@ -31,22 +32,22 @@ export class Example extends LitElement {
       <vaadin-list-box multiple .selectedValues="${[0, 2]}">
         ${this.items.map(
           (person) => html`
-            <vaadin-item>
-              <div style="display: flex;">
-                <img
-                  style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
-                  src="${person.pictureUrl}"
-                  alt="Portrait of ${person.firstName} ${person.lastName}"
-                />
-                <div>
-                  ${person.firstName} ${person.lastName}
-                  <div
-                    style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+            <vaadin-item style="line-height: var(--lumo-line-height-m);">
+              <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+                <vaadin-avatar
+                  .img="${person.pictureUrl}"
+                  .name="${`${person.firstName} ${person.lastName}`}"
+                >
+                </vaadin-avatar>
+                <vaadin-vertical-layout>
+                  <span> ${person.firstName} ${person.lastName} </span>
+                  <span
+                    style="color: var(--lumo-secondary-text-color); font-size: var(--lumo-font-size-s);"
                   >
                     ${person.profession}
-                  </div>
-                </div>
-              </div>
+                  </span>
+                </vaadin-vertical-layout>
+              </vaadin-horizontal-layout>
             </vaadin-item>
           `
         )}

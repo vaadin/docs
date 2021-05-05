@@ -5,7 +5,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("dialog-basic")
 public class DialogBasic extends Div {
@@ -20,6 +20,6 @@ public class DialogBasic extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<DialogBasic> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<DialogBasic> { // hidden-source-line
+  } // hidden-source-line
 }

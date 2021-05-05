@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("date-time-picker-initial-position")
 public class DateTimePickerInitialPosition extends Div {
@@ -25,6 +25,6 @@ public class DateTimePickerInitialPosition extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerInitialPosition> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<DateTimePickerInitialPosition> { // hidden-source-line
+    } // hidden-source-line
 }
