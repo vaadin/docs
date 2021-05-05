@@ -83,5 +83,5 @@ public class ContextMenuDisabled extends Div {
       return byteCountToDisplaySize(size);
     }
   }
-  public static class Exporter extends DemoExporter<ContextMenuDisabled> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ContextMenuDisabled> {} // hidden-source-line
 }

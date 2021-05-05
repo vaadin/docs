@@ -1,9 +1,9 @@
 package com.vaadin.demo.component.login;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("login-basic")
 public class LoginBasic extends Div {
@@ -21,5 +21,5 @@ public class LoginBasic extends Div {
         add(loginForm);
         // end::snippet[]
     }
-    public static class Exporter extends DemoExporter<LoginBasic> {} // hidden-full-source-line
+    public static class Exporter extends DemoExporter<LoginBasic> {} // hidden-source-line
 }

@@ -1,8 +1,8 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, customElement } from 'lit-element';
-import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-rich-content')
 export class Example extends LitElement {

@@ -1,9 +1,9 @@
 package com.vaadin.demo.component.login;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("login-overlay-header")
 public class LoginOverlayHeader extends Div {
@@ -17,5 +17,5 @@ public class LoginOverlayHeader extends Div {
         add(loginOverlay);
         loginOverlay.setOpened(true);
     }
-    public static class Exporter extends DemoExporter<LoginOverlayHeader> {} // hidden-full-source-line
+    public static class Exporter extends DemoExporter<LoginOverlayHeader> {} // hidden-source-line
 }

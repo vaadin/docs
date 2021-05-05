@@ -1,8 +1,8 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, customElement } from 'lit-element';
+import { LoginI18n } from '@vaadin/vaadin-login/vaadin-login-overlay';
 import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
-import { LoginI18n } from '@vaadin/vaadin-login/vaadin-login-overlay';
 
 @customElement('login-overlay-internationalization-preview')
 export class Example extends LitElement {
