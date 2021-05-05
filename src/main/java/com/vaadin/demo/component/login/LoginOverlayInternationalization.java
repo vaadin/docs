@@ -1,25 +1,21 @@
 package com.vaadin.demo.component.login;
 
-import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
+import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
-@Route("login-internationalization")
-public class LoginInternationalization extends Div {
+@Route("login-overlay-internationalization")
+public class LoginOverlayInternationalization extends Div {
 
-    public LoginInternationalization() {
-        // Demo purposes only
-        getStyle()
-                .set("background-color", "var(--lumo-contrast-5pct)")
-                .set("display", "flex")
-                .set("justify-content", "center")
-                .set("padding", "var(--lumo-space-l)");
-
+    public LoginOverlayInternationalization() {
         // tag::snippet[]
         LoginI18n i18n = LoginI18n.createDefault();
+
+        LoginI18n.Header i18nHeader = i18n.getHeader();
+        i18nHeader.setTitle("Sovelluksen nimi");
+        i18nHeader.setDescription("Sovelluksen kuvaus");
 
         LoginI18n.Form i18nForm = i18n.getForm();
         i18nForm.setTitle("Kirjaudu sisään");
@@ -34,10 +30,13 @@ public class LoginInternationalization extends Div {
         i18nErrorMessage.setMessage("Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.");
         i18n.setErrorMessage(i18nErrorMessage);
 
-        LoginForm loginForm = new LoginForm();
-        loginForm.setI18n(i18n);
+        i18n.setAdditionalInformation("Jos tarvitset lisätietoja käyttäjälle.");
+
+        LoginOverlay loginOverlay = new LoginOverlay();
+        loginOverlay.setI18n(i18n);
         // end::snippet[]
-        add(loginForm);
+        add(loginOverlay);
+        loginOverlay.setOpened(true);
     }
-    public static class Exporter extends DemoExporter<LoginInternationalization> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<LoginOverlayInternationalization> {} // hidden-full-source-line
 }
