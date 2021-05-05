@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
-
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-custom-field/vaadin-custom-field';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
@@ -21,7 +20,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-custom-field label="Price" theme="small">
-        <vaadin-horizontal-layout theme="space-s">
+        <vaadin-horizontal-layout theme="spacing-s">
           <vaadin-text-field theme="small"></vaadin-text-field>
           <vaadin-select
             theme="small"

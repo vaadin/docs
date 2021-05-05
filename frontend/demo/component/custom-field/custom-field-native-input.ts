@@ -23,7 +23,7 @@ export class Example extends LitElement {
         label="Payment information"
         @change="${(e: CustomFieldValueChanged) => (this.customFieldValue = e.detail.value)}"
       >
-        <vaadin-horizontal-layout theme="space-s">
+        <vaadin-horizontal-layout theme="spacing-s">
           <input
             aria-label="Cardholder name"
             pattern="[\\p{L} \\-]+"
