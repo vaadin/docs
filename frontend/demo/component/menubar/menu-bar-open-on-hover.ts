@@ -1,13 +1,12 @@
-import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-full-source-line
+import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-full-source-line
+import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
-import { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 
-@customElement('menu-bar-basic')
+@customElement('menu-bar-open-on-hover')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -37,25 +36,13 @@ export class Example extends LitElement {
     },
     { text: 'Duplicate' },
   ];
-
-  @internalProperty()
-  private selectedItem?: MenuBarItem;
   // end::snippet[]
 
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-menu-bar
-        .items="${this.items}"
-        @item-selected="${this.itemSelected}"
-      ></vaadin-menu-bar>
-
-      <div>Clicked item: ${this.selectedItem?.text}</div>
+      <vaadin-menu-bar .items="${this.items}" open-on-hover></vaadin-menu-bar>
       <!-- end::snippethtml[] -->
     `;
-  }
-
-  itemSelected(e: MenuBarItemSelectedEvent) {
-    this.selectedItem = e.detail.value;
   }
 }

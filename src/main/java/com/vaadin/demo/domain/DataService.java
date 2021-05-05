@@ -36,9 +36,8 @@ public class DataService {
     return getPeople().subList(0, count);
   }
 
-  public static List<Person> getPeople(int count, Integer managarId) {
-    List<Person> people = getPeople();
-    people.removeIf((Person person) -> person.getManagerId() != managarId);
+  public static List<Person> getPeople(int count, Integer managerId) {
+    List<Person> people = getPeople(managerId);
     return people.subList(0, count);
   }
 
@@ -52,6 +51,24 @@ public class DataService {
       }
     }
     return professions;
+  }
+
+  /**
+   * Get employees for a given manager.
+   */
+  public static List<Person> getPeople(Integer managerId) {
+    List<Person> people = getPeople();
+    people.removeIf(person -> person.getManagerId() != managerId);
+    return people;
+  }
+
+  /**
+   * Get all managers.
+   */
+  public static List<Person> getManagers() {
+    List<Person> people = getPeople();
+    people.removeIf(person -> !person.isManager());
+    return people;
   }
 
   public static Templates getTemplates() {
