@@ -3,13 +3,12 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 
 import { customElement, LitElement, internalProperty, css } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import { GridDragStartEvent, GridDropEvent, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-drag-rows-between-grids')
 export class Example extends LitElement {
   constructor() {
@@ -26,8 +25,7 @@ export class Example extends LitElement {
         flex-wrap: wrap;
       }
 
-      .grid1,
-      .grid2 {
+      vaadin-grid {
         width: 300px;
         height: 300px;
         margin-left: 0.5rem;
@@ -37,6 +35,7 @@ export class Example extends LitElement {
     `;
   }
 
+  // tag::snippet[]
   @internalProperty()
   private draggedItem?: Person;
 
@@ -52,21 +51,24 @@ export class Example extends LitElement {
     this.grid2Items = people.slice(5);
   }
 
+  private startDraggingItem = (event: GridDragStartEvent) => {
+    this.draggedItem = event.detail.draggedItems[0] as Person;
+  };
+
+  private clearDraggedItem = () => {
+    delete this.draggedItem;
+  };
+
   render() {
     return html`
       <div class="grids-container">
         <vaadin-grid
           .items="${this.grid1Items}"
-          class="grid1"
           ?rows-draggable="${true}"
           drop-mode="on-grid"
-          @grid-dragstart="${(event: CustomEvent) => {
-            this.draggedItem = event.detail.draggedItems[0];
-          }}"
-          @grid-dragend="${() => {
-            delete this.draggedItem;
-          }}"
-          @grid-drop="${(event: CustomEvent) => {
+          @grid-dragstart="${this.startDraggingItem}"
+          @grid-dragend="${this.clearDraggedItem}"
+          @grid-drop="${(event: GridDropEvent) => {
             const { dropTargetItem } = event.detail;
             const draggedPerson = this.draggedItem as Person;
             if (dropTargetItem !== draggedPerson) {
@@ -91,16 +93,11 @@ export class Example extends LitElement {
 
         <vaadin-grid
           .items="${this.grid2Items}"
-          class="grid2"
           ?rows-draggable="${true}"
           drop-mode="on-grid"
-          @grid-dragstart="${(event: CustomEvent) => {
-            this.draggedItem = event.detail.draggedItems[0];
-          }}"
-          @grid-dragend="${() => {
-            delete this.draggedItem;
-          }}"
-          @grid-drop="${(event: CustomEvent) => {
+          @grid-dragstart="${this.startDraggingItem}"
+          @grid-dragend="${this.clearDraggedItem}"
+          @grid-drop="${(event: GridDropEvent) => {
             const { dropTargetItem } = event.detail;
             const draggedPerson = this.draggedItem as Person;
             if (dropTargetItem !== draggedPerson) {
@@ -125,10 +122,10 @@ export class Example extends LitElement {
       </div>
     `;
   }
+  // end::snippet[]
 
   private fullNameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
     const person: Person = model.item as Person;
     render(html`${person.firstName} ${person.lastName}`, root);
   };
 }
-// end::snippet[]

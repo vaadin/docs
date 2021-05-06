@@ -12,7 +12,6 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-build-in-filtering')
 export class Example extends LitElement {
   constructor() {
@@ -34,17 +33,19 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-filter-column
           header="Name"
           path="displayName"
           .renderer="${this.nameRenderer}"
           flex-grow="0"
-          auto-width
+          width="230px"
         ></vaadin-grid-filter-column>
         <vaadin-grid-filter-column path="email"></vaadin-grid-filter-column>
         <vaadin-grid-filter-column path="profession"></vaadin-grid-filter-column>
       </vaadin-grid>
+      <!-- end::snippet[] -->
     `;
   }
 
@@ -61,4 +62,3 @@ export class Example extends LitElement {
     );
   };
 }
-// end::snippet[]

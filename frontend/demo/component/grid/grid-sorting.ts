@@ -8,7 +8,6 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-sorting')
 export class Example extends LitElement {
   constructor() {
@@ -30,6 +29,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-sort-column path="id"></vaadin-grid-sort-column>
         <vaadin-grid-sort-column path="displayName"></vaadin-grid-sort-column>
@@ -37,7 +37,7 @@ export class Example extends LitElement {
         <vaadin-grid-sort-column path="profession"></vaadin-grid-sort-column>
         <vaadin-grid-sort-column path="birthday"></vaadin-grid-sort-column>
       </vaadin-grid>
+      <!-- end::snippet[] -->
     `;
   }
 }
-// end::snippet[]

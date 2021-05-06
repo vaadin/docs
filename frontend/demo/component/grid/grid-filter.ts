@@ -15,8 +15,6 @@ import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 import { TextFieldElement } from '@vaadin/vaadin-text-field';
 
-// tag::snippet[]
-
 type PersonEnhanced = Person & { displayName: string };
 @customElement('grid-filter')
 export class Example extends LitElement {
@@ -26,6 +24,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
+  // tag::snippet[]
   @internalProperty()
   private filteredItems: PersonEnhanced[] = [];
 
@@ -67,7 +66,7 @@ export class Example extends LitElement {
             header="Name"
             .renderer="${this.nameRenderer}"
             flex-grow="0"
-            auto-width
+            width="230px"
           ></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
@@ -75,6 +74,7 @@ export class Example extends LitElement {
       </vaadin-vertical-layout>
     `;
   }
+  // end::snippet[]
 
   private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
     const person = model.item as Person & { displayName: string };
@@ -89,4 +89,3 @@ export class Example extends LitElement {
     );
   };
 }
-// end::snippet[]

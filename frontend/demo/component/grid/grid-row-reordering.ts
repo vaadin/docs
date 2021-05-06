@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 
 import { customElement, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import { GridDragStartEvent, GridDropEvent, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -36,13 +36,13 @@ export class Example extends LitElement {
         .items="${this.items}"
         ?rows-draggable="${true}"
         drop-mode="between"
-        @grid-dragstart="${(event: CustomEvent) => {
-          this.draggedItem = event.detail.draggedItems[0];
+        @grid-dragstart="${(event: GridDragStartEvent) => {
+          this.draggedItem = event.detail.draggedItems[0] as Person;
         }}"
         @grid-dragend="${() => {
           delete this.draggedItem;
         }}"
-        @grid-drop="${(event: CustomEvent) => {
+        @grid-drop="${(event: GridDropEvent) => {
           const { dropTargetItem, dropLocation } = event.detail;
           const draggedPerson = this.draggedItem as Person;
           // only act when dropping on another item
@@ -52,7 +52,7 @@ export class Example extends LitElement {
             this.items.splice(draggedItemIndex, 1);
             // re-insert the item at its new position
             const dropIndex =
-              this.items.indexOf(dropTargetItem) + (dropLocation === 'below' ? 1 : 0);
+              this.items.indexOf(dropTargetItem as Person) + (dropLocation === 'below' ? 1 : 0);
             this.items.splice(dropIndex, 0, draggedPerson);
             // re-assign the array to refresh the grid
             this.items = [...this.items];

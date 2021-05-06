@@ -34,11 +34,11 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid .items="${this.items}">
-        <vaadin-grid-column
-          header="Image"
+        <vaadin-grid-sort-column
+          header="Employee"
+          path="lastName"
           .renderer="${this.employeeRenderer}"
-          .headerRenderer="${this.employeeHeaderRenderer}"
-        ></vaadin-grid-column>
+        ></vaadin-grid-sort-column>
         <vaadin-grid-column
           .renderer="${this.birthdayRenderer}"
           .headerRenderer="${this.birthdayHeaderRenderer}"
@@ -47,9 +47,6 @@ export class Example extends LitElement {
     `;
   }
 
-  private employeeHeaderRenderer = (root: HTMLElement) => {
-    render(html`<vaadin-grid-sorter path="lastName">Employee</vaadin-grid-sorter>`, root);
-  };
   private employeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
     const person = model.item as Person;
     render(

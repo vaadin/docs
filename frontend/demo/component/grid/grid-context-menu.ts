@@ -18,7 +18,6 @@ import {
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import { guard } from 'lit-html/directives/guard';
 
-// tag::snippet[]
 @customElement('grid-context-menu')
 export class Example extends LitElement {
   constructor() {
@@ -30,40 +29,37 @@ export class Example extends LitElement {
   @internalProperty()
   private items: Person[] = [];
 
-  @query('vaadin-grid')
-  private grid!: GridElement;
-
   async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
+
+  // tag::snippet[]
+  private contextMenuRenderer = () => (
+    root: HTMLElement,
+    elem: ContextMenuElement,
+    context: ContextMenuRendererContext
+  ) => {
+    const { sourceEvent } = context.detail! as { sourceEvent: Event };
+    const grid = elem.firstElementChild as GridElement;
+
+    const eventContext = grid.getEventContext(sourceEvent) as GridEventContext;
+    const person = eventContext.item as Person;
+
+    render(
+      html`<vaadin-list-box style="color: var(--lumo-contrast-70pct);">
+        <h6 style="margin: 0 var(--lumo-space-m)">${person.firstName} ${person.lastName}</h6>
+        ${this.createItem('vaadin:pencil', 'Edit')} ${this.createItem('vaadin:trash', 'Delete')}
+        <hr />
+        ${this.createItem('vaadin:envelope-o', 'Email')} ${this.createItem('vaadin:phone', 'Call')}
+      </vaadin-list-box>`,
+      root
+    );
+  };
+
   render() {
     return html`
-      <vaadin-context-menu
-        .renderer="${guard(
-          [],
-          () => (root: HTMLElement, _: ContextMenuElement, context: ContextMenuRendererContext) => {
-            const { sourceEvent } = context.detail! as { sourceEvent: Event };
-
-            const eventContext = this.grid.getEventContext(sourceEvent) as GridEventContext;
-            const person = eventContext.item as Person;
-
-            render(
-              html`<vaadin-list-box style="color: var(--lumo-contrast-70pct);">
-                <h6 style="margin: 0 var(--lumo-space-m)">
-                  ${person.firstName} ${person.lastName}
-                </h6>
-                ${this.createItem('vaadin:pencil', 'Edit')}
-                ${this.createItem('vaadin:trash', 'Delete')}
-                <hr />
-                ${this.createItem('vaadin:envelope-o', 'Email')}
-                ${this.createItem('vaadin:phone', 'Call')}
-              </vaadin-list-box>`,
-              root
-            );
-          }
-        )}"
-      >
+      <vaadin-context-menu .renderer="${guard([], this.contextMenuRenderer)}">
         <vaadin-grid .items="${this.items}" @vaadin-contextmenu="${this.onContextMenu}">
           <vaadin-grid-column path="firstName"></vaadin-grid-column>
           <vaadin-grid-column path="lastName"></vaadin-grid-column>
@@ -92,5 +88,5 @@ export class Example extends LitElement {
       e.stopPropagation();
     }
   }
+  // end::snippet[]
 }
-// end::snippet[]
