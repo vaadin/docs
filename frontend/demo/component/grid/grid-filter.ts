@@ -13,7 +13,6 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { TextFieldElement } from '@vaadin/vaadin-text-field';
 
 type PersonEnhanced = Person & { displayName: string };
 @customElement('grid-filter')
@@ -44,8 +43,8 @@ export class Example extends LitElement {
         <vaadin-text-field
           placeholder="Search"
           style="width: 50%;"
-          @keyup="${(e: KeyboardEvent) => {
-            const value = (e.target as TextFieldElement).value || '';
+          @value-changed="${(e: CustomEvent) => {
+            const value = (e.detail.value as string) || '';
             const filters = value
               .trim()
               .split(' ')
