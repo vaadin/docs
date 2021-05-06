@@ -1,6 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
-
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'Frontend/generated/theme';

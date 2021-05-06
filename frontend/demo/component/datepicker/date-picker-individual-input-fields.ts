@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
-
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-individual-input-fields')
@@ -35,13 +35,19 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-combo-box label="Day" .items="${this.days}" style="width: 5em;"></vaadin-combo-box>
-      <vaadin-combo-box
-        label="Month"
-        .items="${this.months}"
-        style="width: 9em;"
-      ></vaadin-combo-box>
-      <vaadin-combo-box label="Year" .items="${this.years}" style="width: 6em;"></vaadin-combo-box>
+      <vaadin-horizontal-layout theme="spacing-s">
+        <vaadin-combo-box label="Day" .items="${this.days}" style="width: 5em;"></vaadin-combo-box>
+        <vaadin-combo-box
+          label="Month"
+          .items="${this.months}"
+          style="width: 9em;"
+        ></vaadin-combo-box>
+        <vaadin-combo-box
+          label="Year"
+          .items="${this.years}"
+          style="width: 6em;"
+        ></vaadin-combo-box>
+      </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;
   }
