@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty, query } from 'lit-element';
+import { customElement, LitElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
