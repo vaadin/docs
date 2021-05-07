@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar-group';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -41,6 +41,7 @@ export class Example extends LitElement {
       subscriber: false,
       manager: false,
       managerId: -1,
+      status: '',
     });
 
     this.items = people;
@@ -60,12 +61,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-avatar-group
-        .i18n=${this.i18n}
-        .items=${this.items.map((person) => {
+        .i18n="${this.i18n}"
+        .items="${this.items.map((person) => {
           return {
             name: `${person.firstName} ${person.lastName}`,
           };
-        })}
+        })}"
       >
       </vaadin-avatar-group>
     `;

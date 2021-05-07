@@ -1,6 +1,6 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
@@ -10,6 +10,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 import { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
+import { format, parseISO } from 'date-fns';
 
 @customElement('grid-pro-editors')
 export class Example extends LitElement {
@@ -30,38 +31,43 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid-pro .items=${this.items} enter-next-row>
+      <vaadin-grid-pro .items="${this.items}" enter-next-row>
         <vaadin-grid-pro-edit-column path="firstName"> </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column
           path="membership"
           editor-type="select"
-          .editorOptions=${['Regular', 'Premium', 'VIP']}
+          .editorOptions="${['Regular', 'Premium', 'VIP']}"
         >
         </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column path="subscriber" editor-type="checkbox">
         </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column
           path="birthday"
-          .renderer=${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
-            if (model?.item) {
-              const person = model.item as Person;
-              const birthday = new Date(`${person.birthday} 00:00.0000`).toLocaleDateString();
-              root.textContent = birthday;
+          .renderer="${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
+            if (!model) {
+              return;
             }
-          }}
-          .editModeRenderer=${(
+            const person = model.item as Person;
+            root.textContent = format(parseISO(person.birthday), 'MM/dd/yyyy');
+          }}"
+          .editModeRenderer="${(
             root: HTMLElement,
             _column?: GridColumnElement,
             model?: GridItemModel
           ) => {
-            root.innerHTML = '';
-            const datePicker = document.createElement('vaadin-date-picker');
-            if (model?.item) {
-              const person = model.item as Person;
-              datePicker.value = person.birthday;
+            if (!model) {
+              return;
             }
-            root.appendChild(datePicker);
-          }}
+            const person = model.item as Person;
+
+            let datePicker = root.querySelector('vaadin-date-picker');
+            if (!datePicker) {
+              root.innerHTML = '';
+              datePicker = document.createElement('vaadin-date-picker');
+              root.appendChild(datePicker);
+            }
+            datePicker.value = person.birthday;
+          }}"
         ></vaadin-grid-pro-edit-column>
       </vaadin-grid-pro>
       <!-- end::snippet[] -->

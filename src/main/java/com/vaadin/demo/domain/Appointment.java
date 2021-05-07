@@ -4,9 +4,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
 
-@JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
+@JsonIgnoreProperties(ignoreUnknown = true) // hidden-source-line
 // tag::snippet[]
 public class Appointment {
 
@@ -15,6 +15,8 @@ public class Appointment {
   private LocalDateTime startDateTime;
 
   private LocalDate startDate;
+
+  private String enrollmentPeriod;
 
   private Integer id;
 
@@ -65,6 +67,14 @@ public class Appointment {
 
   public void setStartDate(LocalDate startDate) {
     this.startDate = startDate;
+  }
+
+  public String getEnrollmentPeriod() {
+    return enrollmentPeriod;
+  }
+
+  public void setEnrollmentPeriod(String enrollmentPeriod) {
+    this.enrollmentPeriod = enrollmentPeriod;
   }
 }
 // end::snippet[]

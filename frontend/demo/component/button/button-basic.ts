@@ -1,10 +1,10 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, internalProperty, customElement } from 'lit-element';
 import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('button-basic')
 export class Example extends LitElement {
   constructor() {
@@ -14,17 +14,16 @@ export class Example extends LitElement {
   }
 
   @internalProperty()
-  private clickedText = '';
+  private counter = 0;
 
   render() {
     return html`
-      <vaadin-button @click=${this.clickListener}>Button</vaadin-button>
-      ${this.clickedText}
+      <!-- tag::snippet[] -->
+      <vaadin-horizontal-layout theme="spacing" style="align-items: baseline">
+        <vaadin-button @click="${() => this.counter++}">Button</vaadin-button>
+        <div>Clicked ${this.counter} times</div>
+      </vaadin-horizontal-layout>
+      <!-- end::snippet[] -->
     `;
   }
-
-  clickListener() {
-    this.clickedText = 'The button was clicked';
-  }
 }
-// end::snippet[]

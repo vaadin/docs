@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
@@ -27,7 +27,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-split-layout>
-        <vaadin-form-layout .responsiveSteps=${this.responsiveSteps}>
+        <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
           <vaadin-text-field label="First name"></vaadin-text-field>
           <vaadin-text-field label="Last name"></vaadin-text-field>
           <vaadin-email-field label="Email"></vaadin-email-field>

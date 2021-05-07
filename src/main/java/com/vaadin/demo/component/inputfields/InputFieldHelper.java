@@ -10,7 +10,7 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("input-field-helper")
 public class InputFieldHelper extends HorizontalLayout {
@@ -66,6 +66,6 @@ public class InputFieldHelper extends HorizontalLayout {
     }
   }
 
-  public static class Exporter extends DemoExporter<InputFieldHelper> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<InputFieldHelper> { // hidden-source-line
+  } // hidden-source-line
 }

@@ -1,8 +1,7 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, customElement } from 'lit-element';
-import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-validation')
 export class Example extends LitElement {

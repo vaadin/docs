@@ -26,6 +26,6 @@ public class ScrollerBoth extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<ScrollerBoth> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ScrollerBoth> { // hidden-source-line
+  } // hidden-source-line
 }

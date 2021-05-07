@@ -1,6 +1,6 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
-import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-source-line
+import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-source-line
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
@@ -26,9 +26,9 @@ export class Example extends LitElement {
       <vaadin-date-time-picker
         label="Appointment date and time"
         helper-text="Must be within 60 days from today"
-        .value=${initialValue}
-        .min=${minValue}
-        .max=${maxValue}
+        .value="${initialValue}"
+        .min="${minValue}"
+        .max="${maxValue}"
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->
     `;

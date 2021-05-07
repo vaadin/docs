@@ -1,6 +1,6 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/contextMenuConnector'; // hidden-full-source-line
-import '@vaadin/flow-frontend/menubarConnector'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/contextMenuConnector'; // hidden-source-line
+import '@vaadin/flow-frontend/menubarConnector'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
@@ -57,7 +57,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-menu-bar .items=${this.menuBarItems} theme="tertiary-inline"> </vaadin-menu-bar>
+      <vaadin-menu-bar .items="${this.menuBarItems}" theme="tertiary-inline"> </vaadin-menu-bar>
       <!-- end::snippet[] -->
     `;
   }

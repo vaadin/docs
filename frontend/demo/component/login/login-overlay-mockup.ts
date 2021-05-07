@@ -2,7 +2,6 @@ import { customElement, LitElement, html, css, unsafeCSS, property } from 'lit-e
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import { LoginI18n } from '@vaadin/vaadin-login';
-
 import * as img from '../../../../src/main/resources/images/starry-sky.png';
 
 @customElement('login-overlay-mockup')
@@ -15,74 +14,63 @@ export class LoginOverlayMockupElement extends LitElement {
 
   static get styles() {
     return css`
-      :host {
-        display: block;
-        position: relative;
-        height: 620px;
-        overflow: auto;
-      }
       [part='backdrop'] {
-        background-color: var(--lumo-shade-20pct);
         background: var(--lumo-base-color)
           linear-gradient(var(--lumo-shade-5pct), var(--lumo-shade-5pct));
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        pointer-events: auto;
         display: flex;
         justify-content: center;
-        align-items: center;
-        height: min-content;
+        padding: var(--lumo-space-m);
       }
+
       [part='card'] {
-        border-radius: var(--lumo-border-radius);
-        box-shadow: var(--lumo-box-shadow-s);
-        margin: var(--lumo-space-s);
-        height: max-content;
-        width: calc(var(--lumo-size-m) * 10);
         background: var(--lumo-base-color)
           linear-gradient(var(--lumo-tint-5pct), var(--lumo-tint-5pct));
-        max-width: 100%;
+        border-radius: var(--lumo-border-radius);
+        box-shadow: var(--lumo-box-shadow-s);
         box-sizing: border-box;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
-      }
-      [part='brand'] {
-        padding: var(--lumo-space-l) var(--lumo-space-xl) var(--lumo-space-l) var(--lumo-space-l);
-        background-color: var(--lumo-primary-color);
-        color: var(--lumo-primary-contrast-color);
-        min-height: calc(var(--lumo-size-m) * 5);
-        box-sizing: border-box;
+        margin: var(--lumo-space-s);
+        max-width: 100%;
         overflow: hidden;
+        height: max-content;
+        width: calc(var(--lumo-size-m) * 10);
+      }
+
+      [part='brand'] {
+        background-color: var(--lumo-primary-color);
+        box-sizing: border-box;
+        color: var(--lumo-primary-contrast-color);
+        display: flex;
+        flex-direction: column;
         flex-grow: 1;
         flex-shrink: 0;
-        display: flex;
-        flex-direction: column;
         justify-content: flex-end;
+        min-height: calc(var(--lumo-size-m) * 5);
+        overflow: hidden;
+        padding: var(--lumo-space-l) var(--lumo-space-xl) var(--lumo-space-l) var(--lumo-space-l);
       }
+
       [part='brand'] h1 {
         color: inherit;
-        margin: 0;
-        font-size: var(--lumo-font-size-xxxl);
-        font-weight: 500;
-        line-height: var(--lumo-line-height-xs);
         font-family: var(--lumo-font-family);
+        font-size: var(--lumo-font-size-xxxl);
+        font-weight: 600;
+        line-height: var(--lumo-line-height-xs);
+        margin: 0;
       }
+
       [part='description'] {
-        line-height: var(--lumo-line-height-s);
         color: var(--lumo-tint-70pct);
+        line-height: var(--lumo-line-height-s);
         margin-bottom: 0;
         margin-top: 0.5em;
       }
 
       :host([theme='header-customised']) [part='brand'] {
-        background-size: cover;
-        background-position: center;
         background-image: url(${unsafeCSS(img)});
+        background-position: center;
+        background-size: cover;
       }
     `;
   }
@@ -122,7 +110,7 @@ export class LoginOverlayMockupElement extends LitElement {
             <p part="description">${this.description}</p>
           </div>
           <div part="form">
-            <vaadin-login-form .error=${this.error} .i18n=${this.i18n}></vaadin-login-form>
+            <vaadin-login-form .error="${this.error}" .i18n="${this.i18n}"></vaadin-login-form>
           </div>
         </section>
       </div>
