@@ -14,6 +14,7 @@ export class UiMenu extends LitElement {
           <vaadin-tab>Venus</vaadin-tab>
           <vaadin-tab>Earth</vaadin-tab>
           <vaadin-tab>Mars</vaadin-tab>
+          <vaadin-tab>Jupiter</vaadin-tab>
         </vaadin-tabs>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->

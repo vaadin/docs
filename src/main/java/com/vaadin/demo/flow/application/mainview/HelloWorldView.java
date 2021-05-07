@@ -35,6 +35,8 @@ public class HelloWorldView extends HorizontalLayout {
         sayHello = new Button("Say hello");
         add(name, sayHello);
         setVerticalComponentAlignment(Alignment.END, name, sayHello);
+
+        // Handle clicks
         sayHello.addClickListener(e -> {
             Notification.show("Hello " + name.getValue());
         });
