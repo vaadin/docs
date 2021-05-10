@@ -18,6 +18,6 @@ public class BadgeIconsOnly extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<BadgeIconsOnly> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<BadgeIconsOnly> { // hidden-source-line
+    } // hidden-source-line
 }

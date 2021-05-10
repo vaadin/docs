@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("combo-box-custom-entry-2")
 public class ComboBoxCustomEntry2 extends Div {
@@ -31,6 +31,6 @@ public class ComboBoxCustomEntry2 extends Div {
     comboBox.setHelperText("Select or type a browser");
   }
 
-  public static class Exporter extends DemoExporter<ComboBoxCustomEntry2> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ComboBoxCustomEntry2> { // hidden-source-line
+  } // hidden-source-line
 }

@@ -5,4 +5,4 @@ import '@vaadin/vaadin-material-styles/color';
 // tag::typography[]
 import '@vaadin/vaadin-material-styles/typography';
 // end::typography[]
-window.dispatchEvent(new CustomEvent('custom-properties-changed')); // hidden-full-source-line
+window.dispatchEvent(new CustomEvent('custom-properties-changed')); // hidden-source-line

@@ -36,6 +36,6 @@ public class MessageListComponent extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<MessageListComponent> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<MessageListComponent> { // hidden-source-line
+    } // hidden-source-line
 }

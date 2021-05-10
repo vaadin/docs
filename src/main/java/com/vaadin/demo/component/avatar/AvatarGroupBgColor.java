@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.avatar;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.avatar.AvatarGroup;
@@ -31,6 +31,6 @@ public class AvatarGroupBgColor extends Div {
     add(avatarGroup);
   }
 
-  public static class Exporter extends DemoExporter<AvatarGroupBgColor> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<AvatarGroupBgColor> { // hidden-source-line
+  } // hidden-source-line
 }

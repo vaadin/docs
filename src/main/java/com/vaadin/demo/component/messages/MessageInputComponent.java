@@ -20,6 +20,6 @@ public class MessageInputComponent extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<MessageInputComponent> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<MessageInputComponent> { // hidden-source-line
+    } // hidden-source-line
 }

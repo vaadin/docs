@@ -20,6 +20,6 @@ public class SelectDisabled extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectDisabled> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectDisabled> { // hidden-source-line
+  } // hidden-source-line
 }

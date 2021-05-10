@@ -1,15 +1,14 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import { ContextMenuOpenedChanged } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
+import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
-import { ContextMenuOpenedChanged } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
 @customElement('context-menu-left-click')
 export class Example extends LitElement {
@@ -40,7 +39,7 @@ export class Example extends LitElement {
   };
 
   async firstUpdated() {
-    this.gridItems = (await getPeople()).people;
+    this.gridItems = (await getPeople({ count: 5 })).people;
   }
 
   render() {
@@ -48,15 +47,15 @@ export class Example extends LitElement {
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu
         open-on="click"
-        .items="${this.items}"
-        @opened-changed="${(e: ContextMenuOpenedChanged) =>
-          (this.contextMenuOpened = e.detail.value)}"
+        .items=${this.items}
+        @opened-changed=${(e: ContextMenuOpenedChanged) =>
+          (this.contextMenuOpened = e.detail.value)}
       >
-        <vaadin-grid .items="${this.gridItems}" @click="${this.onClick}">
-          <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
-          <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
-          <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
-          <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
+        <vaadin-grid height-by-rows .items=${this.gridItems} @click=${this.onClick}>
+          <vaadin-grid-column path="firstName"></vaadin-grid-column>
+          <vaadin-grid-column path="lastName"></vaadin-grid-column>
+          <vaadin-grid-column path="email"></vaadin-grid-column>
+          <vaadin-grid-column header="Phone number" path="address.phone"></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->

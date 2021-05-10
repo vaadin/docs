@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-source-line
 
 import { customElement, html, LitElement } from 'lit-element';
 import '@vaadin/vaadin-time-picker/vaadin-time-picker';

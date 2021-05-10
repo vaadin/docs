@@ -4,7 +4,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("radio-button-group-labels")
 public class RadioButtonGroupLabels extends VerticalLayout {
@@ -30,6 +30,6 @@ public class RadioButtonGroupLabels extends VerticalLayout {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<RadioButtonGroupLabels> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<RadioButtonGroupLabels> { // hidden-source-line
+  } // hidden-source-line
 }
