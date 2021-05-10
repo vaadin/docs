@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, customElement, css, internalProperty } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
@@ -30,11 +30,9 @@ export class Example extends LitElement {
 
   @internalProperty()
   alignFirstItem?: string;
-  // end::snippet[]
 
   render() {
     return html`
-      <!-- tag::snippethtml[] -->
       <vaadin-vertical-layout theme="spacing padding" style="align-items: ${this.alignLayoutItems}">
         <layout-item style="align-self: ${this.alignFirstItem}">Item 1</layout-item>
         <layout-item theme="inactive">Item 2</layout-item>
@@ -61,7 +59,7 @@ export class Example extends LitElement {
         <vaadin-radio-button value="flex-end">End</vaadin-radio-button>
         <vaadin-radio-button value="stretch">Stretch</vaadin-radio-button>
       </vaadin-radio-group>
-      <!-- end::snippethtml[] -->
     `;
   }
+  // end::snippet[]
 }

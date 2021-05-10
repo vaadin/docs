@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, customElement, css, internalProperty } from 'lit-element';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
@@ -29,11 +29,9 @@ export class Example extends LitElement {
   // tag::snippet[]
   @internalProperty()
   private theme!: string;
-  // end::snippet[]
 
   render() {
     return html`
-      <!-- tag::snippethtml[] -->
       <vaadin-vertical-layout theme="${this.theme} spacing">
         <layout-item>Item 1</layout-item>
         <layout-item>Item 2</layout-item>
@@ -46,8 +44,8 @@ export class Example extends LitElement {
         <vaadin-radio-button value="padding" checked>Enabled</vaadin-radio-button>
         <vaadin-radio-button value="">Disabled</vaadin-radio-button>
       </vaadin-radio-group>
-      <!-- end::snippethtml[] -->
       <p>Padding is applied using the padding theme variant.</p>
     `;
   }
+  // end::snippet[]
 }
