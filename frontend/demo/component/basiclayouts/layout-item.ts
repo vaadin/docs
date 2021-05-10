@@ -8,8 +8,7 @@ export class DetailContent extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: var(--lumo-size-xl);
-        padding: var(--lumo-space-wide-m);
+        padding: var(--lumo-space-wide-xs);
         background: var(--lumo-primary-color);
         border-radius: var(--lumo-border-radius-m);
         color: var(--lumo-base-color);
