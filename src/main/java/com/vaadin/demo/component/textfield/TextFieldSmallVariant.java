@@ -4,7 +4,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("text-field-small-variant")
 public class TextFieldSmallVariant extends HorizontalLayout {
@@ -26,6 +26,6 @@ public class TextFieldSmallVariant extends HorizontalLayout {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<TextFieldSmallVariant> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<TextFieldSmallVariant> { // hidden-source-line
+  } // hidden-source-line
 }

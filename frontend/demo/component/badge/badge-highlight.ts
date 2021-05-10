@@ -1,6 +1,6 @@
-import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // hidden-full-source-line
-import 'Frontend/demo/init'; // hidden-full-source-line
-import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-full-source-line
+import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-source-line
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-lumo-styles/icons';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';

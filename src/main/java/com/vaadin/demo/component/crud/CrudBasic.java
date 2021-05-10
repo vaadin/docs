@@ -11,7 +11,7 @@ import com.vaadin.flow.router.Route;
 
 import java.util.Arrays;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.Person;
 
 @Route("crud-basic")
@@ -49,6 +49,6 @@ public class CrudBasic extends Div {
     return new BinderCrudEditor<>(binder, form);
   }
 
-  public static class Exporter extends DemoExporter<CrudBasic> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CrudBasic> { // hidden-source-line
+  } // hidden-source-line
 }

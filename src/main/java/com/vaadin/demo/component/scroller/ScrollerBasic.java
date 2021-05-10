@@ -111,6 +111,6 @@ public class ScrollerBasic extends VerticalLayout {
     add(footer);
   }
 
-  public static class Exporter extends DemoExporter<ScrollerBasic> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ScrollerBasic> { // hidden-source-line
+  } // hidden-source-line
 }

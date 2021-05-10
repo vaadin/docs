@@ -11,7 +11,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import java.util.List;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.Card;
 import com.vaadin.demo.domain.DataService;
 
@@ -40,6 +40,6 @@ public class RadioButtonPresentation extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<RadioButtonPresentation> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<RadioButtonPresentation> { // hidden-source-line
+  } // hidden-source-line
 }

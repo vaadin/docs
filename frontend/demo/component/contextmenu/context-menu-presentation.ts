@@ -1,17 +1,19 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
-
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import { render } from 'lit-html';
+import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
+import { GridElement, GridEventContext, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 
 @customElement('context-menu-presentation')
 export class Example extends LitElement {
@@ -29,27 +31,22 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   async firstUpdated() {
-    this.gridItems = (await getPeople()).people;
-    const itemsArray = this.createItemsArray(this.gridItems.slice(0, 6));
+    const { people } = await getPeople({ count: 10 });
+
+    this.gridItems = people.slice(0, 5);
+    const itemsArray = this.createItemsArray(people.slice(5, 10));
 
     this.items = [
       { component: this.createItem('vaadin:file-search', 'Open') },
       {
         component: this.createItem('vaadin:user-check', 'Assign'),
         children: [
-          { text: 'Managers', component: this.createHeader() },
           { component: itemsArray[0] },
           { component: itemsArray[1] },
           { component: itemsArray[2] },
-          { text: 'Senior Managers', component: this.createHeader() },
           { component: itemsArray[3] },
           { component: itemsArray[4] },
-          { component: itemsArray[5] },
         ],
-      },
-      {
-        component: this.createItem('vaadin:clipboard-check', 'Status'),
-        children: [{ text: 'Assigned' }, { text: 'Promoted' }],
       },
       { component: 'hr' },
       { component: this.createItem('vaadin:trash', 'Delete') },
@@ -60,12 +57,18 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-context-menu .items="${this.items}">
-        <vaadin-grid .items="${this.gridItems}" @vaadin-contextmenu="${this.onContextMenu}">
-          <vaadin-grid-column label="First name" path="firstName"></vaadin-grid-column>
-          <vaadin-grid-column label="Last name" path="lastName"></vaadin-grid-column>
-          <vaadin-grid-column label="Email" path="email"></vaadin-grid-column>
-          <vaadin-grid-column label="Phone number" path="address.phone"></vaadin-grid-column>
+      <vaadin-context-menu .items=${this.items}>
+        <vaadin-grid
+          height-by-rows
+          .items=${this.gridItems}
+          @vaadin-contextmenu=${this.onContextMenu}
+        >
+          <vaadin-grid-column
+            header="Applicant"
+            .renderer=${this.nameRenderer}
+          ></vaadin-grid-column>
+          <vaadin-grid-column path="email"></vaadin-grid-column>
+          <vaadin-grid-column header="Phone number" path="address.phone"></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
@@ -78,21 +81,24 @@ export class Example extends LitElement {
       index == 0 && item.setAttribute('selected', '');
       render(
         html`
-          <div style="display: flex;">
-            <img
-              style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
-              src="${person.pictureUrl}"
-              alt="Portrait of ${person.firstName} ${person.lastName}"
-            />
-            <div>
-              ${person.firstName} ${person.lastName}
-              <div
-                style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+          <vaadin-horizontal-layout
+            style="align-items: center; line-height: var(--lumo-line-height-m)"
+            theme="spacing"
+          >
+            <vaadin-avatar
+              .img=${person.pictureUrl}
+              .name=${`${person.firstName} ${person.lastName}`}
+            >
+            </vaadin-avatar>
+            <vaadin-vertical-layout>
+              <span> ${person.firstName} ${person.lastName} </span>
+              <span
+                style="color: var(--lumo-secondary-text-color); font-size: var(--lumo-font-size-s);"
               >
                 ${Math.floor(Math.random() * 20) + 1} applications
-              </div>
-            </div>
-          </div>
+              </span>
+            </vaadin-vertical-layout>
+          </vaadin-horizontal-layout>
         `,
         item
       );
@@ -104,21 +110,14 @@ export class Example extends LitElement {
     const item = window.document.createElement('vaadin-context-menu-item');
     const icon = window.document.createElement('iron-icon');
 
-    icon.style.width = 'var(--lumo-icon-size-s)';
-    icon.style.height = 'var(--lumo-icon-size-s)';
-    icon.style.marginRight = 'var(--lumo-space-s)';
+    icon.style.color = 'var(--lumo-secondary-text-color)';
+    icon.style.marginInlineEnd = 'var(--lumo-space-s)';
+    icon.style.padding = 'var(--lumo-space-xs)';
 
     icon.setAttribute('icon', iconName);
     item.appendChild(icon);
     text && item.appendChild(window.document.createTextNode(text));
     return item;
-  }
-
-  createHeader() {
-    const header = document.createElement('h6');
-    header.style.marginBottom = '0';
-    header.style.color = 'gray';
-    return header;
   }
 
   onContextMenu(e: MouseEvent) {
@@ -129,4 +128,11 @@ export class Example extends LitElement {
       e.stopPropagation();
     }
   }
+
+  private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+    if (model?.item) {
+      const person = model.item as Person;
+      render(html` <span>${person.firstName} ${person.lastName}</span> `, root);
+    }
+  };
 }

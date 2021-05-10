@@ -7,7 +7,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("accordion-filled-panels")
 public class AccordionFilledPanels extends Div {
@@ -57,6 +57,6 @@ public class AccordionFilledPanels extends Div {
         add(accordion);
     }
 
-    public static class Exporter extends DemoExporter<AccordionFilledPanels> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<AccordionFilledPanels> { // hidden-source-line
+    } // hidden-source-line
 }

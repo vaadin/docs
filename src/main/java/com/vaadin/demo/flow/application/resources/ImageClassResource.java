@@ -20,6 +20,6 @@ public class ImageClassResource extends Div {
         // end::snippet[]
     }
 
-    public static class ImageClassResourceExporter extends DemoExporter<ImageClassResource> { // hidden-full-source-line
-    } // hidden-full-source-line    
+    public static class ImageClassResourceExporter extends DemoExporter<ImageClassResource> { // hidden-source-line
+    } // hidden-source-line    
 }
