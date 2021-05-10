@@ -1,5 +1,5 @@
-import { renderBanner } from './render-banner';
-import img from './images/migration-assistance.png';
+import { renderBanner } from '../render-banner';
+import img from './migration-assistance.png';
 export class MigrationBanner extends HTMLElement {
   content =
     'Are you planning on migrating your application? Get help from Vaadin experts.';
