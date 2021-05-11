@@ -35,27 +35,25 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  private contextMenuRenderer = () => (
-    root: HTMLElement,
-    elem: ContextMenuElement,
-    context: ContextMenuRendererContext
-  ) => {
-    const { sourceEvent } = context.detail! as { sourceEvent: Event };
-    const grid = elem.firstElementChild as GridElement;
+  private contextMenuRenderer =
+    () => (root: HTMLElement, elem: ContextMenuElement, context: ContextMenuRendererContext) => {
+      const { sourceEvent } = context.detail! as { sourceEvent: Event };
+      const grid = elem.firstElementChild as GridElement;
 
-    const eventContext = grid.getEventContext(sourceEvent) as GridEventContext;
-    const person = eventContext.item as Person;
+      const eventContext = grid.getEventContext(sourceEvent) as GridEventContext;
+      const person = eventContext.item as Person;
 
-    render(
-      html`<vaadin-list-box style="color: var(--lumo-contrast-70pct);">
-        <h6 style="margin: 0 var(--lumo-space-m)">${person.firstName} ${person.lastName}</h6>
-        ${this.createItem('vaadin:pencil', 'Edit')} ${this.createItem('vaadin:trash', 'Delete')}
-        <hr />
-        ${this.createItem('vaadin:envelope-o', 'Email')} ${this.createItem('vaadin:phone', 'Call')}
-      </vaadin-list-box>`,
-      root
-    );
-  };
+      render(
+        html`<vaadin-list-box style="color: var(--lumo-contrast-70pct);">
+          <h6 style="margin: 0 var(--lumo-space-m)">${person.firstName} ${person.lastName}</h6>
+          ${this.createItem('vaadin:pencil', 'Edit')} ${this.createItem('vaadin:trash', 'Delete')}
+          <hr />
+          ${this.createItem('vaadin:envelope-o', 'Email')}
+          ${this.createItem('vaadin:phone', 'Call')}
+        </vaadin-list-box>`,
+        root
+      );
+    };
 
   render() {
     return html`
