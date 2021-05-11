@@ -33,17 +33,13 @@ export class RenderBanner extends HTMLElement {
     const text = document.querySelector('.toc-banner-source-text')?.innerHTML;
     const link = document.querySelector('.toc-banner-source-link')?.textContent;
 
-    const bannerHtml = `<div id='tocBanner'>
-        <div class='toc-banner'>
-          <a href='${link}'>
-            <img src='${imgSrc}' alt='banner-image' />
-            <div class='toc-banner--content'>${text}</div>
-          </a>
-        </div>
+    const bannerHtml = `<div class='toc-banner'>
+        <a href='${link}'>
+          <img src='${imgSrc}' alt='banner-image' />
+          <div class='toc-banner--content'>${text}</div>
+        </a>
       </div>`;
 
     bannerWrapper.innerHTML = bannerHtml;
   }
 }
-
-window.customElements.define('migration-banner', RenderBanner);
