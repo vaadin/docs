@@ -47,8 +47,9 @@ export class Example extends LitElement {
         <vaadin-grid-column path="displayName"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due"
-          .renderer="${guard([], () => (root: HTMLElement) =>
-            render(html`<span>${this.randomDate()}</span>`, root)
+          .renderer="${guard(
+            [],
+            () => (root: HTMLElement) => render(html`<span>${this.randomDate()}</span>`, root)
           )}"
         ></vaadin-grid-column>
         <vaadin-grid-column

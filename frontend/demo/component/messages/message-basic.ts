@@ -30,8 +30,7 @@ export class Example extends LitElement {
         userColorIndex: 1,
       },
       {
-        text:
-          'Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.',
+        text: 'Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.',
         time: 'right now',
         userName: 'Linsey Listy',
         userColorIndex: 2,
