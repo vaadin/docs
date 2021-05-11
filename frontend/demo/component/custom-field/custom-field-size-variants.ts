@@ -24,17 +24,19 @@ export class Example extends LitElement {
         <vaadin-select
           theme="small"
           style="width: 6em;"
-          .renderer="${guard([], () => (root: HTMLElement) =>
-            render(
-              html`
-                <vaadin-list-box>
-                  <vaadin-item value="usd">USD</vaadin-item>
-                  <vaadin-item value="eur">EUR</vaadin-item>
-                  <vaadin-item value="gbp">GBP</vaadin-item>
-                </vaadin-list-box>
-              `,
-              root
-            )
+          .renderer="${guard(
+            [],
+            () => (root: HTMLElement) =>
+              render(
+                html`
+                  <vaadin-list-box>
+                    <vaadin-item value="usd">USD</vaadin-item>
+                    <vaadin-item value="eur">EUR</vaadin-item>
+                    <vaadin-item value="gbp">GBP</vaadin-item>
+                  </vaadin-list-box>
+                `,
+                root
+              )
           )}"
         ></vaadin-select>
       </vaadin-custom-field>
