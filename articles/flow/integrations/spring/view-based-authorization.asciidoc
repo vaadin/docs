@@ -1,0 +1,250 @@
+---
+title: View Based Authorization
+order: 25
+layout: page
+---
+
+= View Based Authorization
+
+Vaadin applications that are based on Spring Boot, can leverage from a view based authorization mechanism out of the box, which can be enabled by using a set of annotations and with minimum Spring Security configurations.
+
+== Introduction
+
+At a glance, this mechanism is based on using `@AnonymousAllowed`, `@PermitAll`, `@RolesAllowed`, and `@DenyAll` annotations on view classes to define the access control rules.
+This approach is also based on Vaadin's Spring Boot and Spring Security auto-configuration.
+So if you are not using Spring Boot in your Vaadin Flow application, you may need extra configurations to enable this authorization mechanism. `??? the last sentence needs further discussions`
+
+.Vaadin Fusion Tip:
+[TIP]
+The same set of annotations are used to define the security access control rules on the endpoints of a <<{articles}/fusion/overview#,Vaadin Fusion>> application.
+You can find out more about Security in a Vaadin Fusion application <<{articles}/fusion/security/configuring#,here>>.
+
+.Where to Find the Source Codes
+[NOTE]
+The complete source code for this documentation can be found https://github.com/vaadin-learning-center/crm-tutorial/tree/latest[here].
+//TODO the `latest` branch should be created
+
+== Adding View Based Access Control
+
+As mention in the <<Introduction,Introduction>>, this mechanism is based on Spring Security and Vaadin's Spring Boot auto-configuration.
+To enable this mechanism in a Vaadin Flow Spring Boot application without any security, the followings are needed and should be added to the project (if not exist already):
+
+- A Login view.
+- Spring Security dependencies.
+- A security configuration class that extends `VaadinWebSecurityConfigurerAdapter`.
+- Annotating the view classes with `@AnonymousAllowed`, `@PermitAll`, or `@RolesAllowed` annotations.
+
+=== Login View
+
+Having a login view is one of the basic requirements of many authentication and authorization mechanisms to be able to redirect the anonymous users to that page prior to giving the access of viewing any protected resources.
+
+.`LoginView.java`
+[source,java]
+----
+@Route("login")
+@PageTitle("Login")
+public class LoginView extends VerticalLayout implements BeforeEnterObserver {
+
+    LoginForm login = new LoginForm();
+
+    public LoginView() {
+        addClassName("login-view");
+        setSizeFull();
+
+        setJustifyContentMode(JustifyContentMode.CENTER);
+        setAlignItems(Alignment.CENTER);
+
+        login.setAction("login");
+
+        add(
+            new H1("Test Application"),
+            login
+        );
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        if(beforeEnterEvent.getLocation()
+        .getQueryParameters()
+        .getParameters()
+        .containsKey("error")) {
+            login.setError(true);
+        }
+    }
+}
+----
+
+.Usage of Vaadin's LoginForm Component
+[NOTE]
+In this example, Vaadin's `LoginForm` component is used to make the implementation more brief, but there is no obligation to do so, feel free to implement your own Login view, as you wish.
+
+=== Spring Security Dependencies
+
+To enable Spring Security in a Spring Boot application there are certain dependencies that should be added to the project.
+Either of the following ways can be used for adding Spring Security dependencies to the project.
+_As this documentation is based on a Spring Boot project, the first way is recommended_:
+
+.Spring Boot dependency that should be added to `pom.xml` file:
+[source,XML]
+----
+<dependencies>
+    <!-- other dependencies -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <!-- other dependencies -->
+</dependencies>
+----
+
+Or
+
+.Direct security dependencies that should be added to `pom.xml` file:
+[source,XML]
+----
+<dependencies>
+    <!-- other dependencies -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+    </dependency>
+    <!-- other dependencies -->
+</dependencies>
+----
+
+.Choose only one of the above ways to add Spring Security
+[NOTE]
+The above ways are two alternative way of adding Spring Security dependencies to the `pom.xml` file.
+Do not duplicate the dependencies by trying both of them at the same time.
+
+=== Security Configuration Class
+
+Next step is to have a Spring Security Configuration class that extends `VaadinWebSecurityConfigurerAdapter`.
+No convention exists for naming this class, so in this documentation it is named as `SecurityConfiguration`, but pay attention to Spring Security annotations
+A minimal implementation of such class is as follows:
+
+.`SecurityConfiguration.java`
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.logout().logoutSuccessUrl("/"); // example of adding other configurations
+        super.configure(http);
+        setLoginView(http, LoginView.class);
+    }
+
+    /**
+     * Allows access to static resources, bypassing Spring security.
+     */
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers(
+                "/images/**" // example of additional configs
+        );
+        super.configure(web);
+    }
+
+    @Bean
+    @Override
+    public UserDetailsService userDetailsService() {
+        UserDetails user =
+                User.withUsername("user")
+                        .password("{noop}user")
+                        .roles("USER")
+                        .build();
+        UserDetails admin =
+                User.withUsername("admin")
+                        .password("{noop}admin")
+                        .roles("ADMIN")
+                        .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+----
+
+Before going any further it worth noticing the presence of `@EnableWebSecurity` and `@Configuration` on top of the above class.
+As their name imply, they tell the Spring to enable its security features.
+
+Next thing to notice is the parent class: `VaadinWebSecurityConfigurerAdapter`.
+As you might be familiar with Spring Boot and Spring Security, you may have seen that you can extend Spring's `WebSecurityConfigurerAdapter` directly and configure a lot of things from scratch, but by extending from `VaadinWebSecurityConfigurerAdapter` there would be some benefits:
+
+- Default implementation of `configure` methods would take care of all of the Vaadin related configurations, for example ignoring the static resources, or to enable the `CSRF` checking while ignoring the unnecessary checking for Vaadin internal requests, etc.
+- The View Based Authorization mechanism is enabled by default.
+- The login view can be configured simply via provided method `setLoginView`.
+
+.Never use hard-coded credentials in production
+[NOTE]
+By looking at the implementation of `userDetailsService` method, it is obvious that this is just an in-memory implementation for the sake of briefness in this documentation.
+In a real-world application You can change the Spring Security configuration to use an authentication provider for LDAP, JAAS, and other real world sources. https://dzone.com/articles/spring-security-authentication[Read more about Spring Security authentication providers].
+
+The most important configuration in the above example, is the call to the `setLoginView(http, LoginView.class);` inside the first configure method.
+This is how the view based authorization mechanism knows where to redirect the users once they attempt to navigate to a protected view.
+
+Now that we have the login view and we introduced it in out security configuration, we can move forward and see how to use the security annotations on the views.
+
+=== Annotating the View Classes
+
+Prior to see a usage example on the annotation, it would be beneficial if we look at the annotations, and their meaning when applied on a view:
+
+- `@AnonymousAllowed` Permits anyone to navigate to the view without any authentication or authorization.
+- `@PermitAll` Allows any authenticated user to navigate to the view.
+- `@RolesAllowed` Grants access to users having the roles specified in the annotation value.
+- `@DenyAll` Disallows to navigate to the view for everyone. This is the default. So if a view is not annotated at all, the `@DenyAll` login would be applied.
+
+This means, when our security configuration class is extending from `VaadinWebSecurityConfigurerAdapter`, the views with no annotation are not available at all, until one of the above annotations (except the `@DenyAll`) applied to them.
+
+Some examples:
+
+.Example of using @AnonymousAllowed to enable all users navigating to this view
+[source,java]
+----
+@Route(value = "", layout = MainView.class)
+@PageTitle("Public View")
+@AnonymousAllowed
+public class PublicView extends VerticalLayout {
+    // ...
+}
+----
+
+.Example of using @PermitAll to allow only authenticated users (with any role) navigating to this view
+[source,java]
+----
+@Route(value = "private", layout = MainView.class)
+@PageTitle("Private View")
+@PermitAll
+public class PrivateView extends VerticalLayout {
+    // ...
+}
+----
+
+.Example of using @RolesAllowed to enable only the users with `ADMIN` role navigating to this view
+[source,java]
+----
+@Route(value = "admin", layout = MainView.class)
+@PageTitle("Admin View")
+@RolesAllowed("ADMIN") // <- this should match one of the user's roles (case-sensitive)
+public class AdminView extends VerticalLayout {
+    // ...
+}
+----
+
+// TODO: verify the following:
+If multiple annotations specified on some views (maybe by accident), the following rules are applied:
+
+- `DenyAll` overrides other annotations
+- `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`
+- `RolesAllowed` overrides `PermitAll`
+
+However, specifying more than one of the above access annotations on a view class in not recommended, as it is confusing and has no logical reason to do so.
+
+=== Limitations
+// TODO
+
