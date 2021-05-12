@@ -1,31 +1,32 @@
 ---
 title: Deploying to Production
-tab-title: Production Mode
 layout: tabbed-page
-order: 80
+tab-title: Overview
+order: 70
 ---
 
-= Production Mode
+= Deploying to Production
 
+[.lead]
 Deploying to a production server involves compiling and packaging the application to be suitable and optimized for the server.
 
-While you may have used an embedded server during development, for production you need to deploy the application as a WAR (Java Servlet) or JAR (Spring Boot).
+While you may have launched your server directly from your IDE during development, for production you need to deploy the application as a WAR file (Java Servlet) or JAR file that includes your application server (Spring Boot & other embedded servers).
 
 By default, Vaadin applications are set up to run in the development mode.
 This requires a bit more memory and CPU power, but enables easier debugging.
 When deploying your app to your users, you will want to switch to the production mode instead.
 
-The main difference between the development and production modes is that in the development mode Vaadin uses Webpack to serve JavaScript files to the browser, instead of the Java server the app is running on.
+The main difference between the development and production modes is that in the development mode Vaadin uses webpack to serve JavaScript files to the browser, instead of the Java server the app is running on.
 This is so that if you change a JS or CSS file, your changes are picked up and served automatically.
 When in production mode, you do not want this extra overhead since the files will not change; it is more efficient to prepare JavaScript and CSS files once, during build, and let one server (the Java Server) serve all requests.
 At the same time, the client resources can be optimized and minified to reduce the load on the network and browser even further.
 
-== Enabling Production Mode
+== Enabling the Production Mode
 
 The `pom.xml` file in a Vaadin project has the following built-in Maven configuration for creating a production mode build:
 
 .pom.xml
-[source, xml]
+[source,xml]
 ----
 <profiles>
     <profile>
@@ -55,47 +56,39 @@ The `pom.xml` file in a Vaadin project has the following built-in Maven configur
 The actual content of the profile will depend on what environment your app is running in, but all of the variations do two things:
 
 . Setting the property `vaadin.productionMode` to `true`
-. Calling the Maven goal `vaadin:build-frontend`
+. Calling the Maven goal `vaadin:build-frontend`.
+The Maven goal `vaadin:prepare-frontend` is also required, but that is often declared already in the development build.
 
 To create a production build, you can call `mvn clean package -Pproduction`.
 This will build a JAR or WAR file with all the dependencies and transpiled front end resources, ready to be deployed.
 The file can be found in the `target` folder after the build completes.
 
-If you do not have the the production Maven profile in your POM file, the easiest way to get it is to get a project base from https://vaadin.com/start matching your environment (Spring boot, Jakarta EE, or plain Java), and copy the production profile from the downloaded POM file.
+If you do not have the the production Maven profile in your POM file, the easiest way to get it is to get a project base from https://vaadin.com/start matching your environment (Spring Boot, Jakarta EE, or plain Java), and copy the production profile from the downloaded POM file.
 
-Having production mode be a separate Maven profile is recommended so that you do not get any unexpected problems due to
-production settings when running in the development mode.
+Having production mode be a separate Maven profile is recommended so that you do not get any unexpected problems due to production settings when running in the development mode.
 
+.Building for 64-bit
 [NOTE]
-If your OS is 64-bit, please make sure to use a 64-bit JDK installation as well. There are known issues when running the build on 32-bit JDKs in 64-bit environments.
-
-[NOTE]
-For an older project running in the compatibility mode (bower mode), please see the V10 documentation about the production mode build.
+If your operating system is 64-bit, make sure to use a 64-bit JDK installation as well.
 
 == Transpilation and Bundling
 
-Transpilation in Vaadin means converting all ES6 JavaScript to ES5 JavaScript format for older browsers (IE11 and Safari 9).
+Transpilation in Vaadin means converting all ES6 JavaScript to ES5 JavaScript format for older browsers.
 All Vaadin components are written using ES6, and consist of several JavaScript and CSS files.
-Transpilation makes sure this newer JavaScript code also works in older browsers, such as IE11.
-
-[NOTE]
-IOS 10 has a known issue with https://caniuse.com/#search=let[`let bindings in for loops are incorrectly treated as function-scoped instead of block scoped`], in this case, all browsers running on it need the transpilation, too.
+Transpilation makes sure this newer JavaScript code also works in browsers which do not support all the latest JavaScript features.
 
 During the build, minimization is done to make the files smaller.
 When minifying code, it is often obscured, which makes it harder to read, hence this is not done in the development mode.
 
-Bundling is an optimization where we merge multiple files to a single collection so that the browser doesn't need to
-request so many files from the server.
+Bundling is an optimization where we merge multiple files to a single collection so that the browser doesn't need to request so many files from the server.
 This makes the application load faster.
-
 
 == Splitting the Webpack Bundle Into Multiple Chunks
 
-This is not currently possible. In case it would be important for you to be able to split the bundle, please let us know in the issue: https://github.com/vaadin/flow/issues/5537.
+This is currently not possible.
+In case it would be important for you to be able to split the bundle, please let us know in the issue: https://github.com/vaadin/flow/issues/5537.
 
 == Plugin Goals and Goal Parameters
-
-Here we describe the maven plugin goals and their usage.
 
 === prepare-frontend
 
@@ -108,7 +101,7 @@ Automatic installation of Node.js and npm is available since Vaadin 14.2. Older 
 
 In addition, it visits all resources used by the application and copies them under `node_modules` folder so they are available when `webpack` builds the frontend. It also creates or updates `package.json`, `webpack.config.json` and `webpack.generated.json` files.
 
-==== Goal parameters
+==== Goal Parameters
 
 * *includes* (default: `&#42;&#42;/&#42;.js,&#42;&#42;/&#42;.css`):
     Comma separated wildcards for files and directories that should be copied. Default is only .js and .css files.
@@ -132,7 +125,8 @@ In addition, it visits all resources used by the application and copies them und
 
 
 === build-frontend
-This goal builds the frontend bundle. This is a complex process involving several steps:
+This goal builds the frontend bundle.
+This is a complex process involving several steps:
 
 - update `package.json` with all `@NpmPackage` annotation values found in the classpath and automatically install these dependencies.
 - update the JavaScript files containing code for importing everything used in the application. These files are generated in the `target/frontend` folder,
@@ -140,37 +134,29 @@ and will be used as entry point of the application.
 - create `webpack.config.js` if not found, or updates it in case some project parameters have changed.
 - generate JavaScript bundles, chunks and transpile to ES5 using `webpack` server. Target folder in case of `war` packaging is `target/${artifactId}-${version}/build` and in case of `jar` packaging is `target/classes/META-INF/resources/build`.
 
-==== Goal parameters
+==== Goal Parameters
 
-* *npmFolder* (default: `${project.basedir}`:
+*npmFolder* (default: `${project.basedir}`::
     The folder where `package.json` file is located. Default is project root folder.
 
-* *generatedFolder* (default: `${project.build.directory}/frontend/`):
-    The folder where Flow will put generated files that will be used by Webpack.
+*generatedFolder* (default: `${project.build.directory}/frontend/`)::
+    The folder where Flow will put generated files that will be used by webpack.
 
-* *frontendDirectory* (default: `${project.basedir}/frontend`):
+*frontendDirectory* (default: `${project.basedir}/frontend`)::
     A directory with project's frontend source files.
 
-* *generateBundle* (default: `true`):
+*generateBundle* (default: `true`)::
     Whether to generate a bundle from the project frontend sources or not.
 
-* *runNpmInstall* (default: `true`):
-    Whether to automatically run `npm install` or `pnpm install`(depending on *pnpmEnable* parameter value) after updating dependencies.
+*runNpmInstall* (default: `true`)::
+    Whether to run `pnpm install` (or `npm install`, depending on *pnpmEnable* parameter value) after updating dependencies.
 
-* *generateEmbeddableWebComponents* (default: `true`):
+*generateEmbeddableWebComponents* (default: `true`)::
     Whether to generate embeddable web components from WebComponentExporter inheritors.
 
-* *optimizeBundle* (default: `true`):
+*optimizeBundle* (default: `true`)::
     Whether to include only frontend resources used from application entry points (the default) or to include all resources found on the class path.
     Should normally be left to the default, but a value of `false` can be useful for faster production builds or debugging discrepancies between development and production mode.
-    *This configuration is available only in Vaadin Platform 14.1 and newer.*
 
-* *pnpmEnable* (default: `false`):
+*pnpmEnable* (default: `false`)::
     Whether to use the _pnpm_ or _npm_ tool to handle frontend resources. By default _npm_ is used.
-    *This configuration is available only in Vaadin 14.2 and newer.*
-
-== Troubleshooting
-
-After adding the `flow-server-production-mode` dependency, the application no longer starts::
-One likely cause of this problem is that the `build-frontend` of the `flow-maven-plugin` was not executed, either because the plugin is missing from the `pom.xml` or it is missing configuration.
-To fix this, add the `flow-maven-plugin` to your maven `build` block (make sure it is visible in your production mode profile), and enable the `build-frontend` goal.
