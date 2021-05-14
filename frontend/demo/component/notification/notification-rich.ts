@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { render } from 'lit-html';
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement} from `lit/decorators.js`;
 import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-button/vaadin-button';

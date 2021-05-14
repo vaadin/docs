@@ -7,7 +7,8 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import type { ButtonElement } from '@vaadin/vaadin-button';
 import type { ComboBoxElement } from '@vaadin/vaadin-combo-box';
-import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
+import { LitElement, html, css } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import { applyTheme } from 'Frontend/generated/theme';
 import { repeat } from 'lit-html/directives/repeat';
 
@@ -33,10 +34,10 @@ export class Example extends LitElement {
     `;
   }
 
-  @internalProperty()
+  @state()
   private items: readonly Profession[] = [];
 
-  @internalProperty()
+  @state()
   private selectedProfessions: readonly Profession[] = [];
 
   constructor() {

@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, internalProperty, customElement } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import { render } from 'lit-html';
 import { guard } from 'lit-html/directives/guard';
 
@@ -21,7 +22,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private dialogOpened = false;
 
   render() {

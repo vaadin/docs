@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, internalProperty, customElement } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-confirm-dialog/vaadin-confirm-dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -11,10 +12,10 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private dialogOpened = false;
 
-  @internalProperty()
+  @state()
   private status = '';
 
   render() {

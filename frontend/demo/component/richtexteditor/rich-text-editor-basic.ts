@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state} from `lit/decorators.js`;
 import '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
 
 import templates from '../../../../src/main/resources/data/templates.json';
@@ -14,7 +15,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private richText = templates.richTextDelta;
 
   render() {

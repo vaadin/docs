@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, css, internalProperty } from 'lit-element';
+import { html, LitElement, css } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
@@ -25,10 +26,10 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   alignLayoutItems?: string;
 
-  @internalProperty()
+  @state()
   alignFirstItem?: string;
 
   render() {

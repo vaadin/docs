@@ -2,7 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-source-line
 
-import { customElement, html, LitElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement} from `lit/decorators.js`;
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 
 const currentYear = new Date().getFullYear();

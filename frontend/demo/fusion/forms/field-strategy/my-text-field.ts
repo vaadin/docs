@@ -1,4 +1,5 @@
-import { LitElement, customElement, html, property } from 'lit-element';
+import { LitElement, html} from 'lit';
+import {customElement, property} from `lit/decorators.js`;
 import '@vaadin/vaadin-custom-field';
 import '@vaadin/vaadin-text-field';
 import type { CustomFieldValueChanged } from '@vaadin/vaadin-custom-field';

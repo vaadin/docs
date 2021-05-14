@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
@@ -17,7 +18,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private gridItems: Person[] = [];
 
   async firstUpdated() {

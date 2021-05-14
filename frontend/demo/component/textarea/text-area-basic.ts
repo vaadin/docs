@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -14,7 +15,7 @@ export class Example extends LitElement {
 
   private charLimit = 140;
 
-  @internalProperty()
+  @state()
   private text = 'Great job. This is excellent!';
 
   render() {

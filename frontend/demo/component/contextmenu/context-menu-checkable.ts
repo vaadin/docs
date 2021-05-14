@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import {
   ContextMenuItem,
@@ -17,7 +18,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items: ContextMenuItem[] = [
     { text: 'Abigail Lewis' },
     { text: 'Allison Torres' },
@@ -26,7 +27,7 @@ export class Example extends LitElement {
     { text: 'Tamaki Ryushi' },
   ];
 
-  @internalProperty()
+  @state()
   private selectedItem = this.items[1];
   // end::snippet[]
 

@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/selectConnector.js'; // hidden-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement} from `lit/decorators.js`;
 import { render } from 'lit-html';
 import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-select/vaadin-select';

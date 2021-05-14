@@ -1,4 +1,5 @@
-import { LitElement, html, customElement } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement} from `lit/decorators.js`;
 
 // NOTE: This can't currently work because of how resources
 // are referenced in the embedded docs examples.

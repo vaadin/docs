@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty, query } from 'lit-element';
+import { LitElement } from 'lit';
+import { customElement, query, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import {
@@ -30,16 +31,16 @@ export class Example extends LitElement {
   @query('vaadin-grid')
   private grid!: GridElement;
 
-  @internalProperty()
+  @state()
   private draggedItem?: Person;
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
-  @internalProperty()
+  @state()
   private managers: Person[] = [];
 
-  @internalProperty()
+  @state()
   private expandedItems: unknown[] = [];
 
   async firstUpdated() {

@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { ComboBoxItemModel } from '@vaadin/vaadin-combo-box/vaadin-combo-box';
@@ -17,10 +18,10 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private allItems: Person[] = [];
 
-  @internalProperty()
+  @state()
   private filteredItems: Person[] = [];
 
   async firstUpdated() {

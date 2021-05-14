@@ -5,12 +5,13 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
-import { customElement, html, internalProperty, LitElement } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import { render } from 'lit-html';
 
 @customElement('badge-icons-only-table')
 export class Example extends LitElement {
-  @internalProperty()
+  @state()
   private items: readonly UserPermissions[] = [];
 
   constructor() {

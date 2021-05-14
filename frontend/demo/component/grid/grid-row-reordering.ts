@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty } from 'lit-element';
+import { LitElement } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { GridDragStartEvent, GridDropEvent, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -18,10 +19,10 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
-  @internalProperty()
+  @state()
   private draggedItem?: Person;
 
   async firstUpdated() {

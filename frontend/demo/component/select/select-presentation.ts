@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/selectConnector.js'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty, query } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state, query } from `lit/decorators.js`;
 import { render } from 'lit-html';
 import { SelectElement } from '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
@@ -18,7 +19,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private people: Person[] = [];
 
   @query('vaadin-select')

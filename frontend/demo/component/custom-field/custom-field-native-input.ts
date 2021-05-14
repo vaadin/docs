@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-custom-field/vaadin-custom-field';
 import { applyTheme } from 'Frontend/generated/theme';
 import { CustomFieldValueChanged } from '@vaadin/vaadin-custom-field/vaadin-custom-field';
@@ -13,7 +14,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private customFieldValue = '';
 
   render() {

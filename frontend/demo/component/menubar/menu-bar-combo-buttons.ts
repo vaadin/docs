@@ -2,7 +2,8 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -16,7 +17,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items = [
     { text: 'Save' },
     {

@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-details/vaadin-details';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
@@ -25,10 +26,10 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private items: Country[] = [];
 
-  @internalProperty()
+  @state()
   private responsiveSteps: FormLayoutResponsiveStep[] = [
     { minWidth: 0, columns: 1 },
     { minWidth: '20em', columns: 2 },

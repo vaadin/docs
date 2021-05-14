@@ -2,7 +2,8 @@ import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-sour
 import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-source-line
 
 import '@vaadin/vaadin-charts/vaadin-chart';
-import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
+import { html, LitElement, css } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import { repeat } from 'lit-html/directives/repeat';
 
 const monthNames = [
@@ -37,7 +38,7 @@ export class Example extends LitElement {
     `;
   }
 
-  @internalProperty()
+  @state()
   private events: ViewEvent[] = [];
 
   async firstUpdated() {

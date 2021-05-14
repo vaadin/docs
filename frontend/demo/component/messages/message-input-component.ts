@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -14,10 +15,10 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private message = '';
 
-  @internalProperty()
+  @state()
   private notificationOpened = false;
 
   render() {

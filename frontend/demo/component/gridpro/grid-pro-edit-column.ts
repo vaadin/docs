@@ -2,7 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 
-import { html, LitElement, internalProperty, customElement } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import '@vaadin/vaadin-grid/vaadin-grid-column';
@@ -20,7 +21,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {

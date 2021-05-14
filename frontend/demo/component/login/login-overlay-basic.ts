@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -12,7 +13,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private loginOpened = false;
 
   render() {

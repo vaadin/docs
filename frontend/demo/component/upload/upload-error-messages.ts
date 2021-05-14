@@ -1,7 +1,8 @@
 import '../../init'; // hidden-source-line
 import { fakeErrorResponse, fakeErrorResponseWrapper } from './upload-demo-helpers'; // hidden-source-line
 /* prettier-ignore */ import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-source-line
-import { customElement, html, LitElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement} from `lit/decorators.js`;
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';

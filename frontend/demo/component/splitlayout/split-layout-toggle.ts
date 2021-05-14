@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { customElement, html, internalProperty, LitElement } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@polymer/iron-icon';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons';
@@ -17,7 +18,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private sidebarCollapsed = false;
 
   render() {

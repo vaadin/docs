@@ -1,6 +1,7 @@
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
 import ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
-import { css, customElement, html, internalProperty, LitElement } from 'lit-element';
+import { css, html,  LitElement } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import { repeat } from 'lit-html/directives/repeat';
 
 @customElement('example-statistics')
@@ -78,7 +79,7 @@ export class ExampleStatistics extends LitElement {
     `;
   }
 
-  @internalProperty()
+  @state()
   private serviceHealth: ServiceHealth[] = [];
 
   async firstUpdated() {

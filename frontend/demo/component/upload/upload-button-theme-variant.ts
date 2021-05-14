@@ -1,6 +1,7 @@
 import '../../init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
-import { customElement, html, internalProperty, LitElement, query } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, query, state } from `lit/decorators.js`;
 import { showErrorNotification } from 'Frontend/demo/notification-helper';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';
@@ -23,7 +24,7 @@ export class Example extends LitElement {
   @query('vaadin-upload')
   private upload?: UploadElement;
 
-  @internalProperty()
+  @state()
   private maxFilesReached = false;
 
   firstUpdated() {

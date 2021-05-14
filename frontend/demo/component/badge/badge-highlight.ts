@@ -5,7 +5,8 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-lumo-styles/icons';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
-import { customElement, html, internalProperty, LitElement } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import { render } from 'lit-html';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -16,7 +17,7 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 
 @customElement('badge-highlight')
 export class Example extends LitElement {
-  @internalProperty()
+  @state()
   private items: readonly Report[] = [];
 
   constructor() {

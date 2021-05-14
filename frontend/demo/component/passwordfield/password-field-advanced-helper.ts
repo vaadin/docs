@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-text-field/vaadin-password-field';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
@@ -26,9 +27,9 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private strengthText: StrengthText = StrengthText.weak;
-  @internalProperty()
+  @state()
   private strengthColor: StrengthColor = StrengthColor.weak;
   pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$';
 

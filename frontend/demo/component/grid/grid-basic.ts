@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty, html } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -16,7 +17,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {

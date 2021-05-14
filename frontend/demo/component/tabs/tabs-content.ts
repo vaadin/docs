@@ -1,14 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
+import { html, LitElement, css } from 'lit';
+import { customElement, state} from `lit/decorators.js`;
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 
 @customElement('tabs-content')
 export class Example extends LitElement {
-  @internalProperty()
+  @state()
   private content = '';
 
-  @internalProperty()
+  @state()
   private pages = ['Dashboard', 'Payment', 'Shipping'];
 
   static get styles() {

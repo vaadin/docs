@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 
-import { html, LitElement, customElement, internalProperty, query } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state, query } from `lit/decorators.js`;
 import '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 
@@ -16,7 +17,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private htmlValue = '';
 
   @query('vaadin-rich-text-editor')

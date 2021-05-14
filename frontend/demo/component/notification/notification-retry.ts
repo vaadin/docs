@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { render } from 'lit-html';
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import { guard } from 'lit-html/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
@@ -9,7 +10,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-retry')
 export class Example extends LitElement {
-  @internalProperty()
+  @state()
   private notificationOpen = false;
 
   constructor() {

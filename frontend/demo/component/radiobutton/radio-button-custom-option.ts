@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
@@ -18,10 +19,10 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private value?: string;
 
-  @internalProperty()
+  @state()
   private items: Card[] = [];
 
   async firstUpdated() {

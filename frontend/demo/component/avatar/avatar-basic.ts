@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -13,7 +14,7 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private person?: Person;
 
   async firstUpdated() {

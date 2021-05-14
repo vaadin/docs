@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import '@vaadin/vaadin-board/vaadin-board';
-import { html, LitElement, customElement, css } from 'lit-element';
+import { html, LitElement, css } from 'lit';
+import { customElement} from `lit/decorators.js`;
 import { applyTheme } from 'Frontend/generated/theme';
 import defaultColorsCSS from './example-color-default.css';
 import defaultCellCSS from './example-cell-default.css';

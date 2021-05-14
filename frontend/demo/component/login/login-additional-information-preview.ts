@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, query } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, query } from `lit/decorators.js`;
 import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
 import { LoginOverlayMockupElement } from './login-overlay-mockup';

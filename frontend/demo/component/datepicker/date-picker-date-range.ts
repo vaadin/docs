@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 import { DatePickerValueChanged } from '@vaadin/vaadin-date-picker/vaadin-date-picker';
@@ -14,10 +15,10 @@ export class Example extends LitElement {
     applyTheme(this.shadowRoot);
   }
 
-  @internalProperty()
+  @state()
   private departureDate = '';
 
-  @internalProperty()
+  @state()
   private returnDate = '';
 
   render() {

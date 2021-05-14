@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement} from `lit/decorators.js`;
 import '@vaadin/vaadin-login/vaadin-login-form';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';

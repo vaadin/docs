@@ -1,14 +1,15 @@
-import { LitElement, html, customElement, internalProperty } from 'lit-element';
+import { LitElement, html } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 
 @customElement('fusion-application-events-basic')
 // tag::snippet[]
 export class EventsBasic extends LitElement {
-  @internalProperty()
+  @state()
   private caption = 'Click me!';
 
-  @internalProperty()
+  @state()
   private count = 0;
 
   render() {

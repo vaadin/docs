@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { css, html, LitElement, customElement, internalProperty } from 'lit-element';
+import { LitElement, html, css } from 'lit';
+import { customElement, state } from `lit/decorators.js`;
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
@@ -23,13 +24,13 @@ export class Example extends LitElement {
     `;
   }
 
-  @internalProperty()
+  @state()
   private primaryEmail = 'foo@example.com';
 
-  @internalProperty()
+  @state()
   private secondaryEmail1 = 'bar@example.com';
 
-  @internalProperty()
+  @state()
   private secondaryEmail2 = 'baz@example.com';
 
   render() {
