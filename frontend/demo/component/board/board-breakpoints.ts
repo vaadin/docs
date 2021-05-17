@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/vaadin-board/vaadin-board';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { html, LitElement, css } from 'lit';
-import { customElement} from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import defaultCellCSS from './example-cell-default.css';
 
