@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { LitElement,css } from 'lit';
+import { LitElement, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { GridDragStartEvent, GridDropEvent, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';

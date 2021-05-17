@@ -1,6 +1,6 @@
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
 import ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
-import { css, html,  LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit-html/directives/repeat';
 
