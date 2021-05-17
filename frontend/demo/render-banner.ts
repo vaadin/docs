@@ -29,17 +29,24 @@ export class RenderBanner extends HTMLElement {
     tocEl?.appendChild(bannerWrapper);
 
     // Banner elements
-    const imgSrc = (document.querySelector('.toc-banner-source img') as HTMLImageElement)?.src;
     const text = document.querySelector('.toc-banner-source-text')?.innerHTML;
     const link = document.querySelector('.toc-banner-source-link')?.textContent;
 
     const bannerHtml = `<div class='toc-banner'>
           <a href='${link}'>
-            <img src='${imgSrc}' alt='banner-image' />
+            <div class="toc-banner--img"></div>
             <div class='toc-banner--content'>${text}</div>
           </a>
         </div>`;
 
     bannerWrapper.innerHTML = bannerHtml;
+
+    // Add banner image
+    const imgSource = document.querySelector('.toc-banner-source .image');
+    const imgTarget = bannerWrapper.querySelector('.toc-banner--img');
+
+    if (imgSource && imgTarget) {
+      imgTarget.appendChild(imgSource);
+    }
   }
 }
