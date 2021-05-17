@@ -27,10 +27,10 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private alignLayoutItems?: string;
 
-  @internalProperty()
+  @state()
   private alignFirstItem?: string;
 
   render() {
