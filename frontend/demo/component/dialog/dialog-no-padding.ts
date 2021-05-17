@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { LitElement, html } from 'lit';
-import { customElement, state } from `lit/decorators.js`;
+import { customElement, state } from 'lit/decorators.js';
 import { render } from 'lit-html';
 import { guard } from 'lit-html/directives/guard';
 

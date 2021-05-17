@@ -1,5 +1,5 @@
 import { html, LitElement } from 'lit';
-import {customElement, property} from `lit/decorators.js`;
+import {customElement, property} from 'lit/decorators.js';
 
 import '@vaadin/vaadin-upload';
 import '@vaadin/vaadin-button';

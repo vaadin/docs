@@ -1,5 +1,5 @@
 import { css, html, LitElement } from 'lit';
-import { customElement} from `lit/decorators.js`;
+import { customElement} from 'lit/decorators.js';
 
 @customElement('master-content')
 export class MasterContent extends LitElement {

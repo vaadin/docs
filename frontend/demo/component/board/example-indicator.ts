@@ -2,7 +2,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, html, LitElement } from 'lit';
-import { customElement, property } from `lit/decorators.js`;
+import { customElement, property } from 'lit/decorators.js';
 
 @customElement('example-indicator')
 export class ExampleIndicator extends LitElement {

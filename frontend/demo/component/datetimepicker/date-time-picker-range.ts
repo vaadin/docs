@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, state } from `lit/decorators.js`;
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 
 const initialStartValue = '2020-08-25T20:00';

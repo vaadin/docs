@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-full-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
 
 import { html, LitElement, css } from 'lit';
-import { customElement} from `lit/decorators.js`;
+import { customElement} from 'lit/decorators.js';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 

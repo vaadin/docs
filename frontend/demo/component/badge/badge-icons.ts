@@ -3,7 +3,7 @@ import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { html, LitElement } from 'lit';
-import { customElement} from `lit/decorators.js`;
+import { customElement} from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-icons')

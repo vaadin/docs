@@ -3,7 +3,7 @@ import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 
 import { LitElement, html } from 'lit';
-import { customElement, state } from `lit/decorators.js`;
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';

@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, state } from `lit/decorators.js`;
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-accordion/vaadin-accordion';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';

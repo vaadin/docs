@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, css } from 'lit';
-import { customElement, state} from `lit/decorators.js`;
+import { customElement, state} from 'lit/decorators.js';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 
 @customElement('tabs-content')

@@ -1,5 +1,5 @@
 import { LitElement, html } from 'lit';
-import {customElement, query} from `lit/decorators.js`;
+import {customElement, query} from 'lit/decorators.js';
 
 import '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-checkbox';

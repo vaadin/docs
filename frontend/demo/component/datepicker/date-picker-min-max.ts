@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
 
 import { LitElement, html } from 'lit';
-import { customElement, state } from `lit/decorators.js`;
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 import { addDays, formatISO } from 'date-fns';

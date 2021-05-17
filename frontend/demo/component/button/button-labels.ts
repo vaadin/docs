@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from `lit/decorators.js`;
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';

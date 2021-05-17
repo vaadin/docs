@@ -1,5 +1,5 @@
 import { html, LitElement } from 'lit';
-import {customElement} from `lit/decorators.js`;
+import {customElement} from 'lit/decorators.js';
 import { field } from '@vaadin/form';
 import './my-text-field';
 import { MyBinder } from './my-binder';

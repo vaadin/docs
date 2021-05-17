@@ -1,7 +1,7 @@
 import '../../init'; // hidden-source-line
 import { createFakeUploadFiles } from './upload-demo-helpers'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import { customElement} from `lit/decorators.js`;
+import { customElement} from 'lit/decorators.js';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 

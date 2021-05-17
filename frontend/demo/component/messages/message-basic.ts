@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, state } from `lit/decorators.js`;
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-messages/vaadin-message-list';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import { applyTheme } from 'Frontend/generated/theme';

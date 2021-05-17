@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import { customElement, query } from `lit/decorators.js`;
+import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
 import { LoginOverlayElement } from '@vaadin/vaadin-login/vaadin-login-overlay';
 import { applyTheme } from 'Frontend/generated/theme';

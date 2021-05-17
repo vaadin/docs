@@ -4,7 +4,7 @@ import {
   TemplateResult,
 } from 'lit';
 
-import {customElement, property, state} from `lit/decorators.js`;
+import {customElement, property, state} from 'lit/decorators.js';
 
 @customElement('data-binding-view')
 class DataBindingView extends LitElement {

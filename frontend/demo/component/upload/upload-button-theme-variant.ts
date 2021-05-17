@@ -1,7 +1,7 @@
 import '../../init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import { customElement, query, state } from `lit/decorators.js`;
+import { customElement, query, state } from 'lit/decorators.js';
 import { showErrorNotification } from 'Frontend/demo/notification-helper';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';

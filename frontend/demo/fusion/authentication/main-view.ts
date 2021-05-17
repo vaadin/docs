@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import { customElement } from `lit/decorators.js`;
+import { customElement } from 'lit/decorators.js';
 import { isAuthorizedViewRoute, routes } from './routes';
 import { repeat } from 'lit-html/directives/repeat';
 import { html } from 'lit-html';

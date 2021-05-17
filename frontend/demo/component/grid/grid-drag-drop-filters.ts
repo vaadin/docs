@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
 import { LitElement } from 'lit';
-import { customElement, query, state } from `lit/decorators.js`;
+import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import {
