@@ -11,23 +11,40 @@ You can enable it by using a set of annotations and with minimum Spring Security
 
 == Introduction
 
+Protecting restricted views in Spring based Vaadin Flow applications can happen through the following ways:
+
+- By using Spring Security's URL pattern based HTTP security configurations
+- By adding View Access Checker mechanism (View Based Authorization)
+
+As by navigating between routes of a Vaadin Flow application there would not be traditional page requests to the server, checking the authorized access to views using only Spring Security URL based filtering mechanism would be equal to only securing the first requested route, or simply no Security for the views at all, except for the first requested path.
+This happens generally for any single page application that tries to secure its routes only using Spring Security.
+
+.Do not rely on Spring Security's URL based authorization in Single Page Applications
+[NOTE]
+It is important to note that this View Based Authorization should be considered as the main mechanism of restricting access to the views.
+The traditional Spring Security's URL based `HttpSecurity` configurations should not be considered as the security mechanism for securing the views at all, except for the static resources as there is no way to load them other than URLs.
+
+
+*This is where View Based Authorization comes in*, to fully securing the views of Vaadin Flow applications based on different access level annotations in a very flexible way.
 The view-based authorization mechanism uses the `@AnonymousAllowed`, `@PermitAll`, `@RolesAllowed`, and `@DenyAll` annotations on view classes to define the access control rules.
-This approach is also based on Vaadin's Spring Boot and Spring Security autoconfiguration.
-If you are not using Spring Boot in your Vaadin Flow application, you may need extra configurations to enable the authorization mechanism.
-// TODO ??? the last sentence needs further discussions
 
 .Use of the annotations in Vaadin Fusion
 [TIP]
-The same set of annotations are used to define the security access control rules on the endpoints of a <<{articles}/fusion/overview#,Vaadin Fusion>> application.
+Although, the same set of annotations are used to define the security access control rules on endpoints of a <<{articles}/fusion/overview#,Vaadin Fusion>> application, this document should not be considered as the way of securing client side views.
 You can find out more about Security in a Vaadin Fusion application <<{articles}/fusion/security/configuring#,here>>.
 
 .Source for the complete example code
+
+The approach of the <<View Based Authorization in Spring Boot Based Applications,first part of this documentation>> is based on Vaadin's Spring Boot and Spring Security Auto-Configuration.
+If you are not using Spring Boot in your Vaadin Flow application, you may need extra configurations to enable this authorization mechanism, that are addressed in <<View Based Authorization in Spring Based Applications>> (without Spring Boot).
+
+.Where to Find the Source Codes
 [TIP]
-A complete example project containing the source codes of this documentation is available https://github.com/vaadin-learning-center/crm-tutorial/tree/latest[here].
+A complete example project including the source codes of this documentation is available https://github.com/vaadin-learning-center/crm-tutorial/tree/latest[here].
 
-== Adding View Based Access Control
+== View Based Authorization in Spring Boot Based Applications
 
-As mentioned in the <<introduction,Introduction>>, the mechanism is based on Spring Security and Vaadin's Spring Boot autoconfiguration.
+As mentioned in the <<Introduction,introduction>>, the mechanism is based on Spring Security and Vaadin's Spring Boot autoconfiguration.
 To enable this mechanism in a Vaadin Flow Spring Boot application without any security, the followings should be added to the project (if not exist already):
 
 - A Login view.
@@ -83,9 +100,9 @@ In this example, Vaadin's `LoginForm` component is used to make the implementati
 
 To enable Spring Security in a Spring Boot application there are certain dependencies that should be added to the project.
 Either of the following ways can be used for adding Spring Security dependencies to the project.
-_As this documentation is based on a Spring Boot project, the first way is recommended_:
+_As this part of the documentation is based on a Spring Boot project, adding the following dependency is recommended_:
 
-.Spring Boot dependency that should be added to `pom.xml` file:
+.Spring Boot Starter Security dependency that should be added to `pom.xml` file:
 [source,XML]
 ----
 <dependencies>
@@ -97,30 +114,6 @@ _As this documentation is based on a Spring Boot project, the first way is recom
     <!-- other dependencies -->
 </dependencies>
 ----
-
-Or
-
-.Direct security dependencies that should be added to `pom.xml` file:
-[source,XML]
-----
-<dependencies>
-    <!-- other dependencies -->
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-config</artifactId>
-    </dependency>
-    <!-- other dependencies -->
-</dependencies>
-----
-
-.Choose only one of the above ways to add Spring Security
-[NOTE]
-The above ways are two alternative way of adding Spring Security dependencies to the `pom.xml` file.
-Do not duplicate the dependencies by trying both of them at the same time.
 
 === Security Configuration Class
 
@@ -270,10 +263,43 @@ If multiple annotations specified on a single view, the following rules are appl
 
 However, specifying more than one of the above access annotations on a view class in not recommended, as it is confusing and probably has no logical reason to do so.
 
-== Limitations
-It is important to note that this View-Based Authorization mechanism should be considered as an alternative to the traditional Spring Security's pattern based `HttpSecurity` configurations that happened previously in Vaadin Spring Boot applications.
-Mixing any of the view access annotations with `AntPathRequestMatcher` (which probably existing in older Vaadin Spring Boot applications) may result in unwanted access configurations or unnecessary complications.
+== View Based Authorization in Spring Based Applications
 
-.Do not mix Pattern-based HTTP security and View-based authorization
+The configuration steps for a Vaadin Flow Spring application would be quite similar to some steps of the Vaadin Flow application which is based on Spring Boot.
+
+- The application obviously should have a login view, an example login view can be found <<Login View,here>>.
+
+- The Spring Security dependencies are as follows:
+
+.Direct Spring Security dependencies that should be added to `pom.xml` file:
+[source,XML]
+----
+<dependencies>
+    <!-- other dependencies -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+    </dependency>
+    <!-- other dependencies -->
+</dependencies>
+----
+
+- A security configuration class that extends `VaadinWebSecurityConfigurerAdapter`.
+This would be quite similar to the <<Security Configuration Class,Security Configuration Class>> example for a Vaadin Flow application based on Spring Boot.
+
+- Some extra steps
+//TODO: provide extra steps for a Spring based application
+
+- Annotating the view classes with `@AnonymousAllowed`, `@PermitAll`, or `@RolesAllowed` annotations.
+Again, this is completely similar to the <<Annotating the View Classes,provided examples>> for a Vaadin Flow application based on Spring Boot.
+
+== Limitations
+Mixing any of the view access annotations with Spring's URL based HTTP security (which probably are existing in older Vaadin Spring Boot applications) may result in unwanted access configurations or unnecessary complications.
+
+.Do not mix Spring's URL based HTTP security and View based authorization on a single view
 [NOTE]
-Vaadin strongly recommends *not* to mix traditional Spring's Pattern-based HTTP security and this View-based authorization mechanism targeting same views, since it may lead to unwanted access configurations, or at least an unnecessary complication in the authorization of the views.
+Vaadin strongly recommends *not* to mix Spring's URL Pattern based HTTP security and this View-based authorization mechanism targeting same views, since it may lead to unwanted access configurations, or at least an unnecessary complication in the authorization of the views.
