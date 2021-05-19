@@ -25,16 +25,19 @@ public class MoneyField extends CustomField<Money> {
 
     // aria-label for screen readers
     amount.getElement()
-      .executeJs("this.inputElement.setAttribute('aria-label', 'Amount')");
+      .executeJs("const amount = this.shadowRoot.querySelector('[part=\"value\"]');" +
+        "amount.setAttribute('aria-label', 'Amount');" +
+        "amount.removeAttribute('aria-labelledby');");
     currency.getElement()
-      .executeJs("this.inputElement.setAttribute('aria-label', 'Currency')");
+      .executeJs("const currency = this.shadowRoot.querySelector('vaadin-select-text-field').shadowRoot.querySelector('[part=\"input-field\"]');" +
+        "currency.setAttribute('aria-label', 'Currency');" +
+        "currency.removeAttribute('aria-labelledby');");
 
     HorizontalLayout layout = new HorizontalLayout(amount, currency);
     // Removes default spacing
     layout.setSpacing(false);
     // Adds small amount of space between the components
     layout.getThemeList().add("spacing-s");
-
 
     add(layout);
   }

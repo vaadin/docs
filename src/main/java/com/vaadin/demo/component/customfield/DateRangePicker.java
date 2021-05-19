@@ -24,15 +24,15 @@ public class DateRangePicker extends CustomField<LocalDateRange> {
 
     // aria-label for screen readers
     start.getElement()
-      .executeJs("this" +
-        ".shadowRoot.querySelector('[part=\"text-field\"]')" +
-        ".shadowRoot.querySelector('[part=\"value\"]')" +
-        ".setAttribute('aria-label', 'Start date')");
+      .executeJs("const start = this.shadowRoot.querySelector('[part=\"text-field\"]').shadowRoot.querySelector('[part=\"value\"]');" +
+        "start.setAttribute('aria-label', 'Start date');" +
+        "start.removeAttribute('aria-labelledby');"
+      );
     end.getElement()
-      .executeJs("this" +
-        ".shadowRoot.querySelector('[part=\"text-field\"]')" +
-        ".shadowRoot.querySelector('[part=\"value\"]')" +
-        ".setAttribute('aria-label', 'End date')");
+      .executeJs("const end = this.shadowRoot.querySelector('[part=\"text-field\"]').shadowRoot.querySelector('[part=\"value\"]');" +
+        "end.setAttribute('aria-label', 'End date');" +
+        "end.removeAttribute('aria-labelledby');"
+      );
 
     add(start, new Text(" – "), end);
   }

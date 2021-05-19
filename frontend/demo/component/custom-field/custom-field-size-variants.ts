@@ -18,15 +18,18 @@ export class Example extends LitElement {
 
   firstUpdated() {
     // aria-label for screen readers
-    this.shadowRoot
+    const amount = this.shadowRoot
       ?.getElementById('amount')
-      ?.shadowRoot?.querySelector('[part="value"]')
-      ?.setAttribute('aria-label', 'Amount');
-    this.shadowRoot
+      ?.shadowRoot?.querySelector('[part="value"]');
+    amount?.setAttribute('aria-label', 'Amount');
+    amount?.removeAttribute('aria-labelledby');
+
+    const currency = this.shadowRoot
       ?.getElementById('currency')
       ?.shadowRoot?.querySelector('vaadin-select-text-field')
-      ?.shadowRoot?.querySelector('[part="value"]')
-      ?.setAttribute('aria-label', 'Currency');
+      ?.shadowRoot?.querySelector('[part="input-field"]');
+    currency?.setAttribute('aria-label', 'Currency');
+    currency?.removeAttribute('aria-labelledby');
   }
 
   render() {
