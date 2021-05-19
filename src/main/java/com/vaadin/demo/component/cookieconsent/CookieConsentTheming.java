@@ -10,7 +10,7 @@ public class CookieConsentTheming extends Div {
 
     public CookieConsentTheming() {
         // tag::snippet[]
-        add("cookie-consent-theming");
+        addClassName("cookie-consent-theming");
 
         CookieConsent cookieConsent = new CookieConsent();
         add(cookieConsent);
