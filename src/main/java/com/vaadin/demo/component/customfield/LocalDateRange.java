@@ -5,28 +5,28 @@ import java.time.LocalDate;
 // tag::snippet[]
 public class LocalDateRange {
 
-  private LocalDate start;
-  private LocalDate end;
+  private LocalDate startDate;
+  private LocalDate endDate;
 
-  public LocalDateRange(LocalDate start, LocalDate end) {
-    this.start = start;
-    this.end = end;
+  public LocalDateRange(LocalDate startDate, LocalDate endDate) {
+    this.startDate = startDate;
+    this.endDate = endDate;
   }
 
-  public LocalDate getStart() {
-    return start;
+  public LocalDate getStartDate() {
+    return startDate;
   }
 
-  public void setStart(LocalDate start) {
-    this.start = start;
+  public void setStartDate(LocalDate startDate) {
+    this.startDate = startDate;
   }
 
-  public LocalDate getEnd() {
-    return end;
+  public LocalDate getEndDate() {
+    return endDate;
   }
 
-  public void setEnd(LocalDate end) {
-    this.end = end;
+  public void setEndDate(LocalDate endDate) {
+    this.endDate = endDate;
   }
 }
 // end::snippet[]

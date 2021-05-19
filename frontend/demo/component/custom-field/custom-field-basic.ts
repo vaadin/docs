@@ -22,10 +22,12 @@ export class Example extends LitElement {
     this.shadowRoot
       ?.getElementById('start')
       ?.shadowRoot?.querySelector('[part="text-field"]')
+      ?.shadowRoot?.querySelector('[part="value"]')
       ?.setAttribute('aria-label', 'Start date');
     this.shadowRoot
       ?.getElementById('end')
       ?.shadowRoot?.querySelector('[part="text-field"]')
+      ?.shadowRoot?.querySelector('[part="value"]')
       ?.setAttribute('aria-label', 'End date');
 
     this.binder.for(this.binder.model.enrollmentPeriod).addValidator({

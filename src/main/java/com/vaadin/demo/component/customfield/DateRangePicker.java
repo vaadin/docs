@@ -24,9 +24,15 @@ public class DateRangePicker extends CustomField<LocalDateRange> {
 
     // aria-label for screen readers
     start.getElement()
-      .executeJs("this.shadowRoot.querySelector('[part=\"text-field\"]').setAttribute('aria-label', 'Start date')");
+      .executeJs("this" +
+        ".shadowRoot.querySelector('[part=\"text-field\"]')" +
+        ".shadowRoot.querySelector('[part=\"value\"]')" +
+        ".setAttribute('aria-label', 'Start date')");
     end.getElement()
-      .executeJs("this.shadowRoot.querySelector('[part=\"text-field\"]').setAttribute('aria-label', 'End date')");
+      .executeJs("this" +
+        ".shadowRoot.querySelector('[part=\"text-field\"]')" +
+        ".shadowRoot.querySelector('[part=\"value\"]')" +
+        ".setAttribute('aria-label', 'End date')");
 
     add(start, new Text(" – "), end);
   }
@@ -38,8 +44,8 @@ public class DateRangePicker extends CustomField<LocalDateRange> {
 
   @Override
   protected void setPresentationValue(LocalDateRange dateRange) {
-    start.setValue(dateRange.getStart());
-    end.setValue(dateRange.getEnd());
+    start.setValue(dateRange.getStartDate());
+    end.setValue(dateRange.getEndDate());
   }
 }
 // end::snippet[]
