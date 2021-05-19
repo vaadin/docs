@@ -4,7 +4,7 @@ import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-lumo-styles/typography';
-import { applyTheme } from 'generated/theme';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tabs-content')
 export class Example extends LitElement {
