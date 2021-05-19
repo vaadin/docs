@@ -26,6 +26,8 @@ public class MoneyField extends CustomField<Money> {
     // aria-label for screen readers
     amount.getElement()
       .executeJs("this.inputElement.setAttribute('aria-label', 'Amount')");
+    currency.getElement()
+      .executeJs("this.inputElement.setAttribute('aria-label', 'Currency')");
 
     HorizontalLayout layout = new HorizontalLayout(amount, currency);
     // Removes default spacing
