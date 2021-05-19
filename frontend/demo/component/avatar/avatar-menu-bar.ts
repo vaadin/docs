@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/contextMenuConnector'; // hidden-source-line
 import '@vaadin/flow-frontend/menubarConnector'; // hidden-source-line
 
-import { LitElement, html } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';

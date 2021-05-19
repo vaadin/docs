@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import '@vaadin/vaadin-board/vaadin-board';
-import { html, LitElement, css } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import borderCSS from './example-border.css';

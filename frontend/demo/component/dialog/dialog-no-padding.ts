@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { LitElement, html } from 'lit';
+import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { render } from 'lit-html';
-import { guard } from 'lit-html/directives/guard';
+import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';

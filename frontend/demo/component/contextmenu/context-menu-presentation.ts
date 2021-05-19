@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
-import { LitElement, html } from 'lit';
+import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { render } from 'lit-html';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';

@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { LitElement, html } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 import { getPeople } from 'Frontend/demo/domain/DataService';

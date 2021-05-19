@@ -1,5 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { LitElement, html } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@polymer/iron-icon';
 import '@vaadin/vaadin-button/vaadin-button';

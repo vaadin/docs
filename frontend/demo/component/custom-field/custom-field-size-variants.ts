@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement } from 'lit';
+import { html, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-custom-field/vaadin-custom-field';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-select/vaadin-select';
 import { applyTheme } from 'Frontend/generated/theme';
-import { guard } from 'lit-html/directives/guard';
-import { render } from 'lit-html';
 
 @customElement('custom-field-size-variants')
 export class Example extends LitElement {

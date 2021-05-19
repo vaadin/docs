@@ -1,8 +1,7 @@
-import { LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { isAuthorizedViewRoute, routes } from './routes';
-import { repeat } from 'lit-html/directives/repeat';
-import { html } from 'lit-html';
 import { router } from 'Frontend/demo/flow/application/routing';
 
 @customElement('main-view')

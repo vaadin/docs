@@ -1,6 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { render } from 'lit-html';
-import { html, LitElement, css, unsafeCSS } from 'lit';
+import { css, html, LitElement, render, unsafeCSS } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
