@@ -41,6 +41,7 @@ export class Example extends LitElement {
       subscriber: false,
       manager: false,
       managerId: -1,
+      status: '',
     });
 
     this.items = people;
