@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
 import { html, LitElement, customElement } from 'lit-element';
+import '@vaadin/vaadin-login/vaadin-login-overlay';
 import { applyTheme } from 'Frontend/generated/theme';
-import './login-overlay-mockup';
 
-@customElement('login-modal-overlay-header')
+@customElement('login-overlay-header')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -14,10 +13,13 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <login-overlay-mockup
-        headerTitle="TaskMob"
+      <!-- tag::snippet[] -->
+      <vaadin-login-overlay
+        title="TaskMob"
         description="Built with ♥ by Vaadin"
-      ></login-overlay-mockup>
+        opened
+      ></vaadin-login-overlay>
+      <!-- end::snippet[] -->
     `;
   }
 }
