@@ -32,6 +32,8 @@ public class Person {
 
   private boolean manager;
 
+  private String status;
+
   public String getFirstName() {
     return firstName;
   }
@@ -147,6 +149,14 @@ public class Person {
 
   public void setManager(boolean manager) {
     this.manager = manager;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
   }
 }
 // end::snippet[]
