@@ -23,19 +23,21 @@ export class Example extends LitElement {
       <vaadin-select
         value="recent"
         label="Sort by"
-        .renderer="${guard([], () => (root: HTMLElement) =>
-          render(
-            html`
-              <vaadin-list-box>
-                <vaadin-item value="recent">Most recent first</vaadin-item>
-                <vaadin-item value="rating-desc">Rating: high to low</vaadin-item>
-                <vaadin-item value="rating-asc">Rating: low to high</vaadin-item>
-                <vaadin-item value="price-desc">Price: high to low</vaadin-item>
-                <vaadin-item value="price-asc">Price: low to high</vaadin-item>
-              </vaadin-list-box>
-            `,
-            root
-          )
+        .renderer="${guard(
+          [],
+          () => (root: HTMLElement) =>
+            render(
+              html`
+                <vaadin-list-box>
+                  <vaadin-item value="recent">Most recent first</vaadin-item>
+                  <vaadin-item value="rating-desc">Rating: high to low</vaadin-item>
+                  <vaadin-item value="rating-asc">Rating: low to high</vaadin-item>
+                  <vaadin-item value="price-desc">Price: high to low</vaadin-item>
+                  <vaadin-item value="price-asc">Price: low to high</vaadin-item>
+                </vaadin-list-box>
+              `,
+              root
+            )
         )}"
       ></vaadin-select>
       <!-- end::snippet[] -->
