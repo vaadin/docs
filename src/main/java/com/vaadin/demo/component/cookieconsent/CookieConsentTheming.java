@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.cookieconsent;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.cookieconsent.CookieConsent;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
@@ -10,7 +11,7 @@ public class CookieConsentTheming extends Div {
 
     public CookieConsentTheming() {
         // tag::snippet[]
-        addClassName("cookie-consent-theming");
+        UI.getCurrent().getElement().getClassList().add("cookie-consent-theming");
 
         CookieConsent cookieConsent = new CookieConsent();
         add(cookieConsent);
