@@ -4,7 +4,7 @@ import { fakeErrorResponse, fakeErrorResponseWrapper } from './upload-demo-helpe
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
+import type { UploadResponseEvent } from '@vaadin/vaadin-upload/vaadin-upload';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import type { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -51,7 +51,7 @@ export class Example extends LitElement {
     `;
   }
 
-  uploadResponseHandler(event: UploadResponse) {
+  uploadResponseHandler(event: UploadResponseEvent) {
     const { file, xhr } = event.detail;
     if (xhr.status >= 500) {
       // You can use any information available in the xhr object about the

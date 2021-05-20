@@ -10,8 +10,8 @@ import '@vaadin/vaadin-grid/vaadin-grid-column';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { GridItemModel } from '@vaadin/vaadin-grid';
-import { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid-column';
+import type { GridItemModel } from '@vaadin/vaadin-grid';
+import type { GridColumnElement } from '@vaadin/vaadin-grid/vaadin-grid-column';
 
 @customElement('grid-pro-edit-column')
 export class Example extends LitElement {
@@ -35,9 +35,13 @@ export class Example extends LitElement {
       <vaadin-grid-pro .items="${this.items}" enter-next-row>
         <vaadin-grid-column
           header="Name (read-only)"
-          .renderer="${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(
+            root: HTMLElement,
+            _column?: GridColumnElement,
+            model?: GridItemModel<Person>
+          ) => {
             if (model?.item) {
-              const { firstName, lastName } = model.item as Person;
+              const { firstName, lastName } = model.item;
               root.textContent = `${firstName} ${lastName}`;
             }
           }}"

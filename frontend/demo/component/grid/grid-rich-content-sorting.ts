@@ -8,7 +8,7 @@ import '@vaadin/vaadin-grid/vaadin-grid-sorter';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -47,8 +47,8 @@ export class Example extends LitElement {
     `;
   }
 
-  private employeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const person = model.item as Person;
+  private employeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const person = model.item;
     render(
       html`
         <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
@@ -75,8 +75,8 @@ export class Example extends LitElement {
     render(html`<vaadin-grid-sorter path="birthday">Birthdate</vaadin-grid-sorter>`, root);
   };
 
-  private birthdayRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const person = model.item as Person;
+  private birthdayRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const person = model.item;
     const birthday = parseISO(person.birthday);
     render(
       html`

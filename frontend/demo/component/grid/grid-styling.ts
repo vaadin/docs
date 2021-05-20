@@ -4,7 +4,7 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -52,15 +52,18 @@ export class Example extends LitElement {
   private ratingRenderer = (
     root: HTMLElement,
     _column?: GridColumnElement,
-    model?: GridItemModel
+    model?: GridItemModel<PersonWithRating>
   ) => {
-    const item = model?.item as PersonWithRating;
-    const rating = this.ratingFormatter.format(item.customerRating);
+    const item = model?.item;
+    const rating = item ? this.ratingFormatter.format(item.customerRating) : '';
     render(html` <span>${rating}</span> `, root);
   };
 
-  private cellClassNameGenerator(column: GridColumnElement, model: GridItemModel) {
-    const item = model.item as PersonWithRating;
+  private cellClassNameGenerator(
+    column: GridColumnElement,
+    model: GridItemModel<PersonWithRating>
+  ) {
+    const item = model.item;
     let classes = '';
     // make the customer rating column bold
     if (column.header?.startsWith('Customer rating')) {

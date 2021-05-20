@@ -28,7 +28,7 @@ export class Example extends LitElement {
     const renderBoolean = (
       root: HTMLElement,
       column?: GridColumnElement,
-      model?: GridItemModel
+      model?: GridItemModel<UserPermissions>
     ): void => {
       if (!column || !model) {
         return;
@@ -38,7 +38,7 @@ export class Example extends LitElement {
       let title: string;
       let theme: string;
 
-      if ((model.item as UserPermissions)[column.id as keyof UserPermissions]) {
+      if (model.item[column.id as keyof UserPermissions]) {
         icon = 'vaadin:check-circle';
         title = 'Confirmed';
         theme = 'success';

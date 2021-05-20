@@ -36,23 +36,31 @@ export class Example extends LitElement {
         <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due Date"
-          .renderer="${(root: HTMLElement, column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(
+            root: HTMLElement,
+            column?: GridColumnElement,
+            model?: GridItemModel<Report>
+          ) => {
             if (!column || !model) {
               return;
             }
 
-            render(html`${dateFormatter.format(new Date((model.item as Report).due))}`, root);
+            render(html`${dateFormatter.format(new Date(model.item.due))}`, root);
           }}"
         ></vaadin-grid-column>
         <vaadin-grid-column path="assignee" header="Assignee"></vaadin-grid-column>
         <vaadin-grid-column
           header="Status"
-          .renderer="${(root: HTMLElement, column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(
+            root: HTMLElement,
+            column?: GridColumnElement,
+            model?: GridItemModel<Report>
+          ) => {
             if (!column || !model) {
               return;
             }
 
-            const { status } = model.item as Report;
+            const { status } = model.item;
 
             let icon: string;
             let title: string;

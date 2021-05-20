@@ -8,7 +8,7 @@ import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -73,8 +73,8 @@ export class Example extends LitElement {
     `;
   }
 
-  private manageRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const { id } = model.item as Person;
+  private manageRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const { id } = model.item;
     render(
       html`
         <vaadin-button

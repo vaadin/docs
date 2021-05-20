@@ -10,7 +10,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-button/vaadin-button';
-import {
+import type {
   GridColumnElement,
   GridDataProviderCallback,
   GridDataProviderParams,
@@ -19,7 +19,7 @@ import {
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { GridTreeToggleExpandedChanged } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
+import type { GridTreeToggleExpandedChangedEvent } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 
 @customElement('tree-grid-rich-content')
 export class Example extends LitElement {
@@ -32,11 +32,14 @@ export class Example extends LitElement {
   @state()
   private expandedItems: Person[] = [];
 
-  async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
+  async dataProvider(
+    params: GridDataProviderParams<Person>,
+    callback: GridDataProviderCallback<Person>
+  ) {
     const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null,
+      managerId: params.parentItem ? params.parentItem.id : null,
     });
 
     callback(people, hierarchyLevelSize);
@@ -46,17 +49,17 @@ export class Example extends LitElement {
   private employeeRenderer = (
     root: HTMLElement,
     _column?: GridColumnElement,
-    model?: GridItemModel
+    model?: GridItemModel<Person>
   ) => {
     if (model?.item) {
-      const person = model.item as Person;
+      const person = model.item;
 
       render(
         html`
           <vaadin-grid-tree-toggle
             .leaf="${!person.manager}"
             .level="${model.level || 0}"
-            @expanded-changed="${(e: GridTreeToggleExpandedChanged) => {
+            @expanded-changed="${(e: GridTreeToggleExpandedChangedEvent) => {
               if (e.detail.value) {
                 this.expandedItems = [...this.expandedItems, person];
               } else {
@@ -85,9 +88,9 @@ export class Example extends LitElement {
       );
     }
   };
-  contactRenderer(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) {
+  contactRenderer(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel<Person>) {
     if (model?.item) {
-      const person = model.item as Person;
+      const person = model.item;
 
       render(
         html`

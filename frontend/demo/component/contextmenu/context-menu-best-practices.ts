@@ -5,9 +5,14 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
+
+interface FileItem {
+  name: string;
+  size: string;
+}
 
 @customElement('context-menu-best-practices')
 export class Example extends LitElement {
@@ -23,7 +28,7 @@ export class Example extends LitElement {
   // end::snippet[]
 
   @state()
-  private gridItems = [
+  private gridItems: FileItem[] = [
     { name: 'Annual Report.docx', size: '24 MB' },
     { name: 'Financials.xlsx', size: '42 MB' },
   ];
@@ -70,9 +75,8 @@ export class Example extends LitElement {
 
   onContextMenu(e: MouseEvent) {
     // Prevent opening context menu on header row.
-    if (
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
-    ) {
+    const target = e.currentTarget as GridElement;
+    if ((target.getEventContext(e) as GridEventContext<FileItem>).section !== 'body') {
       e.stopPropagation();
     }
   }

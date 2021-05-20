@@ -5,7 +5,10 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
-import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
+import type {
+  GridDataProviderCallback,
+  GridDataProviderParams,
+} from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -19,13 +22,16 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
+  async dataProvider(
+    params: GridDataProviderParams<Person>,
+    callback: GridDataProviderCallback<Person>
+  ) {
     // The requested page and the full length of the corresponding
     // hierarhcy level is requested from the data service
     const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null,
+      managerId: params.parentItem ? params.parentItem.id : null,
     });
 
     callback(people, hierarchyLevelSize);

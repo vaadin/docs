@@ -10,9 +10,9 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import {
+import type {
   ContextMenuItem,
-  ContextMenuItemSelected,
+  ContextMenuItemSelectedEvent,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
 @customElement('grid-column-visibility')
@@ -48,7 +48,7 @@ export class Example extends LitElement {
         <vaadin-context-menu
           open-on="click"
           .items="${this.contextMenuItems}"
-          @item-selected="${(e: ContextMenuItemSelected) => {
+          @item-selected="${(e: ContextMenuItemSelectedEvent) => {
             const value = e.detail.value as ContextMenuItem & { key: string };
             this.contextMenuItems = this.contextMenuItems.map((item) =>
               item.key === value.key ? { ...item, checked: !value.checked } : item

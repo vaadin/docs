@@ -7,8 +7,8 @@ import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type {
   UploadElement,
-  UploadFileReject,
-  UploadMaxFilesReachedChanged,
+  UploadFileRejectEvent,
+  UploadMaxFilesReachedChangedEvent,
 } from '@vaadin/vaadin-upload/vaadin-upload';
 import '@vaadin/vaadin-button/vaadin-button';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -41,7 +41,7 @@ export class Example extends LitElement {
         max-files="1"
         accept="application/pdf,.pdf"
         @file-reject="${this.fileRejectHandler}"
-        @max-files-reached-changed="${(e: UploadMaxFilesReachedChanged) =>
+        @max-files-reached-changed="${(e: UploadMaxFilesReachedChangedEvent) =>
           (this.maxFilesReached = e.detail.value)}"
       >
         <vaadin-button slot="add-button" theme="primary" ?disabled="${this.maxFilesReached}">
@@ -52,7 +52,7 @@ export class Example extends LitElement {
     `;
   }
 
-  fileRejectHandler(event: UploadFileReject) {
+  fileRejectHandler(event: UploadFileRejectEvent) {
     showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }

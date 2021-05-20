@@ -3,9 +3,9 @@ import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import {
+import type {
   ContextMenuItem,
-  ContextMenuItemSelected,
+  ContextMenuItemSelectedEvent,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -47,7 +47,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippetselected[]
-  itemSelected(e: ContextMenuItemSelected) {
+  itemSelected(e: ContextMenuItemSelectedEvent) {
     this.selectedItem = this.items.find(
       (item) => item.text === e.detail.value.text
     ) as ContextMenuItem;

@@ -10,7 +10,7 @@ import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
+import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { format, parseISO } from 'date-fns';
 
 @customElement('grid-pro-editors')
@@ -44,22 +44,26 @@ export class Example extends LitElement {
         </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column
           path="birthday"
-          .renderer="${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(
+            root: HTMLElement,
+            _column?: GridColumnElement,
+            model?: GridItemModel<Person>
+          ) => {
             if (!model) {
               return;
             }
-            const person = model.item as Person;
+            const person = model.item;
             root.textContent = format(parseISO(person.birthday), 'MM/dd/yyyy');
           }}"
           .editModeRenderer="${(
             root: HTMLElement,
             _column?: GridColumnElement,
-            model?: GridItemModel
+            model?: GridItemModel<Person>
           ) => {
             if (!model) {
               return;
             }
-            const person = model.item as Person;
+            const person = model.item;
 
             let datePicker = root.querySelector('vaadin-date-picker');
             if (!datePicker) {

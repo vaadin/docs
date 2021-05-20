@@ -6,7 +6,11 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
-import { GridActiveItemChanged, GridElement, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type {
+  GridActiveItemChangedEvent,
+  GridElement,
+  GridItemModel,
+} from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -25,7 +29,7 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   @state()
-  private detailsOpenedItem: any[] = [];
+  private detailsOpenedItem: Person[] = [];
 
   async firstUpdated() {
     const people = (await getPeople()).people.map((person) => ({
@@ -40,13 +44,13 @@ export class Example extends LitElement {
       <vaadin-grid
         theme="row-stripes"
         .items="${this.items}"
-        .detailsOpenedItems="${this.detailsOpenedItem}"
-        @active-item-changed="${(e: GridActiveItemChanged) =>
+        .detailsOpenedItems="${this.detailsOpenedItem as any}"
+        @active-item-changed="${(e: GridActiveItemChangedEvent<Person>) =>
           (this.detailsOpenedItem = [e.detail.value])}"
         .rowDetailsRenderer="${guard(
           [],
-          () => (root: HTMLElement, _: GridElement, model: GridItemModel) => {
-            const person = model.item as Person;
+          () => (root: HTMLElement, _: GridElement, model: GridItemModel<Person>) => {
+            const person = model.item;
 
             render(
               html`<vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">

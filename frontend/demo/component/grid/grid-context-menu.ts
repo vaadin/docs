@@ -8,11 +8,11 @@ import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import {
+import type {
   ContextMenuElement,
   ContextMenuRendererContext,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
@@ -40,7 +40,7 @@ export class Example extends LitElement {
       const { sourceEvent } = context.detail! as { sourceEvent: Event };
       const grid = elem.firstElementChild as GridElement;
 
-      const eventContext = grid.getEventContext(sourceEvent) as GridEventContext;
+      const eventContext = grid.getEventContext(sourceEvent) as GridEventContext<Person>;
       const person = eventContext.item as Person;
 
       render(
@@ -81,7 +81,8 @@ export class Example extends LitElement {
   onContextMenu(e: MouseEvent) {
     // Prevent opening context menu on header row.
     if (
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext<Person>).section !==
+      'body'
     ) {
       e.stopPropagation();
     }

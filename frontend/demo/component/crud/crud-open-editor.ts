@@ -5,7 +5,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-crud/vaadin-crud';
 import { GridElement, GridEventContext } from '@vaadin/vaadin-grid';
-import { CrudEditedItemChanged } from '@vaadin/vaadin-crud';
+import type { CrudEditedItemChangedEvent } from '@vaadin/vaadin-crud';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -35,7 +35,7 @@ export class Example extends LitElement {
         include="firstName, lastName, email, profession"
         .items="${this.items}"
         .editedItem="${this.editedItem as any}"
-        @edited-item-changed="${(e: CrudEditedItemChanged<Person>) =>
+        @edited-item-changed="${(e: CrudEditedItemChangedEvent<Person>) =>
           (this.editedItem = e.detail.value)}"
       >
         <vaadin-grid slot="grid" @dblclick="${this.onDblClick}">
@@ -50,7 +50,7 @@ export class Example extends LitElement {
   }
 
   onDblClick(e: MouseEvent) {
-    this.editedItem = ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext)
-      .item as Person;
+    const target = e.currentTarget as GridElement;
+    this.editedItem = (target.getEventContext(e) as GridEventContext<Person>).item;
   }
 }

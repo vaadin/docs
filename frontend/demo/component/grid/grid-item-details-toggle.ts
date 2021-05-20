@@ -7,7 +7,11 @@ import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
-import { GridColumnElement, GridElement, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type {
+  GridColumnElement,
+  GridElement,
+  GridItemModel,
+} from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -25,7 +29,7 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   @state()
-  private detailsOpenedItem: any[] = [];
+  private detailsOpenedItem: Array<Person | null> = [];
 
   async firstUpdated() {
     const people = (await getPeople()).people.map((person) => ({
@@ -40,11 +44,11 @@ export class Example extends LitElement {
       <vaadin-grid
         theme="row-stripes"
         .items="${this.items}"
-        .detailsOpenedItems="${this.detailsOpenedItem}"
+        .detailsOpenedItems="${this.detailsOpenedItem as any}"
         .rowDetailsRenderer="${guard(
           [],
-          () => (root: HTMLElement, _: GridElement, model: GridItemModel) => {
-            const person = model.item as Person;
+          () => (root: HTMLElement, _: GridElement, model: GridItemModel<Person>) => {
+            const person = model.item;
 
             render(
               html`<vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">
@@ -92,8 +96,8 @@ export class Example extends LitElement {
         <vaadin-grid-column
           .renderer="${guard(
             [],
-            () => (root: HTMLElement, _: GridColumnElement, model: GridItemModel) => {
-              const person = model.item as Person;
+            () => (root: HTMLElement, _: GridColumnElement, model: GridItemModel<Person>) => {
+              const person = model.item;
               render(
                 html`<vaadin-button
                   theme="tertiary"

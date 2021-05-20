@@ -10,7 +10,7 @@ import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-grid/vaadin-grid-selection-column';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -57,8 +57,8 @@ export class Example extends LitElement {
     `;
   }
 
-  private empolyeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const person = model.item as Person;
+  private empolyeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const person = model.item;
     render(
       html`
         <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
@@ -81,8 +81,8 @@ export class Example extends LitElement {
     );
   };
 
-  private statusRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const person = model.item as Person;
+  private statusRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const person = model.item;
     render(
       html`
         <span theme="badge ${person.status === 'Available' ? 'success' : 'error'}"

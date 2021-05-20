@@ -4,9 +4,9 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import { ContextMenuOpenedChanged } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import type { ContextMenuOpenedChangedEvent } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -31,9 +31,10 @@ export class Example extends LitElement {
 
   private onClick = (e: MouseEvent) => {
     // Prevent opening context menu on header row click.
+    const target = e.currentTarget as GridElement;
     if (
       !this.contextMenuOpened &&
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+      (target.getEventContext(e) as GridEventContext<Person>).section !== 'body'
     ) {
       e.stopPropagation();
     }
@@ -49,7 +50,7 @@ export class Example extends LitElement {
       <vaadin-context-menu
         open-on="click"
         .items=${this.items}
-        @opened-changed=${(e: ContextMenuOpenedChanged) =>
+        @opened-changed=${(e: ContextMenuOpenedChangedEvent) =>
           (this.contextMenuOpened = e.detail.value)}
       >
         <vaadin-grid height-by-rows .items=${this.gridItems} @click=${this.onClick}>

@@ -5,7 +5,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -51,9 +51,8 @@ export class Example extends LitElement {
 
   onContextMenu(e: MouseEvent) {
     // Prevent opening context menu on header row.
-    if (
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
-    ) {
+    const target = e.currentTarget as GridElement;
+    if ((target.getEventContext(e) as GridEventContext<Person>).section !== 'body') {
       e.stopPropagation();
     }
   }

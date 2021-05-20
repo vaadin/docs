@@ -5,7 +5,7 @@ import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -72,8 +72,8 @@ export class Example extends LitElement {
     );
   };
 
-  subscriberRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const person = model.item as Person;
+  subscriberRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const person = model.item;
     render(html`<span>${person.subscriber ? 'Yes' : 'No'}</span>`, root);
   };
 

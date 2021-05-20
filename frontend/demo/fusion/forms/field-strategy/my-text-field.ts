@@ -2,7 +2,7 @@ import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '@vaadin/vaadin-custom-field';
 import '@vaadin/vaadin-text-field';
-import type { CustomFieldValueChanged } from '@vaadin/vaadin-custom-field';
+import type { CustomFieldValueChangedEvent } from '@vaadin/vaadin-custom-field';
 
 // tag::snippet[]
 @customElement('my-text-field')
@@ -33,7 +33,7 @@ export class MyTextField extends LitElement {
     `;
   }
 
-  onValueChanged(event: CustomFieldValueChanged) {
+  onValueChanged(event: CustomFieldValueChangedEvent) {
     this.value = event.detail.value;
   }
   // tag::snippet[]

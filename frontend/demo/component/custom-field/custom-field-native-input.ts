@@ -4,7 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-custom-field/vaadin-custom-field';
 import { applyTheme } from 'Frontend/generated/theme';
-import { CustomFieldValueChanged } from '@vaadin/vaadin-custom-field/vaadin-custom-field';
+import type { CustomFieldValueChangedEvent } from '@vaadin/vaadin-custom-field/vaadin-custom-field';
 
 @customElement('custom-field-native-input')
 export class Example extends LitElement {
@@ -22,7 +22,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-custom-field
         label="Payment"
-        @change="${(e: CustomFieldValueChanged) => (this.customFieldValue = e.detail.value)}"
+        @change="${(e: CustomFieldValueChangedEvent) => (this.customFieldValue = e.detail.value)}"
       >
         <input type="text" placeholder="Card number" maxlength="16" />
         <input type="text" placeholder="CVV" style="width: 6em" maxlength="3" />

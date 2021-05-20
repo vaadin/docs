@@ -4,7 +4,7 @@ import { css, html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import { showErrorNotification } from 'Frontend/demo/notification-helper';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadElement, UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
+import type { UploadElement, UploadFileRejectEvent } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-helper')
@@ -71,7 +71,7 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  fileRejectHandler(event: UploadFileReject) {
+  fileRejectHandler(event: UploadFileRejectEvent) {
     showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }

@@ -4,7 +4,7 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Gri
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -45,21 +45,17 @@ export class Example extends LitElement {
     `;
   }
 
-  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
     render(
       html`
-        <img
-          style="height: var(--lumo-size-m)"
-          src="${(model.item as Person).pictureUrl}"
-          alt="User avatar"
-        />
+        <img style="height: var(--lumo-size-m)" src="${model.item.pictureUrl}" alt="User avatar" />
       `,
       root
     );
   };
 
-  private addressRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const item = model.item as Person;
+  private addressRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const item = model.item;
     render(
       html`
         <span

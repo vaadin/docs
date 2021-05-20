@@ -5,7 +5,10 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
+import type {
+  GridDataProviderCallback,
+  GridDataProviderParams,
+} from '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -23,13 +26,13 @@ export class Example extends LitElement {
   private managers: Person[] = [];
 
   private dataProvider = async (
-    params: GridDataProviderParams,
-    callback: GridDataProviderCallback
+    params: GridDataProviderParams<Person>,
+    callback: GridDataProviderCallback<Person>
   ) => {
     const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null,
+      managerId: params.parentItem ? params.parentItem.id : null,
     });
 
     if (!params.parentItem) {
