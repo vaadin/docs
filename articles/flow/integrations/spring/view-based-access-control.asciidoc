@@ -6,7 +6,7 @@ layout: page
 
 = View-Based Access Control
 
-[role="since:com.vaadin:vaadin@V20 standalone"]
+[role="since:com.vaadin:vaadin@V21 standalone"]
 --
 --
 
@@ -67,7 +67,7 @@ Having a login view is a basic requirement of many authentication and authorizat
 @PageTitle("Login")
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
-    LoginForm login = new LoginForm();
+    private LoginForm login = new LoginForm();
 
     public LoginView() {
         addClassName("login-view");
@@ -78,18 +78,15 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
         login.setAction("login");
 
-        add(
-            new H1("Test Application"),
-            login
-        );
+        add(new H1("Test Application"), login);
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
         if(beforeEnterEvent.getLocation()
-        .getQueryParameters()
-        .getParameters()
-        .containsKey("error")) {
+            .getQueryParameters()
+            .getParameters()
+            .containsKey("error")) {
             login.setError(true);
         }
     }
@@ -197,14 +194,14 @@ As their names imply, they tell Spring to enable its security features.
 
 The next thing to notice is the parent class: `VaadinWebSecurityConfigurerAdapter`.
 If you are familiar with Spring Boot and Spring Security, you may be aware that you can extend Spring's `WebSecurityConfigurerAdapter` directly and configure a lot of things from scratch.
-However, there are some benefits to extending from `VaadinWebSecurityConfigurerAdapter`.
+However, there are some benefits to extending from `VaadinWebSecurityConfigurerAdapter`:
 
 - The default implementation of the `configure` methods takes care of all the Vaadin-related configurations, for example ignoring static resources, or enabling `CSRF` checking while ignoring unnecessary checking for Vaadin internal requests, etc.
 - The view-based access control mechanism is enabled by default.
 - The login view can be configured simply via the provided `setLoginView` method.
 
 .Never use hard-coded credentials in production
-[NOTE]
+[WARNING]
 The implementation of `userDetailsService` method is obviously just an in-memory implementation for the sake of brevity in this documentation.
 In a real-world application, you can change the Spring Security configuration to use an authentication provider for LDAP, JAAS, and other real-world sources. https://dzone.com/articles/spring-security-authentication[Read more about Spring Security authentication providers].
 
@@ -269,43 +266,9 @@ If multiple annotations are specified on a single view, the following rules are 
 
 However, specifying more than one of the above access annotations on a view class is not recommended, as it is confusing and there is probably no logical reason to do so.
 
-== View-Based Access Control in Spring-Based Applications
-
-The configuration steps for a Vaadin Flow Spring application are quite similar to those of a Vaadin Flow application which is based on Spring Boot.
-
-- The application should obviously have a login view; you can see an example login view <<Login View,here>>.
-
-- The Spring Security dependencies are as follows:
-
-.Direct Spring Security dependencies that should be added to the `pom.xml` file:
-[source,XML]
-----
-<dependencies>
-    <!-- other dependencies -->
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-config</artifactId>
-    </dependency>
-    <!-- other dependencies -->
-</dependencies>
-----
-
-- A security configuration class that extends `VaadinWebSecurityConfigurerAdapter`.
-This would be quite similar to the <<Security Configuration Class,Security Configuration Class>> example for a Vaadin Flow application based on Spring Boot.
-
-- Some extra steps
-//TODO: provide extra steps for a Spring-based application
-
-- Annotating the view classes with `@AnonymousAllowed`, `@PermitAll`, or `@RolesAllowed` annotations.
-Again, this is very similar to the <<Annotating the View Classes,provided examples>> for a Vaadin Flow application based on Spring Boot.
-
 == Limitations
 Mixing any of the view access annotations with Spring's URL-based HTTP security (which probably exist in older Vaadin Spring Boot applications) may result in unwanted access configurations or unnecessary complications.
 
 .Do not mix Spring's URL-based HTTP security and view-based access control on a single view
-[NOTE]
+[IMPORTANT]
 Vaadin strongly recommends *not* mixing Spring's URL-pattern-based HTTP security and this view-based access control mechanism targeting the same views, since it may lead to unwanted access configurations, or at the very least an unnecessary complication in the authorization of views.
