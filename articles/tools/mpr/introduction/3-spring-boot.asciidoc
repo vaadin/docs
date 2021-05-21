@@ -78,6 +78,48 @@ The V14 Spring add-on doesn't have a feature comparable with `ViewScope`
 Any `@SpringView` should be updated to a Flow Route by wrapping them as a `MprRouteAdapter<? extends View>`
 or re-writing it to be a Flow Component. See <<3-navigator#no-navigator,Upgrading Views to Flow Routes>> for details.
 
+The easiest way to migrate Spring views is to use Flow `@Route` navigation target 
+component which wraps the view via `MprRouteAdapter<? extends View>`. There is no 
+need to annotate Flow navigation target or `View` anyhow.
+Starting from Vaadin 21 `@RouteScope`  without `@RouteScopeOwner` annotation can
+be used as a replacement for `@ViewScope`. The bean within `@RouteScope` 
+(without specified `@RouteScopeOwner`) stays preserved until the current 
+navigation target/view is active (attached). It's possible to use `@RouteScopeOwner` 
+of course explicitly but that requires one extra line.
+
+Here is an example of using `@RouteScope`:
+
+[source,java]
+----
+@Route("help")
+public class HelpRoute extends MprRouteAdapter<HelpView>  {
+}
+
+public class HelpView extends VerticalLayout implements View {
+
+    @Autowired
+    private ApplicationContext context;
+
+    @Override
+    public void enter(ViewChangeEvent event) {
+       HelpService service = context.getBean(HelpService.class);
+       // every time when {@code context.getBean(HelpService.class)} called 
+       // the HelpService instance is the same until we are inside HelpView/HelpRoute
+       Label label = new Label(service.getHelp());
+       addComponent(label);       
+    }
+}
+
+@RouteScope
+public class HelpService {
+
+    public String getHelp(){
+        return "some help";
+    }
+}
+
+----
+
 == Things to keep in mind
 * When porting the UI to a flow component, you lose the ability to use UI methods, such as `setErrorHandler`. You can still access those
 by using `UI.getCurrent()`. The method `setContent` is not supported though - you should use the `add` method from your Flow layout instead.
