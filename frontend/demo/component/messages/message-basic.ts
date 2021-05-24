@@ -1,4 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-messages/vaadin-message-list';
@@ -6,7 +6,7 @@ import '@vaadin/vaadin-messages/vaadin-message-input';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { MessageListItem } from '@vaadin/vaadin-messages';
-import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-full-source-line
+import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-source-line
 
 @customElement('message-basic')
 export class Example extends LitElement {
@@ -30,8 +30,7 @@ export class Example extends LitElement {
         userColorIndex: 1,
       },
       {
-        text:
-          'Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.',
+        text: 'Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.',
         time: 'right now',
         userName: 'Linsey Listy',
         userColorIndex: 2,

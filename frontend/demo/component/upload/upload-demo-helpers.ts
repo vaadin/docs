@@ -405,7 +405,8 @@ export class MockHttpRequest {
   // Based on parseUri by Steven Levithan <stevenlevithan.com>
   // See http://blog.stevenlevithan.com/archives/parseuri
   parseUri(str: string) {
-    const pattern = /^(?:([^:/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:/?#]*)(?::(\d*))?))?((((?:[^?#/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
+    const pattern =
+      /^(?:([^:/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:/?#]*)(?::(\d*))?))?((((?:[^?#/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
     const key = [
       'source',
       'protocol',

@@ -33,6 +33,6 @@ public class AvatarSizes extends Div {
     add(xl, l, s, xs);
   }
 
-  public static class Exporter extends DemoExporter<AvatarSizes> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<AvatarSizes> { // hidden-source-line
+  } // hidden-source-line
 }

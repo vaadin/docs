@@ -4,7 +4,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.ComboBox.ItemFilter;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 
@@ -24,6 +24,6 @@ public class ComboBoxPlaceholder extends Div {
     comboBox.setItemLabelGenerator(person -> person.getFirstName() + " " + person.getLastName());
   }
 
-  public static class Exporter extends DemoExporter<ComboBoxPlaceholder> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ComboBoxPlaceholder> { // hidden-source-line
+  } // hidden-source-line
 }

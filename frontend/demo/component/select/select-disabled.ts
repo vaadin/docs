@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/selectConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/selectConnector.js'; // hidden-source-line
 
 import { html, LitElement, customElement } from 'lit-element';
 import { render } from 'lit-html';
@@ -23,19 +23,21 @@ export class Example extends LitElement {
       <vaadin-select
         label="Size"
         value="xl"
-        .renderer="${guard([], () => (root: HTMLElement) =>
-          render(
-            html`
-              <vaadin-list-box>
-                <vaadin-item value="xs" disabled>XS (out of stock)</vaadin-item>
-                <vaadin-item value="s">S</vaadin-item>
-                <vaadin-item value="m">M</vaadin-item>
-                <vaadin-item value="l">L</vaadin-item>
-                <vaadin-item value="xl">XL</vaadin-item>
-              </vaadin-list-box>
-            `,
-            root
-          )
+        .renderer="${guard(
+          [],
+          () => (root: HTMLElement) =>
+            render(
+              html`
+                <vaadin-list-box>
+                  <vaadin-item value="xs" disabled>XS (out of stock)</vaadin-item>
+                  <vaadin-item value="s">S</vaadin-item>
+                  <vaadin-item value="m">M</vaadin-item>
+                  <vaadin-item value="l">L</vaadin-item>
+                  <vaadin-item value="xl">XL</vaadin-item>
+                </vaadin-list-box>
+              `,
+              root
+            )
         )}"
       ></vaadin-select>
       <!-- end::snippet[] -->
