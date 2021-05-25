@@ -27,18 +27,21 @@ public class TopicView extends VerticalLayout {
         UserInfo localUser = new UserInfo(userId, "User " + userId);
         // end::user-info[]
         // tag::open-topic[]
+        // tag::open-topic-method-call[]
         CollaborationEngine.getInstance().openTopicConnection(this, "tutorial",
                 localUser, topic -> {
+        // end::open-topic-method-call[]
                     // tag::get-map[]
                     CollaborationMap fieldValues = topic
                             .getNamedMap("fieldValues");
                     // end::get-map[]
-                    // tag::registration[]
+                    // tag::registration-declaration[]
                     Registration registration = checkbox
                             .addValueChangeListener(valueChangeEvent -> {
                                 fieldValues.put("isFriday",
                                         valueChangeEvent.getValue());
                             });
+                    // end::registration-declaration[]
                     // tag::subscribe[]
                     fieldValues.subscribe(event -> {
                         if ("isFriday".equals(event.getKey())) {
@@ -47,9 +50,12 @@ public class TopicView extends VerticalLayout {
                         }
                     });
                     // end::subscribe[]
+                    // tag::return-registration[]
                     return registration;
-                    // end::registration[]
+                    // end::return-registration[]
+                // tag::open-topic-method-call-end[]
                 });
+                // end::open-topic-method-call-end[]
         // end::open-topic[]
     }
 }
