@@ -7,10 +7,11 @@ import './login-overlay-mockup';
 
 @customElement('login-overlay-internationalization-preview')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   private i18n: LoginI18n = {

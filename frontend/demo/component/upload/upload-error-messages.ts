@@ -16,10 +16,15 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
 
 @customElement('upload-error-messages')
 export class Example extends LitElement {
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(root);
+    return root;
+  }
+
   constructor() {
     super();
-    // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
     this.uploadResponseHandler = fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-source-line
   }
 

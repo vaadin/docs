@@ -10,10 +10,11 @@ import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/Appointm
 
 @customElement('date-picker-custom-validation')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   private binder = new Binder(this, AppointmentModel);

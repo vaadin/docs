@@ -16,10 +16,11 @@ export class Example extends LitElement {
   private yesterday = format(subDays(new Date(), 1), this.isoMinutes);
   private fiftyMinutesAgo = format(subMinutes(new Date(), 50), this.isoMinutes);
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   async firstUpdated() {

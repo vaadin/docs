@@ -13,10 +13,11 @@ import Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('list-box-custom-item-presentation')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   @state()

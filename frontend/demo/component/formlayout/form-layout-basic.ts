@@ -11,10 +11,11 @@ import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form
 
 @customElement('form-layout-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   private responsiveSteps: FormLayoutResponsiveStep[] = [

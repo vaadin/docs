@@ -16,10 +16,11 @@ import { differenceInYears, format, parseISO } from 'date-fns';
 
 @customElement('grid-rich-content-sorting')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]

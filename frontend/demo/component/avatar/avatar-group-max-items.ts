@@ -8,10 +8,11 @@ import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-group-max-items')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   @state()
