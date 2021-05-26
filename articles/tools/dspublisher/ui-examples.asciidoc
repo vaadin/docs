@@ -1,0 +1,333 @@
+---
+title: Adding UI Examples
+order: 70
+---
+
+= Adding UI Examples
+:toclevels: 2
+
+Dependencies for custom components are added to [filename]#pom.xml# the same way as a <<custom-theme#,custom theme JAR>>.
+Components and theme can be included in the same dependency if desired.
+
+Before writing the code for embedding a component example on a page, the example itself must be added.
+
+== Java Examples
+
+Examples of Java-based components (for the Flow framework) are placed in sub-folders inside [filename]#src/main/java/com/vaadin/demo/component#.
+Each example needs to be in its own file.
+
+----
+my-docs
+└── src/main
+    └── java/com/vaadin
+        └── demo
+            └── component
+                ├── accordion
+                ⋮   ├── AccordionBasic.java
+                ⋮   ├── AccordionDisabledPanels.java
+                ⋮   ⋮
+                ├── mycomponent
+                ⋮   ├── MyComponentExample.java
+                ⋮   ⋮
+----
+
+
+To add examples for a new component, create a folder inside the component folder with a Java file inside it.
+
+.`MyComponentExample.java`
+[source,java]
+----
+package com.vaadin.demo.component.mycomponent;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.router.Route;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.example.MyComponent;
+
+@Route("my-component-example") // <2>
+public class MyComponentExample extends Div { // <1>
+
+  public MyComponentExample() {§
+    MyComponent myc = new MyComponent("My component");
+    add(myc); // <3>
+  }
+
+  public static class Exporter extends // <4>
+    DemoExporter<MyComponentExample> {} // hidden-source-line
+}
+----
+<1> A class that extends `Div` or some other container like `VerticalLayout`
+<2> with a `@Route` annotation with a route name that is unique within the entire website
+<3> and a constructor that adds the desired UI as a child to the class.
+<4> A static inner class that extends the `DemoExporter` class with a type parameter matching the example class.
+
+Design System Publisher uses `spring-boot-devtools` to automatically rebuild the Java examples when they've been modified and saved, provided that the editor or IDE used for editing is correctly configured.
+Rebuilding the Java examples typically takes about 30 seconds, after which the page must be manually reloaded.
+
+== TypeScript Examples
+
+Examples of TypeScript-based components are placed in sub-folders inside frontend/demo/component.
+Each example needs to be in its own file.
+
+----
+my-docs
+└── frontend
+    └── demo
+        └── component
+            ├── accordion
+            ⋮   ├── accordion-basic.ts
+            ⋮   ├── accordion-disabled-panels.ts
+            ⋮   ⋮
+            ├── my-component
+            ⋮   ├── my-component-example.ts
+            ⋮   ⋮
+----
+
+To add examples for a new component, create a folder inside the component folder with a TypeScript file inside it.
+
+.`my-component-example.ts`
+[source,typescript]
+----
+import '../../init'; // hidden-source-line
+import { applyTheme } from 'generated/theme';
+import { html, LitElement, customElement } from 'lit-element';
+
+import '@my-org/my-component/my-component';
+
+@customElement('my-component-example') // <1>
+export class Example extends LitElement { // <2>
+  constructor() {
+    super();
+    applyTheme(this.shadowRoot); // <3>
+  }
+
+  render() { // <4>
+    return html`
+      <my-component>My component</my-component>
+    `;
+  }
+}
+----
+<1> A `@customElement` annotation with a name that is unique within the entire website.
+<2> A class that extends `LitElement`, with a
+<3> constructor that calls `super()` followed by the `applyTheme(this.shadowRoot)` method (this applies your custom theme to the example).
+<4> A render method that returns the HTML for the example.
+
+Whenever changes to a TypeScript example are saved, Publisher rebuilds the example and automatically refreshes the page after a couple of seconds.
+
+.TypeScript code examples do not refresh automatically
+[NOTE]
+The code example displayed below the live component example is not automatically refreshed.
+To refresh the code example the page's text content needs to be re-saved for DS Publisher to rebuild the page.
+
+
+== Embedding Examples in a Page
+
+Component examples are embedded into pages using the `include::path/to/example[render]` directive inside a `[source]` listing block.
+Only Java or TypeScript examples can render live UI examples.
+
+[.example]
+--
+[source,asciidoc,subs="-attributes"]
+-----
+<source-info group="Java"></source-info>
+[source,java]
+----
+\include::{root}/src/main/java/com/vaadin/demo/component/mycomponent/MyComponent.java[render]
+----
+-----
+
+[source,asciidoc,subs="-attributes"]
+-----
+<source-info group="TypeScript"></source-info>
+[source,typescript]
+----
+\include::{root}/frontend/demo/component/my-component/my-component.ts[render]
+----
+-----
+--
+
+=== Syntax Highlighting
+
+The `[source]` tag above the include renders the block with source code formatting.
+The syntax highlighting of the rendered code depends on the second part of the tag.
+
+[cols="1m,1",frame=none,grid=rows]
+|===
+|[source,java]
+|Java files
+
+|[source,typescript]
+|TypeScript files
+
+|[source,html]
+|HTML files and TypeScript files where the HTML part is most important.
+
+|[source,css]
+|Style sheets
+|===
+
+The choice of syntax highlighting also affects the snippet tags (see below).
+
+=== Snippets
+
+Snippets are segments of code examples that are displayed by default, instead of the entire source code of an included file.
+The *Expand code* button above the example reveals the rest of the included file.
+This can be useful for making it easier for readers to see the most relevant part of the example.
+
+Snippets are defined in the source code as comments:
+
+- `tag::snippet[]` marks the beginning of the snippet
+- `end::snippet[]` marks the end of the snippet
+
+Write the comment in the format defined for the example's syntax highlighting.
+For TypeScript examples, this means that code tagged with `[source,html]` must use HTML comments within an HTML literal in the code.
+
+[.example]
+--
+.Java
+----
+public MyComponentExample() {
+  // tag::snippet[]
+  MyComponent myc = new MyComponent("My component");
+  // end::snippet[]
+  add(myc);
+}
+----
+
+.TypeScript
+----
+render() {
+  // tag::snippet[]
+  return html`
+    <my-component>My component</my-component>
+  `;
+  // tag::snippet[]
+}
+----
+
+.HTML
+----
+<div>
+  <!-- tag::snippet[] -->
+  <my-component>My component</my-component>
+  <!-- end::snippet[] -->
+</div>
+----
+
+.CSS
+----
+/* tag::snippet[] */
+html {
+  color: black;
+}
+/* end::snippet[] */
+----
+--
+
+Snippets must be enabled in the `include::[]` directive in the page content, by adding the `tags=snippet` attribute in the brackets following the file path:
+
+[source,asciidoc,subs="verbatim,quotes"]
+-----
+[source,java]
+----
+\include::...[...,*tags=snippet*]
+----
+-----
+
+See https://docs.asciidoctor.org/asciidoc/latest/directives/include-tagged-regions/[Including Content by Tagged Regions] in the AsciiDoc documentation to learn more how you can use snippets.
+
+
+=== Excluding Source Code Lines
+
+Parts of the source code can be entirely omitted from the rendered code examples by appending a specific comment after the line.
+
+----
+// hidden-source-line
+----
+
+This is useful for excluding code that is only needed for the embedded example but not relevant for normal use of the component.
+
+
+=== Grouping Embedded Code Examples
+
+Related code examples, such as examples of the same component for different languages, can be grouped together into one example, like in the following example:
+
+[.example.show-code]
+--
+[source,html]
+----
+include::{root}/frontend/demo/component/inputfields/input-field-label.ts[render,tags=snippet,group=TypeScript,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/inputfields/InputFieldLabel.java[render,tags=snippet,group=Java,indent=0]
+----
+--
+
+To do this, wrap multiple source code blocks with an `[.example]` https://docs.asciidoctor.org/asciidoc/latest/blocks/open-blocks/[open block] and specify a name for each group using the `group` attribute:
+
+[source,asciidoc,subs="verbatim,quotes"]
+-----
+[.example]
+--
+[source,html]
+----
+\include::...[...,*group=TypeScript*]
+----
+
+[source,java]
+----
+\include::...[...,*group=Java*]
+----
+--
+-----
+
+Each group can contain multiple files by providing multiple source code includes with the same group attribute value.
+
+=== Indentation
+
+The `indent` attribute can be used to strip leading indentation from the source code snippets:
+
+[source,asciidoc,subs="verbatim,quotes"]
+-----
+[source,html]
+----
+\include::...[...,*indent=0*]
+----
+-----
+
+
+=== Always Showing Example Code
+
+The source code of a rendered UI example can be always visible (instead of the user needing to click *Show code*) by adding a `show-code` role to the `[.example]` block:
+
+[source,asciidoc]
+----
+[.example.show-code]
+--
+...
+--
+----
+
+=== Code-Only and Render-Only Embeds
+
+The rendered live UI example can be omitted, so that only the code example is displayed, by omitting the `render` attribute from the include:
+
+[source,asciidoc]
+-----
+[source,html]
+----
+\include::{root}/frontend/demo/component/inputfields/input-field-label.ts[indent=0]
+----
+-----
+
+Conversely, the code example can be omitted, so that only the live UI example is rendered, by adding a `role=render-only` attribute to the source code block:
+
+[source,asciidoc,subs="verbatim,quotes"]
+-----
+[source,html,*role=render-only*]
+----
+\include::{root}/frontend/demo/component/inputfields/input-field-label.ts[render]
+----
+-----
