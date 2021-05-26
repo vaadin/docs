@@ -27,8 +27,10 @@ public class TopicView extends VerticalLayout {
         UserInfo localUser = new UserInfo(userId, "User " + userId);
         // end::user-info[]
         // tag::open-topic[]
+        // tag::open-topic-method-call[]
         CollaborationEngine.getInstance().openTopicConnection(this, "tutorial",
                 localUser, topic -> {
+        // end::open-topic-method-call[]
                     // tag::get-map[]
                     CollaborationMap fieldValues = topic
                             .getNamedMap("fieldValues");
@@ -49,7 +51,9 @@ public class TopicView extends VerticalLayout {
                     // end::subscribe[]
                     return registration;
                     // end::registration[]
+                // tag::open-topic-method-call-end[]
                 });
+                // end::open-topic-method-call-end[]
         // end::open-topic[]
     }
 }
