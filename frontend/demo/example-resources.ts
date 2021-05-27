@@ -1,5 +1,6 @@
 // @ts-ignore
 import { withPrefix } from 'gatsby';
+import { differenceInMinutes } from 'date-fns';
 import './init-flow-namespace';
 import { applyTheme } from 'Frontend/generated/theme';
 // See webpack.config 'externals.Frontend/generated/theme'
@@ -9,22 +10,25 @@ window.__applyTheme = { applyTheme };
 // @ts-ignore
 import('all-flow-imports-or-empty').catch(() => {});
 
-window.addEventListener('included-example-loaded', (e) => {
-  const includeUrl = (e as any).detail;
-  // Make sure example includes Vaadin component
-  if (includeUrl && includeUrl!.indexOf('vaadin') > -1) {
-    // Make sure Vaadin server is up and running
-    fetch(withPrefix(includeUrl)).then((urlFetch) => {
-      if (urlFetch.ok) {
-        fetch(withPrefix('/vaadin/?v-r=heartbeat&v-uiId=0'), {
-          method: 'POST',
-        }).then((data) => {
-          // If session is expired reload the page
-          if (!data.ok) {
-            location.reload();
-          }
-        });
-      }
-    });
-  }
-});
+let reloadDate = new Date();
+
+function testHeartbeat() {
+  fetch(withPrefix('/vaadin/?v-r=heartbeat&v-uiId=0'), { method: 'POST' }).then((data) => {
+    if (!data.ok && differenceInMinutes(reloadDate, new Date()) > 5) {
+      reloadDate = new Date();
+      location.reload();
+    }
+  });
+}
+
+const initialListener = () => {
+  window.removeEventListener('included-example-loaded', initialListener);
+  fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
+    if (serverData.ok) {
+      window.addEventListener('included-example-loaded', () => testHeartbeat());
+      testHeartbeat();
+    }
+  });
+};
+
+window.addEventListener('included-example-loaded', initialListener);
