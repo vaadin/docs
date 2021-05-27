@@ -1,6 +1,5 @@
 // @ts-ignore
 import { withPrefix } from 'gatsby';
-import { differenceInMinutes } from 'date-fns';
 import './init-flow-namespace';
 import { applyTheme } from 'Frontend/generated/theme';
 // See webpack.config 'externals.Frontend/generated/theme'
@@ -12,13 +11,9 @@ import('all-flow-imports-or-empty').catch(() => {});
 
 function testHeartbeat() {
   fetch(withPrefix('/vaadin/?v-r=heartbeat&v-uiId=0'), { method: 'POST' }).then((data) => {
-    const reloadDate =
-      localStorage.getItem('reloadDate') && new Date(localStorage.getItem('reloadDate') as string);
-    if (
-      !data.ok &&
-      (!reloadDate || (reloadDate && differenceInMinutes(new Date(), reloadDate) > 5))
-    ) {
-      localStorage.setItem('reloadDate', new Date().toString());
+    const reloadTimestamp = localStorage.getItem('reloadTimestamp');
+    if (!data.ok && (!reloadTimestamp || Date.now() - parseInt(reloadTimestamp) > 5 * 60 * 1000)) {
+      localStorage.setItem('reloadTimestamp', Date.now().toString());
       location.reload();
     }
   });
