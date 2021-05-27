@@ -10,12 +10,15 @@ window.__applyTheme = { applyTheme };
 // @ts-ignore
 import('all-flow-imports-or-empty').catch(() => {});
 
-let reloadDate = new Date();
-
 function testHeartbeat() {
   fetch(withPrefix('/vaadin/?v-r=heartbeat&v-uiId=0'), { method: 'POST' }).then((data) => {
-    if (!data.ok && differenceInMinutes(reloadDate, new Date()) > 5) {
-      reloadDate = new Date();
+    const reloadDate =
+      localStorage.getItem('reloadDate') && new Date(localStorage.getItem('reloadDate') as string);
+    if (
+      !data.ok &&
+      (!reloadDate || (reloadDate && differenceInMinutes(new Date(), reloadDate) > 5))
+    ) {
+      localStorage.setItem('reloadDate', new Date().toString());
       location.reload();
     }
   });
