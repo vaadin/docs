@@ -1,5 +1,5 @@
 SVG = ce-architecture
-RASTERIMAGES = ce-architecture
+RASTERIMAGES =
 
 RASTERSRCIMAGES := $(foreach file, $(RASTERIMAGES), $(file).svg)
 RASTERIMAGES := $(foreach file, $(RASTERIMAGES), ../images/$(file).png)
