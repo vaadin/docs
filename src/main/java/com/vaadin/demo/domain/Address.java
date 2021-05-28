@@ -1,17 +1,25 @@
 package com.vaadin.demo.domain;
 
+import javax.annotation.Nonnull;
+
 public class Address {
 
+  @Nonnull
   private String street;
 
+  @Nonnull
   private String city;
 
+  @Nonnull
   private String state;
 
+  @Nonnull
   private String zip;
 
+  @Nonnull
   private String country;
 
+  @Nonnull
   private String phone;
 
   public String getStreet() {

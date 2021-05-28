@@ -1,20 +1,25 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty, css } from 'lit-element';
+import { css, html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridDragStartEvent, GridDropEvent, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type {
+  GridDragStartEvent,
+  GridDropEvent,
+  GridItemModel,
+} from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-drag-rows-between-grids')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   static get styles() {
@@ -36,13 +41,13 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private draggedItem?: Person;
 
-  @internalProperty()
+  @state()
   private grid1Items: Person[] = [];
 
-  @internalProperty()
+  @state()
   private grid2Items: Person[] = [];
 
   async firstUpdated() {
@@ -51,8 +56,8 @@ export class Example extends LitElement {
     this.grid2Items = people.slice(5);
   }
 
-  private startDraggingItem = (event: GridDragStartEvent) => {
-    this.draggedItem = event.detail.draggedItems[0] as Person;
+  private startDraggingItem = (event: GridDragStartEvent<Person>) => {
+    this.draggedItem = event.detail.draggedItems[0];
   };
 
   private clearDraggedItem = () => {
@@ -68,7 +73,7 @@ export class Example extends LitElement {
           drop-mode="on-grid"
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
-          @grid-drop="${(event: GridDropEvent) => {
+          @grid-drop="${(event: GridDropEvent<Person>) => {
             const { dropTargetItem } = event.detail;
             const draggedPerson = this.draggedItem as Person;
             if (dropTargetItem !== draggedPerson) {
@@ -97,7 +102,7 @@ export class Example extends LitElement {
           drop-mode="on-grid"
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
-          @grid-drop="${(event: GridDropEvent) => {
+          @grid-drop="${(event: GridDropEvent<Person>) => {
             const { dropTargetItem } = event.detail;
             const draggedPerson = this.draggedItem as Person;
             if (dropTargetItem !== draggedPerson) {
@@ -124,8 +129,8 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  private fullNameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const person: Person = model.item as Person;
+  private fullNameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const person: Person = model.item;
     render(html`${person.firstName} ${person.lastName}`, root);
   };
 }

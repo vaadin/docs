@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { render } from 'lit-html';
-import { html, LitElement, customElement, css } from 'lit-element';
+import { css, html, LitElement, render } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-lumo-styles/icons';
 import {
@@ -11,10 +11,11 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-position')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]

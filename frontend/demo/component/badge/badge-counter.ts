@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/vaadin-list-box/vaadin-list-box';
-import { html, LitElement, customElement, css } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-counter')
@@ -14,10 +15,11 @@ export class Example extends LitElement {
     `;
   }
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {

@@ -1,7 +1,8 @@
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import { applyTheme } from 'Frontend/generated/theme';
-import { css, customElement, html, LitElement, property } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
 @customElement('example-indicator')
 export class ExampleIndicator extends LitElement {
@@ -58,10 +59,11 @@ export class ExampleIndicator extends LitElement {
   @property()
   public change = 0;
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {
