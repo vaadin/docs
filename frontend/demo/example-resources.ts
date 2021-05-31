@@ -21,7 +21,7 @@ function testHeartbeat() {
   });
 }
 
-const initialListener = (e: any) => {
+const initialListener = ((e: CustomEvent<string>) => {
   window.removeEventListener('included-example-loaded', initialListener);
   // Make sure flow example is upgraded and requested content from server
   customElements.whenDefined(e.detail).then(() => {
@@ -33,7 +33,7 @@ const initialListener = (e: any) => {
       }
     });
   });
-};
+}) as EventListener;
 
 // Examples are not available when session is expired. Logic prevents that by reloading the page.
 window.addEventListener('included-example-loaded', initialListener);
