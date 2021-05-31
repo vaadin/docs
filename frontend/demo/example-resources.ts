@@ -19,13 +19,15 @@ function testHeartbeat() {
   });
 }
 
-const initialListener = () => {
+const initialListener = (e: any) => {
   window.removeEventListener('included-example-loaded', initialListener);
-  fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
-    if (serverData.ok) {
-      window.addEventListener('included-example-loaded', () => testHeartbeat());
-      testHeartbeat();
-    }
+  customElements.whenDefined(e.detail).then(() => {
+    fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
+      if (serverData.ok) {
+        window.addEventListener('included-example-loaded', () => testHeartbeat());
+        testHeartbeat();
+      }
+    });
   });
 };
 
