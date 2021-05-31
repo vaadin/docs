@@ -1,15 +1,20 @@
 package com.vaadin.demo.domain;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
 
 @JsonIgnoreProperties(ignoreUnknown = true) // hidden-source-line
 // tag::snippet[]
 public class Country {
 
+  @Nonnull
   private String name;
 
+  @Nonnull
   private String abbreviation;
 
+  @Nonnull
   private Integer id;
 
   public String getName() {

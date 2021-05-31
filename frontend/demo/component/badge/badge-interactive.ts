@@ -7,9 +7,10 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import type { ButtonElement } from '@vaadin/vaadin-button';
 import type { ComboBoxElement } from '@vaadin/vaadin-combo-box';
-import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import { repeat } from 'lit-html/directives/repeat';
 
 type Profession = string;
 
@@ -33,16 +34,17 @@ export class Example extends LitElement {
     `;
   }
 
-  @internalProperty()
+  @state()
   private items: readonly Profession[] = [];
 
-  @internalProperty()
+  @state()
   private selectedProfessions: readonly Profession[] = [];
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   async firstUpdated() {

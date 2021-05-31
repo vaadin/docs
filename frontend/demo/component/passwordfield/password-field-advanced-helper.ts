@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-text-field/vaadin-password-field';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@polymer/iron-icon';
@@ -20,15 +21,16 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('password-field-advanced-helper')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private strengthText: StrengthText = StrengthText.weak;
-  @internalProperty()
+  @state()
   private strengthColor: StrengthColor = StrengthColor.weak;
   pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$';
 

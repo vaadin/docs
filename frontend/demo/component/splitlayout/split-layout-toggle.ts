@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { customElement, html, internalProperty, LitElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@polymer/iron-icon';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons';
@@ -10,14 +11,15 @@ import './detail-content';
 
 @customElement('split-layout-toggle')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private sidebarCollapsed = false;
 
   render() {
