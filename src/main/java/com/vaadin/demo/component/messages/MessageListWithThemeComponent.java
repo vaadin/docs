@@ -20,9 +20,9 @@ public class MessageListWithThemeComponent extends Div {
         // tag::snippet[]
         Person person = DataService.getPeople(1).get(0);
         MessageList list = new MessageList();
-        Instant yesterday = LocalDateTime.now().minusDays(1)
+        Instant yesterday = LocalDateTime.now(ZoneOffset.UTC).minusDays(1)
                 .toInstant(ZoneOffset.UTC);
-        Instant fiftyMinsAgo = LocalDateTime.now().minusMinutes(50)
+        Instant fiftyMinsAgo = LocalDateTime.now(ZoneOffset.UTC).minusMinutes(50)
                 .toInstant(ZoneOffset.UTC);
         MessageListItem message1 = new MessageListItem(
                 "Linsey, could you check if the details with the order are okay?",
