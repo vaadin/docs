@@ -1,4 +1,4 @@
-import type { UploadFile, UploadResponse } from '@vaadin/vaadin-upload';
+import type { UploadFile, UploadResponseEvent } from '@vaadin/vaadin-upload';
 
 /*
  * Mock XMLHttpRequest (see http://www.w3.org/TR/XMLHttpRequest)
@@ -563,12 +563,12 @@ export function createFakeUploadFiles(
   return options.map((o) => createFakeUploadFile(o));
 }
 
-export function fakeErrorResponse(event: UploadResponse) {
+export function fakeErrorResponse(event: UploadResponseEvent) {
   (event.detail.xhr.status as any) = 500;
 }
 
-export function fakeErrorResponseWrapper(callback: (event: UploadResponse) => void) {
-  return (event: UploadResponse) => {
+export function fakeErrorResponseWrapper(callback: (event: UploadResponseEvent) => void) {
+  return (event: UploadResponseEvent) => {
     fakeErrorResponse(event);
     callback(event);
   };

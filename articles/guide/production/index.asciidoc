@@ -62,13 +62,47 @@ To create a production build, you can call `mvn clean package -Pproduction`.
 This will build a JAR or WAR file with all the dependencies and transpiled front end resources, ready to be deployed.
 The file can be found in the `target` folder after the build completes.
 
-If you do not have the the production Maven profile in your POM file, the easiest way to get it is to get a project base from https://vaadin.com/start matching your environment (Spring Boot, Jakarta EE, or plain Java), and copy the production profile from the downloaded POM file.
+If you do not have the production Maven profile in your POM file, the easiest way to get it is to get a project base from https://vaadin.com/start matching your environment (Spring Boot, Jakarta EE, or plain Java), and copy the production profile from the downloaded POM file.
 
 Having production mode be a separate Maven profile is recommended so that you do not get any unexpected problems due to production settings when running in the development mode.
 
 .Building for 64-bit
 [NOTE]
 If your operating system is 64-bit, make sure to use a 64-bit JDK installation as well.
+
+[role="since:com.vaadin:vaadin@V21"]
+=== Excluding the Development Server Module
+
+The webpack server integration and Live reload features, which are available only in development mode, are contained in the module `com.vaadin:vaadin-dev-server`.
+When running the application in production mode, it is recommended to exclude this module.
+This can be achieved by adding the following dependency exclusion to the `<dependencies>` section in the `production` profile:
+
+.pom.xml
+[source,xml]
+----
+<profiles>
+    <profile>
+        <id>production</id>
+
+        <!-- above production mode configuration -->
+
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin</artifactId>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.vaadin</groupId>
+                        <artifactId>vaadin-dev-server</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </profile>
+</profiles>
+----
+
+This results in less code and dependency libraries being bundled in the production application.
 
 == Transpilation and Bundling
 
@@ -95,7 +129,7 @@ In addition, it visits all resources used by the application and copies them und
 ==== Goal Parameters
 
 * *includes* (default: `&#42;&#42;/&#42;.js,&#42;&#42;/&#42;.css`):
-    Comma separated wildcards for files and directories that should be copied. Default is only .js and .css files.
+    Comma separated wildcards for files and directories that should be copied. Default is only `.js` and `.css` files.
 
 * *npmFolder* (default: `${project.basedir}`):
     The folder where `package.json` file is located. Default is project root folder.
@@ -109,7 +143,7 @@ In addition, it visits all resources used by the application and copies them und
     Set it to empty string to disable the feature.
 
 * *generatedFolder* (default: `${project.build.directory}/frontend/`):
-    The folder where Flow will put generated files that will be used by Webpack.
+    The folder where Flow will put generated files that will be used by webpack.
 
 * *require.home.node* (default: `false`):
    If set to `true`, always prefer Node.js automatically downloaded and installed into the `.vaadin` directory in the user's home.
@@ -143,7 +177,7 @@ and will be used as entry point of the application.
     Whether to run `pnpm install` (or `npm install`, depending on *pnpmEnable* parameter value) after updating dependencies.
 
 *generateEmbeddableWebComponents* (default: `true`)::
-    Whether to generate embeddable web components from WebComponentExporter inheritors.
+    Whether to generate embedded web components from WebComponentExporter inheritors.
 
 *optimizeBundle* (default: `true`)::
     Whether to include only frontend resources used from application entry points (the default) or to include all resources found on the class path.
