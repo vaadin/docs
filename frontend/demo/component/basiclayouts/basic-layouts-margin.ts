@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, css, internalProperty } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
@@ -9,10 +10,11 @@ import './layout-item';
 
 @customElement('basic-layouts-margin')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   static get styles() {
@@ -34,7 +36,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private theme!: string;
 
   render() {

@@ -1,8 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, css, unsafeCSS } from 'lit-element';
+import { css, html, LitElement, unsafeCSS } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
-import '@vaadin/vaadin-lumo-styles/badge.js';
+import '@vaadin/vaadin-lumo-styles/badge';
 
 @customElement('tabs-badges')
 export class Example extends LitElement {
@@ -10,8 +11,9 @@ export class Example extends LitElement {
     return [
       // Workaround for applying `lumo-badge` styles
       unsafeCSS(
-        document.head.querySelector('dom-module#lumo-badge')?.querySelector('template')?.content
-          .firstElementChild?.textContent
+        Array.from(document.head.querySelectorAll('style')).find(
+          (style) => style.innerText.indexOf("theme~='badge'") > 0
+        )?.textContent
       ),
       css`
         span[theme~='badge'] {
@@ -29,16 +31,16 @@ export class Example extends LitElement {
       -->
       <vaadin-tabs>
         <vaadin-tab>
-          Open
-          <span theme="badge small">24</span>
+          <span>Open</span>
+          <span theme="badge small contrast">24</span>
         </vaadin-tab>
         <vaadin-tab>
-          Completed
-          <span theme="badge small">439</span>
+          <span>Completed</span>
+          <span theme="badge small contrast">439</span>
         </vaadin-tab>
         <vaadin-tab>
-          Cancelled
-          <span theme="badge small">5</span>
+          <span>Cancelled</span>
+          <span theme="badge small contrast">5</span>
         </vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->

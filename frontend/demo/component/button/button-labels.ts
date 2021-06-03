@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { css, html, LitElement, customElement, internalProperty } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
@@ -9,10 +10,11 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-labels')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   static get styles() {
@@ -23,13 +25,13 @@ export class Example extends LitElement {
     `;
   }
 
-  @internalProperty()
+  @state()
   private primaryEmail = 'foo@example.com';
 
-  @internalProperty()
+  @state()
   private secondaryEmail1 = 'bar@example.com';
 
-  @internalProperty()
+  @state()
   private secondaryEmail2 = 'baz@example.com';
 
   render() {

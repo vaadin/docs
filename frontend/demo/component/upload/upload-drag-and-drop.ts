@@ -1,6 +1,7 @@
 import '../../init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
-import { customElement, html, LitElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import type { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
@@ -13,10 +14,11 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
 
 @customElement('upload-drag-and-drop')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {
