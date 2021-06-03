@@ -39,6 +39,7 @@ public class CrudColumns extends Div {
     setupDataProvider();
 
     add(crud);
+    // end::snippet[]
   }
 
   private CrudEditor<Person> createEditor() {
