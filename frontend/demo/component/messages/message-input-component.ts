@@ -1,23 +1,25 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
-import { guard } from 'lit-html/directives/guard';
+import { guard } from 'lit/directives/guard.js';
 
 @customElement('message-input-component')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private message = '';
 
-  @internalProperty()
+  @state()
   private notificationOpened = false;
 
   render() {

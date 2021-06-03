@@ -1,22 +1,24 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty, css } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-helper-2')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
   private charLimit = 600;
 
-  @internalProperty()
+  @state()
   private text = loremIpsum;
 
   static get styles() {
