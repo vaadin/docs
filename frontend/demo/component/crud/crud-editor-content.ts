@@ -24,10 +24,10 @@ export class Example extends LitElement {
   @state()
   private items: Person[] = [];
 
-  @internalProperty()
+  @state()
   private professions: string[] = [];
 
-  @internalProperty()
+  @state()
   private responsiveSteps: FormLayoutResponsiveStep[] = [];
 
   async firstUpdated() {
