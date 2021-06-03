@@ -1,10 +1,11 @@
 import 'Frontend/demo/init'; // hidden-full-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
 
-import { customElement, LitElement, internalProperty, query } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
-import {
+import type {
   GridDataProviderCallback,
   GridDataProviderParams,
   GridDragStartEvent,
@@ -13,7 +14,6 @@ import {
   GridExpandedItemsChangedEvent,
   GridItemModel,
 } from '@vaadin/vaadin-grid/vaadin-grid';
-import { html } from 'lit-html';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -21,26 +21,27 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('grid-drag-drop-filters')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   @query('vaadin-grid')
   private grid!: GridElement;
 
-  @internalProperty()
+  @state()
   private draggedItem?: Person;
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
-  @internalProperty()
+  @state()
   private managers: Person[] = [];
 
-  @internalProperty()
-  private expandedItems: unknown[] = [];
+  @state()
+  private expandedItems: Person[] = [];
 
   async firstUpdated() {
     const { people } = await getPeople();
@@ -51,8 +52,8 @@ export class Example extends LitElement {
   }
 
   private dataProvider = async (
-    params: GridDataProviderParams,
-    callback: GridDataProviderCallback
+    params: GridDataProviderParams<Person>,
+    callback: GridDataProviderCallback<Person>
   ) => {
     const { page, pageSize, parentItem } = params;
     const startIndex = page * pageSize;
@@ -66,7 +67,7 @@ export class Example extends LitElement {
     here and avoid using grid.clearCache() whenever possible.
     */
     const result = parentItem
-      ? this.items.filter((item) => item.managerId === (parentItem as Person).id)
+      ? this.items.filter((item) => item.managerId === parentItem.id)
       : this.managers.slice(startIndex, endIndex);
 
     callback(result, result.length);
@@ -78,19 +79,19 @@ export class Example extends LitElement {
         .dataProvider="${this.dataProvider}"
         .itemIdPath="${'id'}"
         .expandedItems="${this.expandedItems}"
-        @expanded-items-changed="${(event: GridExpandedItemsChangedEvent) => {
+        @expanded-items-changed="${(event: GridExpandedItemsChangedEvent<Person>) => {
           this.expandedItems = event.detail.value;
         }}"
         ?rows-draggable="${true}"
         drop-mode="on-top"
-        @grid-dragstart="${(event: GridDragStartEvent) => {
-          this.draggedItem = event.detail.draggedItems[0] as Person;
+        @grid-dragstart="${(event: GridDragStartEvent<Person>) => {
+          this.draggedItem = event.detail.draggedItems[0];
         }}"
         @grid-dragend="${() => {
           delete this.draggedItem;
         }}"
-        @grid-drop="${(event: GridDropEvent) => {
-          const manager = event.detail.dropTargetItem as Person;
+        @grid-drop="${(event: GridDropEvent<Person>) => {
+          const manager = event.detail.dropTargetItem;
           if (this.draggedItem) {
             // in a real aplpication, when using a data provider, you should
             // change the persisted data instead of updating a field
@@ -99,12 +100,12 @@ export class Example extends LitElement {
             this.grid.clearCache();
           }
         }}"
-        .dragFilter="${(model: GridItemModel) => {
-          const item = model.item as Person;
+        .dragFilter="${(model: GridItemModel<Person>) => {
+          const item = model.item;
           return !item.manager; // only drag non-managers
         }}"
-        .dropFilter="${(model: GridItemModel) => {
-          const item = model.item as Person;
+        .dropFilter="${(model: GridItemModel<Person>) => {
+          const item = model.item;
           return (
             item.manager && // can only drop on a supervisor
             item.id !== this.draggedItem?.managerId // disallow dropping on the same manager
