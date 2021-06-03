@@ -11,8 +11,9 @@ export class Example extends LitElement {
     return [
       // Workaround for applying `lumo-badge` styles
       unsafeCSS(
-        document.head.querySelector('dom-module#lumo-badge')?.querySelector('template')?.content
-          .firstElementChild?.textContent
+        Array.from(document.head.querySelectorAll('style')).find(
+          (style) => style.innerText.indexOf("theme~='badge'") > 0
+        )?.textContent
       ),
       css`
         span[theme~='badge'] {
