@@ -5,18 +5,19 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
-import { customElement, html, internalProperty, LitElement } from 'lit-element';
-import { render } from 'lit-html';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 
 @customElement('badge-icons-only-table')
 export class Example extends LitElement {
-  @internalProperty()
+  @state()
   private items: readonly UserPermissions[] = [];
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   async firstUpdated() {
@@ -28,7 +29,7 @@ export class Example extends LitElement {
     const renderBoolean = (
       root: HTMLElement,
       column?: GridColumnElement,
-      model?: GridItemModel
+      model?: GridItemModel<UserPermissions>
     ): void => {
       if (!column || !model) {
         return;
@@ -38,7 +39,7 @@ export class Example extends LitElement {
       let title: string;
       let theme: string;
 
-      if ((model.item as UserPermissions)[column.id as keyof UserPermissions]) {
+      if (model.item[column.id as keyof UserPermissions]) {
         icon = 'vaadin:check-circle';
         title = 'Confirmed';
         theme = 'success';

@@ -5,8 +5,8 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-lumo-styles/icons';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
-import { customElement, html, internalProperty, LitElement } from 'lit-element';
-import { render } from 'lit-html';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
@@ -16,13 +16,14 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 
 @customElement('badge-highlight')
 export class Example extends LitElement {
-  @internalProperty()
+  @state()
   private items: readonly Report[] = [];
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   async firstUpdated() {
@@ -36,23 +37,31 @@ export class Example extends LitElement {
         <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due Date"
-          .renderer="${(root: HTMLElement, column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(
+            root: HTMLElement,
+            column?: GridColumnElement,
+            model?: GridItemModel<Report>
+          ) => {
             if (!column || !model) {
               return;
             }
 
-            render(html`${dateFormatter.format(new Date((model.item as Report).due))}`, root);
+            render(html`${dateFormatter.format(new Date(model.item.due))}`, root);
           }}"
         ></vaadin-grid-column>
         <vaadin-grid-column path="assignee" header="Assignee"></vaadin-grid-column>
         <vaadin-grid-column
           header="Status"
-          .renderer="${(root: HTMLElement, column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(
+            root: HTMLElement,
+            column?: GridColumnElement,
+            model?: GridItemModel<Report>
+          ) => {
             if (!column || !model) {
               return;
             }
 
-            const { status } = model.item as Report;
+            const { status } = model.item;
 
             let icon: string;
             let title: string;

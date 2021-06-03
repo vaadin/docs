@@ -2,7 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-source-line
 
-import { customElement, html, LitElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 
 const initialStartValue = '2020-08-25T20:00';
@@ -11,16 +12,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-range')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private startDateTime = initialStartValue;
 
-  @internalProperty()
+  @state()
   private endDateTime = initialEndValue;
 
   render() {
