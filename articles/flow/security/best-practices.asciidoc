@@ -21,8 +21,8 @@ This can be automated with, for example, Spring Security and view-based authenti
 What typically can't be automated by these frameworks is data-based access rights, such as limiting access to specific entities.
 
 As an example, if the server receives an ID of a User object to be displayed in, for example, a URL request parameter (`{yourapp.com}/users/4/edit`), then the ID in question can be freely changed by an attacker.
-The application needs to be aware of this and check if the currently logged in user has access rights to this entity.
-This is something that is common for all UI frameworks, and not specific to Vaadin.
+The application needs to be aware of this and check if the currently logged-in user has access rights to this entity.
+This is something that is common to all UI frameworks, and not specific to Vaadin.
 
 // end::authentication-authorization[]
 // tag::spring-security-integration-ref[]
@@ -30,9 +30,191 @@ Examples for integrating Spring Security can be found in
 // end::spring-security-integration-ref[]
 https://vaadin.com/tutorials/securing-your-app-with-spring-security[Securing your app with Spring Security].
 
+== View-Based Access Control
+
+[role="since:com.vaadin:vaadin@V21 standalone"]
+--
+--
+
+Since Vaadin 21, it is possible to use a built-in view-based access control mechanism to secure Flow navigation targets.
+However, as mentioned in <<Authentication and Authorization,Authentication and Authorization>>, it is not mandatory to use it, so it is not enabled by default.
+The view-based access control mechanism uses the `@AnonymousAllowed`, `@PermitAll`, `@RolesAllowed`, and `@DenyAll` annotations on view classes to define the access control rules.
+
+See <<{articles}/flow/integrations/spring/view-based-access-control#, View-Based Access Control>> for detailed information about enabling the access control mechanism in Vaadin Flow Spring Boot applications.
+
+To enable and use this mechanism, the following should be added to a Vaadin Flow application (if it does not exist already):
+
+- A login view.
+- A `VaadinServiceInitListener` that adds `ViewAccessChecker` as the `BeforeEnterListener` of all UIs.
+- A Service Provider under `META-INF/services` to load above the custom [classname]#ServiceInitListener# via the Java SPI loading mechanism.
+
+=== Adding Login View
+Having a login view is one of the basic requirements of many authentication and authorization mechanisms.
+It serves to redirect anonymous users to that page before granting access to view any protected resources.
+
+.[filename]#LoginView.java#
+[source,java]
+----
+@Route("login")
+@PageTitle("Login")
+public class LoginView extends VerticalLayout implements BeforeEnterObserver {
+
+    private LoginForm login = new LoginForm();
+
+    public LoginView() {
+        addClassName("login-view");
+        setSizeFull();
+
+        setJustifyContentMode(JustifyContentMode.CENTER);
+        setAlignItems(Alignment.CENTER);
+
+        login.setAction("login");
+
+        add(new H1("Test Application"), login);
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        if(beforeEnterEvent.getLocation()
+            .getQueryParameters()
+            .getParameters()
+            .containsKey("error")) {
+            login.setError(true);
+        }
+    }
+}
+----
+
+In this example, Vaadin's Login Form component is used for the sake of brevity.
+However, feel free to implement your own login view, if you wish.
+
+=== Adding VaadinServiceInitListener
+In order to restrict access to views, a `BeforeEnterListener` must be registered for the `VaadinService`, to initialize and enable the `ViewAccessChecker`:
+
+.[filename]#ViewAccessCheckerInitializer.java#
+[source,java]
+----
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.VaadinServiceInitListener;
+import com.vaadin.flow.server.auth.ViewAccessChecker;
+import org.vaadin.example.views.login.LoginView;
+
+public class ViewAccessCheckerInitializer implements VaadinServiceInitListener {
+
+    private ViewAccessChecker viewAccessChecker;
+
+    public ViewAccessCheckerInitializer() {
+        viewAccessChecker = new ViewAccessChecker(); // <1>
+        viewAccessChecker.enable(); // <2>
+        viewAccessChecker.setLoginView(LoginView.class); // <3>
+    }
+
+    @Override
+    public void serviceInit(ServiceInitEvent serviceInitEvent) {
+        serviceInitEvent.getSource().addUIInitListener(uiInitEvent -> {
+            uiInitEvent.getUI().addBeforeEnterListener(viewAccessChecker); // <4>
+        });
+    }
+}
+----
+
+The above code contains some notable components of the view-based access control mechanism:
+
+<1> `ViewAccessChecker`, which is at the core of this access control mechanism, is instantiated.
+<2> `ViewAccessChecker` is enabled. Note that it is not enabled by default.
+<3> `LoginView` class is set to the `viewAccessChecker` instance. Now it knows where to redirect unauthenticated users.
+<4> The `viewAccessChecker` instance is set as the `BeforeEnterListener` in the overridden `serviceInit` method.
+Now it is ready to intercept attempts to enter all views.
+
+However, the above class still needs to be loaded, so we recommend following the instructions in the next step.
+
+=== Enable Loading of VaadinServiceInitListener
+To enable the Java SPI loading mechanism to load the above `ViewAccessCheckerInitializer` as the `VaadinServiceInitListener`, do the following:
+
+- Under `resources/META-INF/services` directory, create a file named exactly:
++
+[text,text]
+----
+com.vaadin.flow.server.VaadinServiceInitListener
+----
+
+- Put the fully qualified name of `ViewAccessCheckerInitializer` into this newly created file.
+For example, if the [classname]#ViewAccessCheckerInitializer# class is in the `org.vaadin.example.security` package, the following value should be in the file:
++
+.Text value that should be in the `com.vaadin.flow.server.VaadinServiceInitListener` file:
+[text,text]
+----
+org.vaadin.example.security.ViewAccessCheckerInitializer
+----
+
+This Service Provider config file triggers the Java SPI loading mechanism to load `ViewAccessCheckerInitializer` during application startup.
+More information on this can be found in <<{articles}/flow/advanced/service-init-listener#,VaadinServiceInitListener>>.
+
+=== Access Annotations
+Before we see some examples of access annotations, it is worth having a closer look at the annotations, and their meaning when applied to a view:
+
+- [classname]#@AnonymousAllowed# permits anyone to navigate to the view without any authentication or authorization.
+- [classname]#@PermitAll# allows any *authenticated* user to navigate to the view.
+- [classname]#@RolesAllowed# grants access to users having the roles specified in the annotation value.
+- [classname]#@DenyAll# disallows everyone from navigating to the view.
+This is the default, which means that, if a view is not annotated at all, the [classname]#@DenyAll# logic is applied.
+
+Some usage examples:
+
+.Example of using [classname]#@AnonymousAllowed# to enable all users to navigate to this view
+[source,java]
+----
+@Route(value = "", layout = MainView.class)
+@PageTitle("Public View")
+@AnonymousAllowed
+public class PublicView extends VerticalLayout {
+    // ...
+}
+----
+
+.Example of using [classname]#@PermitAll# to allow only authenticated users (with any role) to navigate to this view
+[source,java]
+----
+@Route(value = "private", layout = MainView.class)
+@PageTitle("Private View")
+@PermitAll
+public class PrivateView extends VerticalLayout {
+    // ...
+}
+----
+
+.Example of using [classname]#@RolesAllowed# to enable only users with the `ADMIN` role to navigate to this view
+[source,java]
+----
+@Route(value = "admin", layout = MainView.class)
+@PageTitle("Admin View")
+@RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
+public class AdminView extends VerticalLayout {
+    // ...
+}
+----
+
+Now, if the application is started by navigating to `http://localhost:8080`, `PublicView` contents should be available without any authentication.
+However, by navigating to `http://localhost:8080/private` or `http://localhost:8080/admin`, the user is redirected to the specified `LoginView`.
+
+// TODO: Consider adding more details and snippet code to showcase how the following can be achieved:
+// 1. login with some users with different roles
+// 2. save the requested URL to redirect to it after a successful login
+
+If multiple annotations are specified on a single view, the following rules are applied:
+
+- `DenyAll` overrides other annotations
+- `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`
+- `RolesAllowed` overrides `PermitAll`
+
+However, we do not recommend specifying more than one of the above access annotations on a view class.
+It is confusing and probably has no logical purpose.
+
 == Application State
 
-The server is always aware of your application state. Compared to client side applications, this means that the server is aware of what is currently visible on the end-user's screen. Hence Vaadin denies actions to components that are not currently visible on the screen, or components that have been disabled on the server.
+The server is always aware of your application's state. 
+This means that, like client-side applications, the server is aware of what is currently visible on the end user's screen. 
+Hence, Vaadin denies actions to components that are not currently visible on the screen, or those that have been disabled on the server.
 
 For instance, if the developer sets a component to be disabled, this effect is set both on the server and the client. On the client, an attacker can circumvent this (attackers have full control over anything in the browser), but the server will block any attempt to interact with the component and a warning is printed to the server logs.
 

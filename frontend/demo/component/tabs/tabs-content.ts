@@ -1,8 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/vaadin-lumo-styles/typography';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tabs-content')
 export class Example extends LitElement {
@@ -12,13 +14,10 @@ export class Example extends LitElement {
   @state()
   private pages = ['Dashboard', 'Payment', 'Shipping'];
 
-  static get styles() {
-    return css`
-      div.content {
-        font-family: var(--lumo-font-family);
-        padding: var(--lumo-space-m);
-      }
-    `;
+  constructor() {
+    super();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(this.shadowRoot);
   }
 
   render() {
@@ -30,12 +29,14 @@ export class Example extends LitElement {
         <vaadin-tab>Shipping</vaadin-tab>
       </vaadin-tabs>
 
-      <div class="content">${this.content}</div>
+      <vaadin-vertical-layout theme="padding">
+        <p>${this.content}</p>
+      </vaadin-vertical-layout>
       <!-- end::snippet[] -->
     `;
   }
 
   selectedChanged(e: CustomEvent) {
-    this.content = `This is ${this.pages[e.detail.value]} page`;
+    this.content = `This is the ${this.pages[e.detail.value]} tab`;
   }
 }
