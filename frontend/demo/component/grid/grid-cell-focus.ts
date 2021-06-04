@@ -50,7 +50,7 @@ export class Example extends LitElement {
           const row = eventContext?.index != undefined ? eventContext?.index : 'Not available';
           const column = eventContext?.column?.path || 'Not available';
           const person =
-            eventContext?.item?.firstName && eventContext?.item?.firstName
+            eventContext?.item?.firstName && eventContext?.item?.lastName
               ? `${eventContext.item.firstName} ${eventContext.item.lastName}`
               : 'Not available';
 
@@ -65,7 +65,7 @@ export class Example extends LitElement {
       <div>
         <vaadin-text-area
           label="Cell focus event information"
-          placeholder="Focus a cell to see event information"
+          readonly
           .value="${this.eventSummary}"
         ></vaadin-text-area>
       </div>

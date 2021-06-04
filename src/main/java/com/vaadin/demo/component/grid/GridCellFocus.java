@@ -34,7 +34,7 @@ public class GridCellFocus extends Div {
 
         TextArea textArea = new TextArea();
         textArea.setLabel("Cell focus event information");
-        textArea.setPlaceholder("Focus a cell to see event information");
+        textArea.setReadOnly(true);
         textArea.setWidthFull();
 
         // tag::snippet[]
