@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-app-layout/vaadin-app-layout';
 import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
-import '@vaadin/vaadin-tabs/vaadin-tabs';
-import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-tabs/vaadin-tab';
+import '@vaadin/vaadin-tabs/vaadin-tabs';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-bottom-navbar')
@@ -21,25 +20,22 @@ export class Example extends LitElement {
   static get styles() {
     return css`
       h1 {
-        margin: var(--lumo-space-s) var(--lumo-space-m);
         font-size: var(--lumo-font-size-l);
+        margin: var(--lumo-space-m) var(--lumo-space-l);
       }
 
       iron-icon {
-        padding: 0.25rem;
-        box-sizing: border-box !important;
-        margin: 0 auto;
-        width: var(--lumo-icon-size-m);
-        height: var(--lumo-icon-size-m);
-      }
-
-      vaadin-tabs,
-      vaadin-tab {
-        flex: auto;
+        height: var(--lumo-icon-size-s);
+        margin: auto;
+        width: var(--lumo-icon-size-s);
       }
 
       .content {
-        padding: var(--lumo-space-m);
+        padding: 0 var(--lumo-space-l);
+      }
+
+      vaadin-tabs {
+        width: 100%;
       }
 
       /* hidden-source-line: the bottom navbar is forced on in the example */
@@ -54,32 +50,33 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-app-layout>
         <h1 slot="navbar">MyApp</h1>
-        <vaadin-tabs slot="navbar touch-optimized">
+        <vaadin-tabs slot="navbar touch-optimized" theme="equal-width-tabs">
           <vaadin-tab>
-            <a tabindex="-1" target="_self">
+            <a tabindex="-1">
               <iron-icon icon="vaadin:dashboard"></iron-icon>
             </a>
           </vaadin-tab>
           <vaadin-tab>
-            <a tabindex="-1" target="_self">
+            <a tabindex="-1">
               <iron-icon icon="vaadin:cart"></iron-icon>
             </a>
           </vaadin-tab>
+          <!-- end::snippet[] -->
           <vaadin-tab>
-            <a tabindex="-1" target="_self">
+            <a tabindex="-1">
               <iron-icon icon="vaadin:user-heart"></iron-icon>
             </a>
           </vaadin-tab>
           <vaadin-tab>
-            <a tabindex="-1" target="_self">
+            <a tabindex="-1">
               <iron-icon icon="vaadin:package"></iron-icon>
             </a>
           </vaadin-tab>
+          <!-- tag::snippet[] -->
         </vaadin-tabs>
-
         <div class="content">
-          <h2>Page title</h2>
-          <p>Page content</p>
+          <h2>View title</h2>
+          <p>View content</p>
         </div>
       </vaadin-app-layout>
       <!-- end::snippet[] -->
