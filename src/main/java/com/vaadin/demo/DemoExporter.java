@@ -1,6 +1,7 @@
 package com.vaadin.demo;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.WebComponentExporter;
 import com.vaadin.flow.component.webcomponent.WebComponent;
 import com.vaadin.flow.internal.ReflectTools;
@@ -25,5 +26,13 @@ public abstract class DemoExporter<T extends Component> extends WebComponentExpo
 
   @Override
   protected void configureInstance(final WebComponent<T> webComponent, final T demo) {
+    UI.getCurrent().setPollInterval(30 * 60 * 1000);
+    UI.getCurrent().addPollListener(e -> emitUpdateTimestamp());
+    emitUpdateTimestamp();
+  }
+
+  private void emitUpdateTimestamp() {
+    UI.getCurrent().getPage().executeJs("window.dispatchEvent(new Event('update-timestamp'))");
   }
 }
+

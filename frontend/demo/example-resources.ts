@@ -9,33 +9,34 @@ window.__applyTheme = { applyTheme };
 // @ts-ignore
 import('all-flow-imports-or-empty').catch(() => {});
 
-function testHeartbeat() {
-  fetch(withPrefix('/vaadin/?v-r=heartbeat&v-uiId=0'), { method: 'POST' }).then((data) => {
-    const reloadTimestamp = localStorage.getItem('reloadTimestamp');
-    // Make sure session is still opened, otherwise reload the page
-    if (!data.ok && (!reloadTimestamp || Date.now() - parseInt(reloadTimestamp) > 5 * 60 * 1000)) {
-      // Save the previous reload timestamp to avoid reloading in less than 5 minutes
-      localStorage.setItem('reloadTimestamp', Date.now().toString());
-      location.reload();
-    }
-  });
-}
+let timestamp = Date.now();
+let interval: ReturnType<typeof setInterval>;
+const sessionTimeout = 30 * 60 * 1000;
 
-const initialListener = ((e: CustomEvent<string>) => {
-  window.removeEventListener('included-example-loaded', initialListener);
-  // Make sure flow example is upgraded and requested content from server
-  if (e.detail) {
-    customElements.whenDefined(e.detail).then(() => {
-      // Make sure server is up and running
-      fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
-        if (serverData.ok) {
-          window.addEventListener('included-example-loaded', () => testHeartbeat());
-          testHeartbeat();
-        }
-      });
+const compareTimestamps = () => {
+  if (Date.now() - timestamp > sessionTimeout) {
+    fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
+      if (serverData.ok) {
+        location.reload();
+      }
     });
   }
-}) as EventListener;
+};
+
+const updateTimestamps = () => {
+  timestamp = Date.now();
+  if (interval) {
+    clearInterval(interval);
+  }
+
+  interval = setInterval(compareTimestamps, sessionTimeout);
+};
+
+const initialListener = () => {
+  window.removeEventListener('update-timestamp', initialListener);
+  interval = setInterval(compareTimestamps, sessionTimeout);
+  window.addEventListener('update-timestamp', updateTimestamps);
+};
 
 // Examples are not available when session is expired. Logic prevents that by reloading the page.
-window.addEventListener('included-example-loaded', initialListener);
+window.addEventListener('update-timestamp', initialListener);
