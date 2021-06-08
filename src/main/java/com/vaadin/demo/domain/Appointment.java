@@ -16,6 +16,12 @@ public class Appointment {
 
   private LocalDate startDate;
 
+  private LocalTime endTime;
+
+  private LocalDateTime endDateTime;
+
+  private LocalDate endDate;
+
   private String enrollmentPeriod;
 
   private Integer id;
@@ -34,6 +40,38 @@ public class Appointment {
 
   public void setStartDateTime(LocalDateTime startDateTime) {
     this.startDateTime = startDateTime;
+  }
+
+  public LocalDate getStartDate() {
+    return startDate;
+  }
+
+  public void setStartDate(LocalDate startDate) {
+    this.startDate = startDate;
+  }
+
+  public LocalTime getEndTime() {
+    return endTime;
+  }
+
+  public void setEndTime(LocalTime endTime) {
+    this.endTime = endTime;
+  }
+
+  public LocalDateTime getEndDateTime() {
+    return endDateTime;
+  }
+
+  public void setEndDateTime(LocalDateTime endDateTime) {
+    this.endDateTime = endDateTime;
+  }
+
+  public LocalDate getEndDate() {
+    return endDate;
+  }
+
+  public void setEndDate(LocalDate endDate) {
+    this.endDate = endDate;
   }
 
   public Integer getId() {
@@ -59,14 +97,6 @@ public class Appointment {
     }
     Appointment other = (Appointment) obj;
     return id == other.id;
-  }
-
-  public LocalDate getStartDate() {
-    return startDate;
-  }
-
-  public void setStartDate(LocalDate startDate) {
-    this.startDate = startDate;
   }
 
   public String getEnrollmentPeriod() {
