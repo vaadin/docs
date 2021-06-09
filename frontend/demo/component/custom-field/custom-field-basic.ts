@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-custom-field/vaadin-custom-field';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -10,17 +10,33 @@ import { differenceInDays, parseISO, isAfter } from 'date-fns';
 
 @customElement('custom-field-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   private binder = new Binder(this, AppointmentModel);
 
   firstUpdated() {
+    // aria-label for screen readers
+    const start = this.shadowRoot
+      ?.getElementById('start')
+      ?.shadowRoot?.querySelector('[part="text-field"]')
+      ?.shadowRoot?.querySelector('[part="value"]');
+    start?.setAttribute('aria-label', 'Start date');
+    start?.removeAttribute('aria-labelledby');
+
+    const end = this.shadowRoot
+      ?.getElementById('end')
+      ?.shadowRoot?.querySelector('[part="text-field"]')
+      ?.shadowRoot?.querySelector('[part="value"]');
+    end?.setAttribute('aria-label', 'End date');
+    end?.removeAttribute('aria-labelledby');
+
     this.binder.for(this.binder.model.enrollmentPeriod).addValidator({
-      message: 'Dates must be no longer than 30 days apart',
+      message: 'Dates cannot be more than 30 days apart',
       validate: (enrollmentPeriod: string) => {
         const [from, to] = enrollmentPeriod.split('\t');
 
@@ -32,7 +48,7 @@ export class Example extends LitElement {
       },
     });
     this.binder.for(this.binder.model.enrollmentPeriod).addValidator({
-      message: 'The first date should not be after the second date',
+      message: 'Start date must be earlier than end date',
       validate: (enrollmentPeriod: string) => {
         const [from, to] = enrollmentPeriod.split('\t');
 
@@ -54,9 +70,9 @@ export class Example extends LitElement {
         required
         ...="${field(this.binder.model.enrollmentPeriod)}"
       >
-        <vaadin-date-picker placeholder="From"></vaadin-date-picker>
+        <vaadin-date-picker id="start" placeholder="Start date"></vaadin-date-picker>
         &ndash;
-        <vaadin-date-picker placeholder="To"></vaadin-date-picker>
+        <vaadin-date-picker id="end" placeholder="End date"></vaadin-date-picker>
       </vaadin-custom-field>
       <!-- end::snippet[] -->
     `;

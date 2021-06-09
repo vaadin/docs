@@ -2,19 +2,26 @@ package com.vaadin.demo.domain;
 
 import java.util.Date;
 
+import javax.annotation.Nonnull;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true) // hidden-source-line
 // tag::snippet[]
 public class Report {
+    @Nonnull
     private String assignee;
 
+    @Nonnull
     private Date due;
 
+    @Nonnull
     private Integer id;
 
+    @Nonnull
     private String report;
 
+    @Nonnull
     private String status;
 
     public String getAssignee() {
