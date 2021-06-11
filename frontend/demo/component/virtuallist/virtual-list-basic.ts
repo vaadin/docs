@@ -15,7 +15,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 import type { VirtualListRenderer } from '@vaadin/vaadin-virtual-list';
 import { DetailsElement } from '@vaadin/vaadin-details';
 
-@customElement('tree-grid-basic')
+@customElement('virtual-list-basic')
 export class Example extends LitElement {
   protected createRenderRoot() {
     const root = super.createRenderRoot();
