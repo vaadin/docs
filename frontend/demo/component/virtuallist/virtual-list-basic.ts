@@ -61,7 +61,7 @@ export class Example extends LitElement {
 
           <vaadin-details
             .opened="${this.expandedPeople.has(person)}"
-            @click="${(e: CustomEvent) => {
+            @click="${(e: Event) => {
               const details = e.currentTarget as DetailsElement;
               if (details.opened) {
                 this.expandedPeople.add(person);
