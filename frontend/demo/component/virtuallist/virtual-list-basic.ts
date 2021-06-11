@@ -48,7 +48,7 @@ export class Example extends LitElement {
     const person = model.item as Person;
 
     render(
-      html` <vaadin-horizontal-layout theme="spacing margin">
+      html`<vaadin-horizontal-layout theme="spacing margin">
         <vaadin-avatar
           .img="${person.pictureUrl}"
           .name="${`${person.firstName} ${person.lastName}`}"
