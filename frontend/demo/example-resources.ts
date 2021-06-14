@@ -9,14 +9,19 @@ window.__applyTheme = { applyTheme };
 // @ts-ignore
 import('all-flow-imports-or-empty').catch(() => {});
 
-let timestamp = Date.now();
+// Stores the last time UI polls the server
+let timestamp: number;
 let interval: ReturnType<typeof setInterval>;
-const sessionTimeout = 30 * 60 * 1000;
+const sessionTimeout = 20 * 60 * 1000;
 
 const compareTimestamps = () => {
-  if (Date.now() - timestamp > sessionTimeout) {
+  // Event could be emitted with a delay up to 2 seconds after the poll
+  // Check if the timestamp is not updated after two intervals
+  if (Date.now() - timestamp > 2 * sessionTimeout) {
+    // Make sure we are not reloading the page before the server becomes available
     fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
       if (serverData.ok) {
+        // If the server is up and running and the session is expired, reload the page
         location.reload();
       }
     });
@@ -25,18 +30,15 @@ const compareTimestamps = () => {
 
 const updateTimestamps = () => {
   timestamp = Date.now();
+  // Avoid setting multiple intervals
   if (interval) {
     clearInterval(interval);
   }
 
+  // Make sure interval starts at the time of UI polling the server
   interval = setInterval(compareTimestamps, sessionTimeout);
 };
 
-const initialListener = () => {
-  window.removeEventListener('update-timestamp', initialListener);
-  interval = setInterval(compareTimestamps, sessionTimeout);
-  window.addEventListener('update-timestamp', updateTimestamps);
-};
-
-// Examples are not available when session is expired. Logic prevents that by reloading the page.
-window.addEventListener('update-timestamp', initialListener);
+// Examples are not available when session expires
+// Event is emitted when UI polls the server. It keeps session alive
+window.addEventListener('update-timestamp', updateTimestamps);

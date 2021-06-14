@@ -7,8 +7,12 @@ import com.vaadin.flow.component.webcomponent.WebComponent;
 import com.vaadin.flow.internal.ReflectTools;
 import com.vaadin.flow.theme.Theme;
 
+import java.time.Duration;
+
 @Theme("docs")
 public abstract class DemoExporter<T extends Component> extends WebComponentExporter<T> {
+
+  private boolean initializedPoll;
 
   public DemoExporter() {
     super("");
@@ -26,8 +30,11 @@ public abstract class DemoExporter<T extends Component> extends WebComponentExpo
 
   @Override
   protected void configureInstance(final WebComponent<T> webComponent, final T demo) {
-    UI.getCurrent().setPollInterval(30 * 60 * 1000);
-    UI.getCurrent().addPollListener(e -> emitUpdateTimestamp());
+    if (!initializedPoll) {
+      UI.getCurrent().setPollInterval((int) Duration.ofMinutes(20).toMillis());
+      UI.getCurrent().addPollListener(e -> emitUpdateTimestamp());
+      initializedPoll = true;
+    }
     emitUpdateTimestamp();
   }
 
