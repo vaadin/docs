@@ -29,6 +29,8 @@ const compareTimestamps = () => {
 };
 
 const updateTimestamps = () => {
+  // Check if session is expired
+  compareTimestamps();
   timestamp = Date.now();
   // Avoid setting multiple intervals
   if (interval) {
