@@ -50,6 +50,7 @@ To enable the mechanism in a Vaadin Flow Spring Boot application without any sec
 
 - A Login view.
 - Spring Security dependencies.
+- Logout capability.
 - A security configuration class that extends `VaadinWebSecurityConfigurerAdapter`.
 - Annotate the view classes with the `@AnonymousAllowed`, `@PermitAll`, or `@RolesAllowed` annotations.
 
@@ -113,6 +114,71 @@ _As this documentation is based on Spring Boot, we recommend adding the followin
     </dependency>
     <!-- other dependencies -->
 </dependencies>
+----
+
+=== Logout capability
+
+For handling logout in web applications, one typically uses a logout button.
+Here is a basic implementation of logout button shown on the main layout's header:
+
+.[filename]#MainLayout.java#
+[source,java]
+----
+public class MainLayout extends AppLayout {
+
+    private SecurityService securityService;
+
+    public MainLayout(@Autowired SecurityService securityService) {
+        this.securityService = securityService;
+
+        H1 logo = new H1("Vaadin CRM");
+        logo.addClassName("logo");
+        HorizontalLayout header;
+        if (securityService.getAuthenticatedUser() != null) {
+            Button logout = new Button("Logout", click ->
+                    securityService.logout());
+            header = new HorizontalLayout(logo, logout);
+        } else {
+            header = new HorizontalLayout(logo);
+        }
+
+        // Other page components omitted.
+
+        addToNavbar(header);
+    }
+}
+----
+
+The way how to get the authenticated user and how to logout the user may vary from application to application.
+Here is a basic example how to do that with Spring Security API:
+
+.[filename]#SecurityService.java#
+[source,java]
+----
+@Component
+public class SecurityService {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
+
+    public UserDetails getAuthenticatedUser() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Object principal = context.getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            return (UserDetails) context.getAuthentication().getPrincipal();
+        }
+        // Anonymous or no authentication.
+        return null;
+    }
+
+    public void logout() {
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.setInvalidateHttpSession(false);
+        logoutHandler.logout(
+                VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
+                null);
+        UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
+    }
+}
 ----
 
 === Security Configuration Class
@@ -249,7 +315,7 @@ public class PrivateView extends VerticalLayout {
 ----
 @Route(value = "admin", layout = MainView.class)
 @PageTitle("Admin View")
-@RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
+@RolesAllowed("ROLE_ADMIN") // <- Should match one of the user's roles (case-sensitive)
 public class AdminView extends VerticalLayout {
     // ...
 }
