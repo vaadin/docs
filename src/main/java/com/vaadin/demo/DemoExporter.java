@@ -12,8 +12,6 @@ import java.time.Duration;
 @Theme("docs")
 public abstract class DemoExporter<T extends Component> extends WebComponentExporter<T> {
 
-  private static boolean initializedPoll;
-
   public DemoExporter() {
     super("");
 
@@ -30,10 +28,9 @@ public abstract class DemoExporter<T extends Component> extends WebComponentExpo
 
   @Override
   protected void configureInstance(final WebComponent<T> webComponent, final T demo) {
-    if (!initializedPoll) {
+    if (UI.getCurrent().getPollInterval() == -1) {
       UI.getCurrent().setPollInterval((int) Duration.ofMinutes(20).toMillis());
       UI.getCurrent().addPollListener(e -> emitUpdateTimestamp());
-      initializedPoll = true;
     }
     emitUpdateTimestamp();
   }
