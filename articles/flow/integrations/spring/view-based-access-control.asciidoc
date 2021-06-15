@@ -33,13 +33,15 @@ You should not use the traditional Spring Security URL-based [classname]#HttpSec
 
 *This is where view-based access control comes in*, to fully secure views in Vaadin Flow applications in a very flexible way, based on different access level annotations.
 The view-based access control mechanism uses the `@AnonymousAllowed`, `@PermitAll`, `@RolesAllowed`, and `@DenyAll` annotations on view classes to define the access control rules.
+**By default any view without an annotation is secured - it acts like it would have the `@DenyAll` annotation in it.**
 
 .The use of annotations in Vaadin Fusion
 [TIP]
 Although the same set of annotations are used to define the security access control rules on endpoints of a <<{articles}/fusion/overview#,Vaadin Fusion>> application, this document does not describe how to secure client-side views.
 It is described in <<{articles}/fusion/security/configuring#,Configuring Security>> in Fusion documentation.
 
-The approach of the of this documentation is based on Vaadin's Spring Boot and Spring Security autoconfiguration.
+The approach of this documentation is based on Vaadin's Spring Boot and Spring Security auto-configuration.
+For using view-based access control in non-Spring projects, see the documentation in the <<{articles}/flow/security/best-practices/#view-based-access-control,Security best practices section>>.
 
 == View-Based Access Control in Spring Boot-Based Applications
 
@@ -253,7 +255,26 @@ public class AdminView extends VerticalLayout {
 }
 ----
 
-If multiple annotations are specified on a single view, the following rules are applied:
+.Example of inheriting security annotations from parent class
+[source,java]
+----
+@RolesAllowed("ROLE_ADMIN")
+public abstract class AbstractAdminView extends VerticalLayout {
+    // ...
+}
+
+@Route(value = "user-listing", layout = MainView.class)
+@PageTitle("User Listing")
+public class UserListingView extends AbstractAdminView {
+    // ...
+}
+----
+
+Like shown by the last example above, the security annotations are inherited from the closest parent class that has them.
+Annotating a child class will override any inherited annotations.
+Interfaces are not checked for annotations, but only classes.
+By design, the annotations are not read from parent layouts or "parent views", as this would make things unnecessarily complex to determine which security level should be applied.
+If multiple annotations are specified on a single view class, the following rules are applied:
 
 - `DenyAll` overrides other annotations
 - `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`
