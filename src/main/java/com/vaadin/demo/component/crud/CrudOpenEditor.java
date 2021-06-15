@@ -25,7 +25,6 @@ public class CrudOpenEditor extends Div {
   private String LAST_NAME = "lastName";
   private String EMAIL = "email";
   private String PROFESSION = "profession";
-  private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
   public CrudOpenEditor() {
     crud = new Crud<>(
@@ -75,8 +74,7 @@ public class CrudOpenEditor extends Div {
       FIRST_NAME,
       LAST_NAME,
       EMAIL,
-      PROFESSION,
-      EDIT_COLUMN
+      PROFESSION
     );
     grid.getColumns().forEach(column -> {
       String key = column.getKey();
@@ -90,8 +88,7 @@ public class CrudOpenEditor extends Div {
       grid.getColumnByKey(FIRST_NAME),
       grid.getColumnByKey(LAST_NAME),
       grid.getColumnByKey(EMAIL),
-      grid.getColumnByKey(PROFESSION),
-      grid.getColumnByKey(EDIT_COLUMN)
+      grid.getColumnByKey(PROFESSION)
     );
   }
 
