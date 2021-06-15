@@ -46,6 +46,7 @@ See <<{articles}/flow/integrations/spring/view-based-access-control#, View-Based
 To enable and use this mechanism, the following should be added to a Vaadin Flow application (if it does not exist already):
 
 - A login view.
+- Logout capability.
 - A `VaadinServiceInitListener` that adds `ViewAccessChecker` as the `BeforeEnterListener` of all UIs.
 - A Service Provider under `META-INF/services` to load above the custom [classname]#ServiceInitListener# via the Java SPI loading mechanism.
 
@@ -58,28 +59,45 @@ It serves to redirect anonymous users to that page before granting access to vie
 ----
 @Route("login")
 @PageTitle("Login")
-public class LoginView extends VerticalLayout implements BeforeEnterObserver {
+public class LoginView extends VerticalLayout implements BeforeEnterObserver,
+        ComponentEventListener<AbstractLogin.LoginEvent> {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
 
     private LoginForm login = new LoginForm();
+    private SecurityService securityService;
 
-    public LoginView() {
+    @Inject
+    public LoginView(SecurityService securityService) {
+        this.securityService = securityService;
         addClassName("login-view");
         setSizeFull();
 
         setJustifyContentMode(JustifyContentMode.CENTER);
         setAlignItems(Alignment.CENTER);
 
-        login.setAction("login");
+        login.addLoginListener(this);
 
         add(new H1("Test Application"), login);
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
-        if(beforeEnterEvent.getLocation()
+        if (beforeEnterEvent.getLocation()
             .getQueryParameters()
             .getParameters()
             .containsKey("error")) {
+            login.setError(true);
+        }
+    }
+
+    @Override
+    public void onComponentEvent(AbstractLogin.LoginEvent loginEvent) {
+        boolean authenticated = securityService.authenticate(
+                loginEvent.getUsername(), loginEvent.getPassword());
+        if (authenticated) {
+            UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
+        } else {
             login.setError(true);
         }
     }
@@ -88,6 +106,77 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
 In this example, Vaadin's Login Form component is used for the sake of brevity.
 However, feel free to implement your own login view, if you wish.
+
+=== Logout capability
+
+For handling logout in web applications, one typically uses a logout button.
+Here is a basic implementation of logout button shown on the main layout's header:
+
+.[filename]#MainLayout.java#
+[source,java]
+----
+public class MainLayout extends AppLayout {
+
+    private SecurityService securityService;
+
+    @Inject
+    public MainLayout(SecurityService securityService) {
+        this.securityService = securityService;
+
+        H1 logo = new H1("Vaadin CRM");
+        logo.addClassName("logo");
+        HorizontalLayout header;
+        if (securityService.isAuthenticated()) {
+            Button logout = new Button("Logout", click ->
+                    securityService.logout());
+            header = new HorizontalLayout(logo, logout);
+        } else {
+            header = new HorizontalLayout(logo);
+        }
+
+        // Other page components omitted.
+
+        addToNavbar(header);
+    }
+}
+----
+
+The way how to get the authenticated user and how to logout the user may vary from application to application.
+Here is a basic example how to do that with Vaadin API:
+
+.[filename]#SecurityService.java#
+[source,java]
+----
+@VaadinServiceScoped
+public class SecurityService {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
+
+    public boolean isAuthenticated() {
+        return VaadinServletRequest.getCurrent() != null &&
+               VaadinServletRequest.getCurrent().getUserPrincipal() != null;
+    }
+
+    public boolean authenticate(String username, String password) {
+        if (VaadinServletRequest.getCurrent() != null) {
+            VaadinServletRequest request = VaadinServletRequest.getCurrent();
+            try {
+                request.login(username, password);
+                return true;
+            } catch (ServletException e) {
+                // login exception handle code omitted
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public void logout() {
+        VaadinSession.getCurrent().getSession().invalidate();
+        UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
+    }
+}
+----
 
 === Adding VaadinServiceInitListener
 In order to restrict access to views, a `BeforeEnterListener` must be registered for the `VaadinService`, to initialize and enable the `ViewAccessChecker`:
