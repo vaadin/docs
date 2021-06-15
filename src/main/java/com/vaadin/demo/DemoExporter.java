@@ -12,7 +12,7 @@ import java.time.Duration;
 @Theme("docs")
 public abstract class DemoExporter<T extends Component> extends WebComponentExporter<T> {
 
-  private boolean initializedPoll;
+  private static boolean initializedPoll;
 
   public DemoExporter() {
     super("");
