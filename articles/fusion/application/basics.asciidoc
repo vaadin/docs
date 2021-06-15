@@ -6,9 +6,61 @@ layout: page
 
 = Application Basics
 
-In this article, we give basics of application development with Vaadin Fusion.
+A Fusion application is written in TypeScript and runs in a single HTML page.
+An application consists of one or more views, each bound to a _route_ or a URL path.
+To access business data and logic, an application can have server-side _endpoints_ written in Java.
 
-The entry point of a Fusion application is the application shell, which consists of the following files:
+== An Introduction to Reactive UIs
+
+Views in Fusion applications are programmed in _reactive_ rather than in imperative manner, as you would with Vaadin Flow, jQuery, and so forth.
+Reactive views have fewer moving parts and because of this they are easier to understand and debug. 
+In reactive UI programming, the application UI is the value of a function.
+The function gets the component's state as a parameter and returns HTML.
+Whenever the state changes, the UI is re-rendered.
+
+The following example is given in both imperative (Flow/Java) and reactive (Fusion/TypeScript):
+
+[.example.show-code]
+--
+
+In imperative UI programming, like with Vaadin Flow, there are two states: the data model and the UI. 
+It is your responsibility as a developer to keep them in sync. 
+You need to keep references to elements so you can update their values when the underlying state (the `Contact`) changes. 
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/application/basic/ImperativeView.java[render, tags=snippet, indent=0, group=Java]
+----
+
+In reactive programming, there is only one state: the data. 
+The UI always reflects that state. 
+You define a template using values from the state (`Contact`). 
+Whenever the model changes, the template is automatically updated. 
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/basic/reactive-view.ts[render, tags=snippet, indent=0, group=TypeScript]
+----
+
+--
+
+////
+// TODO Move this elsewhere, too deep stuff here.
+.Avoid element references in reactive views
+[TIP]
+====
+As a rule of thumb, you should not use `document.querySelector` or LitElement `@query` to get element reference in order to set values or properties imperatively. 
+There is almost always a way to achieve the same with binding values through the template.
+====
+////
+
+== Application Architecture
+
+Most of the application logic is handled in application views.
+You could have a login view, registration view, main view, and various other views.
+To have a typical main view with menu navigation and multiple sub-views, you can use the <<{articles}/ds/components/app-layout#, App Layout>> component.
+
+The entry point of a Fusion application is the _application shell_, which consists of the following files:
 
 `frontend/index.html`::
 A bootstrap page that loads the application.
@@ -17,165 +69,36 @@ You do not normally need to modify the file.
 `frontend/index.ts`::
 The TypeScript entry point of the application.
 This is where you set up routing and other application tasks.
+To navigate between views, you need to define routes (see <<../routing/overview#,Defining Routes>> for more details).
 
-[role="since:com.vaadin:vaadin@15"]
-== Prerequisites
+The routing configuration also starts a server session and loads any server-side views implemented with Vaadin Flow.
+See <<starting#, Starting the Application>> on how to run a Fusion application initially stateless and then start a session from TypeScript code.
 
-Fusion applications have certain prerequisites.
+Most of an application consists of _views_, as described next.
 
-To write the bootstrapping code for an application or create views in TypeScript, make sure that:
+== Adding a View
 
- - <<starting#, Client-side bootstrapping>> is enabled.
+Views in Fusion are custom HTML elements that extend [classname]#LitElement#, which handles rendering the component state reactively.
+You minimally need to implement a [methodname]#render()# function that returns the rendered HTML representation of the component.
+You can also provide custom styling by implementing a [methodname]#styles()# function that returns custom CSS.
+See <lit-element#, LitElement Basics>> for a more thorough introduction to using LitElement.
 
- - The `index.html` page template and the `index.ts` entry point exist in the `frontend/` folder.
+The following is an example of a view in Fusion:
 
-If you are starting with a starter application, they should already have been taken care of.
-
-After that, any `.ts` file imported from `index.ts` (statically or dynamically) is going to be built as a part of the application.
-
-== Starting the Application
-
-Vaadin Fusion starts the application using a bootstrap template (`index.html`).
-The entry point to the application is normally written in TypeScript, but can as well be or JavaScript.
-
-In the following, is an example of the `index.ts` and `index.html` files.
-It adds a button click listener to load the full application lazily, after the button is clicked.
-
-[.example]
+[.example.show-code]
 --
 
-.frontend/index.ts
 [source,typescript]
 ----
-import { Router } from '@vaadin/router';
-import { Flow } from '@vaadin/flow-frontend';
-
-const {serverSideRoutes} = new Flow({
-  imports: () => import('../target/frontend/generated-flow-imports')
-});
-
-const loadButton: HTMLElement | null = document.getElementById('loadButton');
-if (loadButton) {
-  loadButton.addEventListener('click', async() => {
-    const router = new Router(document.querySelector('#outlet'));
-    await router.setRoutes(serverSideRoutes);
-  });
-}
-----
-
-.frontend/index.html
-[source,html]
-----
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>TypeScript Support in Vaadin</title>
-  <!-- index.ts is included here automatically (either by the dev server or during the build) -->
-</head>
-<body>
-  <script src="VAADIN/build/webcomponentsjs/webcomponents-loader.js"></script>
-
-  <div id="#outlet">
-    <h2>Hello, World!</h2>
-    <button id="loadButton">Load Vaadin application</button>
-  </div>
-</body>
-</html>
+include::{root}/frontend/demo/fusion/application/basic/my-view.ts[render, tags=snippet, indent=0, group=TypeScript]
 ----
 
 --
 
-With the above snippets, the bootstrap page shows "Hello, World!" text with a button.
-The Vaadin client engine is not loaded until the button is clicked.
+=== Basic Routing
 
-See the <<starting#, Starting the application in TypeScript>> page for details on starting a Vaadin application from TypeScript code.
-
-== Configuring TypeScript Compiler
-
-TypeScript compiler requires a `tsconfig.json` file, `vaadin-maven-plugin` generates one in case there is no `tsconfig.json` in the project root.
-The default configuration looks similar to the following:
-
-.Default `tsconfig.json`
-[source,json]
-----
-{
-  "compilerOptions": {
-    "sourceMap": true,
-    "inlineSources": true,
-    "module": "esNext",
-    "target": "es2017",
-    "moduleResolution": "node",
-    "strict": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "experimentalDecorators": true,
-    "baseUrl": "frontend",
-    "paths": {
-      "Frontend/*": [
-        "*"
-      ]
-    }
-  },
-  "include": [
-    "frontend/**/*.ts",
-    "frontend/index.js",
-    "types.d.ts"
-  ],
-  "exclude": []
-}
-----
-
-== Adding a TypeScript View [[add-typescript-view]]
-
-To navigate between views, you need to define routes (see <<../routing/overview#,Defining Routes>> for more details). First, create a client-side view:
-
-.frontend/my-view.ts
-[source,typescript]
-----
-import { css, html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-notification/vaadin-notification';
-
-@customElement('my-view')
-export class MyView extends LitElement {
-  @query('#notification')
-  private notification: any;
-
-  static get styles() {
-    return css`
-      :host {
-        display: block;
-      }
-    `;
-  }
-
-  render() {
-    return html`
-      <vaadin-button theme="primary" @click="${this.clickHandler}">
-        Click me
-      </vaadin-button>
-      <vaadin-notification id="notification" duration="2000">
-        <template>
-          Hello, World!
-        </template>
-      </vaadin-notification>
-    `;
-  }
-
-  private clickHandler() {
-    this.notification.open();
-  }
-}
-----
-
-In order to see the new client-side view in the browser, you need to define a new client-side route for it.
+In order to see the new client-side view in the browser, you need to define a new client-side _route_ for it.
+A route is a path in the URL.
 That requires the following changes in the `index.html` and `index.ts` files:
 
 .frontend/index.html
@@ -222,18 +145,27 @@ Now `my-view` is accessible via the root path, that is `http://localhost:8080/`.
 All the other routes are handled by the server-side router.
 See <<../routing/overview#, Defining Routes>> for more information.
 
-== Hot Reload in Development Mode
+[role="since:com.vaadin:vaadin@15"]
+== Prerequisites
 
-When running the application in development mode, all modifications in `frontend` folder are compiled automatically.
-Refreshing the browser is enough to see the updates in the application.
+Fusion applications have certain prerequisites.
 
-.Server restart is required
-[NOTE]
-When adding `index.ts` or `index.html`, the application server needs to be restarted to update the entry point and the bootstrap template.
+To write the bootstrapping code for an application or create views in TypeScript, make sure that:
 
-== Accessing Backend Data in TypeScript Views
+ - <<starting#, Client-side bootstrapping>> is enabled.
+
+ - The `index.html` page template and the `index.ts` entry point exist in the `frontend/` folder.
+
+If you are starting with a starter application, they should already have been taken care of.
+
+After that, any `.ts` file imported from `index.ts` (statically or dynamically) is going to be built as a part of the application.
+
+
+== Accessing Backend Data
 
 Fusion provides a type-safe and secured way to access data from backend in frontend views using the generated TypeScript code.
 Vaadin scans the backend code during development and generates TypeScript code which can call the corresponding Java methods.
 The generated code is processed through the same way as other TypeScript views.
-Only the necessary code is included in the production application bundle. See <<accessing-backend#, Accessing backend from TypeScript>> for more information.
+Only the necessary code is included in the production application bundle. 
+
+See <<accessing-backend#, Accessing Java Backend>> for more information.
