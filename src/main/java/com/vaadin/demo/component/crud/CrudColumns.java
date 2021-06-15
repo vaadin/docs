@@ -12,6 +12,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.converter.LocalDateToDateConverter;
 import com.vaadin.flow.router.Route;
 
 import java.util.Arrays;
@@ -44,24 +45,16 @@ public class CrudColumns extends Div {
 
   private CrudEditor<Person> createEditor() {
     TextField firstName = new TextField("First name");
-    firstName.setRequiredIndicatorVisible(true);
-
     EmailField email = new EmailField("Email");
-    email.setRequiredIndicatorVisible(true);
-
     TextField profession = new TextField("Profession");
-    profession.setRequiredIndicatorVisible(true);
-
     DatePicker birthday = new DatePicker("Birthday");
-    birthday.setRequiredIndicatorVisible(true);
-
     FormLayout form = new FormLayout(firstName, email, profession, birthday);
 
     Binder<Person> binder = new Binder<>(Person.class);
-    binder.bind(firstName, Person::getFirstName, Person::setFirstName);
-    binder.bind(email, Person::getEmail, Person::setEmail);
-    binder.bind(profession, Person::getProfession, Person::setProfession);
-    // binder.bind(birthday, Person::getBirthday, Person::setBirthday);
+    binder.forField(firstName).asRequired().bind(Person::getFirstName, Person::setFirstName);
+    binder.forField(email).asRequired().bind(Person::getEmail, Person::setEmail);
+    binder.forField(profession).asRequired().bind(Person::getProfession, Person::setProfession);
+    binder.forField(birthday).asRequired().withConverter(new LocalDateToDateConverter()).bind(Person::getBirthday, Person::setBirthday);
 
     return new BinderCrudEditor<>(binder, form);
   }

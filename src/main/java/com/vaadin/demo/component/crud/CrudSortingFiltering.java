@@ -41,20 +41,14 @@ public class CrudSortingFiltering extends Div {
 
   private CrudEditor<Person> createEditor() {
     TextField firstName = new TextField("First name");
-    firstName.setRequiredIndicatorVisible(true);
-
     TextField lastName = new TextField("Last name");
-    lastName.setRequiredIndicatorVisible(true);
-
     TextField profession = new TextField("Profession");
-    profession.setRequiredIndicatorVisible(true);
-
     FormLayout form = new FormLayout(firstName, lastName, profession);
 
     Binder<Person> binder = new Binder<>(Person.class);
-    binder.bind(firstName, Person::getFirstName, Person::setFirstName);
-    binder.bind(lastName, Person::getLastName, Person::setLastName);
-    binder.bind(profession, Person::getProfession, Person::setProfession);
+    binder.forField(firstName).asRequired().bind(Person::getFirstName, Person::setFirstName);
+    binder.forField(lastName).asRequired().bind(Person::getLastName, Person::setLastName);
+    binder.forField(profession).asRequired().bind(Person::getProfession, Person::setProfession);
 
     return new BinderCrudEditor<>(binder, form);
   }
