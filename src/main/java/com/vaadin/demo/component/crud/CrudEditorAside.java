@@ -1,10 +1,11 @@
 package com.vaadin.demo.component.crud;
 
-import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.crud.CrudEditorPosition;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -16,8 +17,8 @@ import com.vaadin.flow.router.Route;
 import java.util.Arrays;
 import java.util.List;
 
-@Route("crud-basic")
-public class CrudBasic extends Div {
+@Route("crud-editor-aside")
+public class CrudEditorAside extends Div {
 
   private Crud<Person> crud;
 
@@ -27,18 +28,19 @@ public class CrudBasic extends Div {
   private String PROFESSION = "profession";
   private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudBasic() {
-    // tag::snippet[]
+  public CrudEditorAside() {
     crud = new Crud<>(
       Person.class,
       createEditor()
     );
+    // tag::snippet[]
+    crud.setEditorPosition(CrudEditorPosition.ASIDE);
+    // end::snippet[]
 
     setupGrid();
     setupDataProvider();
 
     add(crud);
-    // end::snippet[]
   }
 
   private CrudEditor<Person> createEditor() {
@@ -95,5 +97,5 @@ public class CrudBasic extends Div {
       dataProvider.persist(saveEvent.getItem())
     );
   }
-  public static class Exporter extends DemoExporter<CrudBasic> {} // hidden-source-line
+  public static class Exporter extends DemoExporter<CrudEditorAside> {} // hidden-full-source-line
 }

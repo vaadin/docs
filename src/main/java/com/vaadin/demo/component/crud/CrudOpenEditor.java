@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.crud;
 
-import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
@@ -16,8 +16,8 @@ import com.vaadin.flow.router.Route;
 import java.util.Arrays;
 import java.util.List;
 
-@Route("crud-basic")
-public class CrudBasic extends Div {
+@Route("crud-open-editor")
+public class CrudOpenEditor extends Div {
 
   private Crud<Person> crud;
 
@@ -25,10 +25,8 @@ public class CrudBasic extends Div {
   private String LAST_NAME = "lastName";
   private String EMAIL = "email";
   private String PROFESSION = "profession";
-  private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudBasic() {
-    // tag::snippet[]
+  public CrudOpenEditor() {
     crud = new Crud<>(
       Person.class,
       createEditor()
@@ -38,7 +36,6 @@ public class CrudBasic extends Div {
     setupDataProvider();
 
     add(crud);
-    // end::snippet[]
   }
 
   private CrudEditor<Person> createEditor() {
@@ -58,15 +55,26 @@ public class CrudBasic extends Div {
   }
 
   private void setupGrid() {
+    // tag::snippet[]
     Grid<Person> grid = crud.getGrid();
+
+    // Remove edit column
+    Crud.removeEditColumn(grid);
+    // grid.removeColumnByKey(EDIT_COLUMN);
+    // grid.removeColumn(grid.getColumnByKey(EDIT_COLUMN));
+
+    // Open editor on double click
+    grid.addItemDoubleClickListener(event ->
+      crud.edit(event.getItem(), Crud.EditMode.EXISTING_ITEM)
+    );
+    // end::snippet[]
 
     // Only show these columns (all columns shown by default):
     List<String> visibleColumns = Arrays.asList(
       FIRST_NAME,
       LAST_NAME,
       EMAIL,
-      PROFESSION,
-      EDIT_COLUMN
+      PROFESSION
     );
     grid.getColumns().forEach(column -> {
       String key = column.getKey();
@@ -80,8 +88,7 @@ public class CrudBasic extends Div {
       grid.getColumnByKey(FIRST_NAME),
       grid.getColumnByKey(LAST_NAME),
       grid.getColumnByKey(EMAIL),
-      grid.getColumnByKey(PROFESSION),
-      grid.getColumnByKey(EDIT_COLUMN)
+      grid.getColumnByKey(PROFESSION)
     );
   }
 
@@ -95,5 +102,5 @@ public class CrudBasic extends Div {
       dataProvider.persist(saveEvent.getItem())
     );
   }
-  public static class Exporter extends DemoExporter<CrudBasic> {} // hidden-source-line
+  public static class Exporter extends DemoExporter<CrudOpenEditor> {} // hidden-full-source-line
 }
