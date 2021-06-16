@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
-
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-crud/vaadin-crud';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -34,11 +33,16 @@ export class Example extends LitElement {
         .items="${this.items}"
         @size-changed="${() => this.requestUpdate()}"
       >
-        <div slot="toolbar" style="flex: 1;">Total: <b>${this.items.length}</b> employees</div>
-        <vaadin-button theme="tertiary" slot="toolbar" new-button>
-          <iron-icon slot="prefix" icon="vaadin:plus"></iron-icon>
-          New employee
-        </vaadin-button>
+        <vaadin-horizontal-layout
+          slot="toolbar"
+          style="align-items: center; flex-grow: 1; justify-content: space-between;"
+        >
+          <span>Total: <b>${this.items.length}</b> employees</span>
+          <vaadin-button theme="tertiary" new-button>
+            <iron-icon slot="prefix" icon="vaadin:plus"></iron-icon>
+            New employee
+          </vaadin-button>
+        </vaadin-horizontal-layout>
       </vaadin-crud>
       <!-- end::snippet[] -->
     `;
