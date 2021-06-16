@@ -1,11 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
+import '@vaadin/vaadin-template-renderer'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { ComboBoxItemModel } from '@vaadin/vaadin-combo-box/vaadin-combo-box';
+import { ComboBoxRenderer } from '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -61,8 +62,7 @@ export class Example extends LitElement {
   // We recommend placing CSS in a separate style sheet and
   // encapsulating the styling in a new component.
 
-  private renderer(root: HTMLElement, _: HTMLElement, { item }: ComboBoxItemModel) {
-    const person = item as Person;
+  private renderer: ComboBoxRenderer<Person> = (root, _, { item: person }) => {
     render(
       html`
         <div style="display: flex;">
@@ -83,6 +83,6 @@ export class Example extends LitElement {
       `,
       root
     );
-  }
+  };
   // end::renderer[]
 }
