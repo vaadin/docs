@@ -50,6 +50,54 @@ To enable and use this mechanism, the following should be added to a Vaadin Flow
 - A `VaadinServiceInitListener` that adds `ViewAccessChecker` as the `BeforeEnterListener` of all UIs.
 - A Service Provider under `META-INF/services` to load above the custom [classname]#ServiceInitListener# via the Java SPI loading mechanism.
 
+=== Handle User's Login and Logout
+
+The way how to get the authenticated user and how to login/logout the user may vary from application to application.
+Vaadin View-based access control implementation uses [methodname]#HttpServletRequest::getUserPrincipal()# and [methodname]#HttpServletRequest.isUserInRole(String)# to check whether the currently authenticated user has access to the view.
+Thus, you have to use a solutions, which put the user information into request.
+The example below uses currently active Vaadin servlet request and shows how to:
+
+- Check whether the user is currently authenticated to the application or not.
+The request is not available in background threads, so this method shows authentication state only in Vaadin request processing threads, otherwise it would always return `false`.
+- Authenticate the user with the given credentials.
+When this method is called from background threads, the authentication would always fail.
+- Logout the user by invalidating the http session and redirecting to the home page.
+
+.[filename]#SecurityUtils.java#
+[source,java]
+----
+public class SecurityUtils {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
+
+    public static boolean isAuthenticated() {
+        VaadinServletRequest request = VaadinServletRequest.getCurrent();
+        return request != null && request.getUserPrincipal() != null;
+    }
+
+    public static boolean authenticate(String username, String password) {
+        if (VaadinServletRequest.getCurrent() != null) {
+            VaadinServletRequest request = VaadinServletRequest.getCurrent();
+            try {
+                request.login(username, password);
+                return true;
+            } catch (ServletException e) {
+                // login exception handle code omitted
+                return false;
+            }
+        }
+        // This is in a background thread and we cannot access the request to
+        // log in the user
+        return false;
+    }
+
+    public static void logout() {
+        VaadinSession.getCurrent().getSession().invalidate();
+        UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
+    }
+}
+----
+
 === Adding Login View
 Having a login view is one of the basic requirements of many authentication and authorization mechanisms.
 It serves to redirect anonymous users to that page before granting access to view any protected resources.
@@ -62,14 +110,11 @@ It serves to redirect anonymous users to that page before granting access to vie
 public class LoginView extends VerticalLayout implements BeforeEnterObserver,
         ComponentEventListener<AbstractLogin.LoginEvent> {
 
-    private static final String LOGOUT_SUCCESS_URL = "/";
+    private static final String LOGIN_SUCCESS_URL = "/";
 
     private LoginForm login = new LoginForm();
-    private SecurityService securityService;
 
-    @Inject
-    public LoginView(SecurityService securityService) {
-        this.securityService = securityService;
+    public LoginView() {
         addClassName("login-view");
         setSizeFull();
 
@@ -93,10 +138,10 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver,
 
     @Override
     public void onComponentEvent(AbstractLogin.LoginEvent loginEvent) {
-        boolean authenticated = securityService.authenticate(
+        boolean authenticated = SecurityUtils.authenticate(
                 loginEvent.getUsername(), loginEvent.getPassword());
         if (authenticated) {
-            UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
+            UI.getCurrent().getPage().setLocation(LOGIN_SUCCESS_URL);
         } else {
             login.setError(true);
         }
@@ -117,18 +162,13 @@ Here is a basic implementation of logout button shown on the main layout's heade
 ----
 public class MainLayout extends AppLayout {
 
-    private SecurityService securityService;
-
-    @Inject
-    public MainLayout(SecurityService securityService) {
-        this.securityService = securityService;
-
+    public MainLayout() {
         H1 logo = new H1("Vaadin CRM");
         logo.addClassName("logo");
         HorizontalLayout header;
-        if (securityService.isAuthenticated()) {
+        if (SecurityUtils.isAuthenticated()) {
             Button logout = new Button("Logout", click ->
-                    securityService.logout());
+                    SecurityUtils.logout());
             header = new HorizontalLayout(logo, logout);
         } else {
             header = new HorizontalLayout(logo);
@@ -137,43 +177,6 @@ public class MainLayout extends AppLayout {
         // Other page components omitted.
 
         addToNavbar(header);
-    }
-}
-----
-
-The way how to get the authenticated user and how to logout the user may vary from application to application.
-Here is a basic example how to do that with Vaadin API:
-
-.[filename]#SecurityService.java#
-[source,java]
-----
-@VaadinServiceScoped
-public class SecurityService {
-
-    private static final String LOGOUT_SUCCESS_URL = "/";
-
-    public boolean isAuthenticated() {
-        return VaadinServletRequest.getCurrent() != null &&
-               VaadinServletRequest.getCurrent().getUserPrincipal() != null;
-    }
-
-    public boolean authenticate(String username, String password) {
-        if (VaadinServletRequest.getCurrent() != null) {
-            VaadinServletRequest request = VaadinServletRequest.getCurrent();
-            try {
-                request.login(username, password);
-                return true;
-            } catch (ServletException e) {
-                // login exception handle code omitted
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public void logout() {
-        VaadinSession.getCurrent().getSession().invalidate();
-        UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
     }
 }
 ----
