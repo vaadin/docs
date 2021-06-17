@@ -73,4 +73,27 @@ public class MessageListDocumentation extends VerticalLayout {
         });
         // end::message-list-submitter[]
     }
+
+    private void messageConfigurator() {
+        UserInfo localUser = this.userInfo;
+        // tag::message-list-configurator[]
+        CollaborationMessageList collaborationMessageList =
+            new CollaborationMessageList(userInfo, topicId);
+        // tag::message-list-configurator-style[]
+        collaborationMessageList.setMessageConfigurator((message, user) -> {
+            if (user.equals(localUser)) {
+                message.addThemeNames("current-user");
+            }
+        });
+        // end::message-list-configurator-style[]
+        // tag::message-list-configurator-censor[]
+         collaborationMessageList.setMessageConfigurator((message, user) -> {
+            // Example: Replace all occurrences of "badword" with "***"
+            String censored = message.getText().replaceAll("badword", "***");
+            message.setText(censored);
+          });
+        // end::message-list-configurator-censor[]
+        // end::message-list-configurator[]
+    }
+
 }
