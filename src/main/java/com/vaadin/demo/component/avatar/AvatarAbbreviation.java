@@ -18,7 +18,5 @@ public class AvatarAbbreviation extends Div {
 
     add(avatarName, avatarAbbr);
   }
-
-  public static class Exporter extends DemoExporter<AvatarAbbreviation> { // hidden-source-line
-  } // hidden-source-line
+  public static class Exporter extends DemoExporter<AvatarAbbreviation> {} // hidden-source-line
 }
