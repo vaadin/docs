@@ -10,8 +10,7 @@ The TypeScript generator produces TypeScript files based on the information from
 
 [NOTE]
 ====
-Vaadin uses https://github.com/OAI/OpenAPI-Specification[OpenAPI Specification] as a middle layer between Java endpoints and TypeScript endpoint clients.
-The current implementation is based on OpenAPI specification 3.0. For details, please refer to <<appendix, the appendix at the end of this page>>.
+Vaadin uses https://github.com/OAI/OpenAPI-Specification[OpenAPI Specification] as a middle layer between Java endpoints and TypeScript endpoint clients. The current implementation is based on OpenAPI specification 3.0. For details, please refer to <<appendix, the appendix at the end of this page>>.
 ====
 
 == Examples
@@ -36,7 +35,7 @@ import client from './connect-client.default';
  * Return Return true if the given user is an admin, otherwise false.
  */
 export async function isAdmin(
-  id?: number
+  id: number
 ) {
   return await client.call('UserEndpoints', 'isAdmin', {id});
 }
@@ -46,8 +45,7 @@ export async function isAdmin(
 The `_import client from './connect-client.default'_` is a static part of any generated file.
 `_connect-client.default.ts_` is another generated file which includes default configurations for the `_ConnectClient_` and exports its instance as `_client_`.
 
-Each method in the generated modules is corresponding to a Java method in `@Endpoint` annotated classes.
-For example, the following Java code is corresponding to the generated <<user-endpoint-ts,UserEndpoints.ts>>:
+Each method in the generated modules is corresponding to a Java method in `@Endpoint` annotated classes. For example, the following Java code is corresponding to the generated <<user-endpoint-ts,UserEndpoints.ts>>:
 
 .UserEndpoint.ts [[UserEndpoint.ts]]
 [source,java]
@@ -70,33 +68,29 @@ public class UserEndpoints {
 }
 ----
 
+By default, all Java types are mapped and generated to a non-nullable type in TypeScript. Therefore, returning a `null` value to TypeScript in a non-optional endpoint method causes a validation exception in runtime.
+
 NOTE: For more information about type mapping between Java and TypeScript, please refer to <<type-conversion#, type conversion page>>.
 
-=== Non-Nullable Values
+=== Optional values
 
-By default, all Java types are mapped and generated to a nullable (optional) type in TypeScript.
-To make it non-nullable (required), you need to put a `@Nonnull` annotation on it.
-You may use any annotation that has a `nonnull` (case-insensitive) name, e.g.:
+If a parameter, a bean property or a method in Java method is annotated with `@Nullable` or has `Optional` type, the corresponding TypeScript code is declared as optional.
 
-* `javax.annotation.Nonnull`
-* `edu.umd.cs.findbugs.annotations.NonNull`
-* `lombok.NonNull`
-* `android.support.annotation.NonNull`
-* `org.eclipse.jdt.annotation.NonNull`
-* any other annotation (including custom) that has the `nonnull` (case-insensitive) name.
+==== Optional parameter
 
-.Required parameters in Java endpoint
+.Optional parameter in Java endpoint
 [source,java]
 ----
-@Endpoint
-class MyEndpoint {
-    public void setName(@Nonnull String firstName, @Nonnull String lastName, String middleName) {
-        // omitted code
-    }
+public void setName(String firstName, String lastName, @Nullable String middleName) {
+    // omitted code
+}
+
+public void setNameOptional(String firstName, String lastName, Optional<String> middleName) {
+    // omitted code
 }
 ----
 
-.Generated required parameters in TypeScript
+.Generated optional parameter in TypeScript
 [source,typescript]
 ----
 export async function setName(
@@ -106,22 +100,29 @@ export async function setName(
 ) {
   return await client.call('UserEndpoints', 'setName', {firstName, lastName, middleName});
 }
+
+export async function setNameOptional(
+  firstName: string,
+  lastName: string,
+  middleName?: string
+) {
+  return await client.call('UserEndpoints', 'setNameOptional', {firstName, lastName, middleName});
+}
 ----
 
-In this case, if user calls `UserEndpoints.setName('first', 'last')` in TypeScript, the middle name is omitted and set as `null` when receiving in Java `UserEndpoints.setName` method.
-If the JavaType for that parameter is `Optional`, it receives `Optional.empty()`;
+In this case, if user calls `UserEndpoints.setName('first', 'last')` in TypeScript, the middle name is omitted and set as `null` when receiving in Java `UserEndpoints.setName` method. If the JavaType is `Optional`, the missing parameter is `Optional.empty()`;
 
-==== Non-Nullable Property
+==== Optional property
 
-.Required properties in Java
+.Optional properties in Java
 [source,java]
 ----
 public class MyBean {
-    @Nonnull
     private long id;
-    @Nonnull
     private String value;
+    @Nullable
     private String description;
+    private Optional<String> optionalDescription;
 }
 ----
 
@@ -132,90 +133,40 @@ export default interface MyBean {
   id: number;
   value: string;
   description?: string;
+  optionalDescription?: string;
 }
 ----
 
-==== Required Return Type
+==== Optional return type
 
-.Required return type in Java
+.Optional return type in Java
 [source,java]
 ----
-@Endpoint
-class MyEndpoint {
-    @Nonnull
-    public String getPhoneNumber() {
-        // omitted code
-    }
+
+@Nullable
+public String getPhoneNumber() {
+    // omitted code
+}
+
+public Optional<String> getPhoneNumberOptional() {
+    // omitted code
 }
 ----
 
-.Generated required return type in TypeScript
+.Generated optional return type in TypeScript
 [source,typescript]
 ----
+
 export async function getPhoneNumber() {
   return await client.call('UserEndpoints', 'getPhoneNumber');
 }
-----
 
-=== Enum
-
-The Java `enum` type is mapped to an `enum` TypeScript type.
-It is an object type, so you can work with it as you work with regular TypeScript objects.
-
-.`enum` type in Java
-[source,java]
-----
-public enum Enumeration {
-    FIRST,
-    SECOND,
+export async function getPhoneNumberOptional() {
+  return await client.call('UserEndpoints', 'getPhoneNumberOptional');
 }
 ----
 
-.Generated `enum` type in TypeScript
-[source,typescript]
-----
-export enum Enumeration {
-  FIRST = "FIRST",
-  SECOND = "SECOND"
-}
-----
-
-.Complex Java enums mapping
-[NOTE]
-====
-The `enum` type is mapped in a simple way. No constructor-related Java features available in the TypeScript `enum`.
-====
-
-.Complex `enum` type in Java
-[source,java]
-----
-public enum Enumeration {
-    FIRST("ONE"),
-    SECOND("TWO");
-
-    private String value;
-
-    public Enumeration(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
-    }
-}
-----
-
-.Generated complex `enum` type in TypeScript
-[source,typescript]
-----
-export enum Enumeration {
-  FIRST = "FIRST",
-  SECOND = "SECOND"
-}
-----
-
-
-== Appendix: How The Generator Generate TypeScript From OpenAPI Specification [[appendix]]
+== Appendix: how the generator generate TypeScript from OpenAPI specification. [[appendix]]
 
 === Modules
 The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding TypeScript file. The tag name is used for TypeScript module name as well as the file name. TsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
@@ -362,7 +313,7 @@ Here is an example OpenAPI document which could generate the above <<UserEndpoin
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [ "id" ],
+                "required": [ "id" ]
                 "properties": {
                   "id": {
                     "type": "number",
