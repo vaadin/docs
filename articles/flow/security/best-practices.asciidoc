@@ -51,17 +51,18 @@ To enable and use this mechanism, the following should be added to a Vaadin Flow
 - A Service Provider under `META-INF/services` to load above the custom [classname]#ServiceInitListener# via the Java SPI loading mechanism.
 
 === Handle User's Login and Logout
+There are many ways to handle login and logout, and how to get the authenticated user for a request.
+The View-based access control implementation in Vaadin uses [methodname]#getUserPrincipal()# and [methodname]#isUserInRole(String)# in [classname]#HttpServletRequest# to check whether the currently authenticated user has access to the view.
+Therefore, you need a way to put the user information into the request.
 
-The way how to get the authenticated user and how to login/logout the user may vary from application to application.
-Vaadin View-based access control implementation uses [methodname]#HttpServletRequest::getUserPrincipal()# and [methodname]#HttpServletRequest.isUserInRole(String)# to check whether the currently authenticated user has access to the view.
-Thus, you have to use a solutions, which put the user information into request.
-The example below uses currently active Vaadin servlet request and shows how to:
+The example below uses the currently active Vaadin servlet request.
+It shows how to:
 
 - Check whether the user is currently authenticated to the application or not.
-The request is not available in background threads, so this method shows authentication state only in Vaadin request processing threads, otherwise it would always return `false`.
+The request is not available in background threads, so the [methodname]#isAuthenticated()# method shows authentication state only in Vaadin request processing threads, otherwise it would always return `false`.
 - Authenticate the user with the given credentials.
-When this method is called from background threads, the authentication would always fail.
-- Logout the user by invalidating the http session and redirecting to the home page.
+The [methodname]#authenticate()# method fails if is called from a background thread.
+- Logout the user by invalidating the HTTP session and redirecting to the home page.
 
 .[filename]#SecurityUtils.java#
 [source,java]
@@ -76,19 +77,19 @@ public class SecurityUtils {
     }
 
     public static boolean authenticate(String username, String password) {
-        if (VaadinServletRequest.getCurrent() != null) {
-            VaadinServletRequest request = VaadinServletRequest.getCurrent();
-            try {
-                request.login(username, password);
-                return true;
-            } catch (ServletException e) {
-                // login exception handle code omitted
-                return false;
-            }
+        VaadinServletRequest request = VaadinServletRequest.getCurrent();
+        if (request == null) {
+            // This is in a background thread and we cannot access the request to
+            // log in the user
+            return false;
         }
-        // This is in a background thread and we cannot access the request to
-        // log in the user
-        return false;
+        try {
+            request.login(username, password);
+            return true;
+        } catch (ServletException e) {
+            // login exception handle code omitted
+            return false;
+        }
     }
 
     public static void logout() {
@@ -154,8 +155,8 @@ However, feel free to implement your own login view, if you wish.
 
 === Logout Capability
 
-For handling logout in web applications, one typically uses a logout button.
-Here is a basic implementation of logout button shown on the main layout's header:
+You typically let the user to log out by using a logout button.
+The following example shows a basic implementation of a logout button shown on the header of the main layout:
 
 .[filename]#MainLayout.java#
 [source,java]
