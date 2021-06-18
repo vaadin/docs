@@ -17,8 +17,6 @@ public class RichTextEditorSetGetValue extends Div {
 
     RichTextEditor rte = new RichTextEditor();
     rte.getStyle().set("max-height", "400px");
-    String valueAsDelta = DataService.getTemplates().getRichTextDelta();
-    rte.setValue(valueAsDelta);
 
     rte.asHtml().addValueChangeListener(e -> textArea.setValue(e.getValue()));
     textArea.addValueChangeListener(e -> rte.asHtml().setValue(e.getValue()));
