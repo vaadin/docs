@@ -1,20 +1,22 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, internalProperty, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-confirm-dialog/vaadin-confirm-dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-cancel-button')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private dialogOpened = false;
 
-  @internalProperty()
+  @state()
   private status = '';
 
   render() {
