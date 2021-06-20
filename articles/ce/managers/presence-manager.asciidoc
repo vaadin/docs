@@ -5,4 +5,52 @@ layout: page
 ---
 
 [[ce.presence-manager]]
-= Managing user presence
+= Manage User Presence
+
+Collaboration Engine includes a manager to set the user presence in a topic, know 
+the users which are currently present and react to presence changes.
+
+It provides a simple and flexible way to manage topic data related to 
+user presence and let you easily create custom components with collaborative features.
+
+In the following code example, a custom component showing the list of active 
+users in a topic is built with the help of `PresenceManager`:
+
+[source,java]
+----
+VerticalLayout users = new VerticalLayout();
+
+UserInfo localUser = new UserInfo("john");
+
+PresenceManager manager = new PresenceManager(users, localUser, "my-topic"); // <1>
+
+manager.setAutoPresence(true); // <2>
+
+manager.setNewUserHandler(newUserInfo -> { // <3>
+    Component card = createUserCard(newUserInfo);
+    users.add(card);
+    return () -> users.remove(card); // <4>
+});
+
+add(new Button("Show active users", event -> {
+    Notification.show("Active users: " + manager.getUsers().count()); <5>
+});
+----
+
+<1> An instance of `PresenceManager` is created with a component (to bind the 
+manager connection context to the UI), an instance of `UserInfo` that represents 
+the current active user and the id of the topic to connect to.
+
+<2> The method `setAutoPresence(boolean)` is used to configure the manager to 
+set the local user as presence in the topic as soon as a connection is 
+established.
+
+<3> A callback to handle when a new user joins the topic is set: it takes 
+the `UserInfo` instance of the new user as the parameter and it will be invoked 
+accessing the UI of the component used to create the manager.
+
+<4> The callback should return a registration than will be removed when the same 
+user leave the topic.
+
+<5> The `getUsers()` method will instead return a stream of the currently 
+present users in the topic.
