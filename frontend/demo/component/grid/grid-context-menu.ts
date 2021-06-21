@@ -71,10 +71,10 @@ export class Example extends LitElement {
 
   createItem(icon: string, text: string) {
     return html`<vaadin-item style="font-size: var(--lumo-font-size-s)"
-      ><iron-icon
+      ><vaadin-icon
         icon="${icon}"
         style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); margin-right: var(--lumo-space-s)"
-      ></iron-icon
+      ></vaadin-icon
       >${text}</vaadin-item
     > `;
   }

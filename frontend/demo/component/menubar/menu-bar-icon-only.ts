@@ -51,7 +51,7 @@ export class Example extends LitElement {
 
   createItem(iconName: string, ariaLabel: string) {
     const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('iron-icon');
+    const icon = window.document.createElement('vaadin-icon');
     item.setAttribute('aria-label', ariaLabel);
     icon.setAttribute('icon', `vaadin:${iconName}`);
     item.appendChild(icon);

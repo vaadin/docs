@@ -51,12 +51,12 @@ export class Example extends LitElement {
 
       render(
         html`
-          <iron-icon
+          <vaadin-icon
             icon="${icon}"
             theme="badge ${theme} pill"
             title="${title}"
             aria-label="${title}"
-          ></iron-icon>
+          ></vaadin-icon>
         `,
         root
       );

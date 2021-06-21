@@ -38,7 +38,7 @@ export class Example extends LitElement {
 
   private createItem() {
     const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('iron-icon');
+    const icon = window.document.createElement('vaadin-icon');
     item.setAttribute('aria-label', 'Other save options');
     icon.setAttribute('icon', `vaadin:chevron-down`);
     item.appendChild(icon);

@@ -20,7 +20,7 @@ export class Example extends LitElement {
         <div style="width: 2em"></div>
         <vaadin-button theme="tertiary-inline">Retry</vaadin-button>
         <vaadin-button theme="tertiary-inline">
-          <iron-icon icon="lumo:cross"></iron-icon>
+          <vaadin-icon icon="lumo:cross"></vaadin-icon>
         </vaadin-button>
       </vaadin-notification-card>
     `;

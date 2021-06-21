@@ -16,18 +16,18 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <iron-icon
+      <vaadin-icon
         icon="vaadin:check-circle"
         theme="badge success pill"
         title="Confirmed"
         aria-label="Confirmed"
-      ></iron-icon>
-      <iron-icon
+      ></vaadin-icon>
+      <vaadin-icon
         icon="vaadin:close-circle"
         theme="badge error pill"
         title="Cancelled"
         aria-label="Cancelled"
-      ></iron-icon>
+      ></vaadin-icon>
       <!-- end::snippet[] -->
     `;
   }

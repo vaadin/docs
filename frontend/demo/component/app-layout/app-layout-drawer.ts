@@ -24,7 +24,7 @@ export class Example extends LitElement {
         margin: 0;
       }
 
-      iron-icon {
+      vaadin-icon {
         box-sizing: border-box;
         margin-inline-end: var(--lumo-space-m);
         padding: var(--lumo-space-xs);
@@ -41,44 +41,44 @@ export class Example extends LitElement {
         <vaadin-tabs slot="drawer" orientation="vertical">
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:dashboard"></iron-icon>
+              <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
               <span>Dashboard</span>
             </a>
           </vaadin-tab>
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:cart"></iron-icon>
+              <vaadin-icon icon="vaadin:cart"></vaadin-icon>
               <span>Orders</span>
             </a>
           </vaadin-tab>
           <!-- end::snippet[] -->
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:user-heart"></iron-icon>
+              <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
               <span>Customers</span>
             </a>
           </vaadin-tab>
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:package"></iron-icon>
+              <vaadin-icon icon="vaadin:package"></vaadin-icon>
               <span>Products</span>
             </a>
           </vaadin-tab>
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:records"></iron-icon>
+              <vaadin-icon icon="vaadin:records"></vaadin-icon>
               <span>Documents</span>
             </a>
           </vaadin-tab>
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:list"></iron-icon>
+              <vaadin-icon icon="vaadin:list"></vaadin-icon>
               <span>Tasks</span>
             </a>
           </vaadin-tab>
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:chart"></iron-icon>
+              <vaadin-icon icon="vaadin:chart"></vaadin-icon>
               <span>Analytics</span>
             </a>
           </vaadin-tab>

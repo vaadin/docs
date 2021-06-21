@@ -98,10 +98,10 @@ export class Example extends LitElement {
     render(
       html`
         <vaadin-button theme="tertiary icon">
-          <iron-icon icon="vaadin:pencil"></iron-icon>
+          <vaadin-icon icon="vaadin:pencil"></vaadin-icon>
         </vaadin-button>
         <vaadin-button theme="error tertiary icon">
-          <iron-icon icon="vaadin:trash"></iron-icon>
+          <vaadin-icon icon="vaadin:trash"></vaadin-icon>
         </vaadin-button>
       `,
       root

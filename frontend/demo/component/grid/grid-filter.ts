@@ -59,7 +59,7 @@ export class Example extends LitElement {
             );
           }}"
         >
-          <iron-icon slot="prefix" icon="vaadin:search"></iron-icon>
+          <vaadin-icon slot="prefix" icon="vaadin:search"></vaadin-icon>
         </vaadin-text-field>
         <vaadin-grid .items="${this.filteredItems}">
           <vaadin-grid-column

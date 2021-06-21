@@ -4,7 +4,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@polymer/iron-icon/iron-icon';
+import '@vaadin/vaadin-icon/vaadin-icon';
 
 @customElement('fusion-application-icons-basic')
 export class IconsBasic extends LitElement {
@@ -12,10 +12,10 @@ export class IconsBasic extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout>
-        <iron-icon icon="vaadin:airplane"></iron-icon>
+        <vaadin-icon icon="vaadin:airplane"></vaadin-icon>
 
         <vaadin-text-field label="Street Address" value="Ruukinkatu 2" clear-button-visible>
-          <iron-icon slot="prefix" icon="vaadin:map-marker"></iron-icon>
+          <vaadin-icon slot="prefix" icon="vaadin:map-marker"></vaadin-icon>
         </vaadin-text-field>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->

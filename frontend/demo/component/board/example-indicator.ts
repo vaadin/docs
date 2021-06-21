@@ -24,9 +24,9 @@ export class ExampleIndicator extends LitElement {
         font-size: var(--lumo-font-size-xxs);
       }
 
-      .icon iron-icon {
-        --iron-icon-width: var(--lumo-font-size-xxs);
-        --iron-icon-height: var(--lumo-font-size-xxs);
+      .icon vaadin-icon {
+        --vaadin-icon-width: var(--lumo-font-size-xxs);
+        --vaadin-icon-height: var(--lumo-font-size-xxs);
       }
 
       @media (min-width: 1024px) {
@@ -42,9 +42,9 @@ export class ExampleIndicator extends LitElement {
           font-size: var(--lumo-font-size-m);
         }
 
-        .icon iron-icon {
-          --iron-icon-width: var(--lumo-font-size-xs);
-          --iron-icon-height: var(--lumo-font-size-xs);
+        .icon vaadin-icon {
+          --vaadin-icon-width: var(--lumo-font-size-xs);
+          --vaadin-icon-height: var(--lumo-font-size-xs);
         }
       }
     `;
@@ -90,7 +90,7 @@ export class ExampleIndicator extends LitElement {
         <div class="title">${this.title}</div>
         <div class="current">${this.current}</div>
         <span class="icon" theme="badge ${theme}">
-          <iron-icon icon="vaadin:${icon}"></iron-icon>
+          <vaadin-icon icon="vaadin:${icon}"></vaadin-icon>
           <span>${sign}${Math.abs(this.change).toFixed(2)}%</span>
         </span>
       </vaadin-vertical-layout>

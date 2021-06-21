@@ -76,7 +76,7 @@ export class Example extends LitElement {
                   @click="${this.onClick}"
                   theme="contrast tertiary-inline"
                 >
-                  <iron-icon icon="lumo:cross"></iron-icon>
+                  <vaadin-icon icon="lumo:cross"></vaadin-icon>
                 </vaadin-button>
               </span>
             `

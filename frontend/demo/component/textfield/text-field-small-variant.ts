@@ -5,7 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import '@polymer/iron-icon/iron-icon';
+import '@vaadin/vaadin-icon/vaadin-icon';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-small-variant')

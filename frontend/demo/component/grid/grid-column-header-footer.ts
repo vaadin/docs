@@ -62,11 +62,11 @@ export class Example extends LitElement {
       html`
         <vaadin-horizontal-layout style="align-items: center;">
           <span>Suscriber</span>
-          <iron-icon
+          <vaadin-icon
             icon="vaadin:info-circle"
             title="Suscriber are paying customers"
             style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
-          ></iron-icon>
+          ></vaadin-icon>
         </vaadin-horizontal-layout>
       `,
       root
@@ -87,11 +87,11 @@ export class Example extends LitElement {
       html`
         <vaadin-horizontal-layout style="align-items: center;">
           <span>Membership</span>
-          <iron-icon
+          <vaadin-icon
             icon="vaadin:info-circle"
             title="Membership levels determines which features a client has access to"
             style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
-          ></iron-icon>
+          ></vaadin-icon>
         </vaadin-horizontal-layout>
       `,
       root

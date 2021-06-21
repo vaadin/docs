@@ -39,7 +39,7 @@ export class Example extends LitElement {
         >
           <span>Total: <b>${this.items.length}</b> employees</span>
           <vaadin-button theme="tertiary" new-button>
-            <iron-icon slot="prefix" icon="vaadin:plus"></iron-icon>
+            <vaadin-icon slot="prefix" icon="vaadin:plus"></vaadin-icon>
             New employee
           </vaadin-button>
         </vaadin-horizontal-layout>

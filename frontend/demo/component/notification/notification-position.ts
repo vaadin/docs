@@ -49,7 +49,7 @@ export class Example extends LitElement {
             @click="${notification.close.bind(notification)}"
             aria-label="Close"
           >
-            <iron-icon icon="lumo:cross"></iron-icon>
+            <vaadin-icon icon="lumo:cross"></vaadin-icon>
           </vaadin-button>
         `,
         root

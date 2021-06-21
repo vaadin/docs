@@ -6,7 +6,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-password-field';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import '@polymer/iron-icon';
+import '@vaadin/vaadin-icon/vaadin-icon';
 
 enum StrengthText {
   weak = 'weak',
@@ -49,12 +49,12 @@ export class Example extends LitElement {
           @value-changed="${this.onPasswordChanged}"
           reveal-button-hidden
         >
-          <iron-icon
+          <vaadin-icon
             icon="vaadin:check"
             slot="suffix"
             style="color:${StrengthText.strong}"
             ?hidden="${this.strengthText !== StrengthText.strong}"
-          ></iron-icon>
+          ></vaadin-icon>
 
           <div slot="helper">
             Password strength:

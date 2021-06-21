@@ -25,7 +25,7 @@ export class Example extends LitElement {
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <iron-icon icon="lumo:checkmark" class="checkmark"></iron-icon>
+              <vaadin-icon icon="lumo:checkmark" class="checkmark"></vaadin-icon>
               <div>Application submitted!</div>
               <div style="width: 2em"></div>
               <vaadin-button @click="${this.close.bind(this, 1)}">View</vaadin-button>
@@ -34,7 +34,7 @@ export class Example extends LitElement {
                 @click="${this.close.bind(this, 1)}"
                 aria-label="Close"
               >
-                <iron-icon icon="lumo:cross"></iron-icon>
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             `,
             root
@@ -48,7 +48,7 @@ export class Example extends LitElement {
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <iron-icon icon="vaadin:warning" class="warning"></iron-icon>
+              <vaadin-icon icon="vaadin:warning" class="warning"></vaadin-icon>
               <div>Failed to generate report</div>
               <div style="width: 2em"></div>
               <vaadin-button @click="${this.close.bind(this, 2)}">Retry</vaadin-button>
@@ -57,7 +57,7 @@ export class Example extends LitElement {
                 @click="${this.close.bind(this, 2)}"
                 aria-label="Close"
               >
-                <iron-icon icon="lumo:cross"></iron-icon>
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             `,
             root
@@ -78,7 +78,7 @@ export class Example extends LitElement {
                 @click="${this.close.bind(this, 3)}"
                 aria-label="Close"
               >
-                <iron-icon icon="lumo:cross"></iron-icon>
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             `,
             root
@@ -91,7 +91,7 @@ export class Example extends LitElement {
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <iron-icon icon="lumo:checkmark" class="checkmark"></iron-icon>
+              <vaadin-icon icon="lumo:checkmark" class="checkmark"></vaadin-icon>
               <div>
                 <b style="color: var(--lumo-success-text-color);">Upload successful</b>
                 <div
@@ -105,7 +105,7 @@ export class Example extends LitElement {
                 @click="${this.close.bind(this, 4)}"
                 aria-label="Close"
               >
-                <iron-icon icon="lumo:cross"></iron-icon>
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             `,
             root

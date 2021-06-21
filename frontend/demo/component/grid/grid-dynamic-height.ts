@@ -85,7 +85,7 @@ export class Example extends LitElement {
             this.items.unshift(model.item as Person);
             this.items = [...this.items]; // re-assign the array to refresh the combo-box
           }}"
-          ><iron-icon icon="vaadin:trash"></iron-icon
+          ><vaadin-icon icon="vaadin:trash"></vaadin-icon
         ></vaadin-button>
       `,
       root

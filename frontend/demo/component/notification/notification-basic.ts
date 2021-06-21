@@ -42,7 +42,7 @@ export class Example extends LitElement {
                 @click="${() => (this.notificationOpen = false)}"
                 aria-label="Close"
               >
-                <iron-icon icon="lumo:cross"></iron-icon>
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             `,
             root

@@ -109,7 +109,7 @@ export class Example extends LitElement {
 
   createItem(iconName: string, text: string) {
     const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('iron-icon');
+    const icon = window.document.createElement('vaadin-icon');
 
     icon.style.color = 'var(--lumo-secondary-text-color)';
     icon.style.marginInlineEnd = 'var(--lumo-space-s)';

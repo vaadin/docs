@@ -52,10 +52,10 @@ export class Example extends LitElement {
           <vaadin-horizontal-layout
             style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
           >
-            <iron-icon
+            <vaadin-icon
               icon="vaadin:exclamation-circle"
               style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s);"
-            ></iron-icon>
+            ></vaadin-icon>
             <span>2 errors</span>
           </vaadin-horizontal-layout>
         </vaadin-horizontal-layout>

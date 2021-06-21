@@ -99,17 +99,17 @@ export class Example extends LitElement {
             style="font-size: var(--lumo-font-size-s); line-height: var(--lumo-line-height-m);"
           >
             <a href="mailto:${person.email}" style="align-items: center; display: flex;">
-              <iron-icon
+              <vaadin-icon
                 icon="vaadin:envelope"
                 style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
-              ></iron-icon>
+              ></vaadin-icon>
               <span>${person.email}</span>
             </a>
             <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
-              <iron-icon
+              <vaadin-icon
                 icon="vaadin:phone"
                 style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
-              ></iron-icon>
+              ></vaadin-icon>
               <span>${person.address.phone}</span>
             </a>
           </vaadin-vertical-layout>

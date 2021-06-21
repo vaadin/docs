@@ -42,19 +42,19 @@ export class Example extends LitElement {
         <vaadin-scroller scroll-direction="horizontal">
           <vaadin-horizontal-layout style="display: inline-flex;" theme="padding spacing">
             <vaadin-button style="height: 100px;">
-              <iron-icon icon="vaadin:clipboard-check" slot="prefix"></iron-icon>
+              <vaadin-icon icon="vaadin:clipboard-check" slot="prefix"></vaadin-icon>
               Audit
             </vaadin-button>
             <vaadin-button style="height: 100px;">
-              <iron-icon icon="vaadin:book-dollar" slot="prefix"></iron-icon>
+              <vaadin-icon icon="vaadin:book-dollar" slot="prefix"></vaadin-icon>
               Report
             </vaadin-button>
             <vaadin-button style="height: 100px;">
-              <iron-icon icon="vaadin:line-chart" slot="prefix"></iron-icon>
+              <vaadin-icon icon="vaadin:line-chart" slot="prefix"></vaadin-icon>
               Dashboard
             </vaadin-button>
             <vaadin-button style="height: 100px;">
-              <iron-icon icon="vaadin:invoice" slot="prefix"></iron-icon>
+              <vaadin-icon icon="vaadin:invoice" slot="prefix"></vaadin-icon>
               Invoice
             </vaadin-button>
           </vaadin-horizontal-layout>

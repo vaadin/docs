@@ -18,7 +18,7 @@ export class Example extends LitElement {
       <vaadin-notification-card theme="primary" slot="middle">
         <div>New project plan available</div>
         <vaadin-button theme="tertiary-inline">
-          <iron-icon icon="lumo:cross"></iron-icon>
+          <vaadin-icon icon="lumo:cross"></vaadin-icon>
         </vaadin-button>
       </vaadin-notification-card>
     `;

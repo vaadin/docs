@@ -42,7 +42,7 @@ export class Example extends LitElement {
         margin: 0;
       }
 
-      header iron-icon {
+      header vaadin-icon {
         box-sizing: border-box;
         height: var(--lumo-icon-size-m);
         margin-right: var(--lumo-space-m);
@@ -65,7 +65,7 @@ export class Example extends LitElement {
       <vaadin-vertical-layout id="container">
         <header>
           <a href="#" aria-label="Go back">
-            <iron-icon icon="vaadin:arrow-left" aria-hidden="true"></iron-icon>
+            <vaadin-icon icon="vaadin:arrow-left" aria-hidden="true"></vaadin-icon>
           </a>
           <h2>Edit employee</h2>
         </header>

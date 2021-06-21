@@ -91,7 +91,7 @@ export class Example extends LitElement {
               render(
                 html`
                   <span theme="badge ${theme} primary">
-                    <iron-icon icon="${icon}"></iron-icon>
+                    <vaadin-icon icon="${icon}"></vaadin-icon>
                     <span>${title}</span>
                   </span>
                 `,

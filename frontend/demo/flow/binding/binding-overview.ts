@@ -8,7 +8,7 @@ import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icons/vaadin-icons';
-import '@polymer/iron-icon/iron-icon';
+import '@vaadin/vaadin-icon/vaadin-icon';
 
 @customElement('binding-overview')
 export class DataBindingExample extends LitElement {
@@ -19,7 +19,7 @@ export class DataBindingExample extends LitElement {
         <vaadin-vertical-layout>
           <vaadin-form-layout>
             <vaadin-text-field label="Street Address" value="Ruukinkatu 2" clear-button-visible>
-              <iron-icon slot="prefix" icon="vaadin:map-marker"></iron-icon>
+              <vaadin-icon slot="prefix" icon="vaadin:map-marker"></vaadin-icon>
             </vaadin-text-field>
           </vaadin-form-layout>
           <vaadin-button>Save</vaadin-button>

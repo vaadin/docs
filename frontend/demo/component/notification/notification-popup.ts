@@ -43,7 +43,7 @@ export class Example2 extends LitElement {
     return html`
       <vaadin-context-menu open-on="click" .renderer="${this.menuRenderer}">
         <vaadin-button aria-label="notifications" theme="tertiary">
-          <iron-icon icon="lumo:bell"></iron-icon>
+          <vaadin-icon icon="lumo:bell"></vaadin-icon>
           <span theme="badge error primary small pill">4</span>
         </vaadin-button>
       </vaadin-context-menu>
