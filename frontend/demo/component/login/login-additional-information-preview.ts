@@ -1,15 +1,17 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, query } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, query } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
 import { LoginOverlayMockupElement } from './login-overlay-mockup';
 
 @customElement('login-additional-information')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   @query('login-overlay-mockup')
