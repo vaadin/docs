@@ -43,6 +43,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid
+        theme="force-focus-outline"
         .items="${this.items}"
         @cell-focus="${(e: CustomEvent) => {
           const eventContext = this.grid.getEventContext(e) as GridEventContext<Person>;
