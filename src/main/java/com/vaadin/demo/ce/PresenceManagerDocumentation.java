@@ -34,7 +34,7 @@ public class PresenceManagerDocumentation extends VerticalLayout {
         add(new Button("Show active users", event -> {
             Notification.show("Active users: " + manager.getUsers().count()); // <5>
         }));
-        // tag::snippet[]
+        // end::snippet[]
     }
 
     Component createUserCard(UserInfo user) {
