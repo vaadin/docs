@@ -5,7 +5,6 @@ import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.demo.domain.DataService;
 
 @Route("rich-text-editor-set-get-value")
 public class RichTextEditorSetGetValue extends Div {
@@ -19,7 +18,11 @@ public class RichTextEditorSetGetValue extends Div {
     rte.getStyle().set("max-height", "400px");
 
     rte.asHtml().addValueChangeListener(e -> textArea.setValue(e.getValue()));
-    textArea.addValueChangeListener(e -> rte.asHtml().setValue(e.getValue()));
+    textArea.addValueChangeListener(e -> {
+      if (!rte.asHtml().getValue().equals(e.getValue())) {
+        rte.asHtml().setValue(e.getValue());
+      }
+    });
     add(rte, textArea);
     // end::snippet[]
   }
