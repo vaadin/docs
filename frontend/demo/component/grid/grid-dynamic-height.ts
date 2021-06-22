@@ -105,7 +105,7 @@ export class Example extends LitElement {
   private renderInvitedPeopleTable = () => {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid .items="${this.invitedPeople}" height-by-rows>
+      <vaadin-grid .items="${this.invitedPeople}" all-rows-visible>
         <vaadin-grid-column header="Name" path="displayName" auto-width></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
         <vaadin-grid-column path="address.phone"></vaadin-grid-column>
