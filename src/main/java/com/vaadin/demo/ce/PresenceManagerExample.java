@@ -12,16 +12,16 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 /**
  * Code snippets used in PresenceManager's reference documentation.
  */
-public class PresenceManagerDocumentation extends VerticalLayout {
+public class PresenceManagerExample extends VerticalLayout {
 
-    public PresenceManagerDocumentation() {
+    public PresenceManagerExample() {
         // tag::snippet[]
         VerticalLayout users = new VerticalLayout();
 
         UserInfo localUser = new UserInfo("john");
 
-        PresenceManager manager = new PresenceManager(users, localUser,
-                "my-topic"); // <1>
+        PresenceManager manager =
+            new PresenceManager(users, localUser, "my-topic"); // <1>
 
         manager.setAutoPresence(true); // <2>
 
@@ -32,7 +32,8 @@ public class PresenceManagerDocumentation extends VerticalLayout {
         });
 
         add(new Button("Show active users", event -> {
-            Notification.show("Active users: " + manager.getUsers().count()); // <5>
+            Notification.show("Active users: " +
+                    manager.getUsers().count()); // <5>
         }));
         // end::snippet[]
     }
