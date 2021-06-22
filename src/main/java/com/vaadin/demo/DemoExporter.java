@@ -5,6 +5,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.WebComponentExporter;
 import com.vaadin.flow.component.webcomponent.WebComponent;
 import com.vaadin.flow.internal.ReflectTools;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.theme.Theme;
 
 import java.time.Duration;
@@ -28,15 +29,16 @@ public abstract class DemoExporter<T extends Component> extends WebComponentExpo
 
   @Override
   protected void configureInstance(final WebComponent<T> webComponent, final T demo) {
+    int interval = (int) Duration.ofSeconds(VaadinSession.getCurrent().getSession().getMaxInactiveInterval() - 10 * 60).toMillis();
     if (UI.getCurrent().getPollInterval() == -1) {
-      UI.getCurrent().setPollInterval((int) Duration.ofMinutes(20).toMillis());
-      UI.getCurrent().addPollListener(e -> emitUpdateTimestamp());
+      UI.getCurrent().setPollInterval(interval);
+      UI.getCurrent().addPollListener(e -> emitUpdateTimestamp(interval));
     }
-    emitUpdateTimestamp();
+    emitUpdateTimestamp(interval);
   }
 
-  private void emitUpdateTimestamp() {
-    UI.getCurrent().getPage().executeJs("window.dispatchEvent(new Event('update-timestamp'))");
+  private void emitUpdateTimestamp(int interval) {
+    UI.getCurrent().getPage().executeJs("window.dispatchEvent(new CustomEvent('update-timestamp', {detail: $0}))", interval);
   }
 }
 
