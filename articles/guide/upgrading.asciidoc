@@ -46,6 +46,44 @@ include::{root}/pom.xml[tag=spring-version, indent=0]
 
 The following instructions apply when upgrading from a version before Vaadin 21.
 
+=== TypeScript Code Generation Nullability Change
+Previously, all the Java types are generated as required in TypeScript.
+Now it changes so that for any type that is nullable in Java, it is optional in TypeScript, that is, the value could be `undefined`. See https://github.com/vaadin/flow/issues/8849[the GitHub issue].
+
+To upgrade, you can either:
+Update the client-side code to handle undefinable value.
+[source,typescript]
+----
+// The address property is never undefined in Vaadin 20
+person.address.street
+// Use the question mark to deal with undefinable properties in Vaadin 21
+person.address?.street
+
+
+// The list returned from the endpoint is never undefined in Vaadin 20
+const items = await endpoint.list();
+// Use the double question mark to give a default value in Vaadin 21
+const item = (await endpoint.list()) ?? [];
+----
+
+Or use `@Nonnull` annotation on the server-side to keep the same code generation behavior as before.
+
+[source,java]
+----
+public class Person {
+    @Nonnull
+    private Address address;
+}
+----
+
+.`@Nonnull` annotation
+[TIP,role=small]
+You can use any `@Nonnull` annotations available or even your own one.
+Vaadin uses case-insensitive string comparison for checking the annotation.
+
+See <<{articles}/fusion/advanced/endpoints-generator/#type-nullability,Type Nullability>> for more details.
+
+
 === The Vaadin Web Components No Longer Support <template>
 
 The Vaadin Web Components no longer support `<template>` to render content.
@@ -84,7 +122,7 @@ To suppress the warning, add the `suppress-template-warning` attribute to the co
 === Lit Templates Use Lit 2
 
 Previously, Lit templates were based on LitElement 2.x and lit-html 1.x.
-New Lit 2.0 is used for Lit templates in the latest Vaadin version.
+New Lit 2.0 (which includes LitElement 3.x and lit-html 2.x) is used for Lit templates in the latest Vaadin version.
 Some changes are required to be able to use your existing template with Lit 2.0.
 Please refer to the https://lit.dev/docs/releases/upgrade/#update-packages-and-import-paths[Lit Upgrade Guide] to find all the necessary changes.
 Most of the necessary changes are with imports.
