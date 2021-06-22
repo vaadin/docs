@@ -33,20 +33,6 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
         }
     }
 
-    private static final List<JustifyContentModeOption> OPTIONS = Arrays
-            .asList(new JustifyContentModeOption("Start (default)",
-                            FlexComponent.JustifyContentMode.START),
-                    new JustifyContentModeOption("Center",
-                            FlexComponent.JustifyContentMode.CENTER),
-                    new JustifyContentModeOption("End",
-                            FlexComponent.JustifyContentMode.END),
-                    new JustifyContentModeOption("Between",
-                            FlexComponent.JustifyContentMode.BETWEEN),
-                    new JustifyContentModeOption("Around",
-                            FlexComponent.JustifyContentMode.AROUND),
-                    new JustifyContentModeOption("Evenly",
-                            FlexComponent.JustifyContentMode.EVENLY));
-
     public BasicLayoutsVerticalLayoutVerticalAlignment() {
         // tag::snippet[]
         VerticalLayout layout = new VerticalLayout();
@@ -56,10 +42,24 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
         layout.add(new LayoutItem("Item 2"));
         layout.add(new LayoutItem("Item 3"));
 
+        List<JustifyContentModeOption> options = Arrays
+                .asList(new JustifyContentModeOption("Start (default)",
+                                FlexComponent.JustifyContentMode.START),
+                        new JustifyContentModeOption("Center",
+                                FlexComponent.JustifyContentMode.CENTER),
+                        new JustifyContentModeOption("End",
+                                FlexComponent.JustifyContentMode.END),
+                        new JustifyContentModeOption("Between",
+                                FlexComponent.JustifyContentMode.BETWEEN),
+                        new JustifyContentModeOption("Around",
+                                FlexComponent.JustifyContentMode.AROUND),
+                        new JustifyContentModeOption("Evenly",
+                                FlexComponent.JustifyContentMode.EVENLY));
+
         RadioButtonGroup<JustifyContentModeOption> radioGroup = new RadioButtonGroup<>();
         radioGroup.setLabel("Vertical alignment");
-        radioGroup.setItems(OPTIONS);
-        radioGroup.setValue(OPTIONS.get(0));
+        radioGroup.setItems(options);
+        radioGroup.setValue(options.get(0));
         radioGroup.addValueChangeListener(
                 e -> layout.setJustifyContentMode(e.getValue().getMode()));
         // end::snippet[]
