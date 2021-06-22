@@ -1,10 +1,11 @@
 package com.vaadin.demo.component.crud;
 
-import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.crud.CrudI18n;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -16,8 +17,8 @@ import com.vaadin.flow.router.Route;
 import java.util.Arrays;
 import java.util.List;
 
-@Route("crud-basic")
-public class CrudBasic extends Div {
+@Route("crud-localization")
+public class CrudLocalization extends Div {
 
   private Crud<Person> crud;
 
@@ -27,8 +28,7 @@ public class CrudBasic extends Div {
   private String PROFESSION = "profession";
   private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudBasic() {
-    // tag::snippet[]
+  public CrudLocalization() {
     crud = new Crud<>(
       Person.class,
       createEditor()
@@ -36,9 +36,9 @@ public class CrudBasic extends Div {
 
     setupGrid();
     setupDataProvider();
+    setupI18n();
 
     add(crud);
-    // end::snippet[]
   }
 
   private CrudEditor<Person> createEditor() {
@@ -83,6 +83,12 @@ public class CrudBasic extends Div {
       grid.getColumnByKey(PROFESSION),
       grid.getColumnByKey(EDIT_COLUMN)
     );
+
+    // Translate headers
+    grid.getColumnByKey(FIRST_NAME).setHeader("Etunimi");
+    grid.getColumnByKey(LAST_NAME).setHeader("Sukunimi");
+    grid.getColumnByKey(EMAIL).setHeader("Sähköposti");
+    grid.getColumnByKey(PROFESSION).setHeader("Ammatti");
   }
 
   private void setupDataProvider() {
@@ -95,5 +101,32 @@ public class CrudBasic extends Div {
       dataProvider.persist(saveEvent.getItem())
     );
   }
-  public static class Exporter extends DemoExporter<CrudBasic> {} // hidden-source-line
+
+  private void setupI18n() {
+    // tag::snippet[]
+    CrudI18n i18n = CrudI18n.createDefault();
+
+    i18n.setNewItem("Luo uusi");
+    i18n.setEditItem("Muuta tietoja");
+    i18n.setSaveItem("Tallenna");
+    i18n.setCancel("Peruuta");
+    i18n.setDeleteItem("Poista...");
+    i18n.setEditLabel("Muokkaa");
+
+    CrudI18n.Confirmations.Confirmation delete = i18n.getConfirm().getDelete();
+    delete.setTitle("Poista kohde");
+    delete.setContent("Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.");
+    delete.getButton().setConfirm("Poista");
+    delete.getButton().setDismiss("Peruuta");
+
+    CrudI18n.Confirmations.Confirmation cancel = i18n.getConfirm().getCancel();
+    cancel.setTitle("Hylkää muutokset");
+    cancel.setContent("Kohteessa on tallentamattomia muutoksia.");
+    cancel.getButton().setConfirm("Hylkää");
+    cancel.getButton().setDismiss("Peruuta");
+
+    crud.setI18n(i18n);
+    // end::snippet[]
+  }
+  public static class Exporter extends DemoExporter<CrudLocalization> {} // hidden-full-source-line
 }
