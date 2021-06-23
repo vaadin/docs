@@ -59,8 +59,7 @@ public class BasicLayoutsVerticalLayoutHorizontalAlignment extends Div {
                 e -> layout.setAlignItems(e.getValue().getAlignment()));
         // end::snippet[]
 
-        layout.getStyle().set("border", "1px solid var(--lumo-primary-color)");
-        layout.getStyle().set("border-radius", "var(--lumo-border-radius-l)");
+        this.setClassName("basic-layouts-example");
 
         this.add(layout, radioGroup);
     }

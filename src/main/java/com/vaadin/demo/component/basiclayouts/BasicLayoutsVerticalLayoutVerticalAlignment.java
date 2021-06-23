@@ -64,9 +64,8 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
                 e -> layout.setJustifyContentMode(e.getValue().getMode()));
         // end::snippet[]
 
-        layout.getStyle().set("height", "calc(var(--lumo-size-xl) * 5)");
-        layout.getStyle().set("border", "1px solid var(--lumo-primary-color)");
-        layout.getStyle().set("border-radius", "var(--lumo-border-radius-l)");
+        this.setClassName("basic-layouts-example");
+        layout.setClassName("with-min-height");
 
         this.add(layout, radioGroup);
     }

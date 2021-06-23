@@ -18,8 +18,7 @@ public class BasicLayoutsVerticalLayout extends Div {
         layout.add(new LayoutItem("Item 4"));
         // end::snippet[]
 
-        layout.getStyle().set("border", "1px solid var(--lumo-primary-color)");
-        layout.getStyle().set("border-radius", "var(--lumo-border-radius-l)");
+        this.setClassName("basic-layouts-example");
 
         this.add(layout);
     }

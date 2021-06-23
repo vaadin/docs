@@ -78,8 +78,7 @@ public class BasicLayoutsVerticalLayoutIndividualAlignment extends Div {
                 e -> layout.setAlignSelf(e.getValue().getAlignment(), item1));
         // end::snippet[]
 
-        layout.getStyle().set("border", "1px solid var(--lumo-primary-color)");
-        layout.getStyle().set("border-radius", "var(--lumo-border-radius-l)");
+        this.setClassName("basic-layouts-example");
 
         this.add(layout, layoutRadioGroup, itemRadioGroup);
     }
