@@ -34,13 +34,14 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
     }
 
     public BasicLayoutsVerticalLayoutVerticalAlignment() {
-        // tag::snippet[]
+        // tag::layout[]
         VerticalLayout layout = new VerticalLayout();
         layout.setPadding(true);
         layout.setSpacing(true);
         layout.add(new LayoutItem("Item 1"));
         layout.add(new LayoutItem("Item 2"));
         layout.add(new LayoutItem("Item 3"));
+        // end::layout[]
 
         List<JustifyContentModeOption> options = Arrays
                 .asList(new JustifyContentModeOption("Start (default)",
@@ -60,9 +61,12 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
         radioGroup.setLabel("Vertical alignment");
         radioGroup.setItems(options);
         radioGroup.setValue(options.get(0));
-        radioGroup.addValueChangeListener(
-                e -> layout.setJustifyContentMode(e.getValue().getMode()));
-        // end::snippet[]
+        // tag::eventhandler[]
+        radioGroup.addValueChangeListener(e -> {
+            FlexComponent.JustifyContentMode mode = e.getValue().getMode();
+            layout.setJustifyContentMode(mode);
+        });
+        // end::eventhandler[]
 
         this.setClassName("basic-layouts-example");
         layout.setClassName("with-min-height");

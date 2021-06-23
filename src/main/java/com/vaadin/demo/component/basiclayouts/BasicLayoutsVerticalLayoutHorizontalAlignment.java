@@ -34,13 +34,14 @@ public class BasicLayoutsVerticalLayoutHorizontalAlignment extends Div {
     }
 
     public BasicLayoutsVerticalLayoutHorizontalAlignment() {
-        // tag::snippet[]
+        // tag::layout[]
         VerticalLayout layout = new VerticalLayout();
         layout.setPadding(true);
         layout.setSpacing(true);
         layout.add(new LayoutItem("Item 1"));
         layout.add(new LayoutItem("Item 2"));
         layout.add(new LayoutItem("Item 3"));
+        // end::layout[]
 
         List<AlignmentOption> options = Arrays
                 .asList(new AlignmentOption("Start (default)",
@@ -55,9 +56,12 @@ public class BasicLayoutsVerticalLayoutHorizontalAlignment extends Div {
         radioGroup.setLabel("Horizontal alignment");
         radioGroup.setItems(options);
         radioGroup.setValue(options.get(0));
-        radioGroup.addValueChangeListener(
-                e -> layout.setAlignItems(e.getValue().getAlignment()));
-        // end::snippet[]
+        // tag::eventhandler[]
+        radioGroup.addValueChangeListener(e -> {
+            FlexComponent.Alignment alignment = e.getValue().getAlignment();
+            layout.setAlignItems(alignment);
+        });
+        // end::eventhandler[]
 
         this.setClassName("basic-layouts-example");
 

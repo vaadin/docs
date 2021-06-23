@@ -34,7 +34,7 @@ public class BasicLayoutsVerticalLayoutIndividualAlignment extends Div {
     }
 
     public BasicLayoutsVerticalLayoutIndividualAlignment() {
-        // tag::snippet[]
+        // tag::layout[]
         LayoutItem item1 = new LayoutItem("Item 1");
         VerticalLayout layout = new VerticalLayout();
         layout.setPadding(true);
@@ -42,6 +42,7 @@ public class BasicLayoutsVerticalLayoutIndividualAlignment extends Div {
         layout.add(item1);
         layout.add(new LayoutItem("Item 2", true));
         layout.add(new LayoutItem("Item 3", true));
+        // end::layout[]
 
         List<AlignmentOption> layoutOptions = Arrays
                 .asList(new AlignmentOption("Start (default)",
@@ -67,16 +68,23 @@ public class BasicLayoutsVerticalLayoutIndividualAlignment extends Div {
         layoutRadioGroup.setLabel("Layout alignment");
         layoutRadioGroup.setItems(layoutOptions);
         layoutRadioGroup.setValue(layoutOptions.get(0));
-        layoutRadioGroup.addValueChangeListener(
-                e -> layout.setAlignItems(e.getValue().getAlignment()));
+        // tag::eventhandler1[]
+        layoutRadioGroup.addValueChangeListener(e -> {
+            FlexComponent.Alignment alignment = e.getValue().getAlignment();
+            layout.setAlignItems(alignment);
+        });
+        // end::eventhandler1[]
 
         RadioButtonGroup<AlignmentOption> itemRadioGroup = new RadioButtonGroup<>();
         itemRadioGroup.setLabel("Item 1: alignment");
         itemRadioGroup.setItems(itemOptions);
         itemRadioGroup.setValue(itemOptions.get(0));
-        itemRadioGroup.addValueChangeListener(
-                e -> layout.setAlignSelf(e.getValue().getAlignment(), item1));
-        // end::snippet[]
+        // tag::eventhandler2[]
+        itemRadioGroup.addValueChangeListener(e -> {
+            FlexComponent.Alignment alignment = e.getValue().getAlignment();
+            layout.setAlignSelf(alignment, item1);
+        });
+        // end::eventhandler2[]
 
         this.setClassName("basic-layouts-example");
 
