@@ -36,8 +36,6 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
     public BasicLayoutsVerticalLayoutVerticalAlignment() {
         // tag::layout[]
         VerticalLayout layout = new VerticalLayout();
-        layout.setPadding(true);
-        layout.setSpacing(true);
         layout.add(new LayoutItem("Item 1"));
         layout.add(new LayoutItem("Item 2"));
         layout.add(new LayoutItem("Item 3"));

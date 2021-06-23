@@ -10,8 +10,6 @@ public class BasicLayoutsVerticalLayout extends Div {
     public BasicLayoutsVerticalLayout() {
         // tag::snippet[]
         VerticalLayout layout = new VerticalLayout();
-        layout.setPadding(true);
-        layout.setSpacing(true);
         layout.add(new LayoutItem("Item 1"));
         layout.add(new LayoutItem("Item 2"));
         layout.add(new LayoutItem("Item 3"));
