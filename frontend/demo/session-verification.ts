@@ -11,7 +11,7 @@ const compareTimestamps = () => {
   // Check if the timestamp is not updated after two intervals
   if (Date.now() - timestamp > 2 * sessionTimeout) {
     // Make sure we are not reloading the page before the server becomes available
-    fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
+    fetch(withPrefix('/vaadin/index')).then((serverData) => {
       if (serverData.ok) {
         // If the server is up and running and the session is expired, reload the page
         location.reload();
