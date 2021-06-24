@@ -5,7 +5,7 @@ import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';

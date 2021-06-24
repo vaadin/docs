@@ -3,7 +3,7 @@ import './upload-demo-helpers'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 

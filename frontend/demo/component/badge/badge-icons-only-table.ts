@@ -2,7 +2,7 @@ import { getUserPermissions } from 'Frontend/demo/domain/DataService'; // hidden
 import 'Frontend/demo/init'; // hidden-source-line
 import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions'; // hidden-source-line
 import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { html, LitElement, render } from 'lit';

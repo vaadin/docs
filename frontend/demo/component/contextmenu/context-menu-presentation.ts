@@ -8,7 +8,7 @@ import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import type { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import type { GridElement, GridEventContext, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';

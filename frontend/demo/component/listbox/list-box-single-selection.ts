@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-item/vaadin-item';
 import '@vaadin/vaadin-list-box';
 import { applyTheme } from 'Frontend/generated/theme';

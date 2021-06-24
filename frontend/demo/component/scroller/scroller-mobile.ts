@@ -5,7 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-ordered-layout/vaadin-scroller';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-lumo-styles/icons';
 import { applyTheme } from 'Frontend/generated/theme';
 

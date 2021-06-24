@@ -8,7 +8,7 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-lumo-styles/sizing';
 import '@vaadin/vaadin-lumo-styles/color';
 import { getCountries } from 'Frontend/demo/domain/DataService';

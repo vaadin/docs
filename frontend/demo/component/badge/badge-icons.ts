@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vaadin-lumo-styles/vaadin-icons.js';
-import '@vaadin/vaadin-icon/vaadin-icon.js';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout.js';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout.js';
 import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators';
 import { applyTheme } from 'Frontend/generated/theme';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 
 @customElement('badge-icons')
 export class Example extends LitElement {
