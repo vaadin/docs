@@ -82,7 +82,8 @@ By default, types are mapped and generated using the Java rules:
 - A collection accepts `null` unless the collection item type is primitive.
 - A map accepts `null` unless the collection item type is primitive.
 
-To make a type non-nullable, you need to put a `@Nonnull` annotation on it.
+Any of mentioned nullable types can be made non-nullable with a `@Nonnull`
+annotation applied.
 You may use any annotation that has a `nonnull` (case-insensitive) name, for example:
 
 * `javax.annotation.Nonnull`
@@ -92,35 +93,66 @@ You may use any annotation that has a `nonnull` (case-insensitive) name, for exa
 * `org.eclipse.jdt.annotation.NonNull`
 * any other annotation (including custom) that has the `nonnull` (case-insensitive) name.
 
-.Required parameters in Java endpoint
+==== Endpoint Functions
+
+For the endpoint function, there are two things that can be nullable:
+
+* **Function parameter type**.
+It can be nullable, but it cannot be omitted. If you have that parameter and want it to be `null` in Java, you must send an `undefined` there during the function call.
+* **Function return type**.
+
+.Original Java endpoint class
 [source,java]
 ----
 @Endpoint
-class MyEndpoint {
-    public void setName(@Nonnull String firstName, @Nonnull String lastName, String middleName) {
+class PersonEndpoint {
+    // Person must have at least the first and the last name
+    public void setFullName(@Nonnull String firstName, @Nonnull String lastName, String middleName) {
+        // omitted code
+    }
+
+    // Full name must exist
+    @Nonnull
+    public String getFullName() {
+        // omitted code
+    }
+
+    // Person can have no connections with other people. But if they have,
+    // the connection cannot be null.
+    public Map<String, @Nonnull String> getConnections() {
         // omitted code
     }
 }
 ----
 
-.Generated required parameters in TypeScript
+.Generated TypeScript endpoint functions
 [source,typescript]
 ----
 export async function setName(
   firstName: string,
   lastName: string,
-  middleName?: string
+  middleName: string | undefined
 ) {
-  return await client.call('UserEndpoints', 'setName', {firstName, lastName, middleName});
+  return client.call('PersonEndpoint', 'setFullName', {firstName, lastName, middleName});
+}
+
+export async function getFullName(): Promise<string> {
+  return client.call('PersonEndpoint', 'getFullName');
+}
+
+export async function getConnections(): Promise<Record<string, string> | undefined> {
+  return client.call('PersonEndpoint', 'getConnections');
 }
 ----
 
-In this case, if user calls `UserEndpoints.setName('first', 'last')` in TypeScript, the middle name is omitted and set as `null` when receiving in Java `UserEndpoints.setName` method.
-If the JavaType for that parameter is `Optional`, it receives `Optional.empty()`;
+==== Data Class Properties
 
-==== Properties
+For the data class, there are one thing that can be nullable:
 
-.Required properties in Java
+* **Properties**.
+Unlike the function parameters, all nullable properties can be omitted.
+
+.Original properties in Java data class
 [source,java]
 ----
 public class MyBean {
@@ -134,7 +166,7 @@ public class MyBean {
 }
 ----
 
-.Generated optional properties in TypeScript
+.Generated properties in TypeScript data interface
 [source,typescript]
 ----
 export default interface MyBean {
@@ -146,25 +178,31 @@ export default interface MyBean {
 }
 ----
 
-==== Return Type
+==== Collection Item Types
 
-.Required return type in Java
+For the collection types, there are one thing that can be nullable:
+
+* **Item type**.
+
+.Original properties in Java data class
 [source,java]
 ----
-@Endpoint
-class MyEndpoint {
-    @Nonnull
-    public String getPhoneNumber() {
-        // omitted code
-    }
+public class MyBean {
+    private List<String> list;
+    private List<@Nonnull String> nonNullableList;
+    private Map<String, String> map;
+    private Map<String, @Nonnull String> nonNullableMap;
 }
 ----
 
-.Generated required return type in TypeScript
+.Generated properties in TypeScript data interface
 [source,typescript]
 ----
-export async function getPhoneNumber() {
-  return await client.call('UserEndpoints', 'getPhoneNumber');
+export default interface MyBean {
+  list?: Array<string | undefined>;
+  nonNullableList?: Array<string>;
+  map?: Record<string, string | undefined>;
+  nonNullableMap?: Record<string, string>;
 }
 ----
 
