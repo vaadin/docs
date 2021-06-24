@@ -17,7 +17,7 @@ public class ContextMenuBestPractices extends Div {
 
   public ContextMenuBestPractices() {
     Grid<File> grid = new Grid();
-    grid.setHeightByRows(true);
+    grid.setAllRowsVisible(true);
     grid.setItems(getFiles());
 
     grid.addColumn(File::getName)

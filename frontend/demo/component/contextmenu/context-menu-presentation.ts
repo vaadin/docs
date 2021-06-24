@@ -60,7 +60,7 @@ export class Example extends LitElement {
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid
-          height-by-rows
+          all-rows-visible
           .items=${this.gridItems}
           @vaadin-contextmenu=${this.onContextMenu}
         >

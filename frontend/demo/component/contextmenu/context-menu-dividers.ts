@@ -41,7 +41,7 @@ export class Example extends LitElement {
         ]}
       >
         <vaadin-grid
-          height-by-rows
+          all-rows-visible
           .items=${this.gridItems}
           @vaadin-contextmenu=${this.onContextMenu}
         >
