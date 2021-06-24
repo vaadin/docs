@@ -14,5 +14,5 @@ public class CustomFieldSizeVariants extends Div {
     // end::snippet[]
     add(moneyField);
   }
-  public static class Exporter extends DemoExporter<CustomFieldSizeVariants> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CustomFieldSizeVariants> {} // hidden-source-line
 }

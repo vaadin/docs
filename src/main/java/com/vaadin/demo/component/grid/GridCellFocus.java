@@ -16,6 +16,7 @@ public class GridCellFocus extends Div {
 
     public GridCellFocus() {
         Grid<Person> grid = new Grid<>(Person.class, false);
+        grid.setThemeName("force-focus-outline");
         grid.addColumn(Person::getFirstName)
                 .setKey("firstName")
                 .setHeader("First name");
@@ -46,13 +47,13 @@ public class GridCellFocus extends Div {
             String row = event.getItem()
                     .map(value -> String.valueOf(people.indexOf(value)))
                     .orElse("Not available");
-            String person = event.getItem()
+            String fullName = event.getItem()
                     .map(Person::getFullName)
                     .orElse("Not available");
 
             String eventSummary = String
                     .format("Section: %s%nRow: %s%nColumn: %s%nPerson: %s",
-                            section, row, column, person);
+                            section, row, column, fullName);
 
             textArea.setValue(eventSummary);
         });

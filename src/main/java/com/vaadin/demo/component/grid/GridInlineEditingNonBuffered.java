@@ -7,7 +7,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 
 @Route("grid-inline-editing-non-buffered")
@@ -33,6 +33,6 @@ public class GridInlineEditingNonBuffered extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<GridInlineEditingNonBuffered> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<GridInlineEditingNonBuffered> { // hidden-source-line
+    } // hidden-source-line
 }

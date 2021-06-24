@@ -1,5 +1,5 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -105,7 +105,7 @@ export class Example extends LitElement {
   private renderInvitedPeopleTable = () => {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-grid .items="${this.invitedPeople}" height-by-rows>
+      <vaadin-grid .items="${this.invitedPeople}" all-rows-visible>
         <vaadin-grid-column header="Name" path="displayName" auto-width></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
         <vaadin-grid-column path="address.phone"></vaadin-grid-column>
