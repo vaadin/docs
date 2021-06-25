@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-text-field/vaadin-password-field';
-import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
+import '@vaadin/vaadin-text-field/vaadin-password-field';
 
 enum StrengthText {
   weak = 'weak',

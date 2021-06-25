@@ -4,6 +4,7 @@ export class IconsPreview extends HTMLElement {
   connectedCallback() {
     const collectionName = this.getAttribute('name');
 
+    // TODO: Use the vaadin iconset registry instead.
     const collection = new IronMeta({ type: 'iconset', value: null }).list.find(
       (i: any) => i.name === collectionName
     );

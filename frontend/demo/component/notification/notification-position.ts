@@ -1,8 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-lumo-styles/icons';
 import {
   NotificationElement,
   NotificationPosition,

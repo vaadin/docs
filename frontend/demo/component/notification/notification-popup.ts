@@ -1,10 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement, render, unsafeCSS } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import '@vaadin/vaadin-lumo-styles/badge.js';
-import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-lumo-styles/badge';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-popup')
