@@ -32,11 +32,18 @@ Add two new actions to `crm-store.ts`:
 [source,typescript]
 ----
 async saveContact(contact: Contact) {
- try {
-   this.saveLocal(await endpoint.saveContact(contact));
- } catch (e) {
-   console.log(e);
- }
+  try {
+    const saved = await endpoint.saveContact(contact);
+    if (saved) {
+      this.saveLocal(saved);
+      uiStore.showSuccess('Contact saved.');
+    } else {
+      uiStore.showError('Contact save failed.');
+    }
+  } catch (e) {
+    console.log(e);
+    uiStore.showError('Contact save failed.');
+  }
 }
 
 async deleteContact(contact: Contact) {
@@ -130,13 +137,13 @@ render() {
  return html`
    <!-- omitted -->
    <div class="se-s">
-     <vaadin-button theme="primary" @click="${this.save}">
+     <vaadin-button theme="primary" @click=${this.save}>
        ${this.binder.value.id ? 'Save' : 'Create'}
      </vaadin-button>
-     <vaadin-button theme="error" @click="${listViewStore.delete}">
+     <vaadin-button theme="error" @click=${listViewStore.delete}>
        Delete
      </vaadin-button>
-     <vaadin-button theme="tertiary" @click="${listViewStore.cancelEdit}">
+     <vaadin-button theme="tertiary" @click=${listViewStore.cancelEdit}>
        Cancel
      </vaadin-button>
    </div>
@@ -237,7 +244,7 @@ Then, at the end of the template in the `render()` method, add a notification co
 <vaadin-notification
  theme=${uiStore.message.error ? "error" : "contrast"}
  position="bottom-start"
- .opened="${uiStore.message.open}"
+ .opened=${uiStore.message.open}
  .renderer=${(root: HTMLElement) =>
    (root.textContent = uiStore.message.text)}>
 </vaadin-notification>
