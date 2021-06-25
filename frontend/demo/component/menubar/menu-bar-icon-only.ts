@@ -5,6 +5,7 @@ import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
+import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-icons/vaadin-iconset';
 import { applyTheme } from 'Frontend/generated/theme';
 

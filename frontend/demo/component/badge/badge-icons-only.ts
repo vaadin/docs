@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
+import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-icons/vaadin-iconset';
 
 @customElement('badge-icons-only')

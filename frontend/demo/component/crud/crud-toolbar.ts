@@ -3,6 +3,7 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-crud/vaadin-crud';
+import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';

@@ -4,6 +4,7 @@ import { customElement } from 'lit/decorators.js';
 import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
