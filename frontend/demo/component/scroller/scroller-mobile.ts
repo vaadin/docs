@@ -7,7 +7,6 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('scroller-basic')
