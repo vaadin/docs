@@ -1,15 +1,17 @@
-import { IronMeta } from '@polymer/iron-meta';
+import { IconsetElement } from '@vaadin/vaadin-icon/vaadin-iconset';
+import '@vaadin/vaadin-icon/vaadin-icon';
 
 export class IconsPreview extends HTMLElement {
   connectedCallback() {
-    const collectionName = this.getAttribute('name');
+    const iconsetName = this.getAttribute('name')!;
+    const iconset = IconsetElement.getIconset(iconsetName);
 
-    // TODO: Use the vaadin iconset registry instead.
-    const collection = new IronMeta({ type: 'iconset', value: null }).list.find(
-      (i: any) => i.name === collectionName
-    );
+    // A hack to get the `_icons` property computed.
+    // https://github.com/vaadin/web-components/blob/447e95e0e08d396167af9a42f68b04529b412ebd/packages/vaadin-icon/src/vaadin-iconset.js#L90
+    iconset.applyIcon('');
 
-    const iconNames = collection.getIconNames().map((name: string) => name.split(':')[1]);
+    // @ts-ignore
+    const iconNames = Object.keys(iconset._icons);
 
     let html = `
       <style>
@@ -64,10 +66,9 @@ export class IconsPreview extends HTMLElement {
     `;
 
     iconNames.forEach((name: string) => {
-      const svg = collection._cloneIcon(name);
       html += `
         <div class="docs-icon-preview icon-${name}">
-          ${svg.outerHTML}
+          <vaadin-icon icon="${iconsetName}:${name}"></vaadin-icon>
           <span class="docs-icon-preview-name">${name}</div>
         </div>`;
     });
