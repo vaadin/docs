@@ -1,5 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
@@ -10,21 +10,16 @@ import './layout-item';
 
 @customElement('basic-layouts-horizontal-layout-individual-alignment')
 export class Example extends LitElement {
+  constructor() {
+    super();
+    this.classList.add('basic-layouts-example');
+  }
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      vaadin-horizontal-layout {
-        height: calc(var(--lumo-size-xl) * 5);
-        border: 1px solid var(--lumo-primary-color);
-        border-radius: var(--lumo-border-radius-l);
-      }
-    `;
   }
 
   // tag::snippet[]
@@ -38,6 +33,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout
         theme="spacing padding"
+        class="height-5xl"
         style="align-items: ${this.alignLayoutItems}"
       >
         <layout-item style="align-self: ${this.alignFirstItem}">Item 1</layout-item>
