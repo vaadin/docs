@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -62,10 +63,10 @@ export class Example extends LitElement {
     render(
       html`
         <vaadin-horizontal-layout style="align-items: center;">
-          <span>Suscriber</span>
+          <span>Subscriber</span>
           <vaadin-icon
             icon="vaadin:info-circle"
-            title="Suscriber are paying customers"
+            title="Subscribers are paying customers"
             style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
           ></vaadin-icon>
         </vaadin-horizontal-layout>
