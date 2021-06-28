@@ -23,9 +23,6 @@ public class BasicLayoutsMargin extends Div {
         layout.add(new LayoutItem("Item 2"));
         layout.add(new LayoutItem("Item 3"));
 
-        Div container = new Div();
-        container.add(layout);
-
         RadioButtonGroup<String> radioButtonGroup = new RadioButtonGroup<>();
         radioButtonGroup.setLabel("Margin");
         radioButtonGroup.setItems(ENABLED_OPTION, DISABLED_OPTION);
@@ -33,6 +30,9 @@ public class BasicLayoutsMargin extends Div {
         radioButtonGroup.addValueChangeListener(
                 e -> layout.setMargin(ENABLED_OPTION.equals(e.getValue())));
         // end::snippet[]
+
+        Div container = new Div();
+        container.add(layout);
 
         this.setClassName("basic-layouts-example");
         container.setClassName("container");

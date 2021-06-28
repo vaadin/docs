@@ -33,8 +33,8 @@ public class BasicLayoutsSpacingVariants extends Div {
                         SPACING_L_THEME, SPACING_XL_THEME);
         radioButtonGroup.setValue(SPACING_XL_THEME);
         radioButtonGroup.addValueChangeListener(e -> {
-            layout.getThemeList().set(e.getOldValue(), false);
-            layout.getThemeList().set(e.getValue(), true);
+            layout.getThemeList().remove(e.getOldValue());
+            layout.getThemeList().add(e.getValue());
         });
         // end::snippet[]
 
