@@ -6,6 +6,7 @@ import '@vaadin/vaadin-lumo-styles/icons';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { html, LitElement, render } from 'lit';
+import { guard } from 'lit/directives/guard';
 import { customElement, state } from 'lit/decorators.js';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -37,69 +38,67 @@ export class Example extends LitElement {
         <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due Date"
-          .renderer="${(
-            root: HTMLElement,
-            column?: GridColumnElement,
-            model?: GridItemModel<Report>
-          ) => {
-            if (!column || !model) {
-              return;
-            }
+          .renderer="${guard(
+            [],
+            () => (root: HTMLElement, column?: GridColumnElement, model?: GridItemModel<Report>) => {
+              if (!column || !model) {
+                return;
+              }
 
-            render(html`${dateFormatter.format(new Date(model.item.due))}`, root);
-          }}"
+              render(html`${dateFormatter.format(new Date(model.item.due))}`, root);
+            }
+          )}"
         ></vaadin-grid-column>
         <vaadin-grid-column path="assignee" header="Assignee"></vaadin-grid-column>
         <vaadin-grid-column
           header="Status"
-          .renderer="${(
-            root: HTMLElement,
-            column?: GridColumnElement,
-            model?: GridItemModel<Report>
-          ) => {
-            if (!column || !model) {
-              return;
+          .renderer="${guard(
+            [],
+            () => (root: HTMLElement, column?: GridColumnElement, model?: GridItemModel<Report>) => {
+              if (!column || !model) {
+                return;
+              }
+
+              const { status } = model.item;
+
+              let icon: string;
+              let title: string;
+              let theme: string;
+
+              switch (status) {
+                case ReportStatus.COMPLETED:
+                  icon = 'lumo:checkmark';
+                  title = 'Completed';
+                  theme = 'success';
+                  break;
+                case ReportStatus.IN_PROGRESS:
+                  icon = 'lumo:cog';
+                  title = 'In Progress';
+                  theme = '';
+                  break;
+                case ReportStatus.CANCELLED:
+                  icon = 'lumo:cross';
+                  title = 'Cancelled';
+                  theme = 'error';
+                  break;
+                default:
+                  icon = 'lumo:clock';
+                  title = 'On Hold';
+                  theme = 'contrast';
+                  break;
+              }
+
+              render(
+                html`
+                  <span theme="badge ${theme} primary">
+                    <iron-icon icon="${icon}"></iron-icon>
+                    <span>${title}</span>
+                  </span>
+                `,
+                root
+              );
             }
-
-            const { status } = model.item;
-
-            let icon: string;
-            let title: string;
-            let theme: string;
-
-            switch (status) {
-              case ReportStatus.COMPLETED:
-                icon = 'lumo:checkmark';
-                title = 'Completed';
-                theme = 'success';
-                break;
-              case ReportStatus.IN_PROGRESS:
-                icon = 'lumo:cog';
-                title = 'In Progress';
-                theme = '';
-                break;
-              case ReportStatus.CANCELLED:
-                icon = 'lumo:cross';
-                title = 'Cancelled';
-                theme = 'error';
-                break;
-              default:
-                icon = 'lumo:clock';
-                title = 'On Hold';
-                theme = 'contrast';
-                break;
-            }
-
-            render(
-              html`
-                <span theme="badge ${theme} primary">
-                  <iron-icon icon="${icon}"></iron-icon>
-                  <span>${title}</span>
-                </span>
-              `,
-              root
-            );
-          }}"
+          )}"
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
