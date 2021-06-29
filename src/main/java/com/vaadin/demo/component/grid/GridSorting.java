@@ -24,7 +24,7 @@ public class GridSorting extends Div {
         grid.addColumn(Person::getProfession).setHeader("Profession")
                 .setSortable(true);
         grid.addColumn(new LocalDateRenderer<>(GridSorting::getPersonBirthday,
-                "YYYY-MM-dd")).setHeader("Birthday").setSortable(true)
+                "yyyy-MM-dd")).setHeader("Birthday").setSortable(true)
                 .setComparator(Person::getBirthday);
         // end::snippet[]
 

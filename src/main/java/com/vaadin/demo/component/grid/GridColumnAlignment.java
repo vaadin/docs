@@ -23,7 +23,7 @@ public class GridColumnAlignment extends Div {
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFullName).setHeader("Name");
         grid.addColumn(new LocalDateRenderer<>(
-                GridColumnAlignment::generateRandomDueDate, "MM/dd/YYYY"))
+                GridColumnAlignment::generateRandomDueDate, "MM/dd/yyyy"))
                 .setHeader("Due");
         // tag::snippet[]
         grid.addColumn(new TextRenderer<>(
