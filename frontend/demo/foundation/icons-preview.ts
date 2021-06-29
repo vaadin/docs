@@ -1,6 +1,14 @@
 import { IconsetElement } from '@vaadin/vaadin-icon/vaadin-iconset';
 import '@vaadin/vaadin-icon/vaadin-icon';
 
+const DEPRECATED_ICONS: Record<string, string> = {
+  buss: 'bus',
+  palete: 'palette',
+  funcion: 'function',
+  megafone: 'megaphone',
+  'trendind-down': 'trending-down',
+};
+
 export class IconsPreview extends HTMLElement {
   connectedCallback() {
     const iconsetName = this.getAttribute('name')!;
@@ -29,6 +37,10 @@ export class IconsPreview extends HTMLElement {
           text-align: center;
           padding-bottom: var(--docs-space-l);
           line-height: 1;
+        }
+
+        .docs-icon-preview.deprecated {
+          text-decoration: line-through;
         }
 
         .docs-icon-preview.hidden {
@@ -66,8 +78,18 @@ export class IconsPreview extends HTMLElement {
     `;
 
     iconNames.forEach((name: string) => {
+      let title = '';
+      const isDeprecated = name in DEPRECATED_ICONS;
+
+      if (isDeprecated) {
+        title = `Since Vaadin 21, '${name}' is deprecated. Please use '${DEPRECATED_ICONS[name]}' instead.`;
+      }
+
       html += `
-        <div class="docs-icon-preview icon-${name}">
+        <div
+          class="docs-icon-preview icon-${name} ${isDeprecated ? 'deprecated' : ''}"
+          title="${title}"
+        >
           <vaadin-icon icon="${iconsetName}:${name}"></vaadin-icon>
           <span class="docs-icon-preview-name">${name}</div>
         </div>`;
