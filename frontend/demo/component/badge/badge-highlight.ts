@@ -2,7 +2,8 @@ import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // 
 import 'Frontend/demo/init'; // hidden-source-line
 import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-source-line
 import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { html, LitElement, render } from 'lit';
@@ -91,7 +92,7 @@ export class Example extends LitElement {
               render(
                 html`
                   <span theme="badge ${theme} primary">
-                    <iron-icon icon="${icon}"></iron-icon>
+                    <vaadin-icon icon="${icon}"></vaadin-icon>
                     <span>${title}</span>
                   </span>
                 `,

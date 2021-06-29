@@ -6,7 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -85,7 +86,7 @@ export class Example extends LitElement {
             this.items.unshift(model.item as Person);
             this.items = [...this.items]; // re-assign the array to refresh the combo-box
           }}"
-          ><iron-icon icon="vaadin:trash"></iron-icon
+          ><vaadin-icon icon="vaadin:trash"></vaadin-icon
         ></vaadin-button>
       `,
       root

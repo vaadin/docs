@@ -4,7 +4,8 @@ import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's c
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -62,11 +63,11 @@ export class Example extends LitElement {
       html`
         <vaadin-horizontal-layout style="align-items: center;">
           <span>Suscriber</span>
-          <iron-icon
+          <vaadin-icon
             icon="vaadin:info-circle"
             title="Suscriber are paying customers"
             style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
-          ></iron-icon>
+          ></vaadin-icon>
         </vaadin-horizontal-layout>
       `,
       root
@@ -87,11 +88,11 @@ export class Example extends LitElement {
       html`
         <vaadin-horizontal-layout style="align-items: center;">
           <span>Membership</span>
-          <iron-icon
+          <vaadin-icon
             icon="vaadin:info-circle"
             title="Membership levels determines which features a client has access to"
             style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
-          ></iron-icon>
+          ></vaadin-icon>
         </vaadin-horizontal-layout>
       `,
       root

@@ -7,7 +7,8 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-selection-column';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -57,10 +58,10 @@ export class Example extends LitElement {
     render(
       html`
         <vaadin-button theme="tertiary">
-          <iron-icon icon="vaadin:pencil"></iron-icon>
+          <vaadin-icon icon="vaadin:pencil"></vaadin-icon>
         </vaadin-button>
         <vaadin-button theme="error tertiary">
-          <iron-icon icon="vaadin:trash"></iron-icon>
+          <vaadin-icon icon="vaadin:trash"></vaadin-icon>
         </vaadin-button>
       `,
       root
