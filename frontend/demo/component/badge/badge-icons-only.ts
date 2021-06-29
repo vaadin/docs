@@ -1,8 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vaadin-icons/vaadin-icons';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 
 @customElement('badge-icons-only')
 export class Example extends LitElement {
@@ -16,18 +17,18 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <iron-icon
+      <vaadin-icon
         icon="vaadin:check-circle"
         theme="badge success pill"
         title="Confirmed"
         aria-label="Confirmed"
-      ></iron-icon>
-      <iron-icon
+      ></vaadin-icon>
+      <vaadin-icon
         icon="vaadin:close-circle"
         theme="badge error pill"
         title="Cancelled"
         aria-label="Cancelled"
-      ></iron-icon>
+      ></vaadin-icon>
       <!-- end::snippet[] -->
     `;
   }

@@ -1,11 +1,12 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
@@ -59,7 +60,7 @@ export class Example extends LitElement {
             );
           }}"
         >
-          <iron-icon slot="prefix" icon="vaadin:search"></iron-icon>
+          <vaadin-icon slot="prefix" icon="vaadin:search"></vaadin-icon>
         </vaadin-text-field>
         <vaadin-grid .items="${this.filteredItems}">
           <vaadin-grid-column

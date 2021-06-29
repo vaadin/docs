@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.customfield;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
@@ -32,5 +32,5 @@ public class CustomFieldNativeInput extends Div {
     add(paymentInformationField, paragraph);
     // end::snippet[]
   }
-  public static class Exporter extends DemoExporter<CustomFieldNativeInput> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CustomFieldNativeInput> {} // hidden-source-line
 }
