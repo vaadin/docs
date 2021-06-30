@@ -4,7 +4,8 @@ import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -43,7 +44,7 @@ export class Example extends LitElement {
 
   createItem(iconName: string, text: string, isChild = false) {
     const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('iron-icon');
+    const icon = window.document.createElement('vaadin-icon');
 
     if (isChild) {
       icon.style.width = 'var(--lumo-icon-size-s)';

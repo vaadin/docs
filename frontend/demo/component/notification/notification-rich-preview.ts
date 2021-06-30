@@ -3,8 +3,9 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icons/vaadin-icons';
-import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -20,22 +21,22 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-notification-card theme="success" slot="middle">
-        <iron-icon icon="lumo:checkmark" class="checkmark"></iron-icon>
+        <vaadin-icon icon="lumo:checkmark" class="checkmark"></vaadin-icon>
         <div>Application submitted!</div>
         <div style="width: 2em"></div>
         <vaadin-button>View</vaadin-button>
         <vaadin-button theme="tertiary-inline">
-          <iron-icon icon="lumo:cross"></iron-icon>
+          <vaadin-icon icon="lumo:cross"></vaadin-icon>
         </vaadin-button>
       </vaadin-notification-card>
 
       <vaadin-notification-card theme="error" slot="middle">
-        <iron-icon icon="vaadin:warning" class="warning"></iron-icon>
+        <vaadin-icon icon="vaadin:warning" class="warning"></vaadin-icon>
         <div>Failed to generate report</div>
         <div style="width: 2em"></div>
         <vaadin-button>Retry</vaadin-button>
         <vaadin-button theme="tertiary-inline">
-          <iron-icon icon="lumo:cross"></iron-icon>
+          <vaadin-icon icon="lumo:cross"></vaadin-icon>
         </vaadin-button>
       </vaadin-notification-card>
 
@@ -43,12 +44,12 @@ export class Example extends LitElement {
         <vaadin-avatar name="Jason Bailey"></vaadin-avatar>
         <div><b>Jason Bailey</b> mentioned you in <a href="#">Project Q4</a></div>
         <vaadin-button theme="tertiary-inline">
-          <iron-icon icon="lumo:cross"></iron-icon>
+          <vaadin-icon icon="lumo:cross"></vaadin-icon>
         </vaadin-button>
       </vaadin-notification-card>
 
       <vaadin-notification-card slot="middle">
-        <iron-icon icon="lumo:checkmark" class="checkmark"></iron-icon>
+        <vaadin-icon icon="lumo:checkmark" class="checkmark"></vaadin-icon>
         <div>
           <b style="color: var(--lumo-success-text-color);">Upload successful</b>
           <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
@@ -56,7 +57,7 @@ export class Example extends LitElement {
           </div>
         </div>
         <vaadin-button theme="tertiary-inline">
-          <iron-icon icon="lumo:cross"></iron-icon>
+          <vaadin-icon icon="lumo:cross"></vaadin-icon>
         </vaadin-button>
       </vaadin-notification-card>
     `;
