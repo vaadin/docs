@@ -13,7 +13,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('grid-build-in-filtering')
+@customElement('grid-column-filtering')
 export class Example extends LitElement {
   protected createRenderRoot() {
     const root = super.createRenderRoot();
