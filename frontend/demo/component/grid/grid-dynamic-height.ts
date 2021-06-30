@@ -1,10 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
+import '@vaadin/flow-frontend/comboBoxConnector.js'; // hidden-source-line (ComboBox's connector)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
+import { ComboBoxValueChangedEvent } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-icons/vaadin-iconset';
@@ -30,7 +33,7 @@ export class Example extends LitElement {
   private invitedPeople: Person[] = [];
 
   @state()
-  private selectedItem = '';
+  private selectedValue = '';
 
   async firstUpdated() {
     const people = (await getPeople()).people.map((person) => {
@@ -47,8 +50,8 @@ export class Example extends LitElement {
       <vaadin-horizontal-layout theme="spacing">
         <vaadin-combo-box
           .items="${this.items}"
-          .value="${this.selectedItem}"
-          @value-changed=${(e: CustomEvent) => (this.selectedItem = e.detail.value)}
+          .value="${this.selectedValue}"
+          @value-changed=${(e: ComboBoxValueChangedEvent) => (this.selectedValue = e.detail.value)}
           item-label-path="displayName"
           item-value-path="id"
           style="flex: 1;"
@@ -56,13 +59,11 @@ export class Example extends LitElement {
         <vaadin-button
           theme="primary"
           @click="${() => {
-            const value = this.selectedItem;
-            const personIdx = this.items.findIndex((p) => +p.id === +value);
-            if (personIdx >= 0) {
-              const person = this.items.splice(personIdx, 1)[0];
-              this.items = [...this.items]; // re-assign the array to refresh the combo-box
+            const person = this.items.find((p) => p.id == parseInt(this.selectedValue));
+            const isInvited = person && this.invitedPeople.some((p) => p.id === person.id);
+            if (person && !isInvited) {
               this.invitedPeople = [...this.invitedPeople, person];
-              this.selectedItem = '';
+              this.selectedValue = '';
             }
           }}"
           >Send invite</vaadin-button
@@ -83,8 +84,6 @@ export class Example extends LitElement {
           theme="error tertiary icon"
           @click="${() => {
             this.invitedPeople = this.invitedPeople.filter((p) => p.id !== id);
-            this.items.unshift(model.item as Person);
-            this.items = [...this.items]; // re-assign the array to refresh the combo-box
           }}"
           ><vaadin-icon icon="vaadin:trash"></vaadin-icon
         ></vaadin-button>
