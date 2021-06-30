@@ -8,6 +8,7 @@ import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
+import '@vaadin/vaadin-icons/vaadin-iconset.js';
 
 @customElement('menu-bar-icons')
 export class Example extends LitElement {
