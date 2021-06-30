@@ -36,7 +36,7 @@ public class GridColumnFreezing extends Div {
     private static TemplateRenderer<Person> createPersonRenderer() {
         return TemplateRenderer.<Person>of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "  <vaadin-avatar img=\"[[item.pictureUrl]]\" name=\"[[item.fullName]]\"></vaadin-avatar>"
+                        + "  <vaadin-avatar style=\"height: var(--lumo-size-m)\" img=\"[[item.pictureUrl]]\" name=\"[[item.fullName]]\" alt=\"User avatar\"></vaadin-avatar>"
                         + "  <span> [[item.fullName]] </span>"
                         + "</vaadin-horizontal-layout>")
                 .withProperty("pictureUrl", Person::getPictureUrl)

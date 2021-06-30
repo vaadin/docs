@@ -34,12 +34,12 @@ public class GridColumnReorderingResizing extends Div {
         Grid.Column<Person> stateColumn = grid
                 .addColumn(person -> person.getAddress().getState())
                 .setHeader("State").setResizable(true);
-        // end::snippet[]
 
         HeaderRow headerRow = grid.prependHeaderRow();
         headerRow.join(firstNameColumn, lastNameColumn).setText("Name");
         headerRow.join(streetColumn, cityColumn, zipColumn, stateColumn)
                 .setText("Address");
+        // end::snippet[]
 
         List<Person> people = DataService.getPeople();
         grid.setItems(people);

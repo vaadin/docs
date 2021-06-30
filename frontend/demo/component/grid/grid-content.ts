@@ -44,7 +44,7 @@ export class Example extends LitElement {
           flex-grow="0"
           auto-width
         ></vaadin-grid-column>
-        <vaadin-grid-column path="profession" resizable auto-width></vaadin-grid-column>
+        <vaadin-grid-column path="profession" auto-width></vaadin-grid-column>
         <vaadin-grid-column
           header="Status"
           .renderer="${this.statusRenderer}"

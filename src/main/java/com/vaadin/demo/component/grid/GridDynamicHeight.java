@@ -59,9 +59,7 @@ public class GridDynamicHeight extends Div {
         grid.addColumn(person -> person.getAddress().getPhone())
                 .setHeader("Phone");
         grid.addColumn(new ComponentRenderer<>(Button::new, (button, person) -> {
-            button.setThemeName("icon", true);
-            button.setThemeName("error", true);
-            button.setThemeName("tertiary", true);
+            button.addThemeNames("icon", "error", "tertiary");
             button.addClickListener(e -> this.removeInvitation(person));
             button.setIcon(new Icon(VaadinIcon.TRASH));
         })).setHeader("Manage");

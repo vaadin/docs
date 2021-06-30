@@ -38,7 +38,7 @@ public class GridContent extends Div {
     private static TemplateRenderer<Person> createEmployeeTemplateRenderer() {
         return TemplateRenderer.<Person>of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "<vaadin-avatar img=\"[[item.pictureUrl]]\" name=\"[[item.fullName]]\"></vaadin-avatar>"
+                        + "<vaadin-avatar img=\"[[item.pictureUrl]]\" name=\"[[item.fullName]]\" alt=\"User avatar\"></vaadin-avatar>"
                         + "  <vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
                         + "    <span> [[item.fullName]] </span>"
                         + "    <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">"

@@ -83,8 +83,6 @@ export class Example extends LitElement {
           theme="error tertiary icon"
           @click="${() => {
             this.invitedPeople = this.invitedPeople.filter((p) => p.id !== id);
-            this.items.unshift(model.item as Person);
-            this.items = [...this.items]; // re-assign the array to refresh the combo-box
           }}"
           ><vaadin-icon icon="vaadin:trash"></vaadin-icon
         ></vaadin-button>
