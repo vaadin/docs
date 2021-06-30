@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.treegrid;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.html.Div;
@@ -28,5 +28,5 @@ public class TreeGridBasic extends Div {
     public List<Person> getStaff(Person manager) {
         return DataService.getPeople(manager.getManagerId());
     }
-    public static class Exporter extends DemoExporter<TreeGridBasic> {} // hidden-full-source-line
+    public static class Exporter extends DemoExporter<TreeGridBasic> {} // hidden-source-line
 }

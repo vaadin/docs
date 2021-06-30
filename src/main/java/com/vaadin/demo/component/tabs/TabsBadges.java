@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.tabs;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.tabs.Tab;
@@ -40,6 +40,6 @@ public class TabsBadges extends Div {
 		return badge;
 	}
 
-	public static class Exporter extends DemoExporter<TabsBadges> { // hidden-full-source-line
-	} // hidden-full-source-line
+	public static class Exporter extends DemoExporter<TabsBadges> { // hidden-source-line
+	} // hidden-source-line
 }

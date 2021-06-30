@@ -4,7 +4,7 @@ import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("login-overlay-internationalization")
 public class LoginOverlayInternationalization extends Div {
@@ -38,5 +38,5 @@ public class LoginOverlayInternationalization extends Div {
         add(loginOverlay);
         loginOverlay.setOpened(true);
     }
-    public static class Exporter extends DemoExporter<LoginOverlayInternationalization> {} // hidden-full-source-line
+    public static class Exporter extends DemoExporter<LoginOverlayInternationalization> {} // hidden-source-line
 }
