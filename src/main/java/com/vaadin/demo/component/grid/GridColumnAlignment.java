@@ -2,6 +2,7 @@ package com.vaadin.demo.component.grid;
 
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,7 +39,7 @@ public class GridColumnAlignment extends Div {
     }
 
     private static LocalDate generateRandomDueDate(Person person) {
-        LocalDate rangeStart = LocalDate.now();
+        LocalDate rangeStart = LocalDate.now(ZoneId.systemDefault());
         LocalDate rangeEnd = rangeStart.plusYears(1);
         long randomEpochDay = ThreadLocalRandom.current()
                 .nextLong(rangeStart.toEpochDay(), rangeEnd.toEpochDay());

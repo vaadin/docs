@@ -71,7 +71,8 @@ public class GridRichContentSorting extends Div {
         LocalDate birthday = person.getBirthday().toInstant()
                 .atZone(ZoneId.systemDefault()).toLocalDate();
 
-        return LocalDate.now().getYear() - birthday.getYear();
+        return LocalDate.now(ZoneId.systemDefault()).getYear() - birthday
+                .getYear();
     }
 
     public static class Exporter // hidden-source-line
