@@ -14,12 +14,12 @@ public class MenuBarDropDown extends Div {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
         MenuItem item = menuBar.addItem("John Smith");
-        SubMenu subItems = item.getSubMenu();
-        subItems.addItem("Profile");
-        subItems.addItem("Account");
-        subItems.addItem("Preferences");
-        subItems.add(new Hr());
-        subItems.addItem("Sign out");
+        SubMenu subMenu = item.getSubMenu();
+        subMenu.addItem("Profile");
+        subMenu.addItem("Account");
+        subMenu.addItem("Preferences");
+        subMenu.add(new Hr());
+        subMenu.addItem("Sign out");
         // end::snippet[]
 
         add(menuBar);

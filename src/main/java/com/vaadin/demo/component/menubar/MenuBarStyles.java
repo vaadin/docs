@@ -11,7 +11,7 @@ public class MenuBarStyles extends Div {
     public MenuBarStyles() {
         // tag::snippet[]
         MenuBar menuWithDefaultTheme = new MenuBar();
-        addItem(menuWithDefaultTheme, "Default");;
+        addItem(menuWithDefaultTheme, "Default");
 
         MenuBar menuWithTertiaryTheme = new MenuBar();
         menuWithTertiaryTheme.setThemeName("tertiary");

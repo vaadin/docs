@@ -17,19 +17,20 @@ public class MenuBarIcons extends Div {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
         menuBar.setThemeName("icon");
-        MenuItem share = createItem(menuBar, VaadinIcon.SHARE, "Share");
+        MenuItem share = createIconItem(menuBar, VaadinIcon.SHARE, "Share", null);
         SubMenu shareSubMenu = share.getSubMenu();
-        createItem(shareSubMenu, VaadinIcon.SHARE, "By Email", true);
-        createItem(shareSubMenu, VaadinIcon.LINK, "Get link", true);
-        createItem(menuBar, VaadinIcon.COPY, "");
+        createIconItem(shareSubMenu, VaadinIcon.SHARE, "By Email", null, true);
+        createIconItem(shareSubMenu, VaadinIcon.LINK, "Get link", null, true);
+        createIconItem(menuBar, VaadinIcon.COPY, null, "duplicate");
         // end::snippet[]
         add(menuBar);
     }
 
-    private MenuItem createItem(HasMenuItems menu, VaadinIcon iconName, String label) {
-        return createItem(menu, iconName, label, false);
+    // tag::createIcon[]
+    private MenuItem createIconItem(HasMenuItems menu, VaadinIcon iconName, String label, String ariaLabel) {
+        return createIconItem(menu, iconName, label, ariaLabel, false);
     }
-    private MenuItem createItem(HasMenuItems menu, VaadinIcon iconName, String label, boolean isChild) {
+    private MenuItem createIconItem(HasMenuItems menu, VaadinIcon iconName, String label, String ariaLabel, boolean isChild) {
         Icon icon = new Icon(iconName);
 
         if (isChild) {
@@ -38,15 +39,20 @@ public class MenuBarIcons extends Div {
             icon.getStyle().set("marginRight", "var(--lumo-space-s)");
         }
 
-        MenuItem item = menu.addItem(icon, e -> {});
+        MenuItem item = menu.addItem(icon, e -> {
+        });
 
-        if (iconName.equals(VaadinIcon.COPY)) {
-            item.getElement().setAttribute("aria-label", "duplicate");
+        if (ariaLabel != null) {
+            item.getElement().setAttribute("aria-label", ariaLabel);
         }
 
-        item.add(new Text(label));
+        if (label != null) {
+            item.add(new Text(label));
+        }
+
         return item;
     }
+    // end::createIcon[]
 
     public static class Exporter extends DemoExporter<MenuBarIcons> { // hidden-source-line
     } // hidden-source-line

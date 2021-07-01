@@ -14,15 +14,15 @@ public class MenuBarDividers extends Div {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
         MenuItem item = menuBar.addItem("Share");
-        SubMenu subItems = item.getSubMenu();
-        subItems.addItem("Facebook");
-        subItems.addItem("Twitter");
-        subItems.addItem("Instagram");
-        subItems.add(new Hr());
-        subItems.addItem("By email");
-        subItems.addItem("Get link");
-        subItems.add(new Hr());
-        subItems.addItem("Set permissions");
+        SubMenu subMenu = item.getSubMenu();
+        subMenu.addItem("Facebook");
+        subMenu.addItem("Twitter");
+        subMenu.addItem("Instagram");
+        subMenu.add(new Hr());
+        subMenu.addItem("By email");
+        subMenu.addItem("Get link");
+        subMenu.add(new Hr());
+        subMenu.addItem("Set permissions");
         // end::snippet[]
 
         add(menuBar);

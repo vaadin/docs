@@ -17,10 +17,10 @@ public class MenuBarIconOnly extends Div {
         MenuBar menuBar = new MenuBar();
         menuBar.setThemeName("tertiary-inline");
 
-        createItem(menuBar, VaadinIcon.EYE, "View");
-        createItem(menuBar, VaadinIcon.PENCIL, "Edit");
+        createIconItem(menuBar, VaadinIcon.EYE, "View");
+        createIconItem(menuBar, VaadinIcon.PENCIL, "Edit");
 
-        MenuItem share = createItem(menuBar, VaadinIcon.SHARE, "Share");
+        MenuItem share = createIconItem(menuBar, VaadinIcon.SHARE, "Share");
         SubMenu shareSubMenu = share.getSubMenu();
         MenuItem onSocialMedia = shareSubMenu.addItem("On social media");
         SubMenu socialMediaSubMenu = onSocialMedia.getSubMenu();
@@ -30,26 +30,25 @@ public class MenuBarIconOnly extends Div {
         shareSubMenu.addItem("By email");
         shareSubMenu.addItem("Get Link");
 
-        MenuItem move = createItem(menuBar, VaadinIcon.FOLDER, "Move");
+        MenuItem move = createIconItem(menuBar, VaadinIcon.FOLDER, "Move");
         SubMenu moveSubMenu = move.getSubMenu();
         moveSubMenu.addItem("To folder");
         moveSubMenu.addItem("To trash");
 
-        createItem(menuBar, VaadinIcon.COPY, "Duplicate");
+        createIconItem(menuBar, VaadinIcon.COPY, "Duplicate");
         // end::snippet[]
         add(menuBar);
     }
 
-    private MenuItem createItem(HasMenuItems menu, VaadinIcon iconName, String ariaLabel) {
+    // tag::createIcon[]
+    private MenuItem createIconItem(MenuBar menu, VaadinIcon iconName, String ariaLabel) {
         Icon icon = new Icon(iconName);
-
-        MenuItem item = menu.addItem(icon, e -> {
-        });
-
+        MenuItem item = menu.addItem(icon);
         item.getElement().setAttribute("aria-label", ariaLabel);
 
         return item;
     }
+    // end::createIcon[]
 
     public static class Exporter extends DemoExporter<MenuBarIconOnly> { // hidden-source-line
     } // hidden-source-line
