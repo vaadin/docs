@@ -1,5 +1,7 @@
 package com.vaadin.demo.component.menubar;
 
+import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -15,29 +17,31 @@ public class MenuBarBasic extends Div {
     // tag::snippet[]
     MenuBar menuBar = new MenuBar();
     Text selected = new Text("");
-    Div message = new Div(new Text("Selected: "), selected);
+    ComponentEventListener<ClickEvent<MenuItem>> listener = e -> selected.setText(e.getSource().getText());
+    Div message = new Div(new Text("Clicked item: "), selected);
 
-    MenuItem project = menuBar.addItem("Project");
-    MenuItem account = menuBar.addItem("Account");
-    menuBar.addItem("Sign Out", e -> selected.setText("Sign Out"));
+    menuBar.addItem("View", listener);
+    menuBar.addItem("Edit", listener);
 
-    SubMenu projectSubMenu = project.getSubMenu();
-    MenuItem users = projectSubMenu.addItem("Users");
-    MenuItem billing = projectSubMenu.addItem("Billing");
+    MenuItem share = menuBar.addItem("Share");
+    SubMenu shareSubMenu = share.getSubMenu();
+    MenuItem onSocialMedia = shareSubMenu.addItem("On social media");
+    SubMenu socialMediaSubMenu = onSocialMedia.getSubMenu();
+    socialMediaSubMenu.addItem("Facebook", listener);
+    socialMediaSubMenu.addItem("Twitter", listener);
+    socialMediaSubMenu.addItem("Instagram", listener);
+    shareSubMenu.addItem("By email", listener);
+    shareSubMenu.addItem("Get Link", listener);
 
-    SubMenu usersSubMenu = users.getSubMenu();
-    usersSubMenu.addItem("List", e -> selected.setText("List"));
-    usersSubMenu.addItem("Add", e -> selected.setText("Add"));
+    MenuItem move = menuBar.addItem("Move");
+    SubMenu moveSubMenu = move.getSubMenu();
+    moveSubMenu.addItem("To folder", listener);
+    moveSubMenu.addItem("To trash", listener);
 
-    SubMenu billingSubMenu = billing.getSubMenu();
-    billingSubMenu.addItem("Invoices", e -> selected.setText("Invoices"));
-    billingSubMenu.addItem("Balance Events", e -> selected.setText("Balance Events"));
-
-    account.getSubMenu().addItem("Edit Profile", e -> selected.setText("Edit Profile"));
-    account.getSubMenu().addItem("Privacy Settings", e -> selected.setText("Privacy Settings"));
+    menuBar.addItem("Duplicate", listener);
+    // end::snippet[]
 
     add(menuBar, message);
-    // end::snippet[]
   }
 
   public static class Exporter extends DemoExporter<MenuBarBasic> { // hidden-source-line
