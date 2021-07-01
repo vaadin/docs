@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.grid;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.Component;
@@ -31,19 +31,17 @@ public class GridColumnFiltering extends Div {
 
         List<Person> people = DataService.getPeople();
         GridListDataView<Person> dataView = grid.setItems(people);
-        PersonFilter filterGridDataView = new PersonFilter(
-                dataView);
+        PersonFilter personFilter = new PersonFilter(dataView);
 
         grid.getHeaderRows().clear();
         HeaderRow headerRow = grid.appendHeaderRow();
 
         headerRow.getCell(nameColumn).setComponent(
-                createFilterHeader("Name", filterGridDataView::setFullName));
+                createFilterHeader("Name", personFilter::setFullName));
         headerRow.getCell(emailColumn).setComponent(
-                createFilterHeader("Email", filterGridDataView::setEmail));
+                createFilterHeader("Email", personFilter::setEmail));
         headerRow.getCell(professionColumn).setComponent(
-                createFilterHeader("Profession",
-                        filterGridDataView::setProfession));
+                createFilterHeader("Profession", personFilter::setProfession));
         // end::snippet1[]
 
         add(grid);

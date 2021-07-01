@@ -86,7 +86,7 @@ public class GridItemDetailsToggle extends Div {
             setColspan(streetField, 3);
         }
 
-        void setPerson(Person person) {
+        public void setPerson(Person person) {
             emailField.setValue(person.getEmail());
             phoneField.setValue(person.getAddress().getPhone());
             streetField.setValue(person.getAddress().getStreet());
