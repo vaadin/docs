@@ -54,7 +54,7 @@ export class Example extends LitElement {
         @opened-changed=${(e: ContextMenuOpenedChangedEvent) =>
           (this.contextMenuOpened = e.detail.value)}
       >
-        <vaadin-grid height-by-rows .items=${this.gridItems} @click=${this.onClick}>
+        <vaadin-grid all-rows-visible .items=${this.gridItems} @click=${this.onClick}>
           <vaadin-grid-column path="firstName"></vaadin-grid-column>
           <vaadin-grid-column path="lastName"></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
