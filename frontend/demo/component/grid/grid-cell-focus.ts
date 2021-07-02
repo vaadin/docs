@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
@@ -43,6 +44,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid
+        theme="force-focus-outline"
         .items="${this.items}"
         @cell-focus="${(e: GridCellFocusEvent) => {
           const eventContext = this.grid.getEventContext(e);

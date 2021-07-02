@@ -44,9 +44,7 @@ export class Example extends LitElement {
     this.people = people;
   }
 
-  private personCardRenderer: VirtualListRenderer = (root, _, model) => {
-    const person = model.item as Person;
-
+  private personCardRenderer: VirtualListRenderer<Person> = (root, _, { item: person }) => {
     render(
       html`<vaadin-horizontal-layout theme="spacing margin">
         <vaadin-avatar

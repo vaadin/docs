@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.crud;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
@@ -110,5 +110,5 @@ public class CrudToolbar extends Div {
     crud.setToolbar(toolbar);
     // end::snippet[]
   }
-  public static class Exporter extends DemoExporter<CrudToolbar> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CrudToolbar> {} // hidden-source-line
 }

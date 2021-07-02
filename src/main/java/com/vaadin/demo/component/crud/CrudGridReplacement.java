@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.crud;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
@@ -70,5 +70,5 @@ public class CrudGridReplacement extends Div {
       dataProvider.persist(saveEvent.getItem())
     );
   }
-  public static class Exporter extends DemoExporter<CrudGridReplacement> {} // hidden-full-source-line
+  public static class Exporter extends DemoExporter<CrudGridReplacement> {} // hidden-source-line
 }
