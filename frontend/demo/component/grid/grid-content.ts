@@ -1,5 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/flow-frontend/vaadin-grid-flow-selection-column.js'; // hidden-source-line (Flow specific selection column)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -8,7 +10,6 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-grid/vaadin-grid-selection-column';
 import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -39,26 +40,21 @@ export class Example extends LitElement {
         <vaadin-grid-selection-column></vaadin-grid-selection-column>
         <vaadin-grid-column
           header="Employee"
-          .renderer="${this.empolyeeRenderer}"
+          .renderer="${this.employeeRenderer}"
           flex-grow="0"
           auto-width
         ></vaadin-grid-column>
-        <vaadin-grid-column path="profession" resizable auto-width></vaadin-grid-column>
+        <vaadin-grid-column path="profession" auto-width></vaadin-grid-column>
         <vaadin-grid-column
           header="Status"
           .renderer="${this.statusRenderer}"
-          auto-width
-        ></vaadin-grid-column>
-        <vaadin-grid-column
-          header="Manage"
-          .renderer="${this.manageRenderer}"
           auto-width
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
 
-  private empolyeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+  private employeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
     const person = model.item;
     render(
       html`
@@ -89,20 +85,6 @@ export class Example extends LitElement {
         <span theme="badge ${person.status === 'Available' ? 'success' : 'error'}"
           >${person.status}</span
         >
-      `,
-      root
-    );
-  };
-
-  private manageRenderer = (root: HTMLElement) => {
-    render(
-      html`
-        <vaadin-button theme="tertiary icon">
-          <iron-icon icon="vaadin:pencil"></iron-icon>
-        </vaadin-button>
-        <vaadin-button theme="error tertiary icon">
-          <iron-icon icon="vaadin:trash"></iron-icon>
-        </vaadin-button>
       `,
       root
     );

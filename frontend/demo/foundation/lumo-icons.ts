@@ -1,4 +1,4 @@
-import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import './lumo-tokens';
 import './icons-preview';
 
