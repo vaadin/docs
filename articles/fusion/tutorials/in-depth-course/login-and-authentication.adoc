@@ -44,17 +44,19 @@ Create a new package `com.example.application.security`. In the new package, cre
 ----
 package com.example.application.security;
 
+import com.vaadin.flow.spring.security.VaadinWebSecurityConfigurerAdapter;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
 
 }
+
 ----
 
 Override the `HttpSecurity` configuration method.
@@ -64,12 +66,11 @@ Override the `HttpSecurity` configuration method.
 ----
 @Override
 protected void configure(HttpSecurity http) throws Exception {
- http.formLogin().loginPage("/login");
- http.csrf().ignoringAntMatchers("/login", "/connect/**");
+  super.configure(http);
+  setLoginView(http, "/login");
 }
 ----
 
-The configuration disables cross-site request forgery protection for Vaadin endpoints because Vaadin handles checking internally.
 The configuration sets up form-based login for the `/login` path.
 
 Lastly, create an in-memory test user with the username `user` and password `userpass`:
@@ -79,7 +80,7 @@ Lastly, create an in-memory test user with the username `user` and password `use
 ----
 @Override
 protected void configure(AuthenticationManagerBuilder auth) throws Exception {
- auth.inMemoryAuthentication().withUser("user").password("{noop}userpass").roles("USER");
+  auth.inMemoryAuthentication().withUser("user").password("{noop}userpass").roles("USER");
 }
 ----
 
@@ -199,6 +200,7 @@ export class LoginView extends View {
  connectedCallback() {
    super.connectedCallback();
    this.classList.add('flex', 'flex-col', 'items-center', 'justify-center');
+   uiStore.setLoggedIn(false);
  }
 
  render() {
@@ -226,8 +228,9 @@ export class LoginView extends View {
 The login view follows the same pattern as the two views you already have.
 It has a `@state` for handling errors.
 This state is only relevant for the Vaadin Login Form component, so it's not worth putting it in a MobX store, the component state is sufficient.
+It sets the `loggedIn` state to `false` any time it's shown.
 
-The Vaadin login form component is bound to the `login()` method, which delegates to the `login` action you just created.
+The Vaadin login form component is bound to the `login()` method, which delegates to the `login` action in the `uiStore`.
 If login succeeds, the store updates the login state.
 If not, set the `error` property and the login form shows an error message.
 
@@ -311,14 +314,14 @@ Lastly, add an `autorun` that observes the `uiStore.loggedIn` state and redirect
 [source,typescript]
 ----
 autorun(() => {
- if (uiStore.loggedIn) {
-   Router.go(sessionStorage.getItem("login-redirect-path") || "/");
- } else {
-   if (location.pathname !== "/login") {
-     sessionStorage.setItem("login-redirect-path", location.pathname);
-   }
-   Router.go("/login");
- }
+  if (uiStore.loggedIn) {
+    Router.go(sessionStorage.getItem('login-redirect-path') || '/');
+  } else {
+    if (location.pathname !== '/login') {
+      sessionStorage.setItem('login-redirect-path', location.pathname);
+      Router.go('/login');
+    }
+  }
 });
 ----
 
