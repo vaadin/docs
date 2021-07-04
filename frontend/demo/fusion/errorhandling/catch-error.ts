@@ -8,7 +8,7 @@ export async function callEndpoint() {
   } catch (error) {
     console.warn(error.message); // "Not implemented"
     if (error instanceof EndpointError) {
-      console.warn(error.type); // "com.vaadin.flow.server.connect.exception.EndpointException"
+      console.warn(error.type); // "com.vaadin.fusion.exception.EndpointException"
     }
   }
 }

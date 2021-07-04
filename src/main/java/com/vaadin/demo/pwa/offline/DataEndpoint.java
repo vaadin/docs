@@ -1,7 +1,7 @@
 package com.vaadin.demo.pwa.offline;
 
-import com.vaadin.flow.server.connect.Endpoint;
-import com.vaadin.flow.server.connect.exception.EndpointException;
+import com.vaadin.fusion.Endpoint;
+import com.vaadin.fusion.exception.EndpointException;
 
 @Endpoint
 public class DataEndpoint {

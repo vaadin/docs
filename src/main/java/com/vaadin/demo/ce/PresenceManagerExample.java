@@ -4,8 +4,6 @@ import com.vaadin.collaborationengine.PresenceManager;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
@@ -20,21 +18,16 @@ public class PresenceManagerExample extends VerticalLayout {
 
         UserInfo localUser = new UserInfo("john");
 
-        PresenceManager manager =
-            new PresenceManager(users, localUser, "my-topic"); // <1>
+        PresenceManager manager = new PresenceManager(users, localUser,
+                "my-topic"); // <1>
 
-        manager.setAutoPresence(true); // <2>
+        manager.markAsPresent(true); // <2>
 
         manager.setNewUserHandler(newUserInfo -> { // <3>
             Component card = createUserCard(newUserInfo);
             users.add(card);
             return () -> users.remove(card); // <4>
         });
-
-        add(new Button("Show active users", event -> {
-            Notification.show("Active users: " +
-                    manager.getUsers().count()); // <5>
-        }));
         // end::snippet[]
     }
 

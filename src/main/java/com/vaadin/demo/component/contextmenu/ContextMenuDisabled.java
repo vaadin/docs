@@ -16,7 +16,7 @@ public class ContextMenuDisabled extends Div {
 
   public ContextMenuDisabled() {
     Grid<File> grid = new Grid();
-    grid.setHeightByRows(true);
+    grid.setAllRowsVisible(true);
     grid.setItems(getFiles());
 
     grid.addColumn(File::getName)

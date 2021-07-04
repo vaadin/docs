@@ -15,12 +15,12 @@ public class IconsInside extends Div {
     public IconsInside() {
         // tag::snippet[]
         TextField field = new TextField("Street Address");
-        field.setPrefixComponent(new Icon("vaadin:map-marker"));
-        field.setSuffixComponent(new Icon("vaadin:building"));
+        field.setPrefixComponent(new Icon("vaadin", "map-marker"));
+        field.setSuffixComponent(new Icon("vaadin", "building"));
 
         // Wrap the icon inside a composition
         HorizontalLayout helper = new HorizontalLayout();
-        helper.add(new Icon("vaadin:info-circle-o"));
+        helper.add(new Icon("vaadin", "info-circle-o"));
         helper.add(new Label("Here be help"));
         field.setHelperComponent(helper);
 
@@ -29,5 +29,5 @@ public class IconsInside extends Div {
     }
 
     public static class IconsInsideExporter extends DemoExporter<IconsInside> { // hidden-source-line
-    } // hidden-source-line    
+    } // hidden-source-line
 }
