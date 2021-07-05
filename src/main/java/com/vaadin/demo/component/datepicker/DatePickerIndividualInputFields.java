@@ -4,6 +4,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
 import java.time.format.TextStyle;
@@ -31,7 +32,7 @@ public class DatePickerIndividualInputFields extends Div {
         year.setItems(IntStream.range(LocalDate.now().getYear() - 99, LocalDate.now().getYear() + 1).boxed());
         year.setWidth(6, Unit.EM);
 
-        add(day, month, year);
+        add(new HorizontalLayout(day, month, year));
         // end::snippet[]
     }
     public static class Exporter extends DemoExporter<DatePickerIndividualInputFields> { // hidden-source-line

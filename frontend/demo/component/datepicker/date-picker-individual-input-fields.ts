@@ -38,7 +38,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-horizontal-layout theme="spacing-s">
+      <vaadin-horizontal-layout theme="spacing">
         <vaadin-combo-box label="Day" .items="${this.days}" style="width: 5em;"></vaadin-combo-box>
         <vaadin-combo-box
           label="Month"
