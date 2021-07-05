@@ -1,16 +1,18 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
 import '@vaadin/vaadin-radio-button/vaadin-radio-button';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-default-value')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {

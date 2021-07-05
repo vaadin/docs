@@ -1,17 +1,19 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { customElement, html, LitElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-icons/vaadin-icons';
-import '@polymer/iron-icon/iron-icon';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {

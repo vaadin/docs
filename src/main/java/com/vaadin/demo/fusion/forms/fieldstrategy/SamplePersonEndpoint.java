@@ -1,6 +1,6 @@
 package com.vaadin.demo.fusion.forms.fieldstrategy;
 
-import com.vaadin.flow.server.connect.Endpoint;
+import com.vaadin.fusion.Endpoint;
 
 @Endpoint
 public class SamplePersonEndpoint {

@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-messages/vaadin-message-list';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -10,13 +11,14 @@ import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-source-line
 
 @customElement('message-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: MessageListItem[] = [];
 
   async firstUpdated() {
@@ -30,8 +32,7 @@ export class Example extends LitElement {
         userColorIndex: 1,
       },
       {
-        text:
-          'Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.',
+        text: 'Using your talent, hobby or profession in a way that makes you contribute with something good to this world is truly the way to go.',
         time: 'right now',
         userName: 'Linsey Listy',
         userColorIndex: 2,

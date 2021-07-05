@@ -1,8 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
-import '@vaadin/vaadin-icons/vaadin-icons';
 
 @customElement('tabs-icons-vertical')
 export class Example extends LitElement {
@@ -11,16 +13,16 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-tabs orientation="vertical">
         <vaadin-tab>
-          <iron-icon icon="vaadin:user"></iron-icon>
-          <span>Tab one</span>
+          <vaadin-icon icon="vaadin:user"></vaadin-icon>
+          <span>Profile</span>
         </vaadin-tab>
         <vaadin-tab>
-          <iron-icon icon="vaadin:cog"></iron-icon>
-          <span>Tab two</span>
+          <vaadin-icon icon="vaadin:cog"></vaadin-icon>
+          <span>Settings</span>
         </vaadin-tab>
         <vaadin-tab>
-          <iron-icon icon="vaadin:bell"></iron-icon>
-          <span>Tab three</span>
+          <vaadin-icon icon="vaadin:bell"></vaadin-icon>
+          <span>Notifications</span>
         </vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->

@@ -32,7 +32,7 @@ Click the "Expand code" button to view a complete reference `pom.xml` file.
 
 . Update Spring Version (Spring-based projects only).
 +
-Vaadin is compatible with Spring 5.2.0 or newer, and Spring Boot 2.2.0 or newer.
+Vaadin is compatible with Spring 5.3.0 or newer, and Spring Boot 2.4.0 or newer.
 If your application uses an older version of Spring, update it to a compatible version:
 +
 [source,xml]
@@ -42,9 +42,149 @@ include::{root}/pom.xml[tag=spring-version, indent=0]
 
 . Run `mvn clean install`
 
+== Changes in Vaadin 21
+
+The following instructions apply when upgrading from a version before Vaadin 21.
+
+=== Fusion Package Renaming
+In order to give Fusion a better identity, we renamed the following Fusion packages:
+1. `com.vaadin.flow.server.connect` to `com.vaadin.fusion`
+2. `com.vaadin.flow.server.frontend.fusion` to `com.vaadin.fusion.frontend`
+3. `com.vaadin.flow.server.startup.fusion` to `com.vaadin.fusion.startup`
+
+=== TypeScript Code Generation Nullability Change
+Previously, all the Java types are generated as required in TypeScript.
+Now it changes so that for any type that is nullable in Java, it is optional in TypeScript, that is, the value could be `undefined`. See https://github.com/vaadin/flow/issues/8849[the GitHub issue].
+
+To upgrade, you can either:
+Update the client-side code to handle undefinable value.
+[source,typescript]
+----
+// The address property is never undefined in Vaadin 20
+person.address.street
+// Use the question mark to deal with undefinable properties in Vaadin 21
+person.address?.street
+
+
+// The list returned from the endpoint is never undefined in Vaadin 20
+const items = await endpoint.list();
+// Use the double question mark to give a default value in Vaadin 21
+const item = (await endpoint.list()) ?? [];
+----
+
+Or use `@Nonnull` annotation on the server-side to keep the same code generation behavior as before.
+
+[source,java]
+----
+public class Person {
+    @Nonnull
+    private Address address;
+}
+----
+
+.`@Nonnull` annotation
+[TIP,role=small]
+You can use any `@Nonnull` annotations available or even your own one.
+Vaadin uses case-insensitive string comparison for checking the annotation.
+
+See <<{articles}/fusion/advanced/endpoints-generator/#type-nullability,Type Nullability>> for more details.
+
+
+=== The Vaadin Web Components No Longer Support <template>
+
+The Vaadin Web Components no longer support `<template>` to render content.
+Please, use renderer functions instead.
+Alternatively, you can use the `@vaadin/vaadin-template-renderer` package which is created to maintain backward compatibility.
+
+==== Installation
+
+Install `vaadin-template-renderer` as follows:
+```
+npm i @vaadin/vaadin-template-renderer --save
+```
+
+Import `vaadin-template-renderer` before any other components:
+
+[source,typescript]
+----
+import '@vaadin/vaadin-template-renderer';
+----
+
+==== Deprecation Warning
+
+By default, `vaadin-template-renderer` shows a deprecation warning when `<template>` is used with a component.
+
+To suppress the warning, add the `suppress-template-warning` attribute to the component:
+
+[source,html]
+----
+<vaadin-combo-box suppress-template-warning>
+    <template>
+        Content
+    </template>
+</vaadin-combo-box>
+----
+
+=== Lit Templates Use Lit 2
+
+Previously, Lit templates were based on LitElement 2.x and lit-html 1.x.
+New Lit 2.0 (which includes LitElement 3.x and lit-html 2.x) is used for Lit templates in the latest Vaadin version.
+Some changes are required to be able to use your existing template with Lit 2.0.
+Please refer to the https://lit.dev/docs/releases/upgrade/#update-packages-and-import-paths[Lit Upgrade Guide] to find all the necessary changes.
+Most of the necessary changes are with imports.
+
+Use the `lit` package.
+For example, change imports of `html` and [classname]#LitElement# from:
+
+[source,typescript]
+----
+import { html, LitElement } from 'lit-element';
+----
+
+to:
+
+[source,typescript]
+----
+import { html, LitElement } from 'lit';
+----
+
+Update decorator imports.
+Decorators have been moved to a separate module.
+For example, change `customElement` and `property` decorator imports from:
+
+[source,typescript]
+----
+import { customElement, property } from 'lit-element';
+----
+
+to:
+
+[source,typescript]
+----
+import { customElement, property } from 'lit/decorators.js';
+----
+
+Update directive imports from:
+
+[source,typescript]
+----
+import { repeat } from 'lit-html/directives/repeat.js';
+----
+
+to:
+
+[source,typescript]
+----
+import { repeat } from 'lit/directives/repeat.js';
+----
+
+Some Lit APIs have been renamed.
+The most noticeable change is that the `@internalProperty` decorator has been renamed to `@state`.
+
+
 == Changes in Vaadin 20
 
-These instructions apply when upgrading from a version before Vaadin 20.
+The following instructions apply when upgrading from a version before Vaadin 20.
 
 === Endpoints Access is Denied by Default
 
@@ -90,7 +230,7 @@ You can update your login view configuration with the `setLoginView()` helper, w
 .`SecurityConfig.java`
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/SecurityConfig.java[tags=login]
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/SecurityConfigDemo.java[tags=login]
 ----
 
 == Changes in Vaadin 19

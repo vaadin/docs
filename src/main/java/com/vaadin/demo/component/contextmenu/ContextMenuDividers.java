@@ -18,7 +18,7 @@ public class ContextMenuDividers extends Div {
 
   public ContextMenuDividers() {
     Grid<Person> grid = new Grid();
-    grid.setHeightByRows(true);
+    grid.setAllRowsVisible(true);
     grid.setItems(people);
 
     grid.addColumn(person -> person.getFirstName())

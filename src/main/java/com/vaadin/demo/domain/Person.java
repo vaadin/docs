@@ -1,6 +1,9 @@
 package com.vaadin.demo.domain;
 
+import java.time.LocalDate;
 import java.util.Date;
+
+import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
 
@@ -8,29 +11,43 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-l
 // tag::snippet[]
 public class Person {
 
+  @Nonnull
   private String firstName;
 
+  @Nonnull
   private String lastName;
 
+  @Nonnull
   private String email;
 
+  @Nonnull
   private Date birthday;
 
+  @Nonnull
   private Integer id;
 
+  @Nonnull
   private boolean subscriber;
 
+  @Nonnull
   private String membership;
 
+  @Nonnull
   private String pictureUrl;
 
+  @Nonnull
   private String profession;
 
+  @Nonnull
   private Address address;
 
   private Integer managerId;
 
+  @Nonnull
   private boolean manager;
+
+  @Nonnull
+  private String status;
 
   public String getFirstName() {
     return firstName;
@@ -147,6 +164,14 @@ public class Person {
 
   public void setManager(boolean manager) {
     this.manager = manager;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
   }
 }
 // end::snippet[]

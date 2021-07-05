@@ -1,24 +1,25 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
-import { customElement, LitElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('grid-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  // tag::snippet[]
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {
@@ -29,30 +30,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid .items="${this.items}">
-        <vaadin-grid-column
-          header="Image"
-          .renderer="${this.avatarRenderer}"
-          flex-grow="0"
-          auto-width
-        ></vaadin-grid-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
+        <vaadin-grid-column path="profession"></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
-
-  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    render(
-      html`
-        <img
-          style="height: var(--lumo-size-m)"
-          src="${(model.item as Person).pictureUrl}"
-          alt="User avatar"
-        />
-      `,
-      root
-    );
-  };
+  // end::snippet[]
 }
-// end::snippet[]

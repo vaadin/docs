@@ -1,16 +1,19 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vaadin-lumo-styles/icons';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators';
+import { applyTheme } from 'Frontend/generated/theme';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { html, LitElement, customElement } from 'lit-element';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-icons')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {
@@ -19,30 +22,30 @@ export class Example extends LitElement {
       <vaadin-vertical-layout theme="spacing">
         <vaadin-horizontal-layout theme="spacing">
           <span theme="badge">
-            <iron-icon icon="lumo:clock"></iron-icon>
+            <vaadin-icon icon="lumo:clock"></vaadin-icon>
             <span>Pending</span>
           </span>
           <span theme="badge success">
-            <iron-icon icon="lumo:checkmark"></iron-icon>
+            <vaadin-icon icon="lumo:checkmark"></vaadin-icon>
             <span>Confirmed</span>
           </span>
           <span theme="badge error">
-            <iron-icon icon="lumo:error"></iron-icon>
+            <vaadin-icon icon="lumo:error"></vaadin-icon>
             <span>Denied</span>
           </span>
         </vaadin-horizontal-layout>
         <vaadin-horizontal-layout theme="spacing">
           <span theme="badge">
             <span>Pending</span>
-            <iron-icon icon="lumo:clock"></iron-icon>
+            <vaadin-icon icon="lumo:clock"></vaadin-icon>
           </span>
           <span theme="badge success">
             <span>Confirmed</span>
-            <iron-icon icon="lumo:checkmark"></iron-icon>
+            <vaadin-icon icon="lumo:checkmark"></vaadin-icon>
           </span>
           <span theme="badge error">
             <span>Denied</span>
-            <iron-icon icon="lumo:error"></iron-icon>
+            <vaadin-icon icon="lumo:error"></vaadin-icon>
           </span>
         </vaadin-horizontal-layout>
       </vaadin-vertical-layout>
