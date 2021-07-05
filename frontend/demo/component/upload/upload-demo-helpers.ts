@@ -1,4 +1,4 @@
-import type { UploadFile, UploadResponse } from '@vaadin/vaadin-upload';
+import type { UploadFile, UploadResponseEvent } from '@vaadin/vaadin-upload';
 
 /*
  * Mock XMLHttpRequest (see http://www.w3.org/TR/XMLHttpRequest)
@@ -405,7 +405,8 @@ export class MockHttpRequest {
   // Based on parseUri by Steven Levithan <stevenlevithan.com>
   // See http://blog.stevenlevithan.com/archives/parseuri
   parseUri(str: string) {
-    const pattern = /^(?:([^:/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:/?#]*)(?::(\d*))?))?((((?:[^?#/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
+    const pattern =
+      /^(?:([^:/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:/?#]*)(?::(\d*))?))?((((?:[^?#/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
     const key = [
       'source',
       'protocol',
@@ -562,12 +563,12 @@ export function createFakeUploadFiles(
   return options.map((o) => createFakeUploadFile(o));
 }
 
-export function fakeErrorResponse(event: UploadResponse) {
+export function fakeErrorResponse(event: UploadResponseEvent) {
   (event.detail.xhr.status as any) = 500;
 }
 
-export function fakeErrorResponseWrapper(callback: (event: UploadResponse) => void) {
-  return (event: UploadResponse) => {
+export function fakeErrorResponseWrapper(callback: (event: UploadResponseEvent) => void) {
+  return (event: UploadResponseEvent) => {
     fakeErrorResponse(event);
     callback(event);
   };

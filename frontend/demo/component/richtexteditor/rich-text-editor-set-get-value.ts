@@ -1,6 +1,7 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty, query } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 
@@ -10,13 +11,14 @@ import { TextAreaElement } from '@vaadin/vaadin-text-field/vaadin-text-area';
 
 @customElement('rich-text-editor-set-get-value')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private htmlValue = '';
 
   @query('vaadin-rich-text-editor')

@@ -1,31 +1,37 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
-import { customElement, LitElement, internalProperty } from 'lit-element';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
-import { GridColumnElement, GridElement, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type {
+  GridColumnElement,
+  GridElement,
+  GridItemModel,
+} from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { guard } from 'lit-html/directives/guard';
 
 // tag::snippet[]
 @customElement('grid-item-details-toggle')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
-  @internalProperty()
-  private detailsOpenedItem: any[] = [];
+  @state()
+  private detailsOpenedItem: Array<Person | null> = [];
 
   async firstUpdated() {
     const people = (await getPeople()).people.map((person) => ({
@@ -40,11 +46,11 @@ export class Example extends LitElement {
       <vaadin-grid
         theme="row-stripes"
         .items="${this.items}"
-        .detailsOpenedItems="${this.detailsOpenedItem}"
+        .detailsOpenedItems="${this.detailsOpenedItem as any}"
         .rowDetailsRenderer="${guard(
           [],
-          () => (root: HTMLElement, _: GridElement, model: GridItemModel) => {
-            const person = model.item as Person;
+          () => (root: HTMLElement, _: GridElement, model: GridItemModel<Person>) => {
+            const person = model.item;
 
             render(
               html`<vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">
@@ -92,8 +98,8 @@ export class Example extends LitElement {
         <vaadin-grid-column
           .renderer="${guard(
             [],
-            () => (root: HTMLElement, _: GridColumnElement, model: GridItemModel) => {
-              const person = model.item as Person;
+            () => (root: HTMLElement, _: GridColumnElement, model: GridItemModel<Person>) => {
+              const person = model.item;
               render(
                 html`<vaadin-button
                   theme="tertiary"

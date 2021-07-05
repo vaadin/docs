@@ -1,7 +1,9 @@
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-icons/vaadin-icons';
 import { applyTheme } from 'Frontend/generated/theme';
-import { css, customElement, html, LitElement, property } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 
 @customElement('example-indicator')
 export class ExampleIndicator extends LitElement {
@@ -23,9 +25,9 @@ export class ExampleIndicator extends LitElement {
         font-size: var(--lumo-font-size-xxs);
       }
 
-      .icon iron-icon {
-        --iron-icon-width: var(--lumo-font-size-xxs);
-        --iron-icon-height: var(--lumo-font-size-xxs);
+      .icon vaadin-icon {
+        --vaadin-icon-width: var(--lumo-font-size-xxs);
+        --vaadin-icon-height: var(--lumo-font-size-xxs);
       }
 
       @media (min-width: 1024px) {
@@ -41,9 +43,9 @@ export class ExampleIndicator extends LitElement {
           font-size: var(--lumo-font-size-m);
         }
 
-        .icon iron-icon {
-          --iron-icon-width: var(--lumo-font-size-xs);
-          --iron-icon-height: var(--lumo-font-size-xs);
+        .icon vaadin-icon {
+          --vaadin-icon-width: var(--lumo-font-size-xs);
+          --vaadin-icon-height: var(--lumo-font-size-xs);
         }
       }
     `;
@@ -58,10 +60,11 @@ export class ExampleIndicator extends LitElement {
   @property()
   public change = 0;
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {
@@ -88,7 +91,7 @@ export class ExampleIndicator extends LitElement {
         <div class="title">${this.title}</div>
         <div class="current">${this.current}</div>
         <span class="icon" theme="badge ${theme}">
-          <iron-icon icon="vaadin:${icon}"></iron-icon>
+          <vaadin-icon icon="vaadin:${icon}"></vaadin-icon>
           <span>${sign}${Math.abs(this.change).toFixed(2)}%</span>
         </span>
       </vaadin-vertical-layout>

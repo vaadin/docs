@@ -1,4 +1,5 @@
-import { customElement, LitElement, html, css, unsafeCSS, property } from 'lit-element';
+import { css, html, LitElement, unsafeCSS } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import { LoginI18n } from '@vaadin/vaadin-login';
@@ -6,10 +7,11 @@ import * as img from '../../../../src/main/resources/images/starry-sky.png';
 
 @customElement('login-overlay-mockup')
 export class LoginOverlayMockupElement extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   static get styles() {

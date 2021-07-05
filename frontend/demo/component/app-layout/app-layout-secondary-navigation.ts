@@ -1,41 +1,42 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement, customElement, css } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-app-layout/vaadin-app-layout';
 import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
-import '@vaadin/vaadin-tabs/vaadin-tabs';
-import '@vaadin/vaadin-tabs/vaadin-tab';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/vaadin-tabs/vaadin-tab';
+import '@vaadin/vaadin-tabs/vaadin-tabs';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-secondary-navigation')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   static get styles() {
     return css`
-      h1,
-      h2 {
-        margin: 0 var(--lumo-space-s);
+      h1 {
         font-size: var(--lumo-font-size-l);
+        line-height: var(--lumo-size-l);
+        margin: 0 var(--lumo-space-m);
       }
 
       h2 {
-        align-self: center;
+        font-size: var(--lumo-font-size-l);
+        margin: 0;
       }
 
-      iron-icon {
-        padding: 0.25rem;
-        box-sizing: border-box !important;
-        margin: 0 4px;
-        width: var(--lumo-icon-size-m);
-        height: var(--lumo-icon-size-m);
+      vaadin-icon {
+        box-sizing: border-box;
+        margin-inline-end: var(--lumo-space-m);
+        padding: var(--lumo-space-xs);
       }
     `;
   }
@@ -44,73 +45,75 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-app-layout primary-section="drawer">
+        <h1 slot="drawer">MyApp</h1>
+        <vaadin-tabs slot="drawer" selected="1" orientation="vertical">
+          <vaadin-tab>
+            <a tabindex="-1">
+              <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
+              <span>Dashboard</span>
+            </a>
+          </vaadin-tab>
+          <vaadin-tab>
+            <a tabindex="-1">
+              <vaadin-icon icon="vaadin:cart"></vaadin-icon>
+              <span>Orders</span>
+            </a>
+          </vaadin-tab>
+          <!-- end::snippet[] -->
+          <vaadin-tab>
+            <a tabindex="-1">
+              <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
+              <span>Customers</span>
+            </a>
+          </vaadin-tab>
+          <vaadin-tab>
+            <a tabindex="-1">
+              <vaadin-icon icon="vaadin:package"></vaadin-icon>
+              <span>Products</span>
+            </a>
+          </vaadin-tab>
+          <vaadin-tab>
+            <a tabindex="-1">
+              <vaadin-icon icon="vaadin:records"></vaadin-icon>
+              <span>Documents</span>
+            </a>
+          </vaadin-tab>
+          <vaadin-tab>
+            <a tabindex="-1">
+              <vaadin-icon icon="vaadin:list"></vaadin-icon>
+              <span>Tasks</span>
+            </a>
+          </vaadin-tab>
+          <vaadin-tab>
+            <a tabindex="-1">
+              <vaadin-icon icon="vaadin:chart"></vaadin-icon>
+              <span>Analytics</span>
+            </a>
+          </vaadin-tab>
+          <!-- tag::snippet[] -->
+        </vaadin-tabs>
         <vaadin-vertical-layout slot="navbar">
-          <vaadin-horizontal-layout>
+          <vaadin-horizontal-layout style="align-items: center;">
             <vaadin-drawer-toggle></vaadin-drawer-toggle>
             <h2>Orders</h2>
           </vaadin-horizontal-layout>
           <vaadin-tabs>
             <vaadin-tab>
-              <a tabindex="-1" target="_self">All</a>
+              <a tabindex="-1">All</a>
             </vaadin-tab>
             <vaadin-tab>
-              <a tabindex="-1" target="_self">Open</a>
+              <a tabindex="-1">Open</a>
+            </vaadin-tab>
+            <!-- end::snippet[] -->
+            <vaadin-tab>
+              <a tabindex="-1">Completed</a>
             </vaadin-tab>
             <vaadin-tab>
-              <a tabindex="-1" target="_self">Completed</a>
+              <a tabindex="-1">Cancelled</a>
             </vaadin-tab>
-            <vaadin-tab>
-              <a tabindex="-1" target="_self">Cancelled</a>
-            </vaadin-tab>
+            <!-- tag::snippet[] -->
           </vaadin-tabs>
         </vaadin-vertical-layout>
-
-        <h1 slot="drawer">MyApp</h1>
-
-        <vaadin-tabs slot="drawer" selected="1" orientation="vertical">
-          <vaadin-tab>
-            <a tabindex="-1" target="_self">
-              <iron-icon icon="vaadin:dashboard"></iron-icon>
-              Dashboards
-            </a>
-          </vaadin-tab>
-          <vaadin-tab>
-            <a tabindex="-1" target="_self">
-              <iron-icon icon="vaadin:cart"></iron-icon>
-              Orders
-            </a>
-          </vaadin-tab>
-          <vaadin-tab>
-            <a tabindex="-1" target="_self">
-              <iron-icon icon="vaadin:user-heart"></iron-icon>
-              Customers
-            </a>
-          </vaadin-tab>
-          <vaadin-tab>
-            <a tabindex="-1" target="_self">
-              <iron-icon icon="vaadin:package"></iron-icon>
-              Products
-            </a>
-          </vaadin-tab>
-          <vaadin-tab>
-            <a tabindex="-1" target="_self">
-              <iron-icon icon="vaadin:records"></iron-icon>
-              Documents
-            </a>
-          </vaadin-tab>
-          <vaadin-tab>
-            <a tabindex="-1" target="_self">
-              <iron-icon icon="vaadin:list"></iron-icon>
-              Tasks
-            </a>
-          </vaadin-tab>
-          <vaadin-tab>
-            <a tabindex="-1" target="_self">
-              <iron-icon icon="vaadin:chart"></iron-icon>
-              Analytics
-            </a>
-          </vaadin-tab>
-        </vaadin-tabs>
       </vaadin-app-layout>
       <!-- end::snippet[] -->
     `;

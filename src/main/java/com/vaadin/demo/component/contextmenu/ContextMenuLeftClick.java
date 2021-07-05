@@ -17,7 +17,7 @@ public class ContextMenuLeftClick extends Div {
 
   public ContextMenuLeftClick() {
     Grid<Person> grid = new Grid();
-    grid.setHeightByRows(true);
+    grid.setAllRowsVisible(true);
     grid.setItems(people);
 
     grid.addColumn(person -> person.getFirstName())
