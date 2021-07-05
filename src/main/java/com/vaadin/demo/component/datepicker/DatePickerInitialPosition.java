@@ -11,16 +11,13 @@ import java.time.temporal.TemporalAdjusters;
 @Route("date-picker-initial-position")
 public class DatePickerInitialPosition extends Div {
 
-  public DatePickerInitialPosition() {
-    // tag::snippet[]
-    DatePicker datePicker = new DatePicker("Q4 deadline");
-    datePicker.setInitialPosition(getLastDayOfYear());
-    // end::snippet[]
-    add(datePicker);
-  }
-
-  private LocalDate getLastDayOfYear() {
-    return LocalDate.now().with(TemporalAdjusters.lastDayOfYear());
-  }
-  public static class Exporter extends DemoExporter<DatePickerInitialPosition> {} // hidden-source-line
+    public DatePickerInitialPosition() {
+        DatePicker datePicker = new DatePicker("Q4 deadline");
+        // tag::snippet[]
+        datePicker.setInitialPosition(LocalDate.now().with(TemporalAdjusters.lastDayOfYear()));
+        // end::snippet[]
+        add(datePicker);
+    }
+    public static class Exporter extends DemoExporter<DatePickerInitialPosition> { // hidden-source-line
+    } // hidden-source-line
 }

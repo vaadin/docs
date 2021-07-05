@@ -10,14 +10,15 @@ import java.util.Locale;
 @Route("date-picker-date-format-indicator")
 public class DatePickerDateFormatIndicator extends Div {
 
-  public DatePickerDateFormatIndicator() {
-    // tag::snippet[]
-    DatePicker datePicker = new DatePicker("Start date");
-    datePicker.setPlaceholder("DD/MM/YYYY");
-    datePicker.setHelperText("Format: DD/MM/YYYY");
-    datePicker.setLocale(Locale.UK);
-    // end::snippet[]
-    add(datePicker);
-  }
-  public static class Exporter extends DemoExporter<DatePickerDateFormatIndicator> {} // hidden-source-line
+    public DatePickerDateFormatIndicator() {
+        DatePicker datePicker = new DatePicker("Start date");
+        datePicker.setLocale(new Locale("fi", "FI"));
+        // tag::snippet[]
+        datePicker.setPlaceholder("DD.MM.YYYY");
+        datePicker.setHelperText("Format: DD.MM.YYYY");
+        // end::snippet[]
+        add(datePicker);
+    }
+    public static class Exporter extends DemoExporter<DatePickerDateFormatIndicator> { // hidden-source-line
+    } // hidden-source-line
 }

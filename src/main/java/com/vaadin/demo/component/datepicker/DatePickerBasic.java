@@ -14,5 +14,6 @@ public class DatePickerBasic extends Div {
     add(datePicker);
     // end::snippet[]
   }
-  public static class Exporter extends DemoExporter<DatePickerBasic> {} // hidden-source-line
+  public static class Exporter extends DemoExporter<DatePickerBasic> { // hidden-source-line
+  } // hidden-source-line
 }

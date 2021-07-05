@@ -7,28 +7,25 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 
-import java.time.DayOfWeek;
-
 @Route("date-picker-custom-validation")
 public class DatePickerCustomValidation extends Div {
 
-  public DatePickerCustomValidation() {
-    DatePicker datePicker = new DatePicker("Meeting date");
-    datePicker.setHelperText("Mondays-Fridays only");
+    public DatePickerCustomValidation() {
+        DatePicker datePicker = new DatePicker("Meeting date");
+        datePicker.setHelperText("Mondays – Fridays only");
+        add(datePicker);
 
-    Binder<Appointment> binder = new Binder();
-    Appointment appointment = new Appointment();
-    // tag::snippet[]
-    binder.forField(datePicker)
-      .asRequired("Pick a meeting date")
-      .withValidator(localDate ->
-        localDate.getDayOfWeek().equals(DayOfWeek.SATURDAY) ||
-        localDate.getDayOfWeek().equals(DayOfWeek.SUNDAY),
-        "Please select a weekday"
-      )
-      .bind(Appointment::getStartDate, Appointment::setStartDate);
-    // end::snippet[]
-    add(datePicker);
-  }
-  public static class Exporter extends DemoExporter<DatePickerCustomValidation> {} // hidden-source-line
+        // tag::snippet[]
+        Binder<Appointment> binder = new Binder<>(Appointment.class);
+        binder.forField(datePicker)
+                .withValidator(localDate -> {
+                    int dayOfWeek = localDate.getDayOfWeek().getValue();
+                    boolean validWeekDay = dayOfWeek >= 1 && dayOfWeek <= 5;
+                    return validWeekDay;
+                }, "The selected day of week is not available")
+                .bind(Appointment::getStartDate, Appointment::setStartDate);
+        // end::snippet[]
+    }
+    public static class Exporter extends DemoExporter<DatePickerCustomValidation> { // hidden-source-line
+    } // hidden-source-line
 }

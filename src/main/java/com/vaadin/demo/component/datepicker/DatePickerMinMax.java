@@ -10,16 +10,15 @@ import java.time.LocalDate;
 @Route("date-picker-min-max")
 public class DatePickerMinMax extends Div {
 
-  public DatePickerMinMax() {
-    LocalDate now = LocalDate.now();
-
-    DatePicker datePicker = new DatePicker("Appointment date");
-    // tag::snippet[]
-    datePicker.setMin(now);
-    datePicker.setMax(now.plusDays(60));
-    // end::snippet[]
-    datePicker.setHelperText("Must be within 60 days from today");
-    add(datePicker);
-  }
-  public static class Exporter extends DemoExporter<DatePickerMinMax> {} // hidden-source-line
+    public DatePickerMinMax() {
+        DatePicker datePicker = new DatePicker("Appointment date");
+        // tag::snippet[]
+        datePicker.setMin(LocalDate.now());
+        datePicker.setMax(LocalDate.now().plusDays(60));
+        // end::snippet[]
+        datePicker.setHelperText("Must be within 60 days from today");
+        add(datePicker);
+    }
+    public static class Exporter extends DemoExporter<DatePickerMinMax> { // hidden-source-line
+    } // hidden-source-line
 }

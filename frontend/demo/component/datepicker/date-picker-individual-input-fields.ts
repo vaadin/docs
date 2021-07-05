@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
 import { html, LitElement, customElement } from 'lit-element';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
