@@ -22,14 +22,14 @@ public class NotificationBasic extends Div {
 
     Div notificationText = new Div(new Text("Financial report generated"));
 
-    Button notificationButton = new Button(new Icon("lumo", "cross"));
-    notificationButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
-    notificationButton.getElement().setAttribute("aria-label", "Close");
-    notificationButton.addClickListener(event -> {
+    Button closeButton = new Button(new Icon("lumo", "cross"));
+    closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
+    closeButton.getElement().setAttribute("aria-label", "Close");
+    closeButton.addClickListener(event -> {
       notification.setOpened(false);
     });
 
-    HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, notificationButton);
+    HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, closeButton);
     notification.add(notificationLayout);
     // end::snippet[]
 
