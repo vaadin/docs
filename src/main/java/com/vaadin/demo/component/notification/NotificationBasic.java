@@ -3,9 +3,7 @@ package com.vaadin.demo.component.notification;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -16,22 +14,10 @@ public class NotificationBasic extends Div {
     // tag::snippet[]
     Notification notification = new Notification();
     notification.setPosition(Notification.Position.MIDDLE);
-
-    Div notificationText = new Div(new Text("Financial report generated"));
-
-    Button notificationButton = new Button(new Icon("lumo", "cross"));
-    notificationButton.addThemeNames("icon", "tertiary-inline");
-    notificationButton.getElement().setAttribute("aria-label", "Close");
-    notificationButton.addClickListener(event -> {
-      notification.setOpened(false);
-    });
-
-    HorizontalLayout notificationLayout = new HorizontalLayout(
-      notificationText,
-      notificationButton
+    notification.add(
+      new Div(new Text("Content")),
+      new Button("Click me!")
     );
-    notificationLayout.setSpacing(true);
-    notification.add(notificationLayout);
 
     Button button = new Button("Try it");
     button.addClickListener(event -> {

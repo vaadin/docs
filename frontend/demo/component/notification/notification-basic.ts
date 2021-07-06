@@ -4,11 +4,8 @@ import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer'; // hidde
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators';
 import { guard } from 'lit/directives/guard';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-basic')
@@ -36,20 +33,13 @@ export class Example extends LitElement {
       <vaadin-notification
         position="middle"
         .opened="${this.notificationOpened}"
+        duration="1000000"
         @opened-changed="${(e: any) => (this.notificationOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <vaadin-horizontal-layout theme="spacing">
-                <div>Financial report generated</div>
-                <vaadin-button
-                  theme="icon tertiary-inline"
-                  @click="${() => (this.notificationOpened = false)}"
-                  aria-label="Close"
-                >
-                  <vaadin-icon icon="lumo:cross"></vaadin-icon>
-                </vaadin-button>
-              </vaadin-horizontal-layout>
+              <div>Content</div>
+              <vaadin-button>Click me!</vaadin-button>
             `,
             root
           );
