@@ -11,18 +11,18 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("notification-success")
-public class NotificationSuccess extends Div {
+@Route("notification-contrast")
+public class NotificationContrast extends Div {
 
-  public NotificationSuccess() {
+  public NotificationContrast() {
     // tag::snippet[]
     Notification notification = new Notification();
     notification.setPosition(Notification.Position.MIDDLE);
     notification.setDuration(5000);
-    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+    notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
     // end::snippet[]
 
-    Div notificationText = new Div(new Text("Application submitted!"));
+    Div notificationText = new Div(new Text("5 tasks deleted"));
 
     Button closeButton = new Button(new Icon("lumo", "cross"));
     closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
@@ -46,6 +46,6 @@ public class NotificationSuccess extends Div {
     add(button, notification);
   }
 
-  public static class Exporter extends DemoExporter<NotificationSuccess> { // hidden-source-line
+  public static class Exporter extends DemoExporter<NotificationContrast> { // hidden-source-line
   } // hidden-source-line
 }

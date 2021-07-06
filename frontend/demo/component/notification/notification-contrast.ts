@@ -1,16 +1,19 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement, render } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators';
 import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import { NotificationOpenedChangedEvent } from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-contrast')
 export class Example extends LitElement {
   @state()
-  private notificationOpen = false;
+  private notificationOpened = false;
 
   protected createRenderRoot() {
     const root = super.createRenderRoot();
@@ -22,8 +25,8 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-button
-        @click="${() => (this.notificationOpen = true)}"
-        .disabled="${this.notificationOpen}"
+        @click="${() => (this.notificationOpened = true)}"
+        .disabled="${this.notificationOpened}"
       >
         Try it
       </vaadin-button>
@@ -32,8 +35,10 @@ export class Example extends LitElement {
       <vaadin-notification
         theme="contrast"
         position="middle"
-        .opened="${this.notificationOpen}"
-        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
+        .opened="${this.notificationOpened}"
+        @opened-changed="${(e: NotificationOpenedChangedEvent) => {
+          this.notificationOpened = e.detail.value;
+        }}"
         .renderer="${this.renderer}"
       ></vaadin-notification>
       <!-- end::snippet[] -->
@@ -43,14 +48,16 @@ export class Example extends LitElement {
   renderer = (root: HTMLElement) =>
     render(
       html`
-        <div>5 tasks deleted</div>
-        <vaadin-button
-          theme="tertiary-inline"
-          @click="${() => (this.notificationOpen = false)}"
-          aria-label="Close"
-        >
-          <vaadin-icon icon="lumo:cross"></vaadin-icon>
-        </vaadin-button>
+        <vaadin-horizontal-layout theme="spacing">
+          <div>5 tasks deleted</div>
+          <vaadin-button
+            theme="tertiary-inline icon"
+            @click="${() => (this.notificationOpened = false)}"
+            aria-label="Close"
+          >
+            <vaadin-icon icon="lumo:cross"></vaadin-icon>
+          </vaadin-button>
+        </vaadin-horizontal-layout>
       `,
       root
     );
