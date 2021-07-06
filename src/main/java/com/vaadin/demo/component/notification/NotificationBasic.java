@@ -1,13 +1,14 @@
 package com.vaadin.demo.component.notification;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
+
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("notification-basic")
@@ -16,6 +17,7 @@ public class NotificationBasic extends Div {
   public NotificationBasic() {
     // tag::snippet[]
     Notification notification = new Notification();
+    notification.setDuration(5000);
     notification.setPosition(Notification.Position.MIDDLE);
 
     Div notificationText = new Div(new Text("Financial report generated"));
@@ -28,8 +30,8 @@ public class NotificationBasic extends Div {
     });
 
     HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, notificationButton);
-    notificationLayout.setSpacing(true);
     notification.add(notificationLayout);
+    // end::snippet[]
 
     Button button = new Button("Try it");
     button.addClickListener(event -> {
@@ -41,7 +43,6 @@ public class NotificationBasic extends Div {
     });
 
     add(button, notification);
-    // end::snippet[]
   }
 
   public static class Exporter extends DemoExporter<NotificationBasic> { // hidden-source-line
