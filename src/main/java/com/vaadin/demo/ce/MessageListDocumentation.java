@@ -18,6 +18,8 @@ public class MessageListDocumentation extends VerticalLayout {
 
     private CollaborationMessageList messageList;
 
+    private UserInfo userInfo;
+
     private UserService userService;
 
     private MessageService messageService;
