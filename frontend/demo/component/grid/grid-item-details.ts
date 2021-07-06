@@ -95,7 +95,7 @@ export class Example extends LitElement {
           }
         )}"
       >
-        <vaadin-grid-column path="displayName"></vaadin-grid-column>
+        <vaadin-grid-column path="displayName" header="Name"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>
       </vaadin-grid>
     `;

@@ -31,7 +31,7 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   @state()
-  private detailsOpenedItem: Array<Person | null> = [];
+  private detailsOpenedItems: Person[] = [];
 
   async firstUpdated() {
     const people = (await getPeople()).people.map((person) => ({
@@ -46,14 +46,14 @@ export class Example extends LitElement {
       <vaadin-grid
         theme="row-stripes"
         .items="${this.items}"
-        .detailsOpenedItems="${this.detailsOpenedItem as any}"
+        .detailsOpenedItems="${this.detailsOpenedItems as any}"
         .rowDetailsRenderer="${guard(
           [],
           () => (root: HTMLElement, _: GridElement, model: GridItemModel<Person>) => {
             const person = model.item;
 
             render(
-              html`<vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">
+              html` <vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">
                 <vaadin-text-field
                   label="Email address"
                   .value="${person.email}"
@@ -93,7 +93,7 @@ export class Example extends LitElement {
           }
         )}"
       >
-        <vaadin-grid-column path="displayName"></vaadin-grid-column>
+        <vaadin-grid-column path="displayName" header="Name"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>
         <vaadin-grid-column
           .renderer="${guard(
@@ -103,11 +103,14 @@ export class Example extends LitElement {
               render(
                 html`<vaadin-button
                   theme="tertiary"
-                  @click="${() =>
-                    (this.detailsOpenedItem =
-                      this.detailsOpenedItem[0] !== person ? [person] : [null])}"
-                  >View details</vaadin-button
-                >`,
+                  @click="${() => {
+                    const isOpened = this.detailsOpenedItems.includes(person);
+                    this.detailsOpenedItems = isOpened
+                      ? this.detailsOpenedItems.filter((p) => p != person)
+                      : [...this.detailsOpenedItems, person];
+                  }}"
+                  >Toggle details
+                </vaadin-button>`,
                 root
               );
             }
