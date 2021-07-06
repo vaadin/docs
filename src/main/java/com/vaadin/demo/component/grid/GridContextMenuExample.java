@@ -60,8 +60,8 @@ public class GridContextMenuExample extends Div {
                 if (person == null)
                     return false;
                 emailItem.setText(
-                        String.format("Email (%s)", person.getEmail()));
-                phoneItem.setText(String.format("Phone (%s)",
+                        String.format("Email: %s", person.getEmail()));
+                phoneItem.setText(String.format("Call: %s",
                         person.getAddress().getPhone()));
                 return true;
             });

@@ -11,6 +11,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Route("grid-item-details")
 public class GridItemDetails extends Div {
@@ -39,32 +40,19 @@ public class GridItemDetails extends Div {
     }
 
     private static class PersonDetailsFormLayout extends FormLayout {
-        private final TextField emailField;
-        private final TextField phoneField;
-        private final TextField streetField;
-        private final TextField zipField;
-        private final TextField cityField;
-        private final TextField stateField;
+        private final TextField emailField = new TextField("Email address");
+        private final TextField phoneField = new TextField("Phone number");
+        private final TextField streetField = new TextField("Street address");
+        private final TextField zipField = new TextField("ZIP code");
+        private final TextField cityField = new TextField("City");
+        private final TextField stateField = new TextField("State");
 
         public PersonDetailsFormLayout() {
-            emailField = new TextField("Email address");
-            emailField.setReadOnly(true);
-            add(emailField);
-            phoneField = new TextField("Phone number");
-            phoneField.setReadOnly(true);
-            add(phoneField);
-            streetField = new TextField("Street address");
-            streetField.setReadOnly(true);
-            add(streetField);
-            zipField = new TextField("ZIP code");
-            zipField.setReadOnly(true);
-            add(zipField);
-            cityField = new TextField("City");
-            cityField.setReadOnly(true);
-            add(cityField);
-            stateField = new TextField("State");
-            stateField.setReadOnly(true);
-            add(stateField);
+            Stream.of(emailField, phoneField, streetField, zipField, cityField,
+                    stateField).forEach(field -> {
+                field.setReadOnly(true);
+                add(field);
+            });
 
             setResponsiveSteps(new ResponsiveStep("0", 3));
             setColspan(emailField, 3);

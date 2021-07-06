@@ -22,7 +22,8 @@ public class GridExternalFiltering extends Div {
     public GridExternalFiltering() {
         // tag::snippet[]
         Grid<Person> grid = new Grid<>(Person.class, false);
-        grid.addColumn(createPersonRenderer()).setHeader("Name");
+        grid.addColumn(createPersonRenderer()).setHeader("Name").setFlexGrow(0)
+                .setWidth("230px");
         grid.addColumn(Person::getEmail).setHeader("Email");
         grid.addColumn(Person::getProfession).setHeader("Profession");
 
@@ -39,7 +40,7 @@ public class GridExternalFiltering extends Div {
         dataView.addFilter(person -> {
             String searchTerm = searchField.getValue().trim();
 
-            if ("".equals(searchTerm))
+            if (searchTerm.isEmpty())
                 return true;
 
             boolean matchesFullName = matchesTerm(person.getFullName(),

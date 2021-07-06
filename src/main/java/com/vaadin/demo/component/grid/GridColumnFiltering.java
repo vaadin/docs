@@ -24,7 +24,8 @@ public class GridColumnFiltering extends Div {
     public GridColumnFiltering() {
         // tag::snippet1[]
         Grid<Person> grid = new Grid<>(Person.class, false);
-        Grid.Column<Person> nameColumn = grid.addColumn(createPersonRenderer());
+        Grid.Column<Person> nameColumn = grid.addColumn(createPersonRenderer())
+                .setWidth("230px").setFlexGrow(0);
         Grid.Column<Person> emailColumn = grid.addColumn(Person::getEmail);
         Grid.Column<Person> professionColumn = grid
                 .addColumn(Person::getProfession);
@@ -51,11 +52,14 @@ public class GridColumnFiltering extends Div {
     private static Component createFilterHeader(String labelText,
             Consumer<String> filterChangeConsumer) {
         Label label = new Label(labelText);
+        label.getStyle().set("padding-top", "var(--lumo-space-m)")
+                .set("font-size", "var(--lumo-font-size-xs)");
         TextField textField = new TextField();
         textField.setValueChangeMode(ValueChangeMode.EAGER);
         textField.setClearButtonVisible(true);
         textField.setThemeName("small");
         textField.setWidthFull();
+        textField.getStyle().set("max-width", "100%");
         textField.addValueChangeListener(
                 e -> filterChangeConsumer.accept(e.getValue()));
         VerticalLayout layout = new VerticalLayout(label, textField);
@@ -93,17 +97,17 @@ public class GridColumnFiltering extends Div {
         }
 
         public boolean test(Person person) {
-            boolean matchesFullName = contains(person.getFullName(), fullName);
-            boolean matchesEmail = contains(person.getEmail(), email);
-            boolean matchesProfession = contains(person.getProfession(),
+            boolean matchesFullName = matches(person.getFullName(), fullName);
+            boolean matchesEmail = matches(person.getEmail(), email);
+            boolean matchesProfession = matches(person.getProfession(),
                     profession);
 
             return matchesFullName && matchesEmail && matchesProfession;
         }
 
-        private boolean contains(String value, String searchText) {
-            return searchText == null || searchText.equals("") || value
-                    .toLowerCase().contains(searchText.toLowerCase());
+        private boolean matches(String value, String searchTerm) {
+            return searchTerm == null || searchTerm.isEmpty() || value
+                    .toLowerCase().contains(searchTerm.toLowerCase());
         }
     }
     // end::snippet2[]
