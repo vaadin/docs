@@ -6,15 +6,17 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Route("date-picker-min-max")
 public class DatePickerMinMax extends Div {
 
     public DatePickerMinMax() {
+        LocalDate now = LocalDate.now(ZoneId.of("Europe/Helsinki"));
         DatePicker datePicker = new DatePicker("Appointment date");
         // tag::snippet[]
-        datePicker.setMin(LocalDate.now());
-        datePicker.setMax(LocalDate.now().plusDays(60));
+        datePicker.setMin(now);
+        datePicker.setMax(now.plusDays(60));
         // end::snippet[]
         datePicker.setHelperText("Must be within 60 days from today");
         add(datePicker);

@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
+import java.time.ZoneId;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
@@ -18,6 +19,8 @@ import java.util.stream.IntStream;
 public class DatePickerIndividualInputFields extends Div {
 
     public DatePickerIndividualInputFields() {
+        LocalDate now = LocalDate.now(ZoneId.of("Europe/Helsinki"));
+
         // tag::snippet[]
         ComboBox day = new ComboBox("Day");
         day.setItems(IntStream.range(1, 31).boxed());
@@ -29,7 +32,7 @@ public class DatePickerIndividualInputFields extends Div {
         month.setWidth(9, Unit.EM);
 
         ComboBox year = new ComboBox("Year");
-        year.setItems(IntStream.range(LocalDate.now().getYear() - 99, LocalDate.now().getYear() + 1).boxed());
+        year.setItems(IntStream.range(now.getYear() - 99, now.getYear() + 1).boxed());
         year.setWidth(6, Unit.EM);
 
         add(new HorizontalLayout(day, month, year));
