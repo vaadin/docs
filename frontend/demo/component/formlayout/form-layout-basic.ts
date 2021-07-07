@@ -1,9 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-password-field';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -27,8 +25,8 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
-        <vaadin-text-field colspan="1" label="First name"></vaadin-text-field>
-        <vaadin-text-field colspan="1" label="Last name"></vaadin-text-field>
+        <vaadin-text-field label="First name"></vaadin-text-field>
+        <vaadin-text-field label="Last name"></vaadin-text-field>
         <vaadin-text-field colspan="2" label="Username"></vaadin-text-field>
         <vaadin-password-field label="Password"> </vaadin-password-field>
         <vaadin-password-field label="Confirm password"> </vaadin-password-field>

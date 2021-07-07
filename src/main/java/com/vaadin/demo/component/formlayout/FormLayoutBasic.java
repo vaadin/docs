@@ -1,9 +1,9 @@
 package com.vaadin.demo.component.formlayout;
 
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.textfield.EmailField;
-import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -12,21 +12,27 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class FormLayoutBasic extends Div {
 
   public FormLayoutBasic() {
+    TextField firstName = new TextField("First name");
+    TextField lastName = new TextField("Last name");
+    TextField username = new TextField("Username");
+    PasswordField password = new PasswordField("Password");
+    PasswordField confirmPassword = new PasswordField("Confirm password");
+
     // tag::snippet[]
-    TextField firstNameField = new TextField("First Name");
-    TextField lastNameField = new TextField("Last Name");
-    TextField cityField = new TextField("City");
-    EmailField emailField = new EmailField("Email");
-    TextArea bioField = new TextArea("Bio");
-
     FormLayout formLayout = new FormLayout();
-    formLayout.add(firstNameField, lastNameField, cityField, emailField, bioField);
-    formLayout.setColspan(bioField, 2);
-
+    formLayout.add(
+            firstName, lastName,
+            username,
+            password, confirmPassword
+    );
+    formLayout.setColspan(username, 2);
+    formLayout.setResponsiveSteps(
+            new ResponsiveStep("0", 1),
+            new ResponsiveStep("20em", 2)
+    );
     add(formLayout);
     // end::snippet[]
   }
-
   public static class Exporter extends DemoExporter<FormLayoutBasic> { // hidden-source-line
   } // hidden-source-line
 }
