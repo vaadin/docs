@@ -20,7 +20,6 @@ public class ButtonSizes extends Div {
         smallButton.addThemeNames("small");
         // end::snippet[]
         HorizontalLayout horizontalLayout = new HorizontalLayout(largeButton, normalButton, smallButton);
-        horizontalLayout.getThemeList().add("spacing");
         add(horizontalLayout);
     }
 

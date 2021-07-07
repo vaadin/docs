@@ -16,7 +16,7 @@ public class ButtonBasic extends Div {
         // tag::snippet[]
         Button button = new Button("Button");
         Paragraph info = new Paragraph(infoText());
-        button.addClickListener(_e -> {
+        button.addClickListener(clickEvent -> {
             counter += 1;
             info.setText(infoText());
         });

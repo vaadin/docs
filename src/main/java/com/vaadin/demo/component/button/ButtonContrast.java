@@ -20,7 +20,6 @@ public class ButtonContrast extends Div {
         tertiaryButton.addThemeNames("tertiary contrast");
         // end::snippet[]
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);
-        horizontalLayout.getThemeList().add("spacing");
         add(horizontalLayout);
     }
 

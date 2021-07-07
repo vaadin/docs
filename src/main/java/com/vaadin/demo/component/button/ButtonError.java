@@ -20,7 +20,6 @@ public class ButtonError extends Div {
         tertiaryButton.addThemeNames("tertiary error");
         // end::snippet[]
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);
-        horizontalLayout.getThemeList().add("spacing");
         add(horizontalLayout);
     }
 

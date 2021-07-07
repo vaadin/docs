@@ -26,7 +26,6 @@ public class ButtonIcons extends Div {
         arrowRightButton.setIconAfterText(true);
         // end::snippet[]
         HorizontalLayout horizontalLayout = new HorizontalLayout(plusButton, closeButton, arrowLeftButton, arrowRightButton);
-        horizontalLayout.getThemeList().add("spacing");
         add(horizontalLayout);
     }
 
