@@ -2,6 +2,7 @@ package com.vaadin.demo.component.grid;
 
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
@@ -11,7 +12,6 @@ import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
-import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
@@ -23,11 +23,10 @@ public class GridColumnAlignment extends Div {
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFullName).setHeader("Name");
         grid.addColumn(new LocalDateRenderer<>(
-                GridColumnAlignment::generateRandomDueDate, "MM/dd/YYYY"))
+                GridColumnAlignment::generateRandomDueDate, "MM/dd/yyyy"))
                 .setHeader("Due");
         // tag::snippet[]
-        grid.addColumn(new TextRenderer<>(
-                GridColumnAlignment::generateRandomAmountText))
+        grid.addColumn(GridColumnAlignment::generateRandomAmountText)
                 .setHeader("Amount").setTextAlign(ColumnTextAlign.END);
         // end::snippet[]
 
@@ -38,7 +37,7 @@ public class GridColumnAlignment extends Div {
     }
 
     private static LocalDate generateRandomDueDate(Person person) {
-        LocalDate rangeStart = LocalDate.now();
+        LocalDate rangeStart = LocalDate.now(ZoneId.systemDefault());
         LocalDate rangeEnd = rangeStart.plusYears(1);
         long randomEpochDay = ThreadLocalRandom.current()
                 .nextLong(rangeStart.toEpochDay(), rangeEnd.toEpochDay());
