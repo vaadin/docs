@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
+import static com.vaadin.flow.component.button.ButtonVariant.*;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.server.StreamResource;
@@ -18,7 +19,7 @@ public class ButtonImages extends Div {
         img.setWidth("100px");
 
         Button imgButton = new Button(img);
-        imgButton.addThemeNames("icon");
+        imgButton.addThemeVariants(LUMO_ICON);
         // end::snippet[]
         add(imgButton);
     }

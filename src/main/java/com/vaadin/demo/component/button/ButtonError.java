@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
+import static com.vaadin.flow.component.button.ButtonVariant.*;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
@@ -11,13 +12,13 @@ public class ButtonError extends Div {
     public ButtonError() {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
-        primaryButton.addThemeNames("primary error");
+        primaryButton.addThemeVariants(LUMO_PRIMARY, LUMO_ERROR);
 
         Button secondaryButton = new Button("Secondary");
-        secondaryButton.addThemeNames("secondary error");
+        secondaryButton.addThemeVariants(LUMO_ERROR);
 
         Button tertiaryButton = new Button("Tertiary");
-        tertiaryButton.addThemeNames("tertiary error");
+        tertiaryButton.addThemeVariants(LUMO_TERTIARY, LUMO_ERROR);
         // end::snippet[]
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);
         add(horizontalLayout);

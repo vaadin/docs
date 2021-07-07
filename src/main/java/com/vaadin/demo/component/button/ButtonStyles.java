@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
+import static com.vaadin.flow.component.button.ButtonVariant.*;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
@@ -11,13 +12,12 @@ public class ButtonStyles extends Div {
     public ButtonStyles() {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
-        primaryButton.addThemeNames("primary");
+        primaryButton.addThemeVariants(LUMO_PRIMARY);
 
         Button secondaryButton = new Button("Secondary");
-        secondaryButton.addThemeNames("secondary");
 
         Button tertiaryButton = new Button("Tertiary");
-        tertiaryButton.addThemeNames("tertiary");
+        tertiaryButton.addThemeVariants(LUMO_TERTIARY);
         // end::snippet[]
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);
         add(horizontalLayout);
