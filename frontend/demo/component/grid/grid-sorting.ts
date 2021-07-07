@@ -35,7 +35,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-sort-column path="id"></vaadin-grid-sort-column>
-        <vaadin-grid-sort-column path="displayName"></vaadin-grid-sort-column>
+        <vaadin-grid-sort-column path="displayName" header="Name"></vaadin-grid-sort-column>
         <vaadin-grid-sort-column path="email"></vaadin-grid-sort-column>
         <vaadin-grid-sort-column path="profession"></vaadin-grid-sort-column>
         <vaadin-grid-sort-column path="birthday"></vaadin-grid-sort-column>

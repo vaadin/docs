@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js';
+import { TextFieldValueChangedEvent } from '@vaadin/vaadin-text-field'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -17,7 +18,8 @@ import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 type PersonEnhanced = Person & { displayName: string };
-@customElement('grid-filter')
+
+@customElement('grid-external-filtering')
 export class Example extends LitElement {
   protected createRenderRoot() {
     const root = super.createRenderRoot();
@@ -46,19 +48,20 @@ export class Example extends LitElement {
         <vaadin-text-field
           placeholder="Search"
           style="width: 50%;"
-          @value-changed="${(e: CustomEvent) => {
-            const value = (e.detail.value as string) || '';
-            const filters = value
-              .trim()
-              .split(' ')
-              .map((filter) => new RegExp(filter, 'i'));
+          @value-changed="${(e: TextFieldValueChangedEvent) => {
+            const searchTerm = ((e.detail.value as string) || '').trim();
+            const matchesTerm = (value: string) => {
+              return value.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0;
+            };
 
-            this.filteredItems = this.items.filter(({ displayName, email, profession }) =>
-              filters.some(
-                (filter) =>
-                  filter.test(displayName) || filter.test(email) || filter.test(profession)
-              )
-            );
+            this.filteredItems = this.items.filter(({ displayName, email, profession }) => {
+              return (
+                !searchTerm ||
+                matchesTerm(displayName) ||
+                matchesTerm(email) ||
+                matchesTerm(profession)
+              );
+            });
           }}"
         >
           <vaadin-icon slot="prefix" icon="vaadin:search"></vaadin-icon>
