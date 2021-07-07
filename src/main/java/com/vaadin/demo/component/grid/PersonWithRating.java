@@ -6,7 +6,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class PersonWithRating extends Person {
+class PersonWithRating extends Person {
 
     private static final DecimalFormat decimalFormat = new DecimalFormat(
             "0.00");

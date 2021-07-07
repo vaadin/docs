@@ -51,8 +51,6 @@ public class GridDragRowsBetweenGrids extends Div {
         // end::snippet[]
 
         Div container = new Div(grid1, grid2);
-        setGridStyles(grid1);
-        setGridStyles(grid2);
         setContainerStyles(container);
 
         add(container);
@@ -62,6 +60,7 @@ public class GridDragRowsBetweenGrids extends Div {
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFullName).setHeader("Full name");
         grid.addColumn(Person::getProfession).setHeader("Profession");
+        setGridStyles(grid);
 
         return grid;
     }
