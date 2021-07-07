@@ -72,8 +72,8 @@ public class GridUnbufferedInlineEditor extends VerticalLayout {
                 ((Focusable) editorComponent).focus();
             }
         });
-
         // end::snippet[]
+
         editor.addCancelListener(e -> {
             firstNameValidationMessage.setText("");
             lastNameValidationMessage.setText("");

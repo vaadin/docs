@@ -4,6 +4,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -77,7 +78,8 @@ public class GridBufferedInlineEditor extends VerticalLayout {
         Button saveButton = new Button("Save", e -> editor.save());
         Button cancelButton = new Button(VaadinIcon.CLOSE.create(),
                 e -> editor.cancel());
-        cancelButton.addThemeNames("icon", "error");
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_ICON,
+                ButtonVariant.LUMO_ERROR);
         HorizontalLayout actions = new HorizontalLayout(saveButton,
                 cancelButton);
         actions.setPadding(false);

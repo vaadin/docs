@@ -19,7 +19,7 @@ public class GridDragDropFilters extends Div {
     private List<Person> people;
     private List<Person> managers;
 
-    private Person draggedItem;
+    private Person draggedPerson;
 
     public GridDragDropFilters() {
 
@@ -28,11 +28,7 @@ public class GridDragDropFilters extends Div {
                 .collect(Collectors.toList());
 
         // tag::snippet[]
-        TreeGrid<Person> treeGrid = new TreeGrid<>();
-        treeGrid.addHierarchyColumn(Person::getFirstName)
-                .setHeader("First name");
-        treeGrid.addColumn(Person::getLastName).setHeader("Last name");
-        treeGrid.addColumn(Person::getEmail).setHeader("Email");
+        TreeGrid<Person> treeGrid = setupTreeGrid();
 
         TreeData<Person> treeData = new TreeData<>();
         treeData.addItems(managers, this::getStaff);
@@ -42,34 +38,46 @@ public class GridDragDropFilters extends Div {
 
         treeGrid.setRowsDraggable(true);
         treeGrid.setDropMode(GridDropMode.ON_TOP);
+        // Only allow dragging staff
         treeGrid.setDragFilter(person -> !person.isManager());
+        // Only allow dropping on managers
         treeGrid.setDropFilter(person -> person.isManager());
 
         treeGrid.addDragStartListener(
-                e -> draggedItem = e.getDraggedItems().get(0));
+                e -> draggedPerson = e.getDraggedItems().get(0));
 
         treeGrid.addDropListener(e -> {
             Person newManager = e.getDropTargetItem().orElse(null);
             boolean isSameManager = newManager != null && newManager.getId()
-                    .equals(draggedItem.getManagerId());
+                    .equals(draggedPerson.getManagerId());
 
             if (newManager == null || isSameManager)
                 return;
 
-            draggedItem.setManagerId(newManager.getId());
-            treeData.removeItem(draggedItem);
-            treeData.addItem(newManager, draggedItem);
+            draggedPerson.setManagerId(newManager.getId());
+            treeData.removeItem(draggedPerson);
+            treeData.addItem(newManager, draggedPerson);
 
-            treeGrid.getDataProvider().refreshAll();
+            treeDataProvider.refreshAll();
         });
 
-        treeGrid.addDragEndListener(e -> draggedItem = null);
+        treeGrid.addDragEndListener(e -> draggedPerson = null);
         // end::snippet[]
 
         add(treeGrid);
     }
 
-    public List<Person> getStaff(Person manager) {
+    private static TreeGrid<Person> setupTreeGrid() {
+        TreeGrid<Person> treeGrid = new TreeGrid<>();
+        treeGrid.addHierarchyColumn(Person::getFirstName)
+                .setHeader("First name");
+        treeGrid.addColumn(Person::getLastName).setHeader("Last name");
+        treeGrid.addColumn(Person::getEmail).setHeader("Email");
+
+        return treeGrid;
+    }
+
+    private List<Person> getStaff(Person manager) {
         return people.stream()
                 .filter(p -> manager.getId().equals(p.getManagerId()))
                 .collect(Collectors.toList());

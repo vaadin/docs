@@ -17,18 +17,13 @@ import java.util.List;
 @Route("grid-row-reordering")
 public class GridRowReordering extends Div {
 
-    private Person draggedItem;
+    private Person draggedPerson;
 
     public GridRowReordering() {
         // tag::snippet[]
-        Grid<Person> grid = new Grid<>(Person.class, false);
-        grid.addColumn(createAvatarRenderer()).setHeader("Image")
-                .setAutoWidth(true).setFlexGrow(0);
-        grid.addColumn(Person::getFirstName).setHeader("First name");
-        grid.addColumn(Person::getLastName).setHeader("Last name");
-        grid.addColumn(Person::getEmail).setHeader("Email");
+        Grid<Person> grid = setupGrid();
 
-        // Ensure we use a modifiable collection
+        // Modifying the data view requires a mutable collection
         List<Person> people = new ArrayList<>(DataService.getPeople());
         GridListDataView<Person> dataView = grid.setItems(people);
 
@@ -36,33 +31,42 @@ public class GridRowReordering extends Div {
         grid.setRowsDraggable(true);
 
         grid.addDragStartListener(
-                e -> draggedItem = e.getDraggedItems().get(0));
+                e -> draggedPerson = e.getDraggedItems().get(0));
 
         grid.addDropListener(e -> {
-            Person dropTarget = e.getDropTargetItem().orElse(null);
+            Person targetPerson = e.getDropTargetItem().orElse(null);
             GridDropLocation dropLocation = e.getDropLocation();
 
-            boolean hasDraggedItem = draggedItem != null;
-            boolean hasDropTarget = dropTarget != null;
-            boolean itemWasDroppedOntoItself =
-                    hasDropTarget && dropTarget.equals(draggedItem);
+            boolean personWasDroppedOntoItself = draggedPerson
+                    .equals(targetPerson);
 
-            if (!hasDraggedItem || !hasDropTarget || itemWasDroppedOntoItself)
+            if (targetPerson == null || personWasDroppedOntoItself)
                 return;
 
-            dataView.removeItem(draggedItem);
+            dataView.removeItem(draggedPerson);
 
             if (dropLocation == GridDropLocation.BELOW) {
-                dataView.addItemAfter(draggedItem, dropTarget);
+                dataView.addItemAfter(draggedPerson, targetPerson);
             } else {
-                dataView.addItemBefore(draggedItem, dropTarget);
+                dataView.addItemBefore(draggedPerson, targetPerson);
             }
         });
 
-        grid.addDragEndListener(e -> draggedItem = null);
+        grid.addDragEndListener(e -> draggedPerson = null);
         // end::snippet[]
 
         add(grid);
+    }
+
+    private static Grid<Person> setupGrid() {
+        Grid<Person> grid = new Grid<>(Person.class, false);
+        grid.addColumn(createAvatarRenderer()).setHeader("Image")
+                .setAutoWidth(true).setFlexGrow(0);
+        grid.addColumn(Person::getFirstName).setHeader("First name");
+        grid.addColumn(Person::getLastName).setHeader("Last name");
+        grid.addColumn(Person::getEmail).setHeader("Email");
+
+        return grid;
     }
 
     private static TemplateRenderer<Person> createAvatarRenderer() {

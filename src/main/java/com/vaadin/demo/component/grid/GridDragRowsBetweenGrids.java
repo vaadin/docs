@@ -17,30 +17,26 @@ import java.util.List;
 @Route("grid-drag-rows-between-grids")
 public class GridDragRowsBetweenGrids extends Div {
 
-    private Person draggedItem;
+    private Person draggedPerson;
 
     public GridDragRowsBetweenGrids() {
-        // tag::snippet[]
-        Grid<Person> grid1 = new Grid<>(Person.class, false);
-        grid1.addColumn(Person::getFullName).setHeader("Full name");
-        grid1.addColumn(Person::getProfession).setHeader("Profession");
-
-        Grid<Person> grid2 = new Grid<>(Person.class, false);
-        grid2.addColumn(Person::getFullName).setHeader("Full name");
-        grid2.addColumn(Person::getProfession).setHeader("Profession");
-
         List<Person> people = DataService.getPeople(10);
-        GridListDataView<Person> dataView1 = grid1
-                .setItems(new ArrayList<>(people.subList(0, 5)));
-        GridListDataView<Person> dataView2 = grid2
-                .setItems(new ArrayList<>(people.subList(5, 10)));
+        ArrayList<Person> people1 = new ArrayList<>(people.subList(0, 5));
+        ArrayList<Person> people2 = new ArrayList<>(people.subList(5, 10));
+
+        // tag::snippet[]
+        Grid<Person> grid1 = setupGrid();
+        Grid<Person> grid2 = setupGrid();
+
+        GridListDataView<Person> dataView1 = grid1.setItems(people1);
+        GridListDataView<Person> dataView2 = grid2.setItems(people2);
 
         grid1.setDropMode(GridDropMode.ON_GRID);
         grid1.setRowsDraggable(true);
         grid1.addDragStartListener(this::handleDragStart);
         grid1.addDropListener(e -> {
-            dataView2.removeItem(draggedItem);
-            dataView1.addItem(draggedItem);
+            dataView2.removeItem(draggedPerson);
+            dataView1.addItem(draggedPerson);
         });
         grid1.addDragEndListener(this::handleDragEnd);
 
@@ -48,8 +44,8 @@ public class GridDragRowsBetweenGrids extends Div {
         grid2.setRowsDraggable(true);
         grid2.addDragStartListener(this::handleDragStart);
         grid2.addDropListener(e -> {
-            dataView1.removeItem(draggedItem);
-            dataView2.addItem(draggedItem);
+            dataView1.removeItem(draggedPerson);
+            dataView2.addItem(draggedPerson);
         });
         grid2.addDragEndListener(this::handleDragEnd);
         // end::snippet[]
@@ -62,12 +58,20 @@ public class GridDragRowsBetweenGrids extends Div {
         add(container);
     }
 
+    private static Grid<Person> setupGrid() {
+        Grid<Person> grid = new Grid<>(Person.class, false);
+        grid.addColumn(Person::getFullName).setHeader("Full name");
+        grid.addColumn(Person::getProfession).setHeader("Profession");
+
+        return grid;
+    }
+
     private void handleDragStart(GridDragStartEvent<Person> e) {
-        draggedItem = e.getDraggedItems().get(0);
+        draggedPerson = e.getDraggedItems().get(0);
     }
 
     private void handleDragEnd(GridDragEndEvent<Person> e) {
-        draggedItem = null;
+        draggedPerson = null;
     }
 
     private static void setGridStyles(Grid<Person> grid) {
@@ -81,8 +85,7 @@ public class GridDragRowsBetweenGrids extends Div {
                 .set("flex-wrap", "wrap");
     }
 
-    public static class Exporter // hidden-source-line
-            extends // hidden-source-line
+    public static class Exporter extends // hidden-source-line
             DemoExporter<GridDragRowsBetweenGrids> { // hidden-source-line
     } // hidden-source-line
 }
