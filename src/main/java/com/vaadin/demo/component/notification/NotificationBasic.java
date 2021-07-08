@@ -27,7 +27,7 @@ public class NotificationBasic extends Div {
     closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
     closeButton.getElement().setAttribute("aria-label", "Close");
     closeButton.addClickListener(event -> {
-      notification.setOpened(false);
+      notification.close();
     });
 
     HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, closeButton);
@@ -37,7 +37,7 @@ public class NotificationBasic extends Div {
 
     Button button = new Button("Try it");
     button.addClickListener(event -> {
-      notification.setOpened(true);
+      notification.open();
     });
 
     notification.addOpenedChangeListener(event -> {

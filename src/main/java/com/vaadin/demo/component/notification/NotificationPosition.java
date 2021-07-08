@@ -55,7 +55,7 @@ public class NotificationPosition extends Div {
     closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
     closeButton.getElement().setAttribute("aria-label", "Close");
     closeButton.addClickListener(event -> {
-      notification.setOpened(false);
+      notification.close();
     });
 
     HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, closeButton);
@@ -65,7 +65,7 @@ public class NotificationPosition extends Div {
     notification.add(notificationLayout);
 
     add(notification);
-    notification.setOpened(true);
+    notification.open();
 
     // Remember to clean up the element from the DOM
     // if you are not reusing the same notification
