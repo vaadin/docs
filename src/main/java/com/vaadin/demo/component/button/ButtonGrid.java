@@ -45,10 +45,10 @@ public class ButtonGrid extends VerticalLayout {
         grid.addColumn(Person::getEmail).setHeader("Email");
         grid.addSelectionListener(selection -> {
             int size = selection.getAllSelectedItems().size();
-            boolean isEnabled = size == 1;
-            editProfile.setEnabled(isEnabled);
-            managePermissions.setEnabled(isEnabled);
-            resetPassword.setEnabled(isEnabled);
+            boolean isSingleSelection = size == 1;
+            editProfile.setEnabled(isSingleSelection);
+            managePermissions.setEnabled(isSingleSelection);
+            resetPassword.setEnabled(isSingleSelection);
 
             delete.setEnabled(size != 0);
         });
@@ -56,6 +56,7 @@ public class ButtonGrid extends VerticalLayout {
         HorizontalLayout footer = new HorizontalLayout(editProfile, managePermissions, resetPassword, delete);
         footer.getStyle().set("flex-wrap", "wrap");
         // end::snippet[]
+
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
         setPadding(false);

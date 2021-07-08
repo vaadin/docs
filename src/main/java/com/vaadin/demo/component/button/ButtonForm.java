@@ -6,6 +6,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -16,7 +17,8 @@ public class ButtonForm extends VerticalLayout {
         // tag::snippet[]
         TextField firstNameField = new TextField("First name", "John", "");
         TextField lastNameField = new TextField("Last name", "Smith", "");
-        TextField emailField = new TextField("Email address", "john.smith@example.com", "");
+        EmailField emailField = new EmailField("Email address");
+        emailField.setValue("john.smith@example.com");
         FormLayout formLayout = new FormLayout(firstNameField, lastNameField, emailField);
         formLayout.setResponsiveSteps(new ResponsiveStep("0", 2));
         formLayout.setColspan(emailField, 2);
@@ -24,9 +26,12 @@ public class ButtonForm extends VerticalLayout {
         Button createAccount = new Button("Create account");
         createAccount.addThemeVariants(LUMO_PRIMARY);
         Button cancel = new Button("Cancel");
+
+        HorizontalLayout buttonLayout = new HorizontalLayout(createAccount, cancel);
         // end::snippet[]
+
         setPadding(false);
-        add(formLayout, new HorizontalLayout(createAccount, cancel));
+        add(formLayout, buttonLayout);
     }
 
     public static class Exporter extends DemoExporter<ButtonForm> { // hidden-source-line

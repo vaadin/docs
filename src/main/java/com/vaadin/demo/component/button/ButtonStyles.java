@@ -19,6 +19,7 @@ public class ButtonStyles extends Div {
         Button tertiaryButton = new Button("Tertiary");
         tertiaryButton.addThemeVariants(LUMO_TERTIARY);
         // end::snippet[]
+
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);
         add(horizontalLayout);
     }

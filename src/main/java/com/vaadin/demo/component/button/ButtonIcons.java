@@ -26,6 +26,7 @@ public class ButtonIcons extends Div {
         Button arrowRightButton = new Button("Right", new Icon(VaadinIcon.ARROW_RIGHT));
         arrowRightButton.setIconAfterText(true);
         // end::snippet[]
+
         HorizontalLayout horizontalLayout = new HorizontalLayout(plusButton, closeButton, arrowLeftButton, arrowRightButton);
         add(horizontalLayout);
     }

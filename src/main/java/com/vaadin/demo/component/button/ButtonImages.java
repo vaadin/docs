@@ -21,6 +21,7 @@ public class ButtonImages extends Div {
         Button imgButton = new Button(img);
         imgButton.addThemeVariants(LUMO_ICON);
         // end::snippet[]
+
         add(imgButton);
     }
 

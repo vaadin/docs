@@ -3,10 +3,12 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/vaadin-text-field/vaadin-email-field';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+import { TextFieldValueChangedEvent } from '@vaadin/vaadin-text-field';
 
 @customElement('button-labels')
 export class Example extends LitElement {
@@ -40,7 +42,8 @@ export class Example extends LitElement {
             id="primary-email"
             label="Primary email address"
             .value="${this.primaryEmail}"
-            @value-changed="${(e: CustomEvent) => (this.primaryEmail = e.detail.value)}"
+            @value-changed="${(e: TextFieldValueChangedEvent) =>
+              (this.primaryEmail = e.detail.value)}"
           ></vaadin-text-field>
           <vaadin-button
             arial-label="Remove primary email address"
@@ -54,7 +57,8 @@ export class Example extends LitElement {
             id="secondary-email"
             label="Secondary email address"
             .value="${this.secondaryEmail}"
-            @value-changed="${(e: CustomEvent) => (this.secondaryEmail = e.detail.value)}"
+            @value-changed="${(e: TextFieldValueChangedEvent) =>
+              (this.secondaryEmail = e.detail.value)}"
           ></vaadin-text-field>
           <vaadin-button
             arial-label="Remove secondary email address"

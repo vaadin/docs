@@ -20,6 +20,7 @@ public class ButtonContrast extends Div {
         Button tertiaryButton = new Button("Tertiary (avoid)");
         tertiaryButton.addThemeVariants(LUMO_TERTIARY, LUMO_CONTRAST);
         // end::snippet[]
+
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);
         add(horizontalLayout);
     }

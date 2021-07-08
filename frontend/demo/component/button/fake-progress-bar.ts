@@ -15,7 +15,7 @@ export class FakeProgressBar extends LitElement {
   @property()
   progress = 0;
 
-  public start() {
+  public simulateProgress() {
     this.progress = 0;
     const breakInterval = setInterval(() => {
       this.progress += 0.005;

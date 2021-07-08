@@ -13,14 +13,16 @@ public class ButtonDisableLongAction extends Div {
         // tag::snippet[]
         Button button = new Button("Perform Action");
         FakeProgressBar progressBar = new FakeProgressBar();
-        button.addClickListener(clickEvent -> {
+        button.addClickListener(event -> {
             button.setEnabled(false);
-            progressBar.start();
-            progressBar.addProgressEndListener((progressEndEvent) -> {
-                button.setEnabled(true);
-            });
+            progressBar.simulateProgress();
+        });
+
+        progressBar.addProgressEndListener(event -> {
+            button.setEnabled(true);
         });
         // end::snippet[]
+
         button.getStyle().set("flex", "none");
         HorizontalLayout horizontalLayout = new HorizontalLayout(button, progressBar);
         horizontalLayout.setAlignItems(FlexComponent.Alignment.CENTER);

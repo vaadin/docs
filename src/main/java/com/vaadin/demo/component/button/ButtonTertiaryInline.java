@@ -13,6 +13,7 @@ public class ButtonTertiaryInline extends Div {
         Button tertiaryInlineButton = new Button("Tertiary inline");
         tertiaryInlineButton.addThemeVariants(LUMO_TERTIARY_INLINE);
         // end::snippet[]
+
         add(tertiaryInlineButton);
     }
 

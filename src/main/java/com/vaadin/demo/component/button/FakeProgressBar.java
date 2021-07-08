@@ -8,8 +8,8 @@ import com.vaadin.flow.dom.DomEventListener;
 @Tag("fake-progress-bar")
 @JsModule("demo/component/button/fake-progress-bar.ts")
 public class FakeProgressBar extends Component {
-    public void start() {
-        this.getElement().callJsFunction("start");
+    public void simulateProgress() {
+        this.getElement().callJsFunction("simulateProgress");
     }
 
     public void addProgressEndListener(DomEventListener listener) {
