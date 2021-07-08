@@ -6,7 +6,6 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
@@ -23,8 +22,7 @@ public class GridColumnWidth extends Div {
         grid.addColumn(Person::getProfession).setHeader("Profession")
                 .setAutoWidth(true).setFlexGrow(0);
         grid.addColumn(Person::getEmail).setHeader("Email");
-        grid.addColumn(new TextRenderer<>(
-                person -> person.isSubscriber() ? "Yes" : "No"))
+        grid.addColumn(person -> person.isSubscriber() ? "Yes" : "No")
                 .setHeader("Has Sub").setWidth("6em").setFlexGrow(0);
         // end::snippet[]
 
