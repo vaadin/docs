@@ -46,10 +46,9 @@ public class NotificationPosition extends Div {
   private void show(Notification.Position position) {
     Notification notification = new Notification();
     notification.setPosition(position);
-    // end::show[]
     notification.setDuration(5000);
 
-    Div notificationText = new Div(new Text(position.getClientName()));
+    Div text = new Div(new Text(position.getClientName()));
 
     Button closeButton = new Button(new Icon("lumo", "cross"));
     closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
@@ -58,21 +57,14 @@ public class NotificationPosition extends Div {
       notification.close();
     });
 
-    HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, closeButton);
-    notificationLayout.setAlignItems(Alignment.CENTER);
-    notificationLayout.setFlexGrow(1, notificationText);
-    notificationLayout.setSizeFull();
-    notification.add(notificationLayout);
-
-    add(notification);
+    HorizontalLayout layout = new HorizontalLayout(text, closeButton);
+    layout.setAlignItems(Alignment.CENTER);
+    layout.setFlexGrow(1, text);
+    layout.setSizeFull();
+    notification.add(layout);
     notification.open();
-
-    // Remember to clean up the element from the DOM
-    // if you are not reusing the same notification
-    notification.addOpenedChangeListener(event -> {
-      remove(notification);
-    });
   }
+  // end::show[]
 
   public static class Exporter extends DemoExporter<NotificationPosition> { // hidden-source-line
   } // hidden-source-line
