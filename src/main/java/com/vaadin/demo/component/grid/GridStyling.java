@@ -26,7 +26,7 @@ public class GridStyling extends Div {
                 return "high-rating";
             if (person.getRating() <= 4)
                 return "low-rating";
-            return "";
+            return null;
         });
         // end::snippet[]
 

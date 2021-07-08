@@ -17,7 +17,7 @@ import java.util.List;
 @Route("grid-drag-rows-between-grids")
 public class GridDragRowsBetweenGrids extends Div {
 
-    private Person draggedPerson;
+    private Person draggedItem;
 
     public GridDragRowsBetweenGrids() {
         List<Person> people = DataService.getPeople(10);
@@ -35,8 +35,8 @@ public class GridDragRowsBetweenGrids extends Div {
         grid1.setRowsDraggable(true);
         grid1.addDragStartListener(this::handleDragStart);
         grid1.addDropListener(e -> {
-            dataView2.removeItem(draggedPerson);
-            dataView1.addItem(draggedPerson);
+            dataView2.removeItem(draggedItem);
+            dataView1.addItem(draggedItem);
         });
         grid1.addDragEndListener(this::handleDragEnd);
 
@@ -44,8 +44,8 @@ public class GridDragRowsBetweenGrids extends Div {
         grid2.setRowsDraggable(true);
         grid2.addDragStartListener(this::handleDragStart);
         grid2.addDropListener(e -> {
-            dataView1.removeItem(draggedPerson);
-            dataView2.addItem(draggedPerson);
+            dataView1.removeItem(draggedItem);
+            dataView2.addItem(draggedItem);
         });
         grid2.addDragEndListener(this::handleDragEnd);
         // end::snippet[]
@@ -66,11 +66,11 @@ public class GridDragRowsBetweenGrids extends Div {
     }
 
     private void handleDragStart(GridDragStartEvent<Person> e) {
-        draggedPerson = e.getDraggedItems().get(0);
+        draggedItem = e.getDraggedItems().get(0);
     }
 
     private void handleDragEnd(GridDragEndEvent<Person> e) {
-        draggedPerson = null;
+        draggedItem = null;
     }
 
     private static void setGridStyles(Grid<Person> grid) {

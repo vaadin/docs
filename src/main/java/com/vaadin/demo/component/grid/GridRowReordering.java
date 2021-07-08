@@ -17,7 +17,7 @@ import java.util.List;
 @Route("grid-row-reordering")
 public class GridRowReordering extends Div {
 
-    private Person draggedPerson;
+    private Person draggedItem;
 
     public GridRowReordering() {
         // tag::snippet[]
@@ -31,28 +31,28 @@ public class GridRowReordering extends Div {
         grid.setRowsDraggable(true);
 
         grid.addDragStartListener(
-                e -> draggedPerson = e.getDraggedItems().get(0));
+                e -> draggedItem = e.getDraggedItems().get(0));
 
         grid.addDropListener(e -> {
             Person targetPerson = e.getDropTargetItem().orElse(null);
             GridDropLocation dropLocation = e.getDropLocation();
 
-            boolean personWasDroppedOntoItself = draggedPerson
+            boolean personWasDroppedOntoItself = draggedItem
                     .equals(targetPerson);
 
             if (targetPerson == null || personWasDroppedOntoItself)
                 return;
 
-            dataView.removeItem(draggedPerson);
+            dataView.removeItem(draggedItem);
 
             if (dropLocation == GridDropLocation.BELOW) {
-                dataView.addItemAfter(draggedPerson, targetPerson);
+                dataView.addItemAfter(draggedItem, targetPerson);
             } else {
-                dataView.addItemBefore(draggedPerson, targetPerson);
+                dataView.addItemBefore(draggedItem, targetPerson);
             }
         });
 
-        grid.addDragEndListener(e -> draggedPerson = null);
+        grid.addDragEndListener(e -> draggedItem = null);
         // end::snippet[]
 
         add(grid);

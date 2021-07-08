@@ -10,22 +10,28 @@ import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.Route;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Route("grid-drag-drop-filters")
 public class GridDragDropFilters extends Div {
 
-    private List<Person> people;
-    private List<Person> managers;
+    private final List<Person> managers;
+    private final Map<Integer, List<Person>> staffGroupedByMangers;
 
-    private Person draggedPerson;
+    private Person draggedItem;
 
     public GridDragDropFilters() {
 
-        people = DataService.getPeople();
+        List<Person> people = DataService.getPeople();
         managers = people.stream().filter(Person::isManager)
                 .collect(Collectors.toList());
+        staffGroupedByMangers = people.stream()
+                .filter(person -> person.getManagerId() != null).collect(
+                        Collectors.groupingBy(Person::getManagerId,
+                                Collectors.toList()));
 
         // tag::snippet[]
         TreeGrid<Person> treeGrid = setupTreeGrid();
@@ -44,24 +50,24 @@ public class GridDragDropFilters extends Div {
         treeGrid.setDropFilter(person -> person.isManager());
 
         treeGrid.addDragStartListener(
-                e -> draggedPerson = e.getDraggedItems().get(0));
+                e -> draggedItem = e.getDraggedItems().get(0));
 
         treeGrid.addDropListener(e -> {
             Person newManager = e.getDropTargetItem().orElse(null);
             boolean isSameManager = newManager != null && newManager.getId()
-                    .equals(draggedPerson.getManagerId());
+                    .equals(draggedItem.getManagerId());
 
             if (newManager == null || isSameManager)
                 return;
 
-            draggedPerson.setManagerId(newManager.getId());
-            treeData.removeItem(draggedPerson);
-            treeData.addItem(newManager, draggedPerson);
+            draggedItem.setManagerId(newManager.getId());
+            treeData.removeItem(draggedItem);
+            treeData.addItem(newManager, draggedItem);
 
             treeDataProvider.refreshAll();
         });
 
-        treeGrid.addDragEndListener(e -> draggedPerson = null);
+        treeGrid.addDragEndListener(e -> draggedItem = null);
         // end::snippet[]
 
         add(treeGrid);
@@ -78,9 +84,8 @@ public class GridDragDropFilters extends Div {
     }
 
     private List<Person> getStaff(Person manager) {
-        return people.stream()
-                .filter(p -> manager.getId().equals(p.getManagerId()))
-                .collect(Collectors.toList());
+        return staffGroupedByMangers
+                .getOrDefault(manager.getId(), Collections.emptyList());
     }
 
     public static class Exporter // hidden-source-line
