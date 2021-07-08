@@ -18,13 +18,15 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-notification-card theme="error" slot="middle">
-        <div>Failed to generate report</div>
-        <vaadin-button theme="tertiary-inline" style="margin-left: var(--lumo-space-xl);">
-          Retry
-        </vaadin-button>
-        <vaadin-button theme="tertiary-inline">
-          <vaadin-icon icon="lumo:cross"></vaadin-icon>
-        </vaadin-button>
+        <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+          <div>Failed to generate report</div>
+          <vaadin-button theme="tertiary-inline" style="margin-left: var(--lumo-space-xl);">
+            Retry
+          </vaadin-button>
+          <vaadin-button theme="tertiary-inline" aria-label="Close">
+            <vaadin-icon icon="lumo:cross"></vaadin-icon>
+          </vaadin-button>
+        </vaadin-horizontal-layout>
       </vaadin-notification-card>
     `;
   }
