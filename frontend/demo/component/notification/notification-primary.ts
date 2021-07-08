@@ -49,7 +49,7 @@ export class Example extends LitElement {
     render(
       html`
         <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
-          <div>5 tasks deleted</div>
+          <div>New project plan available</div>
           <vaadin-button
             theme="tertiary-inline icon"
             @click="${() => (this.notificationOpened = false)}"
