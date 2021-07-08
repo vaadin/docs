@@ -45,9 +45,9 @@ public class NotificationPosition extends Div {
   // tag::show[]
   private void show(Notification.Position position) {
     Notification notification = new Notification();
-    notification.setDuration(5000);
     notification.setPosition(position);
     // end::show[]
+    notification.setDuration(5000);
 
     Div notificationText = new Div(new Text(position.getClientName()));
 
