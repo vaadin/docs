@@ -7,6 +7,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -30,6 +31,7 @@ public class NotificationBasic extends Div {
     });
 
     HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, closeButton);
+    notificationLayout.setAlignItems(Alignment.CENTER);
     notification.add(notificationLayout);
     // end::snippet[]
 

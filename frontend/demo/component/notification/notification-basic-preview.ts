@@ -19,7 +19,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-notification-card slot="middle">
-        <vaadin-horizontal-layout theme="spacing">
+        <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
           <div>Financial report generated</div>
           <vaadin-button theme="icon tertiary-inline">
             <vaadin-icon icon="lumo:cross"></vaadin-icon>
