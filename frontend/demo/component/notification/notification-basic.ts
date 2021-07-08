@@ -42,7 +42,7 @@ export class Example extends LitElement {
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <vaadin-horizontal-layout theme="spacing">
+              <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
                 <div>Financial report generated</div>
                 <vaadin-button
                   theme="tertiary-inline icon"
