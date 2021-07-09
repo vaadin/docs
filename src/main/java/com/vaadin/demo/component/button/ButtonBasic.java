@@ -21,6 +21,7 @@ public class ButtonBasic extends Div {
             info.setText(infoText());
         });
         // end::snippet[]
+
         HorizontalLayout horizontalLayout = new HorizontalLayout(button, info);
         horizontalLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
         add(horizontalLayout);
