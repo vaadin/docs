@@ -21,7 +21,7 @@ export class Example extends LitElement {
       <vaadin-notification-card theme="success" slot="middle">
         <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
           <div>Application submitted!</div>
-          <vaadin-button theme="tertiary-inline icon">
+          <vaadin-button theme="tertiary-inline">
             <vaadin-icon icon="lumo:cross"></vaadin-icon>
           </vaadin-button>
         </vaadin-horizontal-layout>
