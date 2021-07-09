@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -37,7 +38,7 @@ public class GridDynamicHeight extends Div {
         comboBox.setItemLabelGenerator(Person::getFullName);
 
         Button button = new Button("Send invite");
-        button.setThemeName("primary");
+        button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         button.addClickListener(e -> {
             sendInvitation(comboBox.getValue());
             comboBox.setValue(null);
@@ -58,11 +59,14 @@ public class GridDynamicHeight extends Div {
         grid.addColumn(Person::getEmail).setHeader("Email");
         grid.addColumn(person -> person.getAddress().getPhone())
                 .setHeader("Phone");
-        grid.addColumn(new ComponentRenderer<>(Button::new, (button, person) -> {
-            button.addThemeNames("icon", "error", "tertiary");
-            button.addClickListener(e -> this.removeInvitation(person));
-            button.setIcon(new Icon(VaadinIcon.TRASH));
-        })).setHeader("Manage");
+        grid.addColumn(
+                new ComponentRenderer<>(Button::new, (button, person) -> {
+                    button.addThemeVariants(ButtonVariant.LUMO_ICON,
+                            ButtonVariant.LUMO_ERROR,
+                            ButtonVariant.LUMO_TERTIARY);
+                    button.addClickListener(e -> this.removeInvitation(person));
+                    button.setIcon(new Icon(VaadinIcon.TRASH));
+                })).setHeader("Manage");
 
         grid.setItems(invitedPeople);
 

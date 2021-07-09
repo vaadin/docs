@@ -6,6 +6,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -14,7 +15,7 @@ public class MenuBarComboButtons extends Div {
     public MenuBarComboButtons() {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeNames("icon primary");
+        menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON, MenuBarVariant.LUMO_PRIMARY);
         menuBar.addItem("Save");
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
         SubMenu subItems = item.getSubMenu();
