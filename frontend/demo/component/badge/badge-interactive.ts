@@ -1,14 +1,15 @@
 import { getPeople } from 'Frontend/demo/domain/DataService'; // hidden-source-line
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import type { ButtonElement } from '@vaadin/vaadin-button';
-import type { ComboBoxElement } from '@vaadin/vaadin-combo-box';
-import { css, html, LitElement } from 'lit';
+import { ButtonElement } from '@vaadin/vaadin-button';
+import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -17,24 +18,6 @@ type Profession = string;
 
 @customElement('badge-interactive')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      .professions {
-        display: flex;
-        flex-wrap: wrap;
-      }
-
-      .professions > span {
-        margin-inline-end: var(--lumo-space-m);
-        margin-block-end: var(--lumo-space-m);
-      }
-
-      .professions vaadin-button {
-        margin-inline-start: var(--lumo-space-s);
-      }
-    `;
-  }
-
   @state()
   private items: readonly Profession[] = [];
 
@@ -62,7 +45,7 @@ export class Example extends LitElement {
           .items="${this.items}"
           @change="${this.onChange}"
         ></vaadin-combo-box>
-        <div class="professions">
+        <vaadin-horizontal-layout style="flex-wrap: wrap" theme="spacing">
           ${repeat(
             this.selectedProfessions,
             (profession) => profession,
@@ -70,14 +53,14 @@ export class Example extends LitElement {
               <span theme="badge pill contrast">
                 <span>${profession}</span>
                 <vaadin-button
-                  class="badge-btn"
-                  data-profession="${profession}"
-                  title="Clear filter: ${profession}"
                   aria-label="Clear filter: ${profession}"
-                  @click="${this.onClick}"
+                  data-profession="${profession}"
                   theme="contrast tertiary-inline"
+                  title="Clear filter: ${profession}"
+                  style="margin-inline-start: var(--lumo-space-xs)"
+                  @click="${this.onClick}"
                 >
-                  <vaadin-icon icon="lumo:cross"></vaadin-icon>
+                  <vaadin-icon icon="vaadin:close-small"></vaadin-icon>
                 </vaadin-button>
               </span>
             `
