@@ -4,6 +4,7 @@ import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hi
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -50,7 +51,11 @@ export class Example extends LitElement {
   private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
     render(
       html`
-        <img style="height: var(--lumo-size-m)" src="${model.item.pictureUrl}" alt="User avatar" />
+        <vaadin-avatar
+          img="${model.item.pictureUrl}"
+          name="${model.item.firstName} ${model.item.lastName}"
+          alt="User avatar"
+        />
       `,
       root
     );

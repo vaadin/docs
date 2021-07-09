@@ -11,7 +11,6 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
@@ -26,8 +25,7 @@ public class GridColumnHeaderFooter extends Div {
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFullName).setHeader("Name")
                 .setFooter(String.format("%s total members", people.size()));
-        grid.addColumn(new TextRenderer<>(
-                person -> person.isSubscriber() ? "Yes" : "No"))
+        grid.addColumn(person -> person.isSubscriber() ? "Yes" : "No")
                 .setHeader(createSubscriberHeader())
                 .setFooter(createSubscriberFooterText(people));
         grid.addColumn(Person::getMembership)
