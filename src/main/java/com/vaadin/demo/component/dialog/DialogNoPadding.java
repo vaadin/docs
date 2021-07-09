@@ -35,29 +35,16 @@ public class DialogNoPadding extends Div {
         // end::snippet[]
 
         Button button = new Button("Show dialog", e -> dialog.open());
+
         add(dialog, button);
     }
 
     private static VerticalLayout createDialogLayout(Dialog dialog) {
         H2 dialogTitle = new H2("Create new employee");
-        dialogTitle.getStyle().set("font-size", "var(--lumo-font-size-xl)")
-                .set("font-weight", "600")
-                .set("line-height", "var(--lumo-line-height-xs)")
-                .set("margin", "0");
-
         Header header = new Header(dialogTitle);
-        header.getElement().getClassList().add("draggable");
-        header.getStyle()
-                .set("border-bottom", "1px solid var(--lumo-contrast-10pct)")
-                .set("padding", "var(--lumo-space-m) var(--lumo-space-m)");
 
         H3 personalInformationTitle = new H3("Personal information");
         personalInformationTitle.setId("personal-title");
-        personalInformationTitle.getStyle()
-                .set("font-size", "var(--lumo-font-size-l)")
-                .set("font-weight", "600")
-                .set("line-height", "var(--lumo-line-height-xs)")
-                .set("margin", "0 0 var(--lumo-space-s) 0");
         TextField firstNameField = new TextField("First name");
         TextField lastNameField = new TextField("Last name");
         DatePicker birthdatePicker = new DatePicker("Birthdate");
@@ -76,11 +63,6 @@ public class DialogNoPadding extends Div {
 
         H3 employmentInformationTitle = new H3("Employment information");
         employmentInformationTitle.setId("employment-title");
-        employmentInformationTitle.getStyle()
-                .set("font-size", "var(--lumo-font-size-l)")
-                .set("font-weight", "600")
-                .set("line-height", "var(--lumo-line-height-xs)")
-                .set("margin", "0 0 var(--lumo-space-s) 0");
 
         TextField positionField = new TextField("Position");
         TextArea informationArea = new TextArea("Additional information");
@@ -108,17 +90,14 @@ public class DialogNoPadding extends Div {
         buttonLayout
                 .setJustifyContentMode(FlexComponent.JustifyContentMode.END);
         Footer footer = new Footer(buttonLayout);
-        footer.getStyle().set("background-color", "var(--lumo-contrast-5pct)")
-                .set("padding", "var(--lumo-space-s) var(--lumo-space-m)")
-                .set("text-align", "right");
 
         VerticalLayout dialogContent = new VerticalLayout(header, scroller,
                 footer);
         dialogContent.setPadding(false);
         dialogContent.setSpacing(false);
+        dialogContent.getStyle().remove("width");
         dialogContent.setAlignItems(FlexComponent.Alignment.STRETCH);
-        dialogContent.getStyle().set("height", "100%")
-                .set("max-height", "420px").set("width", "320px");
+        dialogContent.setClassName("dialog-no-padding-example-overlay");
 
         return dialogContent;
     }
