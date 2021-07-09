@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
-import static com.vaadin.flow.component.button.ButtonVariant.*;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -11,7 +11,7 @@ public class ButtonTertiaryInline extends Div {
     public ButtonTertiaryInline() {
         // tag::snippet[]
         Button tertiaryInlineButton = new Button("Tertiary inline");
-        tertiaryInlineButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+        tertiaryInlineButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         // end::snippet[]
 
         add(tertiaryInlineButton);

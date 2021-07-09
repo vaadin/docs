@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
-import static com.vaadin.flow.component.button.ButtonVariant.*;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -24,7 +24,7 @@ public class ButtonForm extends VerticalLayout {
         formLayout.setColspan(emailField, 2);
 
         Button createAccount = new Button("Create account");
-        createAccount.addThemeVariants(LUMO_PRIMARY);
+        createAccount.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button cancel = new Button("Cancel");
 
         HorizontalLayout buttonLayout = new HorizontalLayout(createAccount, cancel);

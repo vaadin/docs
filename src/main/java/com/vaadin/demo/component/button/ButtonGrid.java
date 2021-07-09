@@ -3,7 +3,7 @@ package com.vaadin.demo.component.button;
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.button.Button;
-import static com.vaadin.flow.component.button.ButtonVariant.*;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -35,7 +35,7 @@ public class ButtonGrid extends VerticalLayout {
 
         Button delete = new Button("Delete");
         delete.setEnabled(false);
-        delete.addThemeVariants(LUMO_ERROR);
+        delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
         delete.getStyle().set("margin-inline-start", "auto");
 
         Grid<Person> grid = new Grid<>(Person.class, false);

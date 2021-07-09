@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
-import static com.vaadin.flow.component.button.ButtonVariant.*;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
@@ -12,13 +12,13 @@ public class ButtonSuccess extends Div {
     public ButtonSuccess() {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
-        primaryButton.addThemeVariants(LUMO_PRIMARY, LUMO_SUCCESS);
+        primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
 
         Button secondaryButton = new Button("Secondary");
-        secondaryButton.addThemeVariants(LUMO_SUCCESS);
+        secondaryButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
 
         Button tertiaryButton = new Button("Tertiary");
-        tertiaryButton.addThemeVariants(LUMO_TERTIARY, LUMO_SUCCESS);
+        tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SUCCESS);
         // end::snippet[]
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);

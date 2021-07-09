@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
-import static com.vaadin.flow.component.button.ButtonVariant.*;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -14,11 +14,11 @@ public class ButtonIcons extends Div {
     public ButtonIcons() {
         // tag::snippet[]
         Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
-        plusButton.addThemeVariants(LUMO_ICON);
+        plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         plusButton.getElement().setAttribute("aria-label", "Add item");
 
         Button closeButton = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
-        closeButton.addThemeVariants(LUMO_ICON);
+        closeButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         closeButton.getElement().setAttribute("aria-label", "Close");
 
         Button arrowLeftButton = new Button("Left", new Icon(VaadinIcon.ARROW_LEFT));
