@@ -16,14 +16,14 @@ public class DialogClosing extends Div {
     public DialogClosing() {
         Dialog dialog = new Dialog();
 
-        VerticalLayout dialogContent = createDialogContent(dialog);
-        dialog.add(dialogContent);
+        VerticalLayout dialogLayout = createDialogLayout(dialog);
+        dialog.add(dialogLayout);
 
         Button button = new Button("Show dialog", e -> dialog.open());
         add(dialog, button);
     }
 
-    private static VerticalLayout createDialogContent(Dialog dialog) {
+    private static VerticalLayout createDialogLayout(Dialog dialog) {
         H2 headline = new H2("System maintenance");
         headline.getStyle().set("margin", "var(--lumo-space-m) 0")
                 .set("font-size", "1.5em").set("font-weight", "bold");

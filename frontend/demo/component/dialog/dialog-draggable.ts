@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -30,41 +29,36 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog
-        modeless
-        draggable
-        theme="no-padding"
         aria-label="simple"
+        draggable
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(
             html`
-              <div>
+              <vaadin-vertical-layout
+                theme="spacing"
+                style="width: 300px; max-width: 100%; align-items: stretch;"
+              >
                 <vaadin-horizontal-layout
-                  theme="padding"
                   class="draggable"
-                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); cursor: move;"
+                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); cursor: move; padding: var(--lumo-space-m) var(--lumo-space-l); margin: calc(var(--lumo-space-s) * -1) calc(var(--lumo-space-l) * -1) 0"
                 >
                   <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">New employee</h2>
                 </vaadin-horizontal-layout>
-                <vaadin-vertical-layout
-                  theme=" padding spacing"
-                  style="width: 300px; max-width: 100%; align-items: stretch;"
-                >
-                  <vaadin-vertical-layout style="align-items: stretch;">
-                    <vaadin-text-field label="Title"></vaadin-text-field>
-                    <vaadin-text-area label="Description"></vaadin-text-area>
-                  </vaadin-vertical-layout>
-                  <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
-                    <vaadin-button @click="${() => (this.dialogOpened = false)}">
-                      Cancel
-                    </vaadin-button>
-                    <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
-                      Add note
-                    </vaadin-button>
-                  </vaadin-horizontal-layout>
+                <vaadin-vertical-layout style="align-items: stretch;">
+                  <vaadin-text-field label="Title"></vaadin-text-field>
+                  <vaadin-text-area label="Description"></vaadin-text-area>
                 </vaadin-vertical-layout>
-              </div>
+                <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
+                  <vaadin-button @click="${() => (this.dialogOpened = false)}">
+                    Cancel
+                  </vaadin-button>
+                  <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
+                    Add note
+                  </vaadin-button>
+                </vaadin-horizontal-layout>
+              </vaadin-vertical-layout>
             `,
             root
           );

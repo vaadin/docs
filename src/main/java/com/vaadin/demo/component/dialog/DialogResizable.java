@@ -20,8 +20,8 @@ public class DialogResizable extends Div {
     public DialogResizable() {
         Dialog dialog = new Dialog();
 
-        VerticalLayout dialogContent = createDialogContent();
-        dialog.add(dialogContent);
+        VerticalLayout dialogLayout = createDialogLayout();
+        dialog.add(dialogLayout);
         // tag::snippet[]
         dialog.setDraggable(true);
         dialog.setResizable(true);
@@ -31,7 +31,7 @@ public class DialogResizable extends Div {
         add(dialog, button);
     }
 
-    private static VerticalLayout createDialogContent() {
+    private static VerticalLayout createDialogLayout() {
         H2 headline = new H2("Employees");
         headline.getStyle().set("margin", "var(--lumo-space-m) 0 0 0")
                 .set("font-size", "1.5em").set("font-weight", "bold");

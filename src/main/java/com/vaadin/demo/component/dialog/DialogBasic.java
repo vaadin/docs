@@ -19,15 +19,15 @@ public class DialogBasic extends Div {
         // tag::snippet[]
         Dialog dialog = new Dialog();
 
-        VerticalLayout dialogContent = createDialogContent(dialog::close);
-        dialog.add(dialogContent);
+        VerticalLayout dialogLayout = createDialogLayout(dialog);
+        dialog.add(dialogLayout);
 
         Button button = new Button("Show dialog", e -> dialog.open());
         add(dialog, button);
         // end::snippet[]
     }
 
-    private static VerticalLayout createDialogContent(Runnable closeHandler) {
+    private static VerticalLayout createDialogLayout(Dialog dialog) {
         H2 headline = new H2("New employee");
         headline.getStyle().set("margin", "var(--lumo-space-m) 0 0 0")
                 .set("font-size", "1.5em").set("font-weight", "bold");
@@ -40,8 +40,8 @@ public class DialogBasic extends Div {
         fieldLayout.setPadding(false);
         fieldLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
 
-        Button cancelButton = new Button("Cancel", e -> closeHandler.run());
-        Button saveButton = new Button("Save", e -> closeHandler.run());
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+        Button saveButton = new Button("Save", e -> dialog.close());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         HorizontalLayout buttonLayout = new HorizontalLayout(cancelButton,
                 saveButton);
