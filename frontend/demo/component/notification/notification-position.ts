@@ -55,7 +55,7 @@ export class Example extends LitElement {
           <vaadin-horizontal-layout theme="spacing" style="width: 100%; align-items: center;">
             <div style="flex-grow: 1;">${position}</div>
             <vaadin-button
-              theme="tertiary-inline icon"
+              theme="tertiary-inline"
               @click="${() => notification.close()}"
               aria-label="Close"
             >

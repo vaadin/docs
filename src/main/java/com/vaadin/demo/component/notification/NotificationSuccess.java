@@ -26,7 +26,7 @@ public class NotificationSuccess extends Div {
     Div notificationText = new Div(new Text("Application submitted!"));
 
     Button closeButton = new Button(new Icon("lumo", "cross"));
-    closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
+    closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
     closeButton.getElement().setAttribute("aria-label", "Close");
     closeButton.addClickListener(event -> {
       notification.close();

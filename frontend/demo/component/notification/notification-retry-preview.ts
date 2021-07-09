@@ -22,7 +22,7 @@ export class Example extends LitElement {
         <vaadin-button theme="tertiary-inline" style="margin-left: var(--lumo-space-xl);">
           Retry
         </vaadin-button>
-        <vaadin-button theme="tertiary-inline icon">
+        <vaadin-button theme="tertiary-inline">
           <vaadin-icon icon="lumo:cross"></vaadin-icon>
         </vaadin-button>
       </vaadin-notification-card>

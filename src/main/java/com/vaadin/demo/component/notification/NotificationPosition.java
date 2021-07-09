@@ -51,7 +51,7 @@ public class NotificationPosition extends Div {
     Div text = new Div(new Text(position.getClientName()));
 
     Button closeButton = new Button(new Icon("lumo", "cross"));
-    closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
+    closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
     closeButton.getElement().setAttribute("aria-label", "Close");
     closeButton.addClickListener(event -> {
       notification.close();
