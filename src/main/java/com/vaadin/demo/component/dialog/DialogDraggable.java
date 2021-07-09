@@ -17,6 +17,7 @@ public class DialogDraggable extends Div {
 
     public DialogDraggable() {
         Dialog dialog = new Dialog();
+        dialog.getElement().setAttribute("aria-label", "Create new employee");
 
         VerticalLayout dialogLayout = createDialogLayout(dialog);
         dialog.add(dialogLayout);
@@ -30,7 +31,7 @@ public class DialogDraggable extends Div {
     }
 
     private static VerticalLayout createDialogLayout(Dialog dialog) {
-        H2 headline = new H2("New employee");
+        H2 headline = new H2("Create new employee");
         headline.getStyle().set("margin", "0").set("font-size", "1.5em")
                 .set("font-weight", "bold");
         // tag::snippet2[]

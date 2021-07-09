@@ -18,6 +18,7 @@ public class DialogBasic extends Div {
     public DialogBasic() {
         // tag::snippet[]
         Dialog dialog = new Dialog();
+        dialog.getElement().setAttribute("aria-label", "Create new employee");
 
         VerticalLayout dialogLayout = createDialogLayout(dialog);
         dialog.add(dialogLayout);
@@ -28,7 +29,7 @@ public class DialogBasic extends Div {
     }
 
     private static VerticalLayout createDialogLayout(Dialog dialog) {
-        H2 headline = new H2("New employee");
+        H2 headline = new H2("Create new employee");
         headline.getStyle().set("margin", "var(--lumo-space-m) 0 0 0")
                 .set("font-size", "1.5em").set("font-weight", "bold");
 

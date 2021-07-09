@@ -15,6 +15,8 @@ public class DialogClosing extends Div {
 
     public DialogClosing() {
         Dialog dialog = new Dialog();
+        dialog.getElement()
+                .setAttribute("aria-label", "System maintenance hint");
 
         VerticalLayout dialogLayout = createDialogLayout(dialog);
         dialog.add(dialogLayout);
@@ -36,7 +38,8 @@ public class DialogClosing extends Div {
         closeButton.addClickListener(e -> dialog.close());
         // end::snippet[]
 
-        VerticalLayout dialogLayout = new VerticalLayout(headline, paragraph, closeButton);
+        VerticalLayout dialogLayout = new VerticalLayout(headline, paragraph,
+                closeButton);
         dialogLayout.setPadding(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
         dialogLayout.getStyle().set("width", "300px").set("max-width", "100%");

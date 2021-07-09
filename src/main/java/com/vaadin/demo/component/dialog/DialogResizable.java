@@ -19,6 +19,7 @@ public class DialogResizable extends Div {
 
     public DialogResizable() {
         Dialog dialog = new Dialog();
+        dialog.getElement().setAttribute("aria-label", "Employee list");
 
         VerticalLayout dialogLayout = createDialogLayout();
         dialog.add(dialogLayout);
@@ -32,7 +33,7 @@ public class DialogResizable extends Div {
     }
 
     private static VerticalLayout createDialogLayout() {
-        H2 headline = new H2("Employees");
+        H2 headline = new H2("Employee list");
         headline.getStyle().set("margin", "var(--lumo-space-m) 0 0 0")
                 .set("font-size", "1.5em").set("font-weight", "bold");
 

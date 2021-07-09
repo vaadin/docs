@@ -29,7 +29,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog
-        aria-label="simple"
+        aria-label="Create new employee"
         draggable
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
@@ -44,7 +44,9 @@ export class Example extends LitElement {
                   class="draggable"
                   style="border-bottom: 1px solid var(--lumo-contrast-20pct); cursor: move; padding: var(--lumo-space-m) var(--lumo-space-l); margin: calc(var(--lumo-space-s) * -1) calc(var(--lumo-space-l) * -1) 0"
                 >
-                  <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">New employee</h2>
+                  <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">
+                    Create new employee
+                  </h2>
                 </vaadin-horizontal-layout>
                 <vaadin-vertical-layout style="align-items: stretch;">
                   <vaadin-text-field label="Title"></vaadin-text-field>
