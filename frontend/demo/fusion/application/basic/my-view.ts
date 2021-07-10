@@ -1,3 +1,5 @@
+import 'Frontend/demo/init'; // hidden-source-line
+
 import { css, html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/vaadin-button/vaadin-button';
@@ -20,7 +22,7 @@ export class MyView extends LitElement {
     return html`
       <vaadin-button theme="primary" @click="${this.clickHandler}"> Click me </vaadin-button>
       <vaadin-notification id="notification" duration="2000">
-        <template> Hello, World! </template>
+        <template>Hello, World!</template>
       </vaadin-notification>
     `;
   }
