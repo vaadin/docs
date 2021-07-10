@@ -1,5 +1,6 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -34,7 +35,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-sort-column path="id"></vaadin-grid-sort-column>
-        <vaadin-grid-sort-column path="displayName"></vaadin-grid-sort-column>
+        <vaadin-grid-sort-column path="displayName" header="Name"></vaadin-grid-sort-column>
         <vaadin-grid-sort-column path="email"></vaadin-grid-sort-column>
         <vaadin-grid-sort-column path="profession"></vaadin-grid-sort-column>
         <vaadin-grid-sort-column path="birthday"></vaadin-grid-sort-column>

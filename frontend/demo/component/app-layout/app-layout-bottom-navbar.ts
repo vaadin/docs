@@ -3,7 +3,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-app-layout/vaadin-app-layout';
 import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -24,7 +25,7 @@ export class Example extends LitElement {
         margin: var(--lumo-space-m) var(--lumo-space-l);
       }
 
-      iron-icon {
+      vaadin-icon {
         height: var(--lumo-icon-size-s);
         margin: auto;
         width: var(--lumo-icon-size-s);
@@ -53,23 +54,23 @@ export class Example extends LitElement {
         <vaadin-tabs slot="navbar touch-optimized" theme="equal-width-tabs">
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:dashboard"></iron-icon>
+              <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
             </a>
           </vaadin-tab>
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:cart"></iron-icon>
+              <vaadin-icon icon="vaadin:cart"></vaadin-icon>
             </a>
           </vaadin-tab>
           <!-- end::snippet[] -->
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:user-heart"></iron-icon>
+              <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
             </a>
           </vaadin-tab>
           <vaadin-tab>
             <a tabindex="-1">
-              <iron-icon icon="vaadin:package"></iron-icon>
+              <vaadin-icon icon="vaadin:package"></vaadin-icon>
             </a>
           </vaadin-tab>
           <!-- tag::snippet[] -->

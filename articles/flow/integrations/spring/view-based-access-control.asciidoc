@@ -22,8 +22,8 @@ You can protect restricted views in Spring-based Vaadin Flow applications in the
 - By adding View-Based Access Control mechanism
 
 Navigating between routes of a Vaadin Flow application does not send traditional page requests to the server. 
-So checking authorized access to views using only the Spring Security URL-based-filtering mechanism would either secure only the first requested route, or there would simply be no security at all for the views.
-This happens generally for any single-page application that tries to secure its routes using only Spring Security.
+Therefore, checking authorized access to views using only the Spring Security URL-based filtering mechanism would either secure only the first requested route, or there would simply be no security at all for the views.
+This applies to any single-page application that tries to secure its routes using only Spring Security.
 
 .Do not rely on Spring Security's URL-based authorization in single-page applications
 [NOTE]
@@ -31,15 +31,17 @@ View-based access control is the main mechanism for restricting access to views.
 You should not use the traditional Spring Security URL-based [classname]#HttpSecurity# configurations as a mechanism for securing views at all (except for static resources, as URLs are the only way to load them).
 
 
-*This is where view-based access control comes in*, to fully secure views in Vaadin Flow applications in a very flexible way, based on different access level annotations.
+*This is where view-based access control comes in*, to fully secure views in Vaadin Flow applications in a flexible way, based on different access level annotations.
 The view-based access control mechanism uses the `@AnonymousAllowed`, `@PermitAll`, `@RolesAllowed`, and `@DenyAll` annotations on view classes to define the access control rules.
+**By default any view without an annotation is secured - it acts like it would have the `@DenyAll` annotation in it.**
 
 .The use of annotations in Vaadin Fusion
 [TIP]
 Although the same set of annotations are used to define the security access control rules on endpoints of a <<{articles}/fusion/overview#,Vaadin Fusion>> application, this document does not describe how to secure client-side views.
 It is described in <<{articles}/fusion/security/configuring#,Configuring Security>> in Fusion documentation.
 
-The approach of the of this documentation is based on Vaadin's Spring Boot and Spring Security autoconfiguration.
+The approach of this documentation is based on Vaadin's Spring Boot and Spring Security autoconfiguration.
+For using view-based access control in non-Spring projects, see the documentation in the <<{articles}/flow/security/best-practices/#view-based-access-control,Security best practices section>>.
 
 == View-Based Access Control in Spring Boot-Based Applications
 
@@ -48,6 +50,7 @@ To enable the mechanism in a Vaadin Flow Spring Boot application without any sec
 
 - A Login view.
 - Spring Security dependencies.
+- Logout capability.
 - A security configuration class that extends `VaadinWebSecurityConfigurerAdapter`.
 - Annotate the view classes with the `@AnonymousAllowed`, `@PermitAll`, or `@RolesAllowed` annotations.
 
@@ -111,6 +114,71 @@ _As this documentation is based on Spring Boot, we recommend adding the followin
     </dependency>
     <!-- other dependencies -->
 </dependencies>
+----
+
+=== Logout Capability
+
+For handling logout in web applications, one typically uses a logout button.
+Here is a basic implementation of logout button shown on the main layout's header:
+
+.[filename]#MainLayout.java#
+[source,java]
+----
+public class MainLayout extends AppLayout {
+
+    private SecurityService securityService;
+
+    public MainLayout(@Autowired SecurityService securityService) {
+        this.securityService = securityService;
+
+        H1 logo = new H1("Vaadin CRM");
+        logo.addClassName("logo");
+        HorizontalLayout header;
+        if (securityService.getAuthenticatedUser() != null) {
+            Button logout = new Button("Logout", click ->
+                    securityService.logout());
+            header = new HorizontalLayout(logo, logout);
+        } else {
+            header = new HorizontalLayout(logo);
+        }
+
+        // Other page components omitted.
+
+        addToNavbar(header);
+    }
+}
+----
+
+The way how to get the authenticated user and how to logout the user may vary from application to application.
+Here is a basic example how to do that with Spring Security API:
+
+.[filename]#SecurityService.java#
+[source,java]
+----
+@Component
+public class SecurityService {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
+
+    public UserDetails getAuthenticatedUser() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Object principal = context.getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            return (UserDetails) context.getAuthentication().getPrincipal();
+        }
+        // Anonymous or no authentication.
+        return null;
+    }
+
+    public void logout() {
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.setInvalidateHttpSession(false);
+        logoutHandler.logout(
+                VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
+                null);
+        UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
+    }
+}
 ----
 
 === Security Configuration Class
@@ -247,13 +315,32 @@ public class PrivateView extends VerticalLayout {
 ----
 @Route(value = "admin", layout = MainView.class)
 @PageTitle("Admin View")
-@RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
+@RolesAllowed("ROLE_ADMIN") // <- Should match one of the user's roles (case-sensitive)
 public class AdminView extends VerticalLayout {
     // ...
 }
 ----
 
-If multiple annotations are specified on a single view, the following rules are applied:
+.Example of inheriting security annotations from parent class
+[source,java]
+----
+@RolesAllowed("ROLE_ADMIN")
+public abstract class AbstractAdminView extends VerticalLayout {
+    // ...
+}
+
+@Route(value = "user-listing", layout = MainView.class)
+@PageTitle("User Listing")
+public class UserListingView extends AbstractAdminView {
+    // ...
+}
+----
+
+Like shown by the last example above, the security annotations are inherited from the closest parent class that has them.
+Annotating a child class will override any inherited annotations.
+Interfaces are not checked for annotations, but only classes.
+By design, the annotations are not read from parent layouts or "parent views", as this would make things unnecessarily complex to determine which security level should be applied.
+If multiple annotations are specified on a single view class, the following rules are applied:
 
 - `DenyAll` overrides other annotations
 - `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`
@@ -261,9 +348,16 @@ If multiple annotations are specified on a single view, the following rules are 
 
 However, specifying more than one of the above access annotations on a view class is not recommended, as it is confusing and there is probably no logical reason to do so.
 
+If the user is already authenticated and tries to navigate to the view they are not allowed to, an error message is displayed.
+The message depends on the application mode:
+
+- In development mode, Vaadin shows an *_Access denied_* message with the list of available routes.
+- In production mode, Vaadin shows the [classname]#RouteNotFoundError# view, which shows *_Could not navigate to 'RequestedRouteName'_* message by default.
+For security reasons, the message does not tell whether the navigation target exists.
+
 == Limitations
 Mixing any of the view access annotations with Spring's URL-based HTTP security (which probably exist in older Vaadin Spring Boot applications) may result in unwanted access configurations or unnecessary complications.
 
 .Do not mix Spring's URL-based HTTP security and view-based access control on a single view
 [IMPORTANT]
-Vaadin strongly recommends *not* mixing Spring's URL-pattern-based HTTP security and this view-based access control mechanism targeting the same views, since it may lead to unwanted access configurations, or at the very least an unnecessary complication in the authorization of views.
+Vaadin strongly recommends *not* mixing Spring's URL-pattern-based HTTP security and this view-based access control mechanism targeting the same views, since it may lead to unwanted access configurations, and would be an unnecessary complication in the authorization of views.

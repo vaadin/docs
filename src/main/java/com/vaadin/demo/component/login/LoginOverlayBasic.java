@@ -5,7 +5,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("login-overlay-basic")
 public class LoginOverlayBasic extends Div {
@@ -21,5 +21,5 @@ public class LoginOverlayBasic extends Div {
         login.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         add(login);
     }
-    public static class Exporter extends DemoExporter<LoginOverlayBasic> {} // hidden-full-source-line
+    public static class Exporter extends DemoExporter<LoginOverlayBasic> {} // hidden-source-line
 }

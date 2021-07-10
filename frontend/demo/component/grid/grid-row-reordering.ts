@@ -1,8 +1,10 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import type {
   GridDragStartEvent,
@@ -49,16 +51,15 @@ export class Example extends LitElement {
         }}"
         @grid-drop="${(event: GridDropEvent<Person>) => {
           const { dropTargetItem, dropLocation } = event.detail;
-          const draggedPerson = this.draggedItem as Person;
           // only act when dropping on another item
-          if (dropTargetItem !== draggedPerson) {
+          if (this.draggedItem && dropTargetItem !== this.draggedItem) {
             // remove the item from its previous position
-            const draggedItemIndex = this.items.indexOf(draggedPerson);
+            const draggedItemIndex = this.items.indexOf(this.draggedItem);
             this.items.splice(draggedItemIndex, 1);
             // re-insert the item at its new position
             const dropIndex =
               this.items.indexOf(dropTargetItem) + (dropLocation === 'below' ? 1 : 0);
-            this.items.splice(dropIndex, 0, draggedPerson);
+            this.items.splice(dropIndex, 0, this.draggedItem);
             // re-assign the array to refresh the grid
             this.items = [...this.items];
           }
@@ -81,7 +82,11 @@ export class Example extends LitElement {
   private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
     render(
       html`
-        <img style="height: var(--lumo-size-m)" src="${model.item.pictureUrl}" alt="User avatar" />
+        <vaadin-avatar
+          img="${model.item.pictureUrl}"
+          name="${model.item.firstName} ${model.item.lastName}"
+          alt="User avatar"
+        />
       `,
       root
     );

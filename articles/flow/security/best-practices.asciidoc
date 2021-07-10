@@ -28,7 +28,7 @@ This is something that is common to all UI frameworks, and not specific to Vaadi
 // tag::spring-security-integration-ref[]
 Examples for integrating Spring Security can be found in
 // end::spring-security-integration-ref[]
-https://vaadin.com/tutorials/securing-your-app-with-spring-security[Securing your app with Spring Security].
+<<{articles}/flow/integrations/spring/view-based-access-control#, the Spring integration section>>.
 
 == View-Based Access Control
 
@@ -39,14 +39,73 @@ https://vaadin.com/tutorials/securing-your-app-with-spring-security[Securing you
 Since Vaadin 21, it is possible to use a built-in view-based access control mechanism to secure Flow navigation targets.
 However, as mentioned in <<Authentication and Authorization,Authentication and Authorization>>, it is not mandatory to use it, so it is not enabled by default.
 The view-based access control mechanism uses the `@AnonymousAllowed`, `@PermitAll`, `@RolesAllowed`, and `@DenyAll` annotations on view classes to define the access control rules.
+**By default any view without an annotation is secured - it acts like it would have the `@DenyAll` annotation in it.**
 
 See <<{articles}/flow/integrations/spring/view-based-access-control#, View-Based Access Control>> for detailed information about enabling the access control mechanism in Vaadin Flow Spring Boot applications.
 
 To enable and use this mechanism, the following should be added to a Vaadin Flow application (if it does not exist already):
 
+- A security realm.
 - A login view.
+- Logout capability.
 - A `VaadinServiceInitListener` that adds `ViewAccessChecker` as the `BeforeEnterListener` of all UIs.
 - A Service Provider under `META-INF/services` to load above the custom [classname]#ServiceInitListener# via the Java SPI loading mechanism.
+
+=== Configuring a Security Realm
+
+A _security realm_ is a mechanism for storing and mapping the users with their passwords and roles.
+Configuring a security realm depends on the application server you are using to run Vaadin application.
+For example, if you use Apache Tomcat or TomEE, follow link:https://tomcat.apache.org/tomcat-10.0-doc/realm-howto.html[Realm Configuration How-To].
+
+=== Handle User's Login and Logout
+
+You can handle login and logout in many ways, as well as how to get the authenticated user for a request.
+The View-based access control implementation in Vaadin uses [methodname]#getUserPrincipal()# and [methodname]#isUserInRole(String)# in [classname]#HttpServletRequest# to check whether the currently authenticated user has access to the view.
+Therefore, you need a way to put the user information into the request.
+
+The example below uses the currently active Vaadin servlet request.
+It shows how to:
+
+- Check whether the user is currently authenticated to the application or not.
+The request is not available in background threads, so the [methodname]#isAuthenticated()# method shows authentication state only in Vaadin request processing threads, otherwise it would always return `false`.
+- Authenticate the user with the given credentials.
+The [methodname]#authenticate()# method fails if is called from a background thread.
+- Logout the user by invalidating the HTTP session and redirecting to the home page.
+
+.[filename]#SecurityUtils.java#
+[source,java]
+----
+public class SecurityUtils {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
+
+    public static boolean isAuthenticated() {
+        VaadinServletRequest request = VaadinServletRequest.getCurrent();
+        return request != null && request.getUserPrincipal() != null;
+    }
+
+    public static boolean authenticate(String username, String password) {
+        VaadinServletRequest request = VaadinServletRequest.getCurrent();
+        if (request == null) {
+            // This is in a background thread and we cannot access the request to
+            // log in the user
+            return false;
+        }
+        try {
+            request.login(username, password);
+            return true;
+        } catch (ServletException e) {
+            // login exception handle code omitted
+            return false;
+        }
+    }
+
+    public static void logout() {
+        VaadinSession.getCurrent().getSession().invalidate();
+        UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
+    }
+}
+----
 
 === Adding Login View
 Having a login view is one of the basic requirements of many authentication and authorization mechanisms.
@@ -57,7 +116,10 @@ It serves to redirect anonymous users to that page before granting access to vie
 ----
 @Route("login")
 @PageTitle("Login")
-public class LoginView extends VerticalLayout implements BeforeEnterObserver {
+public class LoginView extends VerticalLayout implements BeforeEnterObserver,
+        ComponentEventListener<AbstractLogin.LoginEvent> {
+
+    private static final String LOGIN_SUCCESS_URL = "/";
 
     private LoginForm login = new LoginForm();
 
@@ -68,17 +130,28 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         setJustifyContentMode(JustifyContentMode.CENTER);
         setAlignItems(Alignment.CENTER);
 
-        login.setAction("login");
+        login.addLoginListener(this);
 
         add(new H1("Test Application"), login);
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
-        if(beforeEnterEvent.getLocation()
+        if (beforeEnterEvent.getLocation()
             .getQueryParameters()
             .getParameters()
             .containsKey("error")) {
+            login.setError(true);
+        }
+    }
+
+    @Override
+    public void onComponentEvent(AbstractLogin.LoginEvent loginEvent) {
+        boolean authenticated = SecurityUtils.authenticate(
+                loginEvent.getUsername(), loginEvent.getPassword());
+        if (authenticated) {
+            UI.getCurrent().getPage().setLocation(LOGIN_SUCCESS_URL);
+        } else {
             login.setError(true);
         }
     }
@@ -87,6 +160,35 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
 In this example, Vaadin's Login Form component is used for the sake of brevity.
 However, feel free to implement your own login view, if you wish.
+
+=== Logout Capability
+
+You typically let the user to log out by using a logout button.
+The following example shows a basic implementation of a logout button shown on the header of the main layout:
+
+.[filename]#MainLayout.java#
+[source,java]
+----
+public class MainLayout extends AppLayout {
+
+    public MainLayout() {
+        H1 logo = new H1("Vaadin CRM");
+        logo.addClassName("logo");
+        HorizontalLayout header;
+        if (SecurityUtils.isAuthenticated()) {
+            Button logout = new Button("Logout", click ->
+                    SecurityUtils.logout());
+            header = new HorizontalLayout(logo, logout);
+        } else {
+            header = new HorizontalLayout(logo);
+        }
+
+        // Other page components omitted.
+
+        addToNavbar(header);
+    }
+}
+----
 
 === Adding VaadinServiceInitListener
 In order to restrict access to views, a `BeforeEnterListener` must be registered for the `VaadinService`, to initialize and enable the `ViewAccessChecker`:
@@ -188,7 +290,7 @@ public class PrivateView extends VerticalLayout {
 ----
 @Route(value = "admin", layout = MainView.class)
 @PageTitle("Admin View")
-@RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
+@RolesAllowed("ROLE_ADMIN") // <- Should match one of the user's roles (case-sensitive)
 public class AdminView extends VerticalLayout {
     // ...
 }
@@ -197,11 +299,38 @@ public class AdminView extends VerticalLayout {
 Now, if the application is started by navigating to `http://localhost:8080`, `PublicView` contents should be available without any authentication.
 However, by navigating to `http://localhost:8080/private` or `http://localhost:8080/admin`, the user is redirected to the specified `LoginView`.
 
+If the user is already authenticated and tries to navigate to the view they are not allowed to, an error message is displayed.
+The message depends on the application mode:
+
+- In development mode, Vaadin shows an *_Access denied_* message with the list of available routes.
+- In production mode, Vaadin shows the [classname]#RouteNotFoundError# view, which shows *_Could not navigate to 'RequestedRouteName'_* message by default.
+For security reasons, the message does not tell whether the navigation target exists.
+
 // TODO: Consider adding more details and snippet code to showcase how the following can be achieved:
 // 1. login with some users with different roles
 // 2. save the requested URL to redirect to it after a successful login
 
-If multiple annotations are specified on a single view, the following rules are applied:
+The following example shows how the security annotations are inherited from the closest parent class that has them.
+
+.Example of inheriting security annotations from parent class
+[source,java]
+----
+@RolesAllowed("ROLE_ADMIN")
+public abstract class AbstractAdminView extends VerticalLayout {
+    // ...
+}
+
+@Route(value = "user-listing", layout = MainView.class)
+@PageTitle("User Listing")
+public class UserListingView extends AbstractAdminView {
+    // ...
+}
+----
+
+Annotating a child class will override any inherited annotations.
+Interfaces are not checked for annotations, but only classes.
+By design, the annotations are not read from parent layouts or "parent views", as this would make things unnecessarily complex to determine which security level should be applied.
+If multiple annotations are specified on a single view class, the following rules are applied:
 
 - `DenyAll` overrides other annotations
 - `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`

@@ -2,10 +2,12 @@ import { getUserPermissions } from 'Frontend/demo/domain/DataService'; // hidden
 import 'Frontend/demo/init'; // hidden-source-line
 import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions'; // hidden-source-line
 import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { applyTheme } from 'Frontend/generated/theme';
 import { html, LitElement, render } from 'lit';
+import { guard } from 'lit/directives/guard';
 import { customElement, state } from 'lit/decorators.js';
 
 @customElement('badge-icons-only-table')
@@ -26,41 +28,45 @@ export class Example extends LitElement {
 
   render() {
     // tag::snippet[]
-    const renderBoolean = (
-      root: HTMLElement,
-      column?: GridColumnElement,
-      model?: GridItemModel<UserPermissions>
-    ): void => {
-      if (!column || !model) {
-        return;
-      }
+    const renderBoolean = guard(
+      [],
+      () =>
+        (
+          root: HTMLElement,
+          column?: GridColumnElement,
+          model?: GridItemModel<UserPermissions>
+        ): void => {
+          if (!column || !model) {
+            return;
+          }
 
-      let icon: string;
-      let title: string;
-      let theme: string;
+          let icon: string;
+          let title: string;
+          let theme: string;
 
-      if (model.item[column.id as keyof UserPermissions]) {
-        icon = 'vaadin:check-circle';
-        title = 'Confirmed';
-        theme = 'success';
-      } else {
-        icon = 'vaadin:close-circle';
-        title = 'Cancelled';
-        theme = 'error';
-      }
+          if (model.item[column.id as keyof UserPermissions]) {
+            icon = 'vaadin:check-circle';
+            title = 'Confirmed';
+            theme = 'success';
+          } else {
+            icon = 'vaadin:close-circle';
+            title = 'Cancelled';
+            theme = 'error';
+          }
 
-      render(
-        html`
-          <iron-icon
-            icon="${icon}"
-            theme="badge ${theme} pill"
-            title="${title}"
-            aria-label="${title}"
-          ></iron-icon>
-        `,
-        root
-      );
-    };
+          render(
+            html`
+              <vaadin-icon
+                icon="${icon}"
+                theme="badge ${theme} pill"
+                title="${title}"
+                aria-label="${title}"
+              ></vaadin-icon>
+            `,
+            root
+          );
+        }
+    );
 
     return html`
       <vaadin-grid .items="${this.items}">
