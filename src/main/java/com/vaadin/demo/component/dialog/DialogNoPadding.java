@@ -43,53 +43,13 @@ public class DialogNoPadding extends Div {
         H2 dialogTitle = new H2("Create new employee");
         Header header = new Header(dialogTitle);
 
-        H3 personalInformationTitle = new H3("Personal information");
-        personalInformationTitle.setId("personal-title");
-        TextField firstNameField = new TextField("First name");
-        TextField lastNameField = new TextField("Last name");
-        DatePicker birthdatePicker = new DatePicker("Birthdate");
-        birthdatePicker.setInitialPosition(LocalDate.of(1990, 1, 1));
-
-        VerticalLayout personalInformationLayout = new VerticalLayout(
-                personalInformationTitle, firstNameField, lastNameField,
-                birthdatePicker);
-        personalInformationLayout.setPadding(false);
-        personalInformationLayout.setSpacing(false);
-        personalInformationLayout
-                .setAlignItems(FlexComponent.Alignment.STRETCH);
-        personalInformationLayout.getElement().setAttribute("role", "region");
-        personalInformationLayout.getElement().setAttribute("aria-labelledby",
-                personalInformationTitle.getId().get());
-
-        H3 employmentInformationTitle = new H3("Employment information");
-        employmentInformationTitle.setId("employment-title");
-
-        TextField positionField = new TextField("Position");
-        TextArea informationArea = new TextArea("Additional information");
-
-        VerticalLayout employmentInformationLayout = new VerticalLayout(
-                employmentInformationTitle, positionField, informationArea);
-        employmentInformationLayout.setPadding(false);
-        employmentInformationLayout.setSpacing(false);
-        employmentInformationLayout
-                .setAlignItems(FlexComponent.Alignment.STRETCH);
-        employmentInformationLayout.getElement().setAttribute("role", "region");
-        employmentInformationLayout.getElement().setAttribute("aria-labelledby",
-                employmentInformationTitle.getId().get());
-
+        VerticalLayout personalInformationSection = createPersonalInformationSection();
+        VerticalLayout employeeInformationSection = createEmployeeInformationSection();
         VerticalLayout scrollContent = new VerticalLayout(
-                personalInformationLayout, employmentInformationLayout);
+                personalInformationSection, employeeInformationSection);
         Scroller scroller = new Scroller(scrollContent);
 
-        Button cancelButton = new Button("Cancel", e -> dialog.close());
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        Button saveButton = new Button("Save", e -> dialog.close());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        HorizontalLayout buttonLayout = new HorizontalLayout(cancelButton,
-                saveButton);
-        buttonLayout
-                .setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        Footer footer = new Footer(buttonLayout);
+        Footer footer = createFooter(dialog);
 
         VerticalLayout dialogContent = new VerticalLayout(header, scroller,
                 footer);
@@ -100,6 +60,58 @@ public class DialogNoPadding extends Div {
         dialogContent.setClassName("dialog-no-padding-example-overlay");
 
         return dialogContent;
+    }
+
+    private static VerticalLayout createPersonalInformationSection() {
+        H3 personalInformationTitle = new H3("Personal information");
+        personalInformationTitle.setId("personal-title");
+        TextField firstNameField = new TextField("First name");
+        TextField lastNameField = new TextField("Last name");
+        DatePicker birthdatePicker = new DatePicker("Birthdate");
+        birthdatePicker.setInitialPosition(LocalDate.of(1990, 1, 1));
+
+        VerticalLayout section = new VerticalLayout(personalInformationTitle,
+                firstNameField, lastNameField, birthdatePicker);
+        section.setPadding(false);
+        section.setSpacing(false);
+        section.setAlignItems(FlexComponent.Alignment.STRETCH);
+        section.getElement().setAttribute("role", "region");
+        section.getElement().setAttribute("aria-labelledby",
+                personalInformationTitle.getId().get());
+
+        return section;
+    }
+
+    private static VerticalLayout createEmployeeInformationSection() {
+        H3 employmentInformationTitle = new H3("Employment information");
+        employmentInformationTitle.setId("employment-title");
+
+        TextField positionField = new TextField("Position");
+        TextArea informationArea = new TextArea("Additional information");
+
+        VerticalLayout section = new VerticalLayout(employmentInformationTitle,
+                positionField, informationArea);
+        section.setPadding(false);
+        section.setSpacing(false);
+        section.setAlignItems(FlexComponent.Alignment.STRETCH);
+        section.getElement().setAttribute("role", "region");
+        section.getElement().setAttribute("aria-labelledby",
+                employmentInformationTitle.getId().get());
+
+        return section;
+    }
+
+    private static Footer createFooter(Dialog dialog) {
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        Button saveButton = new Button("Save", e -> dialog.close());
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        HorizontalLayout buttonLayout = new HorizontalLayout(cancelButton,
+                saveButton);
+        buttonLayout
+                .setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+
+        return new Footer(buttonLayout);
     }
 
     public static class Exporter // hidden-source-line
