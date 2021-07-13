@@ -18,7 +18,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
+      <!-- Use the target attribute to specify the URL
+           that handles the file upload -->
       <vaadin-upload
+        target="/api/fileupload"
         .files="${createFakeFilesUploadBasic() /* hidden-source-line-trim */}"
       ></vaadin-upload>
       <!-- end::snippet[] -->
