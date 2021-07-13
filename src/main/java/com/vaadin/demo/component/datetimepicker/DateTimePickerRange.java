@@ -13,15 +13,13 @@ public class DateTimePickerRange extends Div {
 
     public DateTimePickerRange() {
         // tag::snippet[]
-        DateTimePicker startDateTimePicker = new DateTimePicker();
-        DateTimePicker endDateTimePicker = new DateTimePicker();
-
-        startDateTimePicker.setLabel("Start date and time");
-        startDateTimePicker.addValueChangeListener(e -> endDateTimePicker.setMin(e.getValue()));
+        DateTimePicker startDateTimePicker = new DateTimePicker("Start date and time");
         startDateTimePicker.setValue(LocalDateTime.of(2020, 8, 25, 20, 0, 0));
 
-        endDateTimePicker.setLabel("Start date and time");
+        DateTimePicker endDateTimePicker = new DateTimePicker("End date and time");
         endDateTimePicker.setValue(LocalDateTime.of(2020, 9, 1, 20, 0, 0));
+
+        startDateTimePicker.addValueChangeListener(e -> endDateTimePicker.setMin(e.getValue()));
 
         add(startDateTimePicker, endDateTimePicker);
         // end::snippet[]
