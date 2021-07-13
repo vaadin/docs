@@ -5,15 +5,15 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
 
 @Route("upload-drag-and-drop")
 public class UploadDragAndDrop extends Div {
 
     public UploadDragAndDrop() {
-        MemoryBuffer buffer1 = new MemoryBuffer();
-        MemoryBuffer buffer2 = new MemoryBuffer();
+        MultiFileMemoryBuffer buffer1 = new MultiFileMemoryBuffer();
+        MultiFileMemoryBuffer buffer2 = new MultiFileMemoryBuffer();
 
         // tag::snippet[]
         Upload dropEnabledUpload = new Upload(buffer1);
