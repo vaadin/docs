@@ -54,7 +54,7 @@ public class GridProPreventSave extends Div {
         add(grid);
     }
 
-    private boolean isValidPhoneNumber(String phoneNumber) {
+    private static boolean isValidPhoneNumber(String phoneNumber) {
         if (phoneNumber == null) return false;
 
         return Pattern.compile("^[0-9-]+$").matcher(phoneNumber).matches();
@@ -71,7 +71,7 @@ public class GridProPreventSave extends Div {
         return Pattern.compile(regex).matcher(email).matches();
     }
 
-    private void showErrorNotification(String msg) {
+    private static void showErrorNotification(String msg) {
         Notification notification = new Notification(
                 msg,
                 5000,
