@@ -1,8 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement } from 'lit';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -17,10 +15,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-notification-card theme="contrast" slot="middle">
-        <div>5 tasks deleted</div>
-        <vaadin-button theme="tertiary-inline">
-          <vaadin-icon icon="lumo:cross"></vaadin-icon>
-        </vaadin-button>
+        5 tasks deleted
       </vaadin-notification-card>
     `;
   }
