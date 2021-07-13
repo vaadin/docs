@@ -3,12 +3,12 @@ import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hi
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators';
 import { guard } from 'lit/directives/guard';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
-import { NotificationOpenedChangedEvent } from '@vaadin/vaadin-notification/vaadin-notification';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import {
+  NotificationRenderer,
+  NotificationOpenedChangedEvent,
+} from '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-basic')
@@ -39,23 +39,12 @@ export class Example extends LitElement {
         @opened-changed="${(e: NotificationOpenedChangedEvent) => {
           this.notificationOpened = e.detail.value;
         }}"
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
-                <div>Financial report generated</div>
-                <vaadin-button
-                  theme="tertiary-inline"
-                  @click="${() => (this.notificationOpened = false)}"
-                  aria-label="Close"
-                >
-                  <vaadin-icon icon="lumo:cross"></vaadin-icon>
-                </vaadin-button>
-              </vaadin-horizontal-layout>
-            `,
-            root
-          );
-        })}"
+        .renderer="${guard(
+          [],
+          (): NotificationRenderer => (root) => {
+            render(html`Financial report generated`, root);
+          }
+        )}"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
