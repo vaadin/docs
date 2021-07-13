@@ -49,13 +49,13 @@ public class GridProPreventSave extends Div {
     }
 
     private boolean isValidPhoneNumber(String phoneNumber) {
-        if (phoneNumber == null || phoneNumber.isEmpty()) return false;
+        if (phoneNumber == null) return false;
 
         return Pattern.compile("^[0-9-]+$").matcher(phoneNumber).matches();
     }
 
     private static boolean isValidEmail(String email) {
-        if (email == null || email.isEmpty()) return false;
+        if (email == null) return false;
 
         String regex = "^" + "([a-zA-Z0-9_.\\-+])+" // local
                 + "@" + "[a-zA-Z0-9-.]+" // domain
