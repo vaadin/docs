@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -28,7 +29,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog
-        aria-label="simple"
+        aria-label="Create new employee"
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
@@ -39,7 +40,7 @@ export class Example extends LitElement {
                 style="width: 300px; max-width: 100%; align-items: stretch;"
               >
                 <h2 style="margin: var(--lumo-space-m) 0 0 0; font-size: 1.5em; font-weight: bold;">
-                  New employee
+                  Create new employee
                 </h2>
                 <vaadin-vertical-layout style="align-items: stretch;">
                   <vaadin-text-field label="First name"></vaadin-text-field>
@@ -50,7 +51,7 @@ export class Example extends LitElement {
                     Cancel
                   </vaadin-button>
                   <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
-                    Save changes
+                    Save
                   </vaadin-button>
                 </vaadin-horizontal-layout>
               </vaadin-vertical-layout>
