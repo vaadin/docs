@@ -4,6 +4,7 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -20,6 +21,9 @@ import java.util.List;
 public class GridProEditor extends Div {
 
     public GridProEditor() {
+        Renderer<Person> birthdayDateRenderer = new TextRenderer<>(
+                person -> getBirthdayAsLocalDate(person).format(birthdayFormatter)
+        );
         // tag::snippet[]
         GridPro<Person> grid = new GridPro<>();
 
@@ -39,14 +43,10 @@ public class GridProEditor extends Div {
         DatePicker datePicker = new DatePicker();
         datePicker.setWidthFull();
 
-        grid.addEditColumn(GridProEditor::getBirthdayAsLocalDate, new TextRenderer<>(
-                person -> getBirthdayAsLocalDate(person).format(birthdayFormatter)
-        )).custom(datePicker, (person, newValue) -> {
-            Date date = Date.from(
-                    newValue.atStartOfDay(ZoneId.systemDefault()).toInstant()
-            );
-            person.setBirthday(date);
-        }).setHeader("Birthday");
+        grid.addEditColumn(GridProEditor::getBirthdayAsLocalDate, birthdayDateRenderer)
+                .custom(datePicker, (person, newValue) ->
+                        person.setBirthday(dateFromLocalDate(newValue))
+                ).setHeader("Birthday");
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();
@@ -63,6 +63,10 @@ public class GridProEditor extends Div {
                 .toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
+    }
+
+    public static Date dateFromLocalDate(LocalDate localDate) {
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
     public static class Exporter extends DemoExporter<GridProEditor> { // hidden-source-line

@@ -16,19 +16,19 @@ public class GridProBasic extends Div {
     GridPro<Person> grid = new GridPro<>();
 
     grid.addEditColumn(Person::getFirstName)
-            .text((person, newValue) -> person.setFirstName(newValue))
+            .text(Person::setFirstName)
             .setHeader("First name");
 
     grid.addEditColumn(Person::getLastName)
-            .text((person, newValue) -> person.setLastName(newValue))
+            .text(Person::setLastName)
             .setHeader("Last name");
 
     grid.addEditColumn(Person::getEmail)
-            .text((person, newValue) -> person.setEmail(newValue))
+            .text(Person::setEmail)
             .setHeader("Email");
 
     grid.addEditColumn(Person::getProfession)
-            .text((item, newValue) -> item.setProfession(newValue))
+            .text(Person::setProfession)
             .setHeader("Profession");
     // end::snippet[]
 

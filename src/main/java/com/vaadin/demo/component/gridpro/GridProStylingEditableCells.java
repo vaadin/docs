@@ -23,7 +23,7 @@ public class GridProStylingEditableCells extends Div {
 
         grid.addEditColumn(Person::getEmail)
                 .text(Person::setEmail)
-                .setHeader("Email");
+                .setHeader("Email (Editable)");
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();
