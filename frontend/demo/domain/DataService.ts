@@ -72,9 +72,9 @@ export const getUserPermissions = async (): Promise<readonly UserPermissions[]> 
 
 export enum ReportStatus {
   COMPLETED = 'Completed',
-  IN_PROGRESS = 'In Progress',
+  IN_PROGRESS = 'In progress',
   CANCELLED = 'Cancelled',
-  ON_HOLD = 'On Hold',
+  ON_HOLD = 'On hold',
 }
 
 export type Report = Omit<RawReport, 'status'> &
