@@ -91,7 +91,7 @@ public class AccordionSummary extends Div {
         // end::snippet[]
 
         Button customDetailsButton = new Button("Continue", (e) -> billingAddressPanel.setOpened(true));
-        customDetailsButton.setThemeName("primary");
+        customDetailsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         customDetailsPanel.addContent(customDetailsButton);
 
         // Billing address fields
