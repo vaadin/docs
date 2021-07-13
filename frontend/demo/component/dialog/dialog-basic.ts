@@ -51,7 +51,7 @@ export class Example extends LitElement {
                     Cancel
                   </vaadin-button>
                   <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
-                    Save changes
+                    Save
                   </vaadin-button>
                 </vaadin-horizontal-layout>
               </vaadin-vertical-layout>

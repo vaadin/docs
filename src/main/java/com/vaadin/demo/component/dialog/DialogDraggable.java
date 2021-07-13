@@ -9,6 +9,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
@@ -17,7 +18,7 @@ public class DialogDraggable extends Div {
 
     public DialogDraggable() {
         Dialog dialog = new Dialog();
-        dialog.getElement().setAttribute("aria-label", "Create new employee");
+        dialog.getElement().setAttribute("aria-label", "Add note");
 
         VerticalLayout dialogLayout = createDialogLayout(dialog);
         dialog.add(dialogLayout);
@@ -31,7 +32,7 @@ public class DialogDraggable extends Div {
     }
 
     private static VerticalLayout createDialogLayout(Dialog dialog) {
-        H2 headline = new H2("Create new employee");
+        H2 headline = new H2("Add note");
         headline.getStyle().set("margin", "0").set("font-size", "1.5em")
                 .set("font-weight", "bold");
         // tag::snippet2[]
@@ -49,16 +50,16 @@ public class DialogDraggable extends Div {
                 .set("margin",
                         "calc(var(--lumo-space-s) * -1) calc(var(--lumo-space-l) * -1) 0");
 
-        TextField firstNameField = new TextField("First name");
-        TextField lastNameField = new TextField("Last name");
-        VerticalLayout fieldLayout = new VerticalLayout(firstNameField,
-                lastNameField);
+        TextField titleField = new TextField("Title");
+        TextArea descriptionArea = new TextArea("Description");
+        VerticalLayout fieldLayout = new VerticalLayout(titleField,
+                descriptionArea);
         fieldLayout.setSpacing(false);
         fieldLayout.setPadding(false);
         fieldLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
 
         Button cancelButton = new Button("Cancel", e -> dialog.close());
-        Button saveButton = new Button("Save", e -> dialog.close());
+        Button saveButton = new Button("Add note", e -> dialog.close());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         HorizontalLayout buttonLayout = new HorizontalLayout(cancelButton,
                 saveButton);
