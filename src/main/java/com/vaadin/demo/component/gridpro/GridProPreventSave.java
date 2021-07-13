@@ -3,6 +3,8 @@ package com.vaadin.demo.component.gridpro;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
@@ -29,6 +31,8 @@ public class GridProPreventSave extends Div {
                 .text((person, newValue) -> {
                     if (isValidEmail(newValue)) {
                         person.setEmail(newValue);
+                    } else {
+                        showErrorNotification("Please enter a valid email address");
                     }
                 })
                 .setHeader("Email");
@@ -37,6 +41,8 @@ public class GridProPreventSave extends Div {
                 .text((person, newValue) -> {
                     if (isValidPhoneNumber(newValue)) {
                         person.getAddress().setPhone(newValue);
+                    } else {
+                        showErrorNotification("Please enter a valid phone number");
                     }
                 })
                 .setHeader("Phone");
@@ -63,6 +69,16 @@ public class GridProPreventSave extends Div {
                 + "$";
 
         return Pattern.compile(regex).matcher(email).matches();
+    }
+
+    private void showErrorNotification(String msg) {
+        Notification notification = new Notification(
+                msg,
+                5000,
+                Notification.Position.BOTTOM_CENTER
+        );
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.open();
     }
 
     public static class Exporter extends DemoExporter<GridProPreventSave> { // hidden-source-line
