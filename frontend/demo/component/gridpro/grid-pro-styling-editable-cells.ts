@@ -35,7 +35,10 @@ export class Example extends LitElement {
         <vaadin-grid-column path="firstName"> </vaadin-grid-column>
         <vaadin-grid-column path="lastName"> </vaadin-grid-column>
         <vaadin-grid-column path="membership"></vaadin-grid-column>
-        <vaadin-grid-pro-edit-column path="email"></vaadin-grid-pro-edit-column>
+        <vaadin-grid-pro-edit-column
+          path="email"
+          header="Email (Editable)"
+        ></vaadin-grid-pro-edit-column>
       </vaadin-grid-pro>
       <!-- end::snippet[] -->
     `;
