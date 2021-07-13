@@ -1,14 +1,9 @@
 package com.vaadin.demo.component.notification;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -16,36 +11,22 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationContrast extends Div {
 
   public NotificationContrast() {
-    // tag::snippet[]
-    Notification notification = new Notification();
-    notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
-    // end::snippet[]
-    notification.setPosition(Notification.Position.MIDDLE);
-    notification.setDuration(5000);
-
-    Div notificationText = new Div(new Text("5 tasks deleted"));
-
-    Button closeButton = new Button(new Icon("lumo", "cross"));
-    closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-    closeButton.getElement().setAttribute("aria-label", "Close");
-    closeButton.addClickListener(event -> {
-      notification.close();
-    });
-
-    HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, closeButton);
-    notificationLayout.setAlignItems(Alignment.CENTER);
-    notification.add(notificationLayout);
-
     Button button = new Button("Try it");
-    button.addClickListener(event -> {
-      notification.open();
+    button.addClickListener(clickEvent -> {
+      button.setEnabled(false);
+
+      // tag::snippet[]
+      Notification notification = Notification.show("5 tasks deleted");
+      notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+      // end::snippet[]
+      notification.setPosition(Notification.Position.MIDDLE);
+
+      notification.addDetachListener(detachEvent -> {
+        button.setEnabled(true);
+      });
     });
 
-    notification.addOpenedChangeListener(event -> {
-      button.setEnabled(!event.getSource().isOpened());
-    });
-
-    add(button, notification);
+    add(button);
   }
 
   public static class Exporter extends DemoExporter<NotificationContrast> { // hidden-source-line

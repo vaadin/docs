@@ -50,21 +50,7 @@ export class Example extends LitElement {
     const notification = new NotificationElement();
     notification.position = position;
     notification.renderer = (root) => {
-      render(
-        html`
-          <vaadin-horizontal-layout theme="spacing" style="width: 100%; align-items: center;">
-            <div style="flex-grow: 1;">${position}</div>
-            <vaadin-button
-              theme="tertiary-inline"
-              @click="${() => notification.close()}"
-              aria-label="Close"
-            >
-              <vaadin-icon icon="lumo:cross"></vaadin-icon>
-            </vaadin-button>
-          </vaadin-horizontal-layout>
-        `,
-        root
-      );
+      render(html`${position}`, root);
     };
 
     document.body.appendChild(notification);

@@ -6,7 +6,10 @@ import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
-import { NotificationOpenedChangedEvent } from '@vaadin/vaadin-notification/vaadin-notification';
+import {
+  NotificationRenderer,
+  NotificationOpenedChangedEvent,
+} from '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -34,6 +37,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-notification
         theme="error"
+        duration="0"
         position="middle"
         .opened="${this.notificationOpened}"
         @opened-changed="${(e: NotificationOpenedChangedEvent) => {
@@ -45,7 +49,8 @@ export class Example extends LitElement {
     `;
   }
 
-  renderer = (root: HTMLElement) =>
+  // tag::renderer[]
+  renderer: NotificationRenderer = (root) => {
     render(
       html`
         <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
@@ -61,4 +66,6 @@ export class Example extends LitElement {
       `,
       root
     );
+  };
+  // end::renderer[]
 }
