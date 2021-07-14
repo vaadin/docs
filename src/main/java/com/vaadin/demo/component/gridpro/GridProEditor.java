@@ -13,9 +13,11 @@ import com.vaadin.demo.domain.DataService;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 @Route("grid-pro-editors")
 public class GridProEditor extends Div {
@@ -55,8 +57,8 @@ public class GridProEditor extends Div {
         add(grid);
     }
 
-    private static final DateTimeFormatter birthdayFormatter = DateTimeFormatter
-            .ofPattern("MM/dd/yyyy");
+    private static final DateTimeFormatter birthdayFormatter =
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
 
     private static LocalDate getBirthdayAsLocalDate(Person person) {
         return person.getBirthday()
