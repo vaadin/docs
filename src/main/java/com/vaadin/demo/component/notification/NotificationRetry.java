@@ -32,9 +32,9 @@ public class NotificationRetry extends Div {
   private Notification show() {
     // tag::snippet[]
     // When creating a notification using the constructor,
-    // the duration is 0-sec by default, which means the notification does not close automatically.
+    // the duration is 0-sec by default which means that
+    // the notification does not close automatically.
     Notification notification = new Notification();
-    notification.setPosition(Notification.Position.MIDDLE);
     notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
     Div statusText = new Div(new Text("Failed to generate report"));
@@ -53,12 +53,14 @@ public class NotificationRetry extends Div {
       notification.close();
     });
 
-    HorizontalLayout notificationLayout = new HorizontalLayout(statusText, retryButton, closeButton);
-    notificationLayout.setAlignItems(Alignment.CENTER);
+    HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
+    layout.setAlignItems(Alignment.CENTER);
 
-    notification.add(notificationLayout);
+    notification.add(layout);
     notification.open();
     // end::snippet[]
+
+    notification.setPosition(Notification.Position.MIDDLE);
 
     return notification;
   }
