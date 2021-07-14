@@ -1,9 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
-import { html, LitElement } from 'lit';
+import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -21,6 +23,21 @@ export class Example extends LitElement {
 
   @state()
   private items: Person[] = [];
+
+  private showErrorNotification(msg: string) {
+    const notification = new NotificationElement();
+    notification.position = 'bottom-center';
+    notification.setAttribute('theme', 'error');
+
+    notification.renderer = (root: HTMLElement) => render(html`${msg}`, root);
+
+    document.body.appendChild(notification);
+    notification.open();
+
+    notification.addEventListener('opened-changed', () => {
+      document.body.removeChild(notification);
+    });
+  }
 
   async firstUpdated() {
     const { people } = await getPeople();
@@ -46,12 +63,14 @@ export class Example extends LitElement {
         if (!/^[0-9-]+$/.test(event.detail.value)) {
           // phone is not correct
           event.preventDefault();
+          this.showErrorNotification('Please enter a valid phone number');
         }
         break;
       case 'email':
         if (!/^[\w-.]+@([\w-]+.)+[\w-]{2,4}$/.test(event.detail.value)) {
           // email is not correct
           event.preventDefault();
+          this.showErrorNotification('Please enter a valid email address');
         }
         break;
     }
