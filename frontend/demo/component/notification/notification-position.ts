@@ -6,7 +6,6 @@ import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import { ButtonElement } from '@vaadin/vaadin-button/vaadin-button';
 import {
   NotificationElement,
   NotificationPosition,
@@ -43,9 +42,8 @@ export class Example extends LitElement {
   }
 
   show(event: MouseEvent) {
-    const button = event.target as ButtonElement;
     // Use the button label as the location
-    const position = button.textContent as NotificationPosition;
+    const position = (event.target as HTMLElement).textContent as NotificationPosition;
 
     const notification = new NotificationElement();
     notification.position = position;
