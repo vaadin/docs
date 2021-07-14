@@ -23,7 +23,7 @@ public class NotificationError extends Div {
     notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
     notification.setPosition(Notification.Position.MIDDLE);
 
-    Div notificationText = new Div(new Text("Failed to generate report"));
+    Div statusText = new Div(new Text("Failed to generate report"));
 
     Button closeButton = new Button(new Icon("lumo", "cross"));
     closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
@@ -32,7 +32,7 @@ public class NotificationError extends Div {
       notification.close();
     });
 
-    HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, closeButton);
+    HorizontalLayout notificationLayout = new HorizontalLayout(statusText, closeButton);
     notificationLayout.setAlignItems(Alignment.CENTER);
     notification.add(notificationLayout);
 
