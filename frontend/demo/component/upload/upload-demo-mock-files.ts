@@ -63,7 +63,7 @@ export function createFakeFilesUploadErrorMessagesB() {
   ]);
 }
 
-// Expose functions for Java component
+// Expose functions for Java examples
 UploadElement.prototype.createFakeFilesUploadBasic = createFakeFilesUploadBasic;
 UploadElement.prototype.createFakeFilesUploadAutoUploadDisabled =
   createFakeFilesUploadAutoUploadDisabled;
