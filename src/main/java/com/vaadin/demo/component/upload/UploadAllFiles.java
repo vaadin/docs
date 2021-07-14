@@ -26,7 +26,9 @@ public class UploadAllFiles extends Div {
 
         // end::snippet[]
         UploadExamplesI18N i18n = new UploadExamplesI18N();
-        i18n.getAddFiles().setOne("Select Files...");
+        i18n.getAddFiles()
+                .setOne("Select File...")
+                .setMany("Select Files...");
         upload.setI18n(i18n);
 
         add(upload, uploadAllButton);

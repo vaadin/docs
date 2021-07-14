@@ -16,7 +16,9 @@ public class UploadAutoUploadDisabled extends Div {
         upload.setAutoUpload(false);
 
         UploadExamplesI18N i18n = new UploadExamplesI18N();
-        i18n.getAddFiles().setOne("Select Files...");
+        i18n.getAddFiles()
+                .setOne("Select File...")
+                .setMany("Select Files...");
         upload.setI18n(i18n);
         // end::snippet[]
 
