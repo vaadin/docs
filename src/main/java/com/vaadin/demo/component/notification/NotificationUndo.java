@@ -17,6 +17,19 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationUndo extends Div {
 
   public NotificationUndo() {
+    Button button = new Button("Try it");
+    button.addClickListener(clickEvent -> {
+      button.setEnabled(false);
+
+      Notification notification = show();
+
+      notification.addDetachListener(detachEvent -> button.setEnabled(true));
+    });
+
+    add(button);
+  }
+
+  public Notification show() {
     // tag::snippet[]
     Notification notification = new Notification();
     notification.setDuration(10000);
@@ -41,19 +54,12 @@ public class NotificationUndo extends Div {
 
     HorizontalLayout notificationLayout = new HorizontalLayout(statusText, undoButton, closeButton);
     notificationLayout.setAlignItems(Alignment.CENTER);
+
     notification.add(notificationLayout);
+    notification.open();
     // end::snippet[]
 
-    Button button = new Button("Try it");
-    button.addClickListener(event -> {
-      notification.open();
-    });
-
-    notification.addOpenedChangeListener(event -> {
-      button.setEnabled(!event.getSource().isOpened());
-    });
-
-    add(button, notification);
+    return notification;
   }
 
   public static class Exporter extends DemoExporter<NotificationUndo> { // hidden-source-line

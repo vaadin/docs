@@ -2,7 +2,6 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators';
-import { guard } from 'lit/directives/guard';
 import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
@@ -36,42 +35,45 @@ export class Example extends LitElement {
       </vaadin-button>
 
       <!-- tag::snippet[] -->
+      <!-- The duration is set to 0-sec to prevent the notification from auto-close. -->
       <vaadin-notification
         theme="error"
+        duration="0"
         position="middle"
         .opened="${this.notificationOpened}"
         @opened-changed="${(e: NotificationOpenedChangedEvent) => {
           this.notificationOpened = e.detail.value;
         }}"
-        .renderer="${guard(
-          [],
-          (): NotificationRenderer => (root) => {
-            render(
-              html`
-                <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
-                  <div>Failed to generate report</div>
-                  <vaadin-button
-                    theme="tertiary-inline"
-                    style="margin-left: var(--lumo-space-xl);"
-                    @click="${() => (this.notificationOpened = false)}"
-                  >
-                    Retry
-                  </vaadin-button>
-                  <vaadin-button
-                    theme="tertiary-inline icon"
-                    @click="${() => (this.notificationOpened = false)}"
-                    aria-label="Close"
-                  >
-                    <vaadin-icon icon="lumo:cross"></vaadin-icon>
-                  </vaadin-button>
-                </vaadin-horizontal-layout>
-              `,
-              root
-            );
-          }
-        )}"
+        .renderer="${this.renderer}"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
+
+  // tag::renderer[]
+  renderer: NotificationRenderer = (root) => {
+    render(
+      html`
+        <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+          <div>Failed to generate report</div>
+          <vaadin-button
+            theme="tertiary-inline"
+            style="margin-left: var(--lumo-space-xl);"
+            @click="${() => (this.notificationOpened = false)}"
+          >
+            Retry
+          </vaadin-button>
+          <vaadin-button
+            theme="tertiary-inline icon"
+            @click="${() => (this.notificationOpened = false)}"
+            aria-label="Close"
+          >
+            <vaadin-icon icon="lumo:cross"></vaadin-icon>
+          </vaadin-button>
+        </vaadin-horizontal-layout>
+      `,
+      root
+    );
+  };
+  // end::renderer[]
 }

@@ -17,9 +17,23 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationRetry extends Div {
 
   public NotificationRetry() {
+    Button button = new Button("Try it");
+    button.addClickListener(clickEvent -> {
+      button.setEnabled(false);
+
+      Notification notification = show();
+
+      notification.addDetachListener(detachEvent -> button.setEnabled(true));
+    });
+
+    add(button);
+  }
+
+  private Notification show() {
     // tag::snippet[]
+    // When creating a notification using the constructor,
+    // the duration is 0-sec by default, which means the notification does not close automatically.
     Notification notification = new Notification();
-    notification.setDuration(5000);
     notification.setPosition(Notification.Position.MIDDLE);
     notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
@@ -41,19 +55,12 @@ public class NotificationRetry extends Div {
 
     HorizontalLayout notificationLayout = new HorizontalLayout(statusText, retryButton, closeButton);
     notificationLayout.setAlignItems(Alignment.CENTER);
+
     notification.add(notificationLayout);
+    notification.open();
     // end::snippet[]
 
-    Button button = new Button("Try it");
-    button.addClickListener(event -> {
-      notification.open();
-    });
-
-    notification.addOpenedChangeListener(event -> {
-      button.setEnabled(!event.getSource().isOpened());
-    });
-
-    add(button, notification);
+    return notification;
   }
 
   public static class Exporter extends DemoExporter<NotificationRetry> { // hidden-source-line

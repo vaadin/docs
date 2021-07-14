@@ -2,7 +2,6 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
@@ -43,28 +42,29 @@ export class Example extends LitElement {
         @opened-changed="${(e: NotificationOpenedChangedEvent) => {
           this.notificationOpened = e.detail.value;
         }}"
-        .renderer="${guard(
-          [],
-          (): NotificationRenderer => (root) => {
-            render(
-              html`
-                <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
-                  <div>Jason Bailey mentioned you in <a href="#">Project Q4</a></div>
-                  <vaadin-button
-                    theme="tertiary-inline"
-                    aria-label="Close"
-                    @click="${() => (this.notificationOpened = false)}"
-                  >
-                    <vaadin-icon icon="lumo:cross"></vaadin-icon>
-                  </vaadin-button>
-                </vaadin-horizontal-layout>
-              `,
-              root
-            );
-          }
-        )}"
+        .renderer="${this.renderer}"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
+
+  // tag::renderer[]
+  renderer: NotificationRenderer = (root) => {
+    render(
+      html`
+        <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+          <div>Jason Bailey mentioned you in <a href="#">Project Q4</a></div>
+          <vaadin-button
+            theme="tertiary-inline"
+            aria-label="Close"
+            @click="${() => (this.notificationOpened = false)}"
+          >
+            <vaadin-icon icon="lumo:cross"></vaadin-icon>
+          </vaadin-button>
+        </vaadin-horizontal-layout>
+      `,
+      root
+    );
+  };
+  // end::renderer[]
 }
