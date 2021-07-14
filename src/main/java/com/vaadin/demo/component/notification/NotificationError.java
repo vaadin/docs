@@ -16,14 +16,27 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationError extends Div {
 
   public NotificationError() {
+    Button button = new Button("Try it");
+    button.addClickListener(clickEvent -> {
+      button.setEnabled(false);
+
+      Notification notification = show();
+
+      notification.addDetachListener(detachEvent -> button.setEnabled(true));
+    });
+
+    add(button);
+  }
+
+  public Notification show() {
     // tag::snippet[]
     // When creating a notification using the constructor,
-    // the duration is 0-sec by default, which means the notification does not close automatically.
+    // the duration is 0-sec by default which means that
+    // the notification does not close automatically.
     Notification notification = new Notification();
     notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-    notification.setPosition(Notification.Position.MIDDLE);
 
-    Div statusText = new Div(new Text("Failed to generate report"));
+    Div text = new Div(new Text("Failed to generate report"));
 
     Button closeButton = new Button(new Icon("lumo", "cross"));
     closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
@@ -32,21 +45,16 @@ public class NotificationError extends Div {
       notification.close();
     });
 
-    HorizontalLayout notificationLayout = new HorizontalLayout(statusText, closeButton);
-    notificationLayout.setAlignItems(Alignment.CENTER);
-    notification.add(notificationLayout);
+    HorizontalLayout layout = new HorizontalLayout(text, closeButton);
+    layout.setAlignItems(Alignment.CENTER);
 
-    Button button = new Button("Try it");
-    button.addClickListener(event -> {
-      notification.open();
-    });
-
-    notification.addOpenedChangeListener(event -> {
-      button.setEnabled(!event.getSource().isOpened());
-    });
-
-    add(button, notification);
+    notification.add(layout);
+    notification.open();
     // end::snippet[]
+
+    notification.setPosition(Notification.Position.MIDDLE);
+
+    return notification;
   }
 
   public static class Exporter extends DemoExporter<NotificationError> { // hidden-source-line
