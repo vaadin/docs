@@ -18,7 +18,7 @@ public class NotificationError extends Div {
   public NotificationError() {
     // tag::snippet[]
     // When creating a notification using the constructor,
-    // the duration is 0-sec by default, which means the notification does not close automatically
+    // the duration is 0-sec by default, which means the notification does not close automatically.
     Notification notification = new Notification();
     notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
     notification.setPosition(Notification.Position.MIDDLE);
@@ -35,7 +35,6 @@ public class NotificationError extends Div {
     HorizontalLayout notificationLayout = new HorizontalLayout(notificationText, closeButton);
     notificationLayout.setAlignItems(Alignment.CENTER);
     notification.add(notificationLayout);
-    // end::snippet[]
 
     Button button = new Button("Try it");
     button.addClickListener(event -> {
@@ -47,6 +46,7 @@ public class NotificationError extends Div {
     });
 
     add(button, notification);
+    // end::snippet[]
   }
 
   public static class Exporter extends DemoExporter<NotificationError> { // hidden-source-line

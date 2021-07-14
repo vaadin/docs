@@ -35,6 +35,7 @@ export class Example extends LitElement {
       </vaadin-button>
 
       <!-- tag::snippet[] -->
+      <!-- The duration is set to 0-sec to prevent the notification from auto-close. -->
       <vaadin-notification
         theme="error"
         duration="0"
