@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.upload;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
@@ -16,8 +15,9 @@ public class UploadAutoUploadDisabled extends Div {
         Upload upload = new Upload(buffer);
         upload.setAutoUpload(false);
 
-        Button uploadButton = new Button("Select Files...");
-        upload.setUploadButton(uploadButton);
+        UploadExamplesI18N i18n = new UploadExamplesI18N();
+        i18n.getAddFiles().setOne("Select Files...");
+        upload.setI18n(i18n);
         // end::snippet[]
 
         add(upload);
