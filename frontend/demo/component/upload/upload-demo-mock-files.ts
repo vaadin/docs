@@ -1,4 +1,15 @@
 import { createFakeUploadFiles } from './upload-demo-helpers';
+import { UploadElement } from '@vaadin/vaadin-upload';
+
+declare module '@vaadin/vaadin-upload' {
+  class UploadElement {
+    createFakeFilesUploadBasic(): void;
+    createFakeFilesUploadAutoUploadDisabled(): void;
+    createFakeFilesUploadAllFiles(): void;
+    createFakeFilesUploadErrorMessagesA(): void;
+    createFakeFilesUploadErrorMessagesB(): void;
+  }
+}
 
 // upload-basic.ts
 export function createFakeFilesUploadBasic() {
@@ -51,3 +62,11 @@ export function createFakeFilesUploadErrorMessagesB() {
     { name: 'Financials.xlsx', error: "File couldn't be uploaded, please try again" },
   ]);
 }
+
+// Expose functions for Java component
+UploadElement.prototype.createFakeFilesUploadBasic = createFakeFilesUploadBasic;
+UploadElement.prototype.createFakeFilesUploadAutoUploadDisabled =
+  createFakeFilesUploadAutoUploadDisabled;
+UploadElement.prototype.createFakeFilesUploadAllFiles = createFakeFilesUploadAllFiles;
+UploadElement.prototype.createFakeFilesUploadErrorMessagesA = createFakeFilesUploadErrorMessagesA;
+UploadElement.prototype.createFakeFilesUploadErrorMessagesB = createFakeFilesUploadErrorMessagesB;

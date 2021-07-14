@@ -22,6 +22,8 @@ public class UploadAutoUploadDisabled extends Div {
         upload.setI18n(i18n);
         // end::snippet[]
 
+        upload.getElement().executeJs("this.files = this.createFakeFilesUploadAutoUploadDisabled()"); // hidden-source-line
+
         add(upload);
     }
 

@@ -31,6 +31,8 @@ public class UploadAllFiles extends Div {
                 .setMany("Select Files...");
         upload.setI18n(i18n);
 
+        upload.getElement().executeJs("this.files = this.createFakeFilesUploadAllFiles()"); // hidden-source-line
+
         add(upload, uploadAllButton);
     }
 
