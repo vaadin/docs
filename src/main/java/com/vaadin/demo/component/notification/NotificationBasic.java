@@ -22,9 +22,7 @@ public class NotificationBasic extends Div {
       // end::snippet[]
       notification.setPosition(Notification.Position.MIDDLE);
 
-      notification.addDetachListener(detachEvent -> {
-        button.setEnabled(true);
-      });
+      notification.addDetachListener(detachEvent -> button.setEnabled(true));
     });
 
     add(button);
