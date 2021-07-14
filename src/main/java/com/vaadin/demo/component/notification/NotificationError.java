@@ -18,7 +18,7 @@ public class NotificationError extends Div {
   public NotificationError() {
     // tag::snippet[]
     // When creating a notification using the constructor,
-    // the duration is 0-sec by default.
+    // the duration is 0-sec by default, which means the notification does not close automatically
     Notification notification = new Notification();
     notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
     notification.setPosition(Notification.Position.MIDDLE);
