@@ -34,7 +34,7 @@ public class SplitLayoutToggle extends Div {
             setStyles();
         });
         button.getElement().setAttribute("aria-label", "Expand/collapse sidebar");
-        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ICON);
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         button.getStyle().set("float", "right");
 
         masterContainer.add(button, masterContent);
