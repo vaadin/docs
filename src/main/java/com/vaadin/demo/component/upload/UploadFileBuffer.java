@@ -4,11 +4,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.FileBuffer;
 import com.vaadin.flow.component.upload.receivers.FileData;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.component.upload.receivers.MultiFileBuffer;
-
-import java.io.FileDescriptor;
-import java.io.InputStream;
 
 public class UploadFileBuffer extends Div {
     public UploadFileBuffer() {

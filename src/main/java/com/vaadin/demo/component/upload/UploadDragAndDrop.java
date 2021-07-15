@@ -24,12 +24,12 @@ public class UploadDragAndDrop extends Div {
         // end::snippet[]
 
         Label dropEnabledLabel = new Label("Drag and drop enabled");
-        dropEnabledLabel.getStyle().set("font-weight", "bold");
+        dropEnabledLabel.getStyle().set("font-weight", "600");
         dropEnabledUpload.setId("upload-drop-enabled");
         dropEnabledLabel.setFor(dropEnabledUpload.getId().get());
 
         Label dropDisabledLabel = new Label("Drag and drop disabled");
-        dropDisabledLabel.getStyle().set("font-weight", "bold");
+        dropDisabledLabel.getStyle().set("font-weight", "600");
         dropDisabledUpload.setId("upload-drop-disabled");
         dropDisabledLabel.setFor(dropDisabledUpload.getId().get());
 
