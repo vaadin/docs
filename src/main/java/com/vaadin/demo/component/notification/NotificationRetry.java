@@ -22,7 +22,6 @@ public class NotificationRetry extends Div {
       button.setEnabled(false);
 
       Notification notification = show();
-
       notification.addDetachListener(detachEvent -> button.setEnabled(true));
     });
 
