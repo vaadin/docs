@@ -1,4 +1,4 @@
-import { createFakeUploadFiles } from './upload-demo-helpers';
+import { createFakeUploadFiles, mockErrorXhrGenerator } from './upload-demo-helpers';
 import { UploadElement } from '@vaadin/vaadin-upload';
 
 declare module '@vaadin/vaadin-upload' {
@@ -8,6 +8,7 @@ declare module '@vaadin/vaadin-upload' {
     createFakeFilesUploadAllFiles(): void;
     createFakeFilesUploadErrorMessagesA(): void;
     createFakeFilesUploadErrorMessagesB(): void;
+    setupMockErrorResponse(): void;
   }
 }
 
@@ -59,7 +60,7 @@ export function createFakeFilesUploadErrorMessagesA() {
 // upload-error-messages.ts
 export function createFakeFilesUploadErrorMessagesB() {
   return createFakeUploadFiles([
-    { name: 'Financials.xlsx', error: "File couldn't be uploaded, please try again" },
+    { name: 'Financials.xlsx', error: "File couldn't be uploaded, please try again later" },
   ]);
 }
 
@@ -70,3 +71,8 @@ UploadElement.prototype.createFakeFilesUploadAutoUploadDisabled =
 UploadElement.prototype.createFakeFilesUploadAllFiles = createFakeFilesUploadAllFiles;
 UploadElement.prototype.createFakeFilesUploadErrorMessagesA = createFakeFilesUploadErrorMessagesA;
 UploadElement.prototype.createFakeFilesUploadErrorMessagesB = createFakeFilesUploadErrorMessagesB;
+
+UploadElement.prototype.setupMockErrorResponse = function setupMockErrorResponse() {
+  // Monkey-patch vaadin-upload instance to use XHRs that always return a mock error response
+  (this as any)._createXhr = mockErrorXhrGenerator;
+};
