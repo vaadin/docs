@@ -493,7 +493,7 @@ export class MockHttpServer {
 }
 
 // Use MockHttpRequest in demos
-function mockXhrGenerator(file: UploadFile) {
+function mockXhrGenerator() {
   type UploadProp = {
     onloadstart?: () => void;
     onprogress?: (e: unknown) => void;
@@ -504,7 +504,7 @@ function mockXhrGenerator(file: UploadFile) {
     if (xhr.upload.onloadstart) {
       xhr.upload.onloadstart();
     }
-    const total = (file && file.size) || 1024;
+    const total = 1000 * 1000 * 5;
     let done = 0;
     function start() {
       setTimeout(progress, 1000);
@@ -514,7 +514,7 @@ function mockXhrGenerator(file: UploadFile) {
       if (done < total) {
         setTimeout(progress, 200);
         done = Math.min(total, done + 254000);
-      } else if (!file.abort) {
+      } else {
         setTimeout(finish, 1000);
       }
     }
