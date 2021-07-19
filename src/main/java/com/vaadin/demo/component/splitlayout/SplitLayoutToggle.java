@@ -13,35 +13,35 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class SplitLayoutToggle extends Div {
     private boolean sidebarCollapsed;
     private final Button button;
-    private final Div masterContainer;
     private final Icon leftArrowIcon;
     private final Icon rightArrowIcon;
-    private final DetailContent detailContent;
+    private final SplitLayout splitLayout;
 
     public SplitLayoutToggle() {
         // tag::snippet[]
         button = new Button();
-        masterContainer = new Div();
         leftArrowIcon = VaadinIcon.ARROW_LEFT.create();
         rightArrowIcon = VaadinIcon.ARROW_RIGHT.create();
-        detailContent = new DetailContent();
+        Div masterContainer = new Div();
+        DetailContent detailContent = new DetailContent();
         MasterContent masterContent = new MasterContent();
 
         sidebarCollapsed = false;
 
         button.addClickListener(event -> {
             sidebarCollapsed = !sidebarCollapsed;
-            setStyles();
+            updateSidebar();
         });
         button.getElement().setAttribute("aria-label", "Expand/collapse sidebar");
         button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         button.getStyle().set("float", "right");
 
         masterContainer.add(button, masterContent);
+        masterContainer.getStyle().set("overflow", "hidden");
 
-        setStyles();
+        splitLayout = new SplitLayout(masterContainer, detailContent);
 
-        SplitLayout splitLayout = new SplitLayout(masterContainer, detailContent);
+        updateSidebar();
         // end::snippet[]
 
         splitLayout.setMaxHeight("280px");
@@ -49,11 +49,9 @@ public class SplitLayoutToggle extends Div {
     }
 
     // tag::setstyles[]
-    private void setStyles() {
+    private void updateSidebar() {
         button.setIcon(sidebarCollapsed ? rightArrowIcon : leftArrowIcon);
-        int sidebarWidthPercentage = sidebarCollapsed ? 13 : 40;
-        masterContainer.getElement().executeJs("this.style = `overflow: hidden; width: ${$0}%`", sidebarWidthPercentage);
-        detailContent.getElement().executeJs("this.style = `width: ${$0}%`",100 - sidebarWidthPercentage);
+        splitLayout.setSplitterPosition(sidebarCollapsed ? 13 : 40);
     }
     // end::setstyles[]
 

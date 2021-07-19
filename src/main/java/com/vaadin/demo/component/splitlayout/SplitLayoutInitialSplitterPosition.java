@@ -11,12 +11,10 @@ public class SplitLayoutInitialSplitterPosition extends Div {
     public SplitLayoutInitialSplitterPosition() {
         // tag::snippet[]
         MasterContent master = new MasterContent();
-        master.setWidth("50%");
-
         DetailContent detail = new DetailContent();
-        detail.setWidth("50%");
 
         SplitLayout splitLayout = new SplitLayout(master, detail);
+        splitLayout.setSplitterPosition(50);
         // end::snippet[]
 
         splitLayout.setMaxHeight("280px");
