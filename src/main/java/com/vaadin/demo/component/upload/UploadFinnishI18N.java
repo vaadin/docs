@@ -4,6 +4,12 @@ import com.vaadin.flow.component.upload.UploadI18N;
 
 import java.util.Arrays;
 
+/**
+ * At the moment the Upload component requires a fully configured I18N
+ * instance, even for use-cases where you only want to change individual texts.
+ * Please make sure that you have set all translations when writing a custom
+ * I18N config.
+ */
 public class UploadFinnishI18N extends UploadI18N {
     public UploadFinnishI18N() {
         setDropFiles(new DropFiles()
