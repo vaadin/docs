@@ -7,17 +7,17 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("notification-success")
-public class NotificationSuccess extends Div {
+@Route("notification-primary")
+public class NotificationPrimary extends Div {
 
-  public NotificationSuccess() {
+  public NotificationPrimary() {
     Button button = new Button("Try it");
     button.addClickListener(clickEvent -> {
       button.setEnabled(false);
 
       // tag::snippet[]
-      Notification notification = Notification.show("Application submitted!");
-      notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+      Notification notification = Notification.show("New project plan available");
+      notification.addThemeVariants(NotificationVariant.LUMO_PRIMARY);
       // end::snippet[]
       notification.setPosition(Notification.Position.MIDDLE);
 
@@ -27,6 +27,6 @@ public class NotificationSuccess extends Div {
     add(button);
   }
 
-  public static class Exporter extends DemoExporter<NotificationSuccess> { // hidden-source-line
+  public static class Exporter extends DemoExporter<NotificationPrimary> { // hidden-source-line
   } // hidden-source-line
 }

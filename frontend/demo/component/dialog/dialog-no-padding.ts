@@ -1,4 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -32,7 +34,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-dialog
         theme="no-padding"
-        aria-label="simple"
+        aria-label="Create new employee"
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
@@ -48,7 +50,7 @@ export class Example extends LitElement {
                   <h2
                     style="font-size: var(--lumo-font-size-xl); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0;"
                   >
-                    New employee
+                    Create new employee
                   </h2>
                 </header>
                 <vaadin-scroller scroll-direction="vertical" style="padding: var(--lumo-space-l);">
