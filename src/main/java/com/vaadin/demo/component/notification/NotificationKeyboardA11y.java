@@ -1,11 +1,7 @@
 package com.vaadin.demo.component.notification;
 
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyModifier;
-import com.vaadin.flow.component.ShortcutEventListener;
-import com.vaadin.flow.component.Shortcuts;
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.notification.Notification;
@@ -18,17 +14,15 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("notification-keyboard-a11y")
 public class NotificationKeyboardA11y extends Div {
-  private Notification notification;
 
   public NotificationKeyboardA11y() {
-    setupUndoShortcut();
-
     Button button = new Button("Try it");
     button.addClickListener(clickEvent -> {
       button.setEnabled(false);
 
-      notification = show();
+      Notification notification = show();
       notification.addDetachListener(detachEvent -> button.setEnabled(true));
+      setupUndoShortcut(notification);
     });
 
     add(button);
@@ -68,15 +62,9 @@ public class NotificationKeyboardA11y extends Div {
   // end::snippet[]
 
   // tag::setupUndoShortcut[]
-  public void setupUndoShortcut() {
-    ShortcutEventListener undoListener = event -> {
-      if (notification != null && notification.isOpened()) {
-        notification.close();
-      }
-    };
-
-    Shortcuts.addShortcutListener(this, undoListener, Key.KEY_Z, KeyModifier.META);
-    Shortcuts.addShortcutListener(this, undoListener, Key.KEY_Z, KeyModifier.CONTROL);
+  public void setupUndoShortcut(Notification notification) {
+    Shortcuts.addShortcutListener(notification, notification::close, Key.KEY_Z, KeyModifier.META);
+    Shortcuts.addShortcutListener(notification, notification::close, Key.KEY_Z, KeyModifier.CONTROL);
   }
   // end::setupUndoShortcut[]
 
