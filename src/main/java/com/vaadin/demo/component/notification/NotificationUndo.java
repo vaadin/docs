@@ -10,12 +10,13 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
+
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("notification-error")
-public class NotificationError extends Div {
+@Route("notification-undo")
+public class NotificationUndo extends Div {
 
-  public NotificationError() {
+  public NotificationUndo() {
     Button button = new Button("Try it");
     button.addClickListener(clickEvent -> {
       button.setEnabled(false);
@@ -29,13 +30,18 @@ public class NotificationError extends Div {
 
   public Notification show() {
     // tag::snippet[]
-    // When creating a notification using the constructor,
-    // the duration is 0-sec by default which means that
-    // the notification does not close automatically.
     Notification notification = new Notification();
-    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+    notification.setDuration(10000);
+    notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
 
-    Div text = new Div(new Text("Failed to generate report"));
+    Div statusText = new Div(new Text("5 tasks deleted"));
+
+    Button undoButton = new Button("Undo");
+    undoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+    undoButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+    undoButton.addClickListener(event -> {
+      notification.close();
+    });
 
     Button closeButton = new Button(new Icon("lumo", "cross"));
     closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
@@ -44,7 +50,7 @@ public class NotificationError extends Div {
       notification.close();
     });
 
-    HorizontalLayout layout = new HorizontalLayout(text, closeButton);
+    HorizontalLayout layout = new HorizontalLayout(statusText, undoButton, closeButton);
     layout.setAlignItems(Alignment.CENTER);
 
     notification.add(layout);
@@ -56,6 +62,6 @@ public class NotificationError extends Div {
     return notification;
   }
 
-  public static class Exporter extends DemoExporter<NotificationError> { // hidden-source-line
+  public static class Exporter extends DemoExporter<NotificationUndo> { // hidden-source-line
   } // hidden-source-line
 }
