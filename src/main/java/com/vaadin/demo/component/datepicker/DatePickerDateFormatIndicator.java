@@ -17,6 +17,7 @@ public class DatePickerDateFormatIndicator extends Div {
         datePicker.setPlaceholder("DD.MM.YYYY");
         datePicker.setHelperText("Format: DD.MM.YYYY");
         // end::snippet[]
+
         add(datePicker);
     }
     public static class Exporter extends DemoExporter<DatePickerDateFormatIndicator> { // hidden-source-line

@@ -5,9 +5,9 @@ import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
+import { applyTheme } from 'Frontend/generated/theme';
 
 const currentYear = new Date().getFullYear();
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-initial-position')
 export class Example extends LitElement {
@@ -22,7 +22,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-date-time-picker
-        label="Q4 deadline"
+        label="Meeting date and time"
         .initialPosition="${`${currentYear}-12-31`}"
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->

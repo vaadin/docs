@@ -13,8 +13,10 @@ public class DatePickerAutoOpen extends Div {
         // tag::snippet[]
         datePicker.setAutoOpen(false);
         // end::snippet[]
+
         add(datePicker);
     }
+
     public static class Exporter extends DemoExporter<DatePickerAutoOpen> { // hidden-source-line
     } // hidden-source-line
 }

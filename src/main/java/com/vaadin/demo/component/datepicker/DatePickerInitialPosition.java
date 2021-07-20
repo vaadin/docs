@@ -13,11 +13,14 @@ import java.time.temporal.TemporalAdjusters;
 public class DatePickerInitialPosition extends Div {
 
     public DatePickerInitialPosition() {
-        LocalDate now = LocalDate.now(ZoneId.of("Europe/Helsinki"));
         DatePicker datePicker = new DatePicker("Q4 deadline");
         // tag::snippet[]
-        datePicker.setInitialPosition(now.with(TemporalAdjusters.lastDayOfYear()));
+        LocalDate lastDayOfYear = LocalDate.now(ZoneId.systemDefault())
+                .with(TemporalAdjusters.lastDayOfYear());
+
+        datePicker.setInitialPosition(lastDayOfYear);
         // end::snippet[]
+
         add(datePicker);
     }
     public static class Exporter extends DemoExporter<DatePickerInitialPosition> { // hidden-source-line

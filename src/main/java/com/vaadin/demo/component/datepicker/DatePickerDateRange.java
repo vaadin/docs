@@ -16,6 +16,7 @@ public class DatePickerDateRange extends Div {
         departureDate.addValueChangeListener(e -> returnDate.setMin(e.getValue()));
         returnDate.addValueChangeListener(e -> departureDate.setMax(e.getValue()));
         // end::snippet[]
+
         add(new HorizontalLayout(departureDate, returnDate));
     }
     public static class Exporter extends DemoExporter<DatePickerDateRange> { // hidden-source-line
