@@ -14,7 +14,9 @@ public class SplitLayoutInitialSplitterPosition extends Div {
         DetailContent detail = new DetailContent();
 
         SplitLayout splitLayout = new SplitLayout(master, detail);
-        splitLayout.setSplitterPosition(50);
+        // Sets the width for the first child to 70%, giving
+        // the second child the remaining width of 30%
+        splitLayout.setSplitterPosition(70);
         // end::snippet[]
 
         splitLayout.setMaxHeight("280px");
