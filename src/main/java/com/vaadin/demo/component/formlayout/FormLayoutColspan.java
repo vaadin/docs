@@ -25,7 +25,7 @@ public class FormLayoutColspan extends Div {
     // end::snippet[]
     formLayout.setResponsiveSteps(
             new ResponsiveStep("0", 1),
-            new ResponsiveStep("20em", 3)
+            new ResponsiveStep("500px", 3)
     );
     add(formLayout);
   }

@@ -12,26 +12,30 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class FormLayoutBasic extends Div {
 
   public FormLayoutBasic() {
+    // tag::snippet[]
     TextField firstName = new TextField("First name");
     TextField lastName = new TextField("Last name");
     TextField username = new TextField("Username");
     PasswordField password = new PasswordField("Password");
     PasswordField confirmPassword = new PasswordField("Confirm password");
 
-    // tag::snippet[]
     FormLayout formLayout = new FormLayout();
     formLayout.add(
             firstName, lastName,
             username,
             password, confirmPassword
     );
-    formLayout.setColspan(username, 2);
     formLayout.setResponsiveSteps(
+            // Use one column by default
             new ResponsiveStep("0", 1),
-            new ResponsiveStep("20em", 2)
+            // Use two columns, if layout's width exceeds 500px
+            new ResponsiveStep("500px", 2)
     );
-    add(formLayout);
+    // Stretch the username field over 2 columns
+    formLayout.setColspan(username, 2);
     // end::snippet[]
+
+    add(formLayout);
   }
   public static class Exporter extends DemoExporter<FormLayoutBasic> { // hidden-source-line
   } // hidden-source-line

@@ -21,9 +21,12 @@ public class FormLayoutCustomLayout extends Div {
     formLayout.add(firstName, lastName, email);
     // tag::snippet[]
     formLayout.setResponsiveSteps(
+            // Use one column by default
             new ResponsiveStep("0", 1),
-            new ResponsiveStep("10em", 2),
-            new ResponsiveStep("20em", 3)
+            // Use two columns, if the layout's width exceeds 320px
+            new ResponsiveStep("320px", 2),
+            // Use three columns, if the layout's width exceeds 500px
+            new ResponsiveStep("500px", 3)
     );
     // end::snippet[]
 

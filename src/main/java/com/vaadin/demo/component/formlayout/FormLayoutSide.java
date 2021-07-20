@@ -22,6 +22,8 @@ public class FormLayoutSide extends Div {
 
     FormLayout formLayout = new FormLayout();
     // tag::snippet[]
+    // Use addFormItem instead of add, to wrap fields into form items,
+    // which displays labels on the side by default
     formLayout.addFormItem(revenue, "Revenue");
     formLayout.addFormItem(expenses, "Expenses");
     formLayout.addFormItem(invoices, "Invoices");
