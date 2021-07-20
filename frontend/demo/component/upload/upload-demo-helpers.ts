@@ -537,16 +537,8 @@ export function mockErrorXhrGenerator() {
     if (xhr.upload.onloadstart) {
       xhr.upload.onloadstart();
     }
-    function start() {
-      setTimeout(progress, 1000);
-    }
-    function progress() {
-      setTimeout(error, 1000);
-    }
-    function error() {
-      xhr.receive(500, '{"message":"Unexpected server error"}');
-    }
-    start();
+
+    setTimeout(() => xhr.receive(500, '{"message":"Unexpected server error"}'), 2000);
   };
   return xhr;
 }
