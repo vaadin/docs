@@ -15,14 +15,15 @@ public class UploadButtonThemeVariant extends Div {
         MemoryBuffer buffer = new MemoryBuffer();
         // tag::snippet[]
         Upload upload = new Upload(buffer);
+        upload.setAcceptedFileTypes("application/pdf", ".pdf");
 
         Button uploadButton = new Button("Upload PDF...");
         uploadButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         upload.setUploadButton(uploadButton);
 
-        // Disable upload button after file was selected
-        // Re-enable upload button after file was cleared
+        // Disable the upload button after the file is selected
+        // Re-enable the upload button after the file is cleared
         upload.getElement().addEventListener("max-files-reached-changed", event -> {
             boolean maxFilesReached = event.getEventData().getBoolean("event.detail.value");
             uploadButton.setEnabled(!maxFilesReached);
