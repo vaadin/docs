@@ -63,8 +63,8 @@ public class NotificationKeyboardA11y extends Div {
 
   // tag::setupUndoShortcut[]
   public void setupUndoShortcut(Notification notification) {
-    Shortcuts.addShortcutListener(notification, notification::close, Key.KEY_Z, KeyModifier.META);
-    Shortcuts.addShortcutListener(notification, notification::close, Key.KEY_Z, KeyModifier.CONTROL);
+    Shortcuts.addShortcutListener(notification, notification::close, Key.of("z"), KeyModifier.META);
+    Shortcuts.addShortcutListener(notification, notification::close, Key.of("z"), KeyModifier.CONTROL);
   }
   // end::setupUndoShortcut[]
 
