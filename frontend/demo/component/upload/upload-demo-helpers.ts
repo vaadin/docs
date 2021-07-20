@@ -526,6 +526,23 @@ function mockXhrGenerator() {
   return xhr;
 }
 
+export function mockErrorXhrGenerator() {
+  type UploadProp = {
+    onloadstart?: () => void;
+    onprogress?: (e: unknown) => void;
+  };
+  const xhr = new MockHttpRequest() as MockHttpRequest & { upload: UploadProp };
+  xhr.upload = {};
+  xhr.onsend = function () {
+    if (xhr.upload.onloadstart) {
+      xhr.upload.onloadstart();
+    }
+
+    setTimeout(() => xhr.receive(500, '{"message":"Unexpected server error"}'), 2000);
+  };
+  return xhr;
+}
+
 /**
  * All options:
  * {

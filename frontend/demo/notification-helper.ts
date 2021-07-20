@@ -8,6 +8,7 @@ import type {
   NotificationOpenedChangedEvent,
   NotificationPosition,
 } from '@vaadin/vaadin-notification';
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 interface Options {
   position?: NotificationPosition;
@@ -20,7 +21,7 @@ export const showNotification = (text: string, options: Options = { position: 'm
 
 export const showErrorNotification = (
   text: string,
-  options: Options = { position: 'middle', duration: -1, theme: 'error' }
+  options: Options = { position: 'middle', theme: 'error' }
 ) => {
   _showNotification(text, options);
 };

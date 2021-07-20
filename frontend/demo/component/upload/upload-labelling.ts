@@ -24,6 +24,8 @@ export class Example extends LitElement {
     if (this.upload?.i18n) {
       this.upload.i18n.addFiles.one = 'Upload PDF...';
       this.upload.i18n.dropFiles.one = 'Drop PDF here';
+      this.upload.i18n.error.incorrectFileType =
+        'The provided file does not have the correct format. Please provide a PDF document.';
       this.upload.i18n = { ...this.upload.i18n };
     }
   }
@@ -40,6 +42,6 @@ export class Example extends LitElement {
   // end::snippet[]
 
   fileRejectHandler(event: UploadFileRejectEvent) {
-    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
+    showErrorNotification(event.detail.error);
   }
 }
