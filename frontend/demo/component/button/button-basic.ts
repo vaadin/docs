@@ -23,7 +23,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing" style="align-items: baseline">
         <vaadin-button @click="${() => this.counter++}">Button</vaadin-button>
-        <div>Clicked ${this.counter} times</div>
+        <p>Clicked ${this.counter} times</p>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;

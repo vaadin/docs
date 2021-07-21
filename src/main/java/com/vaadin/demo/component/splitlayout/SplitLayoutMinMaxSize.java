@@ -12,9 +12,17 @@ public class SplitLayoutMinMaxSize extends Div {
 
     public SplitLayoutMinMaxSize() {
         // tag::snippet[]
-        SplitLayout splitLayout = new SplitLayout(new Span("Side 1"), new Span("Side 2"));
-        add(splitLayout);
+        MasterContent master = new MasterContent();
+        master.setMinWidth("200px");
+        master.setMaxWidth("400px");
+
+        DetailContent detail = new DetailContent();
+
+        SplitLayout splitLayout = new SplitLayout(master, detail);
         // end::snippet[]
+
+        splitLayout.setMaxHeight("280px");
+        add(splitLayout);
     }
 
     public static class Exporter extends DemoExporter<SplitLayoutMinMaxSize> { // hidden-source-line
