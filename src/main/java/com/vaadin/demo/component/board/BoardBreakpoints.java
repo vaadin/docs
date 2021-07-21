@@ -11,6 +11,8 @@ public class BoardBreakpoints extends Div {
     public BoardBreakpoints() {
         // tag::snippet[]
         Board board = new Board();
+
+        // styles are defined separately, check the board.css snippet
         board.addRow(
                 createCell("Cell 1"),
                 createCell("Cell 2"),
