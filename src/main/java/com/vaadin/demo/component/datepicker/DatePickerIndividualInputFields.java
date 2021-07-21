@@ -19,30 +19,70 @@ import java.util.stream.IntStream;
 @Route("date-picker-individual-input-fields")
 public class DatePickerIndividualInputFields extends Div {
 
+    private final ComboBox<Integer> yearPicker;
+    private final ComboBox<Month> monthPicker;
+    private final ComboBox<Integer> dayPicker;
+
+    // tag::snippet[]
     public DatePickerIndividualInputFields() {
         LocalDate now = LocalDate.now(ZoneId.systemDefault());
 
-        // tag::snippet[]
-        ComboBox<Integer> day = new ComboBox<>("Day");
-        day.setItems(IntStream.range(1, 31)
-                             .boxed()
-                             .collect(Collectors.toList()));
-        day.setWidth(5, Unit.EM);
-
-        ComboBox<Month> month = new ComboBox<>("Month");
-        month.setItems(Month.values());
-        month.setItemLabelGenerator(m -> m.getDisplayName(TextStyle.FULL, Locale.getDefault()));
-        month.setWidth(9, Unit.EM);
-
-        ComboBox<Integer> year = new ComboBox<>("Year");
-        year.setItems(IntStream.range(now.getYear() - 99, now.getYear() + 1)
+        yearPicker = new ComboBox<>("Year");
+        yearPicker.setItems(IntStream.range(now.getYear() - 99, now.getYear() + 1)
                               .boxed()
                               .collect(Collectors.toList()));
-        year.setWidth(6, Unit.EM);
+        yearPicker.setWidth(6, Unit.EM);
+        yearPicker.addValueChangeListener(e -> {
+            updateMonthPicker();
+            updateDayPicker();
+        });
 
-        add(new HorizontalLayout(day, month, year));
-        // end::snippet[]
+        monthPicker = new ComboBox<>("Month");
+        monthPicker.setItems(Month.values());
+        monthPicker.setItemLabelGenerator(m -> m.getDisplayName(TextStyle.FULL, Locale.getDefault()));
+        monthPicker.setWidth(9, Unit.EM);
+        monthPicker.addValueChangeListener(e -> {
+            updateDayPicker();
+        });
+        monthPicker.setEnabled(false);
+
+        dayPicker = new ComboBox<>("Day");
+        dayPicker.setWidth(5, Unit.EM);
+        dayPicker.setEnabled(false);
+
+        add(new HorizontalLayout(yearPicker, monthPicker, dayPicker));
     }
+
+    private void updateMonthPicker() {
+        if(yearPicker.getValue() == null) {
+            monthPicker.setValue(null);
+            monthPicker.setEnabled(false);
+            return;
+        }
+
+        monthPicker.setValue(null);
+        monthPicker.setEnabled(true);
+    }
+
+    private void updateDayPicker() {
+        if(yearPicker.getValue() == null || monthPicker.getValue() == null) {
+            dayPicker.setValue(null);
+            dayPicker.setEnabled(false);
+            return;
+        }
+
+        dayPicker.setValue(null);
+        dayPicker.setEnabled(true);
+
+        LocalDate startOfMonth = LocalDate.of(yearPicker.getValue(), monthPicker.getValue(), 1);
+        int lengthOfMonth = startOfMonth.lengthOfMonth();
+
+        dayPicker.setItems(IntStream.range(1, lengthOfMonth + 1)
+                                   .boxed()
+                                   .collect(Collectors.toList()));
+    }
+    // end::snippet[]
+
     public static class Exporter extends DemoExporter<DatePickerIndividualInputFields> { // hidden-source-line
     } // hidden-source-line
 }
