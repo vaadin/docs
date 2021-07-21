@@ -9,6 +9,7 @@ import com.vaadin.flow.router.Route;
 
 import java.time.ZoneId;
 import java.time.format.TextStyle;
+import java.util.List;
 import java.util.Locale;
 
 import java.time.LocalDate;
@@ -27,10 +28,13 @@ public class DatePickerIndividualInputFields extends Div {
     public DatePickerIndividualInputFields() {
         LocalDate now = LocalDate.now(ZoneId.systemDefault());
 
+        List<Integer> selectableYears = IntStream.range(
+                now.getYear() - 99,
+                now.getYear() + 1)
+                .boxed().collect(Collectors.toList());
+
         yearPicker = new ComboBox<>("Year");
-        yearPicker.setItems(IntStream.range(now.getYear() - 99, now.getYear() + 1)
-                              .boxed()
-                              .collect(Collectors.toList()));
+        yearPicker.setItems(selectableYears);
         yearPicker.setWidth(6, Unit.EM);
         yearPicker.addValueChangeListener(e -> {
             updateMonthPicker();
@@ -39,7 +43,10 @@ public class DatePickerIndividualInputFields extends Div {
 
         monthPicker = new ComboBox<>("Month");
         monthPicker.setItems(Month.values());
-        monthPicker.setItemLabelGenerator(m -> m.getDisplayName(TextStyle.FULL, Locale.getDefault()));
+        monthPicker.setItemLabelGenerator(m -> m.getDisplayName(
+                TextStyle.FULL,
+                Locale.getDefault()
+        ));
         monthPicker.setWidth(9, Unit.EM);
         monthPicker.addValueChangeListener(e -> {
             updateDayPicker();
@@ -54,7 +61,7 @@ public class DatePickerIndividualInputFields extends Div {
     }
 
     private void updateMonthPicker() {
-        if(yearPicker.getValue() == null) {
+        if (yearPicker.getValue() == null) {
             monthPicker.setValue(null);
             monthPicker.setEnabled(false);
             return;
@@ -65,7 +72,7 @@ public class DatePickerIndividualInputFields extends Div {
     }
 
     private void updateDayPicker() {
-        if(yearPicker.getValue() == null || monthPicker.getValue() == null) {
+        if (yearPicker.getValue() == null || monthPicker.getValue() == null) {
             dayPicker.setValue(null);
             dayPicker.setEnabled(false);
             return;
@@ -74,7 +81,11 @@ public class DatePickerIndividualInputFields extends Div {
         dayPicker.setValue(null);
         dayPicker.setEnabled(true);
 
-        LocalDate startOfMonth = LocalDate.of(yearPicker.getValue(), monthPicker.getValue(), 1);
+        LocalDate startOfMonth = LocalDate.of(
+                yearPicker.getValue(),
+                monthPicker.getValue(),
+                1
+        );
         int lengthOfMonth = startOfMonth.lengthOfMonth();
 
         dayPicker.setItems(IntStream.range(1, lengthOfMonth + 1)
