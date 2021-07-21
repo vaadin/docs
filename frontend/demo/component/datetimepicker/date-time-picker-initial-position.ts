@@ -6,8 +6,12 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
+import startOfMonth from 'date-fns/startOfMonth';
+import addMonths from 'date-fns/addMonths';
+import formatISO from 'date-fns/formatISO';
 
-const currentYear = new Date().getFullYear();
+const startOfNextMonth = startOfMonth(addMonths(new Date(), 1));
+const startOfNextMonthISOString = formatISO(startOfNextMonth, { representation: 'date' });
 
 @customElement('date-time-picker-initial-position')
 export class Example extends LitElement {
@@ -23,7 +27,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-date-time-picker
         label="Meeting date and time"
-        .initialPosition="${`${currentYear}-12-31`}"
+        .initialPosition="${startOfNextMonthISOString}"
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->
     `;
