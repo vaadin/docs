@@ -6,6 +6,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 
@@ -17,7 +18,7 @@ public class DateTimePickerInitialPosition extends Div {
         // tag::snippet[]
         // https://github.com/vaadin/vaadin-date-time-picker/issues/57
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
-        LocalDate startOfNextMonth = LocalDate.now()
+        LocalDate startOfNextMonth = LocalDate.now(ZoneId.systemDefault())
                 .with(TemporalAdjusters.firstDayOfNextMonth());
         String startOfNextMonthIsoString = formatter.format(startOfNextMonth);
 
