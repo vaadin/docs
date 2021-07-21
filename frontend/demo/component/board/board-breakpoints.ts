@@ -2,48 +2,16 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import '@vaadin/vaadin-board/vaadin-board';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import defaultCellCSS from './example-cell-default.css';
 
 @customElement('board-breakpoints')
 export class Example extends LitElement {
-  // tag::snippet[]
-  static get styles() {
-    return [
-      defaultCellCSS,
-      css`
-        :host {
-          --vaadin-board-width-small: 150px;
-          --vaadin-board-width-medium: 220px;
-        }
-
-        vaadin-board-row.large > .cell {
-          background: var(--lumo-success-color-10pct);
-          color: var(--lumo-success-color);
-        }
-
-        vaadin-board-row.medium > .cell {
-          background: var(--lumo-primary-color-10pct);
-          color: var(--lumo-primary-color);
-        }
-
-        vaadin-board-row.small > .cell {
-          background: var(--lumo-error-color-10pct);
-          color: var(--lumo-error-color);
-        }
-
-        @media (min-width: 1024px) {
-          :host {
-            --vaadin-board-width-small: 300px;
-            --vaadin-board-width-medium: 400px;
-          }
-        }
-      `,
-    ];
+  constructor() {
+    super();
+    this.classList.add('board-breakpoints');
   }
-  // end::snippet[]
 
   protected createRenderRoot() {
     const root = super.createRenderRoot();
