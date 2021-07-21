@@ -11,11 +11,10 @@ import com.vaadin.flow.router.Route;
 public class DatePickerCustomValidation extends Div {
 
     public DatePickerCustomValidation() {
+        // tag::snippet[]
         DatePicker datePicker = new DatePicker("Meeting date");
         datePicker.setHelperText("Mondays – Fridays only");
-        add(datePicker);
 
-        // tag::snippet[]
         Binder<Appointment> binder = new Binder<>(Appointment.class);
         binder.forField(datePicker)
                 .withValidator(localDate -> {
@@ -25,6 +24,8 @@ public class DatePickerCustomValidation extends Div {
                 }, "Please select a weekday")
                 .bind(Appointment::getStartDate, Appointment::setStartDate);
         // end::snippet[]
+
+        add(datePicker);
     }
     public static class Exporter extends DemoExporter<DatePickerCustomValidation> { // hidden-source-line
     } // hidden-source-line
