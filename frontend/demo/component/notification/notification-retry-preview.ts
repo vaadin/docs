@@ -4,6 +4,7 @@ import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 export class Example extends LitElement {
@@ -17,12 +18,15 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-notification-card theme="error" slot="middle">
-        <div>Failed to generate report</div>
-        <div style="width: 2em"></div>
-        <vaadin-button theme="tertiary-inline">Retry</vaadin-button>
-        <vaadin-button theme="tertiary-inline">
-          <vaadin-icon icon="lumo:cross"></vaadin-icon>
-        </vaadin-button>
+        <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+          <div>Failed to generate report</div>
+          <vaadin-button theme="tertiary-inline" style="margin-left: var(--lumo-space-xl);">
+            Retry
+          </vaadin-button>
+          <vaadin-button theme="tertiary-inline" aria-label="Close">
+            <vaadin-icon icon="lumo:cross"></vaadin-icon>
+          </vaadin-button>
+        </vaadin-horizontal-layout>
       </vaadin-notification-card>
     `;
   }

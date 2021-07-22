@@ -10,12 +10,13 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
+
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("notification-error")
-public class NotificationError extends Div {
+@Route("notification-retry")
+public class NotificationRetry extends Div {
 
-  public NotificationError() {
+  public NotificationRetry() {
     Button button = new Button("Try it");
     button.addClickListener(clickEvent -> {
       button.setEnabled(false);
@@ -27,7 +28,7 @@ public class NotificationError extends Div {
     add(button);
   }
 
-  public Notification show() {
+  private Notification show() {
     // tag::snippet[]
     // When creating a notification using the constructor,
     // the duration is 0-sec by default which means that
@@ -35,7 +36,14 @@ public class NotificationError extends Div {
     Notification notification = new Notification();
     notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-    Div text = new Div(new Text("Failed to generate report"));
+    Div statusText = new Div(new Text("Failed to generate report"));
+
+    Button retryButton = new Button("Retry");
+    retryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+    retryButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+    retryButton.addClickListener(event -> {
+      notification.close();
+    });
 
     Button closeButton = new Button(new Icon("lumo", "cross"));
     closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
@@ -44,7 +52,7 @@ public class NotificationError extends Div {
       notification.close();
     });
 
-    HorizontalLayout layout = new HorizontalLayout(text, closeButton);
+    HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
     layout.setAlignItems(Alignment.CENTER);
 
     notification.add(layout);
@@ -56,6 +64,6 @@ public class NotificationError extends Div {
     return notification;
   }
 
-  public static class Exporter extends DemoExporter<NotificationError> { // hidden-source-line
+  public static class Exporter extends DemoExporter<NotificationRetry> { // hidden-source-line
   } // hidden-source-line
 }
