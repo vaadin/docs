@@ -19,8 +19,8 @@ public class ContextMenuCheckable extends Div {
   private final Span assignee;
 
   public ContextMenuCheckable() {
-    assignee = new Span();
     // tag::snippet1[]
+    assignee = new Span();
     menu = new ContextMenu();
     menu.setTarget(assignee);
 
