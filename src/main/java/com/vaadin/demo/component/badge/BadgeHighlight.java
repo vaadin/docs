@@ -40,35 +40,24 @@ public class BadgeHighlight extends Div {
 
     // tag::snippet2[]
     private Span createStatusBadge(String status) {
-        Icon icon;
         String theme;
         switch (status) {
             case "In progress":
-                icon = createIcon(VaadinIcon.CLOCK);
                 theme = "badge primary";
                 break;
             case "Completed":
-                icon = createIcon(VaadinIcon.CHECK);
                 theme = "badge success primary";
                 break;
             case "Cancelled":
-                icon = createIcon(VaadinIcon.CLOSE_SMALL);
                 theme = "badge error primary";
                 break;
             default:
-                icon = createIcon(VaadinIcon.HAND);
                 theme = "badge contrast primary";
                 break;
         }
-        Span badge = new Span(icon, new Span(status));
+        Span badge = new Span(status);
         badge.getElement().getThemeList().add(theme);
         return badge;
-    }
-
-    private Icon createIcon(VaadinIcon vaadinIcon) {
-        Icon icon = vaadinIcon.create();
-        icon.getStyle().set("padding", "var(--lumo-space-xs");
-        return icon;
     }
     // end::snippet2[]
 

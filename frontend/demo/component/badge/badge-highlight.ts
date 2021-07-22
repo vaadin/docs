@@ -64,42 +64,29 @@ export class Example extends LitElement {
 
               const { status } = model.item;
 
-              let icon: string;
               let title: string;
               let theme: string;
 
               switch (status) {
                 case ReportStatus.COMPLETED:
-                  icon = 'vaadin:check';
                   title = 'Completed';
                   theme = 'success';
                   break;
                 case ReportStatus.IN_PROGRESS:
-                  icon = 'vaadin:clock';
                   title = 'In progress';
                   theme = '';
                   break;
                 case ReportStatus.CANCELLED:
-                  icon = 'vaadin:close-small';
                   title = 'Cancelled';
                   theme = 'error';
                   break;
                 default:
-                  icon = 'vaadin:hand';
                   title = 'On hold';
                   theme = 'contrast';
                   break;
               }
 
-              render(
-                html`
-                  <span theme="badge ${theme} primary">
-                    <vaadin-icon icon="${icon}" style="padding: var(--lumo-space-xs"></vaadin-icon>
-                    <span>${title}</span>
-                  </span>
-                `,
-                root
-              );
+              render(html` <span theme="badge ${theme} primary"> ${title} </span> `, root);
             }
           )}"
         ></vaadin-grid-column>
