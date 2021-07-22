@@ -28,7 +28,7 @@ public class BadgeHighlight extends Div {
         grid.addColumn(Report::getAssignee).setHeader("Assignee");
         // tag::snippet1[]
         grid.addComponentColumn(report ->
-                getStatusBadge(report.getStatus()))
+                createStatusBadge(report.getStatus()))
                 .setHeader("status");
         // end::snippet1[]
 
@@ -39,21 +39,26 @@ public class BadgeHighlight extends Div {
     }
 
     // tag::snippet2[]
-    private Span getStatusBadge(String status) {
+    private Span createStatusBadge(String status) {
         Icon icon;
         String theme;
-        if (status.equals("In progress")) {
-            icon = createIcon(VaadinIcon.CLOCK);
-            theme = "badge primary";
-        } else if (status.equals("Completed")) {
-            icon = createIcon(VaadinIcon.CHECK);
-            theme = "badge success primary";
-        } else if (status.equals("Cancelled")) {
-            icon = createIcon(VaadinIcon.CLOSE_SMALL);
-            theme = "badge error primary";
-        } else {
-            icon = createIcon(VaadinIcon.HAND);
-            theme = "badge contrast primary";
+        switch (status) {
+            case "In progress":
+                icon = createIcon(VaadinIcon.CLOCK);
+                theme = "badge primary";
+                break;
+            case "Completed":
+                icon = createIcon(VaadinIcon.CHECK);
+                theme = "badge success primary";
+                break;
+            case "Cancelled":
+                icon = createIcon(VaadinIcon.CLOSE_SMALL);
+                theme = "badge error primary";
+                break;
+            default:
+                icon = createIcon(VaadinIcon.HAND);
+                theme = "badge contrast primary";
+                break;
         }
         Span badge = new Span(icon, new Span(status));
         badge.getElement().getThemeList().add(theme);

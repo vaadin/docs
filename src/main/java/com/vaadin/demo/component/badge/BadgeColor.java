@@ -13,37 +13,37 @@ public class BadgeColor extends Div {
     public BadgeColor() {
         // tag::snippet1[]
         // Default variant
-        Span pending1 = new Span("Pending");
-        pending1.getElement().getThemeList().add("badge");
+        Span pending = new Span("Pending");
+        pending.getElement().getThemeList().add("badge");
         // end::snippet1[]
 
-        Span confirmed1 = new Span("Confirmed");
-        confirmed1.getElement().getThemeList().add("badge success");
+        Span confirmed = new Span("Confirmed");
+        confirmed.getElement().getThemeList().add("badge success");
 
-        Span denied1 = new Span("Denied");
-        denied1.getElement().getThemeList().add("badge error");
+        Span denied = new Span("Denied");
+        denied.getElement().getThemeList().add("badge error");
 
-        Span onHold1 = new Span("On hold");
-        onHold1.getElement().getThemeList().add("badge contrast");
+        Span onHold = new Span("On hold");
+        onHold.getElement().getThemeList().add("badge contrast");
 
         // tag::snippet2[]
         // Primary variant
-        Span pending2 = new Span("Pending");
-        pending2.getElement().getThemeList().add("badge primary");
+        Span pendingPrimary = new Span("Pending");
+        pendingPrimary.getElement().getThemeList().add("badge primary");
         // end::snippet2[]
 
-        Span confirmed2 = new Span("Confirmed");
-        confirmed2.getElement().getThemeList().add("badge success primary");
+        Span confirmedPrimary = new Span("Confirmed");
+        confirmedPrimary.getElement().getThemeList().add("badge success primary");
 
-        Span denied2 = new Span("Denied");
-        denied2.getElement().getThemeList().add("badge error primary");
+        Span deniedPrimary = new Span("Denied");
+        deniedPrimary.getElement().getThemeList().add("badge error primary");
 
-        Span onHold2 = new Span("On hold");
-        onHold2.getElement().getThemeList().add("badge contrast primary");
+        Span onHoldPrimary = new Span("On hold");
+        onHoldPrimary.getElement().getThemeList().add("badge contrast primary");
 
         VerticalLayout layout = new VerticalLayout(
-                new HorizontalLayout(pending1, confirmed1, denied1, onHold1),
-                new HorizontalLayout(pending2, confirmed2, denied2, onHold2)
+                new HorizontalLayout(pending, confirmed, denied, onHold),
+                new HorizontalLayout(pendingPrimary, confirmedPrimary, deniedPrimary, onHoldPrimary)
         );
         layout.setPadding(false);
         layout.setSizeUndefined();

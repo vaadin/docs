@@ -20,13 +20,13 @@ public class BadgeIconsOnlyTable extends Div {
         // tag::snippet1[]
         grid.addColumn(UserPermissions::getName).setHeader("Name");
         grid.addComponentColumn(userPermissions ->
-                getPermissionIcon(userPermissions.getView()))
+                createPermissionIcon(userPermissions.getView()))
                 .setHeader("View");
         grid.addComponentColumn(userPermissions ->
-                getPermissionIcon(userPermissions.getComment()))
+                createPermissionIcon(userPermissions.getComment()))
                 .setHeader("Comment");
         grid.addComponentColumn(userPermissions ->
-                getPermissionIcon(userPermissions.getEdit()))
+                createPermissionIcon(userPermissions.getEdit()))
                 .setHeader("Edit");
         // end::snippet1[]
 
@@ -37,9 +37,9 @@ public class BadgeIconsOnlyTable extends Div {
     }
 
     // tag::snippet2[]
-    private Icon getPermissionIcon(boolean permission) {
+    private Icon createPermissionIcon(boolean hasPermission) {
         Icon icon;
-        if (permission) {
+        if (hasPermission) {
             icon = createIcon(VaadinIcon.CHECK, "Yes");
             icon.getElement().getThemeList().add("badge success");
         } else {

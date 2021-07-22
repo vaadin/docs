@@ -20,7 +20,7 @@ public class BadgeInteractive extends Div {
         HorizontalLayout badges = new HorizontalLayout();
         badges.getStyle().set("flex-wrap", "wrap");
 
-        ComboBox<String> comboBox = new ComboBox("Profession");
+        ComboBox<String> comboBox = new ComboBox<>("Profession");
         comboBox.setItems(DataService.getProfessions());
         comboBox.addValueChangeListener(e -> badges.add(createBadge(e.getValue())));
         // end::snippet1[]
