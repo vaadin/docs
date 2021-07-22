@@ -1,9 +1,8 @@
 package com.vaadin.demo.component.board;
 
-import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.board.Board;
+import com.vaadin.flow.component.board.Row;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -12,40 +11,77 @@ public class BoardColumnSpan extends Div {
 
     public BoardColumnSpan() {
         // tag::snippet[]
-        Board board = new Board();
-        Div cell1 = createCell("Cell 1");
-        Div cell2 = createCell("Cell 2");
-        Div cell3 = createCell("Cell 3");
-        Div cell4 = createCell("Cell 4");
-
-        board.addRow(cell1, cell2, cell3, cell4);
-        add(board);
+        Board board1 = createBoard1();
+        Board board2 = createBoard2();
+        Board board3 = createBoard3();
         // end::snippet[]
 
-        setStyles(cell1, cell2, cell3, cell4);
+        addClassName("board-column-span");
+        add(board1, board2, board3);
     }
 
-    private Div createCell(String text) {
+    // tag::createBoard[]
+    private static Board createBoard1() {
+        Row row1 = new Row();
+        row1.add(createCell("Span 2"), 2);
+        row1.add(createCell("Span 1"));
+        row1.add(createCell("Span 1"));
+
+        Row row2 = new Row();
+        row2.add(createCell("Span 1"));
+        row2.add(createCell("Span 2"), 2);
+        row2.add(createCell("Span 1"));
+
+        Row row3 = new Row();
+        row3.add(createCell("Span 1"));
+        row3.add(createCell("Span 1"));
+        row3.add(createCell("Span 2"), 2);
+
+        Board board = new Board();
+        board.add(row1, row2, row3);
+
+        return board;
+    }
+
+    private static Board createBoard2() {
+        Row row1 = new Row();
+        row1.add(createCell("Span 3"), 3);
+        row1.add(createCell("Span 1"));
+
+        Row row2 = new Row();
+        row2.add(createCell("Span 1"));
+        row2.add(createCell("Span 3"), 3);
+
+        Board board = new Board();
+        board.add(row1, row2);
+
+        return board;
+    }
+
+    private static Board createBoard3() {
+        Row row1 = new Row();
+        row1.add(createCell("Span 2"), 2);
+        row1.add(createCell("Span 1"));
+
+        Row row2 = new Row();
+        row2.add(createCell("Span 1"));
+        row2.add(createCell("Span 2"), 2);
+
+        Board board = new Board();
+        board.add(row1, row2);
+
+        return board;
+    }
+    // end::createBoard[]
+
+    private static Div createCell(String text) {
         Div div = new Div();
         div.setText(text);
+        div.addClassNames("cell");
+
         return div;
     }
 
-    private static void setStyles(HasStyle... components) {
-        String[] cellColors = new String[] { "#003E53", "#00506B", "#006C90", "#0090C0"};
-        for (int i = 0; i < components.length; i++) {
-            Style style = components[i].getStyle();
-            style.set("padding", "1em");
-            style.set("text-align", "center");
-            style.set("background-color", cellColors[i]);
-
-            if (i < 5) {
-                style.set("color", "white");
-            }
-        }
-
-    }
-
-    public static class Exporter extends DemoExporter<BoardBasic> { // hidden-source-line
+    public static class Exporter extends DemoExporter<BoardColumnSpan> { // hidden-source-line
     } // hidden-source-line
 }
