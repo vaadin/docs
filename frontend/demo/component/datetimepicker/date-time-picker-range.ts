@@ -28,7 +28,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-horizontal-layout theme="spacing">
+      <div>
         <vaadin-date-time-picker
           label="Start date and time"
           .value="${this.startDateTime}"
@@ -40,7 +40,7 @@ export class Example extends LitElement {
           .value="${this.endDateTime}"
           @value-changed="${(e: CustomEvent) => (this.endDateTime = e.detail.value)}"
         ></vaadin-date-time-picker>
-      </vaadin-horizontal-layout>
+      </div>
       <!-- end::snippet[] -->
     `;
   }
