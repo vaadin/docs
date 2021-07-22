@@ -12,7 +12,6 @@ import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
-import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
@@ -27,8 +26,7 @@ public class GridColumnAlignment extends Div {
                 GridColumnAlignment::generateRandomDueDate, "MM/dd/yyyy"))
                 .setHeader("Due");
         // tag::snippet[]
-        grid.addColumn(new TextRenderer<>(
-                GridColumnAlignment::generateRandomAmountText))
+        grid.addColumn(GridColumnAlignment::generateRandomAmountText)
                 .setHeader("Amount").setTextAlign(ColumnTextAlign.END);
         // end::snippet[]
 

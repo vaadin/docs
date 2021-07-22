@@ -5,6 +5,7 @@ import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -28,7 +29,7 @@ public class GridItemDetails extends Div {
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
 
-        grid.setThemeName("row-stripes");
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         add(grid);
     }

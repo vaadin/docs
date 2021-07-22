@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -35,7 +36,10 @@ export class Example extends LitElement {
         <vaadin-grid-column path="firstName"> </vaadin-grid-column>
         <vaadin-grid-column path="lastName"> </vaadin-grid-column>
         <vaadin-grid-column path="membership"></vaadin-grid-column>
-        <vaadin-grid-pro-edit-column path="email"></vaadin-grid-pro-edit-column>
+        <vaadin-grid-pro-edit-column
+          path="email"
+          header="Email (Editable)"
+        ></vaadin-grid-pro-edit-column>
       </vaadin-grid-pro>
       <!-- end::snippet[] -->
     `;

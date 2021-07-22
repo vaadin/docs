@@ -1,4 +1,4 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { createFakeFilesUploadBasic } from './upload-demo-mock-files'; // hidden-source-line
 import { html, LitElement } from 'lit';
@@ -18,7 +18,10 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
+      <!-- Use the target attribute to specify the URL
+           that handles the file upload -->
       <vaadin-upload
+        target="/api/fileupload"
         .files="${createFakeFilesUploadBasic() /* hidden-source-line-trim */}"
       ></vaadin-upload>
       <!-- end::snippet[] -->

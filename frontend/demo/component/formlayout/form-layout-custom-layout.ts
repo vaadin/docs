@@ -21,9 +21,12 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   private responsiveSteps: FormLayoutResponsiveStep[] = [
+    // Use one column by default
     { minWidth: 0, columns: 1 },
-    { minWidth: '10em', columns: 2 },
-    { minWidth: '20em', columns: 3 },
+    // Use two columns, if the layout's width exceeds 320px
+    { minWidth: '320px', columns: 2 },
+    // Use three columns, if the layout's width exceeds 500px
+    { minWidth: '500px', columns: 3 },
   ];
 
   render() {

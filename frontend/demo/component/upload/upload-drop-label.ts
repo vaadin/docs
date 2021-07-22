@@ -1,4 +1,4 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -7,7 +7,7 @@ import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('upload-button-icon')
+@customElement('upload-drop-label')
 export class Example extends LitElement {
   protected createRenderRoot() {
     const root = super.createRenderRoot();
@@ -20,7 +20,11 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-upload>
-        <vaadin-icon slot="drop-label-icon" icon="vaadin:folder-open"></vaadin-icon>
+        <vaadin-icon slot="drop-label-icon" icon="vaadin:cloud-upload-o"></vaadin-icon>
+        <span slot="drop-label">
+          Files will be uploaded to our cloud. Please note our
+          <a href="https://vaadin.com/privacy-policy" target="_blank">privacy policy</a>
+        </span>
       </vaadin-upload>
       <!-- end::snippet[] -->
     `;

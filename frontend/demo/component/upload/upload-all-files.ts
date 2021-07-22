@@ -1,4 +1,4 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { createFakeFilesUploadAllFiles } from './upload-demo-mock-files'; // hidden-source-line
 import { html, LitElement } from 'lit';
@@ -35,11 +35,7 @@ export class Example extends LitElement {
         no-auto
         .files="${createFakeFilesUploadAllFiles() /* hidden-source-line */}"
       ></vaadin-upload>
-      <p>
-        <vaadin-button theme="primary" @click="${this.uploadFiles}">
-          Upload All Files
-        </vaadin-button>
-      </p>
+      <vaadin-button theme="primary" @click="${this.uploadFiles}"> Upload All Files </vaadin-button>
     `;
   }
 
