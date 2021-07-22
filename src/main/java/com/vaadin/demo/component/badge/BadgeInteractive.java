@@ -22,7 +22,10 @@ public class BadgeInteractive extends Div {
 
         ComboBox<String> comboBox = new ComboBox<>("Profession");
         comboBox.setItems(DataService.getProfessions());
-        comboBox.addValueChangeListener(e -> badges.add(createBadge(e.getValue())));
+        comboBox.addValueChangeListener(e -> {
+            Span filterBadge = createFilterBadge(e.getValue());
+            badges.add(filterBadge);
+        });
         // end::snippet1[]
 
         VerticalLayout layout = new VerticalLayout(comboBox, badges);
@@ -33,18 +36,24 @@ public class BadgeInteractive extends Div {
     }
 
     // tag::snippet2[]
-    private Span createBadge(String profession) {
-        Button button = new Button();
-        button.getElement().appendChild(VaadinIcon.CLOSE_SMALL.create().getElement());
-        button.addThemeVariants(ButtonVariant.LUMO_CONTRAST, ButtonVariant.LUMO_TERTIARY_INLINE);
-        button.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
+    private Span createFilterBadge(String profession) {
+        Button clearButton = new Button();
+        clearButton.getElement().appendChild(VaadinIcon.CLOSE_SMALL.create().getElement());
+        clearButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST, ButtonVariant.LUMO_TERTIARY_INLINE);
+        clearButton.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
         // Accessible button name
-        button.getElement().setAttribute("aria-label", "Clear filter: " + profession);
+        clearButton.getElement().setAttribute("aria-label", "Clear filter: " + profession);
         // Tooltip
-        button.getElement().setAttribute("title", "Clear filter: " + profession);
+        clearButton.getElement().setAttribute("title", "Clear filter: " + profession);
 
-        Span badge = new Span(new Span(profession), button);
+        Span badge = new Span(new Span(profession), clearButton);
         badge.getElement().getThemeList().add("badge contrast pill");
+
+        // Add handler for removing the badge
+        clearButton.addClickListener(event -> {
+            badge.getElement().removeFromParent();
+        });
+
         return badge;
     }
     // end::snippet2[]
