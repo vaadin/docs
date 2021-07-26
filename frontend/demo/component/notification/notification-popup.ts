@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 
 import { css, html, LitElement, render, unsafeCSS } from 'lit';
 import { customElement } from 'lit/decorators.js';

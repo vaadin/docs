@@ -17,25 +17,23 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static com.vaadin.flow.component.button.ButtonVariant.*;
 
 @Route("notification-rich")
 public class NotificationRich extends HorizontalLayout {
-    public static ComponentEventListener<ClickEvent<Button>> getClickHandler(
-            Consumer<Notification> notificationConsumer
+    public static ComponentEventListener<ClickEvent<Button>> createClickHandler(
+            Supplier<Notification> notificationSupplier
     ) {
         return clickEvent -> {
             Button btn = clickEvent.getSource();
             btn.setEnabled(false);
 
-            Notification notification = new Notification();
+            Notification notification = notificationSupplier.get();
             notification.setPosition(Notification.Position.MIDDLE);
             notification.setDuration(5000);
             notification.open();
-
-            notificationConsumer.accept(notification);
             notification.addDetachListener(detachEvent -> btn.setEnabled(true));
         };
     }
@@ -43,31 +41,31 @@ public class NotificationRich extends HorizontalLayout {
     public NotificationRich() {
         Button successBtn = new Button(
                 "Try it",
-                getClickHandler(NotificationRich::submitSuccess));
+                createClickHandler(NotificationRich::createSubmitSuccess));
         successBtn.addThemeVariants(LUMO_SUCCESS, LUMO_PRIMARY);
 
         Button errorBtn = new Button(
                 "Try it",
-                getClickHandler(NotificationRich::reportError));
+                createClickHandler(NotificationRich::createReportError));
         errorBtn.addThemeVariants(LUMO_ERROR, LUMO_PRIMARY);
 
         Button mentionBtn = new Button(
                 "Try it",
-                getClickHandler(NotificationRich::mentionNotification));
+                createClickHandler(NotificationRich::createMentionNotification));
         mentionBtn.addThemeVariants(LUMO_CONTRAST);
 
         Button uploadSuccessBtn = new Button(
                 "Try it",
-                getClickHandler(NotificationRich::uploadSuccess));
+                createClickHandler(NotificationRich::createUploadSuccess));
         uploadSuccessBtn.addThemeVariants(LUMO_SUCCESS);
 
         setJustifyContentMode(JustifyContentMode.CENTER);
         add(successBtn, errorBtn, mentionBtn, uploadSuccessBtn);
     }
 
-
     // tag::snippet[]
-    public static void submitSuccess(Notification notification) {
+    public static Notification createSubmitSuccess() {
+        Notification notification = new Notification();
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
         Icon icon = VaadinIcon.CHECK_CIRCLE.create();
@@ -84,9 +82,12 @@ public class NotificationRich extends HorizontalLayout {
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         notification.add(layout);
+
+        return notification;
     }
 
-    public static void reportError(Notification notification) {
+    public static Notification createReportError() {
+        Notification notification = new Notification();
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
         Icon icon = VaadinIcon.WARNING.create();
@@ -103,9 +104,13 @@ public class NotificationRich extends HorizontalLayout {
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         notification.add(layout);
+
+        return notification;
     }
 
-    public static void mentionNotification(Notification notification) {
+    public static Notification createMentionNotification() {
+        Notification notification = new Notification();
+
         Avatar avatar = new Avatar("Jason Bailey");
 
         Span name = new Span("Jason Bailey");
@@ -123,9 +128,13 @@ public class NotificationRich extends HorizontalLayout {
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         notification.add(layout);
+
+        return notification;
     }
 
-    public static void uploadSuccess(Notification notification) {
+    public static Notification createUploadSuccess() {
+        Notification notification = new Notification();
+
         Icon icon = VaadinIcon.CHECK_CIRCLE.create();
         icon.setColor("var(--lumo-success-color)");
 
@@ -155,6 +164,8 @@ public class NotificationRich extends HorizontalLayout {
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         notification.add(layout);
+
+        return notification;
     }
 
     public static Button createCloseBtn(Notification notification) {
