@@ -1,14 +1,16 @@
 import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // hidden-source-line
 import 'Frontend/demo/init'; // hidden-source-line
 import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-source-line
-import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
-import { applyTheme } from 'Frontend/generated/theme';
+import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
+import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement, render } from 'lit';
 import { guard } from 'lit/directives/guard';
 import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/vaadin-grid/vaadin-grid';
+import { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
+import { applyTheme } from 'Frontend/generated/theme';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
@@ -38,7 +40,7 @@ export class Example extends LitElement {
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
         <vaadin-grid-column
-          header="Due Date"
+          header="Due date"
           .renderer="${guard(
             [],
             () => (root: HTMLElement, column?: GridColumnElement, model?: GridItemModel<Report>) => {
@@ -62,42 +64,29 @@ export class Example extends LitElement {
 
               const { status } = model.item;
 
-              let icon: string;
               let title: string;
               let theme: string;
 
               switch (status) {
                 case ReportStatus.COMPLETED:
-                  icon = 'lumo:checkmark';
                   title = 'Completed';
                   theme = 'success';
                   break;
                 case ReportStatus.IN_PROGRESS:
-                  icon = 'lumo:cog';
-                  title = 'In Progress';
+                  title = 'In progress';
                   theme = '';
                   break;
                 case ReportStatus.CANCELLED:
-                  icon = 'lumo:cross';
                   title = 'Cancelled';
                   theme = 'error';
                   break;
                 default:
-                  icon = 'lumo:clock';
-                  title = 'On Hold';
+                  title = 'On hold';
                   theme = 'contrast';
                   break;
               }
 
-              render(
-                html`
-                  <span theme="badge ${theme} primary">
-                    <vaadin-icon icon="${icon}"></vaadin-icon>
-                    <span>${title}</span>
-                  </span>
-                `,
-                root
-              );
+              render(html` <span theme="badge ${theme} primary"> ${title} </span> `, root);
             }
           )}"
         ></vaadin-grid-column>
