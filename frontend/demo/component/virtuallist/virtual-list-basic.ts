@@ -1,6 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/virtualListConnector.js'; // hidden-source-line
-import '@vaadin/vaadin-template-renderer'; // hidden-source-line
 
 import { html, LitElement, render, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';

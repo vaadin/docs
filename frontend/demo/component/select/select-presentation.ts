@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/selectConnector.js'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
