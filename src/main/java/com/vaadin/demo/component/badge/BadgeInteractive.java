@@ -5,7 +5,6 @@ import com.vaadin.demo.domain.DataService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -13,7 +12,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route("badge-interactive")
-public class BadgeInteractive extends Div {
+public class BadgeInteractive extends VerticalLayout {
 
     public BadgeInteractive() {
         // tag::snippet1[]
@@ -28,17 +27,14 @@ public class BadgeInteractive extends Div {
         });
         // end::snippet1[]
 
-        VerticalLayout layout = new VerticalLayout(comboBox, badges);
-        layout.setPadding(false);
-        layout.setSizeUndefined();
-
-        add(layout);
+        add(comboBox, badges);
+        setPadding(false);
+        setSizeUndefined();
     }
 
     // tag::snippet2[]
     private Span createFilterBadge(String profession) {
-        Button clearButton = new Button();
-        clearButton.getElement().appendChild(VaadinIcon.CLOSE_SMALL.create().getElement());
+        Button clearButton = new Button(VaadinIcon.CLOSE_SMALL.create());
         clearButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST, ButtonVariant.LUMO_TERTIARY_INLINE);
         clearButton.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
         // Accessible button name

@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.badge;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -10,7 +9,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route("badge-icons")
-public class BadgeIcons extends Div {
+public class BadgeIcons extends VerticalLayout {
 
     public BadgeIcons() {
         // tag::snippet1[]
@@ -43,13 +42,11 @@ public class BadgeIcons extends Div {
         Span onHold2 = new Span(new Span("On hold"), createIcon(VaadinIcon.HAND));
         onHold2.getElement().getThemeList().add("badge contrast");
 
-        VerticalLayout layout = new VerticalLayout(
-                new HorizontalLayout(pending1, confirmed1, denied1, onHold1),
-                new HorizontalLayout(pending2, confirmed2, denied2, onHold2)
+        add(new HorizontalLayout(pending1, confirmed1, denied1, onHold1),
+            new HorizontalLayout(pending2, confirmed2, denied2, onHold2)
         );
-        layout.setPadding(false);
-        layout.setSizeUndefined();
-        add(layout);
+        setPadding(false);
+        setSizeUndefined();
     }
 
     // tag::snippet3[]

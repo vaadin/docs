@@ -1,13 +1,12 @@
 package com.vaadin.demo.component.badge;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route("badge-basic")
-public class BadgeBasic extends Div {
+public class BadgeBasic extends HorizontalLayout {
 
     public BadgeBasic() {
         // tag::snippet[]
@@ -24,7 +23,7 @@ public class BadgeBasic extends Div {
         onHold.getElement().getThemeList().add("badge contrast");
         // end::snippet[]
 
-        add(new HorizontalLayout(pending, confirmed, denied, onHold));
+        add(pending, confirmed, denied, onHold);
     }
     public static class Exporter extends DemoExporter<BadgeBasic> { // hidden-source-line
     } // hidden-source-line

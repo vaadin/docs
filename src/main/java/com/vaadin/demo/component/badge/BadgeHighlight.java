@@ -6,8 +6,6 @@ import com.vaadin.demo.domain.Report;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.Route;
 
@@ -29,7 +27,7 @@ public class BadgeHighlight extends Div {
         // tag::snippet1[]
         grid.addComponentColumn(report ->
                 createStatusBadge(report.getStatus()))
-                .setHeader("status");
+                .setHeader("Status");
         // end::snippet1[]
 
         List<Report> reports = DataService.getReports();

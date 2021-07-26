@@ -1,14 +1,13 @@
 package com.vaadin.demo.component.badge;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route("badge-icons-only")
-public class BadgeIconsOnly extends Div {
+public class BadgeIconsOnly extends HorizontalLayout {
 
     public BadgeIconsOnly() {
         // tag::snippet1[]
@@ -19,7 +18,7 @@ public class BadgeIconsOnly extends Div {
         cancelled.getElement().getThemeList().add("badge error");
         // end::snippet1[]
 
-        add(new HorizontalLayout(confirmed, cancelled));
+        add(confirmed, cancelled);
     }
 
     // tag::snippet2[]

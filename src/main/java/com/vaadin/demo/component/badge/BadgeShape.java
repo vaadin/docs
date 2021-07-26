@@ -1,13 +1,12 @@
 package com.vaadin.demo.component.badge;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route("badge-shape")
-public class BadgeShape extends Div {
+public class BadgeShape extends HorizontalLayout {
 
     public BadgeShape() {
         // tag::snippet[]
@@ -24,7 +23,7 @@ public class BadgeShape extends Div {
         onHold.getElement().getThemeList().add("badge contrast pill");
         // end::snippet[]
 
-        add(new HorizontalLayout(pending, confirmed, denied, onHold));
+        add(pending, confirmed, denied, onHold);
     }
 
     public static class Exporter extends DemoExporter<BadgeShape> { // hidden-source-line

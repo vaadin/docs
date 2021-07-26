@@ -1,14 +1,13 @@
 package com.vaadin.demo.component.badge;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route("badge-color")
-public class BadgeColor extends Div {
+public class BadgeColor extends VerticalLayout {
 
     public BadgeColor() {
         // tag::snippet1[]
@@ -41,13 +40,11 @@ public class BadgeColor extends Div {
         Span onHoldPrimary = new Span("On hold");
         onHoldPrimary.getElement().getThemeList().add("badge contrast primary");
 
-        VerticalLayout layout = new VerticalLayout(
-                new HorizontalLayout(pending, confirmed, denied, onHold),
-                new HorizontalLayout(pendingPrimary, confirmedPrimary, deniedPrimary, onHoldPrimary)
+        add(new HorizontalLayout(pending, confirmed, denied, onHold),
+            new HorizontalLayout(pendingPrimary, confirmedPrimary, deniedPrimary, onHoldPrimary)
         );
-        layout.setPadding(false);
-        layout.setSizeUndefined();
-        add(layout);
+        setPadding(false);
+        setSizeUndefined();
     }
     public static class Exporter extends DemoExporter<BadgeColor> { // hidden-source-line
     } // hidden-source-line
