@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators';
 import { guard } from 'lit/directives/guard';

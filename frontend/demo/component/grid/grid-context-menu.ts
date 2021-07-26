@@ -1,7 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line (ContextMenu's connector)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';

@@ -8,7 +8,6 @@ import type {
   NotificationOpenedChangedEvent,
   NotificationPosition,
 } from '@vaadin/vaadin-notification';
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 
 interface Options {
   position?: NotificationPosition;
