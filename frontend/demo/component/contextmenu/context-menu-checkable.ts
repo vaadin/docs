@@ -20,37 +20,28 @@ export class Example extends LitElement {
   // tag::snippet[]
   @state()
   private items: ContextMenuItem[] = [
-    { text: 'Abigail Lewis' },
+    { text: 'Abigail Lewis', checked: true },
     { text: 'Allison Torres' },
     { text: 'Anna Myers' },
     { text: 'Lauren Wright' },
     { text: 'Tamaki Ryushi' },
   ];
 
-  @state()
-  private selectedItem = this.items[1];
-  // end::snippet[]
-
   render() {
+    const selectedItem = this.items.find((item) => item.checked);
+
     return html`
-      <!-- tag::snippethtml[] -->
-      <vaadin-context-menu
-        .items="${this.items.map((item) => {
-          return { ...item, checked: item === this.selectedItem };
-        })}"
-        @item-selected="${this.itemSelected}"
-      >
-        <span>Assignee: <b>${this.selectedItem?.text}</b></span>
+      <vaadin-context-menu .items="${this.items}" @item-selected="${this.itemSelected}">
+        <span>Assignee: <b>${selectedItem?.text}</b></span>
       </vaadin-context-menu>
-      <!-- end::snippethtml[] -->
     `;
   }
 
-  // tag::snippetselected[]
   itemSelected(e: ContextMenuItemSelectedEvent) {
-    this.selectedItem = this.items.find(
-      (item) => item.text === e.detail.value.text
-    ) as ContextMenuItem;
+    this.items.forEach((item) => {
+      item.checked = item === e.detail.value;
+    });
+    this.items = [...this.items];
   }
-  // end::snippetselected[]
+  // end::snippet[]
 }
