@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
+import '@vaadin/vaadin-select/vaadin-select';
 import { SelectElement } from '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
@@ -27,9 +28,9 @@ export class Example extends LitElement {
   async firstUpdated() {
     const { people } = await getPeople({ count: 4 });
     this.people = people;
-    // Need to manually re-run the bound renderer whenever the item set changes dynamiclly
+    // Need to manually re-run the bound renderer whenever the item set changes dynamically
     // to have the new items available for keyboard selection (with the overlay closed)
-    this.select?.render();
+    this.select?.requestContentUpdate();
   }
 
   render() {
