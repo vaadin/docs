@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement } from 'lit';
 import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';

@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+
 import { css, html, LitElement, render, unsafeCSS } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-icon/vaadin-icon';
@@ -44,7 +45,7 @@ export class Example2 extends LitElement {
     return html`
       <vaadin-context-menu open-on="click" .renderer="${this.menuRenderer}">
         <vaadin-button aria-label="notifications" theme="tertiary">
-          <vaadin-icon icon="lumo:bell"></vaadin-icon>
+          <vaadin-icon icon="vaadin:bell-o"></vaadin-icon>
           <span theme="badge error primary small pill">4</span>
         </vaadin-button>
       </vaadin-context-menu>
