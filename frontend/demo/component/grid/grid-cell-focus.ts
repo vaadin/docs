@@ -27,7 +27,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private grid!: GridElement;
+  private grid!: GridElement<Person>;
   @state()
   private items: Person[] = [];
   @state()
@@ -44,12 +44,12 @@ export class Example extends LitElement {
       <vaadin-grid
         theme="force-focus-outline"
         .items="${this.items}"
-        @cell-focus="${(e: GridCellFocusEvent) => {
+        @cell-focus="${(e: GridCellFocusEvent<Person>) => {
           const eventContext = this.grid.getEventContext(e);
-          const section = eventContext?.section || 'Not available';
-          const row = eventContext?.index != undefined ? eventContext?.index : 'Not available';
-          const column = eventContext?.column?.path || 'Not available';
-          const person = eventContext?.item;
+          const section = eventContext.section || 'Not available';
+          const row = eventContext.index != undefined ? eventContext.index : 'Not available';
+          const column = eventContext.column?.path || 'Not available';
+          const person = eventContext.item;
           const fullName =
             person?.firstName && person?.lastName
               ? `${person.firstName} ${person.lastName}`
