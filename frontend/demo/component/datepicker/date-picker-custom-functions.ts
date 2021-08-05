@@ -56,6 +56,7 @@ export class Example extends LitElement {
       <vaadin-date-picker
         label="Select a date:"
         value="${this.selectedDateValue}"
+        helper-text="Date picker configured to use ISO 8601 format"
         @change="${(e: DatePickerValueChangedEvent) => (this.selectedDateValue = e.detail.value)}"
       ></vaadin-date-picker>
     `;
