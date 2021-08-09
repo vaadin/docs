@@ -84,4 +84,11 @@ public class DataService {
     return Arrays.asList(getItems(Country[].class, "countries.json"));
   }
 
+  public static List<UserPermissions> getUserPermissions() {
+    return Arrays.asList(getItems(UserPermissions[].class, "permissions.json"));
+  }
+
+  public static List<Report> getReports() {
+    return Arrays.asList(getItems(Report[].class, "reports.json"));
+  }
 }

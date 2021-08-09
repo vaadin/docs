@@ -1,7 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js';
-import { TextFieldValueChangedEvent } from '@vaadin/vaadin-text-field'; // hidden-source-line (Legacy template renderer)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -12,6 +9,7 @@ import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import { TextFieldValueChangedEvent } from '@vaadin/vaadin-text-field';
 import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
