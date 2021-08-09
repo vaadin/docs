@@ -16,7 +16,7 @@ public class DatePickerCustomFormat extends VerticalLayout {
         // tag::snippet[]
         // Setup date picker with a single custom format `yyyy-MM-dd` for
         // displaying dates and parsing user input
-        // Custom date formats are specified used the date pickers internationalization API
+        // Custom date formats are specified using the date pickers internationalization API
         DatePicker.DatePickerI18n singleFormatI18n = new DatePicker.DatePickerI18n();
         singleFormatI18n.setDateFormat("yyyy-MM-dd");
 
