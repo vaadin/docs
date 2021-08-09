@@ -16,10 +16,12 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
       <vaadin-login-overlay
         title="TaskMob"
         description="Built with ♥ by Vaadin"
         opened
+        no-autofocus
       ></vaadin-login-overlay>
       <!-- end::snippet[] -->
     `;
