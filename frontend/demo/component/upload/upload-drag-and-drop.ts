@@ -1,6 +1,6 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
@@ -21,19 +21,27 @@ export class Example extends LitElement {
     return root;
   }
 
+  static get styles() {
+    return css`
+      label {
+        font-weight: 600;
+      }
+    `;
+  }
+
   render() {
     return html`
       <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <div>
           <!-- tag::snippet[] -->
-          <strong>Drag and drop enabled</strong>
-          <vaadin-upload .nodrop="${false}"></vaadin-upload>
+          <label for="upload-drop-enabled">Drag and drop enabled</label>
+          <vaadin-upload id="upload-drop-enabled" .nodrop="${false}"></vaadin-upload>
           <!-- end::snippet[] -->
         </div>
         <div>
           <!-- tag::snippet[] -->
-          <strong>Drag and drop disabled</strong>
-          <vaadin-upload nodrop></vaadin-upload>
+          <label for="upload-drop-disabled">Drag and drop disabled</label>
+          <vaadin-upload id="upload-drop-disabled" nodrop></vaadin-upload>
           <!-- end::snippet[] -->
         </div>
       </vaadin-form-layout>

@@ -1,5 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -7,7 +6,6 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
-import '@vaadin/vaadin-icons/vaadin-icons';
 import type { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -38,19 +36,23 @@ export class Example extends LitElement {
   // tag::snippet[]
   private contextMenuRenderer =
     () => (root: HTMLElement, elem: ContextMenuElement, context: ContextMenuRendererContext) => {
-      const { sourceEvent } = context.detail! as { sourceEvent: Event };
-      const grid = elem.firstElementChild as GridElement;
+      const { sourceEvent } = context.detail as { sourceEvent: Event };
+      const grid = elem.firstElementChild as GridElement<Person>;
 
-      const eventContext = grid.getEventContext(sourceEvent) as GridEventContext<Person>;
-      const person = eventContext.item as Person;
+      const eventContext = grid.getEventContext(sourceEvent);
+      const person = eventContext.item!;
+
+      const clickHandler = (_action: string) => () => {
+        // console.log(`${action}: ${person.firstName} ${person.lastName}`);
+      };
 
       render(
-        html`<vaadin-list-box style="color: var(--lumo-contrast-70pct);">
-          <h6 style="margin: 0 var(--lumo-space-m)">${person.firstName} ${person.lastName}</h6>
-          ${this.createItem('vaadin:pencil', 'Edit')} ${this.createItem('vaadin:trash', 'Delete')}
+        html`<vaadin-list-box>
+          <vaadin-item @click="${clickHandler('Edit')}">Edit</vaadin-item>
+          <vaadin-item @click="${clickHandler('Delete')}">Delete</vaadin-item>
           <hr />
-          ${this.createItem('vaadin:envelope-o', 'Email')}
-          ${this.createItem('vaadin:phone', 'Call')}
+          <vaadin-item @click="${clickHandler('Email')}">Email (${person.email})</vaadin-item>
+          <vaadin-item @click="${clickHandler('Call')}">Call (${person.address.phone})</vaadin-item>
         </vaadin-list-box>`,
         root
       );
@@ -67,16 +69,6 @@ export class Example extends LitElement {
         </vaadin-grid>
       </vaadin-context-menu>
     `;
-  }
-
-  createItem(icon: string, text: string) {
-    return html`<vaadin-item style="font-size: var(--lumo-font-size-s)"
-      ><iron-icon
-        icon="${icon}"
-        style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); margin-right: var(--lumo-space-s)"
-      ></iron-icon
-      >${text}</vaadin-item
-    > `;
   }
 
   onContextMenu(e: MouseEvent) {

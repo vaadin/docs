@@ -31,7 +31,7 @@ public class ContextMenuPresentation extends Div {
 
   public ContextMenuPresentation() {
     Grid<Person> grid = new Grid();
-    grid.setHeightByRows(true);
+    grid.setAllRowsVisible(true);
     grid.setItems(people.subList(0, 5));
 
     grid.addColumn(person -> person.getFullName())

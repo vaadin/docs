@@ -1,6 +1,5 @@
 import './init-flow-namespace';
-import '@vaadin/flow-frontend/dndConnector-es6.js';
-import '@vaadin/flow-frontend/flow-component-renderer.js';
+import './init-flow-components';
 // @ts-ignore
 import Appointment from 'Frontend/generated/com/vaadin/demo/domain/Appointment';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';

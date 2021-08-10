@@ -1,0 +1,294 @@
+---
+title: Using Services With Vaadin
+order: 2
+layout: page
+---
+
+[[osgi.advanced]]
+= Using Services With Vaadin
+
+A Vaadin bundle being deployed to an OSGi container may use any functionality provided by OSGi container via API.
+You can not use Declarative Services directly, because Vaadin components, including navigation targets, are not declared as services.
+However, it is possible to use services through an OSGi API that allows to use Declarative Services indirectly.
+
+[[osgi.advanced.services]]
+== Using Services With Vaadin Components
+
+OSGi provides a generic API that you can use anywhere to get a service.
+You can call the API from any class, be it a component, a navigation target, or just a helper class.
+
+The following example accesses a [classname]#SomeService# service in a main view:
+
+[source, Java]
+----
+@Route("")
+public class MainView extends Div {
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        BundleContext bundleContext = FrameworkUtil.getBundle(getClass())
+                .getBundleContext();
+        ServiceReference<SomeService> reference = bundleContext
+                .getServiceReference(SomeService.class);
+        if (reference == null) {
+            // Fallback to alternative action
+        } else {
+            SomeService service = bundleContext.getService(reference);
+            // Do something with the service
+        }
+    }
+}
+----
+
+In the above example, the main view is available unconditionally in the application, so the route is registered regardless of the presence of [classname]#SomeService#, so you need to check for the availability of the service.
+
+If you can, due to the application logic, trust that the service is always registered at the point when it is requested, you can omit the fallback.
+This is the case in the next topic, where you provide a route conditionally, based on the availability of a service that it requires.
+The view component having the route can trust that the service is available.
+
+Another case is where a component or view where you need to access a service does not even exist if the service is not available.
+You can handle this case by using dynamic route registration.
+
+The following example registers a route when the service becomes available, by using some boilerplate code to track the service:
+
+[source, Java]
+----
+@org.osgi.service.component.annotations.Component(service = Servlet.class)
+@HttpWhiteboardServletAsyncSupported
+@HttpWhiteboardServletPattern("/*")
+public class FixedVaadinServlet extends OSGiVaadinServlet {
+
+    private ServiceTracker<SomeService, SomeService> tracker;
+
+    @Override
+    protected void servletInitialized() throws ServletException {
+        getService().setClassLoader(getClass().getClassLoader());
+
+        VaadinServletContext servletContext =
+            (VaadinServletContext) getService().getContext();
+
+        Bundle bundle = FrameworkUtil.getBundle(FixedVaadinServlet.class);
+        tracker = new ServiceTracker<SomeService, SomeService>(
+                bundle.getBundleContext(), SomeService.class, null) {
+            @Override
+            public SomeService addingService(
+                    ServiceReference<SomeService> reference) {
+                Bundle[] usingBundles = reference.getUsingBundles();
+                if (usingBundles == null || usingBundles.length == 0) {
+                    ApplicationRouteRegistry.getInstance(servletContext)
+                            .setRoute("",SomeView.class,Collections.emptyList());
+                }
+                return super.addingService(reference);
+            }
+
+            @Override
+            public void removedService(ServiceReference<SomeService> reference,
+                    SomeService service) {
+                Bundle[] usingBundles = reference.getUsingBundles();
+                if (usingBundles != null && usingBundles.length == 1) {
+                    ApplicationRouteRegistry.getInstance(servletContext)
+                            .removeRoute("");
+                }
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
+
+    }
+    
+    @Override
+    public void destroy() {
+        super.destroy();
+        if (tracker != null) {
+            tracker.close();
+        }
+    }
+
+}
+
+public class SomeView extends Div {
+    // .....
+}
+----
+
+The service tracker in this example registers the `SomeView` navigation target when the service becomes available and the route is unregistered when the service is unregistered.
+
+.Conditional routes should not be annotated
+[NOTE]
+The `SomeView` class in the example is not annotated with `@Route` at all.
+Otherwise, it would be considered as a static route that is registered always, regardless of the presence of the service.
+
+[[osgi.advanced.declarative.services]]
+== Declarative Services and Vaadin Components
+
+You can use OSGi Declarative Services only indirectly in composite components.
+
+Consider the following example:
+
+[source, Java]
+----
+@Route("")
+public class MainView extends Div {
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+       BundleContext bundleContext = FrameworkUtil.getBundle(getClass())
+            .getBundleContext();
+        ServiceReference<PairedOSGiService> reference = bundleContext
+            .getServiceReference(PairedOSGiService.class);
+        if (reference != null){
+             bundleContext.getService(reference).setView(this);
+        }
+    }
+
+}
+
+@org.osgi.service.component.annotations.Component(scope=ServiceScope.PROTOTYPE, service=PairedOSGiService.class)
+public class PairedOSGiService {
+
+    @Reference
+    private SomeService service;
+    
+    private AtomicReference<MainView> viewReference = new AtomicReference<>();
+    
+    void setView(MainView view){
+       // store view to call its methods
+       viewReference.set(view);
+    }
+    
+    @Activate
+    void activate(){
+       MainView view = viewReference.get();
+       if (view!= null && view.isAttached()){
+           view.getUI().access( () -> {
+                // mutate UI state
+           });
+       }
+    }
+}
+----
+
+In this example, the [classname]#MainView# class handles UI actions, while [classname]#PairedOSGiService# handles OSGi related functionality.
+The border is quite clear: every time OSGi wants to make changes in the UI, it should call a command through [methodname]#UI::access()#.
+
+You should again be aware about the possible absence of [classname]#PairedOSGiService#.
+If [classname]#SomeService# is not yet activated, [classname]#PairedOSGiService# is not available either.
+In that case, a fallback with a static route or dynamic route registration can be used, as described above.
+
+Technically, the same approach can be used to mix OSGi services with Vaadin component if distinction between OSGi logic and UI logic is not suitable for some reason.
+
+In such case, the navigation target component can be just a wrapper for a service component, as in the following example:
+
+[source, Java]
+----
+@Route("")
+public class MainViewWrapper extends Div {
+
+    private ServiceTracker<MainView, MainView> tracker;
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        UI ui = attachEvent.getUI();
+        Bundle bundle = FrameworkUtil.getBundle(MainView.class);
+        tracker = new ServiceTracker<MainView, MainView>(
+                bundle.getBundleContext(), MainView.class, null) {
+            @Override
+            public MainView addingService(
+                    ServiceReference<MainView> reference) {
+                Bundle[] usingBundles = reference.getUsingBundles();
+                if (usingBundles == null || usingBundles.length == 0) {
+                    ServiceObjects<MainView> serviceObjects = bundle
+                            .getBundleContext().getServiceObjects(reference);
+                    MainView view = serviceObjects.getService();
+                    ui.access(() -> add(view));
+                }
+                return super.addingService(reference);
+            }
+
+            @Override
+            public void removedService(ServiceReference<MainView> reference,
+                    MainView service) {
+                Bundle[] usingBundles = reference.getUsingBundles();
+                if (usingBundles != null && usingBundles.length == 1) {
+                    ui.access(MainViewWrapper.this::removeAll);
+                }
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
+    }
+    
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        if (tracker!= null){
+            tracker.close();
+        }
+    }
+
+}
+
+@org.osgi.service.component.annotations.Component(scope=ServiceScope.PROTOTYPE, service=MainView.class)
+public class MainView extends Div {
+
+    @Reference
+    private SomeService service;
+    
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        // ...use the service...
+    }
+    
+    @Activate
+    void activate() {
+    }
+    
+}
+----
+
+Using a component as a Declarative Service is possible, but you should use some boilerplate code that helps in avoiding mistakes.
+
+The code in the example may work "on the fly"; if the page is already opened in the browser and service becomes available, the view is updated automatically _if_ `Push` is used in the project.
+Otherwise, the browser would need to be refreshed to show the content of the main view.
+
+Moreover, as it has been discussed already above: if there is no point to show an empty navigation target page, as in the example, or some fallback component until the service is unavailable, the route may be registered dynamically in the same way (and then there is no need to have tracker inside the `MainViewWrapper`).
+The code can be adopted to support this.
+
+=== Challenges With Declarative Services
+
+As noted earlier, it impossible to use Declarative Services directly with Vaadin.
+
+For example, the following example _**would not work**_, because the service is not always available:
+
+[source, Java]
+----
+@Route("")
+public class MainView extends Div {
+
+    @Reference
+    private SomeService service;
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        // Do something with the service
+    }
+}
+----
+
+Doing so would avoid the getting a service programmatically and to make a fallback handler, as described earlier.
+
+There are several reasons why it is not supported:
+
+* It cannot properly work with OSGi Declarative Services.
+The `MainView` would need to be a service by itself, which requires quite error prone boilerplate code, such as defining it with: `@Component(scope=ServiceScope.PROTOTYPE, service=SomeDedicatedService.class)`
+* It is easy to make the following two mistakes in the `@Component` declaration: 
+** The `scope` has to be prototype.
+Any other scope is invalid for the component.
+** The `service` has to be a dedicated type.
+It could have been, for example, `HasElement`, but this is another way to make a mistake to forget to specify the service at all.
+* Such a feature becomes self-contradictory and confusing: `@Route` makes a component registered statically/unconditionally in Flow.
+But in OSGi, having `MainView` as a service would make it impossible to register the route statically: it should be registered only when `MainView` becomes available as a service, which again depends on the `SomeService` service.
+Therefore, the semantics of `@Route` would need to be changed for OSGi.
+But this is impossible (see the next item).
+* A navigation target annotated with `@Route` is not an OSGi service and should still work; it would need to be statically registered as a navigation target.
+It is necessary to support regular use case: web application which works without OSGi should work inside OSGi without any changes.
+* If you want to use some OSGi lifecycle methods, such as `activate`/`deactivate`, or other methods published in Declarative Services annotations, you should be aware that they are not called from the HTTP request dispatcher thread and it is necessary to use [methodname]#UI::access()# or [methodname]#VaadinSession::access()# to invoke methods on UI objects.
+That is rather error prone, so you should avoid doing so.

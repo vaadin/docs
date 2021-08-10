@@ -14,7 +14,7 @@ public class InputFieldHelperPosition extends Div {
     TextField textField = new TextField();
     textField.setLabel("Phone number");
     textField.setHelperText("Include country and area prefixes");
-    textField.setThemeName(TextFieldVariant.LUMO_HELPER_ABOVE_FIELD.getVariantName());
+    textField.addThemeVariants(TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
     textField.setWidth("15em");
     add(textField);
     // end::snippet[]

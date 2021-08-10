@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
-import type { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridCellFocusEvent, GridElement } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -28,7 +27,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private grid!: GridElement;
+  private grid!: GridElement<Person>;
   @state()
   private items: Person[] = [];
   @state()
@@ -43,18 +42,20 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid
+        theme="force-focus-outline"
         .items="${this.items}"
-        @cell-focus="${(e: CustomEvent) => {
-          const eventContext = this.grid.getEventContext(e) as GridEventContext<Person>;
-          const section = eventContext?.section || 'Not available';
-          const row = eventContext?.index != undefined ? eventContext?.index : 'Not available';
-          const column = eventContext?.column?.path || 'Not available';
-          const person =
-            eventContext?.item?.firstName && eventContext?.item?.lastName
-              ? `${eventContext.item.firstName} ${eventContext.item.lastName}`
+        @cell-focus="${(e: GridCellFocusEvent<Person>) => {
+          const eventContext = this.grid.getEventContext(e);
+          const section = eventContext.section || 'Not available';
+          const row = eventContext.index != undefined ? eventContext.index : 'Not available';
+          const column = eventContext.column?.path || 'Not available';
+          const person = eventContext.item;
+          const fullName =
+            person?.firstName && person?.lastName
+              ? `${person.firstName} ${person.lastName}`
               : 'Not available';
 
-          this.eventSummary = `Section: ${section}\nRow: ${row}\nColumn: ${column}\nPerson: ${person}`;
+          this.eventSummary = `Section: ${section}\nRow: ${row}\nColumn: ${column}\nPerson: ${fullName}`;
         }}"
       >
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
@@ -71,5 +72,6 @@ export class Example extends LitElement {
       </div>
     `;
   }
+
   // end::snippet[]
 }

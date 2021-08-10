@@ -1,5 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -45,7 +44,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid .items="${this.items}">
-        <vaadin-grid-column path="displayName"></vaadin-grid-column>
+        <vaadin-grid-column path="displayName" header="Name"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due"
           .renderer="${guard(

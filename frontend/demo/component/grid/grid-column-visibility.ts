@@ -1,5 +1,4 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -44,7 +43,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-horizontal-layout>
+      <vaadin-horizontal-layout style="align-items: baseline">
         <strong style="flex: 1;">Employees</strong>
         <vaadin-context-menu
           open-on="click"
