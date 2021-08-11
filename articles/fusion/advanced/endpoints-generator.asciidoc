@@ -82,7 +82,7 @@ By default, types are mapped and generated using the Java rules:
 - A collection accepts `null` unless the collection item type is primitive.
 - A map accepts `null` unless the collection item type is primitive.
 
-To make a type non-nullable, you need to put a `@Nonnull` annotation on it.
+Any of mentioned nullable types can be made non-nullable with a `@Nonnull` annotation applied.
 You may use any annotation that has a `nonnull` (case-insensitive) name, for example:
 
 * `javax.annotation.Nonnull`
@@ -92,35 +92,65 @@ You may use any annotation that has a `nonnull` (case-insensitive) name, for exa
 * `org.eclipse.jdt.annotation.NonNull`
 * any other annotation (including custom) that has the `nonnull` (case-insensitive) name.
 
-.Required parameters in Java endpoint
+==== Endpoint Functions
+
+For the endpoint function, nullable elements are:
+
+* **Function parameter type**.
+Arguments cannot be omitted even when the parameter types are nullable.
+To receive a `null` parameter value in Java, send an `undefined` argument in the endpoint function call.
+* **Function return type**.
+
+.Original Java endpoint class
 [source,java]
 ----
 @Endpoint
-class MyEndpoint {
-    public void setName(@Nonnull String firstName, @Nonnull String lastName, String middleName) {
+class PersonEndpoint {
+    // Person must have at least the first and the last name
+    public void setFullName(@Nonnull String firstName, @Nonnull String lastName, String middleName) {
+        // omitted code
+    }
+
+    // Full name must exist
+    @Nonnull
+    public String getFullName() {
+        // omitted code
+    }
+
+    // Person can have no connections with other people. But if they have,
+    // the connection cannot be null.
+    public Map<String, @Nonnull String> getConnections() {
         // omitted code
     }
 }
 ----
 
-.Generated required parameters in TypeScript
+.Generated TypeScript endpoint functions
 [source,typescript]
 ----
 export async function setName(
   firstName: string,
   lastName: string,
-  middleName?: string
+  middleName: string | undefined
 ) {
-  return await client.call('UserEndpoints', 'setName', {firstName, lastName, middleName});
+  return client.call('PersonEndpoint', 'setFullName', {firstName, lastName, middleName});
+}
+
+export async function getFullName(): Promise<string> {
+  return client.call('PersonEndpoint', 'getFullName');
+}
+
+export async function getConnections(): Promise<Record<string, string> | undefined> {
+  return client.call('PersonEndpoint', 'getConnections');
 }
 ----
 
-In this case, if user calls `UserEndpoints.setName('first', 'last')` in TypeScript, the middle name is omitted and set as `null` when receiving in Java `UserEndpoints.setName` method.
-If the JavaType for that parameter is `Optional`, it receives `Optional.empty()`;
+==== Data Class Properties
 
-==== Properties
+Properties of the data classes are nullable.
+Unlike the function parameters, all nullable properties can be omitted.
 
-.Required properties in Java
+.Original properties in Java data class
 [source,java]
 ----
 public class MyBean {
@@ -134,7 +164,7 @@ public class MyBean {
 }
 ----
 
-.Generated optional properties in TypeScript
+.Generated properties in TypeScript data interface
 [source,typescript]
 ----
 export default interface MyBean {
@@ -146,25 +176,29 @@ export default interface MyBean {
 }
 ----
 
-==== Return Type
+==== Collection Item Types
 
-.Required return type in Java
+The collection item type is nullable.
+
+.Original properties in Java data class
 [source,java]
 ----
-@Endpoint
-class MyEndpoint {
-    @Nonnull
-    public String getPhoneNumber() {
-        // omitted code
-    }
+public class MyBean {
+    private List<String> list;
+    private List<@Nonnull String> nonNullableList;
+    private Map<String, String> map;
+    private Map<String, @Nonnull String> nonNullableMap;
 }
 ----
 
-.Generated required return type in TypeScript
+.Generated properties in TypeScript data interface
 [source,typescript]
 ----
-export async function getPhoneNumber() {
-  return await client.call('UserEndpoints', 'getPhoneNumber');
+export default interface MyBean {
+  list?: Array<string | undefined>;
+  nonNullableList?: Array<string>;
+  map?: Record<string, string | undefined>;
+  nonNullableMap?: Record<string, string>;
 }
 ----
 
@@ -194,7 +228,8 @@ export enum Enumeration {
 .Complex Java enums mapping
 [NOTE]
 ====
-The `enum` type is mapped in a simple way. No constructor-related Java features available in the TypeScript `enum`.
+The `enum` type is mapped in a simple way.
+No constructor-related Java features available in the TypeScript `enum`.
 ====
 
 .Complex `enum` type in Java
@@ -225,24 +260,33 @@ export enum Enumeration {
 }
 ----
 
-
 == Appendix: How The Generator Generate TypeScript From OpenAPI Specification [[appendix]]
 
 === Modules
-The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding TypeScript file. The tag name is used for TypeScript module name as well as the file name. TsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
+
+The generator will collect all the `_tags_` field of all operations in the OpenAPI document.
+Each tag will generate a corresponding TypeScript file.
+The tag name is used for TypeScript module name as well as the file name.
+TsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
 
 === Methods
+
 Each exported method in a module is corresponding to a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[POST operation] of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathItemObject[path item] in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathsObject[paths object].
 
 [NOTE]
 ====
-Currently, the generator only supports `_POST_` operation. If a path item contains other operations than `_POST_`, the generator will stop processing.
+Currently, the generator only supports `_POST_` operation.
+If a path item contains other operations than `_POST_`, the generator will stop processing.
 ====
 
-The path *must* start with `/` as described in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#patterned-fields[Patterned Fields]. It is parsed as `_/<endpoint name>/<method name>_` which are used as parameters to call to Java endpoints in the backend. Method name from the path is also reused as the method name in the generated TypeScript file.
+The path *must* start with `/` as described in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#patterned-fields[Patterned Fields].
+It is parsed as `_/<endpoint name>/<method name>_` which are used as parameters to call to Java endpoints in the backend.
+Method name from the path is also reused as the method name in the generated TypeScript file.
 
 ==== Method's Parameters
-Parameters of the method are taken from the `_application/json_` content of https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#requestBodyObject[request body object]. To get the result as <<UserEndpoint.ts>>, the request body content should be:
+
+Parameters of the method are taken from the `_application/json_` content of https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#requestBodyObject[request body object].
+To get the result as <<UserEndpoint.ts>>, the request body content should be:
 
 .Request Body [[request-body]]
 [source,json]
@@ -268,12 +312,16 @@ Type and description of each property are used for TsDoc that describes the para
 
 [NOTE]
 ====
-All the other content types of request body object are not ignored by the Vaadin Generator. It means that without the `application/json` content type, the method is considered as a no parameter one.
+All the other content types of request body object are not ignored by the Vaadin Generator.
+It means that without the `application/json` content type, the method is considered as a no parameter one.
 ====
 
 ==== Method's Return Type
 
-Return type and its description are taken from the `_200_` https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responseObject[response object]. As same as request body object, the generator is only interested at `application/json` content type. The schema type indicates the return type and the description describes the result. Here is an example of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responsesObject[responses objects]:
+Return type and its description are taken from the `_200_` https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responseObject[response object].
+As same as request body object, the generator is only interested at `application/json` content type.
+The schema type indicates the return type and the description describes the result.
+Here is an example of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responsesObject[responses objects]:
 
 .Responses Object [[response-object]]
 [source,json]
@@ -294,12 +342,14 @@ Return type and its description are taken from the `_200_` https://github.com/OA
 
 [NOTE]
 ====
-At this point, the generator only takes the advantage of `_200_` response objects. Other response objects are ignored.
+At this point, the generator only takes the advantage of `_200_` response objects.
+Other response objects are ignored.
 ====
 
 ==== Method's TsDoc
 
-The TsDoc of the generated method is stored as `_description_` value of the `_POST_` operation in path item. A valid `_POST_` operation combined with <<request-body>> and <<response-object>> would look like:
+The TsDoc of the generated method is stored as `_description_` value of the `_POST_` operation in path item.
+A valid `_POST_` operation combined with <<request-body>> and <<response-object>> would look like:
 
 .Post Operation
 [source,json]
@@ -337,11 +387,15 @@ The TsDoc of the generated method is stored as `_description_` value of the `_PO
 }
 ----
 
-<1> As mentioned in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[operation object] specification, in Vaadin Generator, `_tags_` are used to classify operations into TypeScript files. It means each tag will have a corresponding generated TypeScript file. The operations, which contain more than one tag, will appear in all generated files. Empty tags operations will be placed in `_Default.ts_` file.
+<1> As mentioned in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[operation object] specification, in Vaadin Generator, `_tags_` are used to classify operations into TypeScript files.
+It means each tag will have a corresponding generated TypeScript file.
+The operations, which contain more than one tag, will appear in all generated files.
+Empty tags operations will be placed in `_Default.ts_` file.
 
 [NOTE]
 ====
-Although multiple tags do not break the generator, it might be confusing in the development time when there are two exact same methods in different TypeScript files. It is recommended to have only one tag per operation.
+Although multiple tags do not break the generator, it might be confusing in the development time when there are two exact same methods in different TypeScript files.
+It is recommended to have only one tag per operation.
 ====
 
 Here is an example OpenAPI document which could generate the above <<UserEndpoint.ts>>.
