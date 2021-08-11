@@ -75,7 +75,7 @@ export default interface City {
 [source,typescript]
 ----
 // Import and use a declaration from another module
-import { City } from './City';
+import type { City } from './City';
 const cityObject: City = {
     name: "Turku",
     country: "Finland"
@@ -90,27 +90,31 @@ In Vaadin applications, the `index.ts` (or, optionally, `index.js`) file is also
 Fusion generates a TypeScript module for every Vaadin endpoint on the backend.
 Each such module exports all the methods in the endpoint.
 
-You can either import an entire module at once or select individual endpoint methods.
+You can either import an entire module from the https://basarat.gitbook.io/typescript/main-1/barrel[barrel] file, import all methods as a module from the endpoint file, or select individual endpoint methods.
 For example, the `CounterEndpoint.ts` could be used as in the following snippets:
 
-.`index.ts` (import the whole endpoint module object)
+.`index.ts` (import the whole endpoint module object from the barrel file)
 [[index.ts]]
 [source,typescript]
 ----
-// Other imports
-import { CounterEndpoint } from 'Frontend/generated/CounterEndpoint';
+import { CounterEndpoint } from 'Frontend/generated/endpoints';
 
-// Other code
+CounterEndpoint.addOne(1).then(result => console.log(result));
+----
+
+.`index.ts` (import all imports as an endpoint object)
+[source,typescript]
+----
+import * as CounterEndpoint from 'Frontend/generated/CounterEndpoint';
+
 CounterEndpoint.addOne(1).then(result => console.log(result));
 ----
 
 .`index.ts` (import a single endpoint method)
 [source,typescript]
 ----
-// Other imports
 import { addOne } from 'Frontend/generated/CounterEndpoint';
 
-// Other code
 addOne(1).then(result => console.log(result));
 ----
 
@@ -119,7 +123,7 @@ addOne(1).then(result => console.log(result));
 ====
 The `'Frontend/'` path prefix is an alias for the `{project.basedir}/frontend` directory in your application project.
 
-Vaadin has this path alias in <<basics#Configuring TypeScript Compiler,the default TypeScript compiler configuration>> (`tsconfig.json`), as well as in the generated webpack configuration file (`webpack.generated.js`).
+Vaadin has this path alias in <<basics#Configuring TypeScript Compiler,the default TypeScript compiler configuration>> (`tsconfig.json`); webpack configuration file (`webpack.generated.js`) respects the tsconfig aliases by default.
 
 Using this path alias is recommended, as it allows for absolute import paths, rather than traversing the directory hierarchy in relative imports.
 ====
@@ -135,7 +139,7 @@ For more information about supported types, see <<../advanced/type-conversion#, 
 == Example TypeScript Module Contents
 
 For example, the generated TypeScript module for the Java endpoint defined in
- <<accessing-backend#how-to-create-vaadin-endpoint,CounterEndpoint.java>> would look as follows:
+<<accessing-backend#how-to-create-vaadin-endpoint,CounterEndpoint.java>> would look as follows:
 
 .`CounterEndpoint.ts`
 [source,typescript]
@@ -147,17 +151,169 @@ For example, the generated TypeScript module for the Java endpoint defined in
  * @module CounterEndpoint
  */
 
-import client from 'Frontend/connect-client.default';
+import client from './connect-client.default';
 
 /**
  * A method that adds one to the argument.
  *
  * @param number
  */
-export async function addOne(number: number) {
-  return await client.call('CounterEndpoint', 'addOne', {number});
+function _addOne(number: number): Promise<number> {
+  return client.call('CounterEndpoint', 'addOne', {number});
+}
+
+export {
+  _addOne as addOne,
 }
 ----
+
+== Entities
+
+Endpoint methods can return or receive as a parameter any data structure (entity).
+In this case, the TypeScript generator creates a TypeScript interface for it.
+Let's take a look at the example.
+
+
+`City.java`
+[source,java]
+----
+package com.example.endpoints;
+
+/**
+ * An entity that contains an information about a city.
+ */
+public class City {
+    private String country;
+    private String name;
+
+    City(String name, String country) {
+        this.country = country;
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+}
+----
+
+`CountryEndpoint.java`
+[source,java]
+----
+package com.example.endpoints;
+
+import java.util.Arrays;
+
+import com.vaadin.fusion.Endpoint;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+
+/**
+ * A Vaadin endpoint that gets list of capitals.
+ */
+@Endpoint
+@AnonymousAllowed
+public class Country {
+    private List<City> capitals = Arrays.asList(
+            new City("Helsinki", "Finland"), new City("Berlin", "Germany"),
+            new City("London", "UK"), new City("Washington", "USA"));
+
+    /**
+     * A method that returns a collection of entities.
+     */
+    public List<City> getCapitals(int numberOfCapitals) {
+        return numberOfCapitals <= capitals.size() ?
+            capitals.subList(0, numberOfCapitals - 1) : capitals;
+    }
+
+    /**
+     * A method that receives an entity as a parameter.
+     */
+    public String getCityName(City city) {
+        return city.getName();
+    }
+}
+----
+
+The TypeScript output will be the following:
+
+`com/example/endpoints/City.ts`
+[source,typescript]
+----
+/**
+ * An entity that contains an information about a city.
+ * This module is generated from com.example.endpoints.City.
+ * All changes to this file are overridden. Please consider to make changes in the corresponding Java file if necessary.
+ */
+
+export default interface City {
+  readonly country: string;
+  readonly name: string;
+}
+----
+
+`CountryEndpoint.ts`
+[source,typescript]
+----
+/**
+ * A Vaadin endpoint that gets list of capitals.
+ *
+ * This module is generated from CountryEndpoint.java
+ * All changes to this file are overridden. Please consider to make changes in the corresponding Java file if necessary.
+ * @module CountryEndpoint
+ */
+
+// @ts-ignore
+import client from './connect-client.default';
+import City from './com/example/endpoints/City';
+
+/**
+ * A method that returns a collection of entities.
+ */
+function _getCapitals(numberOfCapitals: number): Promise<ReadonlyArray<City | undefined>> {
+  return client.call('CountryEndpoint', 'getCapitals', {numberOfCapitals});
+}
+
+/**
+ * A method that receives an entity as a parameter.
+ */
+function _getCityName(city: City): Promise<string | undefined> {
+  return client.call('CountryEndpoint', 'getCityName', {city});
+}
+
+export {
+  _getCapitals as getCapitals,
+  _getCityName as getCityName,
+}
+----
+
+=== Read-only access
+
+All generated entities provide read-only access to their properties.
+All collections are immutable as well.
+However, while immutable received data is considered the best practice, sometimes it may be necessary to mutate the data or to send it to a method that accepts only mutable structures (it often happens to `ReadonlyArray` that cannot be implicitly cast to the `Array`). In this case, you can cast the data structure manually.
+
+[source,typescript]
+----
+const collection: ReadonlyArray<string | undefined> = [];
+const city: City = {name: "Helsinki", country: "Finland"};
+
+type Mutable<T> = {
+  -readonly[P in keyof T]: T[P]
+};
+
+const mutableCollection = collection as Array<string | undefined>;
+const mutableCity = city as Mutable<City>;
+----
+
+Instead of declaring `Mutable` helper by hands, you can also use the https://github.com/sindresorhus/type-fest[type-fest] library which provides it along with many other useful type helpers.
+
+=== Nullable and non-nullable types
+
+Please refer to <<../advanced/endpoints-generator#Type Nullability, Type Nullability>> to get more information about nullability algorithm works and how to make types non-nullable.
 
 == Code Completion in IDEs
 
