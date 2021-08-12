@@ -1,6 +1,5 @@
 package com.vaadin.demo.fusion.accessingbackend;
 
-// tag::snippet[]
 /**
  * An entity that contains an information about a city.
  */
@@ -21,4 +20,3 @@ public class City {
         return country;
     }
 }
-// end::snippet[]

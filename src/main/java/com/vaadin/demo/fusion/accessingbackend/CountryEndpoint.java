@@ -6,7 +6,6 @@ import java.util.List;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.fusion.Endpoint;
 
-// tag::snippet[]
 /**
  * A Vaadin endpoint that shows principles of work with entities.
  */
@@ -32,4 +31,3 @@ public class CountryEndpoint {
         return city.getName();
     }
 }
-// end::snippet[]

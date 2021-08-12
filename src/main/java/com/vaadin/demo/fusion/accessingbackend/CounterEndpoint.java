@@ -3,6 +3,7 @@ package com.vaadin.demo.fusion.accessingbackend;
 import com.vaadin.fusion.Endpoint;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+// tag::snippet[]
 /**
  * A Vaadin endpoint that counts numbers.
  */
@@ -16,3 +17,4 @@ public class CounterEndpoint {
         return number + 1;
     }
 }
+// end::snippet[]
