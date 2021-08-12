@@ -39,7 +39,7 @@ public class LoginInternationalization extends Div {
         // end::snippet[]
         add(loginForm);
         // Prevent the example from stealing focus when browsing the documentation
-        loginForm.setNoAutofocus(true);
+        loginForm.getElement().setAttribute("no-autofocus", "");
     }
     public static class Exporter extends DemoExporter<LoginInternationalization> {} // hidden-source-line
 }
