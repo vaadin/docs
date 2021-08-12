@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, internalProperty, customElement } from 'lit-element';
-import { render } from 'lit-html';
-import { guard } from 'lit-html/directives/guard';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/vaadin-dialog/vaadin-dialog';
 import '@vaadin/vaadin-button/vaadin-button';
@@ -15,21 +15,23 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-draggable')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private dialogOpened = false;
 
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog
-        aria-label="simple"
+        aria-label="Add note"
         draggable
+        modeless
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
@@ -43,7 +45,7 @@ export class Example extends LitElement {
                   class="draggable"
                   style="border-bottom: 1px solid var(--lumo-contrast-20pct); cursor: move; padding: var(--lumo-space-m) var(--lumo-space-l); margin: calc(var(--lumo-space-s) * -1) calc(var(--lumo-space-l) * -1) 0"
                 >
-                  <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">New employee</h2>
+                  <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">Add note</h2>
                 </vaadin-horizontal-layout>
                 <vaadin-vertical-layout style="align-items: stretch;">
                   <vaadin-text-field label="Title"></vaadin-text-field>

@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, css, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-radio-button/vaadin-radio-group';
@@ -11,31 +12,28 @@ import './layout-item';
 export class Example extends LitElement {
   constructor() {
     super();
-    // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    this.classList.add('basic-layouts-example');
   }
 
-  static get styles() {
-    return css`
-      vaadin-horizontal-layout {
-        height: calc(var(--lumo-size-xl) * 5);
-        border: 1px solid var(--lumo-primary-color);
-        border-radius: var(--lumo-border-radius-l);
-      }
-    `;
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private alignLayoutItems?: string;
 
-  @internalProperty()
+  @state()
   private alignFirstItem?: string;
 
   render() {
     return html`
       <vaadin-horizontal-layout
         theme="spacing padding"
+        class="height-5xl"
         style="align-items: ${this.alignLayoutItems}"
       >
         <layout-item style="align-self: ${this.alignFirstItem}">Item 1</layout-item>

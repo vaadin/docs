@@ -1,8 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { customElement, html, internalProperty, LitElement } from 'lit-element';
-import '@polymer/iron-icon';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icons';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import './master-content';
@@ -10,14 +11,15 @@ import './detail-content';
 
 @customElement('split-layout-toggle')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private sidebarCollapsed = false;
 
   render() {
@@ -32,9 +34,9 @@ export class Example extends LitElement {
             @click="${this.toggleSidebar}"
             style="float: right;"
           >
-            <iron-icon
+            <vaadin-icon
               icon="${this.sidebarCollapsed ? 'vaadin:arrow-right' : 'vaadin:arrow-left'}"
-            ></iron-icon>
+            ></vaadin-icon>
           </vaadin-button>
           <master-content></master-content>
         </div>

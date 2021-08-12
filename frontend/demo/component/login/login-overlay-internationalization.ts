@@ -1,15 +1,17 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-login/vaadin-login-overlay';
 import { LoginI18n } from '@vaadin/vaadin-login/vaadin-login-overlay';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-overlay-internationalization')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   //tag::snippet[]
@@ -33,7 +35,10 @@ export class Example extends LitElement {
   };
 
   render() {
-    return html`<vaadin-login-overlay .i18n="${this.i18n}" opened></vaadin-login-overlay>`;
+    return html`
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
+      <vaadin-login-overlay .i18n="${this.i18n}" opened no-autofocus></vaadin-login-overlay>
+    `;
   }
   //end::snippet[]
 }

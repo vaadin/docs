@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/timepickerConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/datepickerConnector.js'; // hidden-source-line
 
-import { customElement, html, LitElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 import { format, addDays } from 'date-fns';
@@ -14,10 +13,11 @@ const maxValue = format(addDays(new Date(), 60), dateTimeFormat);
 
 @customElement('date-time-picker-min-max')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {

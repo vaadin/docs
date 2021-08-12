@@ -1,5 +1,6 @@
 package com.vaadin.demo.fusion.security.authentication;
 
+import javax.annotation.Nonnull;
 import javax.annotation.security.PermitAll;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -8,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.vaadin.flow.server.connect.Endpoint;
+import com.vaadin.fusion.Endpoint;
 
 /**
  * Provides information about the current user.
@@ -18,6 +19,7 @@ import com.vaadin.flow.server.connect.Endpoint;
 public class UserInfoEndpoint {
 
     @PermitAll
+    @Nonnull
     public UserInfo getUserInfo() {
         Authentication auth = SecurityContextHolder.getContext()
                 .getAuthentication();

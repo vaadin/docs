@@ -1,14 +1,16 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, css } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   static get styles() {
@@ -25,7 +27,8 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-login-form></vaadin-login-form>
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
+      <vaadin-login-form no-autofocus></vaadin-login-form>
       <!-- end::snippet[] -->
     `;
   }

@@ -1,15 +1,17 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, css } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-login/vaadin-login-form';
 import { LoginI18n } from '@vaadin/vaadin-login';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-internationalization')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   static get styles() {
@@ -39,7 +41,10 @@ export class Example extends LitElement {
   };
 
   render() {
-    return html`<vaadin-login-form .i18n="${this.i18n}"></vaadin-login-form>`;
+    return html`
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
+      <vaadin-login-form .i18n="${this.i18n}" no-autofocus></vaadin-login-form>
+    `;
   }
   //end::snippet[]
 }

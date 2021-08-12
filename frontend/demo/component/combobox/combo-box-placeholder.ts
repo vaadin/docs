@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -9,13 +9,14 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-placeholder')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {

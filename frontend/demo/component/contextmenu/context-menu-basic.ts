@@ -1,28 +1,28 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
   // end::snippet[]
 
-  @internalProperty()
+  @state()
   private gridItems: Person[] = [];
 
   async firstUpdated() {
@@ -34,7 +34,7 @@ export class Example extends LitElement {
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid
-          height-by-rows
+          all-rows-visible
           .items=${this.gridItems}
           @vaadin-contextmenu=${this.onContextMenu}
         >
@@ -50,9 +50,8 @@ export class Example extends LitElement {
 
   onContextMenu(e: MouseEvent) {
     // Prevent opening context menu on header row.
-    if (
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
-    ) {
+    const target = e.currentTarget as GridElement;
+    if ((target.getEventContext(e) as GridEventContext<Person>).section !== 'body') {
       e.stopPropagation();
     }
   }

@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/selectConnector.js'; // hidden-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
-import { render } from 'lit-html';
-import { guard } from 'lit-html/directives/guard';
+import { html, LitElement, render } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
@@ -11,10 +10,11 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-disabled')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {

@@ -1,22 +1,22 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 import { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 
 @customElement('menu-bar-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items = [
     { text: 'View' },
     { text: 'Edit' },
@@ -38,7 +38,7 @@ export class Example extends LitElement {
     { text: 'Duplicate' },
   ];
 
-  @internalProperty()
+  @state()
   private selectedItem?: MenuBarItem;
   // end::snippet[]
 

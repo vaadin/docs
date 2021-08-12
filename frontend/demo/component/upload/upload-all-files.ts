@@ -1,17 +1,19 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { createFakeFilesUploadAllFiles } from './upload-demo-mock-files'; // hidden-source-line
-import { customElement, html, LitElement, query } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type { UploadElement } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-all-files')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
@@ -33,11 +35,7 @@ export class Example extends LitElement {
         no-auto
         .files="${createFakeFilesUploadAllFiles() /* hidden-source-line */}"
       ></vaadin-upload>
-      <p>
-        <vaadin-button theme="primary" @click="${this.uploadFiles}">
-          Upload All Files
-        </vaadin-button>
-      </p>
+      <vaadin-button theme="primary" @click="${this.uploadFiles}"> Upload All Files </vaadin-button>
     `;
   }
 

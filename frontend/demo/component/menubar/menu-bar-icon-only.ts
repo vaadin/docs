@@ -1,22 +1,23 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/menubarConnector.js'; // hidden-full-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-full-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-icon-only')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items = [
     { component: this.createItem('eye', 'View') },
     { component: this.createItem('pencil', 'Edit') },
@@ -49,7 +50,7 @@ export class Example extends LitElement {
 
   createItem(iconName: string, ariaLabel: string) {
     const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('iron-icon');
+    const icon = window.document.createElement('vaadin-icon');
     item.setAttribute('aria-label', ariaLabel);
     icon.setAttribute('icon', `vaadin:${iconName}`);
     item.appendChild(icon);

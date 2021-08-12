@@ -1,22 +1,24 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, css, LitElement, customElement } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-ordered-layout/vaadin-scroller';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-text-field/vaadin-text-area';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icons/vaadin-icons';
-import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('scroller-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   static get styles() {
@@ -40,7 +42,7 @@ export class Example extends LitElement {
         margin: 0;
       }
 
-      header iron-icon {
+      header vaadin-icon {
         box-sizing: border-box;
         height: var(--lumo-icon-size-m);
         margin-right: var(--lumo-space-m);
@@ -63,7 +65,7 @@ export class Example extends LitElement {
       <vaadin-vertical-layout id="container">
         <header>
           <a href="#" aria-label="Go back">
-            <iron-icon icon="vaadin:arrow-left" aria-hidden="true"></iron-icon>
+            <vaadin-icon icon="vaadin:arrow-left" aria-hidden="true"></vaadin-icon>
           </a>
           <h2>Edit employee</h2>
         </header>

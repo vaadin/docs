@@ -1,7 +1,7 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { customElement, LitElement, internalProperty, html } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-selection-column';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -11,13 +11,14 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('grid-multi-select-mode')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {

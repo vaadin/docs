@@ -1,16 +1,16 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
-import { customElement, internalProperty, LitElement } from 'lit-element';
-import { html } from 'lit-html';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
-import {
+import type {
   GridColumnElement,
   GridDataProviderCallback,
   GridDataProviderParams,
@@ -19,25 +19,28 @@ import {
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { GridTreeToggleExpandedChanged } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
-import { render } from 'lit-html';
+import type { GridTreeToggleExpandedChangedEvent } from '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 
 @customElement('tree-grid-rich-content')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private expandedItems: Person[] = [];
 
-  async dataProvider(params: GridDataProviderParams, callback: GridDataProviderCallback) {
+  async dataProvider(
+    params: GridDataProviderParams<Person>,
+    callback: GridDataProviderCallback<Person>
+  ) {
     const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null,
+      managerId: params.parentItem ? params.parentItem.id : null,
     });
 
     callback(people, hierarchyLevelSize);
@@ -47,17 +50,17 @@ export class Example extends LitElement {
   private employeeRenderer = (
     root: HTMLElement,
     _column?: GridColumnElement,
-    model?: GridItemModel
+    model?: GridItemModel<Person>
   ) => {
     if (model?.item) {
-      const person = model.item as Person;
+      const person = model.item;
 
       render(
         html`
           <vaadin-grid-tree-toggle
             .leaf="${!person.manager}"
             .level="${model.level || 0}"
-            @expanded-changed="${(e: GridTreeToggleExpandedChanged) => {
+            @expanded-changed="${(e: GridTreeToggleExpandedChangedEvent) => {
               if (e.detail.value) {
                 this.expandedItems = [...this.expandedItems, person];
               } else {
@@ -86,9 +89,9 @@ export class Example extends LitElement {
       );
     }
   };
-  contactRenderer(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) {
+  contactRenderer(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel<Person>) {
     if (model?.item) {
-      const person = model.item as Person;
+      const person = model.item;
 
       render(
         html`
@@ -96,17 +99,17 @@ export class Example extends LitElement {
             style="font-size: var(--lumo-font-size-s); line-height: var(--lumo-line-height-m);"
           >
             <a href="mailto:${person.email}" style="align-items: center; display: flex;">
-              <iron-icon
+              <vaadin-icon
                 icon="vaadin:envelope"
                 style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
-              ></iron-icon>
+              ></vaadin-icon>
               <span>${person.email}</span>
             </a>
             <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
-              <iron-icon
+              <vaadin-icon
                 icon="vaadin:phone"
                 style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
-              ></iron-icon>
+              ></vaadin-icon>
               <span>${person.address.phone}</span>
             </a>
           </vaadin-vertical-layout>

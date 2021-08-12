@@ -1,9 +1,9 @@
-import '../../init'; // hidden-source-line
-import { fakeErrorResponse, fakeErrorResponseWrapper } from './upload-demo-helpers'; // hidden-source-line
-/* prettier-ignore */ import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-source-line
-import { customElement, html, LitElement } from 'lit-element';
+import 'Frontend/demo/init'; // hidden-source-line
+/* prettier-ignore */ import {createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB} from './upload-demo-mock-files'; // hidden-source-line
+import { html, LitElement } from 'lit';
+import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadResponse } from '@vaadin/vaadin-upload/vaadin-upload';
+import { UploadElement } from '@vaadin/vaadin-upload';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import type { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -15,14 +15,32 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
 
 @customElement('upload-error-messages')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
-    this.uploadResponseHandler = fakeErrorResponseWrapper(this.uploadResponseHandler); // hidden-source-line
+    applyTheme(root);
+    return root;
   }
 
+  @query('#upload-caution')
+  private uploadCaution!: UploadElement;
+
+  @query('#upload-recommended')
+  private uploadRecommended!: UploadElement;
+
   // tag::snippet[]
+  firstUpdated() {
+    // end::snippet[]
+    this.uploadCaution.setupMockErrorResponse(); // hidden-source-line
+    this.uploadRecommended.setupMockErrorResponse(); // hidden-source-line
+    this.uploadCaution.i18n.uploading.error.unexpectedServerError = 'Unexpected Server Error';
+    this.uploadCaution.i18n = { ...this.uploadCaution.i18n };
+    // tag::snippet[]
+    this.uploadRecommended.i18n.uploading.error.unexpectedServerError =
+      "File couldn't be uploaded, please try again later";
+    this.uploadRecommended.i18n = { ...this.uploadRecommended.i18n };
+  }
+
   render() {
     return html`
       <!-- end::snippet[] -->
@@ -30,17 +48,17 @@ export class Example extends LitElement {
         <div>
           <strong>Caution</strong>
           <vaadin-upload
+            id="upload-caution"
             nodrop
             .files="${createFakeFilesUploadErrorMessagesA() /* hidden-source-line */}"
-            @upload-response="${fakeErrorResponse /* hidden-source-line */}"
           ></vaadin-upload>
         </div>
         <div>
-          <strong>Do</strong>
+          <strong>Recommended</strong>
           <!-- tag::snippet[] -->
           <vaadin-upload
+            id="upload-recommended"
             nodrop
-            @upload-response="${this.uploadResponseHandler}"
             .files="${createFakeFilesUploadErrorMessagesB() /* hidden-source-line */}"
           ></vaadin-upload>
           <!-- end::snippet[] -->
@@ -48,18 +66,6 @@ export class Example extends LitElement {
       </vaadin-form-layout>
       <!-- tag::snippet[] -->
     `;
-  }
-
-  uploadResponseHandler(event: UploadResponse) {
-    const { file, xhr } = event.detail;
-    if (xhr.status >= 500) {
-      // You can use any information available in the xhr object about the
-      // server response for determining what to show in the error message.
-      file.error = "File couldn't be uploaded, please try again";
-      // Interpret the response as a success so that the custom error message
-      // is shown
-      (xhr.status as any) = 200;
-    }
   }
   // end::snippet[]
 }

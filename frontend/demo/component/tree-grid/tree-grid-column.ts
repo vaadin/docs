@@ -1,11 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
-import { customElement, internalProperty, LitElement } from 'lit-element';
-import { html } from 'lit-html';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/vaadin-grid/vaadin-grid';
+import type {
+  GridDataProviderCallback,
+  GridDataProviderParams,
+} from '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -14,22 +16,23 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-column')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   private managers: Person[] = [];
 
   private dataProvider = async (
-    params: GridDataProviderParams,
-    callback: GridDataProviderCallback
+    params: GridDataProviderParams<Person>,
+    callback: GridDataProviderCallback<Person>
   ) => {
     const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? (params.parentItem as Person).id : null,
+      managerId: params.parentItem ? params.parentItem.id : null,
     });
 
     if (!params.parentItem) {
@@ -40,7 +43,7 @@ export class Example extends LitElement {
   };
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private expandedItems: unknown[] = [];
 
   render() {

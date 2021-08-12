@@ -1,14 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import { render } from 'lit-html';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import type { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridElement, GridEventContext, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import type { GridElement, GridEventContext, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -17,16 +16,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-presentation')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private gridItems: Person[] = [];
 
-  @internalProperty()
+  @state()
   private items?: ContextMenuItem[];
 
   // tag::snippet[]
@@ -59,7 +59,7 @@ export class Example extends LitElement {
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid
-          height-by-rows
+          all-rows-visible
           .items=${this.gridItems}
           @vaadin-contextmenu=${this.onContextMenu}
         >
@@ -108,7 +108,7 @@ export class Example extends LitElement {
 
   createItem(iconName: string, text: string) {
     const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('iron-icon');
+    const icon = window.document.createElement('vaadin-icon');
 
     icon.style.color = 'var(--lumo-secondary-text-color)';
     icon.style.marginInlineEnd = 'var(--lumo-space-s)';
@@ -122,16 +122,15 @@ export class Example extends LitElement {
 
   onContextMenu(e: MouseEvent) {
     // Prevent opening context menu on header row.
-    if (
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
-    ) {
+    const target = e.currentTarget as GridElement;
+    if ((target.getEventContext(e) as GridEventContext<Person>).section !== 'body') {
       e.stopPropagation();
     }
   }
 
-  private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
+  private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
     if (model?.item) {
-      const person = model.item as Person;
+      const person = model.item;
       render(html` <span>${person.firstName} ${person.lastName}</span> `, root);
     }
   };

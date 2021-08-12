@@ -1,24 +1,24 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { customElement, LitElement, internalProperty } from 'lit-element';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { guard } from 'lit-html/directives/guard';
-import { html, render } from 'lit-html';
 import { format } from 'date-fns';
 
 @customElement('grid-column-alignment')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {
@@ -44,7 +44,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid .items="${this.items}">
-        <vaadin-grid-column path="displayName"></vaadin-grid-column>
+        <vaadin-grid-column path="displayName" header="Name"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due"
           .renderer="${guard(

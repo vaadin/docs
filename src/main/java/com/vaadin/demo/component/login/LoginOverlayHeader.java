@@ -16,6 +16,8 @@ public class LoginOverlayHeader extends Div {
         // end::snippet[]
         add(loginOverlay);
         loginOverlay.setOpened(true);
+        // Prevent the example from stealing focus when browsing the documentation
+        loginOverlay.getElement().setAttribute("no-autofocus", "");
     }
     public static class Exporter extends DemoExporter<LoginOverlayHeader> {} // hidden-source-line
 }

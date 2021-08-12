@@ -1,7 +1,7 @@
 package com.vaadin.demo;
 
 import com.vaadin.demo.domain.*;
-import com.vaadin.flow.server.connect.Endpoint;
+import com.vaadin.fusion.Endpoint;
 
 @Endpoint
 public class DummyEndpoint {

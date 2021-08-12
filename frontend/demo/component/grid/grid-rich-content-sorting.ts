@@ -1,29 +1,29 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { customElement, LitElement, internalProperty, html } from 'lit-element';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-sorter';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 import { differenceInYears, format, parseISO } from 'date-fns';
 
 @customElement('grid-rich-content-sorting')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {
@@ -47,8 +47,8 @@ export class Example extends LitElement {
     `;
   }
 
-  private employeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const person = model.item as Person;
+  private employeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const person = model.item;
     render(
       html`
         <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
@@ -75,21 +75,19 @@ export class Example extends LitElement {
     render(html`<vaadin-grid-sorter path="birthday">Birthdate</vaadin-grid-sorter>`, root);
   };
 
-  private birthdayRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel) => {
-    const person = model.item as Person;
+  private birthdayRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
+    const person = model.item;
     const birthday = parseISO(person.birthday);
     render(
       html`
-        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-          <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-            <span> ${format(birthday, 'P')} </span>
-            <span
-              style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-            >
-              Age: ${differenceInYears(Date.now(), birthday)}
-            </span>
-          </vaadin-vertical-layout>
-        </vaadin-horizontal-layout>
+        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+          <span> ${format(birthday, 'P')} </span>
+          <span
+            style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+          >
+            Age: ${differenceInYears(Date.now(), birthday)}
+          </span>
+        </vaadin-vertical-layout>
       `,
       root
     );

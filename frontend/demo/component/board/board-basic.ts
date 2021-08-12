@@ -1,53 +1,24 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import '@vaadin/vaadin-board/vaadin-board';
-import { html, LitElement, customElement, css } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import borderCSS from './example-border.css';
 import './example-indicator';
 import './example-chart';
 
 @customElement('board-basic')
 export class Example extends LitElement {
-  static get styles() {
-    return [
-      borderCSS,
-      css`
-        :host {
-          --vaadin-board-width-small: 200px;
-          --vaadin-board-width-medium: 400px;
-        }
-
-        vaadin-board-row:not(:last-child) {
-          border-block-end: var(--board-border);
-        }
-
-        example-indicator {
-          padding: var(--lumo-space-m);
-        }
-
-        example-indicator:not(:nth-child(2n)) {
-          border-inline-end: var(--board-border);
-        }
-
-        @media (min-width: 1024px) {
-          :host {
-            --vaadin-board-width-small: 300px;
-            --vaadin-board-width-medium: 400px;
-          }
-
-          example-indicator:not(:last-child) {
-            border-inline-end: var(--board-border);
-          }
-        }
-      `,
-    ];
-  }
-
   constructor() {
     super();
+    this.classList.add('basic-board');
+  }
+
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {

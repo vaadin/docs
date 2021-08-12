@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-accordion/vaadin-accordion';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
@@ -24,24 +24,25 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
 
 @customElement('accordion-summary')
 export class Example extends LitElement {
-  @internalProperty()
+  @state()
   private countries: Country[] = [];
 
-  @internalProperty()
+  @state()
   private personBinder = new Binder(this, PersonModel);
 
-  @internalProperty()
+  @state()
   private cardBinder = new Binder(this, CardModel);
 
-  @internalProperty()
+  @state()
   private openedPanelIndex = 0;
   async firstUpdated() {
     this.countries = await getCountries();
   }
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {

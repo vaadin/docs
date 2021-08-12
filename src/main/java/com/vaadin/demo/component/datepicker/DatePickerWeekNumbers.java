@@ -9,13 +9,14 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class DatePickerWeekNumbers extends Div {
 
     public DatePickerWeekNumbers() {
+        DatePicker datePicker = new DatePicker("Vacation start date");
         // tag::snippet[]
-        DatePicker datePicker = new DatePicker("Birthday");
+        datePicker.setWeekNumbersVisible(true);
+        datePicker.setI18n(new DatePicker.DatePickerI18n().setFirstDayOfWeek(1));
+        // end::snippet[]
 
         add(datePicker);
-        // end::snippet[]
     }
-
     public static class Exporter extends DemoExporter<DatePickerWeekNumbers> { // hidden-source-line
     } // hidden-source-line
 }

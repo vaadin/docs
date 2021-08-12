@@ -1,26 +1,27 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { customElement, LitElement, internalProperty, html } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridActiveItemChanged } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridActiveItemChangedEvent } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-single-select-mode')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
-  @internalProperty()
+  @state()
   private selectedItems: Person[] = [];
 
   async firstUpdated() {
@@ -33,8 +34,8 @@ export class Example extends LitElement {
       <vaadin-grid
         .items="${this.items}"
         .selectedItems="${this.selectedItems}"
-        @active-item-changed="${(e: GridActiveItemChanged) => {
-          const item = e.detail.value as Person;
+        @active-item-changed="${(e: GridActiveItemChangedEvent<Person>) => {
+          const item = e.detail.value;
           this.selectedItems = item ? [item] : [];
         }}"
       >

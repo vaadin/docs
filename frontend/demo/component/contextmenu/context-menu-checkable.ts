@@ -1,55 +1,47 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import {
+import type {
   ContextMenuItem,
-  ContextMenuItemSelected,
+  ContextMenuItemSelectedEvent,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-checkable')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items: ContextMenuItem[] = [
-    { text: 'Abigail Lewis' },
+    { text: 'Abigail Lewis', checked: true },
     { text: 'Allison Torres' },
     { text: 'Anna Myers' },
     { text: 'Lauren Wright' },
     { text: 'Tamaki Ryushi' },
   ];
 
-  @internalProperty()
-  private selectedItem = this.items[1];
-  // end::snippet[]
-
   render() {
+    const selectedItem = this.items.find((item) => item.checked);
+
     return html`
-      <!-- tag::snippethtml[] -->
-      <vaadin-context-menu
-        .items="${this.items.map((item) => {
-          return { ...item, checked: item === this.selectedItem };
-        })}"
-        @item-selected="${this.itemSelected}"
-      >
-        <span>Assignee: <b>${this.selectedItem?.text}</b></span>
+      <vaadin-context-menu .items="${this.items}" @item-selected="${this.itemSelected}">
+        <span>Assignee: <b>${selectedItem?.text}</b></span>
       </vaadin-context-menu>
-      <!-- end::snippethtml[] -->
     `;
   }
 
-  // tag::snippetselected[]
-  itemSelected(e: ContextMenuItemSelected) {
-    this.selectedItem = this.items.find(
-      (item) => item.text === e.detail.value.text
-    ) as ContextMenuItem;
+  itemSelected(e: ContextMenuItemSelectedEvent) {
+    this.items.forEach((item) => {
+      item.checked = item === e.detail.value;
+    });
+    this.items = [...this.items];
   }
-  // end::snippetselected[]
+  // end::snippet[]
 }

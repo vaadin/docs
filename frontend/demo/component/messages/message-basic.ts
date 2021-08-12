@@ -1,22 +1,23 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-messages/vaadin-message-list';
 import '@vaadin/vaadin-messages/vaadin-message-input';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { MessageListItem } from '@vaadin/vaadin-messages';
-import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-source-line
 
 @customElement('message-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: MessageListItem[] = [];
 
   async firstUpdated() {

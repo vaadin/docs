@@ -1,32 +1,31 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { customElement, LitElement, internalProperty } from 'lit-element';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
-import '@vaadin/vaadin-icons/vaadin-icons';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
+import type { GridElement, GridEventContext } from '@vaadin/vaadin-grid/vaadin-grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render, html } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import {
+import type {
   ContextMenuElement,
   ContextMenuRendererContext,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import { guard } from 'lit-html/directives/guard';
+import { guard } from 'lit/directives/guard.js';
 
 @customElement('grid-context-menu')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {
@@ -37,19 +36,23 @@ export class Example extends LitElement {
   // tag::snippet[]
   private contextMenuRenderer =
     () => (root: HTMLElement, elem: ContextMenuElement, context: ContextMenuRendererContext) => {
-      const { sourceEvent } = context.detail! as { sourceEvent: Event };
-      const grid = elem.firstElementChild as GridElement;
+      const { sourceEvent } = context.detail as { sourceEvent: Event };
+      const grid = elem.firstElementChild as GridElement<Person>;
 
-      const eventContext = grid.getEventContext(sourceEvent) as GridEventContext;
-      const person = eventContext.item as Person;
+      const eventContext = grid.getEventContext(sourceEvent);
+      const person = eventContext.item!;
+
+      const clickHandler = (_action: string) => () => {
+        // console.log(`${action}: ${person.firstName} ${person.lastName}`);
+      };
 
       render(
-        html`<vaadin-list-box style="color: var(--lumo-contrast-70pct);">
-          <h6 style="margin: 0 var(--lumo-space-m)">${person.firstName} ${person.lastName}</h6>
-          ${this.createItem('vaadin:pencil', 'Edit')} ${this.createItem('vaadin:trash', 'Delete')}
+        html`<vaadin-list-box>
+          <vaadin-item @click="${clickHandler('Edit')}">Edit</vaadin-item>
+          <vaadin-item @click="${clickHandler('Delete')}">Delete</vaadin-item>
           <hr />
-          ${this.createItem('vaadin:envelope-o', 'Email')}
-          ${this.createItem('vaadin:phone', 'Call')}
+          <vaadin-item @click="${clickHandler('Email')}">Email (${person.email})</vaadin-item>
+          <vaadin-item @click="${clickHandler('Call')}">Call (${person.address.phone})</vaadin-item>
         </vaadin-list-box>`,
         root
       );
@@ -68,20 +71,11 @@ export class Example extends LitElement {
     `;
   }
 
-  createItem(icon: string, text: string) {
-    return html`<vaadin-item style="font-size: var(--lumo-font-size-s)"
-      ><iron-icon
-        icon="${icon}"
-        style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); margin-right: var(--lumo-space-s)"
-      ></iron-icon
-      >${text}</vaadin-item
-    > `;
-  }
-
   onContextMenu(e: MouseEvent) {
     // Prevent opening context menu on header row.
     if (
-      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext).section !== 'body'
+      ((e.currentTarget as GridElement).getEventContext(e) as GridEventContext<Person>).section !==
+      'body'
     ) {
       e.stopPropagation();
     }

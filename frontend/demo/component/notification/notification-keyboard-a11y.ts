@@ -1,70 +1,101 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { render } from 'lit-html';
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import { guard } from 'lit-html/directives/guard';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import {
+  NotificationRenderer,
+  NotificationOpenedChangedEvent,
+} from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-keyboard-a11y')
 export class Example extends LitElement {
-  @internalProperty()
-  private notificationOpen = false;
+  @state()
+  private notificationOpened = false;
 
-  @internalProperty()
-  private isMac =
-    ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'].indexOf(window.navigator.platform) > -1;
+  @state()
+  private isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
+  // tag::snippet[]
   render() {
     return html`
+      <!-- end::snippet[] -->
       <vaadin-button
-        @click="${() => (this.notificationOpen = true)}"
-        .disabled="${this.notificationOpen}"
+        @click="${() => (this.notificationOpened = true)}"
+        .disabled="${this.notificationOpened}"
       >
         Try it
       </vaadin-button>
 
       <!-- tag::snippet[] -->
       <vaadin-notification
-        .opened="${this.notificationOpen}"
-        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <div>5 tasks deleted</div>
-              <div style="width: 2em"></div>
-              <vaadin-button theme="primary" @click="${() => (this.notificationOpen = false)}">
-                Undo
-                <!-- Ideally, this should also be hidden if the
-                     device does not have a physical keyboard -->
-                <span aria-hidden="true"> &nbsp; ${this.isMac ? '⌘' : 'Ctrl-'}Z </span>
-              </vaadin-button>
-            `,
-            root
-          );
-        })}"
         theme="contrast"
         duration="10000"
         position="middle"
+        .opened="${this.notificationOpened}"
+        @opened-changed="${(e: NotificationOpenedChangedEvent) => {
+          this.notificationOpened = e.detail.value;
+        }}"
+        .renderer="${this.renderer}"
       ></vaadin-notification>
-      <!-- end::snippet[] -->
     `;
   }
 
-  firstUpdated() {
-    document.addEventListener('keydown', (e) => {
-      if (this.notificationOpen && (e.metaKey || e.ctrlKey) && e.key == 'z') {
-        // Handle your custom undo logic here
-        // Avoid triggering the native undo action
-        e.preventDefault();
-        this.notificationOpen = false;
-      }
-    });
+  // end::snippet[]
+
+  // tag::renderer[]
+  renderer: NotificationRenderer = (root) => {
+    render(
+      html`
+        <vaadin-horizontal-layout style="align-items: center;">
+          <div>5 tasks deleted</div>
+          <vaadin-button
+            style="margin-left: var(--lumo-space-xl);"
+            theme="primary"
+            @click="${() => (this.notificationOpened = false)}"
+          >
+            Undo
+            <!-- Ideally, this should be hidden if the
+                 device does not have a physical keyboard -->
+            ${this.isMac ? '⌘' : 'Ctrl-'}Z
+          </vaadin-button>
+        </vaadin-horizontal-layout>
+      `,
+      root
+    );
+  };
+
+  // end::renderer[]
+
+  // tag::key-down[]
+  connectedCallback() {
+    super.connectedCallback();
+
+    document.addEventListener('keydown', this.onKeyDown);
   }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+
+    document.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  onKeyDown = (event: KeyboardEvent) => {
+    if (this.notificationOpened && (event.metaKey || event.ctrlKey) && event.key == 'z') {
+      // Handle your custom undo logic here
+      // Avoid triggering the native undo action
+      event.preventDefault();
+      this.notificationOpened = false;
+    }
+  };
+  // end::key-down[]
 }

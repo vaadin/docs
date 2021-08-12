@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, css } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import './layout-item';
@@ -10,17 +11,14 @@ import '@vaadin/vaadin-item';
 export class Example extends LitElement {
   constructor() {
     super();
-    // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    this.classList.add('basic-layouts-example');
   }
 
-  static get styles() {
-    return css`
-      vaadin-horizontal-layout {
-        border: 1px solid var(--lumo-primary-color);
-        border-radius: var(--lumo-border-radius-l);
-      }
-    `;
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
+    // Apply custom theme (only supported if your app uses one)
+    applyTheme(root);
+    return root;
   }
 
   render() {

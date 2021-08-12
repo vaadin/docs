@@ -1,4 +1,4 @@
-import type { UploadFile, UploadResponse } from '@vaadin/vaadin-upload';
+import type { UploadFile, UploadResponseEvent } from '@vaadin/vaadin-upload';
 
 /*
  * Mock XMLHttpRequest (see http://www.w3.org/TR/XMLHttpRequest)
@@ -493,7 +493,7 @@ export class MockHttpServer {
 }
 
 // Use MockHttpRequest in demos
-function mockXhrGenerator(file: UploadFile) {
+function mockXhrGenerator() {
   type UploadProp = {
     onloadstart?: () => void;
     onprogress?: (e: unknown) => void;
@@ -504,7 +504,7 @@ function mockXhrGenerator(file: UploadFile) {
     if (xhr.upload.onloadstart) {
       xhr.upload.onloadstart();
     }
-    const total = (file && file.size) || 1024;
+    const total = 1000 * 1000 * 5;
     let done = 0;
     function start() {
       setTimeout(progress, 1000);
@@ -514,7 +514,7 @@ function mockXhrGenerator(file: UploadFile) {
       if (done < total) {
         setTimeout(progress, 200);
         done = Math.min(total, done + 254000);
-      } else if (!file.abort) {
+      } else {
         setTimeout(finish, 1000);
       }
     }
@@ -522,6 +522,23 @@ function mockXhrGenerator(file: UploadFile) {
       xhr.receive(200, '{"message":"OK"}');
     }
     start();
+  };
+  return xhr;
+}
+
+export function mockErrorXhrGenerator() {
+  type UploadProp = {
+    onloadstart?: () => void;
+    onprogress?: (e: unknown) => void;
+  };
+  const xhr = new MockHttpRequest() as MockHttpRequest & { upload: UploadProp };
+  xhr.upload = {};
+  xhr.onsend = function () {
+    if (xhr.upload.onloadstart) {
+      xhr.upload.onloadstart();
+    }
+
+    setTimeout(() => xhr.receive(500, '{"message":"Unexpected server error"}'), 2000);
   };
   return xhr;
 }
@@ -563,12 +580,12 @@ export function createFakeUploadFiles(
   return options.map((o) => createFakeUploadFile(o));
 }
 
-export function fakeErrorResponse(event: UploadResponse) {
+export function fakeErrorResponse(event: UploadResponseEvent) {
   (event.detail.xhr.status as any) = 500;
 }
 
-export function fakeErrorResponseWrapper(callback: (event: UploadResponse) => void) {
-  return (event: UploadResponse) => {
+export function fakeErrorResponseWrapper(callback: (event: UploadResponseEvent) => void) {
+  return (event: UploadResponseEvent) => {
     fakeErrorResponse(event);
     callback(event);
   };

@@ -1,46 +1,24 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import '@vaadin/vaadin-board/vaadin-board';
-import { html, LitElement, customElement, css } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import borderCSS from './example-border.css';
-import defaultBreakpointsCSS from './example-breakpoint-default.css';
 import './example-indicator';
 import './example-statistics';
 
 @customElement('board-nested')
 export class Example extends LitElement {
-  static get styles() {
-    return [
-      defaultBreakpointsCSS,
-      borderCSS,
-      css`
-        example-statistics {
-          padding-inline-end: var(--lumo-space-m);
-          border-inline-end: var(--board-border);
-        }
-
-        example-indicator {
-          padding: var(--lumo-space-s);
-        }
-
-        example-indicator:first-child {
-          border-block-end: var(--board-border);
-        }
-
-        @media (min-width: 1024px) {
-          example-indicator {
-            padding: var(--lumo-space-m);
-          }
-        }
-      `,
-    ];
-  }
-
   constructor() {
     super();
+    this.classList.add('board-nested');
+  }
+
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {

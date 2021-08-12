@@ -1,17 +1,18 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/datepickerConnector'; // hidden-source-line
 
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 import { formatISO, lastDayOfYear } from 'date-fns';
 
 @customElement('date-picker-initial-position')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   private lastDayOfTheYear = lastDayOfYear(Date.now());

@@ -1,11 +1,12 @@
-import { customElement, html, LitElement, property } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
 import '@vaadin/vaadin-upload';
 import '@vaadin/vaadin-button';
 
 import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
-import { ContactEndpoint } from 'Frontend/generated/ContactEndpoint';
+import { ContactEndpoint } from 'Frontend/generated/endpoints';
 
 import { Binder } from '@vaadin/form';
 

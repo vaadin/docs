@@ -1,4 +1,5 @@
-import { LitElement, html, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
 import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
@@ -14,6 +15,7 @@ export class UiMenu extends LitElement {
           <vaadin-tab>Venus</vaadin-tab>
           <vaadin-tab>Earth</vaadin-tab>
           <vaadin-tab>Mars</vaadin-tab>
+          <vaadin-tab>Jupiter</vaadin-tab>
         </vaadin-tabs>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->

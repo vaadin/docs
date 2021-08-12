@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector'; // hidden-source-line
-import '@vaadin/flow-frontend/menubarConnector'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -13,16 +12,17 @@ import { MenuBarItem } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 
 @customElement('avatar-menu-bar')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private menuBarItems: MenuBarItem[] = [];
 
-  @internalProperty()
+  @state()
   private person?: Person;
 
   async firstUpdated() {

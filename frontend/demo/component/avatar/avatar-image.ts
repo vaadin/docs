@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from '../../domain/DataService';
@@ -8,13 +9,14 @@ import * as companyLogo from '../../../../src/main/resources/images/company-logo
 
 @customElement('avatar-image')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private person?: Person;
 
   async firstUpdated() {

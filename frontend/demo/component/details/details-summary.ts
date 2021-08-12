@@ -1,13 +1,14 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-details/vaadin-details';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-form-layout/vaadin-form-layout';
 import '@vaadin/vaadin-text-field/vaadin-text-field';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-lumo-styles/sizing';
 import '@vaadin/vaadin-lumo-styles/color';
 import { getCountries } from 'Frontend/demo/domain/DataService';
@@ -19,16 +20,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('details-summary')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: Country[] = [];
 
-  @internalProperty()
+  @state()
   private responsiveSteps: FormLayoutResponsiveStep[] = [
     { minWidth: 0, columns: 1 },
     { minWidth: '20em', columns: 2 },
@@ -50,10 +52,10 @@ export class Example extends LitElement {
           <vaadin-horizontal-layout
             style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
           >
-            <iron-icon
+            <vaadin-icon
               icon="vaadin:exclamation-circle"
               style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s);"
-            ></iron-icon>
+            ></vaadin-icon>
             <span>2 errors</span>
           </vaadin-horizontal-layout>
         </vaadin-horizontal-layout>

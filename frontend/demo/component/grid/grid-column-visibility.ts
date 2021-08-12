@@ -1,7 +1,7 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { customElement, LitElement, internalProperty, html } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
@@ -9,24 +9,25 @@ import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import {
+import type {
   ContextMenuItem,
-  ContextMenuItemSelected,
+  ContextMenuItemSelectedEvent,
 } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
 @customElement('grid-column-visibility')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   // tag::snippet[]
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
-  @internalProperty()
+  @state()
   private contextMenuItems: (ContextMenuItem & { key: string })[] = [
     { text: 'First name', checked: true, key: 'firstName' },
     { text: 'Last name', checked: true, key: 'lastName' },
@@ -42,12 +43,12 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-horizontal-layout>
+      <vaadin-horizontal-layout style="align-items: baseline">
         <strong style="flex: 1;">Employees</strong>
         <vaadin-context-menu
           open-on="click"
           .items="${this.contextMenuItems}"
-          @item-selected="${(e: ContextMenuItemSelected) => {
+          @item-selected="${(e: ContextMenuItemSelectedEvent) => {
             const value = e.detail.value as ContextMenuItem & { key: string };
             this.contextMenuItems = this.contextMenuItems.map((item) =>
               item.key === value.key ? { ...item, checked: !value.checked } : item

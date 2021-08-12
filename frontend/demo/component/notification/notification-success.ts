@@ -1,27 +1,32 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { render } from 'lit-html';
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators';
+import { guard } from 'lit/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import {
+  NotificationRenderer,
+  NotificationOpenedChangedEvent,
+} from '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-success')
 export class Example extends LitElement {
-  @internalProperty()
-  private notificationOpen = false;
+  @state()
+  private notificationOpened = false;
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {
     return html`
       <vaadin-button
-        @click="${() => (this.notificationOpen = true)}"
-        .disabled="${this.notificationOpen}"
+        @click="${() => (this.notificationOpened = true)}"
+        .disabled="${this.notificationOpened}"
       >
         Try it
       </vaadin-button>
@@ -30,26 +35,18 @@ export class Example extends LitElement {
       <vaadin-notification
         theme="success"
         position="middle"
-        .opened="${this.notificationOpen}"
-        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
-        .renderer="${this.renderer}"
+        .opened="${this.notificationOpened}"
+        @opened-changed="${(e: NotificationOpenedChangedEvent) => {
+          this.notificationOpened = e.detail.value;
+        }}"
+        .renderer="${guard(
+          [],
+          (): NotificationRenderer => (root) => {
+            render(html`Application submitted!`, root);
+          }
+        )}"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
-
-  renderer = (root: HTMLElement) =>
-    render(
-      html`
-        <div>Application submitted!</div>
-        <vaadin-button
-          theme="tertiary-inline"
-          @click="${() => (this.notificationOpen = false)}"
-          aria-label="Close"
-        >
-          <iron-icon icon="lumo:cross"></iron-icon>
-        </vaadin-button>
-      `,
-      root
-    );
 }

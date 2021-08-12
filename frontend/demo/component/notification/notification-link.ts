@@ -1,54 +1,70 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { render } from 'lit-html';
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
-import { guard } from 'lit-html/directives/guard';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import {
+  NotificationOpenedChangedEvent,
+  NotificationRenderer,
+} from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-link')
 export class Example extends LitElement {
-  @internalProperty()
-  private notificationOpen = false;
+  @state()
+  private notificationOpened = false;
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {
     return html`
       <vaadin-button
-        @click="${() => (this.notificationOpen = true)}"
-        .disabled="${this.notificationOpen}"
+        @click="${() => (this.notificationOpened = true)}"
+        .disabled="${this.notificationOpened}"
       >
         Try it
       </vaadin-button>
 
       <!-- tag::snippet[] -->
+      <!-- The duration is set to 0-sec to prevent the notification from auto-close. -->
       <vaadin-notification
-        .opened="${this.notificationOpen}"
-        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <div>Jason Bailey mentioned you in <a href="#">Project Q4</a></div>
-              <vaadin-button
-                theme="tertiary-inline"
-                @click="${() => (this.notificationOpen = false)}"
-                aria-label="Close"
-              >
-                <iron-icon icon="lumo:cross"></iron-icon>
-              </vaadin-button>
-            `,
-            root
-          );
-        })}"
+        duration="0"
         position="middle"
+        .opened="${this.notificationOpened}"
+        @opened-changed="${(e: NotificationOpenedChangedEvent) => {
+          this.notificationOpened = e.detail.value;
+        }}"
+        .renderer="${this.renderer}"
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
   }
+
+  // tag::renderer[]
+  renderer: NotificationRenderer = (root) => {
+    render(
+      html`
+        <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+          <div>Jason Bailey mentioned you in <a href="#">Project Q4</a></div>
+          <vaadin-button
+            theme="tertiary-inline"
+            aria-label="Close"
+            @click="${() => (this.notificationOpened = false)}"
+          >
+            <vaadin-icon icon="lumo:cross"></vaadin-icon>
+          </vaadin-button>
+        </vaadin-horizontal-layout>
+      `,
+      root
+    );
+  };
+  // end::renderer[]
 }

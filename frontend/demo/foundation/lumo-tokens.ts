@@ -14,6 +14,9 @@ import '@vaadin/vaadin-lumo-styles/spacing';
 // tag::style[]
 import '@vaadin/vaadin-lumo-styles/style';
 // end::style[]
+// tag::utility-classes[]
+import 'lumo-css-framework/all-classes.css';
+// end::utility-classes[]
 
 import { applyTheme } from 'Frontend/generated/theme'; // hidden-source-line
 applyTheme(document); // hidden-source-line

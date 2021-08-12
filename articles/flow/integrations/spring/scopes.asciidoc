@@ -12,7 +12,7 @@ layout: page
 
 * *Scopes* are narrower than contexts. While conventional singletons are application-wide, objects managed by a Spring container are "singletons" in a narrower scope. Examples include a user session, a particular UI instance associated with the session, or even a single request. A scope defines the lifecycle of the object, that is its creation, use, and destruction.
 
-More information on beans and scopes in Spring can read from the https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-definition[Spring project documentation].
+Read more about https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-definition[beans and scopes in Spring].
 
 == Using Scopes with Vaadin and Spring
 
@@ -28,6 +28,21 @@ In addition to standard Spring scopes, the https://vaadin.com/directory/componen
 ** `VaadinSessionScope` for targeting beans to a user's session
 ** `UIScope` for targeting beans to a browser window or tab opened by the user
 ** `RouteScope` for targeting beans to certain routing components pointed by the `RouteScopeOwner` qualifier
+
+.Overview of how Vaadin specific scopes relate to each other when used in navigation targets
+image::images/spring-scopes.png["Overview of Vaadin specific scopes for bean classes (including navigation targets) and their binding to app, session, window/tab and path"]
+
+.Routing components are Spring-initialized beans
+[IMPORTANT]
+All Flow routing components (`@Route`, `RouterLayout` or `HasErrorParameter`) are initialized by Spring, even without explicitly adding the `@SpringComponent` annotation.
+Without any annotations, the components act like a bean in _prototype_ scope.
+You can inject other beans to the components, but note that while `@PostConstruct` methods work, `@PreDestroy` methods do not.
+When you want to use another scope for the components, **you need to remember to add the `@SpringComponent` annotation to get the scope applied.**
+
+.Changes in scopes need server restart
+[NOTE]
+When changing the scope annotations, the application server needs to be restarted to apply the new scopes.
+Restart is required even when live reload is enabled.
 
 === VaadinSessionScope
 
@@ -114,7 +129,7 @@ To be able to preserve the beans on refresh, you need to use `@RouteScope` inste
 [role="since:com.vaadin:vaadin@V21"]
 === RouteScope and RouteScopeOwner
 
-The `@RouteScope` annotation ties the beans to the lifecycle of Vaadin Flow routing components (`@Route`, `RouteLayout`, `HasErrorParameter`).
+The `@RouteScope` annotation ties the beans to the lifecycle of Vaadin Flow routing components (`@Route`, `RouterLayout`, `HasErrorParameter`).
 Since there can be multiple nested levels of routing components present at once, an additional `@RouteScopeOwner` _qualifier_ annotation can be used to specify the _owner_ routing component.
 Without the owner qualifier, the owner is the currently active routing component at the time of injection.
 As long as the owner routing component is part of the active view chain, all beans owned by it remain in the scope.
@@ -188,6 +203,13 @@ public class SiblingView extends VerticalLayout {
 .Injecting to wider scope
 CAUTION: Injecting a "narrower" `RouteScope` bean into "wider" scope, like parent layout's `RouteScope` or `UIScope`, can cause problems.
 For example, if you store a `RouteScope` bean into a `UIScope` bean, the bean might become stale after navigation.
+
+The `@RouteScopeOwner` qualifier has to be placed both on top of the bean class and on the injection point of the bean.
+The annotation can be omitted in the injection point when the bean implementation can be resolved unambiguously by Spring (like it could be in the example above).
+However, it is recommended to have it there for better code readability.
+
+Having an owner view class as a value in the `@RouteScopeOwner` for a model/business logic bean class ties application's view layer to a model/business layer.
+It can be decoupled, for example, by splitting the bean class into an interface and its implementation class, and then using the interface in the view class and marking a concrete bean's implementation class with `@RouteScopeOwner`.
 
 ==== @RouteScope Without @RouteScopeOwner to Replace @ViewScope From Vaadin 7 / 8
 

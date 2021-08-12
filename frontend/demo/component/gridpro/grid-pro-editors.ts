@@ -1,26 +1,26 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridProConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 
-import { html, LitElement, internalProperty, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
 import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
+import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
 import { format, parseISO } from 'date-fns';
 
 @customElement('grid-pro-editors')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {
@@ -43,27 +43,32 @@ export class Example extends LitElement {
         </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column
           path="birthday"
-          .renderer="${(root: HTMLElement, _column?: GridColumnElement, model?: GridItemModel) => {
+          .renderer="${(
+            root: HTMLElement,
+            _column?: GridColumnElement,
+            model?: GridItemModel<Person>
+          ) => {
             if (!model) {
               return;
             }
-            const person = model.item as Person;
+            const person = model.item;
             root.textContent = format(parseISO(person.birthday), 'MM/dd/yyyy');
           }}"
           .editModeRenderer="${(
             root: HTMLElement,
             _column?: GridColumnElement,
-            model?: GridItemModel
+            model?: GridItemModel<Person>
           ) => {
             if (!model) {
               return;
             }
-            const person = model.item as Person;
+            const person = model.item;
 
             let datePicker = root.querySelector('vaadin-date-picker');
             if (!datePicker) {
               root.innerHTML = '';
               datePicker = document.createElement('vaadin-date-picker');
+              datePicker.style.width = '100%';
               root.appendChild(datePicker);
             }
             datePicker.value = person.birthday;

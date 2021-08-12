@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
@@ -10,16 +10,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('combo-box-filtering-2')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private allItems: Country[] = [];
 
-  @internalProperty()
+  @state()
   private filteredItems: Country[] = [];
 
   async firstUpdated() {

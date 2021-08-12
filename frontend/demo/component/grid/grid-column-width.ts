@@ -1,27 +1,27 @@
-import 'Frontend/demo/init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line (Grid's connector)
+import 'Frontend/demo/init'; // hidden-source-line
 
-import { customElement, LitElement, internalProperty, html } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
+import { GridItemModel } from '@vaadin/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-selection-column';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
-import '@vaadin/vaadin-icons/vaadin-icons';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { render } from 'lit-html';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('grid-column-width')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private items: Person[] = [];
 
   async firstUpdated() {
@@ -37,14 +37,14 @@ export class Example extends LitElement {
       <vaadin-split-layout>
         <vaadin-grid .items="${this.items}" style="width: 100%;">
           <vaadin-grid-selection-column></vaadin-grid-selection-column>
-          <vaadin-grid-column path="displayName" width="10em"></vaadin-grid-column>
-          <vaadin-grid-column path="profession" auto-width></vaadin-grid-column>
+          <vaadin-grid-column path="firstName" width="7em" flex-grow="0"></vaadin-grid-column>
+          <vaadin-grid-column path="profession" auto-width flex-grow="0"></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column
-            width="7em"
-            header="Manage"
-            .renderer="${this.manageRenderer}"
-            auto-width
+            width="6em"
+            flex-grow="0"
+            header="Has Sub"
+            .renderer="${this.subscriptionRenderer}"
           ></vaadin-grid-column>
         </vaadin-grid>
         <div></div>
@@ -52,18 +52,12 @@ export class Example extends LitElement {
     `;
   }
 
-  private manageRenderer = (root: HTMLElement) => {
-    render(
-      html`
-        <vaadin-button theme="tertiary">
-          <iron-icon icon="vaadin:pencil"></iron-icon>
-        </vaadin-button>
-        <vaadin-button theme="error tertiary">
-          <iron-icon icon="vaadin:trash"></iron-icon>
-        </vaadin-button>
-      `,
-      root
-    );
+  private subscriptionRenderer = (
+    root: HTMLElement,
+    _: HTMLElement,
+    model: GridItemModel<Person>
+  ) => {
+    root.textContent = model.item.subscriber ? 'Yes' : 'No';
   };
 }
 // end::snippet[]

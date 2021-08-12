@@ -1,29 +1,31 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
-import { customElement, html, internalProperty, LitElement, query } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement, query, state } from 'lit/decorators.js';
 import { showErrorNotification } from 'Frontend/demo/notification-helper';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-upload/vaadin-upload';
 import type {
   UploadElement,
-  UploadFileReject,
-  UploadMaxFilesReachedChanged,
+  UploadFileRejectEvent,
+  UploadMaxFilesReachedChangedEvent,
 } from '@vaadin/vaadin-upload/vaadin-upload';
 import '@vaadin/vaadin-button/vaadin-button';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-button-theme-variant')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   @query('vaadin-upload')
   private upload?: UploadElement;
 
-  @internalProperty()
+  @state()
   private maxFilesReached = false;
 
   firstUpdated() {
@@ -40,7 +42,7 @@ export class Example extends LitElement {
         max-files="1"
         accept="application/pdf,.pdf"
         @file-reject="${this.fileRejectHandler}"
-        @max-files-reached-changed="${(e: UploadMaxFilesReachedChanged) =>
+        @max-files-reached-changed="${(e: UploadMaxFilesReachedChangedEvent) =>
           (this.maxFilesReached = e.detail.value)}"
       >
         <vaadin-button slot="add-button" theme="primary" ?disabled="${this.maxFilesReached}">
@@ -51,7 +53,7 @@ export class Example extends LitElement {
     `;
   }
 
-  fileRejectHandler(event: UploadFileReject) {
+  fileRejectHandler(event: UploadFileRejectEvent) {
     showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }

@@ -4,7 +4,10 @@
  * with minor fixes to satisfy prettier and fix missing types.
  */
 import '@vaadin/vaadin-notification';
-import type { NotificationOpenedChanged, NotificationPosition } from '@vaadin/vaadin-notification';
+import type {
+  NotificationOpenedChangedEvent,
+  NotificationPosition,
+} from '@vaadin/vaadin-notification';
 
 interface Options {
   position?: NotificationPosition;
@@ -17,7 +20,7 @@ export const showNotification = (text: string, options: Options = { position: 'm
 
 export const showErrorNotification = (
   text: string,
-  options: Options = { position: 'middle', duration: -1, theme: 'error' }
+  options: Options = { position: 'middle', theme: 'error' }
 ) => {
   _showNotification(text, options);
 };
@@ -31,7 +34,7 @@ const _showNotification = (text: string, options: Options) => {
   n.appendChild(tpl);
   document.body.appendChild(n);
   n.opened = true;
-  n.addEventListener('opened-changed', (e: NotificationOpenedChanged) => {
+  n.addEventListener('opened-changed', (e: NotificationOpenedChangedEvent) => {
     if (!e.detail.value) {
       document.body.removeChild(n);
     }

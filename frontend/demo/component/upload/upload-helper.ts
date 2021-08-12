@@ -1,9 +1,10 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
-import { css, customElement, html, LitElement, query } from 'lit-element';
+import { css, html, LitElement } from 'lit';
+import { customElement, query } from 'lit/decorators.js';
 import { showErrorNotification } from 'Frontend/demo/notification-helper';
 import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadElement, UploadFileReject } from '@vaadin/vaadin-upload/vaadin-upload';
+import type { UploadElement, UploadFileRejectEvent } from '@vaadin/vaadin-upload/vaadin-upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-helper')
@@ -20,10 +21,11 @@ export class Example extends LitElement {
     `;
   }
 
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   @query('vaadin-upload')
@@ -34,6 +36,8 @@ export class Example extends LitElement {
     if (this.upload?.i18n) {
       this.upload.i18n.addFiles.one = 'Upload Spreadsheet...';
       this.upload.i18n.dropFiles.one = 'Drop spreadsheet here';
+      this.upload.i18n.error.incorrectFileType =
+        'Please provide the file in one of the supported formats (.xls, .xlsx, .csv).';
       this.upload.i18n = { ...this.upload.i18n };
     }
   }
@@ -70,7 +74,7 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  fileRejectHandler(event: UploadFileReject) {
-    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
+  fileRejectHandler(event: UploadFileRejectEvent) {
+    showErrorNotification(event.detail.error);
   }
 }

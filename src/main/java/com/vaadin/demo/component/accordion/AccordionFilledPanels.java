@@ -2,10 +2,10 @@ package com.vaadin.demo.component.accordion;
 
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
+import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -27,7 +27,7 @@ public class AccordionFilledPanels extends Div {
 
         // tag::snippet[]
         AccordionPanel personalInfoPanel = accordion.add("Personal information", personalInformationLayout);
-        personalInfoPanel.setThemeName("filled");
+        personalInfoPanel.addThemeVariants(DetailsVariant.FILLED);
         // end::snippet[]
 
         Span street = new Span("4027 Amber Lake Canyon");
@@ -40,7 +40,7 @@ public class AccordionFilledPanels extends Div {
         billingAddressLayout.add(street, zipCode, city);
         
         AccordionPanel billingAddressPanel = accordion.add("Billing address", billingAddressLayout);
-        billingAddressPanel.setThemeName("filled");
+        billingAddressPanel.addThemeVariants(DetailsVariant.FILLED);
 
         Span cardBrand = new Span("Mastercard");
         Span cardNumber = new Span("1234 5678 9012 3456");
@@ -52,7 +52,7 @@ public class AccordionFilledPanels extends Div {
         paymentLayout.add(cardBrand, cardNumber, expiryDate);
         
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
-        paymentPanel.setThemeName("filled");
+        paymentPanel.addThemeVariants(DetailsVariant.FILLED);
 
         add(accordion);
     }

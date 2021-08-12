@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, internalProperty, customElement } from 'lit-element';
-import { render } from 'lit-html';
-import { guard } from 'lit-html/directives/guard';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
@@ -17,13 +17,14 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-no-padding')
 export class Example extends LitElement {
-  constructor() {
-    super();
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  @internalProperty()
+  @state()
   private dialogOpened = false;
 
   render() {
@@ -31,7 +32,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-dialog
         theme="no-padding"
-        aria-label="simple"
+        aria-label="Create new employee"
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
@@ -47,7 +48,7 @@ export class Example extends LitElement {
                   <h2
                     style="font-size: var(--lumo-font-size-xl); font-weight: 600; line-height: var(--lumo-line-height-xs); margin: 0;"
                   >
-                    New employee
+                    Create new employee
                   </h2>
                 </header>
                 <vaadin-scroller scroll-direction="vertical" style="padding: var(--lumo-space-l);">

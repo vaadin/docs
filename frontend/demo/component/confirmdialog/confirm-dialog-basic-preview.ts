@@ -1,7 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, css } from 'lit-element';
-import '@vaadin/vaadin-lumo-styles/icons';
+import { css, html, LitElement } from 'lit';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-text-field/vaadin-text-field';

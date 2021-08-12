@@ -2,22 +2,22 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import '@vaadin/vaadin-board/vaadin-board';
 import '@vaadin/vaadin-split-layout/vaadin-split-layout';
-import { html, LitElement, customElement } from 'lit-element';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import defaultColorCSS from './example-color-default.css';
-import defaultCellCSS from './example-cell-default.css';
-import defaultBreakpointsCSS from './example-breakpoint-default.css';
 
 @customElement('board-column-wrapping')
 export class Example extends LitElement {
-  static get styles() {
-    return [defaultBreakpointsCSS, defaultCellCSS, defaultColorCSS];
-  }
-
   constructor() {
     super();
+    this.classList.add('board-column-wrapping');
+  }
+
+  protected createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
   render() {
