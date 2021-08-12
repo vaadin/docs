@@ -20,6 +20,8 @@ public class LoginBasic extends Div {
         LoginForm loginForm = new LoginForm();
         add(loginForm);
         // end::snippet[]
+        // Prevent the example from stealing focus when browsing the documentation
+        loginForm.getElement().setAttribute("no-autofocus", "");
     }
     public static class Exporter extends DemoExporter<LoginBasic> {} // hidden-source-line
 }
