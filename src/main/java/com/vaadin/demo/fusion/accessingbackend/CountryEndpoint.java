@@ -19,15 +19,23 @@ public class CountryEndpoint {
     /**
      * A method that returns a collection of entities.
      */
-    public List<City> getCities(int numberOfCities) {
-        return numberOfCities <= cities.size() ?
-                cities.subList(0, numberOfCities - 1) : cities;
+    public List<City> getCities(Query query) {
+        return query.getNumberOfCities() <= cities.size() ?
+                cities.subList(0, query.getNumberOfCities() - 1) : cities;
     }
 
     /**
-     * A method that receives an entity as a parameter.
+     * An entity specified as an inner class.
      */
-    public String getCityName(City city) {
-        return city.getName();
+    public static class Query {
+        private final int numberOfCities;
+
+        public Query(final int numberOfCities) {
+            this.numberOfCities = numberOfCities;
+        }
+
+        public int getNumberOfCities() {
+            return numberOfCities;
+        }
     }
 }
