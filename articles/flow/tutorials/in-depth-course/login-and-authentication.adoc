@@ -1,0 +1,459 @@
+---
+title: Login and Authentication
+order: 100
+page-title: "Tutorial: setting up authentication and login in Vaadin Flow"
+description: Learn to set up Spring Security to restrict access to views in a Flow application.
+---
+
+= Adding a Login Screen to a Vaadin Application Using Spring Security
+
+In this chapter, you secure the CRM application by setting up Spring Security and adding a login screen to limit access to logged-in users. 
+
+.Simplified Security
+[TIP]
+====
+Vaadin 21 and later include built-in Spring Security helpers that greatly simplify securing your Flow application. 
+You can follow the Vaadin 21 version of this tutorial if you prefer to use the helpers. 
+====
+
+== Creating a Login View
+
+Start by creating a new view, `LoginView`, in the `views` package.
+
+.`LoginView.java`
+[source,java]
+----
+package com.example.application.views;
+
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.login.LoginForm;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route("login") // <1>
+@PageTitle("Login | Vaadin CRM")
+public class LoginView extends VerticalLayout implements BeforeEnterObserver {
+
+	private final LoginForm login = new LoginForm(); // <2> 
+
+	public LoginView(){
+		addClassName("login-view");
+		setSizeFull(); // <3>
+		setAlignItems(Alignment.CENTER); 
+		setJustifyContentMode(JustifyContentMode.CENTER);
+
+		login.setAction("login"); // <4>
+
+		add(new H1("Vaadin CRM"), login);
+	}
+
+	@Override
+	public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+		// inform the user about an authentication error
+		if(beforeEnterEvent.getLocation()  // <5>
+        .getQueryParameters()
+        .getParameters()
+        .containsKey("error")) {
+            login.setError(true);
+        }
+	}
+}
+----
+<1> Map the view to the `"login"` path. 
+`LoginView` should take up the whole browser window, so don't use `MainLayout` as the parent.
+<2> Instantiate a `LoginForm` component to capture username and password.
+<3> Make `LoginView` full size and center its content both horizontally and vertically, by calling setAlignItems(`Alignment.CENTER`) and setJustifyContentMode(`JustifyContentMode.CENTER`).
+<4> Set the `LoginForm` action to `"login"` to post the login form to Spring Security.
+<5> Read query parameters and show an error if a login attempt fails. 
+
+Build the application and navigate to http://localhost/login. You should see a centered login form. 
+
+image::images/login/login-form.png[Login view]
+
+== Setting up Spring Security to Handle Logins
+
+With the login screen in place, you now need to configure Spring Security to perform the authentication and to prevent unauthorized users from accessing views. 
+
+=== Installing Spring Security Dependencies
+
+Add the Spring Security dependency in `pom.xml`:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+----
+
+Check that the dependency is downloaded. 
+If you are unsure, run `./mvnw install` from the command line to download the dependency.
+
+Next, disable Spring MVC auto-configuration on the `Application` class, as this interferes with how Vaadin works and can cause strange reloading behavior.
+
+.`*Application.class*`
+[source,java]
+----
+@SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
+@NpmPackage(value = "lumo-css-framework", version = "^4.0.10")
+public class Application extends SpringBootServletInitializer {
+    ...
+}
+----
+
+=== Configuring Spring Security
+
+Create a new package `com.example.application.security` for classes related to security.
+
+In the new package, create the following classes using the code detailed below:
+
+* `SecurityUtils`: utility methods.
+* `CustomRequestCache`: a cache to keep track of unauthenticated requests.
+* `SecurityConfiguration`: Spring Security configuration.
+* `SecurityService`: a service for getting information about the logged-in user and logging them out.
+
+.Create Classes Automatically
+[TIP]
+====
+Paste the class code into the `security` package to have IntelliJ automatically create the class for you.
+====
+
+.`SecurityUtils.java`
+[source,java]
+----
+package com.example.application.security;
+
+import com.vaadin.flow.server.HandlerHelper.RequestType;
+import com.vaadin.flow.shared.ApplicationConstants;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.stream.Stream;
+
+public final class SecurityUtils {
+
+    private SecurityUtils() {
+        // Util methods only
+    }
+
+    static boolean isFrameworkInternalRequest(HttpServletRequest request) { // <1>
+        final String parameterValue = request.getParameter(ApplicationConstants.REQUEST_TYPE_PARAMETER);
+        return parameterValue != null
+            && Stream.of(RequestType.values())
+            .anyMatch(r -> r.getIdentifier().equals(parameterValue));
+    }
+
+    static boolean isUserLoggedIn() { // <2>
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null
+            && !(authentication instanceof AnonymousAuthenticationToken)
+            && authentication.isAuthenticated();
+    }
+}
+----
+<1> `isFrameworkInternalRequest()` determines if a request is internal to Vaadin.
+<2> `isUserLoggedIn()` checks if the current user is logged in.
+
+
+.`CustomRequestCache.java`
+[source,java]
+----
+package com.example.application.security;
+
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+class CustomRequestCache extends HttpSessionRequestCache {
+
+	@Override
+	public void saveRequest(HttpServletRequest request, HttpServletResponse response) { 
+		if (!SecurityUtils.isFrameworkInternalRequest(request)) {
+			super.saveRequest(request, response); // <1>
+		}
+	}
+}
+----
+<1> Saves unauthenticated requests, so that, once the user is logged in, you can redirect them to the page they were trying to access.
+
+.`SecurityConfig.java`
+[source,java]
+----
+package com.example.application.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+
+@EnableWebSecurity
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+  private static final String LOGIN_PROCESSING_URL = "/login";
+  private static final String LOGIN_FAILURE_URL = "/login?error";
+  private static final String LOGIN_URL = "/login";
+  private static final String LOGOUT_SUCCESS_URL = "/login";
+
+  /**
+   * Require login to access internal pages and configure login form.
+   */
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    // Vaadin handles CSRF internally
+    http.csrf().disable()
+
+        // Register our CustomRequestCache, which saves unauthorized access attempts, so the user is redirected after login.
+        .requestCache().requestCache(new CustomRequestCache())
+
+        // Restrict access to our application.
+        .and().authorizeRequests()
+
+        // Allow all Vaadin internal requests.
+        .requestMatchers(SecurityUtils::isFrameworkInternalRequest).permitAll()
+
+        // Allow all requests by logged-in users.
+        .anyRequest().authenticated()
+
+        // Configure the login page.
+        .and().formLogin()
+        .loginPage(LOGIN_URL).permitAll()
+        .loginProcessingUrl(LOGIN_PROCESSING_URL)
+        .failureUrl(LOGIN_FAILURE_URL)
+
+        // Configure logout
+        .and().logout().logoutSuccessUrl(LOGOUT_SUCCESS_URL);
+  }
+
+  @Bean
+  @Override
+  public UserDetailsService userDetailsService() { 
+    UserDetails user = User.withUsername("user")
+            .password("{noop}userpass")
+            .roles("USER")
+            .build();
+
+    return new InMemoryUserDetailsManager(user);
+  }
+
+  /**
+   * Allows access to static resources, bypassing Spring Security.
+   */
+  @Override
+  public void configure(WebSecurity web) {
+    web.ignoring().antMatchers(
+        // Client-side JS
+        "/VAADIN/**",
+
+        // the standard favicon URI
+        "/favicon.ico",
+
+        // the robots exclusion standard
+        "/robots.txt",
+
+        // web application manifest
+        "/manifest.webmanifest",
+        "/sw.js",
+        "/offline.html",
+
+        // icons and images
+        "/icons/**",
+        "/images/**",
+        "/styles/**",
+
+        // (development mode) H2 debugging console
+        "/h2-console/**");
+  }
+}
+----
+
+.Never use hard-coded credentials in production
+[WARNING]
+====
+Do not use hard-coded credentials in real applications. 
+You can change the Spring Security configuration to use an authentication provider for LDAP, JAAS, and other real-world sources. 
+https://dzone.com/articles/spring-security-authentication[Read more about Spring Security authentication providers].
+====
+
+=== Restricting Access to Vaadin Views
+
+Spring Security restricts access to content based on paths. 
+Vaadin applications are single-page applications. 
+This means that they do not trigger a full browser refresh when you navigate between views, even though the path does change.
+To secure a Vaadin application, you need to wire Spring Security to the Vaadin navigation system. 
+
+To do this, create a new class in the `security` package, `ConfigureUIServiceInitListener.java`.
+
+.`ConfigureUIServiceInitListener.java`
+[source,java]
+----
+package com.example.application.security;
+
+import com.example.application.views.LoginView;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.VaadinServiceInitListener;
+import org.springframework.stereotype.Component;
+
+@Component // <1>
+public class ConfigureUIServiceInitListener implements VaadinServiceInitListener {
+
+	@Override
+	public void serviceInit(ServiceInitEvent event) { // <2>
+		event.getSource().addUIInitListener(uiEvent -> { 
+			final UI ui = uiEvent.getUI();
+			ui.addBeforeEnterListener(this::authenticateNavigation);
+		});
+	}
+
+	private void authenticateNavigation(BeforeEnterEvent event) { // <3>
+		if (!LoginView.class.equals(event.getNavigationTarget())
+		    && !SecurityUtils.isUserLoggedIn()) { 
+			event.rerouteTo(LoginView.class);
+		}
+	}
+}
+----
+<1> The `@Component` annotation registers the listener. Vaadin will pick it up on startup.
+<2> In `serviceInit()`, listen for the initialization of the UI (the internal root component in Vaadin) and then add a listener before every view transition.
+<3> In `authenticateNavigation()`, reroute all requests to the login, if the user is not logged in.
+
+Finally, create a service for accessing user information and logging out. 
+Create `SecurityService.java` in the `security` package. 
+
+.`SecurityService.java`
+[source,java]
+----
+package com.example.application.security;
+
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.server.VaadinServletRequest;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.stereotype.Component;
+
+@Component
+public class SecurityService {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
+
+    public UserDetails getAuthenticatedUser() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Object principal = context.getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            return (UserDetails) context.getAuthentication().getPrincipal();
+        }
+        // Anonymous or no authentication.
+        return null;
+    }
+
+    public void logout() {
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(
+                VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
+                null);
+        UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
+    }
+}
+----
+
+== Adding a Logout Button
+
+You can now log in to the application. 
+The final thing that is needed is a logout button in the application header.
+
+In `MainLayout`, add a link to the header:
+
+.`MainLayout.java`
+[source,java]
+----
+package com.example.application.views;
+
+import com.example.application.security.SecurityService;
+import com.example.application.views.list.ListView;
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.HighlightConditions;
+import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.theme.Theme;
+
+@Theme(themeFolder = "flowcrmtutorial")
+public class MainLayout extends AppLayout {
+    private final SecurityService securityService;
+
+    public MainLayout(SecurityService securityService) { // <1>
+        this.securityService = securityService;
+        createHeader();
+        createDrawer();
+    }
+
+    private void createHeader() {
+        H1 logo = new H1("Vaadin CRM");
+        logo.addClassNames("text-l", "m-m");
+
+        Button logout = new Button("Log out", e -> securityService.logout()); // <2>
+
+        HorizontalLayout header = new HorizontalLayout(new DrawerToggle(), logo, logout); // <3>
+
+        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        header.expand(logo); // <4>
+        header.setWidth("100%");
+        header.addClassNames("py-0", "px-m");
+
+        addToNavbar(header);
+
+    }
+
+    private void createDrawer() {
+        RouterLink listLink = new RouterLink("List", ListView.class);
+        listLink.setHighlightCondition(HighlightConditions.sameLocation());
+
+        addToDrawer(new VerticalLayout(
+            listLink,
+            new RouterLink("Dashboard", DashboardView.class)
+        ));
+    }
+}
+----
+<1> Autowire the `SecurityService` and save it in a field.
+<2> Create a logout button that calls the `logout()` method in the service.
+<3> Add the button to the header layout.
+<4> Call `header.expand(logo)` to make the logo take up all the extra space in the layout. 
+This pushes the logout button to the far right.
+
+**Stop and restart the server to pick up the new Maven dependencies.** 
+You should now be able to log in and out of the app. 
+Verify that you can't access http://localhost/dashboard without being logged in.
+You can log in with:
+
+* Username: `user`
+* Password: `userpass`
+
+image::images/login/logout-button.png[Log out button on page]
+
+You have now built a full-stack CRM application with navigation and authentication. 
+In the next chapter, you'll learn how to turn it into a PWA to make it installable on mobile and desktop.
+
+include::{root}/articles/flow/tutorials/in-depth-course/_ebook-banner.adoc[opts=optional]
