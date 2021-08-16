@@ -5,7 +5,8 @@ import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.data.renderer.TemplateRenderer;
+import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDate;
@@ -19,10 +20,10 @@ public class GridRichContentSorting extends Div {
     public GridRichContentSorting() {
         // tag::snippet[]
         Grid<Person> grid = new Grid<>(Person.class, false);
-        grid.addColumn(createEmployeeTemplateRenderer()).setHeader("Employee")
+        grid.addColumn(createEmployeeRenderer()).setHeader("Employee")
                 .setAutoWidth(true).setFlexGrow(0)
                 .setComparator(Person::getLastName);
-        grid.addColumn(createBirthdayTemplateRenderer()).setHeader("Birthdate")
+        grid.addColumn(createBirthdayRenderer()).setHeader("Birthdate")
                 .setComparator(Person::getBirthday);
         // end::snippet[]
 
@@ -32,14 +33,14 @@ public class GridRichContentSorting extends Div {
         add(grid);
     }
 
-    private static TemplateRenderer<Person> createEmployeeTemplateRenderer() {
-        return TemplateRenderer.<Person>of(
+    private static Renderer<Person> createEmployeeRenderer() {
+        return LitRenderer.<Person>of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "  <vaadin-avatar img=\"[[item.pictureUrl]]\" name=\"[[item.fullName]]\"></vaadin-avatar>"
+                        + "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
                         + "  <vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
-                        + "    <span> [[item.fullName]] </span>"
+                        + "    <span> ${item.fullName} </span>"
                         + "    <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">"
-                        + "      [[item.email]]" + "    </span>"
+                        + "      ${item.email}" + "    </span>"
                         + "  </vaadin-vertical-layout>"
                         + "</vaadin-horizontal-layout>")
                 .withProperty("pictureUrl", Person::getPictureUrl)
@@ -47,11 +48,11 @@ public class GridRichContentSorting extends Div {
                 .withProperty("email", Person::getEmail);
     }
 
-    private static TemplateRenderer<Person> createBirthdayTemplateRenderer() {
-        return TemplateRenderer.<Person>of(
+    private static Renderer<Person> createBirthdayRenderer() {
+        return LitRenderer.<Person>of(
                 "<vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
-                        + "  <span>[[item.birthday]]</span>"
-                        + "  <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">Age: [[item.age]]</span>"
+                        + "  <span>${item.birthday}</span>"
+                        + "  <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">Age: ${item.age}</span>"
                         + "</vaadin-vertical-layout>").withProperty("birthday",
                 GridRichContentSorting::getFormattedPersonBirthday)
                 .withProperty("age", GridRichContentSorting::getPersonAge);

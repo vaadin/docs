@@ -24,5 +24,8 @@ import '@vaadin/flow-frontend/selectConnector.js';
 import '@vaadin/flow-frontend/timepickerConnector.js';
 import '@vaadin/flow-frontend/virtualListConnector.js';
 
+// Lit renderer
+import '@vaadin/flow-frontend/lit-renderer.ts';
+
 // Legacy template renderer
 import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js';
