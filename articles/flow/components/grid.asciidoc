@@ -347,7 +347,7 @@ grid.setSortableColumns("name", "yearOfBirth");
 
 === Column Headers and Footers
 
-By default, columns do not have a header or footer. These need to be set explicitly using the `setHeader` and `setFooter` methods. Both methods have two overloads: one accepts a plain text string and the other a `TemplateRenderer`.
+By default, columns do not have a header or footer. These need to be set explicitly using the `setHeader` and `setFooter` methods. Both methods have two overloads: one accepts a plain text string and the other a `LitRenderer`.
 
 *Examples*: Setting headers and footers.
 
@@ -364,7 +364,7 @@ nameColumn.setFooter("Name");
 nameColumn.setFooter(new Html("<b>Name</b>"));
 ----
 
-See <<Using Template Renderers>> for more.
+See <<Using Lit Renderers>> for more.
 
 === Column Reordering
 
@@ -461,7 +461,7 @@ You can configure columns to use a renderer to show the data in the cells.
 Conceptually, there are three types of renderer:
 
 . *Basic renderer*: Renders basic values, such as dates and numbers.
-. *Template renderer*: Renders content using HTML markup and Polymer data-binding syntax.
+. *Lit renderer*: Renders content using HTML markup and Lit data-binding syntax.
 . *Component renderer*: Renders content using arbitrary components.
 
 === Using Basic Renderers
@@ -578,39 +578,39 @@ grid.addColumn(new NativeButtonRenderer<>(
 );
 ----
 
-=== Using Template Renderers
+=== Using Lit Renderers
 
-Providing a `TemplateRenderer` for a column allows you to define the content of cells using HTML markup, and to use Polymer notations for data binding and event handling.
+Providing a `LitRenderer` for a column allows you to define the content of cells using HTML markup, and to use Lit notations for data binding and event handling.
 
-*Example*: Using `TemplateRenderer` to bold the names of the persons.
+*Example*: Using `LitRenderer` to bold the names of the persons.
 
 [source,java]
 ----
 Grid<Person> grid = new Grid<>();
 grid.setItems(people);
 
-grid.addColumn(TemplateRenderer
-       .<Person>of("<b>[[item.name]]</b>")
+grid.addColumn(LitRenderer
+       .<Person>of("<b>${item.name}</b>")
        .withProperty("name", Person::getName)
 ).setHeader("Name");
 ----
 
-* The template string is passed for the static `TemplateRenderer.of()` method.
+* The template string is passed for the static `LitRenderer.of()` method.
 * Every property in the template needs to be defined in the `withProperty()` method.
-* `\[[item.name]]` is Polymer syntax for binding properties for a list of items.
-See the https://polymer-library.polymer-project.org/3.0/api/elements/dom-repeat[Polymer 3 documentation] for more.
-* When using a custom web-component or a Vaadin element in a template renderer, remember to import the component. This can be done using link:https://vaadin.com/api/platform/com/vaadin/flow/component/dependency/JsModule.html[`@JsModule`]  or link:https://vaadin.com/api/platform/com/vaadin/flow/component/dependency/Uses.html[`@Uses`], if the component has a server-side counterpart. This will ensure all StyleSheet, HtmlImport, JavaScript dependencies for the component are loaded when the Grid is used.
+* `${item.name}` is the Lit syntax for interpolating properties into the template.
+See the https://lit.dev/docs/templates/overview/[Lit documentation] for more.
+* When using a custom Web Component or a Vaadin element in a Lit renderer, remember to import the component. This can be done using link:https://vaadin.com/api/platform/com/vaadin/flow/component/dependency/JsModule.html[`@JsModule`]  or link:https://vaadin.com/api/platform/com/vaadin/flow/component/dependency/Uses.html[`@Uses`], if the component has a server-side counterpart. This will ensure all StyleSheet, HtmlImport, JavaScript dependencies for the component are loaded when the Grid is used.
 
 ==== Creating Custom Properties
 
-You can use a `TemplateRenderer` to create and display new properties (i.e. properties the item did not originally contain).
+You can use a `LitRenderer` to create and display new properties (i.e. properties the item did not originally contain).
 
-*Example*: Using `TemplateRenderer` to compute the approximate age of each person and add it in a new column. Age is the current year less the birth year.
+*Example*: Using `LitRenderer` to compute the approximate age of each person and add it in a new column. Age is the current year less the birth year.
 
 [source,java]
 ----
-grid.addColumn(TemplateRenderer
-        .<Person>of("[[item.age]] years old")
+grid.addColumn(LitRenderer
+        .<Person>of("${item.age} years old")
         .withProperty("age",
                 person -> Year.now().getValue()
                         - person.getYearOfBirth())
@@ -624,30 +624,44 @@ If an object contains a bean property that has sub properties, it is only necess
 *Example*: Using the `withProperty()` method to access numerous sub properties. Assumes `Person` has a field for the `Address` bean, which has `street`, `number` and `postalCode` fields with corresponding getter and setter methods.
 [source,java]
 ----
-grid.addColumn(TemplateRenderer.<Person>of(
-        "<div>[[item.address.street]], number " +
-        "[[item.address.number]]<br>" +
-        "<small>[[item.address.postalCode]]</small>" +
+grid.addColumn(LitRenderer.<Person>of(
+        "<div>${item.address.street}, number " +
+        "${item.address.number}<br>" +
+        "<small>${item.address.postalCode}</small>" +
         "</div>")
         .withProperty("address", Person::getAddress))
     .setHeader("Address");
 ----
 
-==== Handling Events
+==== Using JavaScript Expressions
 
-You can define event handlers for the elements in your template, and hook them to server-side code, by calling the `withEventHandler()` method on your `TemplateRenderer`. This is useful for editing items in the grid.
+Lit templates can include any type of JavaScript expressions, not limited to binding single property values.
 
-*Example*: Using the `withEventHandler()` method to map defined method names to server-side code. The snippet adds a new column with two buttons: one to edit a property of the item and one to remove the item. Both buttons define a method to call for `on-click` events.
+*Example*: By evaluating the persons age in the template expression, the age column could also be written as:
 
 [source,java]
 ----
-grid.addColumn(TemplateRenderer.<Person>of(
-     "<button on-click='handleUpdate'>Update</button>" +
-     "<button on-click='handleRemove'>Remove</button>")
-    .withEventHandler("handleUpdate", person -> {
+grid.addColumn(LitRenderer
+        .<Person>of("${new Date().getFullYear() - item.yearOfBirth} years old")
+        .withProperty("yearOfBirth", Person::getYearOfBirth);
+).setHeader("Age");
+----
+
+==== Handling Events
+
+You can define event handlers for the elements in your template, and hook them to server-side code, by calling the `withFunction()` method on your `LitRenderer`. This is useful for editing items in the grid.
+
+*Example*: Using the `withFunction()` method to map defined method names to server-side code. The snippet adds a new column with two buttons: one to edit a property of the item and one to remove the item. Both buttons define a method to call for `click` events.
+
+[source,java]
+----
+grid.addColumn(LitRenderer.<Person>of(
+     "<button @click=\"${handleUpdate}\">Update</button>" +
+     "<button @click=\"${handleRemove}\">Remove</button>")
+    .withFunction("handleUpdate", person -> {
         person.setName(person.getName() + " Updated");
         grid.getDataProvider().refreshItem(person);
-    }).withEventHandler("handleRemove", person -> {
+    }).withFunction("handleRemove", person -> {
         ListDataProvider<Person> dataProvider =
             (ListDataProvider<Person>) grid
                 .getDataProvider();
@@ -658,9 +672,26 @@ grid.addColumn(TemplateRenderer.<Person>of(
 
 * When the server-side data used by the grid is edited, the grid's `DataProvider` is refreshed by calling the `refreshItem()` method. This ensures the changes show up in the element.
 * When an item is removed, the `refreshAll()` method call ensures that all the data is updated.
-* You need to use Polymer notations for event handlers. `on-click` (with a dash) is Polymer syntax for the native `onclick`.
-* `TemplateRenderer` has a fluent API, so you can chain the commands, like
-`TemplateRenderer.of().withProperty().withProperty().withEventHandler()...`
+* You need to use Lit notation for event handlers. `@click` is Lit syntax for the native `click`.
+* `LitRenderer` has a fluent API, so you can chain the commands, like
+`LitRenderer.of().withProperty().withProperty().withFunction()...`
+
+The `withFunction()` method can also receive additional parameters.
+The additional parameters can be accessed in the handler as the second parameter (of type `JsonArray`).
+
+*Example*:
+
+[source,java]
+----
+grid.addColumn(LitRenderer.<Person>of(
+     "<input .value=\"${item.profession}\" @change=\"${e => changed(e.target.value)}\">")
+    .withFunction("changed", (person, params) -> {
+        String profession = params.getString(0);
+        person.setProfession(profession);
+        grid.getDataProvider().refreshItem(person);
+    }).withProperty("profession", Person::getProfession));
+----
+
 
 === Using Component Renderers
 
@@ -750,7 +781,7 @@ See <<../binding-data/data-provider#,Data Providers>> for more.
 
 The `Grid` supports expanding rows that reveal more detail about the items. The additional information is hidden, unless the user choses to reveal it, keeping the grid appearance clean and simple, while simultaneously allowing detailed explanations.
 
-You can enable expanding rows using the `setItemDetailsRenderer()` method, which allows either a `TemplateRenderer` or a `ComponentRenderer` to define how the details are rendered.
+You can enable expanding rows using the `setItemDetailsRenderer()` method, which allows either a `LitRenderer` or a `ComponentRenderer` to define how the details are rendered.
 
 *Example*: Using the `setItemDetailsRenderer` method with a `ComponentRenderer`.
 
@@ -824,21 +855,21 @@ grid.addColumn(person -> person.getName() + " " +
 
 * With multiple properties, the `QuerySortOrder` objects are created in the order they are declared.
 
-You can also use use properties created for your `TemplateRenderer`.
+You can also use use properties created for your `LitRenderer`.
 
-*Example*: Using the `addColumn` method with `TemplateRenderer` to set column sort properties.
+*Example*: Using the `addColumn` method with `LitRenderer` to set column sort properties.
 
 [source,java]
 ----
-grid.addColumn(TemplateRenderer.<Person> of(
-        "<div>[[item.name]]<br>" +
-        "<small>[[item.email]]</small></div>")
+grid.addColumn(LitRenderer.<Person>of(
+        "<div>${item.name}<br>" +
+        "<small>${item.email}</small></div>")
         .withProperty("name", Person::getName)
         .withProperty("email", Person::getEmail),
     "name", "email")
     .setHeader("Person");
 ----
-* For in-memory sorting to work correctly, the values returned by the `ValueProviders` in the `TemplateRenderer`
+* For in-memory sorting to work correctly, the values returned by the `ValueProviders` in the `LitRenderer`
 (`Person::getName` and `Person::getEmail` in this example) should implement `Comparable`.
 * The names of the sort properties must match the names of the properties in the template (set via `withProperty`).
 
