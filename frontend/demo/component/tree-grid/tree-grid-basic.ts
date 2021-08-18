@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -28,7 +27,7 @@ export class Example extends LitElement {
     callback: GridDataProviderCallback<Person>
   ) {
     // The requested page and the full length of the corresponding
-    // hierarhcy level is requested from the data service
+    // hierarchy level is requested from the data service
     const { people, hierarchyLevelSize } = await getPeople({
       count: params.pageSize,
       startIndex: params.page * params.pageSize,

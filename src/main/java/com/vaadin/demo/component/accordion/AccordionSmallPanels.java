@@ -2,6 +2,7 @@ package com.vaadin.demo.component.accordion;
 
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
+import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -24,7 +25,7 @@ public class AccordionSmallPanels extends Div {
         personalInformationLayout.setPadding(false);
 
         AccordionPanel personalInfoPanel = accordion.add("Personal information", personalInformationLayout);
-        personalInfoPanel.setThemeName("small");
+        personalInfoPanel.addThemeVariants(DetailsVariant.SMALL);
 
         Span street = new Span("4027 Amber Lake Canyon");
         Span zipCode = new Span("72333-5884 Cozy Nook");
@@ -36,7 +37,7 @@ public class AccordionSmallPanels extends Div {
         billingAddressLayout.add(street, zipCode, city);
         
         AccordionPanel billingAdressPanel = accordion.add("Billing address", billingAddressLayout);
-        billingAdressPanel.setThemeName("small");
+        billingAdressPanel.addThemeVariants(DetailsVariant.SMALL);
 
         Span cardBrand = new Span("Mastercard");
         Span cardNumber = new Span("1234 5678 9012 3456");
@@ -49,7 +50,7 @@ public class AccordionSmallPanels extends Div {
         
         // tag::snippet[]
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
-        paymentPanel.setThemeName("small");
+        paymentPanel.addThemeVariants(DetailsVariant.SMALL);
         // end::snippet[]
 
         add(accordion);

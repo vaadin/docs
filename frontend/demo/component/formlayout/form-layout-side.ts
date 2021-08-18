@@ -21,6 +21,8 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-form-layout>
+        <!-- Wrap fields into form items, which 
+             displays labels on the side by default -->
         <vaadin-form-item>
           <label slot="label">Revenue</label>
           <vaadin-text-field>

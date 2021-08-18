@@ -28,7 +28,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog
-        aria-label="simple"
+        aria-label="System maintenance notice"
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
         .renderer="${guard([], () => (root: HTMLElement) => {
