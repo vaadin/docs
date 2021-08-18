@@ -617,6 +617,20 @@ grid.addColumn(LitRenderer
 ).setHeader("Age");
 ----
 
+==== Using Expressions
+
+Lit templates can include any type of JavaScript expressions, not limited to binding single property values.
+
+*Example*: By evaluating the persons age in the template expression, the age column could also be written as:
+
+[source,java]
+----
+grid.addColumn(LitRenderer
+        .<Person>of("${new Date().getFullYear() - item.yearOfBirth} years old")
+        .withProperty("yearOfBirth", Person::getYearOfBirth);
+).setHeader("Age");
+----
+
 ==== Binding Beans
 
 If an object contains a bean property that has sub properties, it is only necessary to make the bean accessible by calling the `withProperty()` method. The sub properties become accessible automatically.
@@ -631,20 +645,6 @@ grid.addColumn(LitRenderer.<Person>of(
         "</div>")
         .withProperty("address", Person::getAddress))
     .setHeader("Address");
-----
-
-==== Using JavaScript Expressions
-
-Lit templates can include any type of JavaScript expressions, not limited to binding single property values.
-
-*Example*: By evaluating the persons age in the template expression, the age column could also be written as:
-
-[source,java]
-----
-grid.addColumn(LitRenderer
-        .<Person>of("${new Date().getFullYear() - item.yearOfBirth} years old")
-        .withProperty("yearOfBirth", Person::getYearOfBirth);
-).setHeader("Age");
 ----
 
 ==== Handling Events
@@ -676,8 +676,8 @@ grid.addColumn(LitRenderer.<Person>of(
 * `LitRenderer` has a fluent API, so you can chain the commands, like
 `LitRenderer.of().withProperty().withProperty().withFunction()...`
 
-The `withFunction()` method can also receive additional parameters.
-The additional parameters can be accessed in the handler as the second parameter (of type `JsonArray`).
+The `withFunction()` method can also receive more data in addition to the item.
+The additional data can be accessed via the second handler parameter (of type `JsonArray`).
 
 *Example*:
 
@@ -685,13 +685,15 @@ The additional parameters can be accessed in the handler as the second parameter
 ----
 grid.addColumn(LitRenderer.<Person>of(
      "<input .value=\"${item.profession}\" @change=\"${e => changed(e.target.value)}\">")
-    .withFunction("changed", (person, params) -> {
-        String profession = params.getString(0);
+    .withFunction("changed", (person, args) -> {
+        String profession = args.getString(0);
         person.setProfession(profession);
         grid.getDataProvider().refreshItem(person);
     }).withProperty("profession", Person::getProfession));
 ----
 
+* The functions defined by the `withFunction()` method are can be called with any number of additional parameters.
+* The additional argument of type `String` (the updated profession) is obtained from the second handler parameter with `args.getString(0)`, where the number is the index of the argument in the `JsonArray`.
 
 === Using Component Renderers
 
