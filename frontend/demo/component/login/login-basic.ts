@@ -27,7 +27,8 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-login-form></vaadin-login-form>
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
+      <vaadin-login-form no-autofocus></vaadin-login-form>
       <!-- end::snippet[] -->
     `;
   }
