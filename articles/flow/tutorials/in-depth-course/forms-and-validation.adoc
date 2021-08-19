@@ -1,0 +1,203 @@
+---
+title: Forms and Validation
+order: 70
+page-title: "Creating a form in Vaadin: data binding and validation"
+description: Learn how to use Binder to bind a data object to input fields and validate input.
+---
+
+= Vaadin Forms: Data Binding and Validation
+
+In the <<./creating-a-component#,Creating a Component>> chapter, you created the input fields and buttons that you need for editing contacts. 
+In this chapter, you will bind those inputs to a `Contact` object to create a fully functional form with validation.
+
+This chapter covers:
+
+* Creating a Vaadin Binder.
+* Binding input fields.
+* Field validation.
+
+== Using Vaadin Binder to Create a Form and Validate Input
+
+A form is a collection of input fields that are connected to a data model, a `Contact` in this case. 
+Forms validate user input and make it easy to get an object populated with input values from the UI. 
+
+It binds UI fields to data object fields by name. 
+For instance, it takes a UI field named `firstName` and maps it to the `firstName` field of the data object, and the `lastName` field to the `lastName` field, and so on. 
+This is why the field names in `Contact` and `ContactForm` are the same. 
+Vaadin uses the <<../../binding-data/components-binder#,`Binder`>> class to build forms.
+
+.Advanced Binder API
+[NOTE]
+====
+Binder also supports an <<../../binding-data/components-binder-validation#,advanced API>> where you can configure data conversions and additional validation rules, but for this application, the simple API is sufficient.
+
+Binder can use validation rules that are defined on the data object in the UI. 
+This means you can run the same validations both in the browser and before saving to the database, without duplicating code. 
+====
+
+=== Defining Bean Validation Rules in Java
+
+You can define data validation rules as Java Bean Validation annotations on the Java class.
+
+You can see all the applied validation rules by inspecting `Contact.java`. The validations are placed above the field declarations like this:
+
+[source,java]
+----
+@Email
+@NotEmpty
+private String email = "";
+----
+
+== Creating the Binder
+
+Instantiate a Binder and use it to bind the input fields:
+
+.`ContactForm.java`
+[source,java]
+----
+// Other fields omitted
+Binder<Contact> binder = new BeanValidationBinder<>(Contact.class); // <1>
+
+public ContactForm(List<Company> companies, List<Status> statuses) {
+    addClassName("contact-form");
+    binder.bindInstanceFields(this); // <2>
+    // Rest of constructor omitted
+}
+----
+<1> `BeanValidationBinder` is a `Binder` that is aware of bean validation annotations. 
+By passing it in the `Contact.class`, you define the type of object you are binding to.
+<2> `bindInstanceFields()` matches fields in `Contact` and `ContactForm` based on their names.
+
+With these two lines of code, you've readied the UI fields to be connected to a contact. 
+That's the next step.
+
+== Setting the Contact
+
+Next, you need to create a setter for the `contact`. 
+Unlike the companies and statuses, it can change over time as a user browses through the contacts.
+
+To do this, add the following in the `ContactForm` class: 
+
+.`ContactForm.java`
+[source,java]
+----
+public class ContactForm extends FormLayout {
+    private Contact contact;
+
+    // other methods and fields omitted
+
+    public void setContact(Contact contact) {
+        this.contact = contact; // <1>
+        binder.readBean(contact); // <2>
+    }
+}
+----
+<1> Save a reference to the contact, so you can save the form values back into it later.
+<2> Calls `binder.readBean()` to bind the values from the contact to the UI fields. 
+`readBean()` copies the values from the contact to an internal model; that way you don't overwrite values if you cancel editing.
+
+== Setting up Component Events
+
+Vaadin comes with an event-handling system for components. 
+You have already used it to listen to value-change events from the filter TextField in the main view. 
+The form component should have a similar way of informing parent components of events. 
+The events you will fire are:
+
+* `SaveEvent`
+* `DeleteEvent`
+* `CloseEvent`
+
+Add the following code at the end of the `ContactForm` class to define the new events:
+
+.`ContactForm.java`
+[source,java]
+----
+// Events
+public static abstract class ContactFormEvent extends ComponentEvent<ContactForm> {
+  private Contact contact;
+
+  protected ContactFormEvent(ContactForm source, Contact contact) { // <1>
+    super(source, false);
+    this.contact = contact;
+  }
+
+  public Contact getContact() {
+    return contact;
+  }
+}
+
+public static class SaveEvent extends ContactFormEvent {
+  SaveEvent(ContactForm source, Contact contact) {
+    super(source, contact);
+  }
+}
+
+public static class DeleteEvent extends ContactFormEvent {
+  DeleteEvent(ContactForm source, Contact contact) {
+    super(source, contact);
+  }
+
+}
+
+public static class CloseEvent extends ContactFormEvent {
+  CloseEvent(ContactForm source) {
+    super(source, null);
+  }
+}
+
+public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
+    ComponentEventListener<T> listener) { // <2>
+  return getEventBus().addListener(eventType, listener);
+}
+----
+<1> `ContactFormEvent` is a common superclass for all the events. 
+It contains the `contact` that was edited or deleted. 
+<2> The `addListener()` method uses Vaadin's event bus to register the custom event types. 
+Select the `com.vaadin` import for `Registration` if IntelliJ asks.
+
+== Saving, Deleting, and Closing the Form
+
+With the event types defined, you can now inform anyone using `ContactForm` of relevant events.
+
+To add `save`, `delete`, and `close` event listeners, add the following to the `ContactForm` class:
+
+.`ContactForm.java`
+[source,java]
+----
+private Component createButtonsLayout() {
+  save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+  delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+  close.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+  save.addClickShortcut(Key.ENTER); 
+  close.addClickShortcut(Key.ESCAPE);
+
+  save.addClickListener(event -> validateAndSave()); // <1> 
+  delete.addClickListener(event -> fireEvent(new DeleteEvent(this, contact))); // <2>
+  close.addClickListener(event -> fireEvent(new CloseEvent(this))); // <3>
+
+  binder.addStatusChangeListener(e -> save.setEnabled(binder.isValid())); // <4>
+  return new HorizontalLayout(save, delete, close);
+}
+
+private void validateAndSave() {
+  try {
+    binder.writeBean(contact); // <5>
+    fireEvent(new SaveEvent(this, contact)); // <6>
+  } catch (ValidationException e) {
+    e.printStackTrace();
+  }
+}
+----
+<1> The *save* button calls the `validateAndSave()` method.
+<2> The *delete* button fires a delete event and passes the active contact.
+<3> The *cancel* button fires a close event.
+<4> Validates the form every time it changes. If it is invalid, it disables the *save* button to avoid invalid submissions.
+<5> Write the form contents back to the original `contact`.
+<6> Fire a save event, so the parent component can handle the action.
+
+Build the project and verify that it compiles. 
+There are no visible changes yet. 
+In the next chapter, you will connect the form to the list view to complete the first view.
+
+include::{root}/articles/flow/tutorials/in-depth-course/_ebook-banner.adoc[opts=optional]
