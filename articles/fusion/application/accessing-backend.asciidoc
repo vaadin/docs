@@ -25,22 +25,7 @@ An endpoint is a Java class annotated with `@Endpoint`:
 
 [source,java]
 ----
-import com.vaadin.fusion.Endpoint;
-import com.vaadin.flow.server.auth.AnonymousAllowed;
-
-/**
- * A Vaadin endpoint that counts numbers.
- */
-@Endpoint
-@AnonymousAllowed
-public class CounterEndpoint {
-    /**
-     * A method that adds one to the argument.
-     */
-    public int addOne(int number) {
-        return number + 1;
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CounterEndpoint.java[tags=snippet]
 ----
 
 When the application starts, Vaadin scans the classpath for `@Endpoint`-annotated classes.
@@ -60,27 +45,18 @@ This syntax has the following properties:
 
 - A module supports top-level `import` statements, which load and execute other modules, and can bring exported declarations.
 
-The following example demonstrates the `City.ts` module:
+The following example demonstrates the `city.ts` module:
 
-.`City.ts`
+.`city.ts`
 [source,typescript]
 ----
-// Declare and export an interface
-export default interface City {
-  country: string;
-}
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-info/city.d.ts[]
 ----
 
 .`index.ts`
 [source,typescript]
 ----
-// Import and use a declaration from another module
-import { City } from './City';
-const cityObject: City = {
-    name: "Turku",
-    country: "Finland"
-};
-// Note: cityObject is not exported, thus it is only available in this file
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-info/index.ts[]
 ----
 
 In Vaadin applications, the `index.ts` (or, optionally, `index.js`) file is also a module.
@@ -90,28 +66,29 @@ In Vaadin applications, the `index.ts` (or, optionally, `index.js`) file is also
 Fusion generates a TypeScript module for every Vaadin endpoint on the backend.
 Each such module exports all the methods in the endpoint.
 
-You can either import an entire module at once or select individual endpoint methods.
+You can either import an entire module from the https://basarat.gitbook.io/typescript/main-1/barrel[barrel] file, import all methods as a module from the endpoint file, or select individual endpoint methods.
 For example, the `CounterEndpoint.ts` could be used as in the following snippets:
 
-.`index.ts` (import the whole endpoint module object)
+.`index.ts` (import the whole endpoint module object from the barrel file)
 [[index.ts]]
 [source,typescript]
 ----
-// Other imports
-import { CounterEndpoint } from 'Frontend/generated/CounterEndpoint';
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/barrel.ts[]
+----
 
-// Other code
-CounterEndpoint.addOne(1).then(result => console.log(result));
+[NOTE]
+Barrel file exports all the endpoints at once, so you can import multiple endpoints using a single import.
+
+.`index.ts` (import all imports as an endpoint object)
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/asterisk.ts[]
 ----
 
 .`index.ts` (import a single endpoint method)
 [source,typescript]
 ----
-// Other imports
-import { addOne } from 'Frontend/generated/CounterEndpoint';
-
-// Other code
-addOne(1).then(result => console.log(result));
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/method.ts[]
 ----
 
 .The “Frontend” directory alias
@@ -119,7 +96,7 @@ addOne(1).then(result => console.log(result));
 ====
 The `'Frontend/'` path prefix is an alias for the `{project.basedir}/frontend` directory in your application project.
 
-Vaadin has this path alias in <<basics#Configuring TypeScript Compiler,the default TypeScript compiler configuration>> (`tsconfig.json`), as well as in the generated webpack configuration file (`webpack.generated.js`).
+Vaadin has this path alias in <<basics#Configuring TypeScript Compiler,the default TypeScript compiler configuration>> (`tsconfig.json`); webpack configuration file (`webpack.generated.js`) respects the `tsconfig` aliases by default.
 
 Using this path alias is recommended, as it allows for absolute import paths, rather than traversing the directory hierarchy in relative imports.
 ====
@@ -135,29 +112,86 @@ For more information about supported types, see <<../advanced/type-conversion#, 
 == Example TypeScript Module Contents
 
 For example, the generated TypeScript module for the Java endpoint defined in
- <<accessing-backend#how-to-create-vaadin-endpoint,CounterEndpoint.java>> would look as follows:
+<<accessing-backend#how-to-create-vaadin-endpoint,CounterEndpoint.java>> would look as follows:
 
 .`CounterEndpoint.ts`
 [source,typescript]
 ----
-/**
- * A Vaadin endpoint that counts numbers.
- *
- * This module has been generated from CounterEndpoint.java
- * @module CounterEndpoint
- */
-
-import client from 'Frontend/connect-client.default';
-
-/**
- * A method that adds one to the argument.
- *
- * @param number
- */
-export async function addOne(number: number) {
-  return await client.call('CounterEndpoint', 'addOne', {number});
-}
+include::{root}/frontend/generated/CounterEndpoint.ts[]
 ----
+
+== Entities
+
+An Endpoint method can return or receive a parameter as an entity (non-primitive type).
+In this case, the generator also creates a TypeScript interface for the entity.
+
+Entity can be defined in the following ways:
+
+- In a separate class that belongs to the project.
+
+- In a class that belongs to the project dependency.
+
+- In an inner class (of an endpoint or any other class).
+
+.`City.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/City.java[]
+----
+
+.`CountryEndpoint.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CountryEndpoint.java[]
+----
+
+The TypeScript output is the following:
+
+.`City.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/City.ts[]
+----
+
+.`Query.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/CountryEndpoint/Query.ts[]
+----
+
+.`CountryEndpoint.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/CountryEndpoint.ts[]
+----
+
+=== Read-Only Access
+
+According to TypeScript best practices, the data in the application must be immutable.
+You shouldn't mutate your data implicitly, especially if the data came from the backend.
+Due to it, all the generated entities provide read-only access to their properties.
+All collections are immutable as well.
+If you want to change the data, it is better to create a new structure and make a shallow copy of the original.
+For arrays, you can also use array immutable operators: `filter`, `map`, `reduce`, etc.
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/immutability.ts[tags=snippet]
+----
+
+However, sometimes it may be necessary to mutate the data or send it to a method that accepts only mutable structures (it often happens to `ReadonlyArray` that cannot be implicitly cast to the `Array`).
+In this case, you can cast the data structure manually.
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/readonly-to-mutable.ts[tags=snippet]
+----
+
+Instead of declaring `Mutable` helper by hands, you can also use the https://github.com/sindresorhus/type-fest[type-fest] library which provides it along with many other useful type helpers.
+
+=== Nullable and Non-Nullable Types
+
+Please refer to <<../advanced/endpoints-generator#Type Nullability, Type Nullability>> to get more information about nullability algorithm works and how to make types non-nullable.
 
 == Code Completion in IDEs
 
