@@ -10,8 +10,8 @@ export default class Example extends LitElement {
     script.onload = () => (window as any).haas.loader.initMenu();
     script.src =
       window.location.hostname == 'preview.vaadin.com'
-        ? 'https://preview.vaadin.com/vaadincom/haas-service/haas-loader.js'
-        : 'https://vaadin.com/vaadincom/haas-service/haas-loader.js';
+        ? 'https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js'
+        : 'https://vaadin.com/vaadincom/haas-service/v2/haas-loader.js';
     return script;
   }
 

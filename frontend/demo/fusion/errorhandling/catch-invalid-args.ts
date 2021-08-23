@@ -1,6 +1,6 @@
 import { EndpointValidationError } from '@vaadin/flow-frontend';
 
-import { DateEndpoint } from 'Frontend/generated/DateEndpoint';
+import { DateEndpoint } from 'Frontend/generated/endpoints';
 
 export async function callEndpoint() {
   try {
