@@ -51,7 +51,7 @@ export class Example extends LitElement {
           img="${model.item.pictureUrl}"
           name="${model.item.firstName} ${model.item.lastName}"
           alt="User avatar"
-        />
+        ></vaadin-avatar>
       `,
       root
     );

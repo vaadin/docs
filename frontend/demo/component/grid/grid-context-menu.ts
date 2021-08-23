@@ -36,7 +36,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   private contextMenuRenderer =
     () => (root: HTMLElement, elem: ContextMenuElement, context: ContextMenuRendererContext) => {
-      const { sourceEvent } = context.detail! as { sourceEvent: Event };
+      const { sourceEvent } = context.detail as { sourceEvent: Event };
       const grid = elem.firstElementChild as GridElement<Person>;
 
       const eventContext = grid.getEventContext(sourceEvent);

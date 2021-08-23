@@ -112,7 +112,12 @@ export class LoginOverlayMockupElement extends LitElement {
             <p part="description">${this.description}</p>
           </div>
           <div part="form">
-            <vaadin-login-form .error="${this.error}" .i18n="${this.i18n}"></vaadin-login-form>
+            <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
+            <vaadin-login-form
+              .error="${this.error}"
+              .i18n="${this.i18n}"
+              no-autofocus
+            ></vaadin-login-form>
           </div>
         </section>
       </div>

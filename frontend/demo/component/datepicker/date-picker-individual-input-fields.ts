@@ -45,14 +45,14 @@ export class Example extends LitElement {
   selectableDays: number[] = [];
 
   private handleYearChange(e: ComboBoxSelectedItemChangedEvent<number>) {
-    this.selectedYear = e.detail.value;
+    this.selectedYear = e.detail.value!;
     this.selectedMonth = undefined;
     this.selectedDay = undefined;
     this.selectableDays = [];
   }
 
   private handleMonthChange(e: ComboBoxSelectedItemChangedEvent<string>) {
-    this.selectedMonth = e.detail.value;
+    this.selectedMonth = e.detail.value!;
     this.selectedDay = undefined;
 
     if (!this.selectedYear || !this.selectedMonth) {
@@ -67,7 +67,7 @@ export class Example extends LitElement {
   }
 
   private handleDayChange(e: ComboBoxSelectedItemChangedEvent<number>) {
-    this.selectedDay = e.detail.value;
+    this.selectedDay = e.detail.value!;
   }
 
   render() {
