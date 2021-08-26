@@ -14,7 +14,9 @@ import '@vaadin/vaadin-lumo-styles/spacing';
 // tag::style[]
 import '@vaadin/vaadin-lumo-styles/style';
 // end::style[]
-
+import { includeModule } from './include-module'; // hidden-source-line
 import { applyTheme } from 'Frontend/generated/theme'; // hidden-source-line
+// prettier-ignore
+includeModule('lumo-color', (css) => `[theme~="dark"] ${css.split("[theme~='dark']")[1].split('}')[0]} }`); // hidden-source-line
 applyTheme(document); // hidden-source-line
 window.dispatchEvent(new CustomEvent('custom-properties-changed')); // hidden-source-line
