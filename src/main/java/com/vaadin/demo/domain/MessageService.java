@@ -6,8 +6,11 @@ import java.util.stream.Stream;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 
 @SpringComponent
-public interface MessageService {
-    Stream<Message> findAllByTopicSince(String topic, Instant since);
+public class MessageService {
+    public Stream<Message> findAllByTopicSince(String topic, Instant since) {
+        return null;
+    }
 
-    void save(Message message);
+    public void save(Message message) {
+    }
 }
