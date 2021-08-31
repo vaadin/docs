@@ -42,7 +42,7 @@ currentMajorRelease=$2
 major=`getMajorVersion $1`
 [[ $version =~ (alpha|beta|rc) ]] && prerelease=true || prerelease=false
 
-if [ !$prerelease ] && [ "$major" = 14 ]
+if [ $prerelease = false ] && [ "$major" = 14 ]
 then
   echo "Updating files in the V14 branch"
   `updateV14Branch $version`
@@ -51,7 +51,7 @@ fi
 echo $currentMajorRelease
 echo $major
 
-if [ !$prerelease ] && [ $major = $currentMajorRelease ]
+if [ $prerelease = false ] && [ $major = $currentMajorRelease ]
 then
   echo "updating files in the Latest branch"
   `updateLatestBranch $version`
