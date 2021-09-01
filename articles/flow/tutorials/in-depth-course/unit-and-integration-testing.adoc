@@ -1,8 +1,8 @@
 ---
 title: Unit and Integration Testing
-order: 140
+order: 120
 page-title: "Testing Vaadin Flow apps with jUnit"
-description: Learn how to run unit and integration tests on Vaadin Flow apps
+description: Learn how to run unit and integration tests on Vaadin Flow apps.
 ---
 
 = Testing Vaadin With Unit and Integration Tests
@@ -22,13 +22,10 @@ End-to-end tests require the application to be deployed and are run in a browser
 In this chapter, you write and run unit and integration tests.
 The tutorial covers end-to-end tests in the next chapter.
 
-video::zz3AcFpXSFI[youtube]
-
-
-== Creating and Running Unit Tests For Simple UI Logic
+== Creating and Running Unit Tests for Simple UI Logic
 
 The most minimal way of testing is to create a plain Java unit test.
-This only works with UI classes with no dependencies, no auto wiring etc.
+This only works with UI classes with no dependencies, no auto-wiring etc.
 For the `ContactForm`, you can create a unit test to verify that the form fields are correctly populated, based on the given bean.
 
 .Put tests in the correct folder
@@ -40,148 +37,148 @@ Use package-access for class fields.
 If the test isn't in the same package as the class that's being tested, you will get errors.
 ====
 
-. Start by deleting the tests included with the starter: AbstractViewTest.java` and `LoginViewIT.java`.
+Create a new folder, `src/test/java`. 
+In IntelliJ, right-click on the folder and select **Mark Directory as > Test Sources Root**.
+In the new folder, create a new package, `com.example.application.views.list`, and add a new `ContactFormTest.java` file with the code below.
 
-. In the `test` folder, create a new package, `com.vaadin.tutorial.crm.ui.view.list`, and add a new `ContactFormTest.java` file with the code below.
-When prompted, select the `org.junit` import of `@Before`.
-+
 .`ContactFormTest.java`
 [source,java]
 ----
+package com.example.application.views.list;
+
+import com.example.application.data.entity.Company;
+import com.example.application.data.entity.Contact;
+import com.example.application.data.entity.Status;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class ContactFormTest {
     private List<Company> companies;
+    private List<Status> statuses;
     private Contact marcUsher;
     private Company company1;
     private Company company2;
+    private Status status1;
+    private Status status2;
 
-    @Before
+    @Before // <1>
     public void setupData() {
         companies = new ArrayList<>();
-        company1 = new Company("Vaadin Ltd");
-        company2 = new Company("IT Mill");
+        company1 = new Company();
+        company1.setName("Vaadin Ltd");
+        company2 = new Company();
+        company2.setName("IT Mill");
         companies.add(company1);
         companies.add(company2);
+
+        statuses = new ArrayList<>();
+        status1 = new Status();
+        status1.setName("Status 1");
+        status2 = new Status();
+        status2.setName("Status 2");
+        statuses.add(status1);
+        statuses.add(status2);
 
         marcUsher = new Contact();
         marcUsher.setFirstName("Marc");
         marcUsher.setLastName("Usher");
         marcUsher.setEmail("marc@usher.com");
-        marcUsher.setStatus(Contact.Status.NotContacted);
+        marcUsher.setStatus(status1);
         marcUsher.setCompany(company2);
     }
 }
 ----
-+
-* The `@Before` annotation adds dummy data that is used for testing. This method is executed before each `@Test` method.
+<1> The `@Before` annotation adds dummy data that is used for testing. This method is executed before each `@Test` method.
 
-. Now, add a test method that uses `ContactForm`:
-+
+Now, add a test method that uses `ContactForm`:
+
 .`ContactFormTest.java`
 [source,java]
 ----
 @Test
 public void formFieldsPopulated() {
-    ContactForm form = new ContactForm(companies);
+    ContactForm form = new ContactForm(companies, statuses);
     form.setContact(marcUsher); // <1>
     Assert.assertEquals("Marc", form.firstName.getValue());
     Assert.assertEquals("Usher", form.lastName.getValue());
     Assert.assertEquals("marc@usher.com", form.email.getValue());
     Assert.assertEquals(company2, form.company.getValue());
-    Assert.assertEquals(Contact.Status.NotContacted, form.status.getValue()); // <2>
+    Assert.assertEquals(status1, form.status.getValue()); // <2>
 }
 ----
-+
 <1> Validates that the fields are populated correctly, by first initializing the contact form with some companies, and then setting a contact bean for the form.
-<2> Uses standard JUnit `assertEquals` methods to compare the values from the fields available through the `ContactForm` instance:
+<2> Uses standard JUnit `assertEquals()` methods to compare the values from the fields available through the `ContactForm` instance:
 
-. Similarly, test the save functionality of `ContactForm`:
+Similarly, test the save functionality of `ContactForm`. 
 
-.. First, initialize a `ContactForm` with an empty contact:
-+
 .`ContactFormTest.java`
 [source,java]
 ----
 @Test
 public void saveEventHasCorrectValues() {
-    ContactForm form = new ContactForm(companies);
-    Contact contact = new Contact();
-    form.setContact(contact);
+    ContactForm form = new ContactForm(companies, statuses);
+    Contact contact = new Contact(); 
+    form.setContact(contact); // <1>
+    form.firstName.setValue("John"); // <2>
+    form.lastName.setValue("Doe");
+    form.company.setValue(company1);
+    form.email.setValue("john@doe.com");
+    form.status.setValue(status2);
+
+    AtomicReference<Contact> savedContactRef = new AtomicReference<>(null);
+    form.addListener(ContactForm.SaveEvent.class, e -> {
+        savedContactRef.set(e.getContact()); // <3>
+    });
+    form.save.click(); // <4>
+    Contact savedContact = savedContactRef.get();
+
+    Assert.assertEquals("John", savedContact.getFirstName()); // <5>
+    Assert.assertEquals("Doe", savedContact.getLastName());
+    Assert.assertEquals("john@doe.com", savedContact.getEmail());
+    Assert.assertEquals(company1, savedContact.getCompany());
+    Assert.assertEquals(status2, savedContact.getStatus());
 }
 ----
-+
-.. Continue the method by populating values into the form:
-+
-.`saveEventHasCorrectValues()`
-[source,java]
-----
-form.firstName.setValue("John");
-form.lastName.setValue("Doe");
-form.company.setValue(company1);
-form.email.setValue("john@doe.com");
-form.status.setValue(Contact.Status.Customer);
-----
-+
-.. Finally, add the following code to the end of `saveEventHasCorrectValues()` to click the save button and assert that the values from the fields end up in the bean:
-+
-.`saveEventHasCorrectValues()`
-[source,java]
-----
-AtomicReference<Contact> savedContactRef = new AtomicReference<>(null);
-form.addListener(ContactForm.SaveEvent.class, e -> {
-    savedContactRef.set(e.getContact()); // <1>
-});
-form.save.click();
-Contact savedContact = savedContactRef.get(); // <2>
+<1> Initialize the form with an empty `Contact`.
+<2> Populate values into the form. 
+<3> Capture the saved contact into an `AtomicReference`. 
+<4> Click the *save* button and read the saved contact.
+<5> Once the event data is available, verify that the bean contains the expected values.
 
-Assert.assertEquals("John", savedContact.getFirstName());
-Assert.assertEquals("Doe", savedContact.getLastName());
-Assert.assertEquals("john@doe.com", savedContact.getEmail());
-Assert.assertEquals(company1, savedContact.getCompany());
-Assert.assertEquals(Contact.Status.Customer, savedContact.getStatus()); // <3>
-----
-+
-<1> As `ContactForm` fires an event on save and the event data is needed for the test, an `AtomicReference` is used to store the event data, without using a class field.
-<2> Clicks the save button and asserts that the values from the fields end up in the bean.
-<3> Once the event data is available, you can use standard `assertEquals` calls to verify that the bean contains the expected values.
+To run the unit test, right-click `ContactFormTest` and select *Run 'ContactFormTest'*.
 
-. To run the unit test, right click `ContactFormTest` and Select *Run 'ContactFormTest'*.
-+
 image::images/unit-test/run-unit-test.png[run unit test]
 
-. When the test finishes, you will see the results at the bottom of the IDE window in the test runner panel.
+When the test finishes, you will see the results at the bottom of the IDE window in the test-runner panel.
 As you can see, both tests passed.
-+
+
 image::images/unit-test/unit-test-results.png[tests passed]
 
-== Creating and Running Integration Tests For More Advanced UI Logic
+== Creating and Running Integration Tests for More Advanced UI Logic
 
 To test a class that uses `@Autowire`, a database, or any other feature provided by Spring Boot, you can no longer use plain JUnit tests.
 Instead, you can use the Spring Boot test runner.
 This does add a little overhead, but it makes more features available to your test.
 
-. First, add the `spring-boot-starter-test` dependency to the project's `pom.xml` to be able to use the features:
-+
-.`pom.xml`
-[source,xml]
-----
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-test</artifactId>
-  <scope>test</scope>
-  <exclusions>
-    <exclusion>
-      <groupId>org.junit.vintage</groupId>
-      <artifactId>junit-vintage-engine</artifactId>
-    </exclusion>
-  </exclusions>
-</dependency>
-----
-. To set up a unit test for `ListView`, create a new file, `ListViewTest`, in the `com.vaadin.tutorial.crm.ui.views.list` package:
-+
+To set up a unit test for `ListView`, create a new file, `ListViewTest`, in the `com.example.application.views.list` package:
+
 .`ListViewTest.java`
 [source,java]
 ----
-@RunWith(SpringRunner.class)
+package com.example.application.views.list;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+@RunWith(SpringRunner.class) // <1>
 @SpringBootTest
 public class ListViewTest {
 
@@ -193,17 +190,15 @@ public class ListViewTest {
     }
 }
 ----
-+
-* The `@RunWith(SpringRunner.class)` and `@SpringBootTest` annotations make sure that the Spring Boot application is initialized before the tests are run and allow you to use `@Autowire` in the test.
+<1> The `@RunWith(SpringRunner.class)` and `@SpringBootTest` annotations make sure that the Spring Boot application is initialized before the tests are run and allow you to use `@Autowire` in the test.
 
-. In the `ListView` class:
-.. Add the Spring `@Component` annotation to make it possible to `@Autowire` it.
-Also add `@Scope("prototype")` to ensure every test run gets a fresh instance.
-+
+In the `ListView` class:
+
+. Add the Spring `@Component` annotation to make it possible to `@Autowire` it.
+. Also add `@Scope("prototype")` to ensure that every test run gets a fresh instance.
+
 Side note: you didn't need to add the annotation for normal application usage, as all `@Route` classes are automatically instantiated by Vaadin in a Spring-compatible way.
-+
-.. Remove the `private` keyword. This changes the private fields to package private, and allows you to access the grid and form of the `ListView` in your test case.
-+
+
 .`*ListView.java*`
 [source,java]
 ----
@@ -212,25 +207,22 @@ Side note: you didn't need to add the annotation for normal application usage, a
 @Route(value = "", layout = MainLayout.class)
 @PageTitle("Contacts | Vaadin CRM")
 public class ListView extends VerticalLayout {
-
-    ContactForm form;
     Grid<Contact> grid = new Grid<>(Contact.class);
     TextField filterText = new TextField();
-
-    ContactService contactService;
+    ContactForm form;
+    CrmService service;
 
     // rest omitted
 }
 ----
 
-. Right click the package that contains both tests, and select [guilabel]#Run tests in 'com.vaadin.tutorial.crm.ui.views.list'#.
-+
+Right-click the package that contains both tests, and select [guilabel]#Run tests in 'com.example.application.views.list'#.
+You should see that both test classes run and result in three successful tests.
+
 image::images/unit-test/run-tests-in-package.png[run package tests]
 
-. You should see that both test classes run and result in 3 successful tests.
-+
-image::images/unit-test/two-tests-passed.png[three successful tests]
-+
+image::images/unit-test/three-tests-passed.png[three successful tests]
+
 .Integration tests take longer to run
 [NOTE]
 ====
@@ -241,35 +233,37 @@ You can improve the startup time by explicitly listing the needed dependencies i
 Pivotal's https://pivotal.io/application-modernization-recipes/testing/spring-boot-testing-best-practices[Spring Boot Testing Best Practices] has tips to speed up your tests.
 ====
 
-. You can now add the actual test implementation, which selects the first row in the grid and validates that this shows the form with the selected `Contact`:
-+
+You can now add the actual test implementation, which selects the first row in the grid and validates that this shows the form with the selected `Contact`:
+
 .`ListViewTest.java`
 [source,java]
 ----
-    @Test
-    public void formShownWhenContactSelected() {
-        Grid<Contact> grid = listView.grid;
-        Contact firstContact = getFirstItem(grid);
+@Test
+public void formShownWhenContactSelected() {
+    Grid<Contact> grid = listView.grid;
+    Contact firstContact = getFirstItem(grid);
 
-        ContactForm form = listView.form;
+    ContactForm form = listView.form;
 
-        Assert.assertFalse(form.isVisible());
-		grid.asSingleSelect().setValue(firstContact);
-        Assert.assertTrue(form.isVisible());
-        Assert.assertEquals(firstContact.getFirstName(), form.firstName.getValue());
-    }
+    Assert.assertFalse(form.isVisible());
+    grid.asSingleSelect().setValue(firstContact);
+    Assert.assertTrue(form.isVisible());
+    Assert.assertEquals(firstContact.getFirstName(), form.firstName.getValue());
+}
+
 private Contact getFirstItem(Grid<Contact> grid) {
-		return( (ListDataProvider<Contact>) grid.getDataProvider()).getItems().iterator().next();
-	}
+    return( (ListDataProvider<Contact>) grid.getDataProvider()).getItems().iterator().next();
+}
 ----
-+
-* The test verifies that the form logic works by:
-** Asserting that the form is initially hidden.
-** Selecting the first item in the grid and verifying that:
-*** The form is visible.
-*** The form is bound to the correct `Contact` by ensuring the right name is visible in the field.
 
-. Rerun the tests. They should all pass.
+The test verifies that the form logic works by:
+
+* asserting that the form is initially hidden,
+* selecting the first item in the grid and verifying that:
+** the form is visible,
+** the form is bound to the correct `Contact` by ensuring the right name is visible in the field.
+
+Rerun the tests. They should all pass.
 
 You now know how to test the application logic both in isolation with unit tests and by injecting dependencies to test the integration between several components.
 In the next chapter, the tutorial covers how to test the entire application in the browser.

@@ -1,17 +1,20 @@
 ---
-title: Components and Layouts
+title: Creating a View
 order: 40
-page-title: "Vaadin Flow Basics: Build UIs With Components and Layouts"
-description: Flow uses a event-driven component model for building UIs. This tutorial covers the basics.
+page-title: "Vaadin Flow Basics: Build a View With Components and Layouts"
+description: Flow uses an event-driven component model for building UIs. This tutorial covers the basics.
 ---
 
-= Vaadin Flow Basics: Build UIs With Components and Layouts
+= Creating a Vaadin Flow View With Components
 
-In this chapter you learn core Vaadin concepts and get your project ready for coding.
+In this chapter, you learn core Vaadin concepts and scaffold the first view of the CRM application.
 
-video::vmh5coL-nKs[youtube]
+This chapter covers:
 
-== Quick Introduction to Vaadin
+* Vaadin component basics.
+* Constructing a view with the Vaadin Flow Java API.
+
+== A Quick Introduction to Vaadin Flow
 
 Here are the most important Vaadin Flow concepts you need to know to get started. 
 
@@ -22,7 +25,15 @@ It has a component-based programming model that allows you to build user interfa
 
 === Vaadin UI Components
 
-Vaadin includes a <<{articles}/ds/overview#,large library of UI components>> that you can use as the building blocks of your application.
+Vaadin includes over <<{articles}/ds/overview#,40 UI components>> to help you build apps faster.
+By using ready-made building blocks, you are able to focus more of your time on building end-user functionality.
+
+Vaadin components are custom HTML elements that are registered with the browser.
+They are based on W3C web component standards.
+
+The components have light and dark themes, and you can further customize them through CSS variables to fit your brand.
+
+image::images/components-and-layouts/vaadin-components.png[A grid of Vaadin components]
 
 You create a new component by initializing a Java object. 
 For instance, to create a `Button`, you write:
@@ -54,11 +65,11 @@ layout.setDefaultVerticalComponentAlignment(Alignment.END);
 add(layout);
 ----
 
-image::images/basics/layout-alignment.png[layout alignment]
+image::images/components-and-layouts/layout-alignment.png[layout alignment]
 
 === UI Events
 
-You can add functionality to your application by listening to events, such as, click events from buttons, or value-change events from select components. 
+You can add functionality to your application by listening to events, such as click events from buttons, or value-change events from select components. 
 
 This example adds the text "Clicked!" to the layout when the button is clicked. 
 
@@ -74,70 +85,101 @@ button.addClickListener(clickEvent ->
 One unique Vaadin Flow feature is that you can build web applications entirely in Java. 
 This higher level of abstraction makes development more productive and debugging easier.
 
-Vaadin also supports HTML-templates and customizing the code that runs in the browser, usually you don't need to worry about this. 
+Vaadin also supports HTML templates and customizing the code that runs in the browser; you don't usually need to worry about this. 
 
-== Preparing the Project
+== The Contact List View
 
-=== Defining Packages
+The first view is the Contact list view.
+This view lists all the contacts in the system. 
+Users can search, add, edit, and delete contacts in this view.
 
-The CRM application has both UI and backend code. 
-To keep the code organized, you need to define separate packages for each in the project structure.
+You initially focus only on the list view. 
+You add the layout containing the header and sidebar later in the “Navigation and parent layouts” chapter.
 
-To define packages:
+In this and the next chapter, you create the required layouts and components for the view. 
+Then, in the chapter that follows, you create a service class for accessing the backend and populating the view with data.
 
-. Right-click the `com.vaadin.tutorial.crm` package.
-. Select *New > Package* and create a package named `com.vaadin.tutorial.crm.ui`.
-. Repeat this process to create another package named `com.vaadin.tutorial.crm.backend`. 
+image::images/components-and-layouts/contact-list-view.png[The contact list view consists of a Grid, and a toolbar with a TextField and a Button]
 
-+
-image::images/basics/create-package.png[create new package]
+Locate the `ListView.java` class under `src/main/java`. 
+Replace the contents of the file with the following:
 
-. Drag `MainView` and `GreetService` into the `ui` package. 
-If IntelliJ asks you if you want to refactor the code, say yes.
-
-+
-Your project structure should now look like this:
-+
-image::images/basics/package-structure.png[project structure,width=250]
-
-=== Setting Up the Main Layout
-
-Next, clean out unnecessary code and set up the main layout. 
-
-To do this:
-
-. Delete the content of `MainView` and replace it with the code shown below. 
-+
-.`MainView.java`
+.`ListView.java`
 [source,java]
 ----
-package com.vaadin.tutorial.crm.ui;
+package com.example.application.views.list;
 
+import com.example.application.data.entity.Contact;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.Theme;
 
-@Route("") // <1>
-public class MainView extends VerticalLayout {
+@Route(value = "")
+@Theme(themeFolder = "flowcrmtutorial")
+@PageTitle("Contacts | Vaadin CRM")
+public class ListView extends VerticalLayout { // <1>
+    Grid<Contact> grid = new Grid<>(Contact.class); // <2>
+    TextField filterText = new TextField();
 
-    public MainView() {
-        
+    public ListView() {
+        addClassName("list-view");
+        setSizeFull();
+        configureGrid(); // <3>
+
+        add(getToolbar(), grid); // <4>
     }
 
+    private void configureGrid() {
+        grid.addClassNames("contact-grid");
+        grid.setSizeFull();
+        grid.setColumns("firstName", "lastName", "email"); // <5>
+        grid.addColumn(contact -> contact.getStatus().getName()).setHeader("Status"); // <6>
+        grid.addColumn(contact -> contact.getCompany().getName()).setHeader("Company");
+        grid.getColumns().forEach(col -> col.setAutoWidth(true)); // <7>
+    }
+
+    private HorizontalLayout getToolbar() {
+        filterText.setPlaceholder("Filter by name...");
+        filterText.setClearButtonVisible(true);
+        filterText.setValueChangeMode(ValueChangeMode.LAZY); // <8>
+
+        Button addContactButton = new Button("Add contact");
+
+        HorizontalLayout toolbar = new HorizontalLayout(filterText, addContactButton); // <9>
+        toolbar.addClassName("toolbar");
+        return toolbar;
+    }
 }
 ----
-<1> `@Route("")` maps the view to the root.
+<1> The view extends `VerticalLayout`, which places all child components vertically.
+<2> The Grid component is typed with `Contact`. 
+<3> The grid configuration is extracted to a separate method to keep the constructor easier to read.
+<4> Add the toolbar and grid to the `VerticalLayout`.
+<5> Define which properties of `Contact` the grid should show.
+<6> Define custom columns for nested objects.
+<7> Configure the columns to automatically adjust their size to fit their contents. 
+<8> Configure the search field to fire value-change events only when the user stops typing.
+This way you avoid unnecessary database calls.
+<9> The toolbar uses a `HorizontalLayout` to place the `TextField` and `Button` next to each other.
 
-. Next, *delete* the following unnecessary files: 
+If your application is still running from the previous step, you only need to perform a build, either with the `CMD/Ctrl-F9` keyboard shortcut, or by pressing the “hammer” icon in the toolbar.
+Vaadin will automatically reload your browser to display the changes.
 
-+
-** `GreetService.java`
-** `frontend/styles/vaadin-text-field-styles.css`
+image:images/components-and-layouts/build-project.png[The build project button is in the IntelliJ toolbar, width=300]
 
-. Verify that you are able to run your application. 
+You can keep the server running throughout the tutorial. 
+There are only a couple of cases where you need to restart the server; these will be highlighted in the instructions. 
 
-+
-You should see an empty window in the browser, and no errors in the console.
+You should now see the empty view structure in the browser window. 
+In the next chapter, you will build a component for the form that is used for editing contacts.
 
-image::images/basics/empty-window.png[empty browser window]
+image::images/components-and-layouts/list-view-complete.png[The completed list view has all the components, but no data yet]
 
 include::{root}/articles/flow/tutorials/in-depth-course/_ebook-banner.adoc[opts=optional]
+
