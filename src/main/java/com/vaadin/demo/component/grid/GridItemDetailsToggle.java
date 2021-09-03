@@ -9,7 +9,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.data.renderer.TemplateRenderer;
+import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
@@ -38,11 +39,11 @@ public class GridItemDetailsToggle extends Div {
     }
 
     // tag::snippet2[]
-    private static TemplateRenderer<Person> createToggleDetailsRenderer(
+    private static Renderer<Person> createToggleDetailsRenderer(
             Grid<Person> grid) {
-        return TemplateRenderer.<Person>of(
-                "<vaadin-button theme=\"tertiary\" on-click=\"handleClick\">Toggle details</vaadin-button>")
-                .withEventHandler("handleClick", person -> grid
+        return LitRenderer.<Person>of(
+                "<vaadin-button theme=\"tertiary\" @click=\"${handleClick}\">Toggle details</vaadin-button>")
+                .withFunction("handleClick", person -> grid
                         .setDetailsVisible(person,
                                 !grid.isDetailsVisible(person)));
     }
