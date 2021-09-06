@@ -6,7 +6,7 @@ import '@vaadin/vaadin-button';
 
 import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
-import { ContactEndpoint } from 'Frontend/generated/endpoints';
+import { ContactEndpoint } from 'Frontend/generated/ContactEndpoint';
 
 import { Binder } from '@vaadin/form';
 
