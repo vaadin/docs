@@ -7,7 +7,7 @@ import '@vaadin/vaadin-text-field/vaadin-text-area';
 
 import { applyTheme } from 'Frontend/generated/theme';
 import { RichTextEditorElement } from '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
-import { TextArea } from '@vaadin/vaadin-text-field/vaadin-text-area';
+import { TextAreaElement } from '@vaadin/vaadin-text-field/vaadin-text-area';
 
 @customElement('rich-text-editor-set-get-value')
 export class Example extends LitElement {
@@ -34,7 +34,7 @@ export class Example extends LitElement {
 
       <vaadin-text-area
         label="Html Value"
-        @change="${(e: CustomEvent) => this.setHtmlValue((e.target as TextArea).value)}"
+        @change="${(e: CustomEvent) => this.setHtmlValue((e.target as TextAreaElement).value)}"
         placeholder="Type html string here to set it as value to the Rich Text Editor above..."
         style="width: 100%;"
         .value="${this.htmlValue}"

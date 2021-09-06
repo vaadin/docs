@@ -1,6 +1,6 @@
 import { EndpointError } from '@vaadin/flow-frontend';
 
-import { DataEndpoint } from 'Frontend/generated/endpoints';
+import { DataEndpoint } from 'Frontend/generated/DataEndpoint';
 
 export async function callEndpoint() {
   try {
