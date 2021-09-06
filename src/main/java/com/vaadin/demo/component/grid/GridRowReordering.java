@@ -8,7 +8,8 @@ import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.data.renderer.TemplateRenderer;
+import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 
 import java.util.ArrayList;
@@ -69,9 +70,9 @@ public class GridRowReordering extends Div {
         return grid;
     }
 
-    private static TemplateRenderer<Person> createAvatarRenderer() {
-        return TemplateRenderer.<Person>of(
-                "<vaadin-avatar img=\"[[item.pictureUrl]]\" name=\"[[item.fullName]]\" alt=\"User avatar\"></vaadin-avatar>")
+    private static Renderer<Person> createAvatarRenderer() {
+        return LitRenderer.<Person>of(
+                "<vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\" alt=\"User avatar\"></vaadin-avatar>")
                 .withProperty("pictureUrl", Person::getPictureUrl);
     }
 
