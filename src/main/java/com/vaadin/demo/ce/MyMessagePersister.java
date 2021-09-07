@@ -11,7 +11,7 @@ import com.vaadin.demo.domain.User;
 import com.vaadin.demo.domain.User.UserService;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 
-// tag::message-list-persister[]
+// tag::message-persister[]
 @SpringComponent
 public class MyMessagePersister implements CollaborationMessagePersister {
 
@@ -55,4 +55,4 @@ public class MyMessagePersister implements CollaborationMessagePersister {
         messageService.save(messageEntity);
     }
 }
-// end::message-list-persister[]
+// end::message-persister[]
