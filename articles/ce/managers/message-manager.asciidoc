@@ -1,0 +1,98 @@
+---
+title: Message Manager
+order: 2
+layout: page
+---
+
+[[ce.message-manager]]
+= Manage User Presence
+
+Collaboration Engine includes a manager to handle text messages in a topic, e.g. subscribing to incoming messages and submit new ones.
+The manager can also be configured to persist messages to a custom backend (e.g. a database) so that messages are restored when the application restarts.
+It provides a simple and flexible way to manage messages in a topic and makes it easy to create custom components with collaborative messaging features.
+
+The following example shows how to create a new instance of the [classname]#MessageManager# and use it to broadcast notifications to all users connected to the same view:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/MessageManagerExample.java[tags=snippet,indent=0]
+----
+
+<1> The manager is constructed with a component instance, the local user-info and the topic id.
+
+<2> The [methodname]#setNewMessageHandler()# method takes a callback that will be invoked when a new message is submitted, which is provided by the context passed as the argument to the callback.
+
+<3> The manager can then be used to submit new message, for example in a [classname]#MessageInput# submit listener.
+
+[[ce.message-manager.persister]]
+== Persisting Messages
+
+The topic data in Collaboration Engine is stored only in the application memory.
+This applies also to messages handled by [classname]#MessageManager#, which means that
+all the submitted messages will be lost when restarting the server.
+
+To solve this issue, you can configure [classname]#MessageManager# to store the messages
+in your own backend.
+This is done by implementing the [classname]#CollaborationMessagePersister# interface.
+It specifies two operations:
+
+- Fetch all messages in a given topic, which have been submitted during or after a given timestamp.
+- Store a new message.
+
+In the following example implementation,
+you can see how the persister is mapping between the [classname]#CollaborationMessage# objects
+and the application's own [classname]#Message# entities, and integrating with the service layer:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/MyMessagePersister.java[tags=message-persister,indent=0]
+----
+
+.Example classes
+NOTE: [classname]#MessageService#, [classname]#UserService#, [classname]#Message# and [classname]#User# are application-specific example classes,
+and not part of the Collaboration Engine API.
+
+.Initialize a persister from lambdas
+TIP: You can also create a message persister instance with lambdas by using the static
+[methodname]#CollaborationMessagePersister.fromCallbacks()# method.
+
+It's best to configure your database to insert the creation/insertion timestamp of the entity.
+This ensures that the messages are ordered by their timestamps in the database.
+If you use the timestamp provided by [methodname]#CollaborationMessage::getTime# (based on the JVM clock),
+you take a risk of skipping some inserted messages in rare edge cases.
+
+For example, if you use Hibernate to create the database table,
+you can include an automatic insertion timestamp in your entity class
+with the following annotation:
+[source,java]
+----
+@Column(columnDefinition="TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+private Instant time;
+----
+
+You can set the message persister in the manager's constructor:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/MessageManagerExample.java[tags=persister,indent=0]
+----
+
+When a persister is provided, [classname]#MessageManager# takes care of keeping
+the component state in sync with your backend.
+When the first manager connects to a topic after starting the application,
+it fetches all the messages from the persister
+(making a [classname]#FetchQuery# with Unix epoch as the [methodname]#getSince()# timestamp).
+The fetched messages are stored in Collaboration Engine's memory and shared among
+other managers connected to the same topic, avoiding redundant backend queries.
+
+When a new message is submitted, the data flows through your backend.
+First, the manager saves the message to your backend with the persister.
+Then, the manager makes a query to the persister to fetch all the messages with a timestamp
+that is equal or more recent than the last message in memory.
+The new messages are again stored in the Collaboration Engine's memory,
+updating all the manager instances which are connected to the same topic.
+
+When implementing the [methodname]#fetchMessages()# method, it is important to note that the returned
+stream should include the messages sent exactly at the time that you can get with [methodname]#getSince()# from the [classname]#FetchQuery#.
+This ensures that all messages are fetched even when multiple messages have the same timestamp.
+The component takes care of filtering out the duplicates, which are expected when returning the latest message again.
