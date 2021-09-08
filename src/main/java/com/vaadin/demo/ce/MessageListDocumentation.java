@@ -24,8 +24,6 @@ public class MessageListDocumentation extends VerticalLayout {
 
     private MessageService messageService;
 
-    private MyMessagePersister myMessagePersister;
-
     public MessageListDocumentation() {
         // tag::message-list-and-input[]
         User userEntity = userService.getCurrentUser();
@@ -49,12 +47,11 @@ public class MessageListDocumentation extends VerticalLayout {
         // end::message-list-layout[]
     }
 
-    private void setPersister() {
-        // tag::message-list-ctor-persister[]
-        CollaborationMessageList messageList = new CollaborationMessageList(
-                userInfo, "general", myMessagePersister);
-        // end::message-list-ctor-persister[]
+    // tag::message-list-ctor-persister[]
+    CollaborationMessageList createWithPersister(MyMessagePersister persister) {
+        return new CollaborationMessageList(userInfo, "general", persister);
     }
+    // end::message-list-ctor-persister[]
 
     private void customSubmitter() {
         // tag::message-list-submitter[]
@@ -77,8 +74,8 @@ public class MessageListDocumentation extends VerticalLayout {
     private void messageConfigurator() {
         UserInfo localUser = this.userInfo;
         // tag::message-list-configurator[]
-        CollaborationMessageList collaborationMessageList =
-            new CollaborationMessageList(userInfo, topicId);
+        CollaborationMessageList collaborationMessageList = new CollaborationMessageList(
+                userInfo, topicId);
         // tag::message-list-configurator-style[]
         collaborationMessageList.setMessageConfigurator((message, user) -> {
             if (user.equals(localUser)) {
@@ -87,11 +84,11 @@ public class MessageListDocumentation extends VerticalLayout {
         });
         // end::message-list-configurator-style[]
         // tag::message-list-configurator-censor[]
-         collaborationMessageList.setMessageConfigurator((message, user) -> {
+        collaborationMessageList.setMessageConfigurator((message, user) -> {
             // Example: Replace all occurrences of "badword" with "***"
             String censored = message.getText().replaceAll("badword", "***");
             message.setText(censored);
-          });
+        });
         // end::message-list-configurator-censor[]
         // end::message-list-configurator[]
     }

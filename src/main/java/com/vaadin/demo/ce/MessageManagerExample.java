@@ -20,27 +20,26 @@ public class MessageManagerExample extends VerticalLayout {
         MessageManager messageManager = new MessageManager(this, localUser,
                 topicId); // <1>
 
-        messageManager.setNewMessageHandler(context -> {
+        messageManager.setNewMessageHandler(context -> { // <2>
             CollaborationMessage message = context.getMessage();
             UserInfo user = message.getUser();
             String text = message.getText();
 
             Notification.show(user.getName() + ": " + text);
-        }); // <2>
+        });
 
         add(new MessageInput(event -> {
             String text = event.getValue();
-            messageManager.submit(text);
-        })); // <3>
+            messageManager.submit(text); // <3>
+        }));
         // end::snippet[]
     }
 
-    void persisterExample(MyMessagePersister persister) {
+    // tag::persister[]
+    MessageManager createManagerWithPersister(MyMessagePersister persister) {
         UserInfo localUser = new UserInfo("john");
         String topicId = "notifications";
-        // tag::persister[]
-        MessageManager messageManager = new MessageManager(this, localUser,
-                topicId, persister);
-        // end::persister[]
+        return new MessageManager(this, localUser, topicId, persister);
     }
+    // end::persister[]
 }
