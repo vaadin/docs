@@ -30,7 +30,7 @@ For example:
 - `articles/intro/index.asciidoc` → `/intro/`
 - `articles/forms/data-binding.asciidoc` → `/forms/data-binding/`
 
-See the [contribution guides](https://vaadin.com/docs/latest/guide/contributing-docs/overview) to learn how to write documentation articles.
+See the [contribution guides](https://vaadin.com/docs/latest/contributing-docs/overview) to learn how to write documentation articles.
 
 ### `frontend`
 
@@ -46,7 +46,7 @@ Project related scripts (tests, validation builds, preview deployment, etc).
 
 ### `.github`
 
-Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](https://vaadin.com/docs/latest/guide/contributing-docs/editing-tools/#vale).
+Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](https://vaadin.com/docs/latest/contributing-docs/editing-tools/#vale).
 
 ### `versions.json`
 
