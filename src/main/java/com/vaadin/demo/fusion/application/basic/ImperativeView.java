@@ -1,4 +1,4 @@
-package com.vaadin.demo.flow.application.events;
+package com.vaadin.demo.fusion.application.basic;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.button.Button;
