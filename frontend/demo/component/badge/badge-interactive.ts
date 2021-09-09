@@ -7,7 +7,7 @@ import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { ButtonElement } from '@vaadin/vaadin-button';
+import { Button } from '@vaadin/vaadin-button';
 import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -84,7 +84,7 @@ export class Example extends LitElement {
   }
 
   private onClick({ target }: Event) {
-    const { profession } = (target as ButtonElement).dataset;
+    const { profession } = (target as Button).dataset;
 
     if (profession) {
       this.selectedProfessions = this.selectedProfessions.filter((p) => p !== profession);
