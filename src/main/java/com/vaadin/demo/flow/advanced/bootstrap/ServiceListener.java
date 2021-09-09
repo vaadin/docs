@@ -7,6 +7,7 @@ import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 import com.vaadin.flow.shared.communication.PushMode;
 
+// tag::snippet[]
 public class ServiceListener implements VaadinServiceInitListener{
 
     @Override
@@ -24,3 +25,4 @@ public class ServiceListener implements VaadinServiceInitListener{
         });
     }
 }
+// end::snippet[]
