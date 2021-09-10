@@ -74,8 +74,8 @@ public class MessageListDocumentation extends VerticalLayout {
     private void messageConfigurator() {
         UserInfo localUser = this.userInfo;
         // tag::message-list-configurator[]
-        CollaborationMessageList collaborationMessageList = new CollaborationMessageList(
-                userInfo, topicId);
+        CollaborationMessageList collaborationMessageList =
+                new CollaborationMessageList(userInfo, topicId);
         // tag::message-list-configurator-style[]
         collaborationMessageList.setMessageConfigurator((message, user) -> {
             if (user.equals(localUser)) {

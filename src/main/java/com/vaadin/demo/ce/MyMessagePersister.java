@@ -15,8 +15,8 @@ import com.vaadin.flow.spring.annotation.SpringComponent;
 @SpringComponent
 public class MyMessagePersister implements CollaborationMessagePersister {
 
-    private final MessageService messageService;
-    private final UserService userService;
+    private final MessageService messageService; // <1>
+    private final UserService userService; // <1>
 
     public MyMessagePersister(MessageService messageService,
             UserService userService) {
@@ -29,7 +29,7 @@ public class MyMessagePersister implements CollaborationMessagePersister {
         return messageService
                 .findAllByTopicSince(query.getTopicId(), query.getSince())
                 .map(messageEntity -> {
-                    User author = messageEntity.getAuthor();
+                    User author = messageEntity.getAuthor(); // <1>
                     UserInfo userInfo = new UserInfo(author.getId(),
                             author.getName(), author.getImageUrl());
 
@@ -42,11 +42,11 @@ public class MyMessagePersister implements CollaborationMessagePersister {
     public void persistMessage(PersistRequest request) {
         CollaborationMessage message = request.getMessage();
 
-        Message messageEntity = new Message();
+        Message messageEntity = new Message(); // <1>
         messageEntity.setTopic(request.getTopicId());
         messageEntity.setText(message.getText());
-        messageEntity
-                .setAuthor(userService.findById(message.getUser().getId()));
+        messageEntity.setAuthor(userService.findById(
+            message.getUser().getId()));
 
         // Set the time from the message only as a fallback option if your
         // database can't automatically add an insertion timestamp:

@@ -17,8 +17,8 @@ public class MessageManagerExample extends VerticalLayout {
         UserInfo localUser = new UserInfo("john");
         String topicId = "notifications";
 
-        MessageManager messageManager = new MessageManager(this, localUser,
-                topicId); // <1>
+        MessageManager messageManager =
+                new MessageManager(this, localUser, topicId); // <1>
 
         messageManager.setNewMessageHandler(context -> { // <2>
             CollaborationMessage message = context.getMessage();
