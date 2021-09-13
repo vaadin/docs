@@ -22,7 +22,6 @@ public class ImperativeView extends Div {
 
     add(new Div(text), button);
   }
-  public static class Exporter extends DemoExporter<ImperativeView> { // hidden-source-line
-  } // hidden-source-line    
+  public static class Exporter extends DemoExporter<ImperativeView> {} // hidden-source-line
 }
 // end::snippet[]
