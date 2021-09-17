@@ -31,10 +31,6 @@ export class Example extends LitElement {
         width: var(--lumo-icon-size-s);
       }
 
-      .content {
-        padding: 0 var(--lumo-space-l);
-      }
-
       vaadin-tabs {
         width: 100%;
       }
@@ -51,7 +47,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-app-layout>
         <h1 slot="navbar">MyApp</h1>
-        <vaadin-tabs slot="navbar touch-optimized" theme="equal-width-tabs">
+        <vaadin-tabs slot="navbar touch-optimized" theme="minimal equal-width-tabs">
           <vaadin-tab>
             <a tabindex="-1">
               <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
