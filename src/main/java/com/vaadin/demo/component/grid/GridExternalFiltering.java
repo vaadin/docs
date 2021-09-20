@@ -10,7 +10,8 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.renderer.TemplateRenderer;
+import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
@@ -59,11 +60,11 @@ public class GridExternalFiltering extends Div {
         add(layout);
     }
 
-    private static TemplateRenderer<Person> createPersonRenderer() {
-        return TemplateRenderer.<Person>of(
+    private static Renderer<Person> createPersonRenderer() {
+        return LitRenderer.<Person>of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "  <vaadin-avatar img=\"[[item.pictureUrl]]\" name=\"[[item.fullName]]\"></vaadin-avatar>"
-                        + "  <span> [[item.fullName]] </span>"
+                        + "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
+                        + "  <span> ${item.fullName} </span>"
                         + "</vaadin-horizontal-layout>")
                 .withProperty("pictureUrl", Person::getPictureUrl)
                 .withProperty("fullName", Person::getFullName);
