@@ -193,47 +193,15 @@ public void bindWithSorting() {
     grid.addColumn(person -> person.getTitle())
         .setHeader("Title")
         	.setKey("title").setSortable(true); // <2>
-    grid.setItems(
-        query -> {
-            Sort springSort = toSpringDataSort(query.getSortOrders()); // <3>
-            return repo.findAll(
-                    PageRequest.of(
-                            query.getPage(),
-                            query.getPageSize(),
-                            springSort // <4>
-            )).stream();
-    });
-}
-
-/**
- * A method to convert given Vaadin sort hints to Spring Data specific sort
- * instructions.
- *
- * @param vaadinSortOrders a list of Vaadin QuerySortOrders to convert to
- * @return the Sort object for Spring Data repositories
- */
-public static Sort toSpringDataSort(List<QuerySortOrder> vaadinSortOrders) {
-    return Sort.by(
-            vaadinSortOrders.stream()
-                    .map(sortOrder ->
-                            sortOrder.getDirection() == SortDirection.ASCENDING ?
-                                    Sort.Order.asc(sortOrder.getSorted()) : // <5>
-                                    Sort.Order.desc(sortOrder.getSorted())
-                    )
-                    .collect(Collectors.toList())
-    );
+    grid.setItems(VaadinSpringDataHelpers.fromPagingRepository(repo)); // <3>
 }
 ----
 <1> If you are using property name based column definition, `Grid` columns can be made sortable by their property names.
 The `setSortableColumns()` method makes columns with given identifiers sortable and all other non-sortable.
 <2> Alternatively, define a key to your columns, which will be passed to the callback, and define the column to be sortable.
 <3> In the callback, you need to convert the Vaadin specific sort information to whatever your back end understands.
-In this example, we are using Spring Data and using a separate method to convert the values.
-The method body is shown below.
-Note that the conversion becomes simpler if you only want to support sorting based on a single property.
-Vaadin Grid supports sorting based on multiple columns.
-<4> Here the back end compatible sort information is passed to our back end call.
-<5> The `getSorted()` method in `QuerySortOrder` returns the columns property name or a key you have assigned to the column.
+In this example, we are using Spring Data and using a Vaadin Spring Data util method to convert the values.
+This util method also passes the sort information to our back end call and returns the constructed callback.
 
 === Filtering with Lazy Data Binding
 
