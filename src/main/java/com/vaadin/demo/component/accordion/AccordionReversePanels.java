@@ -2,6 +2,7 @@ package com.vaadin.demo.component.accordion;
 
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
+import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -24,7 +25,7 @@ public class AccordionReversePanels extends Div {
         personalInformationLayout.setPadding(false);
 
         AccordionPanel personalInfoPanel = accordion.add("Personal information", personalInformationLayout);
-        personalInfoPanel.setThemeName("reverse");
+        personalInfoPanel.addThemeVariants(DetailsVariant.REVERSE);
 
         Span street = new Span("4027 Amber Lake Canyon");
         Span zipCode = new Span("72333-5884 Cozy Nook");
@@ -35,8 +36,8 @@ public class AccordionReversePanels extends Div {
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
         
-        AccordionPanel billingAdressPanel = accordion.add("Billing address", billingAddressLayout);
-        billingAdressPanel.setThemeName("reverse");
+        AccordionPanel billingAddressPanel = accordion.add("Billing address", billingAddressLayout);
+        billingAddressPanel.addThemeVariants(DetailsVariant.REVERSE);
 
         Span cardBrand = new Span("Mastercard");
         Span cardNumber = new Span("1234 5678 9012 3456");
@@ -49,7 +50,7 @@ public class AccordionReversePanels extends Div {
         
         // tag::snippet[]
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
-        paymentPanel.setThemeName("reverse");
+        paymentPanel.addThemeVariants(DetailsVariant.REVERSE);
         // end::snippet[]
 
         add(accordion);

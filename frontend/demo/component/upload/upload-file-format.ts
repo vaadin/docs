@@ -1,4 +1,4 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
@@ -35,6 +35,8 @@ export class Example extends LitElement {
     if (this.upload?.i18n) {
       this.upload.i18n.addFiles.one = 'Upload Report...';
       this.upload.i18n.dropFiles.one = 'Drop report here';
+      this.upload.i18n.error.incorrectFileType =
+        'The provided file does not have the correct format. Please provide a PDF document.';
       this.upload.i18n = { ...this.upload.i18n };
     }
   }
@@ -47,13 +49,10 @@ export class Example extends LitElement {
       <vaadin-upload
         accept="application/pdf,.pdf"
         max-files="1"
-        @file-reject="${this.fileRejectHandler}"
+        @file-reject="${(event: UploadFileRejectEvent) =>
+          showErrorNotification(event.detail.error)}"
       ></vaadin-upload>
       <!-- end::snippet[] -->
     `;
-  }
-
-  fileRejectHandler(event: UploadFileRejectEvent) {
-    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }

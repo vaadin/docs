@@ -6,7 +6,8 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.data.renderer.TemplateRenderer;
+import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
@@ -32,9 +33,9 @@ public class GridNoBorder extends Div {
         add(grid);
     }
 
-    private static TemplateRenderer<Person> createAvatarRenderer() {
-        return TemplateRenderer.<Person>of(
-                "<vaadin-avatar img=\"[[item.pictureUrl]]\" name=\"[[item.fullName]]\" alt=\"User avatar\"></vaadin-avatar>")
+    private static Renderer<Person> createAvatarRenderer() {
+        return LitRenderer.<Person>of(
+                "<vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\" alt=\"User avatar\"></vaadin-avatar>")
                 .withProperty("pictureUrl", Person::getPictureUrl);
     }
 

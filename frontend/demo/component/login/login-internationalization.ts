@@ -41,7 +41,10 @@ export class Example extends LitElement {
   };
 
   render() {
-    return html`<vaadin-login-form .i18n="${this.i18n}"></vaadin-login-form>`;
+    return html`
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
+      <vaadin-login-form .i18n="${this.i18n}" no-autofocus></vaadin-login-form>
+    `;
   }
   //end::snippet[]
 }

@@ -1,8 +1,8 @@
 package com.vaadin.demo.component.menubar;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -14,15 +14,15 @@ public class MenuBarStyles extends Div {
         addItem(menuWithDefaultTheme, "Default");
 
         MenuBar menuWithTertiaryTheme = new MenuBar();
-        menuWithTertiaryTheme.setThemeName("tertiary");
+        menuWithTertiaryTheme.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
         addItem(menuWithTertiaryTheme, "Tertiary");
 
         MenuBar menuWithPrimaryTheme = new MenuBar();
-        menuWithPrimaryTheme.setThemeName("primary");
+        menuWithPrimaryTheme.addThemeVariants(MenuBarVariant.LUMO_PRIMARY);
         addItem(menuWithPrimaryTheme, "Primary");
 
         MenuBar menuWithSmallTheme = new MenuBar();
-        menuWithSmallTheme.setThemeName("small");
+        menuWithSmallTheme.addThemeVariants(MenuBarVariant.LUMO_SMALL);
         addItem(menuWithSmallTheme, "Small");
         // end::snippet[]
 

@@ -6,7 +6,6 @@ import '@vaadin/vaadin-messages/vaadin-message-list';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { format, subDays, subMinutes } from 'date-fns';
-import '@vaadin/flow-frontend/messageListConnector.js'; // hidden-source-line
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('message-list-component-with-theme')

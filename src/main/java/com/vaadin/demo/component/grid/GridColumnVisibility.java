@@ -5,6 +5,7 @@ import java.util.List;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.grid.Grid;
@@ -35,7 +36,7 @@ public class GridColumnVisibility extends Div {
                 .setHeader("Profession");
 
         Button menuButton = new Button("Show/Hide Columns");
-        menuButton.setThemeName("tertiary");
+        menuButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(
                 menuButton);
         columnToggleContextMenu.addColumnToggleItem("First name", firstNameColumn);

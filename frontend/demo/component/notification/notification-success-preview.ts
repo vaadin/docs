@@ -1,8 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -17,10 +14,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-notification-card theme="success" slot="middle">
-        <div>Application submitted!</div>
-        <vaadin-button theme="tertiary-inline">
-          <vaadin-icon icon="lumo:cross"></vaadin-icon>
-        </vaadin-button>
+        Application submitted!
       </vaadin-notification-card>
     `;
   }

@@ -1,0 +1,204 @@
+= Configuration Properties
+
+[.lead]
+Vaadin applications have configuration properties that change its behavior.
+Use either system properties or servlet initialization parameters to set them.
+
+See the <<properties,full list of properties>>.
+
+For Spring-based applications, there are <<{articles}/flow/integrations/spring/configuration#, Spring specific instructions available>>.
+
+== Using System Properties
+
+When using Java's system properties to set the Vaadin application parameters,
+the `vaadin.` prefix is needed to be specified before the parameter names.
+The following shows and example of setting the system property when executing
+a Maven goal from the command line:
+
+----
+mvn jetty:run -Dvaadin.frontend.url.es6=http://mydomain.com/es6/ -Dvaadin.frontend.url.es5=http://mydomain.com/es5/
+----
+
+System properties can be configured for Maven plugin executions. For instance, the following
+example sets a Vaadin specific system property when the Jetty Maven plugin is run:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.eclipse.jetty</groupId>
+    <artifactId>jetty-maven-plugin</artifactId>
+    <configuration>
+        <systemProperties>
+            <systemProperty>
+                <name>vaadin.pushMode</name>
+                <value>disabled</value>
+            </systemProperty>
+        </systemProperties>
+    </configuration>
+</plugin>
+----
+
+== Using Servlet Initialization Parameters
+
+Another alternative is to use servlet initialization parameters.
+You can use the Servlet 3.0 `@WebServlet` annotation, which requires you to configure
+your own servlet (otherwise it is done automatically by Vaadin with default parameter values):
+
+[source,java]
+----
+@WebServlet(urlPatterns = "/*", name = "myservlet", asyncSupported = true, initParams = {
+        @WebInitParam(name = "frontend.url.es6", value = "http://mydomain.com/es6/"),
+        @WebInitParam(name = "frontend.url.es5", value = "http://mydomain.com/es5/") })
+@VaadinServletConfiguration(productionMode = false)
+public class MyServlet extends VaadinServlet {
+}
+----
+
+Yet another approach is to use the `web.xml` file:
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app
+  id="WebApp_ID" version="3.0"
+  xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+  <servlet>
+    <servlet-name>myservlet</servlet-name>
+    <servlet-class>
+        com.vaadin.server.VaadinServlet
+    </servlet-class>
+
+    <init-param>
+      <param-name>frontend.url.es6</param-name>
+      <param-value>http://mydomain.com/es6/</param-value>
+    </init-param>
+
+    <init-param>
+      <param-name>frontend.url.es5</param-name>
+      <param-value>http://mydomain.com/es5/</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>myservlet</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+</web-app>
+----
+
+.System properties override servlet parameters
+[NOTE]
+If you have both properties with the same name specified, the system one will be used.
+
+[[properties]]
+== Configuration Properties
+
+The list contains the properties that are defined in `com.vaadin.server.DeploymentConfiguration` and `com.vaadin.server.Constants` classes, in alphabetical order.
+
+.Spring Boot
+[NOTE]
+If you use Spring Boot then you should add the prefix `vaadin.`, for example, `vaadin.productionMode=true`.
+
+`closeIdleSessions`::
+When set to true (the default is false), the session is be closed if no UI is active.
+Heartbeat requests are like any other request from the servlet container's viewpoint.
+This means that as long as there is an open UI, the session never expires even though there is no user interaction.
+You can control this behavior by setting an init parameter named closeIdleSessions to true.
+
+`devmode.liveReload.enabled`::
+This is by default set to `true`, which means that if you are using some live reload tool on the server side the browser is refreshed automatically once code is reloaded on the server side.
+
+`devmode.sessionSerialization.enabled`::
+Determines whether the `VaadinSession` instances of the users are serialized on server shutdown when running in development mode.
+The parameter is set to `false` by default so that only other HTTP session data is serialized/deserialized on development server restart.
+Enabling the property allows, for example, access control information to be retained during development, so that you do not need to log in again for each change.
+
+`devmode.optimizeBundle`::
+By default, in development mode all frontend resources found on the class path are included in the generated webpack bundle.
+When set to `true`, creates an optimized bundle by including only frontend resources that are used from the application entry points (this is the default in production mode).
+Uses bytecode scanning which increases application startup time.
+
+`disable.automatic.servlet.registration`::
+Configuration name for the parameter that determines if Vaadin should automatically register servlets needed for the application to work.
+
+`disable-xsrf-protection`
+Cross-site request forgery protection.
+This protection is enabled by default, but it might need to be disabled to allow a certain type of testing.
+For these cases, the check can be disabled by setting the init parameter.
+
+`frontend.url.es5`::
+A location Vaadin searches web components' files in production mode when the request is coming
+from older browsers, not supporting es6, default web components' development language version.
+
+`frontend.url.es6`::
+A location Vaadin searches web components' files in production mode for requests from modern browsers.
+
+`heartbeatInterval`::
+*Affects Flow applications only.* UIs that are open on the client side send a regular heartbeat to the server to indicate they are still alive, even though there is no ongoing user interaction.
+When the server does not receive a valid heartbeat for a given UI, it will eventually remove that UI from the session.
+
+`i18n.provider`::
+I18N provider property. To use localization and translation strings the application only needs to implement `I18NProvider` and define the fully qualified class name in the property `i18n.provider`.
+Please consult <<{articles}/flow/advanced/i18n-localization#, Localization>> documentation.
+
+`load.es5.adapters`::
+Include polyfills for browsers that do not support ES6 to their initial page.
+For web components to work, extra libraries (polyfills) are required to be loaded, can be turned off
+if different versions or libraries should be included instead.
+
+`maxMessageSuspendTimeout`::
+In certain cases, such as when the server sends adjacent `XmlHttpRequest` responses and push
+messages over a low bandwidth connection, messages may be received out of order by the client.
+This property specifies the maximum time (in milliseconds) that the client will then wait for
+the predecessors of a received out-order message, before considering them missing and requesting
+a full resynchronization of the application state from the server.
+The default value is 5000 ms.
+You may increase this if your application exhibits an undue amount of resynchronization requests
+(as these degrade the UX due to flickering and loss of client-side-only state such as scroll position).
+
+`original.frontend.resources`::
+Configuration name for the parameter that determines if Vaadin should use bundled fragments or not.
+
+`pnpm.enable`::
+This flag can be used to enable pnpm instead of npm for resolving and downloading frontend dependencies.
+By default it is `false` and npm is used, but setting it to `true` enables pnpm.
+See how to <<npm-pnpm#, switch between npm and pnpm>>.
+
+`productionMode`::
+Turns application to work in production mode.
+Production mode disables most of the logged information that appears on the console because logging and other debug features can have a significant performance impact.
+Development mode JavaScript functions are not exported, `push` is given as a minified JavaScript file instead of full size and static resources are cached.
+See <<../production#,Deploying to Production>> for more information.
+
+`pushLongPollingSuspendTimeout`::
+*Affects Flow applications only.* When using the long polling transport strategy,  it specifies how long it accepts responses after
+each network request.
+Number of milliseconds.
+
+`pushMode`::
+*Affects Flow applications only.* The permitted values are "disabled" or "manual". See <<{articles}/flow/advanced/server-push#, Server Push>> for more information.
+
+`pushURL`::
+*Affects Flow applications only.* The URL to use for push requests. Some servers require a predefined URL to push.
+See <<{articles}/flow/advanced/server-push#, Server Push>> for more information.
+
+`requestTiming`::
+If true, in each response the server includes some basic timing information.
+This can be used for performance testing.
+
+`sendUrlsAsParameters`::
+Returns whether the sending of URL's as GET and POST parameters in requests with content-type
+`application/x-www-form-urlencoded` is enabled or not.
+
+`syncIdCheck`::
+Returns whether sync id checking is enabled.
+The sync id is used to gracefully handle situations
+when the client sends a message to a connector that has recently been removed on the server.
+Default is `true`.
+
+`useDeprecatedV14Bootstrapping`::
+This flag can be used to enable the server-side bootstrapping mode which was used in Vaadin 14 and earlier version.

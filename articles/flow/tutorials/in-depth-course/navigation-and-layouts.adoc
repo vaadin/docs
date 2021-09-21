@@ -1,0 +1,231 @@
+---
+title: Navigation and App Layout
+order: 90
+page-title: "Tutorial: Navigation and parent layouts in Vaadin Flow"
+description: Learn to set up a parent layout and navigate between child views.
+---
+
+= Navigating Between Views in Vaadin
+
+So far in this tutorial series, you've built a CRM application for listing and editing contacts.
+In this chapter, you add a dashboard view to the application.
+You also add a responsive application layout, with a header and a navigation sidebar that can be toggled on small screens.
+
+image::images/navigation/app-layout.png[Application layout with a header and a sidebar]
+
+== Defining View Routes
+
+Any Vaadin component can be made a navigation target by adding an `@Route("<path>")` annotation.
+Routes can be nested by defining the parent layout in the annotation: `@Route(value = "list", parent=MainLayout.class)`.
+
+== Creating the Parent Layout
+
+The application should have:
+
+* A shared parent layout with two child views:
++
+`MainLayout`: App Layout with header and navigation:
++
+.. `ListView`: The default view, mapped to `""`.
+.. `DashboardView`: Mapped to `"dashboard"`.
+* A responsive app layout and navigation links.
+
+Begin by creating a new Java class named `MainLayout` in the `views` package with the following content. 
+This is the shared parent layout of both views in the application.
+
+.`MainLayout.java`
+[source, java]
+----
+package com.example.application.views;
+
+import com.example.application.views.list.ListView;
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.HighlightConditions;
+import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.PWA;
+
+public class MainLayout extends AppLayout { // <1>
+
+    public MainLayout() {
+        createHeader();
+        createDrawer();
+    }
+
+    private void createHeader() {
+        H1 logo = new H1("Vaadin CRM");
+        logo.addClassNames("text-l", "m-m");
+
+        HorizontalLayout header = new HorizontalLayout(
+          new DrawerToggle(), // <2>
+          logo
+        );
+
+        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER); // <3> 
+        header.expand(logo);
+        header.setWidth("100%");
+        header.addClassNames("py-0", "px-m");
+
+        addToNavbar(header); // <4>
+
+    }
+
+    private void createDrawer() {
+        RouterLink listLink = new RouterLink("List", ListView.class); // <5>
+        listLink.setHighlightCondition(HighlightConditions.sameLocation()); // <6>
+
+        addToDrawer(new VerticalLayout( // <7>
+            listLink
+        ));
+    }
+}
+----
+<1> `AppLayout` is a Vaadin layout with a header and a responsive drawer.
+<2>  `DrawerToggle` is a menu button that toggles the visibility of the sidebar.
+<3> Centers the components in the `header` along the vertical axis.
+<4> Adds the `header` layout to the application layout's nav bar, the section at the top of the screen.
+<5> Creates a `RouterLink` with the text "List" and `ListView.class` as the destination view.
+<6> Sets setHighlightCondition(HighlightConditions.sameLocation()) to avoid highlighting the link for partial route matches.
+(Technically, every route starts with an empty route, so without this it would always show up as active, even though the user is not on the view.)
+<7> Wraps the link in a `VerticalLayout` and adds it to the `AppLayout`'s drawer.
+
+Add the following CSS to `frontend/themes/flowcrmtutorial/styles.css` to highlight the selected link.
+
+.`styles.css`
+[source,css]
+----
+a[highlight] {
+    font-weight: bold;
+    text-decoration: underline;
+}
+----
+
+Lastly, in `ListView` update the `@Route` mapping to use the new `MainLayout` and delete the `@Theme` annotation.
+
+.`ListView.java`
+[source,java]
+----
+@Route(value="", layout = MainLayout.class) // <1>
+@PageTitle("Contacts | Vaadin CRM")
+public class ListView extends VerticalLayout {
+     ...
+}
+----
+<1> `ListView` still matches the empty path, but now uses `MainLayout` as its parent.
+
+Run the application.
+You should now see a header and a sidebar on the list view.
+
+image::images/navigation/app-layout-list-view.png[Application with sidebar list view]
+
+== Creating a Dashboard View
+
+Next, create a new dashboard view.
+This view shows stats: the number of contacts in the system and a pie chart of the number of contacts per company.
+
+image::images/navigation/dashboard-view.png[Dashboard view]
+
+Create a new Java class named `DashboardView` in the `views` package with the following content:
+
+.`DashboardView.java`
+[source,java]
+----
+package com.example.application.views;
+
+import com.example.application.data.service.CrmService;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.charts.Chart;
+import com.vaadin.flow.component.charts.model.ChartType;
+import com.vaadin.flow.component.charts.model.DataSeries;
+import com.vaadin.flow.component.charts.model.DataSeriesItem;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route(value = "dashboard", layout = MainLayout.class) // <1>
+@PageTitle("Dashboard | Vaadin CRM")
+public class DashboardView extends VerticalLayout {
+    private final CrmService service;
+
+    public DashboardView(CrmService service) { // <2>
+        this.service = service;
+        addClassName("dashboard-view");
+        setDefaultHorizontalComponentAlignment(Alignment.CENTER); // <3>
+        add(getContactStats(), getCompaniesChart());
+    }
+
+    private Component getContactStats() {
+        Span stats = new Span(service.countContacts() + " contacts"); // <3>
+        stats.addClassNames("text-xl", "mt-m");
+        return stats;
+    }
+
+    private Chart getCompaniesChart() {
+        Chart chart = new Chart(ChartType.PIE); // <4>
+
+        DataSeries dataSeries = new DataSeries();
+        service.findAllCompanies().forEach(company ->
+            dataSeries.add(new DataSeriesItem(company.getName(), company.getEmployeeCount()))); // <5>
+        chart.getConfiguration().setSeries(dataSeries);
+        return chart;
+    }
+}
+----
+<1> `DashboardView` is mapped to the `"dashboard"` path and uses `MainLayout` as a parent layout.
+<2> Takes `CrmService` as a constructor parameter and saves it as a field.
+<3> Centers the contents of the layout.
+<4> Calls the service to get the number of contacts.
+<5> Calls the service to get all companies, then creates a `DataSeriesItem` for each, containing the company name and employee count. 
+
+.Vaadin Charts is a Commercial Component Set
+[NOTE]
+====
+<<{articles}/ds/components/charts#,Vaadin Charts>> is a collection of data visualization components that is a part of the https://vaadin.com/pricing[Vaadin Pro subscription]. Vaadin Charts comes with a free trial that you can activate in the browser. All Vaadin Pro tools and components are free for students through the https://education.github.com/pack?utm_source=github+vaadin[GitHub Student Developer Pack].
+====
+
+Open `Company.java` and add the following field and getter to get the employee count without having to fetch all the entities. 
+
+.`Company.java`
+[source, java]
+----
+@Formula("(select count(c.id) from Contact c where c.company_id = id)") // <1>
+private int employeeCount;
+
+public int getEmployeeCount(){
+    return employeeCount;
+}
+----
+<1> The Formula will get the count of employees without needing to fetch all the employees.
+
+== Add the Dashboard View to the Main Layout Sidebar 
+
+Add a navigation link to `DashboardView` in the `MainLayout` drawer:
+
+.`MainLayout.java`
+[source,java]
+----
+private void createDrawer() {
+    RouterLink listLink = new RouterLink("List", ListView.class);
+    listLink.setHighlightCondition(HighlightConditions.sameLocation());
+
+    addToDrawer(new VerticalLayout(
+        listLink,
+        new RouterLink("Dashboard", DashboardView.class)
+    ));
+}
+----
+
+Build and run the application.
+You should now be able to navigate to the dashboard view and see stats on your CRM contacts.
+If you want to, go ahead and add or remove contacts in the list view to see that the dashboard reflects your changes.
+
+image::images/navigation/dashboard-completed.png[Complete dashboard view]
+
+In the next chapter, you'll secure the application by adding a login screen.
+
+include::{articles}/flow/tutorials/in-depth-course/_ebook-banner.adoc[opts=optional]

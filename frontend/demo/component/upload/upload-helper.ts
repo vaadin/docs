@@ -1,4 +1,4 @@
-import '../../init'; // hidden-source-line
+import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
@@ -36,6 +36,8 @@ export class Example extends LitElement {
     if (this.upload?.i18n) {
       this.upload.i18n.addFiles.one = 'Upload Spreadsheet...';
       this.upload.i18n.dropFiles.one = 'Drop spreadsheet here';
+      this.upload.i18n.error.incorrectFileType =
+        'Please provide the file in one of the supported formats (.xls, .xlsx, .csv).';
       this.upload.i18n = { ...this.upload.i18n };
     }
   }
@@ -73,6 +75,6 @@ export class Example extends LitElement {
   // end::snippet[]
 
   fileRejectHandler(event: UploadFileRejectEvent) {
-    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
+    showErrorNotification(event.detail.error);
   }
 }

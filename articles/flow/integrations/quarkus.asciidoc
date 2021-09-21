@@ -1,0 +1,144 @@
+---
+title: Quarkus
+order: 250
+layout: page
+---
+
+[[quarkus.basic]]
+= Using Quarkus With Vaadin
+
+Quarkus is an open source, Kubernetes-native Java framework made for Java virtual machines and native compilation.
+It optimizes Java specifically for containers, enabling it to become an effective platform for serverless, cloud, and Kubernetes environments.
+See https://quarkus.io/[+quarkus.io+] for more information about Quarkus.
+
+== Starting a Project
+
+For starting a new project with Quarkus and Vaadin, you can get a project base for from https://github.com/vaadin/base-starter-flow-quarkus/[Quarkus base starter].
+It is a project template with the necessary configuration and dependencies included for starting to build your own application.
+
+This starter is also available with Gradle configuration in the https://github.com/vaadin/base-starter-flow-quarkus/tree/gradle[Gradle] branch.
+
+== Adding Dependencies
+
+To be able to run Quarkus, you need to have the `vaadin-quarkus` and `vaadin-jandex` Maven dependencies in the project, as well as configure the `quarkus-maven-plugin`.
+
+For example:
+
+.`pom.xml`
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <!-- Quarkus Platform BOM to keep the project
+             artifacts in synch with the quarkus.version -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-bom</artifactId>
+            <version>${quarkus.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- Vaadin Platform BOM -->
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <type>pom</type>
+            <scope>import</scope>
+            <version>${vaadin.version}</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <!-- The Vaadin Quarkus extension -->
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-quarkus</artifactId>
+        <!-- NOTE: this will come from vaadin-bom when final released -->
+        <version>1.0.0.alpha1</version>
+    </dependency>
+
+    <!-- This jandex dependency contains Vaadin-core annotation indexes
+         and is used as an offline reflection library. -->
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-core-jandex</artifactId>
+    </dependency>
+
+    <!-- Quarkus always pulls in slf4j-jboss-logmanager
+         into target/lib; don't use slf4j-simple -->
+    <dependency>
+        <groupId>org.jboss.slf4j</groupId>
+        <artifactId>slf4j-jboss-logmanager</artifactId>
+        <version>1.1.0.Final</version>
+    </dependency>
+</dependencies>
+
+<build>
+    <plugins>
+        <!-- For indepth information on quarkus-maven-plugin
+             see https://quarkus.io/guides/maven-tooling#build-tool-maven -->
+        <plugin>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-maven-plugin</artifactId>
+            <version>${quarkus.version}</version>
+            <extensions>true</extensions>
+            <executions>
+                <execution>
+                    <goals>
+                        <!-- Builds the Quarkus application -->
+                        <goal>build</goal>
+                        <!-- in these goals the Quarkus application bootstrap
+                             is initialized and re-used in the build goal -->
+                        <goal>generate-code</goal>
+                        <goal>generate-code-tests</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+The Quarkus application can then be started in development mode using the `quarkus:dev` goal in Maven.
+
+[source,bash]
+----
+$ mvn package quarkus:dev
+----
+
+Open http://localhost:8080/[+localhost:8080+] in the browser.
+
+== Vaadin CDI Features
+
+Quarkus’ dependency injection solution is based on CDI, so it is possible to use all CDI features.
+
+See the documentation for Vaadin CDI features:
+
+* <<cdi/contexts#, Vaadin CDI Scopes>> 
+* <<cdi/events#, Observable Vaadin Events>> 
+* <<cdi/service-beans#, Vaadin Service Interfaces as CDI Beans>>
+* <<cdi/instantiated-beans#, Using CDI Beans>>
+
+[[quarkus.vaadin.addons]]
+== Vaadin Add-Ons in Quarkus Applications
+
+Any Vaadin add-on used in a Quarkus application should contain a Jandex index.
+You can generate it using the `jandex-maven-plugin`.
+See https://quarkus.io/guides/cdi-reference#how-to-generate-a-jandex-index[How to Generate a Jandex Index].
+
+If you cannot modify the dependency, you can still get Quarkus to index it by adding `quarkus.index-dependency` entries to your [filename]#application.properties#:
+
+.[filename]#application.properties#
+[source, properties]
+----
+quarkus.index-dependency.<name>.group-id=
+quarkus.index-dependency.<name>.artifact-id=
+quarkus.index-dependency.<name>.classifier=(this one is optional)
+----
+
+[[quarkus.vaadin.limitations]]
+== Limitations
+
+WebSockets Push does not currently work in the Vaadin extension for Quarkus.
+As a consequence, Live Reload functionality is not available.

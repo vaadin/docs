@@ -13,10 +13,8 @@ public class ButtonDisableLongAction extends Div {
         // tag::snippet[]
         Button button = new Button("Perform Action");
         FakeProgressBar progressBar = new FakeProgressBar();
-        button.addClickListener(event -> {
-            button.setEnabled(false);
-            progressBar.simulateProgress();
-        });
+        button.setDisableOnClick(true);
+        button.addClickListener(event -> progressBar.simulateProgress());
 
         progressBar.addProgressEndListener(event -> {
             button.setEnabled(true);

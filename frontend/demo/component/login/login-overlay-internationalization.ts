@@ -35,7 +35,10 @@ export class Example extends LitElement {
   };
 
   render() {
-    return html`<vaadin-login-overlay .i18n="${this.i18n}" opened></vaadin-login-overlay>`;
+    return html`
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
+      <vaadin-login-overlay .i18n="${this.i18n}" opened no-autofocus></vaadin-login-overlay>
+    `;
   }
   //end::snippet[]
 }
