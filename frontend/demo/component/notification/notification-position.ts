@@ -1,5 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators';
 import '@vaadin/vaadin-icon/vaadin-icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
@@ -44,20 +44,8 @@ export class Example extends LitElement {
     // Use the button label as the location
     const position = (event.target as HTMLElement).textContent as NotificationPosition;
 
-    const notification = new NotificationElement();
-    notification.position = position;
-    notification.renderer = (root) => {
-      render(html`${position}`, root);
-    };
-
-    document.body.appendChild(notification);
-    notification.open();
-
-    // Remember to clean up the element from the DOM
-    // if you are not reusing the same notification
-    notification.addEventListener('opened-changed', () => {
-      document.body.removeChild(notification);
-    });
+    NotificationElement.show(position, { position });
   }
+
   // end::snippet[]
 }

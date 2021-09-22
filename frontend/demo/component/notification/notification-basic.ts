@@ -1,14 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators';
-import { guard } from 'lit/directives/guard';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
-import {
-  NotificationRenderer,
-  NotificationOpenedChangedEvent,
-} from '@vaadin/vaadin-notification/vaadin-notification';
+import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
+import { NotificationOpenedChangedEvent } from '@vaadin/vaadin-notification/src/interfaces';
 
 @customElement('notification-basic')
 export class Example extends LitElement {
@@ -22,30 +19,27 @@ export class Example extends LitElement {
     return root;
   }
 
+  handleClick() {
+    // tag::snippet[]
+    const notification = NotificationElement.show('Financial report generated', {
+      position: 'middle',
+    });
+    // end::snippet[]
+    this.notificationOpened = true;
+    const handleOpenChanged = (e: NotificationOpenedChangedEvent) => {
+      if (!e.detail.value) {
+        this.notificationOpened = false;
+        notification.removeEventListener('opened-changed', handleOpenChanged);
+      }
+    };
+    notification.addEventListener('opened-changed', handleOpenChanged);
+  }
+
   render() {
     return html`
-      <vaadin-button
-        @click="${() => (this.notificationOpened = true)}"
-        .disabled="${this.notificationOpened}"
-      >
+      <vaadin-button @click="${this.handleClick}" .disabled="${this.notificationOpened}">
         Try it
       </vaadin-button>
-
-      <!-- tag::snippet[] -->
-      <vaadin-notification
-        position="middle"
-        .opened="${this.notificationOpened}"
-        @opened-changed="${(e: NotificationOpenedChangedEvent) => {
-          this.notificationOpened = e.detail.value;
-        }}"
-        .renderer="${guard(
-          [],
-          (): NotificationRenderer => (root) => {
-            render(html`Financial report generated`, root);
-          }
-        )}"
-      ></vaadin-notification>
-      <!-- end::snippet[] -->
     `;
   }
 }
