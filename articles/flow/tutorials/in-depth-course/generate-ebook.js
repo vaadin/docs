@@ -9,6 +9,8 @@ async function generatePDF() {
       'pdf-theme=./pdf-assets/themes/vaadin-theme.yml',
       '-a',
       'pdf-fontsdir=./pdf-assets/fonts',
+      '-a',
+      'skip-front-matter',
       '_ebook.adoc',
     ]);
 
