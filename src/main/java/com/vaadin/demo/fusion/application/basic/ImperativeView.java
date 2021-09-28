@@ -1,4 +1,4 @@
-package com.vaadin.demo.flow.application.events;
+package com.vaadin.demo.fusion.application.basic;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.button.Button;
@@ -22,7 +22,6 @@ public class ImperativeView extends Div {
 
     add(new Div(text), button);
   }
-  public static class Exporter extends DemoExporter<ImperativeView> { // hidden-source-line
-  } // hidden-source-line    
+  public static class Exporter extends DemoExporter<ImperativeView> {} // hidden-source-line
 }
 // end::snippet[]

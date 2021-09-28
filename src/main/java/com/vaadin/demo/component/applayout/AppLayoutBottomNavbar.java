@@ -32,7 +32,6 @@ public class AppLayoutBottomNavbar extends AppLayout {
 
     Div content = new Div();
     content.add(viewTitle, viewContent);
-    content.getStyle().set("padding", "0 var(--lumo-space-l)");
 
     addToNavbar(title);
     addToNavbar(true, tabs);
@@ -49,7 +48,7 @@ public class AppLayoutBottomNavbar extends AppLayout {
       createTab(VaadinIcon.USER_HEART, "Customers"),
       createTab(VaadinIcon.PACKAGE, "Products")
     );
-    tabs.addThemeVariants(TabsVariant.LUMO_EQUAL_WIDTH_TABS);
+    tabs.addThemeVariants(TabsVariant.LUMO_MINIMAL, TabsVariant.LUMO_EQUAL_WIDTH_TABS);
     return tabs;
   }
 
