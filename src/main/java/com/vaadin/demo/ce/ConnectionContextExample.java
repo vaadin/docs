@@ -15,16 +15,21 @@ public class ConnectionContextExample extends Div {
     public void createAsyncJob() {
         CollaborationEngine collaborationEngine = CollaborationEngine.getInstance();
         Thread thread = new Thread(() -> {
-                // Query API
-                Object result = queryAPI();
-                // Get SystemConnectionContext from Collaboration Engine
-                SystemConnectionContext systemConnectionContext = collaborationEngine.getSystemContext();
-                // Notify the topic
-                MessageManager messageManager = new MessageManager(systemConnectionContext, systemUser, topicId, collaborationEngine) ;
-                messageManager.submit(result.toString()).whenComplete((a,t) -> {
+            // Query API
+            Object result = queryAPI();
+            // Get SystemConnectionContext from Collaboration Engine
+            SystemConnectionContext systemConnectionContext =
+                collaborationEngine.getSystemContext();
+            // Notify the topic
+            MessageManager messageManager =
+                new MessageManager(systemConnectionContext, systemUser, topicId,
+                    collaborationEngine);
+            messageManager
+                .submit(result.toString())
+                .whenComplete((a, t) -> {
                     // Close the message manager when done
                     messageManager.close();
-                });
+            });
         });
         thread.setDaemon(true);
         thread.start();
