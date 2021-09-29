@@ -7,28 +7,28 @@ layout: page
 = Legacy Component Pack
 :toclevels: 2
 
-One of the biggest challenges in migrating from Vaadin 7 or 8 to the new web components based Vaadin Flow is the difference between the UI components in API and behavior.
-The Legacy Component Pack is an add-on that provides a set of backwards compatible "legacy components" that ease migrating from Vaadin 7 or 8 to the latest Vaadin version.
-The API, behavior, and even DOM-structure of the components mimic, as closely as possible, to the existing components.
+One of the biggest challenges in migrating from Vaadin 7 or 8 to Vaadin Flow is that Flow is based on a different set of web components that differs both in the API and behavior.
+The Legacy Component Pack is an add-on that provides a set of backwards-compatible "legacy components" that ease migrating from Vaadin 7 or 8 to the latest Vaadin version.
+The API, behavior, and even the DOM-structure of the components is made to mimic the Vaadin 7/8 components as closely as possible.
 
-The first version of the pack will consist of the following components: `HorizontalLayout`, `VerticalLayot`, `Panel` and `Label`.
-Each component either doesn't have a corresponding component available with Flow, or the behavior and API has changes so significantly, that it would require significant effort to modify the code to migrate it to Flow.
-By using the legacy component pack, for the forementioned components, only the imports need to be changed to be able to use almost all of the same component features.
+The first version of the pack consists of the following components: `HorizontalLayout`, `VerticalLayout`, `Panel`, and `Label`.
+These components either lack counterparts in Flow entirely, or have significantly different APIs, requiring a lot of modifications when migrating.
+By using the legacy component pack, only the imports for the supported components need to be changed to be able to use almost all of the same component features.
 
 == License
 
 The Legacy Component Pack is licensed under Commercial Vaadin Developer License 4.0 (CVDLv4) and part of the https://vaadin.com/pricing[Pro Subscription].
-You will be asked to validate your license or start a trial period when you start to use it.
+You will be asked to validate your license or start a trial period when you start using it.
 
-== Usage Instructions
+== Using the Legacy Component Pack
 
-The pack is aimed for to be used when migrating your project from Vaadin 7 or 8 to the latest Vaadin version.
+The pack is intended for migrating your project from Vaadin 7 or 8 to the latest Vaadin version.
 The pack itself should work with any Vaadin version, but it is tested against the latest version.
-For migrators, the recommendation is to migrate to the latest version.
+The recommendation is to migrate to the latest version.
 
-To use the legacy components, you first need to add the dependency to your projects `pom.xml` or `build.gradle`:
+To use the legacy components, you first need to add the dependency to your project's `pom.xml` or `build.gradle` as follows:
 
-. Add the pack dependency to [filename]#pom.xml#:
+* With Maven, add the pack dependency to [filename]#pom.xml#:
 +
 .`pom.xml`
 [source,xml]
@@ -38,7 +38,7 @@ To use the legacy components, you first need to add the dependency to your proje
     <dependency>
         <groupId>com.vaadin</groupId>
         <artifactId>vaadin-legacy-components-flow</artifactId>
-         <!-- Version can be omitted once the package is added to vaadin-bom -->
+         <!-- Version can be omitted if using Vaadin version 22 and vaadin-bom -->
         <version>1.0.0.alpha1</version>
     </dependency>
 </dependencies>
@@ -47,17 +47,11 @@ To use the legacy components, you first need to add the dependency to your proje
 .Prerelease
 [NOTE]
 The pack is currently in prerelease state which means that you need to include the Vaadin prereleases Maven repository to your `<repositories>` listing.
+You can still use it on top of the latest stable version Vaadin 21.
 
-After the dependency has been downloaded, you can start using the components by updating the component imports. For the components that are included in the pack, change the import statements to the corresponding legacy packages: from `com.vaadin.ui` to `com.vaadin.legacy.ui`.
+After the dependency has been downloaded, you can start using the components by updating the component imports.
+For the components that are included in the pack, change the import statements to the corresponding legacy packages, for example, `com.vaadin.ui.VerticalLayout` to `com.vaadin.legacy.ui.VerticalLayout`.
 
-
-== Limitations and Unsupported API
-
-TODO https://github.com/vaadin/flow-legacy-components/issues/72
-
-== Incompatible API Table
-
-TODO https://github.com/vaadin/flow-legacy-components/issues/72
 
 == Included Components
 
@@ -105,3 +99,160 @@ TODO
 === Label
 
 TODO
+
+== Incompatible and Unsupported API and Migration Instructions
+
+Any API that was deprecated already in Vaadin 8 (or 7) **does not exist** in the legacy components.
+You should thus change any code that uses the deprecated APIs before starting the migration.
+
+Any legacy component API that cannot work or is obsolete for Vaadin Flow, is included in the legacy components as `@Deprecated` and **does not do anything except log a warning in development mode.**
+This is done to make it is faster to get the project to compile and run, and enables you to see the migration results sooner without having to comment out code.
+
+This section goes through both the incompatible and the unsupported API introduced by each legacy component class and how you could mitigate the situation if using that API in your project.
+The Legacy Component Pack is shortened to _LCP_ in the tables below.
+
+=== `com.vaadin.ui.Component`
+
+The base `Component` interface from Vaadin 7 and 8 is replaced in Flow by the abstract class `com.vaadin.flow.component.Component`.
+Most of the API is still the same or has changed only slightly.
+The legacy component pack introduces any missing API in the `AbstractComponent` class instead.
+
+.`Component`
+|===
+|Method signature |Mitigation 
+
+| `String getId()`
+| **Return type changed to** `Optional<String>` by Flow's `Component`
+| `HasComponents	getParent()`
+| **Return type changed to** `Optional<Component>` by Flow's `Component`
+| `UI getUI()`
+| **Return type changed to** `Optional<UI>` by Flow's `Component`
+| `String getCaption()`
+
+`void setCaption(String caption)`
+| **Migrate**. Only supported by LCP's `Label`, for other components you have to move the text to another component like `Span` or `Div`. Replaced by `setLabel(String)` by field components in Flow.
+| `String getDescription()`
+| **Remove/Migrate**. Not supported by the LCP and no direct replacement in Flow. Alternatives are https://vaadin.com/directory/search?keyword=tooltip[available in the Directory].
+| `Resource getIcon()`
+
+`setIcon(Resource icon)`
+| **Remove/Migrate**. Not supported by LCP's components and for Flow's components it depends on the component if it supports icons or not - for example `Button` supports icons. 
+| `void readDesign(org.jsoup.nodes.Element design, DesignContext designContext)`
+
+`void writeDesign(org.jsoup.nodes.Element design, DesignContext designContext)`
+| **Remove**. You should not be even calling these methods as they are for Vaadin Designer integration only.
+|===
+
+=== `com.vaadin.server.AbstractClientConnector`
+
+The legacy component pack version of the class is in the `com.vaadin.legacy.server` package.
+
+.`AbstractClientConnector`
+|===
+|Method signatures |Mitigation 
+
+|`protected void fireEvent(EventObject event)`
+| **Migrate**. Flow's components' `ComponentEventBus` needs event object type to be `ComponentEvent<T>` instead. Use `getEventBus().fireEvent(event);` to fire the event. From outside the component, use `ComponentUtil::fireEvent()`.
+| `protected void addExtension(Extension extension)`
+
+`Collection<Extension>	getExtensions()`
+
+`void	removeExtension(Extension extension)`
+
+| **Remove/Migrate**. Flow components can not be extended with extensions.
+How to migrate depends on what the extension does. For pure server-side extensions, you can subclass the component. For extensions with client-side parts, you need to make a JavaScript file and call it from Java code inside the extended.
+| `Registration addListener(Class<?> eventType, SerializableEventListener listener, Method method)`
+
+`protected Registration addListener(String eventIdentifier, Class<?> eventType, SerializableEventListener listener, Method method)`
+| **Migrate**. For external usage: use distinct _addXyzListener_ API in the component or `ComponentUtil::addListener()` methods. For inside component usage: replaced by Flow's `ComponentEventListener` added to `ComponentEventBus` that is only accessible inside the component. 
+| `protected void addMethodInvocationToQueue(String interfaceName, Method method, Object[] parameters)`
+| **Remove**. This method was only for internal usage; you should not be using it. It does not apply for Flow.
+| `protected SharedState createState()`
+
+`protected SharedState getState()`
+
+`protected SharedState getState(boolean markAsDirty)`
+
+`Class<? extends SharedState> getStateType()`
+
+`protected void	updateDiffstate(String propertyName, JsonValue newValue)`
+
+| **Remove/Migrate**. `SharedState` is not applicable for Flow; data is transferred through <<../element-api/properties-attributes#,`Element` API>> with properties and attributes instead.
+| `JsonObject encodeState()`
+| **Remove**. Internal method that does not apply for Flow.
+| `static Iterable<? extends ClientConnector> getAllChildrenIterable(ClientConnector connector)`
+| **Migrate**. Does not apply directly to Flow; child components can be obtained with `Component::getChildren()`
+| `String	getConnectorId()`
+| **Remove/Migrate**. Does not apply to Flow. Manually set IDs can be used with `setId`/`getId`; Internally Flow uses `StateNode::getId` for tracking _nodes_ between client and server. 
+| `ErrorHandler	getErrorHandler()`
+
+`void setErrorHandler(ErrorHandler errorHandler)`
+
+| **Migrate**. Flow does not have a component-level error handler. Migrate to use `VaadinSession::setErrorHandler()` instead or depending the type of error, you could use an <<../routing/exceptions#, error view instead>>.
+| `Collection<?>	getListeners(Class<?> eventType)`
+| **Remove/Migrate**. No replacement available in Flow: use the `fireEvent()` API from `ComponentEventBus` or `ComponentUtil` for notifying all listeners.
+| `protected Resource getResource(String key)`
+
+`protected void setResource(String key, Resource resource)`
+| **Remove**. Not applicable in Flow. 
+| `ServerRpcManager<?>	getRpcManager(String rpcInterfaceName)`
+
+`List<ClientMethodInvocation> retrievePendingRpcCalls()`
+
+| **Remove**. Internal method that is not applicable in Flow.
+| `protected <T extends ClientRpc> T getRpcProxy(Class<T> rpcInterface)`
+
+`protected <T extends ServerRpc> void registerRpc(T implementation)`
+
+`protected <T extends ServerRpc> void registerRpc(T implementation, Class<T> rpcInterfaceType)`
+| **Remove/Migrate**. Not applicable in Flow; see documentation for <<../element-api/client-server-rpc#, RPC calls between the client and the server>>.
+| `boolean handleConnectorRequest(VaadinRequest request, VaadinResponse response, String path)`
+| **Remove**. Internal method that should not even be used.
+| `protected boolean hasListeners(Class<?> eventType)`
+| **Migrate**. The event type is different: LCP components have both `protected boolean hasListeners(Class<? extends ComponentEvent>)` and `hasListener(Class<? extends ComponentEvent>)`; Flow's `Component` introduces the latter.
+|===
+
+=== `com.vaadin.ui.AbstractComponent`
+
+The legacy component pack version of the component is in the `com.vaadin.legacy.ui` package.
+
+.AbstractComponent
+|===
+|Method signature |Mitigation 
+
+| `protected void fireComponentErrorEvent()`
+| **Remove/Migrate**. Not supported by LCP components and no direct replacement in Flow.
+How to migrate depends on what the error event was for.
+| `protected void focus()`
+| **Migrate**. You need to first check if the component implements `com.vaadin.flow.component.Focusable` and then call `focus()` on it.
+| `protected ActionManager getActionManager()`
+| **Migrate**. Not supported by LCP. See <<../components/shortcut#, how to add shortcuts>> in Flow.
+| `ErrorMessage	getComponentError()`
+
+`ErrorMessage	getErrorMessage()`
+
+`void setComponentError(ErrorMessage componentError)`
+
+| **Remove/Migrate**. Not supported by LCP and in Flow, error messages are component-specific.
+| `protected Collection<String> getCustomAttributes()`
+| **Remove**. You should not even be calling this as it was for Vaadin Designer integration only.
+| `boolean isCaptionAsHtml()`
+
+`void	setCaptionAsHtml(boolean captionAsHtml)`
+| **Migrate**. Only supported by LCP's `Label`, for other components you have to move the text to another component like `Span` or `Div`. Replaced by `setLabel(String)` by field components in Flow.| `protected boolean isReadOnly()`
+
+`protected void	setReadOnly(boolean readOnly)`
+| **Remove/Migrate**. Not supported by LCP components. In Flow, only field components can be read-only.
+| `protected boolean isRequiredIndicatorVisible()`
+
+`protected void	setRequiredIndicatorVisible(boolean visible)`
+| **Remove/Migrate**. Not supported by LCP components. In Flow, only field components can have a required indicator.
+| `boolean	isResponsive()`
+
+`void	setResponsive(boolean responsive)`
+| **Remove**. Not supported by LCP nor Flow components.
+| `void	setDescription(String description)`
+
+`void setDescription(String description, ContentMode mode)`
+| **Remove/Migrate**. Not supported by the LCP and no direct replacement in Flow. Alternatives are https://vaadin.com/directory/search?keyword=tooltip[available in the Directory]
+|===
