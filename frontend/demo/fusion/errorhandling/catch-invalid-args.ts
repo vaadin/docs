@@ -1,4 +1,4 @@
-import { EndpointValidationError } from '@vaadin/flow-frontend';
+import { EndpointValidationError } from '@vaadin/fusion-frontend';
 
 import { DateEndpoint } from 'Frontend/generated/endpoints';
 
@@ -8,7 +8,7 @@ export async function callEndpoint() {
     const tomorrow = await DateEndpoint.getTomorrow('2021-02-29');
     console.log(tomorrow);
     // handle result...
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof EndpointValidationError) {
       error.validationErrorData.forEach(({ parameterName, message }) => {
         console.warn(parameterName); // "date"

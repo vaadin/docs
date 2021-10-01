@@ -4,7 +4,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/vaadin-custom-field/vaadin-custom-field';
 import '@vaadin/vaadin-date-picker/vaadin-date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
-import { Binder, field } from 'Frontend/../target/flow-frontend/form';
+import { Binder, field } from '@vaadin/form';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 import { differenceInDays, parseISO, isAfter } from 'date-fns';
 
