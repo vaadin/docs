@@ -1,4 +1,4 @@
-import { EndpointValidationError } from '@vaadin/flow-frontend';
+import { EndpointValidationError } from '@vaadin/fusion-frontend';
 
 import { DateEndpoint } from 'Frontend/generated/endpoints';
 
