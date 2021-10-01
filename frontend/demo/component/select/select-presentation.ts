@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-select/vaadin-select';
-import { SelectElement } from '@vaadin/vaadin-select/vaadin-select';
+import { Select } from '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -23,7 +23,7 @@ export class Example extends LitElement {
   private people: Person[] = [];
 
   @query('vaadin-select')
-  private select?: SelectElement;
+  private select?: Select;
 
   async firstUpdated() {
     const { people } = await getPeople({ count: 4 });
