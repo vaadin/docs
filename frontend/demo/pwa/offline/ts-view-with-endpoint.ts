@@ -1,4 +1,4 @@
-import { EndpointError } from '@vaadin/flow-frontend';
+import { EndpointError } from '@vaadin/fusion-frontend';
 
 // import the remote endpoint
 import { DataEndpoint } from 'Frontend/generated/endpoints';

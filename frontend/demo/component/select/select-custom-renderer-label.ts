@@ -4,7 +4,7 @@ import { html, LitElement, render } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-select/vaadin-select';
-import { SelectElement } from '@vaadin/vaadin-select';
+import { Select } from '@vaadin/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -26,7 +26,7 @@ export class Example extends LitElement {
   private people: Person[] = [];
 
   @query('vaadin-select')
-  private select?: SelectElement;
+  private select?: Select;
 
   async firstUpdated() {
     this.people = (await getPeople({ count: 5 })).people;
