@@ -1,0 +1,171 @@
+---
+title: Stateless Authentication
+order: 100
+layout: page
+---
+
+= Stateless Authentication With Spring Security
+
+After a user logs in, the web application has to persist the authentication data over server requests, so that the user is not asked to log in again for every single action.
+Stateless authentication presents a way to persist the authentication data between the requests on the client-side.
+
+Unlike server-side authentication storage solutions, which commonly rely on sessions, stateless authentication does not require keeping track of sessions on the server.
+
+== When to Use Stateless Authentication
+
+Using stateless authentication gives benefits in the following use cases:
+
+**Horizontal scaling of the backend**::
+Helps to avoid the complexity of managing shared or sticky sessions between multiple backend servers.
+
+**Seamless deployment**::
+Backend servers can be restarted without logging out users, without requirement for session persistence.
+
+**Offline logout for client-side applications**::
+Users can log off and have their authentication data destroyed on the client without requesting a logout from the server.
+
+Fusion provides the stateless authentication support in applications using Spring Security.
+Under the hood, it uses a signed JSON Web Token (JWT) stored in a cookie pair: the token content in the JS-accessible cookie, and the signature in the HTTP-only cookie.
+
+== Enabling Stateless Authentication
+
+The following examples describe the steps to enable stateless authentication in a Fusion application that uses Spring Security.
+
+pass:[<!-- vale Google.Colons = NO -->]
+
+=== Step 1: Dependencies
+
+Add the following dependencies to the project’s `pom.xml`:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-oauth2-jose</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-oauth2-resource-server</artifactId>
+</dependency>
+----
+
+=== Step 2: Configure Spring Security
+
+Modify the Spring Security configuration and use the [methodname]#VaadinWebSecurityConfigurerAdapter.setStatelessAuthentication()# method to set up stateless authentication as follows:
+
+.`SecurityConfig.java`
+[source,java,subs="callouts+"]
+----
+@EnableWebSecurity
+@Configuration
+public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        ...
+        super.configure(http);
+
+        setLoginView(http, "/login");
+
+        setStatelessAuthentication(http,
+            new SecretKeySpec(
+                    Base64.getDecoder().decode("..."), // <1>
+                JwsAlgorithms.HS256), // <2>
+            "com.example.application" // <3>
+        );
+    }
+}
+----
+<1> Sets the secret key that is used for signing and verifying the JWT.
+<2> Sets the JWT signature algorithm.
+Note that the key length should match the algorithm chosen.
+<3> Sets the issuer JWT claim — a string or a URL that identifies your application.
+
+[CAUTION]
+.Secret Key Considerations
+====
+The secret key must be unique for your application.
+Keep it secret.
+====
+
+You can generate a secret key using the `openssl` command.
+
+For example, the following command generates a 32-byte base64-encoded secret key for using with the `HS256` algorithm:
+
+[source,bash]
+----
+openssl rand -base64 32
+----
+
+=== Step 3: Verify
+
+After the step 2, your application should be using stateless authentication.
+
+To verify that:
+
+. Start the development server and open your application.
+. Log in.
+. Restart the development server.
+
+You should remain logged in after the restart.
+
+pass:[<!-- vale Google.Colons = YES -->]
+
+== Accessing User Details
+
+When using stateless authentication, the `SecurityContext.getAuthentication().getPrincipal()` call returns a `Jwt` instance that only contains the username and roles.
+
+In applications using a username and password authentication, you may need to access the full `UserDetails` instance for the current user.
+You can use the `UserDetailsService` to load the user details using the username from the JWT:
+
+.`SecurityUtils.java`
+[source,java]
+----
+@Component
+public class SecurityUtils  {
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    public Optional<UserDetails> getAuthenticatedUser() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Object principal = context.getAuthentication().getPrincipal();
+        if (principal instanceof Jwt) {
+            String userName = ((Jwt) principal).getSubject();
+            try {
+                return Optional.of(userDetailsService.loadUserByUsername(userName));
+            } catch (UserPrincipalNotFoundException) {
+                return Optional.empty();
+            }
+        }
+        // Anonymous or no authentication.
+        return Optional.empty();
+    }
+
+}
+----
+
+== JWT Expiration
+
+By default, the JWT and cookies expire after 30 minutes after the last server request.
+You can customize the expiration period by using an additional duration argument for the configuration method.
+
+For example:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        ...
+        setStatelessAuthentication(http,
+            new SecretKeySpec(Base64.getDecoder().decode("..."),
+                JwsAlgorithms.HS256),
+            "com.example.application",
+            3600 // The JWT lifetime in seconds
+        );
+    }
+}
+----
