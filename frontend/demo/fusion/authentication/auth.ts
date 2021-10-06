@@ -1,9 +1,9 @@
 // tag::impl[]
 // Uses the Vaadin provided login an logout helper methods
-import { login as loginImpl, LoginResult, logout as logoutImpl } from '@vaadin/flow-frontend';
+import { login as loginImpl, LoginResult, logout as logoutImpl } from '@vaadin/fusion-frontend';
 // end::impl[]
 // tag::userinfo[]
-import { UserInfoEndpoint } from 'Frontend/generated/UserInfoEndpoint';
+import { UserInfoEndpoint } from 'Frontend/generated/endpoints';
 import UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
 // end::userinfo[]
 // tag::basic[]

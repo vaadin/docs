@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/selectConnector.js'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import { SelectElement } from '@vaadin/vaadin-select/vaadin-select';
+import '@vaadin/vaadin-select/vaadin-select';
+import { Select } from '@vaadin/vaadin-select/vaadin-select';
 import '@vaadin/vaadin-list-box/vaadin-list-box';
 import '@vaadin/vaadin-item/vaadin-item';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -23,14 +23,14 @@ export class Example extends LitElement {
   private people: Person[] = [];
 
   @query('vaadin-select')
-  private select?: SelectElement;
+  private select?: Select;
 
   async firstUpdated() {
     const { people } = await getPeople({ count: 4 });
     this.people = people;
-    // Need to manually re-run the bound renderer whenever the item set changes dynamiclly
+    // Need to manually re-run the bound renderer whenever the item set changes dynamically
     // to have the new items available for keyboard selection (with the overlay closed)
-    this.select?.render();
+    this.select?.requestContentUpdate();
   }
 
   render() {

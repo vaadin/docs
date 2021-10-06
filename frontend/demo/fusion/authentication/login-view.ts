@@ -1,6 +1,6 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { LoginResult } from '@vaadin/flow-frontend';
+import { LoginResult } from '@vaadin/fusion-frontend';
 import { login } from './auth';
 import { AfterEnterObserver, RouterLocation } from '@vaadin/router';
 import '@vaadin/vaadin-login/vaadin-login-overlay';

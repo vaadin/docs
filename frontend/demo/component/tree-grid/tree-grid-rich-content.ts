@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -8,7 +7,8 @@ import '@vaadin/vaadin-grid/vaadin-grid';
 import '@vaadin/vaadin-grid/vaadin-grid-tree-toggle';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
 import type {
   GridColumnElement,
@@ -99,17 +99,17 @@ export class Example extends LitElement {
             style="font-size: var(--lumo-font-size-s); line-height: var(--lumo-line-height-m);"
           >
             <a href="mailto:${person.email}" style="align-items: center; display: flex;">
-              <iron-icon
+              <vaadin-icon
                 icon="vaadin:envelope"
                 style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
-              ></iron-icon>
+              ></vaadin-icon>
               <span>${person.email}</span>
             </a>
             <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
-              <iron-icon
+              <vaadin-icon
                 icon="vaadin:phone"
                 style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
-              ></iron-icon>
+              ></vaadin-icon>
               <span>${person.address.phone}</span>
             </a>
           </vaadin-vertical-layout>

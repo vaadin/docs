@@ -9,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.vaadin.flow.server.connect.Endpoint;
+import com.vaadin.fusion.Endpoint;
 
 /**
  * Provides information about the current user.

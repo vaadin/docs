@@ -16,7 +16,8 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-login-overlay opened error></vaadin-login-overlay>
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
+      <vaadin-login-overlay opened error no-autofocus></vaadin-login-overlay>
       <!-- end::snippet[] -->
     `;
   }

@@ -1,6 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/virtualListConnector.js'; // hidden-source-line
-import '@vaadin/vaadin-template-renderer'; // hidden-source-line
 
 import { html, LitElement, render, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -44,9 +42,7 @@ export class Example extends LitElement {
     this.people = people;
   }
 
-  private personCardRenderer: VirtualListRenderer = (root, _, model) => {
-    const person = model.item as Person;
-
+  private personCardRenderer: VirtualListRenderer<Person> = (root, _, { item: person }) => {
     render(
       html`<vaadin-horizontal-layout theme="spacing margin">
         <vaadin-avatar

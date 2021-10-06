@@ -57,8 +57,9 @@ public class DataService {
    * Get employees for a given manager.
    */
   public static List<Person> getPeople(Integer managerId) {
-    List<Person> people = getPeople();
-    people.removeIf(person -> person.getManagerId() != managerId);
+    List<Person> people = new ArrayList<>(getPeople());
+    people.removeIf(person -> person.getManagerId() == null
+            || !person.getManagerId().equals(managerId));
     return people;
   }
 
@@ -66,7 +67,7 @@ public class DataService {
    * Get all managers.
    */
   public static List<Person> getManagers() {
-    List<Person> people = getPeople();
+    List<Person> people = new ArrayList<>(getPeople());
     people.removeIf(person -> !person.isManager());
     return people;
   }
@@ -83,4 +84,11 @@ public class DataService {
     return Arrays.asList(getItems(Country[].class, "countries.json"));
   }
 
+  public static List<UserPermissions> getUserPermissions() {
+    return Arrays.asList(getItems(UserPermissions[].class, "permissions.json"));
+  }
+
+  public static List<Report> getReports() {
+    return Arrays.asList(getItems(Report[].class, "reports.json"));
+  }
 }

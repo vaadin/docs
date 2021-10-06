@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -52,7 +51,7 @@ export class Example extends LitElement {
     const person = model.item;
     render(
       html`
-        <vaadin-horizontal-layout style="align-items: center;">
+        <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
           <vaadin-avatar
             style="height: var(--lumo-size-m)"
             img="${person.pictureUrl}"

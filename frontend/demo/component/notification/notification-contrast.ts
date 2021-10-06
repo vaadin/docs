@@ -1,15 +1,18 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, render } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-lumo-styles/icons';
 import '@vaadin/vaadin-notification/vaadin-notification';
+import {
+  NotificationElement,
+  NotificationOpenedChangedEvent,
+} from '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-contrast')
 export class Example extends LitElement {
   @state()
-  private notificationOpen = false;
+  private notificationOpened = false;
 
   protected createRenderRoot() {
     const root = super.createRenderRoot();
@@ -18,39 +21,28 @@ export class Example extends LitElement {
     return root;
   }
 
-  render() {
-    return html`
-      <vaadin-button
-        @click="${() => (this.notificationOpen = true)}"
-        .disabled="${this.notificationOpen}"
-      >
-        Try it
-      </vaadin-button>
-
-      <!-- tag::snippet[] -->
-      <vaadin-notification
-        theme="contrast"
-        position="middle"
-        .opened="${this.notificationOpen}"
-        @opened-changed="${(e: any) => (this.notificationOpen = e.detail.value)}"
-        .renderer="${this.renderer}"
-      ></vaadin-notification>
-      <!-- end::snippet[] -->
-    `;
+  handleClick() {
+    // tag::snippet[]
+    const notification = NotificationElement.show('5 tasks deleted', {
+      position: 'middle',
+    });
+    notification.setAttribute('theme', 'contrast');
+    // end::snippet[]
+    this.notificationOpened = true;
+    const handleOpenChanged = (e: NotificationOpenedChangedEvent) => {
+      if (!e.detail.value) {
+        this.notificationOpened = false;
+        notification.removeEventListener('opened-changed', handleOpenChanged);
+      }
+    };
+    notification.addEventListener('opened-changed', handleOpenChanged);
   }
 
-  renderer = (root: HTMLElement) =>
-    render(
-      html`
-        <div>5 tasks deleted</div>
-        <vaadin-button
-          theme="tertiary-inline"
-          @click="${() => (this.notificationOpen = false)}"
-          aria-label="Close"
-        >
-          <iron-icon icon="lumo:cross"></iron-icon>
-        </vaadin-button>
-      `,
-      root
-    );
+  render() {
+    return html`
+      <vaadin-button @click="${this.handleClick}" .disabled="${this.notificationOpened}">
+        Try it
+      </vaadin-button>
+    `;
+  }
 }

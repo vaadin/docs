@@ -1,6 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-avatar/vaadin-avatar';
@@ -8,7 +6,8 @@ import '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import type { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import type { GridElement, GridEventContext, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-icons/vaadin-icons';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-icons/vaadin-iconset';
 import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -60,7 +59,7 @@ export class Example extends LitElement {
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
         <vaadin-grid
-          height-by-rows
+          all-rows-visible
           .items=${this.gridItems}
           @vaadin-contextmenu=${this.onContextMenu}
         >
@@ -109,7 +108,7 @@ export class Example extends LitElement {
 
   createItem(iconName: string, text: string) {
     const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('iron-icon');
+    const icon = window.document.createElement('vaadin-icon');
 
     icon.style.color = 'var(--lumo-secondary-text-color)';
     icon.style.marginInlineEnd = 'var(--lumo-space-s)';

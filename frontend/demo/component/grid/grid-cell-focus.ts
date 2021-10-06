@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
@@ -28,7 +27,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private grid!: GridElement;
+  private grid!: GridElement<Person>;
   @state()
   private items: Person[] = [];
   @state()
@@ -45,12 +44,12 @@ export class Example extends LitElement {
       <vaadin-grid
         theme="force-focus-outline"
         .items="${this.items}"
-        @cell-focus="${(e: GridCellFocusEvent) => {
+        @cell-focus="${(e: GridCellFocusEvent<Person>) => {
           const eventContext = this.grid.getEventContext(e);
-          const section = eventContext?.section || 'Not available';
-          const row = eventContext?.index != undefined ? eventContext?.index : 'Not available';
-          const column = eventContext?.column?.path || 'Not available';
-          const person = eventContext?.item;
+          const section = eventContext.section || 'Not available';
+          const row = eventContext.index != undefined ? eventContext.index : 'Not available';
+          const column = eventContext.column?.path || 'Not available';
+          const person = eventContext.item;
           const fullName =
             person?.firstName && person?.lastName
               ? `${person.firstName} ${person.lastName}`

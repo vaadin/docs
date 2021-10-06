@@ -45,7 +45,7 @@ public class TreeGridColumn extends Div {
     }
 
     public List<Person> getStaff(Person manager) {
-        return DataService.getPeople(manager.getManagerId());
+        return DataService.getPeople(manager.getId());
     }
     public static class Exporter extends DemoExporter<TreeGridColumn> {} // hidden-source-line
 }

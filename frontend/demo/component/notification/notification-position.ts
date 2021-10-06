@@ -1,8 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { css, html, LitElement, render } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators';
+import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-lumo-styles/icons';
+import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import {
   NotificationElement,
   NotificationPosition,
@@ -16,6 +18,11 @@ export class Example extends LitElement {
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
+  }
+
+  constructor() {
+    super();
+    this.classList.add('notification-position-example');
   }
 
   // tag::snippet[]
@@ -33,73 +40,12 @@ export class Example extends LitElement {
     `;
   }
 
-  show(e: MouseEvent) {
+  show(event: MouseEvent) {
     // Use the button label as the location
-    const position = (e.composedPath()[2] as HTMLElement).textContent as NotificationPosition;
+    const position = (event.target as HTMLElement).textContent as NotificationPosition;
 
-    const notification = new NotificationElement();
-    notification.position = position;
-
-    notification.renderer = (root: HTMLElement) => {
-      render(
-        html`
-          <div>${position}</div>
-          <vaadin-button
-            theme="tertiary-inline"
-            @click="${notification.close.bind(notification)}"
-            aria-label="Close"
-          >
-            <iron-icon icon="lumo:cross"></iron-icon>
-          </vaadin-button>
-        `,
-        root
-      );
-    };
-
-    document.body.appendChild(notification);
-    notification.open();
-
-    // Remember to clean up the element from the DOM
-    // if you are not reusing the same notification
-    notification.addEventListener('opened-changed', () => {
-      document.body.removeChild(notification);
-    });
+    NotificationElement.show(position, { position });
   }
+
   // end::snippet[]
-
-  static styles = css`
-    :host {
-      display: grid !important;
-      grid-gap: 1em;
-      grid-template-columns: 1fr 1fr 1fr;
-    }
-
-    vaadin-button {
-      margin: 0;
-      max-width: 100%;
-    }
-
-    vaadin-button:nth-child(2),
-    vaadin-button:nth-child(6) {
-      margin-inline-end: auto;
-    }
-
-    vaadin-button:nth-child(3),
-    vaadin-button:nth-child(5),
-    vaadin-button:nth-child(7) {
-      margin: 0 auto;
-    }
-
-    vaadin-button:nth-child(4),
-    vaadin-button:nth-child(8) {
-      margin-inline-start: auto;
-    }
-
-    vaadin-button:nth-child(1),
-    vaadin-button:nth-child(5),
-    vaadin-button:nth-child(9) {
-      grid-column-start: 1;
-      grid-column-end: 4;
-    }
-  `;
 }

@@ -18,8 +18,9 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <!-- See login-rich-content.css -->
+      <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
       <div class="login-rich-content">
-        <vaadin-login-form theme="dark"></vaadin-login-form>
+        <vaadin-login-form theme="dark" no-autofocus></vaadin-login-form>
       </div>
       <!-- end::snippet[] -->
     `;

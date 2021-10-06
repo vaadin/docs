@@ -1,6 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/contextMenuConnector.js'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-context-menu/vaadin-context-menu';
@@ -41,7 +39,7 @@ export class Example extends LitElement {
         ]}
       >
         <vaadin-grid
-          height-by-rows
+          all-rows-visible
           .items=${this.gridItems}
           @vaadin-contextmenu=${this.onContextMenu}
         >

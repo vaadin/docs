@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -81,16 +80,14 @@ export class Example extends LitElement {
     const birthday = parseISO(person.birthday);
     render(
       html`
-        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-          <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-            <span> ${format(birthday, 'P')} </span>
-            <span
-              style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-            >
-              Age: ${differenceInYears(Date.now(), birthday)}
-            </span>
-          </vaadin-vertical-layout>
-        </vaadin-horizontal-layout>
+        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+          <span> ${format(birthday, 'P')} </span>
+          <span
+            style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+          >
+            Age: ${differenceInYears(Date.now(), birthday)}
+          </span>
+        </vaadin-vertical-layout>
       `,
       root
     );

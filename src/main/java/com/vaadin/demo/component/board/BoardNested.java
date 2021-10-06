@@ -1,51 +1,32 @@
 package com.vaadin.demo.component.board;
 
-import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.board.Board;
+import com.vaadin.flow.component.board.Row;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("board-nested")
 public class BoardNested extends Div {
-
     public BoardNested() {
         // tag::snippet[]
-        Board board = new Board();
-        Div cell1 = createCell("Cell 1");
-        Div cell2 = createCell("Cell 2");
-        Div cell3 = createCell("Cell 3");
-        Div cell4 = createCell("Cell 4");
+        Row rootRow = new Row();
+        rootRow.add(new ExampleStatistics(), 2);
 
-        board.addRow(cell1, cell2, cell3, cell4);
-        add(board);
+        Row nestedRow = new Row(
+                new ExampleIndicator("Current users", "745", "+33.7"),
+                new ExampleIndicator("Conversion rate", "18%", "+3.9")
+        );
+        rootRow.addNestedRow(nestedRow);
+
+        Board board = new Board();
+        board.add(rootRow);
         // end::snippet[]
 
-        setStyles(cell1, cell2, cell3, cell4);
+        add(board);
+        this.setClassName("board-nested");
     }
 
-    private Div createCell(String text) {
-        Div div = new Div();
-        div.setText(text);
-        return div;
-    }
-
-    private static void setStyles(HasStyle... components) {
-        String[] cellColors = new String[] { "#003E53", "#00506B", "#006C90", "#0090C0"};
-        for (int i = 0; i < components.length; i++) {
-            Style style = components[i].getStyle();
-            style.set("padding", "1em");
-            style.set("text-align", "center");
-            style.set("background-color", cellColors[i]);
-
-            if (i < 5) {
-                style.set("color", "white");
-            }
-        }
-
-    }
-
-    public static class Exporter extends DemoExporter<BoardBasic> { // hidden-source-line
+    public static class Exporter extends DemoExporter<BoardNested> { // hidden-source-line
     } // hidden-source-line
 }
