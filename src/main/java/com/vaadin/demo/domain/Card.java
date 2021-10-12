@@ -1,8 +1,8 @@
 package com.vaadin.demo.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
 
-@JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
+@JsonIgnoreProperties(ignoreUnknown = true) // hidden-source-line
 // tag::snippet[]
 public class Card {
 
@@ -13,6 +13,8 @@ public class Card {
   private String pictureUrl;
 
   private String expiryDate;
+
+  private String cvv;
 
   private Integer id;
 
@@ -46,6 +48,14 @@ public class Card {
 
   public void setExpiryDate(String expiryDate) {
     this.expiryDate = expiryDate;
+  }
+
+  public String getCvv() {
+    return cvv;
+  }
+
+  public void setCvv(String cvv) {
+    this.cvv = cvv;
   }
 
   public Integer getId() {
