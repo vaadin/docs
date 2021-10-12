@@ -4,4 +4,3 @@ import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
 import '@vaadin/vaadin-icons/vaadin-icons';
 import '@vaadin/vaadin-tabs/vaadin-tab';
 import '@vaadin/vaadin-tabs/vaadin-tabs';
-
