@@ -4,7 +4,9 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.WebComponentExporter;
 import com.vaadin.flow.component.webcomponent.WebComponent;
 import com.vaadin.flow.internal.ReflectTools;
+import com.vaadin.flow.theme.Theme;
 
+@Theme(themeFolder = "docs")
 public abstract class DemoExporter<T extends Component> extends WebComponentExporter<T> {
 
   public DemoExporter() {
