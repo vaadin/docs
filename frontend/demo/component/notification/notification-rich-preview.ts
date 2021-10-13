@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-avatar/vaadin-avatar';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
+import '@vaadin/avatar';
+import '@vaadin/button';
+import '@vaadin/icon';
+import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-rich-preview')

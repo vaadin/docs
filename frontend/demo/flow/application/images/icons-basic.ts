@@ -1,10 +1,10 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/horizontal-layout';
+import '@vaadin/icon';
+import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/text-field';
+import '@vaadin/vertical-layout';
 
 @customElement('fusion-application-icons-basic')
 export class IconsBasic extends LitElement {

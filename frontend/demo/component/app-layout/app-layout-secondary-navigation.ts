@@ -1,14 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-app-layout/vaadin-app-layout';
-import '@vaadin/vaadin-app-layout/vaadin-drawer-toggle';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-tabs/vaadin-tab';
-import '@vaadin/vaadin-tabs/vaadin-tabs';
+import '@vaadin/app-layout';
+import '@vaadin/app-layout/vaadin-drawer-toggle';
+import '@vaadin/horizontal-layout';
+import '@vaadin/icon';
+import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/tabs';
+import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-secondary-navigation')

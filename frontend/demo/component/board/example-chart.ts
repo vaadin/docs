@@ -1,10 +1,9 @@
 import { getViewEvents } from 'Frontend/demo/domain/DataService'; // hidden-source-line
 import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // hidden-source-line
-
-import '@vaadin/vaadin-charts/vaadin-chart';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
+import '@vaadin/chart';
 
 const monthNames = [
   'Jan',

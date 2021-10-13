@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
-import '@vaadin/vaadin-date-picker/vaadin-date-picker';
+import '@vaadin/date-picker';
+import { DatePicker } from '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
-import { DatePickerElement } from '@vaadin/vaadin-date-picker/vaadin-date-picker';
 
 @customElement('date-picker-week-numbers')
 export class Example extends LitElement {
@@ -16,7 +16,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-date-picker')
-  private datePicker?: DatePickerElement;
+  private datePicker?: DatePicker;
 
   // tag::snippet[]
   firstUpdated() {

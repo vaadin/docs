@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { guard } from 'lit/directives/guard.js';
-import '@vaadin/vaadin-custom-field/vaadin-custom-field';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-select/vaadin-select';
+import '@vaadin/custom-field';
+import '@vaadin/horizontal-layout';
+import '@vaadin/select';
+import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('custom-field-size-variants')
@@ -19,18 +19,13 @@ export class Example extends LitElement {
 
   firstUpdated() {
     // aria-label for screen readers
-    const amount = this.shadowRoot
-      ?.getElementById('amount')
-      ?.shadowRoot?.querySelector('[part="value"]');
-    amount?.setAttribute('aria-label', 'Amount');
-    amount?.removeAttribute('aria-labelledby');
+    const amount = this.renderRoot.querySelector('#amount > input') as HTMLInputElement;
+    amount.setAttribute('aria-label', 'Amount');
+    amount.removeAttribute('aria-labelledby');
 
-    const currency = this.shadowRoot
-      ?.getElementById('currency')
-      ?.shadowRoot?.querySelector('vaadin-select-text-field')
-      ?.shadowRoot?.querySelector('[part="input-field"]');
-    currency?.setAttribute('aria-label', 'Currency');
-    currency?.removeAttribute('aria-labelledby');
+    const currency = this.renderRoot.querySelector('#currency > [slot="value"]') as HTMLElement;
+    currency.setAttribute('aria-label', 'Currency');
+    currency.removeAttribute('aria-labelledby');
   }
 
   render() {

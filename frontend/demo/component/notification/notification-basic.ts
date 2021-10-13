@@ -1,11 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-notification/vaadin-notification';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/button';
+import { Notification, NotificationOpenedChangedEvent } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
-import { NotificationOpenedChangedEvent } from '@vaadin/vaadin-notification/src/interfaces';
 
 @customElement('notification-basic')
 export class Example extends LitElement {
@@ -21,7 +19,7 @@ export class Example extends LitElement {
 
   handleClick() {
     // tag::snippet[]
-    const notification = NotificationElement.show('Financial report generated', {
+    const notification = Notification.show('Financial report generated', {
       position: 'middle',
     });
     // end::snippet[]

@@ -2,14 +2,14 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-ordered-layout/vaadin-scroller';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-text-field/vaadin-text-area';
-import '@vaadin/vaadin-date-picker/vaadin-date-picker';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
+import '@vaadin/button';
+import '@vaadin/date-picker';
+import '@vaadin/icon';
+import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/scroller';
+import '@vaadin/text-area';
+import '@vaadin/text-field';
+import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('scroller-basic')

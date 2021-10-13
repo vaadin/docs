@@ -2,8 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox-group';
+import '@vaadin/checkbox';
+import '@vaadin/checkbox-group';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-vertical')

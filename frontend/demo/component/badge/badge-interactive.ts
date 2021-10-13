@@ -1,14 +1,14 @@
 import { getPeople } from 'Frontend/demo/domain/DataService'; // hidden-source-line
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import { Button } from '@vaadin/vaadin-button';
-import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
+import '@vaadin/button';
+import '@vaadin/combo-box';
+import '@vaadin/icon';
+import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/horizontal-layout';
+import '@vaadin/vertical-layout';
+import { Button } from '@vaadin/button';
+import { ComboBox } from '@vaadin/combo-box';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
@@ -72,7 +72,7 @@ export class Example extends LitElement {
   }
 
   private onChange({ target }: Event) {
-    const { selectedItem } = target as ComboBoxElement;
+    const { selectedItem } = target as ComboBox;
 
     if (selectedItem == null) {
       return;

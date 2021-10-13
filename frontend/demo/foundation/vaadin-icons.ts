@@ -1,4 +1,4 @@
-import '@vaadin/vaadin-icons/vaadin-iconset';
+import '@vaadin/icons/vaadin-iconset.js';
 import './icons-preview';
 
 export default class VaadinIcons extends HTMLElement {

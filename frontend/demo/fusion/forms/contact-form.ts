@@ -1,8 +1,9 @@
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import '@vaadin/vaadin-upload';
-import '@vaadin/vaadin-button';
+import '@vaadin/button';
+import '@vaadin/upload';
+import type { UploadBeforeEvent } from '@vaadin/upload';
 
 import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
@@ -28,7 +29,7 @@ export class ContactForm extends LitElement {
         capture="camera"
         accept="image/*"
         max-files="1"
-        @upload-before="${async (e: CustomEvent) => {
+        @upload-before="${async (e: UploadBeforeEvent) => {
           const file = e.detail.file;
           e.preventDefault();
           const base64Image = await readAsDataURL(file);

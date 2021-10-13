@@ -2,10 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-radio-button/vaadin-radio-group';
-import '@vaadin/vaadin-item';
-import { RadioGroupValueChangedEvent } from '@vaadin/vaadin-radio-button/vaadin-radio-group';
+import '@vaadin/radio-group';
+import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import '@vaadin/vertical-layout';
 import './layout-item';
 
 @customElement('basic-layouts-padding')

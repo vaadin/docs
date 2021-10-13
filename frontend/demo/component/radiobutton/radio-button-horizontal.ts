@@ -2,8 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-radio-button/vaadin-radio-group';
-import '@vaadin/vaadin-radio-button/vaadin-radio-button';
+import '@vaadin/radio-group';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-horizontal')

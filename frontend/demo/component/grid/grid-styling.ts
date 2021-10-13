@@ -2,8 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import type { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/grid';
+import type { GridColumn, GridItemModel } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -51,18 +51,15 @@ export class Example extends LitElement {
 
   private ratingRenderer = (
     root: HTMLElement,
-    _column?: GridColumnElement,
-    model?: GridItemModel<PersonWithRating>
+    _column: GridColumn,
+    model: GridItemModel<PersonWithRating>
   ) => {
-    const item = model?.item;
+    const item = model.item;
     const rating = item ? this.ratingFormatter.format(item.customerRating) : '';
     render(html` <span>${rating}</span> `, root);
   };
 
-  private cellClassNameGenerator(
-    column: GridColumnElement,
-    model: GridItemModel<PersonWithRating>
-  ) {
+  private cellClassNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {
     const item = model.item;
     let classes = '';
     // make the customer rating column bold

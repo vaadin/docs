@@ -2,14 +2,14 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import { ComboBoxValueChangedEvent } from '@vaadin/vaadin-combo-box';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import type { GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/button';
+import '@vaadin/combo-box';
+import { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
+import '@vaadin/grid';
+import type { GridItemModel } from '@vaadin/grid';
+import '@vaadin/horizontal-layout';
+import '@vaadin/icon';
+import '@vaadin/icons/vaadin-iconset.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

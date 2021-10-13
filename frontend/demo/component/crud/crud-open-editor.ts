@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-crud/vaadin-crud';
-import { GridElement, GridEventContext } from '@vaadin/vaadin-grid';
-import type { CrudEditedItemChangedEvent } from '@vaadin/vaadin-crud';
+import '@vaadin/crud';
+import type { CrudEditedItemChangedEvent } from '@vaadin/crud';
+import { Grid } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -49,7 +49,7 @@ export class Example extends LitElement {
   }
 
   onDblClick(e: MouseEvent) {
-    const target = e.currentTarget as GridElement;
-    this.editedItem = (target.getEventContext(e) as GridEventContext<Person>).item;
+    const target = e.currentTarget as Grid<Person>;
+    this.editedItem = target.getEventContext(e).item;
   }
 }

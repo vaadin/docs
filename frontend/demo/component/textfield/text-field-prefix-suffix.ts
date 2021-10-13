@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/horizontal-layout';
+import '@vaadin/icon';
+import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-prefix-suffix')

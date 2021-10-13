@@ -2,12 +2,13 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { guard } from 'lit/directives/guard.js';
-import '@vaadin/vaadin-avatar/vaadin-avatar';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
+import '@vaadin/avatar';
+import '@vaadin/button';
+import '@vaadin/icon';
+import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/notification';
+import type { Notification } from '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-rich')
@@ -148,14 +149,14 @@ export class Example extends LitElement {
   open(which: number) {
     const notification = this.shadowRoot?.querySelector(
       `vaadin-notification:nth-child(${which})`
-    ) as NotificationElement;
+    ) as Notification;
     notification?.open();
   }
 
   close(which: number) {
     const notification = this.shadowRoot?.querySelector(
       `vaadin-notification:nth-child(${which})`
-    ) as NotificationElement;
+    ) as Notification;
     notification?.close();
   }
 }

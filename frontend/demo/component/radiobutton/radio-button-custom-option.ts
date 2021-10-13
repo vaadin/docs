@@ -2,11 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-radio-button/vaadin-radio-group';
-import '@vaadin/vaadin-radio-button/vaadin-radio-button';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/horizontal-layout';
+import '@vaadin/radio-group';
+import '@vaadin/text-field';
+import '@vaadin/vertical-layout';
 import { getCards } from 'Frontend/demo/domain/DataService';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { applyTheme } from 'Frontend/generated/theme';

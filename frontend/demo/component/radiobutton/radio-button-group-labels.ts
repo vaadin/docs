@@ -2,9 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-radio-button/vaadin-radio-group';
-import '@vaadin/vaadin-radio-button/vaadin-radio-button';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/radio-group';
+import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-group-labels')
