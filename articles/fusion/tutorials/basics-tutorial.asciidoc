@@ -1,0 +1,545 @@
+---
+title: Basics Tutorial
+order: 20
+layout: page
+page-title: "Vaadin Fusion Basics Tutorial"
+description: "Learn the basics of Fusion: creating a project, accessing endpoints, building views, and deploying"
+---
+
+[[fusion.tutorial]]
+= Vaadin Fusion Basics Tutorial
+
+pass:[<!-- vale Google.Will = NO -->]
+
+This tutorial teaches you the core concepts of Vaadin Fusion while you build a full-stack application for managing to-do items.
+After completing the tutorial, you are ready to start experimenting on your own or continue to more advanced tutorials.
+
+pass:[<!-- vale Google.Will = YES -->]
+
+== Required Tools
+
+You need the following tools and libraries to complete the tutorial:
+
+* Java 8 or later and Maven.
+See <<{articles}/fusion/guide/install#, Installing Development Tools>> for instructions.
+
+* https://code.visualstudio.com/[Visual Studio Code] is used in this tutorial.
+See the https://youtu.be/G_aJONwi0qo[setup instructions] on YouTube.
++
+You can use any IDE that supports Java and TypeScript development.
+
+== Download a New Vaadin Fusion Project
+
+++++
+<p>
+<a href="https://start.vaadin.com/?preset=fusion-tutorial&dl" class="button primary water quickstart-download-project" target="_blank" rel="noreferrer noopener">Download</a>
+</p>
+++++
+
+The pre-configured starter project includes:
+
+- An empty `Todo` view
+- H2 database and Spring Data JPA dependencies
+
+== Importing a Vaadin Fusion Project
+
+Unzip the downloaded file and open the project  in your IDE.
+The instructions in this tutorial assume you use https://code.visualstudio.com/[VS Code].
+// See the instructions for <<{articles}/fusion/guide/getting-started/intellij#,IntelliJ IDEA>>, <<{articles}/fusion/guide/getting-started/getting-started-eclipse#,Eclipse>>, and <<{articles}/fusion/guide/getting-started/getting-started-netbeans#,NetBeans>> if you prefer to use another IDE.
+
+Open the project by either:
+
+- Navigating to the project folder and running `code .` (note the period).
+
+- Choosing **File > Open...** in VS Code and selecting the _project folder_.
+
+Installing the following plugins in VS Code is recommended for an optimal development experience:
+
+* https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack[Java Extension Pack^]
+* https://marketplace.visualstudio.com/items?itemName=runem.lit-plugin[lit-plugin^]
+* https://marketplace.visualstudio.com/items?itemName=Pivotal.vscode-spring-boot[Spring Boot Tools^]
+
+VS Code should automatically suggest these for you when you open the project.
+
+=== Project Structure and Architecture
+
+Vaadin Fusion projects are based on https://spring.io/projects/spring-boot[Spring Boot^] and use https://maven.apache.org/[Maven^] for project management.
+
+.Fusion project structure
+image::../images/basics-project-structure.png[Project Structure,width=250]
+
+The two important folders to know are:
+
+`frontend`::
+This is where your views and frontend code live.
+
+`src`::
+This is where your Java backend code lives.
+
+The key files in a Vaadin Fusion application are:
+
+`pom.xml`::
+The project configuration file which defines dependencies.
+
+`frontend/index.html`::
+The bootstrap page (you usually do not need to change this).
+
+`frontend/index.ts`::
+Defines routing.
+
+`src/main/java/com/example/application/Application.java`::
+Runs the Spring Boot application.
+
+== Defining the Data Model and Service Layer
+
+Begin by setting up the data model and services for accessing the database.
+
+You can do it in two steps:
+
+. Define an entity.
+. Create a repository for accessing the database.
+
+This tutorial shows how to use an in-memory H2 database and JPA for persistence.
+The starter you download already includes the needed dependencies in `pom.xml`.
+
+Define a JPA _entity_ class for the data model, by creating a new `Todo.java` file in `src/main/java/com/example/application/data/entity` with the following content:
+
+.`Todo.java`
+[source,java]
+----
+package com.example.application.data.entity;
+
+import javax.persistence.Entity;
+import javax.validation.constraints.NotBlank;
+
+import com.example.application.data.AbstractEntity;
+
+@Entity // <1>
+public class Todo extends AbstractEntity { // <2>
+
+ private boolean done = false;
+ @NotBlank // <3>
+ private String task;
+
+ public Todo() {
+ }
+
+ public Todo(String task) {
+   this.task = task;
+ }
+
+ public boolean isDone() {
+   return done;
+ }
+
+ public void setDone(boolean done) {
+   this.done = done;
+ }
+
+ public String getTask() {
+   return task;
+ }
+
+ public void setTask(String task) {
+   this.task = task;
+ }
+}
+----
+<1> Turn the class into a JPA entity with an `@Entity` annotation.
+<2> Extend from `AbstractEntity` to get id generation, equals and hashCode.
+<3> Add a `@NotBlank` Java bean validation annotation to enforce validity both in the view and on the server.
+
+Next, create a _repository_ for accessing the database.
+You only need to provide an interface with type information, Spring Data takes care of the implementation.
+
+Create a new file, `TodoRepository.java`, in `src/main/java/com/example/application/data/service` with the following contents:
+
+.`TodoRepository.java`
+[source,java]
+----
+package com.example.application.data.service;
+
+import com.example.application.data.entity.Todo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TodoRepository extends JpaRepository<Todo, Integer> {
+
+}
+----
+
+You now have all the necessary backend code in place to start building a UI.
+
+Run the project from the command line with the following command:
+
+[source,bash]
+----
+mvn
+----
+
+**The first time you run `mvn`, it may take up to a few minutes** as it downloads all dependencies and builds a frontend bundle.
+On the following builds `mvn` does not download dependencies and builds are much faster.
+
+When the build has finished, you should see the application running on http://localhost:8080.
+
+image::../images/basics-running-1.png[Running project]
+
+
+==  Create a Typed Server Endpoint
+
+One of the key features of Vaadin Fusion is type-safe server access through _endpoints_.
+When you define an `@Endpoint`, Vaadin creates the needed REST-like endpoints, secures them, and generates TypeScript interfaces for all the used data types and public methods.
+Having full-stack type safety helps you stay productive through autocomplete and helps guard against accidental UI breakage when the data model changes on the server.
+
+Create a new `TodoEndpoint.java` file in `src/main/java/com/example/application/data/endpoint`:
+
+.`TodoEndpoint.java`
+[source,java]
+----
+package com.example.application.data.endpoint;
+
+import java.util.List;
+
+import com.example.application.data.entity.Todo;
+import com.example.application.data.service.TodoRepository;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.fusion.Endpoint;
+import com.vaadin.fusion.Nonnull;
+
+@Endpoint // <1>
+@AnonymousAllowed // <2>
+public class TodoEndpoint {
+ private TodoRepository repository;
+
+ public TodoEndpoint(TodoRepository repository) { // <3>
+   this.repository = repository;
+ }
+
+ public @Nonnull List<@Nonnull Todo> findAll() { // <4>
+   return repository.findAll();
+ }
+
+ public Todo save(Todo todo) {
+   return repository.save(todo);
+ }
+}
+----
+<1> Annotating a class with `@Endpoint` exposes it as a service for client-side views.
+All *public* methods of an endpoint are callable from TypeScript.
+<2> By default, endpoint access requires an authenticated user. `@AnonymousAllowed` enables access for anyone. See <<../security/configuring#,Configuring Security>> for more information on endpoint security.
+<3> Use Spring to automatically inject the `TodoRepository` dependency for database access.
+<4> Using the `@Nonnull` annotation ensures that the TypeScript Generator does not interpret these values as possibly `undefined`.
+
+Save the file and ensure the change is loaded.
+You should see log output from the reload (that ends with a `Frontend compiled successfully` message) in the console.
+
+If you did not have the server running, or if something failed, (re)start the server with the `mvn` command.
+
+include::_reactive-intro.adoc[]
+
+== Lit Basics
+
+Vaadin Fusion uses the https://lit.dev/[Lit] library for client-side views.
+It is a lightweight and highly performant library for building reactive components with declarative templates.
+
+You can learn the basics of Lit in the <<../application/lit#, Lit basics article>>.
+
+== Building the Todo View Component
+
+Now that you know the basics of reactive UI programming and Lit, you are ready for the final part of the tutorial: creating a view for adding and viewing todo items.
+
+Open `frontend/views/todo/todo-view.ts` and replace its contents with the following:
+
+[source,typescript]
+----
+import {
+  // <1>
+  css,
+  html,
+  LitElement
+} from 'lit';
+
+import { customElement, state } from 'lit/decorators.js';
+
+import '@vaadin/vaadin-text-field';
+import '@vaadin/vaadin-button';
+import '@vaadin/vaadin-checkbox';
+import { Binder, field } from '@vaadin/form';
+import * as TodoEndpoint from 'Frontend/generated/TodoEndpoint';
+import Todo from 'Frontend/generated/com/example/application/data/entity/Todo';
+import TodoModel from 'Frontend/generated/com/example/application/data/entity/TodoModel';
+
+@customElement('todo-view') // <2>
+export class TodoView extends LitElement { // <3>
+}
+----
+<1> Import the UI components, helpers, and generated TypeScript models required for building the view.
+<2> Register the new component with the browser. This makes it available as `<todo-view>`. The routing in `index.ts` is already set up to show it when you navigate to the application.
+<3> Define the component class that extends from `LitElement`.
+
+=== Defining the View State
+
+Inside the `TodoView` class, define the view state as follows:
+
+[source,typescript]
+----
+ @state()
+ private todos: Todo[] = []; // <1>
+ private binder = new Binder(this, TodoModel); // <2>
+----
+<1> The list of `Todo` items is private and decorated with `@state()` so Lit observes it for changes.
+<2> A Vaadin `Binder` is used to handle the form state for creating new Todos.
+`TodoModel` is automatically generated by Vaadin.
+It describes the data types and validations that `Binder` needs.
+Read more about forms in <<../forms/overview#,Creating Client-Side Forms>>.
+
+=== Defining CSS
+
+[source,typescript]
+----
+ static styles = css`
+   :host {
+     display: block;
+     padding: var(--lumo-space-m) var(--lumo-space-l); /* <1> */
+   }
+ `;
+----
+<1> The `padding` property is defined using the <<{articles}/ds/foundation/size-space#space,spacing properties>> to be consistent with the rest of the app.
+
+=== Defining the HTML Template
+
+Start by defining a `render()` method that returns a `html` template literal.
+
+[source,typescript]
+----
+render() {
+ return html`
+
+ `;
+}
+----
+
+Add the following code within the `html` template:
+
+[source,typescript]
+----
+return html`
+   <div class='form'>
+    <vaadin-text-field
+      ...='${field(this.binder.model.task)}'
+    ></vaadin-text-field> <!--1-->
+    <vaadin-button
+      theme='primary'
+      @click=${this.createTodo /* <2> */}
+      ?disabled=${this.binder.invalid /* <3> */}
+      >Add</vaadin-button>
+   </div>
+`;
+----
+<1> The Text Field component is bound to the `task` property of a `Todo` using `...='${field(this.binder.model.task)}'`.
+The `...='${}'` is the _spread operator_, which applies several properties at once.
+You can read more about forms in <<../forms/overview#,Creating Client-Side Forms>>.
+<2> The click event of the *Add* button is bound to the `createTodo()` method.
+<3> The button is disabled if the form is invalid.
+
+Right underneath the previous `<div>`, add the following code:
+
+[source,typescript]
+----
+return html`
+   <div class='todos'>
+    ${this.todos.map((todo) => html` <!--1-->
+        <div class='todo'>
+          <vaadin-checkbox
+            ?checked=${todo.done /* <2> */}
+            @checked-changed=${(e: CustomEvent) => // <3>
+              this.updateTodoState(todo, e.detail.value)}
+          ></vaadin-checkbox>
+          <span>${todo.task}</span>
+        </div>
+      `)}
+   </div>
+`;
+----
+<1> The existing todo items are shown by mapping the `todos` array to Lit templates.
+The template for a single `Todo` contains a checkbox and the task text.
+<2> Bind the `checked` boolean attribute to the `done` property on the todo.
+<3> Call the `updateTodoState()` method, with the todo and the new value whenever the checked value changes.
+
+=== Updating the View State and Calling the Backend
+
+Below the `render()` method in the `TodoView` class, add a `connectedCallback()` https://lit.dev/docs/components/lifecycle/[lifecycle callback] to initialize the view when it is attached to the DOM.
+
+[source,typescript]
+----
+async connectedCallback() { // <1>
+ super.connectedCallback(); // <2>
+ this.todos = await TodoEndpoint.findAll(); // <3>
+}
+----
+<1> Use an https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function[async function] to make it easier to handle asynchronous code.
+<2> Remember to call the superclass method.
+<3> The `getTodos()` method is automatically generated by Vaadin based on the method in `TodosEndpoint.java`.
+The method was imported in the head of the file.
+The `await` keyword waits for the server response without blocking the UI.
+
+Below the connectedCallback(), add another method to handle the creation of new `Todo`s.
+
+[source,typescript]
+----
+async createTodo() {
+ const createdTodo = await this.binder.submitTo(TodoEndpoint.save); // <1>
+ if (createdTodo) { // <2>
+   this.todos = [...this.todos, createdTodo];
+   this.binder.clear();
+ }
+}
+----
+<1> Use binder to submit the form to `TodoEndpoint`.
+The binder validates the input before posting it and the server re-validates it.
+<2> If the `Todo` was saved successfully, update the `todos` array and clear the form.
+
+Finally, add a method for updating the `todo` state right below `createTodo()`:
+
+[source,typescript]
+----
+updateTodoState(todo: Todo, done: boolean) {
+ const updatedTodo = { ...todo, done }; // <1>
+ this.todos = this.todos.map((t) => (t.id === todo.id ? updatedTodo : t)); // <2>
+ TodoEndpoint.save(updatedTodo); // <3>
+}
+----
+<1> Create a new `Todo` with the updated `done` state.
+<2> Update the local `todos` array with the new state.
+The `map` operator creates a new array where the changed `todo` is swapped out.
+<3> Save the updated todo to the server.
+
+=== Complete View Code
+
+The completed view code is as follows:
+
+.`todo-view.ts`
+[source,typescript]
+----
+import {
+  css,
+  html,
+  LitElement
+} from 'lit';
+
+import { customElement, state } from 'lit/decorators.js';
+
+import '@vaadin/vaadin-text-field';
+import '@vaadin/vaadin-button';
+import '@vaadin/vaadin-checkbox';
+import { Binder, field } from '@vaadin/form';
+import * as TodoEndpoint from 'Frontend/generated/TodoEndpoint';
+import Todo from 'Frontend/generated/com/example/application/data/entity/Todo';
+import TodoModel from 'Frontend/generated/com/example/application/data/entity/TodoModel';
+
+@customElement('todo-view')
+export class TodoView extends LitElement {
+ @state()
+ private todos: Todo[] = [];
+ private binder = new Binder(this, TodoModel);
+
+ static styles = css`
+   :host {
+     display: block;
+     padding: var(--lumo-space-m) var(--lumo-space-l);
+   }
+ `;
+
+ render() {
+   return html`
+     <div class='form'>
+       <vaadin-text-field
+         ...='${field(this.binder.model.task)}'
+       ></vaadin-text-field>
+       <vaadin-button
+         theme='primary'
+         @click='${this.createTodo}'
+         ?disabled='${this.binder.invalid}'
+         >Add</vaadin-button
+       >
+     </div>
+     <div class='todos'>
+       ${this.todos.map(
+         (todo) => html`
+           <div class='todo'>
+             <vaadin-checkbox
+               ?checked='${todo.done}'
+               @checked-changed='${(
+                 e: CustomEvent
+               ) => this.updateTodoState(todo, e.detail.value)}'
+             ></vaadin-checkbox>
+             <span>${todo.task}</span>
+           </div>
+         `
+       )}
+     </div>
+   `;
+ }
+
+ async connectedCallback() {
+   //<1>
+   super.connectedCallback();
+   this.todos = await TodoEndpoint.findAll();
+ }
+
+ async createTodo() {
+   const createdTodo = await this.binder.submitTo(TodoEndpoint.save);
+   if (createdTodo) {
+     this.todos = [...this.todos, createdTodo];
+     this.binder.clear();
+   }
+ }
+
+ updateTodoState(todo: Todo, done: boolean) {
+   const updatedTodo = { ...todo, done };
+   this.todos = this.todos.map((t) => (t.id === todo.id ? updatedTodo : t));
+   TodoEndpoint.save(updatedTodo);
+ }
+}
+----
+
+=== Run the Completed Application
+
+Start your server with the `mvn` command if you do not already have it running.
+
+Open http://localhost:8080 in your browser and you should now have a fully functional todo application.
+Notice that you can refresh the browser and it keeps the same todo items as they are persisted in the database.
+
+image::../images/basics-running-2.png[Running project]
+
+== Optional: Deploy the Application to Heroku
+
+The following steps are optional.
+You can follow them to deploy your application to https://www.heroku.com/[Heroku], a cloud deployment platform that offers a free tier that does not require a credit card.
+
+include::_heroku-steps.adoc[leveloffset=+1]
+
+== Next Steps and Helpful Links
+
+pass:[<!-- vale Google.Exclamation = NO -->]
+
+Congratulations on finishing the tutorial!
+
+pass:[<!-- vale Google.Exclamation = YES -->]
+
+In the following are some helpful links to continue your learning:
+
+- https://github.com/vaadin-learning-center/fusion-basics-tutorial[GitHub repository for the completed project source code].
+
+- <<in-depth-course#, An in-depth 4-hour course covering navigation, forms, state management, security, and offline use.>>
+
+- <<../routing/overview#, Learn to add more views to your app>>.
+
+- <<../forms/overview#,Creating Client-Side Forms>>.
+
+- <<{articles}/ds/components#,Browse all Vaadin components and their APIs>>.
+
+If you get stuck or need help, please reach out to the Vaadin community:
+
+- https://vaadin.com/forum[Vaadin Forum]
+- https://discord.gg/vaadin[Vaadin Community Discord]
