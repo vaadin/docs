@@ -3,7 +3,7 @@ import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent'; // 
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import '@vaadin/chart';
+import '@vaadin/charts';
 
 const monthNames = [
   'Jan',
