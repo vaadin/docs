@@ -18,9 +18,9 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-radio-group label="Status" disabled>
-        <vaadin-radio-button value="inProgress" checked>In progress</vaadin-radio-button>
-        <vaadin-radio-button value="done">Done</vaadin-radio-button>
-        <vaadin-radio-button value="cancelled">Cancelled</vaadin-radio-button>
+        <vaadin-radio-button value="inProgress" label="In progress" checked></vaadin-radio-button>
+        <vaadin-radio-button value="done" label="Done"></vaadin-radio-button>
+        <vaadin-radio-button value="cancelled" label="Cancelled"></vaadin-radio-button>
       </vaadin-radio-group>
       <!-- end::snippet[] -->
     `;

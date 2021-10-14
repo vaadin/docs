@@ -40,11 +40,11 @@ export class Example extends LitElement {
         label="Spacing variant"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.themeVariant = e.detail.value)}"
       >
-        <vaadin-radio-button value="spacing-xs" checked>spacing-xs</vaadin-radio-button>
-        <vaadin-radio-button value="spacing-s" checked>spacing-s</vaadin-radio-button>
-        <vaadin-radio-button value="spacing" checked>spacing</vaadin-radio-button>
-        <vaadin-radio-button value="spacing-l" checked>spacing-l</vaadin-radio-button>
-        <vaadin-radio-button value="spacing-xl" checked>spacing-xl</vaadin-radio-button>
+        <vaadin-radio-button value="spacing-xs" label="spacing-xs" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing-s" label="spacing-s" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing" label="spacing" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing-l" label="spacing-l" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing-xl" label="spacing-xl" checked></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

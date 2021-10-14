@@ -36,8 +36,8 @@ export class Example extends LitElement {
         label="Item sizing"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.size = e.detail.value)}"
       >
-        <vaadin-radio-button value="0" checked>Default size</vaadin-radio-button>
-        <vaadin-radio-button value="1">Expand</vaadin-radio-button>
+        <vaadin-radio-button value="0" label="Default size" checked></vaadin-radio-button>
+        <vaadin-radio-button value="1" label="Expand"></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

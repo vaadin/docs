@@ -44,23 +44,27 @@ export class Example extends LitElement {
         @value-changed="${(e: RadioGroupValueChangedEvent) =>
           (this.alignLayoutItems = e.detail.value)}"
       >
-        <vaadin-radio-button value="stretch" checked>Stretch (default)</vaadin-radio-button>
-        <vaadin-radio-button value="flex-start">Start</vaadin-radio-button>
-        <vaadin-radio-button value="center">Center</vaadin-radio-button>
-        <vaadin-radio-button value="flex-end">End</vaadin-radio-button>
-        <vaadin-radio-button value="baseline">Baseline</vaadin-radio-button>
+        <vaadin-radio-button
+          value="stretch"
+          label="Stretch (default)"
+          checked
+        ></vaadin-radio-button>
+        <vaadin-radio-button value="flex-start" label="Start"></vaadin-radio-button>
+        <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
+        <vaadin-radio-button value="flex-end" label="End"></vaadin-radio-button>
+        <vaadin-radio-button value="baseline" label="Baseline"></vaadin-radio-button>
       </vaadin-radio-group>
       <vaadin-radio-group
         label="Item 1: alignment"
         @value-changed="${(e: RadioGroupValueChangedEvent) =>
           (this.alignFirstItem = e.detail.value)}"
       >
-        <vaadin-radio-button value="auto" checked>Auto (default)</vaadin-radio-button>
-        <vaadin-radio-button value="stretch">Stretch</vaadin-radio-button>
-        <vaadin-radio-button value="flex-start">Start</vaadin-radio-button>
-        <vaadin-radio-button value="center">Center</vaadin-radio-button>
-        <vaadin-radio-button value="flex-end">End</vaadin-radio-button>
-        <vaadin-radio-button value="baseline">Baseline</vaadin-radio-button>
+        <vaadin-radio-button value="auto" checked label="Auto (default)"></vaadin-radio-button>
+        <vaadin-radio-button value="stretch" label="Stretch"></vaadin-radio-button>
+        <vaadin-radio-button value="flex-start" label="Start"></vaadin-radio-button>
+        <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
+        <vaadin-radio-button value="flex-end" label="End"></vaadin-radio-button>
+        <vaadin-radio-button value="baseline" label="Baseline"></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

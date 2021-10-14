@@ -43,14 +43,16 @@ export class Example extends LitElement {
           ${this.items.map(
             (card) => html`
               <vaadin-radio-button .value="${String(card.id)}">
-                <vaadin-horizontal-layout theme="spacing">
-                  <img src="${card.pictureUrl}" alt="${card.name}" style="height: 1em;" />
-                  <span>${card.accountNumber}</span>
-                </vaadin-horizontal-layout>
+                <label slot="label">
+                  <vaadin-horizontal-layout theme="spacing">
+                    <img src="${card.pictureUrl}" alt="${card.name}" style="height: 1em;" />
+                    <span>${card.accountNumber}</span>
+                  </vaadin-horizontal-layout>
+                </label>
               </vaadin-radio-button>
             `
           )}
-          <vaadin-radio-button value="-1">Other</vaadin-radio-button>
+          <vaadin-radio-button value="-1" label="Other"></vaadin-radio-button>
         </vaadin-radio-group>
 
         <vaadin-text-field label="Card number" .hidden="${this.value !== '-1'}"></vaadin-text-field>

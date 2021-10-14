@@ -41,12 +41,16 @@ export class Example extends LitElement {
         @value-changed="${(e: RadioGroupValueChangedEvent) =>
           (this.justifyContent = e.detail.value)}"
       >
-        <vaadin-radio-button value="flex-start" checked>Start (default)</vaadin-radio-button>
-        <vaadin-radio-button value="center">Center</vaadin-radio-button>
-        <vaadin-radio-button value="flex-end">End</vaadin-radio-button>
-        <vaadin-radio-button value="space-between">Between</vaadin-radio-button>
-        <vaadin-radio-button value="space-around">Around</vaadin-radio-button>
-        <vaadin-radio-button value="space-evenly">Evenly</vaadin-radio-button>
+        <vaadin-radio-button
+          value="flex-start"
+          label="Start (default)"
+          checked
+        ></vaadin-radio-button>
+        <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
+        <vaadin-radio-button value="flex-end" label="End"></vaadin-radio-button>
+        <vaadin-radio-button value="space-between" label="Between"></vaadin-radio-button>
+        <vaadin-radio-button value="space-around" label="Around"></vaadin-radio-button>
+        <vaadin-radio-button value="space-evenly" label="Evenly"></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

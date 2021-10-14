@@ -36,10 +36,14 @@ export class Example extends LitElement {
         label="Horizontal alignment"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.alignItems = e.detail.value)}"
       >
-        <vaadin-radio-button value="flex-start" checked>Start (default)</vaadin-radio-button>
-        <vaadin-radio-button value="center">Center</vaadin-radio-button>
-        <vaadin-radio-button value="flex-end">End</vaadin-radio-button>
-        <vaadin-radio-button value="stretch">Stretch</vaadin-radio-button>
+        <vaadin-radio-button
+          value="flex-start"
+          label="Start (default)"
+          checked
+        ></vaadin-radio-button>
+        <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
+        <vaadin-radio-button value="flex-end" label="End"></vaadin-radio-button>
+        <vaadin-radio-button value="stretch" label="Stretch"></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

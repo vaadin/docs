@@ -35,13 +35,13 @@ export class Example extends LitElement {
         ${this.items.map(
           (card) => html`
             <vaadin-radio-button .value="${String(card.id)}">
-              <div>
+              <label slot="label">
                 <vaadin-horizontal-layout theme="spacing">
                   <img src="${card.pictureUrl}" alt="${card.name}" style="height: 1em;" />
                   <span>${card.accountNumber}</span>
                 </vaadin-horizontal-layout>
                 <div>Expiry date:${card.expiryDate}</div>
-              </div>
+              </label>
             </vaadin-radio-button>
           `
         )}
