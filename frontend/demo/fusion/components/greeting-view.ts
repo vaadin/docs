@@ -25,7 +25,10 @@ export class GreetingView extends LitElement {
         .value="${this.greeting}"
         @value-changed="${(e: ComboBoxValueChangedEvent) => (this.greeting = e.detail.value)}"
       ></vaadin-combo-box>
-      <vaadin-checkbox @change="${this.checkboxChange}">Type Custom greeting</vaadin-checkbox>
+      <vaadin-checkbox
+        @change="${this.checkboxChange}"
+        label="Type Custom greeting"
+      ></vaadin-checkbox>
     `;
   }
 

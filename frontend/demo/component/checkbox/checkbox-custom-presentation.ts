@@ -31,13 +31,15 @@ export class Example extends LitElement {
         ${this.items.map((person) => {
           return html`
             <vaadin-checkbox .value="${String(person.id)}">
-              <div style="display: flex;">
-                <img style="height: 2em" src="${person.pictureUrl}" alt="User avatar" />
-                <div>
-                  ${person.firstName} ${person.lastName}
-                  <div>${person.profession}</div>
+              <label slot="label">
+                <div style="display: flex;">
+                  <img style="height: 2em" src="${person.pictureUrl}" alt="User avatar" />
+                  <div>
+                    ${person.firstName} ${person.lastName}
+                    <div>${person.profession}</div>
+                  </div>
                 </div>
-              </div>
+              </label>
             </vaadin-checkbox>
           `;
         })}

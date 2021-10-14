@@ -19,13 +19,13 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-checkbox-group label="Working days" theme="vertical">
-        <vaadin-checkbox value="mon">Monday</vaadin-checkbox>
-        <vaadin-checkbox value="tue">Tuesday</vaadin-checkbox>
-        <vaadin-checkbox value="wed">Wednesday</vaadin-checkbox>
-        <vaadin-checkbox value="thu">Thursday</vaadin-checkbox>
-        <vaadin-checkbox value="fri">Friday</vaadin-checkbox>
-        <vaadin-checkbox value="sat">Saturday</vaadin-checkbox>
-        <vaadin-checkbox value="sun">Sunday</vaadin-checkbox>
+        <vaadin-checkbox value="mon" label="Monday"></vaadin-checkbox>
+        <vaadin-checkbox value="tue" label="Tuesday"></vaadin-checkbox>
+        <vaadin-checkbox value="wed" label="Wednesday"></vaadin-checkbox>
+        <vaadin-checkbox value="thu" label="Thursday"></vaadin-checkbox>
+        <vaadin-checkbox value="fri" label="Friday"></vaadin-checkbox>
+        <vaadin-checkbox value="sat" label="Saturday"></vaadin-checkbox>
+        <vaadin-checkbox value="sun" label="Sunday"></vaadin-checkbox>
       </vaadin-checkbox-group>
       <!-- end::snippet[] -->
     `;

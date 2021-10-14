@@ -27,10 +27,10 @@ export class Example extends LitElement {
         @value-changed="${(e: CustomEvent) => (this.value = e.detail.value)}"
         theme="vertical"
       >
-        <vaadin-checkbox value="0">Order ID</vaadin-checkbox>
-        <vaadin-checkbox value="1">Product name</vaadin-checkbox>
-        <vaadin-checkbox value="2">Customer</vaadin-checkbox>
-        <vaadin-checkbox value="3">Status</vaadin-checkbox>
+        <vaadin-checkbox value="0" label="Order ID"></vaadin-checkbox>
+        <vaadin-checkbox value="1" label="Product name"></vaadin-checkbox>
+        <vaadin-checkbox value="2" label="Customer"></vaadin-checkbox>
+        <vaadin-checkbox value="3" label="Status"></vaadin-checkbox>
       </vaadin-checkbox-group>
       <!-- end::snippet[] -->
     `;

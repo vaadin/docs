@@ -17,7 +17,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-checkbox>I accept the terms and conditions</vaadin-checkbox>
+      <vaadin-checkbox label="I accept the terms and conditions"></vaadin-checkbox>
       <!-- end::snippet[] -->
     `;
   }

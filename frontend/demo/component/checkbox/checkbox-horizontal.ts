@@ -18,9 +18,9 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-checkbox-group label="Permissions">
-        <vaadin-checkbox value="read">Read</vaadin-checkbox>
-        <vaadin-checkbox value="edit">Edit</vaadin-checkbox>
-        <vaadin-checkbox value="delete">Delete</vaadin-checkbox>
+        <vaadin-checkbox value="read" label="Read"></vaadin-checkbox>
+        <vaadin-checkbox value="edit" label="Edit"></vaadin-checkbox>
+        <vaadin-checkbox value="delete" label="Delete"></vaadin-checkbox>
       </vaadin-checkbox-group>
       <!-- end::snippet[] -->
     `;

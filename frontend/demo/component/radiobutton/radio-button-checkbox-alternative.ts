@@ -20,7 +20,9 @@ export class Example extends LitElement {
     return html`
       <vaadin-vertical-layout>
         <!-- tag::snippet[] -->
-        <vaadin-checkbox checked>Reply All by default (unchecked state not clear)</vaadin-checkbox>
+        <vaadin-checkbox checked>
+          <label slot="label">Reply All by default (unchecked state not clear)</label>
+        </vaadin-checkbox>
         <vaadin-radio-group label="Default reply behavior">
           <vaadin-radio-button checked>Reply</vaadin-radio-button>
           <vaadin-radio-button>Reply to all</vaadin-radio-button>

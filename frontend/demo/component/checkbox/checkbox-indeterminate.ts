@@ -42,9 +42,8 @@ export class Example extends LitElement {
             (this.selectedIds = (e.target as HTMLInputElement).checked
               ? this.items.map((person) => String(person.id))
               : [])}"
-        >
-          Notify users
-        </vaadin-checkbox>
+          label="Notify users"
+        ></vaadin-checkbox>
 
         <vaadin-checkbox-group
           label="Users to notify"
@@ -54,8 +53,10 @@ export class Example extends LitElement {
         >
           ${this.items.map((person) => {
             return html`
-              <vaadin-checkbox .value="${String(person.id)}">
-                ${person.firstName} ${person.lastName}
+              <vaadin-checkbox
+                .value="${String(person.id)}"
+                label="${person.firstName} ${person.lastName}"
+              >
               </vaadin-checkbox>
             `;
           })}
