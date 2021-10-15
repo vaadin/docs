@@ -1,7 +1,11 @@
 import './init-flow-namespace';
 import './init-flow-components';
-// import client from '../generated/connect-client.default';
-// client.prefix = __VAADIN_CONNECT_PREFIX__;
+
+// @ts-ignore
+import { applyTheme } from 'Frontend/generated/theme';
+
+// Apply the theme, so that overlay elements styles and custom property overrides work as expected
+applyTheme(document);
 
 document.body.style.setProperty('--docs-example-render-font-family', 'var(--lumo-font-family)');
 document.body.style.setProperty('--docs-example-render-color', 'var(--lumo-body-text-color)');
