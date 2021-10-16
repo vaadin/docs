@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/icons';
 import '@vaadin/tabs';
 
 @customElement('tabs-icons-horizontal')

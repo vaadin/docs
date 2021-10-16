@@ -7,7 +7,7 @@ import type { ContextMenuItem } from '@vaadin/context-menu';
 import '@vaadin/grid';
 import type { Grid, GridItemModel } from '@vaadin/grid';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';

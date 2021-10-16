@@ -4,7 +4,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/app-layout';
 import '@vaadin/app-layout/vaadin-drawer-toggle';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 import '@vaadin/tabs';
 import { applyTheme } from 'Frontend/generated/theme';
 

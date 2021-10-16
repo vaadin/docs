@@ -4,7 +4,7 @@ import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/combo-box';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { Button } from '@vaadin/button';

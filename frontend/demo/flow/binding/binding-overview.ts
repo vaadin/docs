@@ -6,7 +6,7 @@ import '@vaadin/button';
 import '@vaadin/form-layout';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/icons';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 

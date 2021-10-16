@@ -5,7 +5,7 @@ import { guard } from 'lit/directives/guard.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 import '@vaadin/notification';
 import type { Notification } from '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';

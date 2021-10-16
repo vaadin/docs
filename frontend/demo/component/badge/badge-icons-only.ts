@@ -4,7 +4,7 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 
 @customElement('badge-icons-only')
 export class Example extends LitElement {

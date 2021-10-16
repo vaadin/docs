@@ -8,7 +8,7 @@ import '@vaadin/grid';
 import type { GridItemModel } from '@vaadin/grid';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/icons';
 import { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';

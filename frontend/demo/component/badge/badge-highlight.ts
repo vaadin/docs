@@ -9,7 +9,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
 import { GridColumn, GridItemModel } from '@vaadin/grid';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {

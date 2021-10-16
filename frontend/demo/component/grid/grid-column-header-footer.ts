@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
 import type { GridItemModel } from '@vaadin/grid';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/icons';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

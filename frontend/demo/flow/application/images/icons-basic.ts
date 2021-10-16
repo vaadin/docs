@@ -2,7 +2,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/icons';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 

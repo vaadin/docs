@@ -5,7 +5,7 @@ import '@vaadin/app-layout';
 import '@vaadin/app-layout/vaadin-drawer-toggle';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 import '@vaadin/tabs';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';

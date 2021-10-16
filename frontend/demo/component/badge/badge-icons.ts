@@ -3,7 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 

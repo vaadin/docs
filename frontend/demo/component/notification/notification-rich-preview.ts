@@ -4,7 +4,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset';
+import '@vaadin/icons';
 import '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { applyTheme } from 'Frontend/generated/theme';

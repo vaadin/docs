@@ -15,7 +15,7 @@ import '@vaadin/grid/vaadin-grid-tree-toggle.js';
 import type { GridTreeToggleExpandedChangedEvent } from '@vaadin/grid/vaadin-grid-tree-toggle.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/icons';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';

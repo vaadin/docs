@@ -3,7 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/icon';
-import '@vaadin/icons/vaadin-iconset.js';
+import '@vaadin/icons';
 import '@vaadin/split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import './master-content';
