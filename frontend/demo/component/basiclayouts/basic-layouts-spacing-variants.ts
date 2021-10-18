@@ -2,10 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-radio-button/vaadin-radio-group';
-import '@vaadin/vaadin-item';
-import { RadioGroupValueChangedEvent } from '@vaadin/vaadin-radio-button/vaadin-radio-group';
+import '@vaadin/radio-group';
+import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import '@vaadin/vertical-layout';
 import './layout-item';
 
 @customElement('basic-layouts-spacing-variants')
@@ -41,11 +40,11 @@ export class Example extends LitElement {
         label="Spacing variant"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.themeVariant = e.detail.value)}"
       >
-        <vaadin-radio-button value="spacing-xs" checked>spacing-xs</vaadin-radio-button>
-        <vaadin-radio-button value="spacing-s" checked>spacing-s</vaadin-radio-button>
-        <vaadin-radio-button value="spacing" checked>spacing</vaadin-radio-button>
-        <vaadin-radio-button value="spacing-l" checked>spacing-l</vaadin-radio-button>
-        <vaadin-radio-button value="spacing-xl" checked>spacing-xl</vaadin-radio-button>
+        <vaadin-radio-button value="spacing-xs" label="spacing-xs" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing-s" label="spacing-s" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing" label="spacing" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing-l" label="spacing-l" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing-xl" label="spacing-xl" checked></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

@@ -2,8 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-text-field/vaadin-email-field';
+import '@vaadin/email-field';
+import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('email-field-basic')

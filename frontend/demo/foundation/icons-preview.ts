@@ -1,5 +1,5 @@
-import { IconsetElement } from '@vaadin/vaadin-icon/vaadin-iconset';
-import '@vaadin/vaadin-icon/vaadin-icon';
+import { Iconset } from '@vaadin/icon/vaadin-iconset.js';
+import '@vaadin/icon';
 
 const DEPRECATED_ICONS: Record<string, string> = {
   buss: 'bus',
@@ -11,8 +11,8 @@ const DEPRECATED_ICONS: Record<string, string> = {
 
 export class IconsPreview extends HTMLElement {
   connectedCallback() {
-    const iconsetName = this.getAttribute('name')!;
-    const iconset = IconsetElement.getIconset(iconsetName);
+    const iconsetName = this.getAttribute('name');
+    const iconset = Iconset.getIconset(iconsetName as string);
 
     // A hack to get the `_icons` property computed.
     // https://github.com/vaadin/web-components/blob/447e95e0e08d396167af9a42f68b04529b412ebd/packages/vaadin-icon/src/vaadin-iconset.js#L90

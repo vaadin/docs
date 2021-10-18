@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 export class Example extends LitElement {

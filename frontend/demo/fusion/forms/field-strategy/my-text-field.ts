@@ -1,8 +1,8 @@
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import '@vaadin/vaadin-custom-field';
-import '@vaadin/vaadin-text-field';
-import type { CustomFieldValueChangedEvent } from '@vaadin/vaadin-custom-field';
+import '@vaadin/custom-field';
+import '@vaadin/text-field';
+import type { CustomFieldValueChangedEvent } from '@vaadin/custom-field';
 
 // tag::snippet[]
 @customElement('my-text-field')

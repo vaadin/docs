@@ -3,9 +3,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { guard } from 'lit/directives/guard.js';
-import '@vaadin/vaadin-select/vaadin-select';
-import '@vaadin/vaadin-list-box/vaadin-list-box';
-import '@vaadin/vaadin-item/vaadin-item';
+import '@vaadin/item';
+import '@vaadin/list-box';
+import '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-disabled')

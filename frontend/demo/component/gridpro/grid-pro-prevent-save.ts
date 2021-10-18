@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
-import '@vaadin/vaadin-grid-pro/vaadin-grid-pro';
-import '@vaadin/vaadin-grid-pro/vaadin-grid-pro-edit-column';
+import '@vaadin/grid-pro';
+import '@vaadin/grid-pro/vaadin-grid-pro-edit-column.js';
+import { Notification } from '@vaadin/notification';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -22,18 +22,8 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   private showErrorNotification(msg: string) {
-    const notification = new NotificationElement();
-    notification.position = 'bottom-center';
+    const notification = Notification.show(msg, { position: 'bottom-center' });
     notification.setAttribute('theme', 'error');
-
-    notification.renderer = (root: HTMLElement) => render(html`${msg}`, root);
-
-    document.body.appendChild(notification);
-    notification.open();
-
-    notification.addEventListener('opened-changed', () => {
-      document.body.removeChild(notification);
-    });
   }
 
   async firstUpdated() {

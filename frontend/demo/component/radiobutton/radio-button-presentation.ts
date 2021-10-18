@@ -2,9 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-radio-button/vaadin-radio-group';
-import '@vaadin/vaadin-radio-button/vaadin-radio-button';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/horizontal-layout';
+import '@vaadin/radio-group';
 import { getCards } from 'Frontend/demo/domain/DataService';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -36,13 +35,13 @@ export class Example extends LitElement {
         ${this.items.map(
           (card) => html`
             <vaadin-radio-button .value="${String(card.id)}">
-              <div>
+              <label slot="label">
                 <vaadin-horizontal-layout theme="spacing">
                   <img src="${card.pictureUrl}" alt="${card.name}" style="height: 1em;" />
                   <span>${card.accountNumber}</span>
                 </vaadin-horizontal-layout>
                 <div>Expiry date:${card.expiryDate}</div>
-              </div>
+              </label>
             </vaadin-radio-button>
           `
         )}

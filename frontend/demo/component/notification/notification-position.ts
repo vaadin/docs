@@ -1,14 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import {
-  NotificationElement,
-  NotificationPosition,
-} from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/button';
+import { Notification, NotificationPosition } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-position')
@@ -44,7 +38,7 @@ export class Example extends LitElement {
     // Use the button label as the location
     const position = (event.target as HTMLElement).textContent as NotificationPosition;
 
-    NotificationElement.show(position, { position });
+    Notification.show(position, { position });
   }
 
   // end::snippet[]

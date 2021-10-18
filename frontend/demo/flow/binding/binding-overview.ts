@@ -2,13 +2,13 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/button';
+import '@vaadin/form-layout';
+import '@vaadin/horizontal-layout';
+import '@vaadin/icon';
+import '@vaadin/icons';
+import '@vaadin/text-field';
+import '@vaadin/vertical-layout';
 
 @customElement('binding-overview')
 export class DataBindingExample extends LitElement {

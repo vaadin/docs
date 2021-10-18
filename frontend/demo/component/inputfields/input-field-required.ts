@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-text-field';
-import '@vaadin/vaadin-date-picker';
+import '@vaadin/date-picker';
+import '@vaadin/horizontal-layout';
+import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('input-field-required')

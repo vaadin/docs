@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
-import '@vaadin/vaadin-split-layout/vaadin-split-layout';
+import '@vaadin/menu-bar';
+import { MenuBarI18n } from '@vaadin/menu-bar';
+import '@vaadin/split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import { MenuBarI18n } from '@vaadin/vaadin-menu-bar';
 
 @customElement('menu-bar-internationalization')
 export class Example extends LitElement {

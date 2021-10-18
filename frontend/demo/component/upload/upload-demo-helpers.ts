@@ -1,4 +1,4 @@
-import type { UploadFile, UploadResponseEvent } from '@vaadin/vaadin-upload';
+import type { UploadFile, UploadResponseEvent } from '@vaadin/upload';
 
 /*
  * Mock XMLHttpRequest (see http://www.w3.org/TR/XMLHttpRequest)
