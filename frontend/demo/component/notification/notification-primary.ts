@@ -1,12 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-notification/vaadin-notification';
-import {
-  NotificationElement,
-  NotificationOpenedChangedEvent,
-} from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/button';
+import { Notification, NotificationOpenedChangedEvent } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-primary')
@@ -23,7 +19,7 @@ export class Example extends LitElement {
 
   handleClick() {
     // tag::snippet[]
-    const notification = NotificationElement.show('New project plan available', {
+    const notification = Notification.show('New project plan available', {
       position: 'middle',
     });
     notification.setAttribute('theme', 'primary');

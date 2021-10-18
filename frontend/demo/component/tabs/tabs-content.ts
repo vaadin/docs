@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-tabs/vaadin-tabs';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/tabs';
+import '@vaadin/vertical-layout';
 import '@vaadin/vaadin-lumo-styles/typography';
 import { applyTheme } from 'Frontend/generated/theme';
 

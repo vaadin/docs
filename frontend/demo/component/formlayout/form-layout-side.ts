@@ -2,10 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import '@vaadin/vaadin-form-layout/vaadin-form-item';
-
-import '@vaadin/vaadin-text-field/vaadin-text-field';
+import '@vaadin/form-layout';
+import '@vaadin/form-layout/vaadin-form-item';
+import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('form-layout-side')
@@ -21,7 +20,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-form-layout>
-        <!-- Wrap fields into form items, which 
+        <!-- Wrap fields into form items, which
              displays labels on the side by default -->
         <vaadin-form-item>
           <label slot="label">Revenue</label>

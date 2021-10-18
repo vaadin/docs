@@ -16,11 +16,12 @@ export class Example extends LitElement {
 
   @query('login-overlay-mockup')
   private login?: LoginOverlayMockupElement;
+
   firstUpdated() {
     if (this.login && this.login.i18n) {
       this.login.i18n = {
         ...this.login.i18n,
-        additionalInformation: `Please, contact admin@company.com if you're experiecing issues logging into your account`,
+        additionalInformation: `Please, contact admin@company.com if you're experiencing issues logging into your account`,
       };
     }
   }

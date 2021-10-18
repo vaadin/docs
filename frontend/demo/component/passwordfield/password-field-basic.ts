@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-text-field/vaadin-password-field';
+import '@vaadin/password-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('password-field-basic')

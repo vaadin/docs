@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-upload/vaadin-upload';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import type { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
+import '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
