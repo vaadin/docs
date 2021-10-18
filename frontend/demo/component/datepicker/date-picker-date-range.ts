@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-date-picker/vaadin-date-picker';
-import { DatePickerValueChangedEvent } from '@vaadin/vaadin-date-picker/vaadin-date-picker';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/date-picker';
+import { DatePickerValueChangedEvent } from '@vaadin/date-picker';
+import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-date-range')

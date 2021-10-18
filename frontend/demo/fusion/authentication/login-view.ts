@@ -3,7 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { LoginResult } from '@vaadin/fusion-frontend';
 import { login } from './auth';
 import { AfterEnterObserver, RouterLocation } from '@vaadin/router';
-import '@vaadin/vaadin-login/vaadin-login-overlay';
+import '@vaadin/login';
 
 @customElement('login-view')
 export class LoginView extends LitElement implements AfterEnterObserver {

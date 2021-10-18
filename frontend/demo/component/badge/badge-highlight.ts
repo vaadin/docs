@@ -2,14 +2,14 @@ import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // 
 import 'Frontend/demo/init'; // hidden-source-line
 import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-source-line
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
+import '@vaadin/polymer-legacy-adapter/template-renderer.js'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement, render } from 'lit';
 import { guard } from 'lit/directives/guard';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
+import '@vaadin/grid';
+import { GridColumn, GridItemModel } from '@vaadin/grid';
+import '@vaadin/icon';
+import '@vaadin/icons';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -43,11 +43,7 @@ export class Example extends LitElement {
           header="Due date"
           .renderer="${guard(
             [],
-            () => (root: HTMLElement, column?: GridColumnElement, model?: GridItemModel<Report>) => {
-              if (!column || !model) {
-                return;
-              }
-
+            () => (root: HTMLElement, _column: GridColumn, model: GridItemModel<Report>) => {
               render(html`${dateFormatter.format(new Date(model.item.due))}`, root);
             }
           )}"
@@ -57,11 +53,7 @@ export class Example extends LitElement {
           header="Status"
           .renderer="${guard(
             [],
-            () => (root: HTMLElement, column?: GridColumnElement, model?: GridItemModel<Report>) => {
-              if (!column || !model) {
-                return;
-              }
-
+            () => (root: HTMLElement, _column: GridColumn, model: GridItemModel<Report>) => {
               const { status } = model.item;
 
               let title: string;

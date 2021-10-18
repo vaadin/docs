@@ -1,5 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vaadin-tabs/vaadin-tabs';
+import '@vaadin/tabs';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
