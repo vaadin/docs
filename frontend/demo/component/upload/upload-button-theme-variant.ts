@@ -2,15 +2,14 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import { showErrorNotification } from 'Frontend/demo/notification-helper';
-import '@vaadin/vaadin-notification/vaadin-notification';
-import '@vaadin/vaadin-upload/vaadin-upload';
+import '@vaadin/button';
+import { Notification } from '@vaadin/notification';
+import '@vaadin/upload';
 import type {
-  UploadElement,
+  Upload,
   UploadFileRejectEvent,
   UploadMaxFilesReachedChangedEvent,
-} from '@vaadin/vaadin-upload/vaadin-upload';
-import '@vaadin/vaadin-button/vaadin-button';
+} from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-button-theme-variant')
@@ -23,7 +22,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: UploadElement;
+  private upload?: Upload;
 
   @state()
   private maxFilesReached = false;
@@ -54,6 +53,6 @@ export class Example extends LitElement {
   }
 
   fileRejectHandler(event: UploadFileRejectEvent) {
-    showErrorNotification(`Error: ${event.detail.error} '${event.detail.file.name}'`);
+    Notification.show(`Error: ${event.detail.error} '${event.detail.file.name}'`);
   }
 }

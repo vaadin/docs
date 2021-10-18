@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-time-picker/vaadin-time-picker';
+import '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('time-picker-minutes-step')

@@ -3,7 +3,7 @@ import './upload-demo-helpers'; // hidden-source-line
 import { createFakeFilesUploadBasic } from './upload-demo-mock-files'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-upload/vaadin-upload';
+import '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-basic')

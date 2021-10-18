@@ -1,3 +1,6 @@
+// Legacy Polymer-based dom-module styling
+import '@vaadin/polymer-legacy-adapter/style-modules.js';
+
 import './init-flow-namespace';
 import './init-flow-components';
 // @ts-ignore

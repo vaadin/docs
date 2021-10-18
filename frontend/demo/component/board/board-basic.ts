@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import '@vaadin/vaadin-board/vaadin-board';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import '@vaadin/board';
 import { applyTheme } from 'Frontend/generated/theme';
 import './example-indicator';
 import './example-chart';

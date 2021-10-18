@@ -4,11 +4,11 @@ import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { guard } from 'lit/directives/guard.js';
 
-import '@vaadin/vaadin-dialog/vaadin-dialog';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/button';
+import '@vaadin/dialog';
+import '@vaadin/horizontal-layout';
+import '@vaadin/text-field';
+import '@vaadin/vertical-layout';
 
 import { applyTheme } from 'Frontend/generated/theme';
 

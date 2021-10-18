@@ -1,11 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import type {
-  ContextMenuItem,
-  ContextMenuItemSelectedEvent,
-} from '@vaadin/vaadin-context-menu/vaadin-context-menu';
+import '@vaadin/context-menu';
+import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-checkable')
