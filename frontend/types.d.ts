@@ -7,3 +7,5 @@ declare module '*.jpg' {
   const value: string;
   export = value;
 }
+
+declare module 'Frontend/generated/theme';
