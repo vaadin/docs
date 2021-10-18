@@ -24,6 +24,7 @@ const filteredFileNameOfTheFlowGeneratedMainEntryPoint =
 // running the docs. The brute force solution here is to simply
 // remove the other bundles from the config.
 delete flowDefaults.entry['bundle'];
+delete flowDefaults.entry['gizmo'];
 
 // @ts-ignore
 module.exports = merge(flowDefaults, {
