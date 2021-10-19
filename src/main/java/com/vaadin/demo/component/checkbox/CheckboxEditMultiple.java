@@ -1,9 +1,9 @@
 package com.vaadin.demo.component.checkbox;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("checkbox-edit-multiple")
 public class CheckboxEditMultiple extends Div {
@@ -17,6 +17,6 @@ public class CheckboxEditMultiple extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<CheckboxEditMultiple> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxEditMultiple> { // hidden-source-line
+    } // hidden-source-line
 }
