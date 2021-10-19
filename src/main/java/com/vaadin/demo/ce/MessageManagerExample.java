@@ -27,12 +27,14 @@ public class MessageManagerExample extends VerticalLayout {
 
             Notification.show(user.getName() + ": " + text);
         });
+        // end::snippet[]
 
+        // tag::submit[]
         add(new MessageInput(event -> {
             String text = event.getValue();
-            messageManager.submit(text); // <3>
+            messageManager.submit(text);
         }));
-        // end::snippet[]
+        // end::submit[]
     }
 
     // tag::persister[]
