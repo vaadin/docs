@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-text-field/vaadin-integer-field';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import '@vaadin/vaadin-form-layout/vaadin-form-item';
-import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
+import '@vaadin/integer-field';
+import '@vaadin/form-layout';
+import '@vaadin/form-layout/vaadin-form-item.js';
+import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   {

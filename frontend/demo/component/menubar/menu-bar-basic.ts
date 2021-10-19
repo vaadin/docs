@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
+import '@vaadin/menu-bar';
+import { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
-import { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
 
 @customElement('menu-bar-basic')
 export class Example extends LitElement {

@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-date-picker/vaadin-date-picker';
+import '@vaadin/date-picker';
 import { Binder, field } from '@vaadin/form';
 import { applyTheme } from 'Frontend/generated/theme';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';

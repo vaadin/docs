@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-split-layout/vaadin-split-layout';
+import '@vaadin/button';
+import '@vaadin/icon';
+import '@vaadin/icons';
+import '@vaadin/split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import './master-content';
 import './detail-content';

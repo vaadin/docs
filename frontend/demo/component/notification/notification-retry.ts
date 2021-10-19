@@ -1,15 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators';
-import '@vaadin/vaadin-icon/vaadin-icon';
+import '@vaadin/button';
+import '@vaadin/horizontal-layout';
+import '@vaadin/icon';
+import '@vaadin/notification';
+import { NotificationRenderer, NotificationOpenedChangedEvent } from '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-notification/vaadin-notification';
-import {
-  NotificationRenderer,
-  NotificationOpenedChangedEvent,
-} from '@vaadin/vaadin-notification/vaadin-notification';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-retry')

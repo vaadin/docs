@@ -2,17 +2,17 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
+import '@vaadin/grid';
+import '@vaadin/grid/vaadin-grid-tree-column.js';
 import type {
+  Grid,
   GridDataProviderCallback,
   GridDataProviderParams,
   GridDragStartEvent,
   GridDropEvent,
-  GridElement,
   GridExpandedItemsChangedEvent,
   GridItemModel,
-} from '@vaadin/vaadin-grid/vaadin-grid';
+} from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -34,7 +34,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private grid!: GridElement;
+  private grid!: Grid;
 
   @state()
   private draggedItem?: EditablePerson;
@@ -68,7 +68,7 @@ export class Example extends LitElement {
     We cannot change the underlying data in this demo so this dataProvider uses
     a local field to fetch its values. This allows us to keep a reference to the
     modified list instead of loading a new list every time the dataProvider gets
-    called. In a real application, you should always access your data source 
+    called. In a real application, you should always access your data source
     here and avoid using grid.clearCache() whenever possible.
     */
     const result = parentItem

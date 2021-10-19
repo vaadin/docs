@@ -1,15 +1,15 @@
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 
-import '@vaadin/vaadin-text-field';
-import { TextFieldElement } from '@vaadin/vaadin-text-field';
+import '@vaadin/text-field';
+import { TextField } from '@vaadin/text-field';
 
 import 'vanilla-colorful';
 
 @customElement('color-picker-view')
 export class ColorPickerView extends LitElement {
   @query('#hex')
-  hex!: TextFieldElement;
+  hex!: TextField;
 
   render() {
     return html`
