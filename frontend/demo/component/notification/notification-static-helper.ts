@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-notification/vaadin-notification';
-import { NotificationElement } from '@vaadin/vaadin-notification/vaadin-notification';
+import '@vaadin/button';
+import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-static-helper')
@@ -18,7 +17,7 @@ export class Example extends LitElement {
   handleTextNotification() {
     // tag::snippet[]
     // Show a simple text-based notification
-    NotificationElement.show('Financial report generated', {
+    Notification.show('Financial report generated', {
       position: 'middle',
     });
     // end::snippet[]
@@ -27,7 +26,7 @@ export class Example extends LitElement {
   handleLitTemplateNotification() {
     // tag::snippet[]
     // Show a notification with markup using a Lit template
-    NotificationElement.show(
+    Notification.show(
       html`
         <b>@John:</b>
         &nbsp;

@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-login/vaadin-login-form';
+import '@vaadin/login/vaadin-login-form.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-basic')

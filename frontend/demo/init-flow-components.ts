@@ -28,4 +28,4 @@ import '@vaadin/flow-frontend/virtualListConnector.js';
 import '@vaadin/flow-frontend/lit-renderer.ts';
 
 // Legacy template renderer
-import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js';
+import '@vaadin/polymer-legacy-adapter/template-renderer.js';

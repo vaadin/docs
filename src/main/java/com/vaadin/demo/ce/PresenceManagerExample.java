@@ -23,8 +23,8 @@ public class PresenceManagerExample extends VerticalLayout {
 
         manager.markAsPresent(true); // <2>
 
-        manager.setNewUserHandler(newUserInfo -> { // <3>
-            Component card = createUserCard(newUserInfo);
+        manager.setPresenceHandler(context -> { // <3>
+            Component card = createUserCard(context.getUser());
             users.add(card);
             return () -> users.remove(card); // <4>
         });

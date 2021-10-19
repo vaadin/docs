@@ -2,11 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
-import { showErrorNotification } from 'Frontend/demo/notification-helper';
-import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadFileRejectEvent } from '@vaadin/vaadin-upload/vaadin-upload';
+import { Notification } from '@vaadin/notification';
+import '@vaadin/upload';
+import type { Upload, UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
-import { UploadElement } from '@vaadin/vaadin-upload';
 
 @customElement('upload-file-count')
 export class Example extends LitElement {
@@ -30,7 +29,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: UploadElement;
+  private upload?: Upload;
 
   firstUpdated() {
     if (this.upload?.i18n) {
@@ -47,8 +46,9 @@ export class Example extends LitElement {
       <p>Maximum of ${maxFiles} files allowed</p>
       <vaadin-upload
         .maxFiles="${maxFiles}"
-        @file-reject="${(event: UploadFileRejectEvent) =>
-          showErrorNotification(event.detail.error)}"
+        @file-reject="${(event: UploadFileRejectEvent) => {
+          Notification.show(event.detail.error);
+        }}"
       ></vaadin-upload>
     `;
   }

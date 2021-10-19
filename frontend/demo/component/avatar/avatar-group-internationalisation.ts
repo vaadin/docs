@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-avatar/vaadin-avatar-group';
+import '@vaadin/avatar-group';
+import { AvatarGroupI18n } from '@vaadin/avatar-group';
 import { applyTheme } from 'Frontend/generated/theme';
-import { AvatarGroupI18n } from '@vaadin/vaadin-avatar/src/interfaces';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 

@@ -2,10 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-radio-button/vaadin-radio-group';
-import '@vaadin/vaadin-item';
-import { RadioGroupValueChangedEvent } from '@vaadin/vaadin-radio-button/vaadin-radio-group';
+import '@vaadin/horizontal-layout';
+import '@vaadin/radio-group';
+import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import './layout-item';
 
 @customElement('basic-layouts-horizontal-layout-vertical-alignment')
@@ -41,11 +40,15 @@ export class Example extends LitElement {
         label="Vertical alignment"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.alignItems = e.detail.value)}"
       >
-        <vaadin-radio-button value="stretch" checked>Stretch (default)</vaadin-radio-button>
-        <vaadin-radio-button value="flex-start">Start</vaadin-radio-button>
-        <vaadin-radio-button value="center">Center</vaadin-radio-button>
-        <vaadin-radio-button value="flex-end">End</vaadin-radio-button>
-        <vaadin-radio-button value="baseline">Baseline</vaadin-radio-button>
+        <vaadin-radio-button
+          value="stretch"
+          label="Stretch (default)"
+          checked
+        ></vaadin-radio-button>
+        <vaadin-radio-button value="flex-start" label="Start"></vaadin-radio-button>
+        <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
+        <vaadin-radio-button value="flex-end" label="End"></vaadin-radio-button>
+        <vaadin-radio-button value="baseline" label="Baseline"></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

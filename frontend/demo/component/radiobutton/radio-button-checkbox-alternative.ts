@@ -2,10 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-radio-button/vaadin-radio-group';
-import '@vaadin/vaadin-radio-button/vaadin-radio-button';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/checkbox';
+import '@vaadin/radio-group';
+import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-checkbox-alternative')
@@ -21,10 +20,12 @@ export class Example extends LitElement {
     return html`
       <vaadin-vertical-layout>
         <!-- tag::snippet[] -->
-        <vaadin-checkbox checked>Reply All by default (unchecked state not clear)</vaadin-checkbox>
+        <vaadin-checkbox checked>
+          <label slot="label">Reply All by default (unchecked state not clear)</label>
+        </vaadin-checkbox>
         <vaadin-radio-group label="Default reply behavior">
-          <vaadin-radio-button checked>Reply</vaadin-radio-button>
-          <vaadin-radio-button>Reply to all</vaadin-radio-button>
+          <vaadin-radio-button label="Reply" checked></vaadin-radio-button>
+          <vaadin-radio-button label="Reply to all"></vaadin-radio-button>
         </vaadin-radio-group>
         <!-- end::snippet[] -->
       </vaadin-vertical-layout>

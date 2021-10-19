@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-select/vaadin-select';
-import { Select } from '@vaadin/vaadin-select/vaadin-select';
-import '@vaadin/vaadin-list-box/vaadin-list-box';
-import '@vaadin/vaadin-item/vaadin-item';
+import '@vaadin/item';
+import '@vaadin/list-box';
+import '@vaadin/select';
+import { Select } from '@vaadin/select';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
