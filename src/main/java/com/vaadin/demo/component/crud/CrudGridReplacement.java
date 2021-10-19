@@ -13,32 +13,23 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 
-import java.util.Arrays;
-import java.util.List;
-
-@Route("crud-basic")
-public class CrudBasic extends Div {
+@Route("crud-grid-replacement")
+public class CrudGridReplacement extends Div {
 
   private Crud<Person> crud;
 
-  private String FIRST_NAME = "firstName";
-  private String LAST_NAME = "lastName";
-  private String EMAIL = "email";
-  private String PROFESSION = "profession";
-  private String EDIT_COLUMN = "vaadin-crud-edit-column";
-
-  public CrudBasic() {
-    // tag::snippet[]
+  public CrudGridReplacement() {
+    // tag::snippet1[]
     crud = new Crud<>(
       Person.class,
+      createGrid(),
       createEditor()
     );
+    // end::snippet1[]
 
-    setupGrid();
     setupDataProvider();
 
     add(crud);
-    // end::snippet[]
   }
 
   private CrudEditor<Person> createEditor() {
@@ -57,33 +48,17 @@ public class CrudBasic extends Div {
     return new BinderCrudEditor<>(binder, form);
   }
 
-  private void setupGrid() {
-    Grid<Person> grid = crud.getGrid();
-
-    // Only show these columns (all columns shown by default):
-    List<String> visibleColumns = Arrays.asList(
-      FIRST_NAME,
-      LAST_NAME,
-      EMAIL,
-      PROFESSION,
-      EDIT_COLUMN
-    );
-    grid.getColumns().forEach(column -> {
-      String key = column.getKey();
-      if (!visibleColumns.contains(key)) {
-        grid.removeColumn(column);
-      }
-    });
-
-    // Reorder the columns (alphabetical by default)
-    grid.setColumnOrder(
-      grid.getColumnByKey(FIRST_NAME),
-      grid.getColumnByKey(LAST_NAME),
-      grid.getColumnByKey(EMAIL),
-      grid.getColumnByKey(PROFESSION),
-      grid.getColumnByKey(EDIT_COLUMN)
-    );
+  // tag::snippet2[]
+  private Grid<Person> createGrid() {
+    Grid<Person> grid = new Grid<>();
+    Crud.addEditColumn(grid);
+    grid.addColumn(Person::getFirstName).setHeader("First name");
+    grid.addColumn(Person::getLastName).setHeader("Last name");
+    grid.addColumn(Person::getEmail).setHeader("Email");
+    grid.addColumn(Person::getProfession).setHeader("Profession");
+    return grid;
   }
+  // end::snippet2[]
 
   private void setupDataProvider() {
     PersonDataProvider dataProvider = new PersonDataProvider();
@@ -95,5 +70,5 @@ public class CrudBasic extends Div {
       dataProvider.persist(saveEvent.getItem())
     );
   }
-  public static class Exporter extends DemoExporter<CrudBasic> {} // hidden-source-line
+  public static class Exporter extends DemoExporter<CrudGridReplacement> {} // hidden-source-line
 }
