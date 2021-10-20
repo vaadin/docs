@@ -13,11 +13,10 @@ interface Country {
 
 @customElement('combo-box-filtering-1')
 export class Example extends LitElement {
-  protected createRenderRoot() {
-    const root = super.createRenderRoot();
+  constructor() {
+    super();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(root);
-    return root;
+    applyTheme(this.shadowRoot);
   }
 
   @state()
