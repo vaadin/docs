@@ -1,0 +1,54 @@
+---
+title: Connection Context
+order: 8
+layout: page
+---
+
+[[ce.external]]
+= Introduction
+
+The connection context makes it possible for a connection to become deactivated when it is no longer needed and active again if the context status changes.
+The context does also handles synchronization of date change notifications delivered to application code.
+
+To use a connection context, pass it to the collaboration manager's constructor or to the [methodname]#openTopicConnection# method
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/ConnectionContextExample.java[tags=pass-a-connection-context,indent=0]
+----
+
+There are 2 implementions of [classname]#ConnectionContext#, [classname]#ComponentConnectionContext# and [classname]#SystemConnectionContext#.
+
+== ComponentConnectionContext
+
+A connection context based on the attach state of a set of component instances.
+This implementation activates the topic connection whenever the target component is attached and deactivates it when the component is detached.
+All attached components must belong to the same UI instance, and this UI instance is used to dispatch actions using the [methodname]#access# method in the [classname]#UI# class.
+
+[classname]#ComponentConnectionContext# is used internally by all high-level components such as [classname]#CollaborationAvatarGroup# and by shorthand methods and constructors that take a component instance as the context.
+
+The following example illustrates a common pattern, when inside a component instance we want to create a Collaboration Manager or use the Topic API. In this case, `this` (which extends [classname]#VerticalLayout#) is passed as the first parameter. Internally a  [classname]#ComponentConnectionContext# will be created in each call, and the connection will be active when the component is attached and deactivated when it is detached
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/ConnectionContextExample.java[tags=component,indent=0]
+----
+
+== SystemConnectionContext
+
+A connection context that is always active.
+This context is intended to be used in situations that aren't directly associated with a UI, such as from a background thread or when integrating with external services.
+
+An instance can be acquired using [methodname]#getInstance# in any situation where [methodname]#CollaborationEngine.getInstance# is available.
+In other situations, you can use [methodname]#CollaborationEngine.getSystemContext# or create a new context instance using the constructor.
+
+In the following example, an asynchronous job uses a [classname]#SystemConnectionContext# to send a system message.
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/ConnectionContextExample.java[tags=async-task,indent=0]
+----
+
+<1> The asynchronous function uses Spring's [classname]#@Async# annotation. It receives the [classname]#CollaborationEngine# as a parameter, since [methodname]#CollaborationEngine.getInstance# throws an exception when running in a background thread.
+
+<2> The [classname]#SystemConnectionContext# is acquired through [methodname]#CollaborationEngine.getSystemContext#.
+
+<3> It is then used to create a MessageManager that will be immediately activated.
+
+<4> The message is sent and the MessageManger is immediately closed.
