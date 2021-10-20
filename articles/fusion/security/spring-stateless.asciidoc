@@ -6,6 +6,10 @@ layout: page
 
 = Stateless Authentication With Spring Security
 
+[role="since:com.vaadin:vaadin@V22 standalone"]
+--
+--
+
 After a user logs in, the web application has to persist the authentication data over server requests, so that the user is not asked to log in again for every single action.
 Stateless authentication presents a way to persist the authentication data between the requests on the client-side.
 
@@ -54,51 +58,61 @@ Add the following dependencies to the project’s `pom.xml`:
 Modify the Spring Security configuration and use the [methodname]#VaadinWebSecurityConfigurerAdapter.setStatelessAuthentication()# method to set up stateless authentication as follows:
 
 .`SecurityConfig.java`
-[source,java,subs="callouts+"]
+[source,java]
 ----
-@EnableWebSecurity
-@Configuration
-public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        ...
-        super.configure(http);
-
-        setLoginView(http, "/login");
-
-        setStatelessAuthentication(http,
-            new SecretKeySpec(
-                    Base64.getDecoder().decode("..."), // <1>
-                JwsAlgorithms.HS256), // <2>
-            "com.example.application" // <3>
-        );
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityConfig.java[tags="stateless-configure"]
 ----
 <1> Sets the secret key that is used for signing and verifying the JWT.
 <2> Sets the JWT signature algorithm.
-Note that the key length should match the algorithm chosen.
+Note that the key length should match the algorithm chosen. For example, the `HS256` algorithm used above requires a 32-byte secret key.
 <3> Sets the issuer JWT claim — a string or a URL that identifies your application.
 
 [CAUTION]
 .Secret Key Considerations
 ====
 The secret key must be unique for your application.
-Keep it secret.
+
+Use different keys on the development, staging, and production environments.
+
+Do not commit the secret key into the repository.
 ====
 
-You can generate a secret key using the `openssl` command.
+The security configuration above gets the secret key from the base64-encoded `my.app.auth.secret` string property.
+You should configure the property value in your environment accordingly.
 
-For example, the following command generates a 32-byte base64-encoded secret key for using with the `HS256` algorithm:
+To avoid hard-coding the value and committing it into the repository, you can create a separate `application.properties` file in the `config/local/` subdirectory ignored by Git, for example:
 
 [source,bash]
 ----
-openssl rand -base64 32
+mkdir -p config/local/
+
+echo "
+# Contains secrets that shouldn’t go into the repository
+config/local/" >> .gitignore
+
+echo "my.app.auth.secret=$(openssl rand -base64 32)" > config/local/application.properties
 ----
 
-=== Step 3: Verify
+Spring Boot supports many ways of configuring properties. See the link:https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config[Externalized Configuration] feature section in the Spring Boot Reference.
 
-After the step 2, your application should be using stateless authentication.
+=== Step 3: Handle the JWT Authentication Principal
+
+NOTE: When using stateless authentication, the `SecurityContext.getAuthentication().getPrincipal()` call returns a `Jwt` instance that only contains the username and roles.
+
+In your application, check the references of the `Authentication.getPrincipal()` method, and verify that the code can handle the `Jwt` result.
+
+In applications using a username and password authentication, you may need to access the full `UserDetails` instance for the current user.
+You can use the `UserDetailsService` to load the user details using the username from the JWT:
+
+.`SecurityUtils.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityUtils.java[tags="user-details"]
+----
+
+==== Step 4: Verify
+
+After the step 3, your application should be using stateless authentication.
 
 To verify that:
 
@@ -109,40 +123,6 @@ To verify that:
 You should remain logged in after the restart.
 
 pass:[<!-- vale Google.Colons = YES -->]
-
-== Accessing User Details
-
-When using stateless authentication, the `SecurityContext.getAuthentication().getPrincipal()` call returns a `Jwt` instance that only contains the username and roles.
-
-In applications using a username and password authentication, you may need to access the full `UserDetails` instance for the current user.
-You can use the `UserDetailsService` to load the user details using the username from the JWT:
-
-.`SecurityUtils.java`
-[source,java]
-----
-@Component
-public class SecurityUtils  {
-
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    public Optional<UserDetails> getAuthenticatedUser() {
-        SecurityContext context = SecurityContextHolder.getContext();
-        Object principal = context.getAuthentication().getPrincipal();
-        if (principal instanceof Jwt) {
-            String userName = ((Jwt) principal).getSubject();
-            try {
-                return Optional.of(userDetailsService.loadUserByUsername(userName));
-            } catch (UserPrincipalNotFoundException) {
-                return Optional.empty();
-            }
-        }
-        // Anonymous or no authentication.
-        return Optional.empty();
-    }
-
-}
-----
 
 == JWT Expiration
 
