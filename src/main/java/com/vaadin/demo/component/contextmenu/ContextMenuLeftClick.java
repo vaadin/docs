@@ -10,12 +10,12 @@ import com.vaadin.flow.router.Route;
 
 import java.util.List;
 
-@Route("context-menu-basic")
-public class ContextMenuBasic extends Div {
+@Route("context-menu-left-click")
+public class ContextMenuLeftClick extends Div {
 
   private List<Person> people = DataService.getPeople(5);
 
-  public ContextMenuBasic() {
+  public ContextMenuLeftClick() {
     Grid<Person> grid = new Grid();
     grid.setAllRowsVisible(true);
     grid.setItems(people);
@@ -31,6 +31,7 @@ public class ContextMenuBasic extends Div {
 
     // tag::snippet[]
     GridContextMenu<Person> menu = grid.addContextMenu();
+    menu.setOpenOnClick(true);
     menu.addItem("View", event -> {});
     menu.addItem("Edit", event -> {});
     menu.addItem("Delete", event -> {});
@@ -38,5 +39,5 @@ public class ContextMenuBasic extends Div {
 
     add(grid);
   }
-  public static class Exporter extends DemoExporter<ContextMenuBasic> {} // hidden-source-line
+  public static class Exporter extends DemoExporter<ContextMenuLeftClick> {} // hidden-source-line
 }
