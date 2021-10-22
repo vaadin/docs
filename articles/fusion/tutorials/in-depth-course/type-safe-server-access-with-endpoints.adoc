@@ -18,23 +18,9 @@ You can find the backend code in the `src/main/java` directory.
 
 This chapter covers:
 
-* Spring Boot.
+* The backend architecture.
 * How to create an endpoint.
 * How to optimize communication by using data transfer objects (DTO).
-
-== An Introduction to Spring Boot
-
-Vaadin Fusion uses https://spring.io/projects/spring-boot[Spring Boot^] on the server. 
-Spring Boot is an opinionated, convention-over-configuration approach to creating Spring applications. 
-Spring Boot automates much of the needed configuration and manages an embedded Tomcat server so you don't need to deploy the application to a separate server. 
-
-In this tutorial, you use the following features that are configured by Spring Boot:
-
-* https://spring.io/projects/spring-data[Spring Data^] for accessing the database through https://spring.io/projects/spring-data-jpa[JPA^] and Hibernate. 
-* An embedded https://www.h2database.com/html/main.html[H2 Database^] for development, and https://www.postgresql.org[PostgreSQL] for production. 
-* Spring Boot DevTools for automatic code reload.
-* Embedded Tomcat server for deployment.
-* https://spring.io/projects/spring-security[Spring Security^] for authenticating users.
 
 == Backend Overview
 
@@ -97,7 +83,8 @@ import com.example.application.data.repository.CompanyRepository;
 import com.example.application.data.repository.ContactRepository;
 import com.example.application.data.repository.StatusRepository;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.flow.server.connect.Endpoint;
+import com.vaadin.fusion.Endpoint;
+import com.vaadin.fusion.Nonnull;
  
 @Endpoint
 @AnonymousAllowed
@@ -124,7 +111,6 @@ public CrmEndpoint(ContactRepository contactRepository, CompanyRepository compan
  this.contactRepository = contactRepository;
  this.companyRepository = companyRepository;
  this.statusRepository = statusRepository;
- 
 }
 ----
 
@@ -139,39 +125,52 @@ Instead, it uses public fields.
 [source,java]
 ----
 public static class CrmData {
- public List<Contact> contacts;
- public List<Company> companies;
- public List<Status> statuses;
-}
+  @Nonnull
+  public List<@Nonnull Contact> contacts = Collections.emptyList();
+  @Nonnull
+  public List<@Nonnull Company> companies = Collections.emptyList();;
+  @Nonnull
+  public List<@Nonnull Status> statuses = Collections.emptyList();;
+  }
 ----
 
-Then, implement the API methods. 
+TypeScript is more strict with handling `null` values than Java is. 
+Because of this, Fusion generates optional (nullable) TypeScript types for all non-primitive Java types.
+In this case, you ensure that you never return `null` values or `null` elements in the collections by annotating the types with `@Nonnull`.
+This creates non-nullable TypeScript types which are easier to work with. 
+You can read more about type nullability <<../../advanced/endpoints-generator/#type-nullability,here>>. 
+
+Next, implement API methods for getting, updating, and deleting data. 
 
 .`CrmEndpoint.java`
 [source,java]
 ----
+@Nonnull
 public CrmData getCrmData() {
- CrmData crmData = new CrmData();
- crmData.contacts = contactRepository.findAll();
- crmData.companies = companyRepository.findAll();
- crmData.statuses = statusRepository.findAll();
- return crmData;
+  CrmData crmData = new CrmData();
+  crmData.contacts = contactRepository.findAll();
+  crmData.companies = companyRepository.findAll();
+  crmData.statuses = statusRepository.findAll();
+  return crmData;
 }
- 
+
+@Nonnull
 public Contact saveContact(Contact contact) {
   contact.setCompany(companyRepository.findById(contact.getCompany().getId())
-      .orElseThrow(() -> new RuntimeException("Could not find Company with id" + contact.getCompany().getId())));
+      .orElseThrow(() -> new RuntimeException(
+          "Could not find Company with id" + contact.getCompany().getId())));
   contact.setStatus(statusRepository.findById(contact.getStatus().getId())
-      .orElseThrow(() -> new RuntimeException("Could not find Status with id" + contact.getStatus().getId())));
+      .orElseThrow(() -> new RuntimeException(
+          "Could not find Status with id" + contact.getStatus().getId())));
   return contactRepository.save(contact);
 }
- 
+
 public void deleteContact(Integer contactId) {
- contactRepository.deleteById(contactId);
+  contactRepository.deleteById(contactId);
 }
 ----
 
-`saveContact()` looks up the `company` and `status` by id to avoid saving changes to them by accident. 
+Note that `saveContact()` looks up the `company` and `status` by id to avoid saving changes to them by accident. 
 
 Save the file and ensure the development server build is successful. 
-If you shut down the server, re-start it with the `mvn` command from the command line. 
+If you have shut down the server, re-start it with the `mvn` command from the command line. 

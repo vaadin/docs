@@ -35,28 +35,26 @@ Add two new actions to `crm-store.ts`:
 ----
 async saveContact(contact: Contact) {
   try {
-    const saved = await endpoint.saveContact(contact);
+    const saved = await CrmEndpoint.saveContact(contact);
     if (saved) {
       this.saveLocal(saved);
-      uiStore.showSuccess('Contact saved.');
     } else {
-      uiStore.showError('Contact save failed.');
+      console.log('Contact save failed');
     }
   } catch (e) {
-    console.log(e);
-    uiStore.showError('Contact save failed.');
+    console.log('Contact save failed');
   }
 }
 
 async deleteContact(contact: Contact) {
- if (!contact.id) return;
+  if (!contact.id) return;
 
- try {
-   await endpoint.deleteContact(contact.id);
-   this.deleteLocal(contact);
- } catch (e) {
-   console.log(e);
- }
+  try {
+    await CrmEndpoint.deleteContact(contact.id);
+    this.deleteLocal(contact);
+  } catch (e) {
+    console.log('Contact delete failed');
+  }
 }
 ----
 
@@ -75,7 +73,7 @@ Assuming that the server calls succeed most of the time, it makes updates appear
 
 === Saving and Deleting Locally
 
-Next, add two private actions for updating the state.
+Next, add two private actions for updating the state in the store.
 
 .`crm-store.ts`
 [source,typescript]
@@ -137,18 +135,18 @@ Saving the form requires using the binder, so add a separate method for this.
 render() {
  const { model } = this.binder;
  return html`
-   <!-- omitted -->
-   <div class="se-s">
-     <vaadin-button theme="primary" @click=${this.save}>
-       ${this.binder.value.id ? 'Save' : 'Create'}
-     </vaadin-button>
-     <vaadin-button theme="error" @click=${listViewStore.delete}>
-       Delete
-     </vaadin-button>
-     <vaadin-button theme="tertiary" @click=${listViewStore.cancelEdit}>
-       Cancel
-     </vaadin-button>
-   </div>
+    <!-- omitted -->
+    <div class="flex gap-s">
+      <vaadin-button theme="primary" @click=${this.save}>
+        ${this.binder.value.id ? 'Save' : 'Create'}
+      </vaadin-button>
+      <vaadin-button theme="error" @click=${listViewStore.delete}>
+        Delete
+      </vaadin-button>
+      <vaadin-button theme="tertiary" @click=${listViewStore.cancelEdit}>
+        Cancel
+      </vaadin-button>
+    </div>
  `;
 }
 
@@ -176,31 +174,35 @@ Create a new file `frontend/stores/ui-store.ts` with the following content:
 .`ui-store.ts`
 [source,typescript]
 ----
-import { makeAutoObservable, runInAction } from 'mobx';
+import { makeAutoObservable } from 'mobx';
 
 class Message {
- constructor(public text = '', public error = false, public open = false) {}
+  constructor(public text = '', public error = false, public open = false) {}
 }
 
 export class UiStore {
- message = new Message();
+  message = new Message();
 
- constructor() {
-   makeAutoObservable(this, {}, { autoBind: true });
- }
+  constructor() {
+    makeAutoObservable(this, {}, { autoBind: true });
+  }
 
- showSuccess(message: string) {
-   this.showMessage(message, false);
- }
+  showSuccess(message: string) {
+    this.showMessage(message, false);
+  }
 
- showError(message: string) {
-   this.showMessage(message, true);
- }
+  showError(message: string) {
+    this.showMessage(message, true);
+  }
 
- private showMessage(text: string, error: boolean) {
-   this.message = new Message(text, error, true);
-   setTimeout(() => runInAction(() => (this.message = new Message())), 5000);
- }
+  clearMessage() {
+    this.message = new Message();
+  }
+
+  private showMessage(text: string, error: boolean) {
+    this.message = new Message(text, error, true);
+    setTimeout(() => this.clearMessage(), 5000);
+  }
 }
 ----
 
@@ -218,8 +220,8 @@ import { CrmStore } from './crm-store';
 import { UiStore } from './ui-store';
 
 export class AppStore {
- crmStore = new CrmStore();
- uiStore = new UiStore();
+  crmStore = new CrmStore();
+  uiStore = new UiStore();
 }
 
 export const appStore = new AppStore();
@@ -234,8 +236,8 @@ Add the import:
 .`list-view.ts`
 [source,typescript]
 ----
-import "@vaadin/vaadin-notification";
-import { uiStore } from "Frontend/stores/app-store";
+import '@vaadin/notification';
+import { uiStore } from 'Frontend/stores/app-store';
 ----
 
 Then, at the end of the template in the `render()` method, add a notification component that's bound to the `message` state.
@@ -244,11 +246,11 @@ Then, at the end of the template in the `render()` method, add a notification co
 [source,html]
 ----
 <vaadin-notification
- theme=${uiStore.message.error ? "error" : "contrast"}
- position="bottom-start"
- .opened=${uiStore.message.open}
- .renderer=${(root: HTMLElement) =>
-   (root.textContent = uiStore.message.text)}>
+  theme=${uiStore.message.error ? 'error' : 'contrast'}
+  position="bottom-start"
+  .opened=${uiStore.message.open}
+  .renderer=${(root: HTMLElement) =>
+    (root.textContent = uiStore.message.text)}>
 </vaadin-notification>
 ----
 
@@ -264,26 +266,30 @@ Remember to import `uiStore`.
 [source,typescript,highlight=3;6;16;19]
 ----
 async saveContact(contact: Contact) {
- try {
-   this.saveLocal(await endpoint.saveContact(contact));
-   uiStore.showSuccess("Contact saved.");
- } catch (e) {
-   console.log(e);
-   uiStore.showError("Contact save failed.");
- }
+  try {
+    const saved = await CrmEndpoint.saveContact(contact);
+    if (saved) {
+      this.saveLocal(saved);
+      uiStore.showSuccess('Contact saved.');
+    } else {
+      uiStore.showError('Contact save failed.');
+    }
+  } catch (e) {
+    console.log(e);
+    uiStore.showError('Contact save failed.');
+  }
 }
 
 async deleteContact(contact: Contact) {
- if (!contact.id) return;
+  if (!contact.id) return;
 
- try {
-   await endpoint.deleteContact(contact.id);
-   this.deleteLocal(contact);
-   uiStore.showSuccess("Contact deleted.");
- } catch (e) {
-   console.log(e);
-   uiStore.showError("Failed to delete contact.");
- }
+  try {
+    await CrmEndpoint.deleteContact(contact.id);
+    this.deleteLocal(contact);
+    uiStore.showSuccess('Contact deleted.');
+  } catch (e) {
+    uiStore.showError('Failed to delete contact.');
+  }
 }
 ----
 

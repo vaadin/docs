@@ -44,15 +44,18 @@ Instantiate a new Binder in `contact-form.ts`:
 .`contact-form.ts`
 [source,typescript]
 ----
-import { Binder, field } from 'Frontend/../target/flow-frontend/form';
+import { html } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { View } from 'Frontend/views/view';
+import { Binder, field } from '@vaadin/form';
 import ContactModel from 'Frontend/generated/com/example/application/data/entity/ContactModel';
-import { crmStore } from 'Frontend/stores/app-store';
-import { listViewStore } from './list-view-store';
-
+import '@vaadin/button';
+import '@vaadin/combo-box';
+import '@vaadin/text-field';
 
 @customElement('contact-form')
 export class ContactForm extends View {
- protected binder = new Binder(this, ContactModel);
+  protected binder = new Binder(this, ContactModel);
   // render() omitted
 }
 ----
@@ -66,41 +69,33 @@ Next, update the `render()` method to bind the input fields to the model using B
 .`contact-form.ts`
 [source,typescript]
 ----
-render() {
- const { model } = this.binder;
- return html`
-   <vaadin-text-field
-     label="First name"
-     ...=${field(model.firstName)}
-   ></vaadin-text-field>
-   <vaadin-text-field
-     label="Last name"
-     ...=${field(model.lastName)}
-   ></vaadin-text-field>
-   <vaadin-text-field
-     label="Email"
-     ...=${field(model.email)}
-   ></vaadin-text-field>
-   <vaadin-combo-box
-     label="Status"
-     .items=${crmStore.statuses}
-     item-label-path="name"
-     ...=${field(model.status)}
-   ></vaadin-combo-box>
-   <vaadin-combo-box
-     label="Company"
-     item-label-path="name"
-     .items=${crmStore.companies}
-     ...=${field(model.company)}
-   >
-   </vaadin-combo-box>
+return html`
+    <vaadin-text-field
+      label="First name"
+      ${field(model.firstName)}></vaadin-text-field>
+    <vaadin-text-field
+      label="Last name"
+      ${field(model.lastName)}></vaadin-text-field>
+    <vaadin-text-field
+      label="Email"
+      ${field(model.email)}></vaadin-text-field>
+    <vaadin-combo-box
+      label="Status"
+      ${field(model.status)}
+      item-label-path="name"
+      .items=${crmStore.statuses}></vaadin-combo-box>
+    <vaadin-combo-box
+      label="Company"
+      ${field(model.company)}
+      item-label-path="name"
+      .items=${crmStore.companies}></vaadin-combo-box>
 
-   <div class="spacing-e-s">
-     <vaadin-button theme="primary">Save</vaadin-button>
-     <vaadin-button theme="error">Delete</vaadin-button>
-     <vaadin-button theme="tertiary">Cancel</vaadin-button>
-   </div>
- `;
+    <div class="flex gap-s">
+      <vaadin-button theme="primary">Save</vaadin-button>
+      <vaadin-button theme="error">Delete</vaadin-button>
+      <vaadin-button theme="tertiary">Cancel</vaadin-button>
+    </div>
+  `;
 }
 ----
 
@@ -108,9 +103,9 @@ The important changes to the method are:
 
 1. Save `model` into a local variable for easier access (using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment[object destructuring syntax]).
 2. Bind each field to its corresponding model value using the `...=${field(model.property)}` syntax.
-The `field()` directive returns all the needed validations and value change listeners, and the spread binding `...` binds them all to the field.
+The `field()` directive binds all the needed validations and value change listeners to the field.
 3. The status and companies combo boxes are populated with items from the `crmStore`.
-Because both contain objects, you need to specify which property on the object should be used for the label using the `item-label-path` property.
+Because statuses and companies are objects, you need to specify which property on the object should be used for the label using the `item-label-path` property.
 
 == Populating the Form With the Selected Contact
 
@@ -121,12 +116,14 @@ You can use a MobX https://mobx.js.org/reactions.html#autorun[`autorun`] to auto
 [source,typescript]
 ----
 constructor() {
- super();
- this.autorun(() =>
-   this.binder.read(
-     listViewStore.selectedContact || ContactModel.createEmptyValue()
-   )
- );
+  super();
+  this.autorun(() => {
+    if (listViewStore.selectedContact) {
+      this.binder.read(listViewStore.selectedContact);
+    } else {
+      this.binder.clear();
+    }
+  });
 }
 ----
 
@@ -137,7 +134,6 @@ The helper method on `View` takes care of disposing of the listener when you nav
 
 `autorun` takes a function as a parameter.
 The function runs immediately, and any time an observable value it depends on changes, in this case any time `selectedContact` changes.
-If `selectedContact` is null (no contact is selected), read `ContactModel.createEmptyValue()` to clear the form instead.
 
 == Creating New Contacts
 
@@ -162,8 +158,8 @@ Bind the click event of the Add Contact button in `list-view.ts` to the `editNew
 .`list-view.ts`
 [source,html]
 ----
-<vaadin-button @click="${listViewStore.editNew}">
- Add Contact
+<vaadin-button @click=${listViewStore.editNew}>
+  Add Contact
 </vaadin-button>
 ----
 
@@ -177,9 +173,8 @@ Add a boolean `hidden` attribute on the `<contact-form>` element in list view to
 [source,html]
 ----
 <contact-form
- class="flex flex-column spacing-b-s"
- ?hidden=${!listViewStore.selectedContact}
-></contact-form>
+  class="flex flex-col gap-s"
+  ?hidden=${!listViewStore.selectedContact}></contact-form>
 ----
 
 Add a CSS selector for the `hidden` attribute in `frontend/themes/fusioncrmtutorial/styles.css`.
@@ -192,8 +187,8 @@ Add a CSS selector for the `hidden` attribute in `frontend/themes/fusioncrmtutor
 }
 ----
 
-The `hidden` attribute is a https://caniuse.com/hidden[well-supported browser feature], but the default implementation is overridden by any change in the `display` value for an event.
-By explicitly overriding it, you can get it to behave the way it's intended.
+The `hidden` attribute is a https://caniuse.com/hidden[well-supported browser feature], but the default implementation is overridden by any change in the `display` value for an element.
+By explicitly defining it, you can get it to behave the way it's intended.
 
 == Maximizing the Form on Narrow Viewports
 
@@ -217,9 +212,9 @@ connectedCallback() {
 }
 ----
 
-Then, add a CSS media query for narrow screens to `list-view.css`.
+Then, add a CSS media query for narrow screens to `styles.css`.
 
-.`list-view.css`
+.`styles.css`
 [source,css]
 ----
 @media (max-width: 700px) {
@@ -242,7 +237,7 @@ Update the Cancel button in the contact form to call the `cancelEdit` action so 
 [source,html]
 ----
 <vaadin-button theme="tertiary" @click=${listViewStore.cancelEdit}>
- Cancel
+  Cancel
 </vaadin-button>
 ----
 
