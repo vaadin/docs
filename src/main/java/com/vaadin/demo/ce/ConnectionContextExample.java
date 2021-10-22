@@ -1,10 +1,7 @@
 package com.vaadin.demo.ce;
 
-import javax.swing.JList;
 
-import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationEngine;
-import com.vaadin.collaborationengine.ComponentConnectionContext;
 import com.vaadin.collaborationengine.ConnectionContext;
 import com.vaadin.collaborationengine.MessageManager;
 import com.vaadin.collaborationengine.PresenceManager;
@@ -12,7 +9,6 @@ import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.TopicConnectionRegistration;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.function.SerializableFunction;
 import com.vaadin.flow.shared.Registration;
 
@@ -55,7 +51,7 @@ public class ConnectionContextExample extends VerticalLayout {
         // Would throw an exception in this case.
         // collaborationEngine = CollaborationEngine.getInstance(); 
         UserInfo systemUser = new UserInfo("system user");
-        
+
         ConnectionContext context = collaborationEngine.getSystemContext(); // <2>
 
         MessageManager messageManager =
