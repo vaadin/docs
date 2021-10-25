@@ -1,11 +1,10 @@
 package com.vaadin.demo.component.checkbox;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("checkbox-group-basic")
 public class CheckboxGroupBasic extends Div {
@@ -21,6 +20,6 @@ public class CheckboxGroupBasic extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<CheckboxGroupBasic> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxGroupBasic> { // hidden-source-line
+    } // hidden-source-line
 }

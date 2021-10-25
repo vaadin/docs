@@ -1,9 +1,9 @@
 package com.vaadin.demo.component.checkbox;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("checkbox-trigger")
 public class CheckboxTrigger extends Div {
@@ -17,6 +17,6 @@ public class CheckboxTrigger extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<CheckboxTrigger> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<CheckboxTrigger> { // hidden-source-line
+    } // hidden-source-line
 }
