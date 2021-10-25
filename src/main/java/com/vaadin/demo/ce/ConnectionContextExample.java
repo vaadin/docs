@@ -2,9 +2,12 @@ package com.vaadin.demo.ce;
 
 
 import com.vaadin.collaborationengine.CollaborationEngine;
+import com.vaadin.collaborationengine.CollaborationMessagePersister;
+import com.vaadin.collaborationengine.ComponentConnectionContext;
 import com.vaadin.collaborationengine.ConnectionContext;
 import com.vaadin.collaborationengine.MessageManager;
 import com.vaadin.collaborationengine.PresenceManager;
+import com.vaadin.collaborationengine.SystemConnectionContext;
 import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.TopicConnectionRegistration;
 import com.vaadin.collaborationengine.UserInfo;
@@ -43,6 +46,8 @@ public class ConnectionContextExample extends VerticalLayout {
 
     public void instantiateWithComponent() {
         // tag::component[]
+        // The ComponentConnectionContext is implicitly created
+        // when passing a component (this) as the first argument.
         messageManager = new MessageManager(this, localUser, topicId);
         presenceManager = new PresenceManager(this, localUser, topicId);
         registration = collaborationEngine.openTopicConnection(
@@ -50,6 +55,19 @@ public class ConnectionContextExample extends VerticalLayout {
         // end::component[]
     }
 
+    public void instantiateWithComponentContext() {
+        // tag::component-context[]
+        ComponentConnectionContext context =
+            new ComponentConnectionContext(this);
+        // In this case the CollaborationEngine instance
+        // also needs to be supplied.
+        messageManager = new MessageManager(context, localUser,
+            topicId, CollaborationEngine.getInstance());
+
+        registration = collaborationEngine.openTopicConnection(
+            context, topicId, localUser, connectionActivationCallback);
+        // end::component-context[]
+    }
     // tag::async-task[]
     @Async
     public void runAsynchronously(CollaborationEngine collaborationEngine) { // <1>
@@ -68,6 +86,14 @@ public class ConnectionContextExample extends VerticalLayout {
 
     }
     // end::async-task[]
+
+    public SystemConnectionContext getSystemConnectionContext(CollaborationEngine collaborationEngine) {
+
+        // tag::system-connection-context[]
+        SystemConnectionContext context = collaborationEngine.getSystemContext();
+        // end::system-connection-context[]
+        return context;
+    }
 
     public void close() {
         messageManager.close();
