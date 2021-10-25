@@ -1,8 +1,11 @@
 package com.vaadin.demo.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-full-source-line
+import java.time.LocalDate;
+import java.util.Date;
 
-@JsonIgnoreProperties(ignoreUnknown = true) // hidden-full-source-line
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
+
+@JsonIgnoreProperties(ignoreUnknown = true) // hidden-source-line
 // tag::snippet[]
 public class Person {
 
@@ -11,6 +14,8 @@ public class Person {
   private String lastName;
 
   private String email;
+
+  private Date birthday;
 
   private Integer id;
 
@@ -21,6 +26,14 @@ public class Person {
   private String pictureUrl;
 
   private String profession;
+
+  private Address address;
+
+  private Integer managerId;
+
+  private boolean manager;
+
+  private String status;
 
   public String getFirstName() {
     return firstName;
@@ -38,12 +51,24 @@ public class Person {
     this.lastName = lastName;
   }
 
+  public String getFullName() {
+    return firstName + " " + lastName;
+  }
+
   public String getEmail() {
     return email;
   }
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public Date getBirthday() {
+    return birthday;
+  }
+
+  public void setBirthday(Date birthday) {
+    this.birthday = birthday;
   }
 
   public boolean isSubscriber() {
@@ -78,6 +103,14 @@ public class Person {
     this.profession = profession;
   }
 
+  public Address getAddress() {
+    return address;
+  }
+
+  public void setAddress(Address address) {
+    this.address = address;
+  }
+
   public Integer getId() {
     return id;
   }
@@ -101,6 +134,30 @@ public class Person {
     }
     Person other = (Person) obj;
     return id == other.id;
+  }
+
+  public Integer getManagerId() {
+    return managerId;
+  }
+
+  public void setManagerId(Integer managerId) {
+    this.managerId = managerId;
+  }
+
+  public boolean isManager() {
+    return manager;
+  }
+
+  public void setManager(boolean manager) {
+    this.manager = manager;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
   }
 }
 // end::snippet[]

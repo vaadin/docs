@@ -1,25 +1,5 @@
-import '../../init'; // hidden-full-source-line
-import '@vaadin/flow-frontend/gridConnector.js'; // hidden-full-source-line
+import '../../init';
 
-import { html, LitElement, customElement, internalProperty } from 'lit-element';
 import '@vaadin/vaadin-crud/vaadin-crud';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
-
-// tag::snippet[]
-@customElement('crud-basic')
-export class Example extends LitElement {
-  @internalProperty()
-  private items: Person[] = [];
-
-  async firstUpdated() {
-    this.items = await getPeople();
-  }
-
-  render() {
-    return html`
-      <vaadin-crud include="firstName, lastName" .items=${this.items}></vaadin-crud>
-    `;
-  }
-}
-// end::snippet[]
+import '@vaadin/vaadin-text-field/vaadin-email-field';
+import '@vaadin/vaadin-text-field/vaadin-text-field';
