@@ -22,10 +22,14 @@ public class CustomFieldBasic extends Div {
     binder.forField(dateRangePicker)
       .asRequired("Enter a start and end date")
       .withValidator(localDateRange ->
-        ChronoUnit.DAYS.between(localDateRange.getStartDate(), localDateRange.getEndDate()) > 30,
+        localDateRange.getStartDate() == null ||
+        localDateRange.getEndDate() == null ||
+        ChronoUnit.DAYS.between(localDateRange.getStartDate(), localDateRange.getEndDate()) <= 30,
         "Dates cannot be more than 30 days apart"
       )
       .withValidator(localDateRange ->
+        localDateRange.getStartDate() == null ||
+        localDateRange.getEndDate() == null ||
         localDateRange.getStartDate().isBefore(localDateRange.getEndDate()),
         "Start date must be earlier than end date"
       )
