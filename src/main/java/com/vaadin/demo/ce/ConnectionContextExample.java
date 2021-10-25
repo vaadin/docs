@@ -2,7 +2,6 @@ package com.vaadin.demo.ce;
 
 
 import com.vaadin.collaborationengine.CollaborationEngine;
-import com.vaadin.collaborationengine.CollaborationMessagePersister;
 import com.vaadin.collaborationengine.ComponentConnectionContext;
 import com.vaadin.collaborationengine.ConnectionContext;
 import com.vaadin.collaborationengine.MessageManager;
