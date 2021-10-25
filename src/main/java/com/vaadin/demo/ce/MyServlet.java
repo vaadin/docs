@@ -18,8 +18,8 @@ public class MyServlet extends HttpServlet {
 
     // tag::full-example[]
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
         // tag::get-ce[]
         CollaborationEngine ce = (CollaborationEngine) getServletContext()
                 .getAttribute(CollaborationEngine.class.getName());
@@ -30,7 +30,8 @@ public class MyServlet extends HttpServlet {
         }
         // Retrieve message that was sent in this POST request
         String userMessage = req.getParameter("message");
-        String message = "An anonymous user posted the following message: " + userMessage;
+        String message = "An anonymous user posted the following message: " +
+            userMessage;
         sendMessageToTopic(ce, message);
         resp.setStatus(202);
     }
@@ -41,9 +42,8 @@ public class MyServlet extends HttpServlet {
             SystemConnectionContext systemConnectionContext =
                 ce.getSystemContext();
 
-            MessageManager messageManager =
-                new MessageManager(systemConnectionContext, systemUser, topicId,
-                    ce);
+            MessageManager messageManager = new MessageManager(
+                systemConnectionContext, systemUser, topicId, ce);
 
             messageManager
                 .submit(message) // Send message to topic

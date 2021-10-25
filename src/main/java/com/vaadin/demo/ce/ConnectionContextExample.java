@@ -31,9 +31,13 @@ public class ConnectionContextExample extends VerticalLayout {
 
     public void instantiateWithConnectionContext(ConnectionContext connectionContext) {
         // tag::pass-a-connection-context[]
-        messageManager = new MessageManager(connectionContext, localUser, topicId, collaborationEngine);
-        registration = collaborationEngine.openTopicConnection(connectionContext, topicId, localUser,
-                connectionActivationCallback);
+        // Use to create a message manager
+        messageManager = new MessageManager(
+            connectionContext, localUser, topicId, collaborationEngine);
+
+        // Use to open a topic connection
+        registration = collaborationEngine.openTopicConnection(
+            connectionContext, topicId, localUser, connectionActivationCallback);
         // end::pass-a-connection-context[]
     }
 
@@ -41,7 +45,8 @@ public class ConnectionContextExample extends VerticalLayout {
         // tag::component[]
         messageManager = new MessageManager(this, localUser, topicId);
         presenceManager = new PresenceManager(this, localUser, topicId);
-        registration = collaborationEngine.openTopicConnection(this, topicId, localUser, connectionActivationCallback);
+        registration = collaborationEngine.openTopicConnection(
+            this, topicId, localUser, connectionActivationCallback);
         // end::component[]
     }
 
