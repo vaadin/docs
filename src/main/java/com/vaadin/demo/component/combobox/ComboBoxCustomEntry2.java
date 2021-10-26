@@ -20,6 +20,7 @@ public class ComboBoxCustomEntry2 extends Div {
     comboBox.setAllowCustomValue(true);
     comboBox.addCustomValueSetListener(e -> {
       String customValue = e.getDetail();
+      if (items.contains(customValue)) return;
       items.add(customValue);
       comboBox.setItems(items);
       comboBox.setValue(customValue);
