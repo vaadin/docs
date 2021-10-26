@@ -5,7 +5,7 @@ import com.vaadin.flow.component.combobox.ComboBox.ItemFilter;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 
@@ -14,7 +14,7 @@ public class ComboBoxPresentation extends Div {
 
   public ComboBoxPresentation() {
     ItemFilter<Person> filter = (person, filterString) -> (person
-        .getFirstName() + " " + person.getLastName() + " " + person.getProfession()).toLowerCase().indexOf(filterString.toLowerCase()) > -1;
+            .getFirstName() + " " + person.getLastName() + " " + person.getProfession()).toLowerCase().indexOf(filterString.toLowerCase()) > -1;
 
     // tag::combobox[]
     ComboBox<Person> comboBox = new ComboBox<>("Choose doctor");
@@ -43,11 +43,11 @@ public class ComboBoxPresentation extends Div {
     tpl.append("</div>");
 
     return TemplateRenderer.<Person>of(tpl.toString()).withProperty("pictureUrl", Person::getPictureUrl)
-        .withProperty("firstName", Person::getFirstName).withProperty("lastName", Person::getLastName)
-        .withProperty("profession", Person::getProfession);
+            .withProperty("firstName", Person::getFirstName).withProperty("lastName", Person::getLastName)
+            .withProperty("profession", Person::getProfession);
   }
   // end::renderer[]
 
-  public static class Exporter extends DemoExporter<ComboBoxPresentation> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ComboBoxPresentation> { // hidden-source-line
+  } // hidden-source-line
 }
