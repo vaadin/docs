@@ -2,13 +2,18 @@ package com.vaadin.demo.component.crud;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
@@ -16,19 +21,17 @@ import com.vaadin.flow.router.Route;
 import java.util.Arrays;
 import java.util.List;
 
-@Route("crud-basic")
-public class CrudBasic extends Div {
+@Route("crud-toolbar")
+public class CrudToolbar extends Div {
 
   private Crud<Person> crud;
+  private PersonDataProvider dataProvider;
 
   private String FIRST_NAME = "firstName";
   private String LAST_NAME = "lastName";
-  private String EMAIL = "email";
-  private String PROFESSION = "profession";
   private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudBasic() {
-    // tag::snippet[]
+  public CrudToolbar() {
     crud = new Crud<>(
       Person.class,
       createEditor()
@@ -36,23 +39,19 @@ public class CrudBasic extends Div {
 
     setupGrid();
     setupDataProvider();
+    setupToolbar();
 
     add(crud);
-    // end::snippet[]
   }
 
   private CrudEditor<Person> createEditor() {
     TextField firstName = new TextField("First name");
     TextField lastName = new TextField("Last name");
-    EmailField email = new EmailField("Email");
-    TextField profession = new TextField("Profession");
-    FormLayout form = new FormLayout(firstName, lastName, email, profession);
+    FormLayout form = new FormLayout(firstName, lastName);
 
     Binder<Person> binder = new Binder<>(Person.class);
     binder.forField(firstName).asRequired().bind(Person::getFirstName, Person::setFirstName);
     binder.forField(lastName).asRequired().bind(Person::getLastName, Person::setLastName);
-    binder.forField(email).asRequired().bind(Person::getEmail, Person::setEmail);
-    binder.forField(profession).asRequired().bind(Person::getProfession, Person::setProfession);
 
     return new BinderCrudEditor<>(binder, form);
   }
@@ -64,8 +63,6 @@ public class CrudBasic extends Div {
     List<String> visibleColumns = Arrays.asList(
       FIRST_NAME,
       LAST_NAME,
-      EMAIL,
-      PROFESSION,
       EDIT_COLUMN
     );
     grid.getColumns().forEach(column -> {
@@ -79,14 +76,12 @@ public class CrudBasic extends Div {
     grid.setColumnOrder(
       grid.getColumnByKey(FIRST_NAME),
       grid.getColumnByKey(LAST_NAME),
-      grid.getColumnByKey(EMAIL),
-      grid.getColumnByKey(PROFESSION),
       grid.getColumnByKey(EDIT_COLUMN)
     );
   }
 
   private void setupDataProvider() {
-    PersonDataProvider dataProvider = new PersonDataProvider();
+    dataProvider = new PersonDataProvider();
     crud.setDataProvider(dataProvider);
     crud.addDeleteListener(deleteEvent ->
       dataProvider.delete(deleteEvent.getItem())
@@ -95,5 +90,25 @@ public class CrudBasic extends Div {
       dataProvider.persist(saveEvent.getItem())
     );
   }
-  public static class Exporter extends DemoExporter<CrudBasic> {} // hidden-source-line
+
+  private void setupToolbar() {
+    // tag::snippet[]
+    Html total = new Html("<span>Total: <b>" + dataProvider.DATABASE.size() + "</b> employees</span>");
+
+    Button button = new Button("New employee", VaadinIcon.PLUS.create());
+    button.addClickListener(event -> {
+      crud.edit(new Person(), Crud.EditMode.NEW_ITEM);
+    });
+    button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+    HorizontalLayout toolbar = new HorizontalLayout(total, button);
+    toolbar.setAlignItems(FlexComponent.Alignment.CENTER);
+    toolbar.setFlexGrow(1, toolbar);
+    toolbar.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+    toolbar.setSpacing(false);
+
+    crud.setToolbar(toolbar);
+    // end::snippet[]
+  }
+  public static class Exporter extends DemoExporter<CrudToolbar> {} // hidden-source-line
 }
