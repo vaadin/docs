@@ -6,16 +6,17 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
 
-@Route("context-menu-basic")
-public class ContextMenuBasic extends Div {
+@Route("context-menu-dividers")
+public class ContextMenuDividers extends Div {
 
   private List<Person> people = DataService.getPeople(5);
 
-  public ContextMenuBasic() {
+  public ContextMenuDividers() {
     Grid<Person> grid = new Grid();
     grid.setAllRowsVisible(true);
     grid.setItems(people);
@@ -32,11 +33,15 @@ public class ContextMenuBasic extends Div {
     // tag::snippet[]
     GridContextMenu<Person> menu = grid.addContextMenu();
     menu.addItem("View", event -> {});
+    menu.add(new Hr());
     menu.addItem("Edit", event -> {});
     menu.addItem("Delete", event -> {});
+    menu.add(new Hr());
+    menu.addItem("Email", event -> {});
+    menu.addItem("Call", event -> {});
     // end::snippet[]
 
     add(grid);
   }
-  public static class Exporter extends DemoExporter<ContextMenuBasic> {} // hidden-source-line
+  public static class Exporter extends DemoExporter<ContextMenuDividers> {} // hidden-source-line
 }
