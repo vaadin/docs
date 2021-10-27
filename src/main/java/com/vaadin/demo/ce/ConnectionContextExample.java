@@ -58,6 +58,7 @@ public class ConnectionContextExample extends VerticalLayout {
         // tag::component-context[]
         ComponentConnectionContext context =
             new ComponentConnectionContext(this);
+
         // In this case the CollaborationEngine instance
         // also needs to be supplied.
         messageManager = new MessageManager(context, localUser,
@@ -70,8 +71,6 @@ public class ConnectionContextExample extends VerticalLayout {
     // tag::async-task[]
     @Async
     public void runAsynchronously(CollaborationEngine collaborationEngine) { // <1>
-        // Would throw an exception in this case.
-        // collaborationEngine = CollaborationEngine.getInstance(); 
         UserInfo systemUser = new UserInfo("system user");
 
         ConnectionContext context = collaborationEngine.getSystemContext(); // <2>
