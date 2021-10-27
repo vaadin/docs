@@ -4,6 +4,7 @@ import './init-flow-components';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // Apply the theme, so that overlay elements styles and custom property overrides work as expected
+console.log('###apply theme init.ts')
 applyTheme(document);
 
 document.body.style.setProperty('--docs-example-render-font-family', 'var(--lumo-font-family)');
