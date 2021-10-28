@@ -1,3 +1,4 @@
+import '@vaadin/polymer-legacy-adapter/style-modules'; // hidden-source-line
 // Import all Lumo CSS custom properties into the global style scope
 // tag::color[]
 import '@vaadin/vaadin-lumo-styles/color';
