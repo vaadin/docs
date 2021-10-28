@@ -1,23 +1,20 @@
 package com.vaadin.demo.component.datetimepicker;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("date-time-picker-auto-open")
 public class DateTimePickerAutoOpen extends Div {
 
     public DateTimePickerAutoOpen() {
+        DateTimePicker dateTimePicker = new DateTimePicker("Meeting date and time");
         // tag::snippet[]
-        DateTimePicker dateTimePicker = new DateTimePicker();
-        dateTimePicker.setLabel("Meeting date and time");
         dateTimePicker.setAutoOpen(false);
-        add(dateTimePicker);
         // end::snippet[]
+        add(dateTimePicker);
     }
-
-    public static class Exporter extends DemoExporter<DateTimePickerAutoOpen> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<DateTimePickerAutoOpen> { // hidden-source-line
+    } // hidden-source-line
 }
