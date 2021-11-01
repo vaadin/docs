@@ -1,7 +1,7 @@
-import { cssFromModule } from '@polymer/polymer/lib/utils/style-gather';
+import { CSSResult } from 'lit';
 
-export function includeModule(moduleName: string, parseCss: (css: string) => string) {
-  const css = cssFromModule(moduleName);
+export function includeModule(cssModule: CSSResult, parseCss: (css: string) => string) {
+  const css = cssModule.cssText;
   const style = document.createElement('style');
   style.innerHTML = parseCss(css);
   document.head.appendChild(style);
