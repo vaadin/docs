@@ -1,5 +1,6 @@
 package com.vaadin.demo.component.passwordfield;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
@@ -8,7 +9,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("password-field-advanced-helper")
 public class PasswordFieldAdvancedHelper extends Div {
@@ -60,6 +60,6 @@ public class PasswordFieldAdvancedHelper extends Div {
     }
   }
 
-  public static class Exporter extends DemoExporter<PasswordFieldAdvancedHelper> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<PasswordFieldAdvancedHelper> { // hidden-source-line
+  } // hidden-source-line
 }
