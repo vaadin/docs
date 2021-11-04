@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { live } from 'lit/directives/live.js';
 import '@vaadin/avatar';
 import '@vaadin/details';
 import { Details } from '@vaadin/details';
@@ -34,7 +35,6 @@ export class Example extends LitElement {
   @state()
   private people?: Person[];
 
-  @state()
   private expandedPeople: Set<Person> = new Set();
 
   async firstUpdated() {
@@ -42,7 +42,8 @@ export class Example extends LitElement {
     this.people = people;
   }
 
-  private personCardRenderer: VirtualListRenderer<Person> = (root, _, { item: person }) => {
+  private personCardRenderer: VirtualListRenderer<Person> = (root, _, model) => {
+    const person = model.item;
     render(
       html`<vaadin-horizontal-layout theme="spacing margin">
         <vaadin-avatar
@@ -56,7 +57,7 @@ export class Example extends LitElement {
           <span>${person.profession}</span>
 
           <vaadin-details
-            .opened="${this.expandedPeople.has(person)}"
+            .opened="${live(this.expandedPeople.has(person))}"
             @click="${(e: Event) => {
               const details = e.currentTarget as Details;
               if (details.opened) {
