@@ -34,7 +34,6 @@ export class Example extends LitElement {
   @state()
   private people?: Person[];
 
-  @state()
   private expandedPeople: Set<Person> = new Set();
 
   async firstUpdated() {
@@ -42,7 +41,8 @@ export class Example extends LitElement {
     this.people = people;
   }
 
-  private personCardRenderer: VirtualListRenderer<Person> = (root, _, { item: person }) => {
+  private personCardRenderer: VirtualListRenderer<Person> = (root, _, model) => {
+    const person = model.item;
     render(
       html`<vaadin-horizontal-layout theme="spacing margin">
         <vaadin-avatar
@@ -64,6 +64,8 @@ export class Example extends LitElement {
               } else {
                 this.expandedPeople.delete(person);
               }
+              // Re-render to make Lit aware of the state change
+              this.personCardRenderer(root, _, model);
             }}"
           >
             <div slot="summary">Contact information</div>
