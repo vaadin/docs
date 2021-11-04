@@ -1,9 +1,9 @@
 package com.vaadin.demo.component.progressbar;
 
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.router.Route;
 
@@ -30,6 +30,6 @@ public class ProgressBarLabel extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<ProgressBarLabel> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<ProgressBarLabel> { // hidden-source-line
+    } // hidden-source-line
 }
