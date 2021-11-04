@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { live } from 'lit/directives/live.js';
 import '@vaadin/avatar';
 import '@vaadin/details';
 import { Details } from '@vaadin/details';
@@ -56,7 +57,7 @@ export class Example extends LitElement {
           <span>${person.profession}</span>
 
           <vaadin-details
-            .opened="${this.expandedPeople.has(person)}"
+            .opened="${live(this.expandedPeople.has(person))}"
             @click="${(e: Event) => {
               const details = e.currentTarget as Details;
               if (details.opened) {
@@ -64,8 +65,6 @@ export class Example extends LitElement {
               } else {
                 this.expandedPeople.delete(person);
               }
-              // Re-render to make Lit aware of the state change
-              this.personCardRenderer(root, _, model);
             }}"
           >
             <div slot="summary">Contact information</div>
