@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.select;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
@@ -20,6 +20,6 @@ public class SelectDisabled extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectDisabled> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectDisabled> { // hidden-source-line
+  } // hidden-source-line
 }

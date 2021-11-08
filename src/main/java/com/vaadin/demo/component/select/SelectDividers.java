@@ -1,15 +1,15 @@
 package com.vaadin.demo.component.select;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
-@Route("select-separators")
-public class SelectSeparators extends Div {
+@Route("select-dividers")
+public class SelectDividers extends Div {
 
-  public SelectSeparators() {
+  public SelectDividers() {
     // tag::snippet[]
     Select<String> select = new Select<>();
     select.setLabel("Sort by");
@@ -23,6 +23,6 @@ public class SelectSeparators extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectSeparators> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectDividers> { // hidden-source-line
+  } // hidden-source-line
 }
