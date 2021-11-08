@@ -6,19 +6,20 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.router.Route;
 
-@Route("rich-text-editor-basic")
-public class RichTextEditorBasic extends Div {
+@Route("rich-text-editor-min-max-height")
+public class RichTextEditorMinMaxHeight extends Div {
 
-  public RichTextEditorBasic() {
+  public RichTextEditorMinMaxHeight() {
     // tag::snippet[]
     RichTextEditor rte = new RichTextEditor();
     rte.setMaxHeight("400px");
+    rte.setMinHeight("200px");
     String valueAsDelta = DataService.getTemplates().getRichTextDelta();
     rte.setValue(valueAsDelta);
     add(rte);
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<RichTextEditorBasic> { // hidden-source-line
+  public static class Exporter extends DemoExporter<RichTextEditorMinMaxHeight> { // hidden-source-line
   } // hidden-source-line
 }
