@@ -8,26 +8,33 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
+import java.util.Optional;
 
-@Route("grid-basic")
-public class GridBasic extends Div {
+@Route("grid-single-selection-mode")
+public class GridSingleSelectionMode extends Div {
 
-    public GridBasic() {
+    public GridSingleSelectionMode() {
         // tag::snippet[]
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFirstName).setHeader("First name");
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getEmail).setHeader("Email");
-        grid.addColumn(Person::getProfession).setHeader("Profession");
 
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
+
+        grid.addSelectionListener(selection -> {
+            Optional<Person> optionalPerson = selection.getFirstSelectedItem();
+            if (optionalPerson.isPresent()) {
+                // System.out.printf("Selected person: %s%n", optionalPerson.get().getFullName());
+            }
+        });
         // end::snippet[]
 
         add(grid);
     }
 
-    public static class Exporter // hidden-source-line
-            extends DemoExporter<GridBasic> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<GridSingleSelectionMode> { // hidden-source-line
     } // hidden-source-line
 }

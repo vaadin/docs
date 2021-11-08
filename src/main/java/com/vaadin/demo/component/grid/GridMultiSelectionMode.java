@@ -9,25 +9,29 @@ import com.vaadin.flow.router.Route;
 
 import java.util.List;
 
-@Route("grid-basic")
-public class GridBasic extends Div {
+@Route("grid-multi-selection-mode")
+public class GridMultiSelectionMode extends Div {
 
-    public GridBasic() {
+    public GridMultiSelectionMode() {
         // tag::snippet[]
         Grid<Person> grid = new Grid<>(Person.class, false);
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addColumn(Person::getFirstName).setHeader("First name");
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getEmail).setHeader("Email");
-        grid.addColumn(Person::getProfession).setHeader("Profession");
 
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
+
+        grid.addSelectionListener(selection -> {
+            // System.out.printf("Number of selected people: %s%n", selection.getAllSelectedItems().size());
+        });
         // end::snippet[]
 
         add(grid);
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<GridBasic> { // hidden-source-line
+            extends DemoExporter<GridMultiSelectionMode> { // hidden-source-line
     } // hidden-source-line
 }
