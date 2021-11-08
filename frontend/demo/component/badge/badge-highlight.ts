@@ -4,7 +4,7 @@ import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden
 import '@vaadin/flow-frontend/gridConnector.js'; // hidden-source-line (Grid's connector)
 import '@vaadin/vaadin-template-renderer/src/vaadin-template-renderer.js'; // hidden-source-line (Legacy template renderer)
 import { html, LitElement, render } from 'lit';
-import { guard } from 'lit/directives/guard';
+import { guard } from 'lit/directives/guard.js';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/vaadin-grid/vaadin-grid';
 import { GridColumnElement, GridItemModel } from '@vaadin/vaadin-grid';
