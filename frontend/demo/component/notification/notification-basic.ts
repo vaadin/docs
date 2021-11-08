@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
-import { customElement, state } from 'lit/decorators';
-import { guard } from 'lit/directives/guard';
+import { customElement, state } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 import '@vaadin/vaadin-button/vaadin-button';
 import '@vaadin/vaadin-notification/vaadin-notification';
 import {
