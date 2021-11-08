@@ -38,6 +38,9 @@ public class GridDragRowsBetweenGrids extends Div {
         grid1.setRowsDraggable(true);
         grid1.addDragStartListener(this::handleDragStart);
         grid1.addDropListener(e -> {
+            if (dataProvider1.getItems().contains(draggedItem)) {
+                return;
+            }
             dataProvider2.getItems().remove(draggedItem);
             dataProvider2.refreshAll();
             dataProvider1.getItems().add(draggedItem);
@@ -49,6 +52,9 @@ public class GridDragRowsBetweenGrids extends Div {
         grid2.setRowsDraggable(true);
         grid2.addDragStartListener(this::handleDragStart);
         grid2.addDropListener(e -> {
+            if (dataProvider2.getItems().contains(draggedItem)) {
+                return;
+            }
             dataProvider1.getItems().remove(draggedItem);
             dataProvider1.refreshAll();
             dataProvider2.getItems().add(draggedItem);
