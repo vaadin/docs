@@ -1,6 +1,6 @@
 import { applyTheme } from 'Frontend/generated/theme';
 import { css, html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators';
+import { customElement, property } from 'lit/decorators.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/vertical-layout';
