@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.scroller;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.Scroller;
@@ -26,6 +26,6 @@ public class ScrollerBoth extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<ScrollerBoth> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<ScrollerBoth> { // hidden-source-line
+  } // hidden-source-line
 }
