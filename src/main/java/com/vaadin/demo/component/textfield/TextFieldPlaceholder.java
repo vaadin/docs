@@ -6,20 +6,18 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
-@Route("text-field-basic")
-public class TextFieldBasic extends Div {
+@Route("text-field-placeholder")
+public class TextFieldPlaceholder extends Div {
 
-  public TextFieldBasic() {
+  public TextFieldPlaceholder() {
     // tag::snippet[]
     TextField textField = new TextField();
-    textField.setLabel("Street Address");
-    textField.setValue("Ruukinkatu 2");
-    textField.setClearButtonVisible(true);
-    textField.setPrefixComponent(VaadinIcon.MAP_MARKER.create());
+    textField.setPlaceholder("Search");
+    textField.setPrefixComponent(VaadinIcon.SEARCH.create());
     add(textField);
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<TextFieldBasic> { // hidden-source-line
+  public static class Exporter extends DemoExporter<TextFieldPlaceholder> { // hidden-source-line
   } // hidden-source-line
 }
