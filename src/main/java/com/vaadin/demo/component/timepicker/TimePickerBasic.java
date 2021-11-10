@@ -1,12 +1,11 @@
 package com.vaadin.demo.component.timepicker;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalTime;
-
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("time-picker-basic")
 public class TimePickerBasic extends Div {
@@ -20,6 +19,6 @@ public class TimePickerBasic extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<TimePickerBasic> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<TimePickerBasic> { // hidden-source-line
+    } // hidden-source-line
 }
