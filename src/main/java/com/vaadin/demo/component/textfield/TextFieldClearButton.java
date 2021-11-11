@@ -2,24 +2,21 @@ package com.vaadin.demo.component.textfield;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
-@Route("text-field-basic")
-public class TextFieldBasic extends Div {
+@Route("text-field-clear-button")
+public class TextFieldClearButton extends Div {
 
-  public TextFieldBasic() {
+  public TextFieldClearButton() {
     // tag::snippet[]
     TextField textField = new TextField();
-    textField.setLabel("Street Address");
-    textField.setValue("Ruukinkatu 2");
     textField.setClearButtonVisible(true);
-    textField.setPrefixComponent(VaadinIcon.MAP_MARKER.create());
+    textField.setValue("Value");
     add(textField);
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<TextFieldBasic> { // hidden-source-line
+  public static class Exporter extends DemoExporter<TextFieldClearButton> { // hidden-source-line
   } // hidden-source-line
 }
