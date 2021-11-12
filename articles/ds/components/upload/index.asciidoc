@@ -1,0 +1,449 @@
+---
+title: Upload
+page-links:
+  - 'API: https://cdn.vaadin.com/vaadin-upload/{moduleNpmVersion:vaadin-upload}/#/elements/vaadin-upload[Web Component] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/upload/Upload.html[Java]'
+  - 'Source: https://github.com/vaadin/vaadin-upload[Web Component] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-upload-flow-parent[Java]'
+---
+
+= Upload
+
+// tag::description[]
+Upload is a component for uploading one or more files.
+// end::description[]
+It shows the upload progression and status of each file.
+Files can be uploaded using the Upload button or via drag and drop.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-basic.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadBasic.java[render,tags=snippet,indent=0]
+----
+--
+
+== Handling Uploaded Files
+
+The Java Flow Upload component provides an API to handle uploaded file data directly, without having to set up an endpoint or a servlet.
+It uses a `Receiver` implementation to write the incoming file data into an `OutputStream`.
+
+The following default implementations of `Receiver` are available:
+
+[cols="1,2"]
+|===
+|`MemoryBuffer`
+|Handles a single file upload at once, writes the file data into an in-memory buffer.
+Using `MemoryBuffer` automatically configures the component so that only a single file can be selected.
+
+|`MultiFileMemoryBuffer`
+|Handles multiple file uploads at once, writes the file data into a set of in-memory buffers.
+
+|`FileBuffer`
+|Handles a single file upload at once, saves a file on the system.
+Files are going to be saved into the current working directory of the Java application.
+Using `FileBuffer` automatically configures the component so that only a single file can be selected.
+
+|`MultiFileMemoryBuffer`
+|Handles multiple file uploads at once, and for each, saves a file on the system.
+Files are going to be saved into the current working directory of the Java application.
+|===
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadMemoryBuffer.java[tags=snippet,indent=0]
+----
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadFileBuffer.java[tags=snippet,indent=0]
+----
+--
+
+For more advanced use-cases, you can provide custom implementations for `Receiver` or `MultiFileReceiver`, for example to save files into a specific directory, or uploading them to a Cloud storage.
+
+== Drag & Drop
+
+Upload supports drag and drop for uploading files. Multiple files can be dropped simultaneously.
+**By default, it's enabled on desktop and disabled on touch devices. **
+By explicitly setting it to enabled or disabled affects both desktop and mobile devices.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-drag-and-drop.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadDragAndDrop.java[render,tags=snippet,indent=0]
+----
+--
+
+== Auto Upload
+
+By default, files are uploaded immediately as they are added to the queue.
+Auto upload can be disabled, for example, to allow the user to review the list of files before initiating their upload by clicking the ▶️ button for each file.
+It is recommended to change the button label to indicate that uploads do not start automatically.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-auto-upload-disabled.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadAutoUploadDisabled.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+Uploads can be initiated programmatically when auto upload is disabled, for example if you want to provide the user with a single button to start all uploads.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-all-files.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadAllFiles.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+== Upload Restrictions
+
+You can set three types of restrictions: file format, file count and file size.
+
+Exceptions that arise from the user violating any of the imposed restrictions aren't shown in the UI by default.
+Use a <<#listeners, File Rejected listener>> to catch these exceptions and, for example, a <<../notification#, Notification>> to inform the user about the problem at hand and any potential solutions.
+
+However, the user should be informed upfront about any file upload restrictions.
+Maximum number of files allowed, file size and format limitations should all be communicated clearly to avoid exceptions whenever possible.
+
+=== File Format
+
+Upload can be configured to only accept files of specific formats.
+The acceptable file formats are set using MIME type patterns or file extensions, for example `"video/*"`, `"image/tiff"` or `".pdf"` and `"audio/mp3"`.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-file-format.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadFileFormat.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+.Prefer MIME-type
+[NOTE]
+====
+While https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types[MIME types] are widely supported, file extensions are only implemented https://caniuse.com/input-file-accept[in certain browsers] and should be avoided.
+====
+
+=== File Count
+
+Upload does not limit the number of files that can be uploaded by default.
+If you set the maximum to one the native file browser prevents selecting multiple files.
+
+.Receiver-specific Restrictions
+[NOTE]
+====
+When using a Receiver that does not implement the `MultiFileReceiver` interface, such as `MemoryBuffer` or `FileBuffer`, the Upload component will automatically limit the number of files to one.
+That is because these receiver implementations only support handling a single file at once.
+====
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-file-count.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadFileCount.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+=== File Size
+
+Upload allows you to limit the file size by setting a maximum.
+The limit is defined in bytes. It's unlimited by default.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-file-size.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadFileSize.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+.Revalidate the size limit in the server
+[NOTE]
+====
+This constraint is set on the client and is checked before contacting the server.
+====
+
+== File Actions
+
+Each file has a certain set of associated actions available depending on its upload state.
+A file always has a "Clear/Remove" button.
+This button cancels the upload (if applicable) and removes the file from the list.
+
+The "Clear/Remove" button is the only available action during and after a successful upload.
+
+[.example.render-only]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-clear-button.ts[render]
+----
+--
+
+.Remember to remove the file from the back end
+[NOTE]
+====
+The "Clear/Remove" button does not remove a successfully uploaded file from the server file system or database.
+It is only removed from Upload's file list.
+====
+
+If an error or exception occurs Upload displays a "Retry" button that attempts to upload the file again when pressed.
+
+[.example.render-only]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-retry-button.ts[render]
+----
+--
+
+When a file is queued (auto upload disabled) it has a "Start" Button that the user must press to begin the upload process.
+
+[.example.render-only]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-start-button.ts[render]
+----
+--
+
+== Internationalization (i18n)
+
+All of Upload's labels and messages are configurable.
+For a complete list please refer to the API documentation (https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/upload/UploadI18N.html[Java,role=external,window=_blank]).
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-internationalization.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadInternationalization.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadFinnishI18N.java[]
+----
+--
+
+== Customization
+
+You can replace the default upload button.
+For example, if Upload needs a stronger emphasis you can use a primary button.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-button-theme-variant.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadButtonThemeVariant.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+You can also customize the drop label, as well as the icon.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-drop-label.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadDropLabel.java[render,tags=snippet,indent=0]
+----
+--
+
+.Use a large drop target
+[NOTE]
+====
+When customizing the Upload component make sure not to make the drop target too small.
+A large drop target is easier to use and less error prone.
+====
+
+== Technical
+
+=== Listeners
+
+Upload has listeners for the following events:
+
+[cols="1,2"]
+|===
+|Event|Description
+
+|_All Finished_
+|Triggered when Upload has processed all the files in its queue, regardless of whether all the uploads were successful or not
+
+|_Failed_
+|When the upload is received but the reception is interrupted for some reason
+
+|_File Rejected_
+|Sent when the file selected for upload doesn't meet the constraints, for example, file size
+
+|_Finished_
+|Sent when Upload receives a file regardless of whether the upload was successful or not (to distinguish between the two cases use either Succeeded or Failed listeners)
+
+|_Progress_
+|Event for tracking upload progress
+
+|_Started_
+|Triggered when the upload starts
+
+|_Succeeded_
+|Sent when the upload has been successfully received
+|===
+
+== Best Practices
+
+=== Labelling
+
+Choose labels that are informative and instructional.
+For example, if the user is to upload a single PDF file, it's better to have the button label say "Upload PDF..." instead of "Upload File…".
+The task becomes clearer and improves accessibility for the user, especially if they're using a screen reader as the button's label is read aloud when focused.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-labelling.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadLabelling.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+Likewise, if the user is expected to upload a spreadsheet but multiple file formats are accepted, have the button say "Upload Spreadsheet" with helpers to inform the user which formats are accepted.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-helper.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadHelper.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+=== Error Messages
+
+Try to provide meaningful feedback and error messages when an exception or error occurs.
+Avoid technical jargon and instead try to provide solutions/instructions on how to fix the error.
+
+A "Server Unavailable" might suffice for tech savvy users but for some it might not be helpful at all.
+Your error messages should be written with your users in mind.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-error-messages.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadErrorMessages.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadExamplesI18N.java[]
+----
+--
+
+== Related Components
+
+|===
+|<<../progress-bar#,Progress Bar>> |Component for showing task completion progress.
+|===
