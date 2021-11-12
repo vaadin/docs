@@ -5,20 +5,21 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
 
-@Route("select-placeholder")
-public class SelectPlaceholder extends Div {
+@Route("select-empty-selection-caption")
+public class SelectEmptySelectionCaption extends Div {
 
-  public SelectPlaceholder() {
-    // tag::snippet[]
+  public SelectEmptySelectionCaption() {
     Select<String> select = new Select<>();
+    // tag::snippet[]
+    select.setEmptySelectionAllowed(true);
+    select.setEmptySelectionCaption("Unknown size");
+    // end::snippet[]
     select.setLabel("Size");
     select.setItems("XS", "S", "M", "L", "XL");
-    select.setPlaceholder("Select size");
 
     add(select);
-    // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectPlaceholder> { // hidden-source-line
+  public static class Exporter extends DemoExporter<SelectEmptySelectionCaption> { // hidden-source-line
   } // hidden-source-line
 }
