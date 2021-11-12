@@ -2,6 +2,7 @@
 // tag::color[]
 import '@vaadin/vaadin-lumo-styles/color';
 // end::color[]
+import { color } from '@vaadin/vaadin-lumo-styles/color'; // hidden-source-line
 // tag::typography[]
 import '@vaadin/vaadin-lumo-styles/typography';
 // end::typography[]
@@ -20,6 +21,6 @@ import 'lumo-css-framework/all-classes.css';
 import { includeModule } from './include-module'; // hidden-source-line
 import { applyTheme } from 'Frontend/generated/theme'; // hidden-source-line
 // prettier-ignore
-includeModule('lumo-color', (css) => `[theme~="dark"] ${css.split("[theme~='dark']")[1].split('}')[0]} }`); // hidden-source-line
+includeModule(color, (css) => `[theme~="dark"] ${css.split("[theme~='dark']")[1].split('}')[0]} }`); // hidden-source-line
 applyTheme(document); // hidden-source-line
 window.dispatchEvent(new CustomEvent('custom-properties-changed')); // hidden-source-line

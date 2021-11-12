@@ -66,10 +66,7 @@ Start by importing connection state helpers from Vaadin.
 .`ui-store.ts`
 [source,typescript]
 ----
-import {
- ConnectionState,
- ConnectionStateStore,
-} from "@vaadin/fusion-frontend";
+import { ConnectionState, ConnectionStateStore } from '@vaadin/common-frontend';
 ----
 
 Next, add an `offline` observable and helpers for tracking changes in the connection state:
@@ -152,66 +149,59 @@ import { crmStore, uiStore } from 'Frontend/stores/app-store';
 Next, use the `offline` state to disable components when the application is offline:
 
 .`contact-form.ts`
-[source,typescript,highlight=7;12;17;24;31;39;46]
+[source,typescript]
 ----
 render() {
- const { model } = this.binder;
- return html`
-   <vaadin-text-field
-     label="First name"
-     ?disabled=${uiStore.offline}
-     ...=${field(model.firstName)}
-   ></vaadin-text-field>
-   <vaadin-text-field
-     label="Last name"
-     ?disabled=${uiStore.offline}
-     ...=${field(model.lastName)}
-   ></vaadin-text-field>
-   <vaadin-text-field
-     label="Email"
-     ?disabled=${uiStore.offline}
-     ...=${field(model.email)}
-   ></vaadin-text-field>
-   <vaadin-combo-box
-     label="Status"
-     .items=${crmStore.statuses}
-     ?disabled=${uiStore.offline}
-     item-label-path="name"
-     ...=${field(model.status)}
-   ></vaadin-combo-box>
+  const { model } = this.binder;
 
-   <vaadin-combo-box
-     label="Company"
-     item-label-path="name"
-     .items=${crmStore.companies}
-     ?disabled=${uiStore.offline}
-     ...=${field(model.company)}
-   >
-   </vaadin-combo-box>
-   <div class="buttons se-s">
-     <vaadin-button
-       theme="primary"
-       @click=${this.save}
-       ?disabled=${this.binder.invalid || uiStore.offline}
-     >
-       ${this.binder.value.id ? "Save" : "Create"}
-     </vaadin-button>
-     <vaadin-button
-       theme="error"
-       @click=${listViewStore.delete}
-       ?disabled=${!this.binder.value.id || uiStore.offline}
-     >
-       Delete
-     </vaadin-button>
-     <vaadin-button theme="tertiary" @click=${listViewStore.cancelEdit}>
-       Cancel
-     </vaadin-button>
-   </div>
- `;
+  return html`
+    <vaadin-text-field
+      label="First name"
+      ?disabled=${uiStore.offline}
+      ${field(model.firstName)}></vaadin-text-field>
+    <vaadin-text-field
+      label="Last name"
+      ?disabled=${uiStore.offline}
+      ${field(model.lastName)}></vaadin-text-field>
+    <vaadin-text-field
+      label="Email"
+      ?disabled=${uiStore.offline}
+      ${field(model.email)}></vaadin-text-field>
+    <vaadin-combo-box
+      label="Status"
+      ?disabled=${uiStore.offline}
+      ${field(model.status)}
+      item-label-path="name"
+      .items=${crmStore.statuses}></vaadin-combo-box>
+    <vaadin-combo-box
+      label="Company"
+      ?disabled=${uiStore.offline}
+      ${field(model.company)}
+      item-label-path="name"
+      .items=${crmStore.companies}></vaadin-combo-box>
+
+    <div class="flex gap-s">
+      <vaadin-button
+        theme="primary"
+        ?disabled=${this.binder.invalid || uiStore.offline}
+        @click=${this.save}>
+        ${this.binder.value.id ? 'Save' : 'Create'}
+      </vaadin-button>
+      <vaadin-button
+        theme="error"
+        ?disabled=${!this.binder.value.id || uiStore.offline}
+        @click=${listViewStore.delete}>
+        Delete
+      </vaadin-button>
+      <vaadin-button theme="tertiary" @click=${listViewStore.cancelEdit}>
+        Cancel
+      </vaadin-button>
+    </div>
+  `;
 }
 ----
 
-Hide the logout button while offline as it has no effect.
+Also hide the logout link while offline as it has no effect.
 
 In the main layout, import `uiStore`, then use the `offline` state to toggle the `hidden` attribute of the link.
 
@@ -233,19 +223,22 @@ You cannot authenticate the user or fetch data if they weren't logged in before 
 Again, import the store and use the state to disable the form.
 
 .`login-view.ts`
-[source,html,highlight=6;9-12]
+[source,typescript]
 ----
-<h1>Vaadin CRM</h1>
-<vaadin-login-form
- no-forgot-password
- @login=${this.login}
- .error=${this.error}
- ?disabled=${uiStore.offline}
->
-</vaadin-login-form>
-${uiStore.offline
- ? html` <b>You are offline. Login is only available while online.</b> `
- : nothing}
+render() {
+  return html`
+    <h1>Vaadin CRM</h1>
+    <vaadin-login-form
+      no-forgot-password
+      @login=${this.login}
+      .error=${this.error}
+      ?disabled=${uiStore.offline}>
+    </vaadin-login-form>
+    ${uiStore.offline
+      ? html` <b>You are offline. Login is only available while online.</b> `
+      : nothing}
+  `;
+}
 ----
 
 Show a helpful message to users explaining why the login functionality isn't available when offline.
@@ -314,19 +307,18 @@ Update the `initFromServer()` method in `crm-store.ts` to use the `cacheable()` 
 [source,typescript]
 ----
 async initFromServer() {
- const data = await cacheable(
-   endpoint.getCrmData,
-   "crm",
-   CrmDataModel.createEmptyValue()
- );
+  const data = await cacheable(
+    CrmEndpoint.getCrmData,
+    'crm',
+    CrmDataModel.createEmptyValue()
+  );
 
- runInAction(() => {
-   this.contacts = data.contacts;
-   this.companies = data.companies;
-   this.statuses = data.statuses;
- });
+  runInAction(() => {
+    this.contacts = data.contacts;
+    this.companies = data.companies;
+    this.statuses = data.statuses;
+  });
 }
-
 ----
 
 == Installing the Application
