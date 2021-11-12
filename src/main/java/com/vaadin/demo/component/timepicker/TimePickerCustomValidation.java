@@ -1,5 +1,7 @@
 package com.vaadin.demo.component.timepicker;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.demo.domain.Appointment;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.binder.Binder;
@@ -7,9 +9,6 @@ import com.vaadin.flow.router.Route;
 
 import java.time.Duration;
 import java.time.LocalTime;
-
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
-import com.vaadin.demo.domain.Appointment;
 
 @Route("time-picker-custom-validation")
 public class TimePickerCustomValidation extends Div {
@@ -33,6 +32,6 @@ public class TimePickerCustomValidation extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<TimePickerCustomValidation> { // hidden-full-source-line
-    } // hidden-full-source-line
+    public static class Exporter extends DemoExporter<TimePickerCustomValidation> { // hidden-source-line
+    } // hidden-source-line
 }
