@@ -829,3 +829,190 @@ See the http://demo.vaadin.com/book-examples-vaadin7/book#datamodel.container.fi
 (((range="endofrange", startref="term.datamodel.container")))
 
 
+
+[[datamodel.container.sorted]]
+== [classname]#Sortable# Containers
+
+((("Container", "Sortable", id="term.datamodel.container.sorted.sortable", range="startofrange")))
+
+
+((("[classname]#IndexedContainer#", id="term.datamodel.container.sorted.indexedcontainer", range="startofrange")))
+((("[interfacename]#Comparable#", id="term.datamodel.container.sorted.comparable", range="startofrange")))
+((("[methodname]#getSortableContainerPropertyIds()#", id="term.datamodel.container.getsortablepropertyids", range="startofrange")))
+((("[methodname]#sort(Object[], boolean[])#", id="term.datamodel.container.sort", range="startofrange")))
+
+
+Containers that implement the [interfacename]#Container.Sortable# interface can
+be sorted. Many built-in containers, such as [classname]#IndexedContainer# and
+the bean item containers, implement this interface out-of-the-box. Both
+[classname]#Table# and [classname]#Grid# have helper methods for programmatic
+sorting and provide the option for changing the sort order via clicking the 
+header cells, and forward those events to the underlying container that
+performs the actual sorting.
+((("[classname]#Table#")))
+((("[classname]#Grid#")))
+
+The usual way to sort a container directly is to call the
+[methodname]#sort(Object[], boolean[])# method. By default, if any of the given
+property ids do not match the properties that the container considers sortable,
+the values from those indexes are ignored.
+
+----
+// lastName ascending, age descending
+container.sort(new Object[] { "lastName", "age" },
+        new boolean[] { true, false });
+----
+
+Whether a container property can be sorted or not is controlled by the
+[methodname]#getSortableContainerPropertyIds()# method. In the default
+implementations, any container property with a type that implements the
+[interfacename]#Comparable# interface is considered sortable. This can be
+changed by overriding the [methodname]#getSortableContainerPropertyIds()#
+method, but note that you should not include properties that are not natively
+comparable without also adding a custom sorting implementation.
+
+----
+IndexedContainer container = new IndexedContainer() {
+    @Override
+    public Collection<?> getSortableContainerPropertyIds() {
+        // make all properties non-sortable
+        return Collections.emptyList();
+    }
+};
+----
+
+[[datamodel.container.sorted.custom]]
+=== Custom Sorting
+
+((("[classname]#AbstractInMemoryContainer#", id="term.datamodel.container.sorted.abstractinmemorycontainer", range="startofrange")))
+((("[interfacename]#ItemSorter#", id="term.datamodel.container.sorted.itemsorter", range="startofrange")))
+
+You must have an in-memory container if you wish to add a custom sorting
+implementation using the helpers provided by the framework. These helpers are
+included in all containers that extend [classname]#AbstractInMemoryContainer#
+(including the built-in [classname]#IndexedContainer# and the bean item
+containers). If the container data is loaded into the container by a request
+from elsewhere, e.g. from a database (like in [classname]#SQLContainer#), the
+database handles the sorting. There is no default implementation for
+programmatically sorting only the currently loaded subset of the data.
+((("[classname]#SQLContainer#")))
+
+Custom sorting implementation is required if
+
+* you want to use non-default comparing logic for one or more of the container
+properties
+* you want to be able to sort a container property that has a type that is not
+natively comparable
+
+In the latter case you should also override the
+[methodname]#getSortableContainerPropertyIds()# method to include that property
+id.
+
+----
+IndexedContainer container = new IndexedContainer() {
+    @Override
+    public Collection<?> getSortableContainerPropertyIds() {
+        // make all properties sortable
+        return getContainerPropertyIds();
+    }
+};
+----
+
+Sorting in any container that extends [classname]#AbstractInMemoryContainer#
+can be customized by giving it a new [interfacename]#ItemSorter#. The easiest
+way to do this is to use a [classname]#DefaultItemSorter# with a custom
+[interfacename]#Comparator#.
+((("[classname]#DefaultItemSorter#")))
+((("[interfacename]#Comparator#")))
+
+----
+container.setItemSorter(new DefaultItemSorter(new Comparator<Object>() {
+    @Override
+    public int compare(Object o1, Object o2) {
+        // custom handling, ignores the possibility of null values
+        if (o1 instanceof CheckBox && o2 instanceof CheckBox) {
+            Boolean b1 = ((CheckBox) o1).getValue();
+            return b1.compareTo(((CheckBox) o2).getValue());
+        }
+        if (o1 instanceof Button && o2 instanceof Button) {
+            String caption1 = ((Button) o1).getCaption().toLowerCase();
+            String caption2 = ((Button) o2).getCaption().toLowerCase();
+            return caption1.compareTo(caption2);
+        }
+        if (o1 instanceof String && o2 instanceof String) {
+            return ((String) o1).toLowerCase()
+                    .compareTo(((String) o2).toLowerCase());
+        }
+        return 0;
+    }
+}));
+----
+
+Note that the given [interfacename]#ItemSorter# will be used for all the
+properties listed by the [methodname]#getSortableContainerPropertyIds()#
+method, not only those that have types that do not implement
+[interfacename]#Comparable#. For an easy access to the default comparator logic
+(including null value handling) you might want to use the
+[classname]#DefaultPropertyValueComparator# as a starting point. Remember to
+add custom handling for any and all data types you have that do not implement
+[interfacename]#Comparable#. Such types can only be passed on to the default
+comparator handling when the other compared value is null.
+((("[classname]#DefaultPropertyValueComparator#")))
+
+----
+container.setItemSorter(
+        new DefaultItemSorter(new DefaultPropertyValueComparator() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                // custom handling
+                ...
+
+                return super.compare(o1, o1);
+            }
+}));
+----
+
+(((range="endofrange", startref="term.datamodel.container.sorted.itemsorter")))
+(((range="endofrange", startref="term.datamodel.container.sorted.abstractinmemorycontainer")))
+
+[[datamodel.container.sorted.sqlcontainer]]
+=== [classname]#SQLContainer#
+
+((("[classname]#OrderBy#", id="term.datamodel.container.sorted.orderby", range="startofrange")))
+
+[classname]#SQLContainer# is not an in-memory data container, so the sorting
+options are limited to using the database's own sorting.
+[classname]#SQLContainer# uses the [classname]#OrderBy# class for forwarding
+the sorting information to the database. The property id given to an
+[classname]#OrderBy# instance must match a previously added property id within
+the container.
+((("[classname]#SQLContainer#")))
+
+Calling the [methodname]#sort(Object[], boolean[])# method clears out any
+previously set [classname]#OrderBy# instances and creates new ones based on the
+given arrays.
+
+If you wish to only change the sorting for a single property without affecting
+the previously set sorting otherwise, the [methodname]#addOrderBy(OrderBy)#
+adds the given [classname]#OrderBy# to the list and refreshes the container
+contents with the new sorting rules. Note that this does not remove any
+previously set [classname]#OrderBy# instance for the same property. There is no
+corresponding method for clearing the sorting rules from a single property, or
+for querying the currently set list of rules.
+((("[methodname]#addOrderBy(OrderBy)#")))
+
+----
+// ascending
+container.addOrderBy(new OrderBy("lastName", true));
+// descending
+container.addOrderBy(new OrderBy("age", false));
+----
+
+(((range="endofrange", startref="term.datamodel.container.sorted.orderby")))
+
+(((range="endofrange", startref="term.datamodel.container.sorted.sort")))
+(((range="endofrange", startref="term.datamodel.container.sorted.getsortablepropertyids")))
+(((range="endofrange", startref="term.datamodel.container.sorted.comparable")))
+(((range="endofrange", startref="term.datamodel.container.sorted.indexedcontainer")))
+
+(((range="endofrange", startref="term.datamodel.container.sorted.sortable")))
