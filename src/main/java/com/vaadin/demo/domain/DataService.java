@@ -48,6 +48,25 @@ public class DataService {
     return professions;
   }
 
+  /**
+   * Get employees for a given manager.
+   */
+  public static List<Person> getPeople(Integer managerId) {
+    List<Person> people = new ArrayList<>(getPeople());
+    people.removeIf(person -> person.getManagerId() == null
+            || !person.getManagerId().equals(managerId));
+    return people;
+  }
+
+  /**
+   * Get all managers.
+   */
+  public static List<Person> getManagers() {
+    List<Person> people = new ArrayList<>(getPeople());
+    people.removeIf(person -> !person.isManager());
+    return people;
+  }
+
   public static Templates getTemplates() {
     return getItems(Templates.class, "templates.json");
   }
