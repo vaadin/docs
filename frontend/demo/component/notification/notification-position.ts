@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import { Notification, NotificationPosition } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
