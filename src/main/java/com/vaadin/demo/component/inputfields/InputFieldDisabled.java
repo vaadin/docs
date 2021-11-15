@@ -1,9 +1,9 @@
 package com.vaadin.demo.component.inputfields;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-full-source-line
 
 @Route("input-field-disabled")
 public class InputFieldDisabled extends Div {
@@ -18,6 +18,6 @@ public class InputFieldDisabled extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<InputFieldDisabled> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<InputFieldDisabled> { // hidden-source-line
+  } // hidden-source-line
 }

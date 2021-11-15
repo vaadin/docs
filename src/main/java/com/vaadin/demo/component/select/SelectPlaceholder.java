@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.select;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
@@ -19,6 +19,6 @@ public class SelectPlaceholder extends Div {
     // end::snippet[]
   }
 
-  public static class Exporter extends DemoExporter<SelectPlaceholder> { // hidden-full-source-line
-  } // hidden-full-source-line
+  public static class Exporter extends DemoExporter<SelectPlaceholder> { // hidden-source-line
+  } // hidden-source-line
 }
