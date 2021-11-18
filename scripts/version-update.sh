@@ -9,8 +9,8 @@ set -o pipefail
 #            use -i to edit files in-place
 #            use /g for matching the replacing-string globally
 updateV14Branch() {
-  #https://github.com/vaadin/docs/blob/v14/articles/guide/start/maven.asciidoc
-  sed -i "s/-DarchetypeVersion.*/-DarchetypeVersion=[replaceable]#$1# \\\/g" "articles/guide/start/maven.asciidoc" || exit 1
+  #https://github.com/vaadin/docs/blob/v14/articles/flow/guide/start/maven.asciidoc
+  sed -i "s/-DarchetypeVersion.*/-DarchetypeVersion=[replaceable]#$1# \\\/g" "articles/flow/guide/start/maven.asciidoc" || exit 1
   
   #https://github.com/vaadin/docs/blob/v14/articles/flow/upgrading/v10-13/index.asciidoc
   sed -i "s/vaadin.version>.*/vaadin.version>$1<\/vaadin.version>/g" "articles/flow/upgrading/v10-13/index.asciidoc" || exit 1
