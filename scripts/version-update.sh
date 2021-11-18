@@ -12,8 +12,8 @@ updateV14Branch() {
   #https://github.com/vaadin/docs/blob/v14/articles/guide/start/maven.asciidoc
   sed -i "s/-DarchetypeVersion.*/-DarchetypeVersion=[replaceable]#$1# \\\/g" "articles/guide/start/maven.asciidoc" || exit 1
   
-  #https://github.com/vaadin/docs/blob/v14/articles/guide/upgrading/v10-13/index.asciidoc
-  sed -i "s/vaadin.version>.*/vaadin.version>$1<\/vaadin.version>/g" "articles/guide/upgrading/v10-13/index.asciidoc" || exit 1
+  #https://github.com/vaadin/docs/blob/v14/articles/flow/upgrading/v10-13/index.asciidoc
+  sed -i "s/vaadin.version>.*/vaadin.version>$1<\/vaadin.version>/g" "articles/flow/upgrading/v10-13/index.asciidoc" || exit 1
   
   #https://github.com/vaadin/docs/blob/v14/articles/tools/mpr/configuration/mpr-cdi-tutorial.asciidoc
   sed -i "s/version>14.*/version>$1<\/version>/g" "articles/tools/mpr/configuration/mpr-cdi-tutorial.asciidoc" || exit 1
