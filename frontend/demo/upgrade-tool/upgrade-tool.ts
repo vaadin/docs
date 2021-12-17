@@ -2,10 +2,14 @@ import { SelectValueChangedEvent } from '@vaadin/select';
 import '@vaadin/button';
 import '@vaadin/select';
 import '@vaadin/checkbox';
+import '@vaadin/checkbox-group';
+import '@vaadin/notification';
 import { html, LitElement, render } from 'lit';
 import { guard } from 'lit/directives/guard';
 import { customElement, state } from 'lit/decorators';
-import { Checkbox, CheckboxCheckedChangedEvent } from '@vaadin/checkbox';
+import { Checkbox } from '@vaadin/checkbox';
+import { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
+import { Notification } from '@vaadin/notification';
 
 const VAADIN_VERSIONS: Record<string, string> = {
   14: '14.8.0',
@@ -34,11 +38,14 @@ export default class UpgradeTool extends LitElement {
   @state()
   private toVersion = '';
   @state()
+  private frameworkValue = ['flow'];
+  @state()
+  private extraSettingsValue = ['spring'];
+
   private isFlow = true;
-  @state()
   private isFusion = false;
-  @state()
   private isSpring = true;
+  private isTypeScript = true;
 
   render() {
     return html`
@@ -46,28 +53,38 @@ export default class UpgradeTool extends LitElement {
         <h2>Select your Vaadin versions:</h2>
         <div style="margin-bottom: 10px">${this.createSelectComponents()}</div>
         <div style="margin-bottom: 10px">
-          <vaadin-checkbox
-            id="flow-checkbox"
-            label="Flow"
-            ?checked=${this.isFlow}
-            @checked-changed=${this.flowChanged}
-          ></vaadin-checkbox>
-          <vaadin-checkbox
-            id="fusion-checkbox"
-            label="Fusion"
-            ?checked=${this.isFusion}
-            @checked-changed=${this.fusionChanged}
-          ></vaadin-checkbox>
+          <vaadin-checkbox-group
+            label="Framework"
+            id="framework-checkbox-group"
+            .value="${this.frameworkValue}"
+            @value-changed=${this.frameworkChanged}
+            theme="horizontal"
+          >
+            <vaadin-checkbox value="flow" label="Flow" id="flow-checkbox"></vaadin-checkbox>
+            <vaadin-checkbox value="fusion" label="Fusion" id="fusion-checkbox"></vaadin-checkbox>
+          </vaadin-checkbox-group>
         </div>
         <div>
-          <vaadin-checkbox
-            id="spring-checkbox"
-            label="Spring Project"
-            style="font-size: var(--lumo-font-size-s);"
-            ?disabled=${this.isFusion}
-            ?checked=${this.isSpring}
-            @checked-changed=${this.springChanged}
-          ></vaadin-checkbox>
+          <vaadin-checkbox-group
+            label="I use"
+            id="extra-settings-checkbox-group"
+            .value="${this.extraSettingsValue}"
+            @value-changed=${this.extraSettingsChanged}
+            theme="horizontal"
+          >
+            <vaadin-checkbox
+              value="spring"
+              label="Spring Boot"
+              id="spring-checkbox"
+              ?disabled=${this.isFusion || (!this.isFusion && !this.isFlow)}
+            ></vaadin-checkbox>
+            <vaadin-checkbox
+              value="typescript"
+              label="TypeScript-based views"
+              id="typescript-checkbox"
+              ?disabled=${this.isFusion || (!this.isFusion && !this.isFlow)}
+            ></vaadin-checkbox>
+          </vaadin-checkbox-group>
         </div>
         <vaadin-button
           theme="primary"
@@ -85,28 +102,32 @@ export default class UpgradeTool extends LitElement {
 
   private showUpdateInstructions() {
     this.hideOldInstructions();
-    const elements = [
-      document.getElementById('before-upgrade'),
-      document.getElementById('after-upgrade'),
-    ];
 
-    if (this.isFlow) {
-      const flowElements = this.getFrameworkInstructions('flow');
-      elements.push(...flowElements);
-    }
+    const elementsToShow: HTMLElement[] = [];
 
-    if (this.isFusion) {
-      const fusionElements = this.getFrameworkInstructions('fusion');
-      elements.push(...fusionElements);
+    if (this.isFlow || this.isFusion) {
+      elementsToShow.push(...this.getElementsByClassname('instructions-all'));
+    } else {
+      Notification.show('Please select a framework!');
     }
 
     if (this.isSpring) {
-      document
-        .querySelectorAll('.spring-instructions')
-        .forEach((elem) => elem.classList.remove('hidden'));
+      elementsToShow.push(...this.getDetailedInstructionElements('spring'));
     }
 
-    elements.forEach((e) => {
+    if (this.isTypeScript) {
+      elementsToShow.push(...this.getDetailedInstructionElements('typescript'));
+    }
+
+    if (this.isFlow) {
+      elementsToShow.push(...this.getDetailedInstructionElements('flow'));
+    }
+
+    if (this.isFusion) {
+      elementsToShow.push(...this.getDetailedInstructionElements('fusion'));
+    }
+
+    elementsToShow.forEach((e) => {
       if (!e) {
         return;
       }
@@ -115,23 +136,43 @@ export default class UpgradeTool extends LitElement {
     });
   }
 
-  private getFrameworkInstructions(framework: string): any {
-    const elements: HTMLElement[] = [];
-    let elem = document.getElementById(
-      `${framework}-instructions-${this.fromVersion}-${this.toVersion}`
-    );
-    if (elem) {
-      elements.push(elem);
+  private getElementsByClassname(classname: string) {
+    return <HTMLElement[]>[...document.querySelectorAll('.' + classname)];
+  }
+
+  private getDetailedInstructionElements(target: string): HTMLElement[] {
+    const elementsToShow: HTMLElement[] = [];
+    elementsToShow.push(...this.getElementsByClassname(target + '-instructions-all'));
+
+    let suffix = `-instructions-${this.fromVersion}-${this.toVersion}`;
+    const elements = this.getElementsByClassname(target + suffix);
+
+    if (elements.length > 0) {
+      elements.push(...this.getExtraInstructionsElements(target, suffix));
+      elementsToShow.push(...elements);
     } else {
       let idx = SIMPLE_VERSIONS.indexOf(this.fromVersion);
       const endIdx = SIMPLE_VERSIONS.indexOf(this.toVersion);
+
       for (idx; idx < endIdx; idx++) {
-        elem = document.getElementById(
-          `${framework}-instructions-${SIMPLE_VERSIONS[idx]}-${SIMPLE_VERSIONS[idx + 1]}`
-        );
-        if (elem) elements.push(elem);
+        suffix = `-instructions-${SIMPLE_VERSIONS[idx]}-${SIMPLE_VERSIONS[idx + 1]}`;
+        elements.push(...this.getElementsByClassname(target + suffix));
+        if (elements.length > 0) {
+          elements.push(...this.getExtraInstructionsElements(target, suffix));
+          elementsToShow.push(...elements);
+        }
       }
     }
+    return elementsToShow;
+  }
+
+  getExtraInstructionsElements(framework: string, suffix: string) {
+    const elements: HTMLElement[] = [];
+    if (this.isSpring)
+      elements.push(...this.getElementsByClassname(framework + '-spring' + suffix));
+    if (this.isTypeScript)
+      elements.push(...this.getElementsByClassname(framework + '-typescript' + suffix));
+
     return elements;
   }
 
@@ -216,21 +257,33 @@ export default class UpgradeTool extends LitElement {
     this.toVersion = e.detail.value;
   }
 
-  private flowChanged(e: CheckboxCheckedChangedEvent) {
-    this.isFlow = e.detail.value;
-  }
+  private frameworkChanged(e: CheckboxGroupValueChangedEvent) {
+    const val = e.detail.value;
+    this.frameworkValue = val;
 
-  private fusionChanged(e: CheckboxCheckedChangedEvent) {
-    this.isFusion = e.detail.value;
-    if (this.isFusion) {
+    this.isFlow = val.includes('flow');
+
+    if (this.frameworkValue.includes('fusion')) {
+      this.isFusion = true;
       this.isSpring = true;
-      const checkbox = <Checkbox>document.getElementById('spring-checkbox');
-      checkbox.checked = true;
+      this.isTypeScript = true;
+
+      ['spring', 'typescript'].forEach((v) => {
+        this.extraSettingsValue.indexOf(v) === -1 ? this.extraSettingsValue.push(v) : null;
+        const checkbox = <Checkbox>document.getElementById(`${v}-checkbox`);
+        checkbox.checked = true;
+      });
+    } else {
+      this.isFusion = false;
     }
   }
 
-  private springChanged(e: CheckboxCheckedChangedEvent) {
-    this.isSpring = e.detail.value;
+  private extraSettingsChanged(e: CheckboxGroupValueChangedEvent) {
+    const val = e.detail.value;
+    this.extraSettingsValue = val;
+
+    this.isSpring = val.includes('spring') || this.isFusion;
+    this.isTypeScript = val.includes('typescript') || this.isFusion;
   }
 
   connectedCallback() {
