@@ -142,7 +142,7 @@ export default class UpgradeTool extends LitElement {
 
   private getDetailedInstructionElements(target: string): HTMLElement[] {
     const elementsToShow: HTMLElement[] = [];
-    elementsToShow.push(...this.getElementsByClassname(target + '-all'));
+    elementsToShow.push(...this.getElementsByClassname(target));
 
     let suffix = `-${this.fromVersion}-${this.toVersion}`;
     const elements = this.getElementsByClassname(target + suffix);
