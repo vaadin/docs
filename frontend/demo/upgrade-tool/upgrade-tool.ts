@@ -178,7 +178,9 @@ export default class UpgradeTool extends LitElement {
 
   private hideOldInstructions() {
     document
-      .querySelectorAll('.upgrade-instructions')
+      .querySelectorAll(
+        '[class*="all"], [class*="flow"], [class*="fusion"], [class*="spring"], [class*="typescript"]'
+      )
       .forEach((elem) => elem.classList.add('hidden'));
   }
 
