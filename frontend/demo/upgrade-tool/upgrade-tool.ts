@@ -106,7 +106,7 @@ export default class UpgradeTool extends LitElement {
     const elementsToShow: HTMLElement[] = [];
 
     if (this.isFlow || this.isFusion) {
-      elementsToShow.push(...this.getElementsByClassname('instructions-all'));
+      elementsToShow.push(...this.getElementsByClassname('all'));
     } else {
       Notification.show('Please select a framework!');
     }
@@ -142,9 +142,9 @@ export default class UpgradeTool extends LitElement {
 
   private getDetailedInstructionElements(target: string): HTMLElement[] {
     const elementsToShow: HTMLElement[] = [];
-    elementsToShow.push(...this.getElementsByClassname(target + '-instructions-all'));
+    elementsToShow.push(...this.getElementsByClassname(target + '-all'));
 
-    let suffix = `-instructions-${this.fromVersion}-${this.toVersion}`;
+    let suffix = `-${this.fromVersion}-${this.toVersion}`;
     const elements = this.getElementsByClassname(target + suffix);
 
     if (elements.length > 0) {
@@ -155,7 +155,7 @@ export default class UpgradeTool extends LitElement {
       const endIdx = SIMPLE_VERSIONS.indexOf(this.toVersion);
 
       for (idx; idx < endIdx; idx++) {
-        suffix = `-instructions-${SIMPLE_VERSIONS[idx]}-${SIMPLE_VERSIONS[idx + 1]}`;
+        suffix = `-${SIMPLE_VERSIONS[idx]}-${SIMPLE_VERSIONS[idx + 1]}`;
         elements.push(...this.getElementsByClassname(target + suffix));
         if (elements.length > 0) {
           elements.push(...this.getExtraInstructionsElements(target, suffix));
@@ -179,7 +179,7 @@ export default class UpgradeTool extends LitElement {
   private hideOldInstructions() {
     document
       .querySelectorAll(
-        '[class*="all"], [class*="flow"], [class*="fusion"], [class*="spring"], [class*="typescript"]'
+        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='typescript']"
       )
       .forEach((elem) => elem.classList.add('hidden'));
   }
