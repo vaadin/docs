@@ -132,7 +132,7 @@ export default class UpgradeTool extends LitElement {
         return;
       }
       this.updateVaadinVersionsInElement(e);
-      e.classList.remove('hidden');
+      e.style.setProperty('display', 'block');
     });
   }
 
@@ -181,7 +181,7 @@ export default class UpgradeTool extends LitElement {
       .querySelectorAll(
         "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='typescript']"
       )
-      .forEach((elem) => elem.classList.add('hidden'));
+      .forEach((elem) => (<HTMLElement>elem).style.setProperty('display', 'none'));
   }
 
   private updateVaadinVersionsInElement(e: HTMLElement) {
