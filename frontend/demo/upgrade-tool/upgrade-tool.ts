@@ -3,6 +3,7 @@ import '@vaadin/button';
 import '@vaadin/select';
 import '@vaadin/checkbox';
 import '@vaadin/checkbox-group';
+import '@vaadin/details';
 import '@vaadin/notification';
 import { html, LitElement, render } from 'lit';
 import { guard } from 'lit/directives/guard';
@@ -52,6 +53,21 @@ export default class UpgradeTool extends LitElement {
       <div>
         <h2>Select your Vaadin versions:</h2>
         <div style="margin-bottom: 10px">${this.createSelectComponents()}</div>
+        <vaadin-details>
+          <div slot="summary">Earlier Versions</div>
+          <ul style="margin-top: 0">
+            <li>
+              <a href="https://vaadin.com/docs/v14/flow/upgrading/v10-13/"
+                >Upgrading from Vaadin 10–13 to Vaadin 14</a
+              >
+            </li>
+            <li>
+              <a href="https://vaadin.com/docs/v14/flow/upgrading/v8/"
+                >Upgrading from Vaadin 8 to Vaadin 14</a
+              >
+            </li>
+          </ul>
+        </vaadin-details>
         <div style="margin-bottom: 10px">
           <vaadin-checkbox-group
             label="Framework"
