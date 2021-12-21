@@ -11,7 +11,7 @@ if (!process.env.GITHUB_TOKEN) {
 const url = 'https://github.com/vaadin/docs-app.git';
 const localPath = path.join(__dirname, 'docs-app');
 const opts = {
-  checkoutBranch: 'section-outlines',
+  checkoutBranch: 'master',
   fetchOpts: {
     callbacks: {
       certificateCheck: function() { return 0; },
