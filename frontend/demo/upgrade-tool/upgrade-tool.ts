@@ -103,100 +103,75 @@ export default class UpgradeTool extends LitElement {
   private showUpdateInstructions() {
     this.hideOldInstructions();
 
-    const elementsToShow: HTMLElement[] = [];
-
     if (this.isFlow || this.isFusion) {
-      elementsToShow.push(...this.getElementsByClassname('all'));
+      this.showElementsWithClassname('all');
     } else {
       Notification.show('Please select a framework!');
+      return;
     }
 
+    const versionSectionElements: HTMLElement[] = this.getVersionSectionElements(
+      this.fromVersion,
+      this.toVersion
+    );
+    versionSectionElements.forEach((e) => this.setElementVisible(e, true));
+
     if (this.isSpring) {
-      elementsToShow.push(...this.getDetailedInstructionElements('spring'));
+      this.showElementsWithClassname('spring');
     }
 
     if (this.isTypeScript) {
-      elementsToShow.push(...this.getDetailedInstructionElements('typescript'));
+      this.showElementsWithClassname('typescript');
     }
 
     if (this.isFlow) {
-      elementsToShow.push(...this.getDetailedInstructionElements('flow'));
+      this.showElementsWithClassname('flow');
     }
 
     if (this.isFusion) {
-      elementsToShow.push(...this.getDetailedInstructionElements('fusion'));
+      this.showElementsWithClassname('fusion');
+    }
+  }
+
+  private showElementsWithClassname(classname: string) {
+    this.getElementsByClassname(classname).forEach((e) => this.setElementVisible(e, true));
+  }
+
+  private getVersionSectionElements(fromVersion: string, toVersion: string) {
+    const elementsToShow: HTMLElement[] = [];
+    const classname = `v${fromVersion}-${toVersion}`;
+    const elements = this.getElementsByClassname(classname);
+
+    if (elements.length > 0) {
+      elementsToShow.push(...elements);
+    } else {
+      const idx = SIMPLE_VERSIONS.indexOf(fromVersion);
+      const nextVersion = SIMPLE_VERSIONS[idx + 1];
+      elementsToShow.push(...this.getVersionSectionElements(fromVersion, nextVersion));
+      elementsToShow.push(...this.getVersionSectionElements(nextVersion, toVersion));
     }
 
-    elementsToShow.forEach((e) => {
-      if (!e) {
-        return;
-      }
-      this.updateVaadinVersionsInElement(e);
-      e.style.setProperty('display', 'block');
-    });
+    return elementsToShow;
+  }
+
+  private setElementVisible(element: HTMLElement, isVisible: boolean): void {
+    if (isVisible) {
+      element.style.setProperty('display', 'block');
+    } else {
+      element.style.setProperty('display', 'none');
+    }
   }
 
   private getElementsByClassname(classname: string) {
     return <HTMLElement[]>[...document.querySelectorAll('.' + classname)];
   }
 
-  private getDetailedInstructionElements(target: string): HTMLElement[] {
-    const elementsToShow: HTMLElement[] = [];
-    elementsToShow.push(...this.getElementsByClassname(target));
-
-    let suffix = `-${this.fromVersion}-${this.toVersion}`;
-    const elements = this.getElementsByClassname(target + suffix);
-
-    if (elements.length > 0) {
-      elements.push(...this.getExtraInstructionsElements(target, suffix));
-      elementsToShow.push(...elements);
-    } else {
-      let idx = SIMPLE_VERSIONS.indexOf(this.fromVersion);
-      const endIdx = SIMPLE_VERSIONS.indexOf(this.toVersion);
-
-      for (idx; idx < endIdx; idx++) {
-        suffix = `-${SIMPLE_VERSIONS[idx]}-${SIMPLE_VERSIONS[idx + 1]}`;
-        elements.push(...this.getElementsByClassname(target + suffix));
-        if (elements.length > 0) {
-          elements.push(...this.getExtraInstructionsElements(target, suffix));
-          elementsToShow.push(...elements);
-        }
-      }
-    }
-    return elementsToShow;
-  }
-
-  getExtraInstructionsElements(framework: string, suffix: string) {
-    const elements: HTMLElement[] = [];
-    if (this.isSpring)
-      elements.push(...this.getElementsByClassname(framework + '-spring' + suffix));
-    if (this.isTypeScript)
-      elements.push(...this.getElementsByClassname(framework + '-typescript' + suffix));
-
-    return elements;
-  }
-
   private hideOldInstructions() {
     document
       .querySelectorAll(
-        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='typescript']"
+        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='typescript'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
       )
-      .forEach((elem) => (<HTMLElement>elem).style.setProperty('display', 'none'));
-  }
-
-  private updateVaadinVersionsInElement(e: HTMLElement) {
-    e.querySelectorAll('.vaadin-to-version-simple').forEach(
-      (elem) => ((<HTMLElement>elem).innerText = `${this.toVersion}`)
-    );
-    e.querySelectorAll('.vaadin-to-version-full').forEach(
-      (elem) => ((<HTMLElement>elem).innerText = `${VAADIN_VERSIONS[this.toVersion]}`)
-    );
-    e.querySelectorAll('.vaadin-from-version-simple').forEach(
-      (elem) => ((<HTMLElement>elem).innerText = `${this.fromVersion}`)
-    );
-    e.querySelectorAll('.vaadin-from-version-full').forEach(
-      (elem) => ((<HTMLElement>elem).innerText = `${VAADIN_VERSIONS[this.fromVersion]}`)
-    );
+      .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
   }
 
   private createSelectComponents() {
