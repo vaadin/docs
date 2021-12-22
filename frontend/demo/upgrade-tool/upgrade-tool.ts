@@ -137,7 +137,7 @@ export default class UpgradeTool extends LitElement {
     }
 
     if (this.isTypeScript) {
-      this.showElementsWithClassname('typescript');
+      this.showElementsWithClassname('ts');
     }
 
     if (this.isFlow) {
@@ -185,7 +185,7 @@ export default class UpgradeTool extends LitElement {
   private hideOldInstructions() {
     document
       .querySelectorAll(
-        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='typescript'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
+        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
       )
       .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
   }
