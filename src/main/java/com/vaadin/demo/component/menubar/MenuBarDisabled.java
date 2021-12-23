@@ -15,13 +15,12 @@ public class MenuBarDisabled extends Div {
 
         menuBar.addItem("View");
         MenuItem edit = menuBar.addItem("Edit");
-        edit.getElement().setAttribute("disabled", true);
+        edit.setEnabled(false);
 
         MenuItem share = menuBar.addItem("Share");
         SubMenu shareSubMenu = share.getSubMenu();
         shareSubMenu.addItem("By email")
-                .getElement()
-                .setAttribute("disabled", true);
+                .setEnabled(false);
         shareSubMenu.addItem("Get Link");
         // end::snippet[]
 
