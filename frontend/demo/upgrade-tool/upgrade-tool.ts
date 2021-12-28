@@ -11,6 +11,7 @@ import { customElement, state } from 'lit/decorators';
 import { Checkbox } from '@vaadin/checkbox';
 import { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { Notification } from '@vaadin/notification';
+import { applyTheme } from 'Frontend/generated/theme';
 
 const VAADIN_VERSIONS: Record<string, string> = {
   14: '14.8.0',
@@ -31,6 +32,9 @@ for (const k in VAADIN_VERSIONS) {
 
 const DEFAULT_FROM = '14';
 const DEFAULT_TO = '22';
+
+// Apply the theme, so that overlay elements styles and custom property overrides work as expected
+applyTheme(document);
 
 @customElement('upgrade-tool')
 export default class UpgradeTool extends LitElement {
