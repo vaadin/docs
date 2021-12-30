@@ -14,7 +14,7 @@ import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const VAADIN_VERSIONS: Record<string, string> = {
-  14: '14.8.0',
+  14: '14.8.1',
   15: '15.0.6',
   16: '16.0.5',
   17: '17.0.11',
@@ -22,7 +22,7 @@ const VAADIN_VERSIONS: Record<string, string> = {
   19: '19.0.9',
   20: '20.0.8',
   21: '21.0.9',
-  22: '22.0.1',
+  22: '22.0.2',
 };
 
 const SIMPLE_VERSIONS: string[] = [];
@@ -32,6 +32,8 @@ for (const k in VAADIN_VERSIONS) {
 
 const DEFAULT_FROM = '14';
 const DEFAULT_TO = '22';
+
+const HARDCODED_VERSIONS_CLASS = 'vaadin-to-version-full';
 
 // Apply the theme, so that overlay elements styles and custom property overrides work as expected
 applyTheme(document);
@@ -122,6 +124,7 @@ export default class UpgradeTool extends LitElement {
 
   private showUpdateInstructions() {
     this.hideOldInstructions();
+    this.replaceHardCodedVersions();
 
     if (this.isFlow || this.isFusion) {
       this.showElementsWithClassname('all');
@@ -192,6 +195,12 @@ export default class UpgradeTool extends LitElement {
         "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
       )
       .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
+  }
+
+  private replaceHardCodedVersions() {
+    this.getElementsByClassname(HARDCODED_VERSIONS_CLASS).forEach(
+      (e) => (e.textContent = VAADIN_VERSIONS[this.toVersion])
+    );
   }
 
   private createSelectComponents() {
