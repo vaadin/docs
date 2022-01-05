@@ -26,7 +26,7 @@ public class RadioButtonGroupLabels extends VerticalLayout {
     departmentGroup.setLabel("Department");
     departmentGroup.setItems("Engineering", "Human Resources", "Marketing");
     departmentGroup.setValue("Engineering");
-    add(depatrmentGroup);
+    add(departmentGroup);
     // end::snippet[]
   }
 
