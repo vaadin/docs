@@ -35,9 +35,9 @@ public class AccordionSmallPanels extends Div {
         billingAddressLayout.setSpacing(false);
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
-        
-        AccordionPanel billingAdressPanel = accordion.add("Billing address", billingAddressLayout);
-        billingAdressPanel.addThemeVariants(DetailsVariant.SMALL);
+
+        AccordionPanel billingAddressPanel = accordion.add("Billing address", billingAddressLayout);
+        billingAddressPanel.addThemeVariants(DetailsVariant.SMALL);
 
         Span cardBrand = new Span("Mastercard");
         Span cardNumber = new Span("1234 5678 9012 3456");
@@ -47,7 +47,7 @@ public class AccordionSmallPanels extends Div {
         paymentLayout.setSpacing(false);
         paymentLayout.setPadding(false);
         paymentLayout.add(cardBrand, cardNumber, expiryDate);
-        
+
         // tag::snippet[]
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
         paymentPanel.addThemeVariants(DetailsVariant.SMALL);
