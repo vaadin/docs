@@ -4,6 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/form-layout';
+import '@vaadin/form-layout/vaadin-form-item.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
