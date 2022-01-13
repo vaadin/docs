@@ -1,17 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/item';
 import '@vaadin/list-box';
 import '@vaadin/select';
-import { Select } from '@vaadin/select';
+import { SelectItem } from '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-
-const formatPersonFullName = (person: Person) => `${person.firstName} ${person.lastName}`;
 
 @customElement('select-complex-value-label')
 export class Example extends LitElement {
@@ -23,44 +19,21 @@ export class Example extends LitElement {
   }
 
   @state()
-  private people: Person[] = [];
-
-  @query('vaadin-select')
-  private select?: Select;
+  private items: SelectItem[] = [];
 
   async firstUpdated() {
-    this.people = (await getPeople({ count: 5 })).people;
-    // Need to manually re-run the bound renderer whenever the item set changes dynamically
-    // to have the new items available for keyboard selection (with the overlay closed)
-    this.select?.requestContentUpdate();
+    const people = (await getPeople({ count: 5 })).people;
+    // tag::snippet[]
+    this.items = people.map((person) => {
+      return {
+        label: `${person.firstName} ${person.lastName}`,
+        value: person.id,
+      };
+    });
+    // end::snippet[]
   }
 
   render() {
-    return html`
-      <vaadin-select
-        label="Assignee"
-        .renderer="${guard(
-          [],
-          () => (root: HTMLElement) =>
-            render(
-              html`
-                <vaadin-list-box>
-                  ${this.people.map(
-                    (person) => html`
-                      <!-- tag::snippet[] -->
-                      <vaadin-item value="${person.id}">
-                        <!-- Use full name of the person as text content of the item -->
-                        ${formatPersonFullName(person)}
-                      </vaadin-item>
-                      <!-- end::snippet[] -->
-                    `
-                  )}
-                </vaadin-list-box>
-              `,
-              root
-            )
-        )}"
-      ></vaadin-select>
-    `;
+    return html`<vaadin-select label="Assignee" .items="${this.items}"></vaadin-select>`;
   }
 }

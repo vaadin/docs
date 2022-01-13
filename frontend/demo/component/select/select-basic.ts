@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/item';
 import '@vaadin/list-box';
 import '@vaadin/select';
@@ -17,28 +16,37 @@ export class Example extends LitElement {
     return root;
   }
 
+  @state()
+  private items = [
+    {
+      label: 'Most recent first',
+      value: 'recent',
+    },
+    {
+      label: 'Rating: high to low',
+      value: 'rating-desc',
+    },
+    {
+      label: 'Rating: low to high',
+      value: 'rating-asc',
+    },
+    {
+      label: 'Price: high to low',
+      value: 'price-desc',
+    },
+    {
+      label: 'Price: low to high',
+      value: 'price-asc',
+    },
+  ];
+
   render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-select
-        value="recent"
         label="Sort by"
-        .renderer="${guard(
-          [],
-          () => (root: HTMLElement) =>
-            render(
-              html`
-                <vaadin-list-box>
-                  <vaadin-item value="recent">Most recent first</vaadin-item>
-                  <vaadin-item value="rating-desc">Rating: high to low</vaadin-item>
-                  <vaadin-item value="rating-asc">Rating: low to high</vaadin-item>
-                  <vaadin-item value="price-desc">Price: high to low</vaadin-item>
-                  <vaadin-item value="price-asc">Price: low to high</vaadin-item>
-                </vaadin-list-box>
-              `,
-              root
-            )
-        )}"
+        .items="${this.items}"
+        .value="${this.items[0].value}"
       ></vaadin-select>
       <!-- end::snippet[] -->
     `;
