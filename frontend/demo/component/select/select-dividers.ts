@@ -35,7 +35,7 @@ export class Example extends LitElement {
       value: 'rating-asc',
     },
     {
-      compoent: 'hr',
+      component: 'hr',
     },
     {
       label: 'Price: high to low',
