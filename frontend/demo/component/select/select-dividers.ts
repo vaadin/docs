@@ -24,7 +24,7 @@ export class Example extends LitElement {
       value: 'recent',
     },
     {
-      compoent: 'hr',
+      component: 'hr',
     },
     {
       label: 'Rating: high to low',
