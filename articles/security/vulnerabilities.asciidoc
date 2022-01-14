@@ -5,7 +5,16 @@ layout: page
 ---
 = Common Vulnerabilities
 
-include::{articles}/flow/security/vulnerabilities.asciidoc[tag=sql-injections]
+== SQL Injections
+
+Since Vaadin is a backend-agnostic UI framework, it doesn't directly deal with backend access; instead, choosing a backend framework (for example, Spring Data) is left to the developer.
+Vaadin does not provide mitigation for SQL injections, this is left to the backend provider and developer.
+
+However, following the data validation and escaping guidelines (see the XSS section), as well as standard secure database access practices, SQL injections can be completely blocked in Vaadin applications.
+
+Most providers have their own ways of dealing with injections out of the box and we recommend developers follow those guides. If the developer uses pure JDBC however, they will have to deal with injection risks themselves.
+Here is an example for pure JDBC demonstrating an SQL injection mitigation using the value from a `TextField` in a Prepared Statement:
+
 [source,typescript]
 ----
 class ValueChangedView extends LitElement {
@@ -45,6 +54,38 @@ public class NameEndpoint {
     }
 }
 ----
-include::{articles}/flow/security/vulnerabilities.asciidoc[tag=csrf]
 
-include::{articles}/flow/security/vulnerabilities.asciidoc[tag=java-serialization]
+== Cross-Site Request Forgery (CSRF / XSRF)
+
+All requests between the client and the server are included with a user session specific CSRF token.
+All communication between the server and the client is handled by Vaadin, so you do not need to remember to include and verify the CSRF tokens manually.
+
+The CSRF token is passed inside the JSON message in the request body:
+
+[source]
+----
+Sending xhr message to server:
+{"csrfToken":"0bd61cf8-0231-455b-b39a-434f054352c5","rpc":[{"type":"mSync","node":5,"feature":1,"property":"invalid","value":false},{"type":"publishedEventHandler","node":9,"templateEventMethodName":"confirmUpdate","templateEventMethodArgs":[0]}],"syncId":0,"clientId":0}
+----
+
+Vaadin services requests, the CSRF token is passed in the `X-CSRF-Token` HTTP header:
+
+[source]
+----
+X-CSRF-Token: 0bd61cf8-0231-455b-b39a-434f054352c5
+----
+
+The CSRF token mechanism can be overridden on the server to enable for example, repeatable load test scripts using Gatling or similar tools.
+This is strongly discouraged when running in production.
+
+== Java Serialization Vulnerability
+
+A general security issue has been identified in programming language mechanics where the language allows execution of code that comes from serialized objects.
+The Java language is not immune to this; at least the Java Serialization framework, RMI, JMX and JMS features are vulnerable to this.
+
+If the application is set up to de-serialize Java objects (for example, using the libraries above) and an attacker can feed the system a malicious payload that gets de-serialized into Java objects.
+Then, the attacker can execute arbitrary code using specific language features (such as reflection).
+
+Vaadin has published a security alert for this vulnerability, <<https://v.vaadin.com/security-alert-for-java-deserialization-of-untrusted-data-in-vaadin-severity-level-moderate, please click here for the report>>.
+
+The vulnerability can not be fixed in Vaadin, but instead developers must mitigate the risk using methods described in the alert appendices.
