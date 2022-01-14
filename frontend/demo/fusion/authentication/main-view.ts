@@ -2,7 +2,9 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { isAuthorizedViewRoute, routes } from './routes';
-import { router } from 'Frontend/demo/flow/application/routing';
+import { Router } from '@vaadin/router';
+
+export const router = new Router(document.querySelector('#outlet'));
 
 @customElement('main-view')
 export class MainView extends LitElement {
