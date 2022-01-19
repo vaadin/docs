@@ -8,16 +8,35 @@ export default class Example extends LitElement {
   private haasImportScript() {
     const script = document.createElement('script');
     script.onload = () => (window as any).haas.loader.initMenu();
-    script.src =
-      window.location.hostname == 'preview.vaadin.com'
-        ? 'https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js'
-        : 'https://vaadin.com/vaadincom/haas-service/v2/haas-loader.js';
+    script.defer = true;
+    // script.src =
+    //   window.location.hostname != 'vaadin.com'
+    //     ? 'https://vaadin.com/vaadincom/haas-service/v2/haas-loader.js';
+    //     : 'https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js'
+    // TODO change back before merging to production branches
+    script.src = 'https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js';
     return script;
   }
 
   render() {
     return html`
-      <div class="vcom-header" id="haas-container"></div>
+      <link
+        rel="preload"
+        as="style"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600;700&display=swap"
+      />
+      <link
+        rel="preload"
+        as="style"
+        href="https://cdn.vaadin.com/website/antlers/v2/assets/icons/css/line-awesome.min.css"
+      />
+      <link
+        rel="preload"
+        as="style"
+        href="https://cdn.vaadin.com/staging/website/hubspot-theme/v2/haas/css/haas.css"
+      />
+
+      <div id="haas-container"></div>
       ${this.haasImportScript()}
     `;
   }
