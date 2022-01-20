@@ -35,10 +35,10 @@ public class AccordionDisabledPanels extends Div {
         billingAddressLayout.setSpacing(false);
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
-        
+
         // tag::snippet[]
-        AccordionPanel billingAdressPanel = accordion.add("Billing address", billingAddressLayout);
-        billingAdressPanel.setEnabled(false);
+        AccordionPanel billingAddressPanel = accordion.add("Billing address", billingAddressLayout);
+        billingAddressPanel.setEnabled(false);
         // end::snippet[]
 
         Span cardBrand = new Span("Mastercard");
@@ -49,7 +49,7 @@ public class AccordionDisabledPanels extends Div {
         paymentLayout.setSpacing(false);
         paymentLayout.setPadding(false);
         paymentLayout.add(cardBrand, cardNumber, expiryDate);
-        
+
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
         paymentPanel.setEnabled(false);
 
