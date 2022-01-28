@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { html, LitElement, render } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 import '@vaadin/item';
 import '@vaadin/list-box';
 import '@vaadin/select';
@@ -16,40 +17,30 @@ export class Example extends LitElement {
     return root;
   }
 
-  @state()
-  // tag::snippet[]
-  private items = [
-    {
-      label: 'XS (out of stock)',
-      value: 'xs',
-      disabled: true,
-    },
-    {
-      label: 'S',
-      value: 's',
-    },
-    {
-      label: 'M',
-      value: 'm',
-    },
-    {
-      label: 'L',
-      value: 'l',
-    },
-    {
-      label: 'XL',
-      value: 'xl',
-    },
-  ];
-  // end::snippet[]
-
   render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-select
         label="Size"
-        .items="${this.items}"
-        .value="${this.items[4].value}"
+        value="xl"
+        .renderer="${guard(
+          [],
+          () => (root: HTMLElement) =>
+            render(
+              html`
+                <vaadin-list-box>
+                  <vaadin-item value="xs" disabled>XS (out of stock)</vaadin-item>
+                  <vaadin-item value="s">S</vaadin-item>
+                  <vaadin-item value="m">M</vaadin-item>
+                  <vaadin-item value="l">L</vaadin-item>
+                  <vaadin-item value="xl">XL</vaadin-item>
+                </vaadin-list-box>
+              `,
+              root
+            )
+        )}"
       ></vaadin-select>
+      <!-- end::snippet[] -->
     `;
   }
 }
