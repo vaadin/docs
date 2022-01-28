@@ -9,7 +9,7 @@ import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
 import { ContactEndpoint } from 'Frontend/generated/endpoints';
 
-import { Binder } from '@vaadin/form';
+import { Binder } from '@hilla/form';
 
 import { readAsDataURL } from 'promise-file-reader';
 

@@ -1,4 +1,4 @@
-import { EndpointError } from '@vaadin/fusion-frontend';
+import { EndpointError } from '@hilla/frontend';
 
 import { DataEndpoint } from 'Frontend/generated/endpoints';
 
