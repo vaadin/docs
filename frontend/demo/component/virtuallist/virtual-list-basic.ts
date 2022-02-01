@@ -2,16 +2,17 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-virtual-list';
-import '@vaadin/vaadin-avatar';
-import '@vaadin/vaadin-details';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import { live } from 'lit/directives/live.js';
+import '@vaadin/avatar';
+import '@vaadin/details';
+import { Details } from '@vaadin/details';
+import '@vaadin/horizontal-layout';
+import '@vaadin/vertical-layout';
+import '@vaadin/virtual-list';
+import type { VirtualListRenderer } from '@vaadin/virtual-list';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { VirtualListRenderer } from '@vaadin/vaadin-virtual-list';
-import { DetailsElement } from '@vaadin/vaadin-details';
 
 @customElement('virtual-list-basic')
 export class Example extends LitElement {
@@ -34,7 +35,6 @@ export class Example extends LitElement {
   @state()
   private people?: Person[];
 
-  @state()
   private expandedPeople: Set<Person> = new Set();
 
   async firstUpdated() {
@@ -42,7 +42,8 @@ export class Example extends LitElement {
     this.people = people;
   }
 
-  private personCardRenderer: VirtualListRenderer<Person> = (root, _, { item: person }) => {
+  private personCardRenderer: VirtualListRenderer<Person> = (root, _, model) => {
+    const person = model.item;
     render(
       html`<vaadin-horizontal-layout theme="spacing margin">
         <vaadin-avatar
@@ -56,9 +57,9 @@ export class Example extends LitElement {
           <span>${person.profession}</span>
 
           <vaadin-details
-            .opened="${this.expandedPeople.has(person)}"
+            .opened="${live(this.expandedPeople.has(person))}"
             @click="${(e: Event) => {
-              const details = e.currentTarget as DetailsElement;
+              const details = e.currentTarget as Details;
               if (details.opened) {
                 this.expandedPeople.add(person);
               } else {

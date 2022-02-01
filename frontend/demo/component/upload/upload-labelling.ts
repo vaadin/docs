@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
-import { showErrorNotification } from 'Frontend/demo/notification-helper';
-import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadElement, UploadFileRejectEvent } from '@vaadin/vaadin-upload/vaadin-upload';
+import { Notification } from '@vaadin/notification';
+import '@vaadin/upload';
+import type { Upload, UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-labelling')
@@ -17,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: UploadElement;
+  private upload?: Upload;
 
   // tag::snippet[]
   firstUpdated() {
@@ -42,6 +42,6 @@ export class Example extends LitElement {
   // end::snippet[]
 
   fileRejectHandler(event: UploadFileRejectEvent) {
-    showErrorNotification(event.detail.error);
+    Notification.show(event.detail.error);
   }
 }

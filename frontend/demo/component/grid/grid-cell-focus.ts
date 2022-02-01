@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-text-field/vaadin-text-area';
-import type { GridCellFocusEvent, GridElement } from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/grid';
+import type { Grid, GridCellFocusEvent } from '@vaadin/grid';
+import '@vaadin/text-area';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -27,9 +27,11 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private grid!: GridElement<Person>;
+  private grid!: Grid<Person>;
+
   @state()
   private items: Person[] = [];
+
   @state()
   private eventSummary?: string;
 

@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
+import '@vaadin/icon';
+import '@vaadin/icons';
+import '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-icon-only')
@@ -49,8 +49,8 @@ export class Example extends LitElement {
   }
 
   createItem(iconName: string, ariaLabel: string) {
-    const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('vaadin-icon');
+    const item = document.createElement('vaadin-context-menu-item');
+    const icon = document.createElement('vaadin-icon');
     item.setAttribute('aria-label', ariaLabel);
     icon.setAttribute('icon', `vaadin:${iconName}`);
     item.appendChild(icon);

@@ -2,14 +2,11 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import type {
-  GridDataProviderCallback,
-  GridDataProviderParams,
-} from '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-grid/vaadin-grid-tree-column';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/button';
+import '@vaadin/grid';
+import type { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/grid';
+import '@vaadin/grid/vaadin-grid-tree-column.js';
+import '@vaadin/horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

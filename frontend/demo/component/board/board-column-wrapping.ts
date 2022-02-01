@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import '@vaadin/vaadin-board/vaadin-board';
-import '@vaadin/vaadin-split-layout/vaadin-split-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import '@vaadin/board';
+import '@vaadin/split-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('board-column-wrapping')

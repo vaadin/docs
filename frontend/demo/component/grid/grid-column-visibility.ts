@@ -2,17 +2,14 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/button';
+import '@vaadin/context-menu';
+import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
+import '@vaadin/grid';
+import '@vaadin/horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import type {
-  ContextMenuItem,
-  ContextMenuItemSelectedEvent,
-} from '@vaadin/vaadin-context-menu/vaadin-context-menu';
 
 @customElement('grid-column-visibility')
 export class Example extends LitElement {

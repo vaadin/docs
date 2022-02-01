@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-tabs/vaadin-tabs';
+import '@vaadin/tabs';
 import '@vaadin/vaadin-lumo-styles/badge';
 
 @customElement('tabs-badges')

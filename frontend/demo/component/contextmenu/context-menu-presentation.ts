@@ -1,15 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-avatar/vaadin-avatar';
-import '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import type { ContextMenuItem } from '@vaadin/vaadin-context-menu/vaadin-context-menu';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import type { GridElement, GridEventContext, GridItemModel } from '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/avatar';
+import '@vaadin/context-menu';
+import type { ContextMenuItem } from '@vaadin/context-menu';
+import '@vaadin/grid';
+import type { Grid, GridItemModel } from '@vaadin/grid';
+import '@vaadin/icon';
+import '@vaadin/icons';
+import '@vaadin/horizontal-layout';
+import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -107,8 +107,8 @@ export class Example extends LitElement {
   }
 
   createItem(iconName: string, text: string) {
-    const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('vaadin-icon');
+    const item = document.createElement('vaadin-context-menu-item');
+    const icon = document.createElement('vaadin-icon');
 
     icon.style.color = 'var(--lumo-secondary-text-color)';
     icon.style.marginInlineEnd = 'var(--lumo-space-s)';
@@ -116,14 +116,14 @@ export class Example extends LitElement {
 
     icon.setAttribute('icon', iconName);
     item.appendChild(icon);
-    text && item.appendChild(window.document.createTextNode(text));
+    text && item.appendChild(document.createTextNode(text));
     return item;
   }
 
   onContextMenu(e: MouseEvent) {
     // Prevent opening context menu on header row.
-    const target = e.currentTarget as GridElement;
-    if ((target.getEventContext(e) as GridEventContext<Person>).section !== 'body') {
+    const target = e.currentTarget as Grid<Person>;
+    if (target.getEventContext(e).section !== 'body') {
       e.stopPropagation();
     }
   }

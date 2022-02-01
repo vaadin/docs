@@ -2,8 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadI18n } from '@vaadin/vaadin-upload/vaadin-upload';
+import '@vaadin/upload';
+import type { UploadI18n } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-internationalization')
@@ -26,7 +26,6 @@ export class Example extends LitElement {
         one: 'Valitse tiedosto...',
         many: 'Valitse tiedostot...',
       },
-      cancel: 'Peruuta',
       error: {
         tooManyFiles: 'Liian monta tiedostoa.',
         fileIsTooBig: 'Tiedosto on liian suuri.',

@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-ordered-layout/vaadin-scroller';
+import '@vaadin/scroller';
 import * as img from '../../../../src/main/resources/images/reindeer.jpg';
 import { applyTheme } from 'Frontend/generated/theme';
 

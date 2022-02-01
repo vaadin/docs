@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
-import { showErrorNotification } from 'Frontend/demo/notification-helper';
-import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadElement, UploadFileRejectEvent } from '@vaadin/vaadin-upload/vaadin-upload';
+import { Notification } from '@vaadin/notification';
+import '@vaadin/upload';
+import type { Upload, UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-format')
@@ -29,7 +29,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: UploadElement;
+  private upload?: Upload;
 
   firstUpdated() {
     if (this.upload?.i18n) {
@@ -49,8 +49,9 @@ export class Example extends LitElement {
       <vaadin-upload
         accept="application/pdf,.pdf"
         max-files="1"
-        @file-reject="${(event: UploadFileRejectEvent) =>
-          showErrorNotification(event.detail.error)}"
+        @file-reject="${(event: UploadFileRejectEvent) => {
+          Notification.show(event.detail.error);
+        }}"
       ></vaadin-upload>
       <!-- end::snippet[] -->
     `;

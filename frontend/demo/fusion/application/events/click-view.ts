@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-button/vaadin-button';
+import '@vaadin/button';
+import { Notification } from '@vaadin/notification';
 
 // tag::snippet[]
 @customElement('click-view')
@@ -11,7 +12,7 @@ export class ClickView extends LitElement {
   }
 
   private sayHello() {
-    alert('Hello');
+    Notification.show('Hello');
   }
 }
 // end::snippet[]

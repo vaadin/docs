@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-menu-bar/vaadin-menu-bar';
+import '@vaadin/icon';
+import '@vaadin/icons';
+import '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-icons')

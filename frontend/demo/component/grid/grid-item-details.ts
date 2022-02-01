@@ -2,18 +2,14 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import type {
-  GridActiveItemChangedEvent,
-  GridElement,
-  GridItemModel,
-} from '@vaadin/vaadin-grid/vaadin-grid';
+import { guard } from 'lit/directives/guard.js';
+import '@vaadin/grid';
+import type { Grid, GridActiveItemChangedEvent, GridItemModel } from '@vaadin/grid';
+import '@vaadin/form-layout';
+import '@vaadin/text-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { guard } from 'lit/directives/guard.js';
 
 // tag::snippet[]
 @customElement('grid-item-details')
@@ -44,12 +40,12 @@ export class Example extends LitElement {
       <vaadin-grid
         theme="row-stripes"
         .items="${this.items}"
-        .detailsOpenedItems="${this.detailsOpenedItem as any}"
+        .detailsOpenedItems="${this.detailsOpenedItem}"
         @active-item-changed="${(e: GridActiveItemChangedEvent<Person>) =>
           (this.detailsOpenedItem = [e.detail.value])}"
         .rowDetailsRenderer="${guard(
           [],
-          () => (root: HTMLElement, _: GridElement, model: GridItemModel<Person>) => {
+          () => (root: HTMLElement, _: Grid, model: GridItemModel<Person>) => {
             const person = model.item;
 
             render(

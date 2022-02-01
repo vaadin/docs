@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-avatar/vaadin-avatar';
+import '@vaadin/avatar';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('avatar-abbreviation')

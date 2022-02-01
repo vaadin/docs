@@ -1,4 +1,4 @@
-import { ConnectClient, InvalidSessionMiddleware } from '@vaadin/flow-frontend';
+import { ConnectClient, InvalidSessionMiddleware } from '@vaadin/fusion-frontend';
 import { setSessionExpired } from '../auth';
 const client = new ConnectClient({
   prefix: 'connect',

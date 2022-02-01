@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
+import '@vaadin/checkbox';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
@@ -16,7 +16,7 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html`<vaadin-checkbox>Enabled</vaadin-checkbox>`;
+    return html`<vaadin-checkbox label="Enabled"></vaadin-checkbox>`;
   }
 }
 // end::snippet[]

@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-custom-field/vaadin-custom-field';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/custom-field';
+import type { CustomFieldValueChangedEvent } from '@vaadin/custom-field';
+import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { CustomFieldValueChangedEvent } from '@vaadin/vaadin-custom-field/vaadin-custom-field';
 
 @customElement('custom-field-native-input')
 export class Example extends LitElement {

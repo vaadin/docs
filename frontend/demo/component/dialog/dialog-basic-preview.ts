@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { css, html, LitElement } from 'lit';
-import '@vaadin/vaadin-notification/vaadin-notification';
-import '@vaadin/vaadin-button/vaadin-button';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/button';
+import '@vaadin/horizontal-layout';
+import '@vaadin/notification';
+import '@vaadin/text-field';
+import '@vaadin/vertical-layout';
 
 export class Example extends LitElement {
   static get styles() {

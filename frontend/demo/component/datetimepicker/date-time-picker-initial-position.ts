@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-date-time-picker/vaadin-date-time-picker';
+import '@vaadin/date-time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 import startOfMonth from 'date-fns/startOfMonth';
 import addMonths from 'date-fns/addMonths';

@@ -3,14 +3,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { guard } from 'lit/directives/guard.js';
-import '@vaadin/vaadin-grid/vaadin-grid';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import type {
-  GridColumnElement,
-  GridElement,
-  GridItemModel,
-} from '@vaadin/vaadin-grid/vaadin-grid';
+import '@vaadin/grid';
+import type { Grid, GridColumn, GridItemModel } from '@vaadin/grid';
+import '@vaadin/form-layout';
+import '@vaadin/text-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -44,10 +40,10 @@ export class Example extends LitElement {
       <vaadin-grid
         theme="row-stripes"
         .items="${this.items}"
-        .detailsOpenedItems="${this.detailsOpenedItems as any}"
+        .detailsOpenedItems="${this.detailsOpenedItems}"
         .rowDetailsRenderer="${guard(
           [],
-          () => (root: HTMLElement, _: GridElement, model: GridItemModel<Person>) => {
+          () => (root: HTMLElement, _: Grid, model: GridItemModel<Person>) => {
             const person = model.item;
 
             render(
@@ -96,7 +92,7 @@ export class Example extends LitElement {
         <vaadin-grid-column
           .renderer="${guard(
             [],
-            () => (root: HTMLElement, _: GridColumnElement, model: GridItemModel<Person>) => {
+            () => (root: HTMLElement, _: GridColumn, model: GridItemModel<Person>) => {
               const person = model.item;
               render(
                 html`<vaadin-button

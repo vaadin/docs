@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
+import '@vaadin/checkbox';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -31,13 +31,15 @@ export class Example extends LitElement {
         ${this.items.map((person) => {
           return html`
             <vaadin-checkbox .value="${String(person.id)}">
-              <div style="display: flex;">
-                <img style="height: 2em" src="${person.pictureUrl}" alt="User avatar" />
-                <div>
-                  ${person.firstName} ${person.lastName}
-                  <div>${person.profession}</div>
+              <label slot="label">
+                <div style="display: flex;">
+                  <img style="height: 2em" src="${person.pictureUrl}" alt="User avatar" />
+                  <div>
+                    ${person.firstName} ${person.lastName}
+                    <div>${person.profession}</div>
+                  </div>
                 </div>
-              </div>
+              </label>
             </vaadin-checkbox>
           `;
         })}

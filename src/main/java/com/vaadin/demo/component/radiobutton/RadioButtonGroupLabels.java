@@ -21,12 +21,12 @@ public class RadioButtonGroupLabels extends VerticalLayout {
     jobTitleGroup.setValue("Analyst");
     add(jobTitleGroup);
 
-    RadioButtonGroup<String> deparmentGroup = new RadioButtonGroup<>();
-    deparmentGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-    deparmentGroup.setLabel("Department");
-    deparmentGroup.setItems("Engineering", "Human Resources", "Marketing");
-    deparmentGroup.setValue("Engineering");
-    add(deparmentGroup);
+    RadioButtonGroup<String> departmentGroup = new RadioButtonGroup<>();
+    departmentGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+    departmentGroup.setLabel("Department");
+    departmentGroup.setItems("Engineering", "Human Resources", "Marketing");
+    departmentGroup.setValue("Engineering");
+    add(departmentGroup);
     // end::snippet[]
   }
 

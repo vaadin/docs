@@ -2,12 +2,11 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
-import '@vaadin/vaadin-text-field/vaadin-text-area';
-
+import '@vaadin/rich-text-editor';
+import { RichTextEditor } from '@vaadin/rich-text-editor';
+import '@vaadin/text-area';
+import { TextArea } from '@vaadin/text-area';
 import { applyTheme } from 'Frontend/generated/theme';
-import { RichTextEditorElement } from '@vaadin/vaadin-rich-text-editor/vaadin-rich-text-editor';
-import { TextArea } from '@vaadin/vaadin-text-field/vaadin-text-area';
 
 @customElement('rich-text-editor-set-get-value')
 export class Example extends LitElement {
@@ -22,7 +21,7 @@ export class Example extends LitElement {
   private htmlValue = '';
 
   @query('vaadin-rich-text-editor')
-  private richTextEditor!: RichTextEditorElement;
+  private richTextEditor!: RichTextEditor;
 
   render() {
     return html`

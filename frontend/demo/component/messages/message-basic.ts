@@ -2,11 +2,11 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-messages/vaadin-message-list';
-import '@vaadin/vaadin-messages/vaadin-message-input';
+import '@vaadin/message-input';
+import '@vaadin/message-list';
+import { MessageListItem } from '@vaadin/message-list';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { MessageListItem } from '@vaadin/vaadin-messages';
 
 @customElement('message-basic')
 export class Example extends LitElement {

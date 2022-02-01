@@ -2,14 +2,14 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-accordion/vaadin-accordion';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-text-field/vaadin-email-field';
-import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import '@vaadin/vaadin-button/vaadin-button';
-import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout';
+import '@vaadin/accordion';
+import '@vaadin/button';
+import '@vaadin/combo-box';
+import '@vaadin/email-field';
+import '@vaadin/form-layout';
+import '@vaadin/text-field';
+import '@vaadin/vertical-layout';
+import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import { Binder, field } from '@vaadin/form';

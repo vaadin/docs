@@ -31,7 +31,7 @@ public class DialogClosing extends Div {
                 .set("font-size", "1.5em").set("font-weight", "bold");
 
         Paragraph paragraph = new Paragraph(
-                "System maintenance will begin at 3 PM. It is schedule to conclude at 5PM. We apologise for any inconvenience.");
+                "System maintenance will begin at 3 PM. It is schedule to conclude at 5PM. We apologize for any inconvenience.");
 
         // tag::snippet[]
         Button closeButton = new Button("Close");

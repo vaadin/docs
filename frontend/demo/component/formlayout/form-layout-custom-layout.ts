@@ -2,13 +2,12 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-text-field/vaadin-email-field';
-import '@vaadin/vaadin-split-layout/vaadin-split-layout';
+import '@vaadin/email-field';
+import '@vaadin/form-layout';
+import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import '@vaadin/split-layout';
+import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
-import { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
 
 @customElement('form-layout-custom-layout')
 export class Example extends LitElement {

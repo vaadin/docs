@@ -3,8 +3,8 @@ import './upload-demo-helpers'; // hidden-source-line
 import { createFakeFilesUploadAllFiles } from './upload-demo-mock-files'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
-import '@vaadin/vaadin-upload/vaadin-upload';
-import type { UploadElement } from '@vaadin/vaadin-upload/vaadin-upload';
+import '@vaadin/upload';
+import type { Upload } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-all-files')
@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('vaadin-upload')
-  private upload?: UploadElement;
+  private upload?: Upload;
 
   // end::snippet[]
   firstUpdated() {

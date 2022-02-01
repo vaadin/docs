@@ -2,8 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-progress-bar/vaadin-progress-bar';
-import '@vaadin/vaadin-custom-field/vaadin-custom-field';
+import '@vaadin/progress-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('progress-bar-determinate')

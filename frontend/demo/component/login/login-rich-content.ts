@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-login/vaadin-login-form';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/horizontal-layout';
+import '@vaadin/login/vaadin-login-form.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-rich-content')

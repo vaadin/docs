@@ -1,37 +1,41 @@
 import { html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 
-import '@vaadin/vaadin-combo-box';
-import '@vaadin/vaadin-checkbox';
-import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
-import { CheckboxElement } from '@vaadin/vaadin-checkbox';
+import '@vaadin/checkbox';
+import '@vaadin/combo-box';
+import type { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
 
 @customElement('greeting-view')
 export class GreetingView extends LitElement {
-  @query('#greeting')
-  greeting!: ComboBoxElement;
+  @state()
+  private greetings = ['Hi', 'Hello', 'Dear'];
 
-  @query('#custom')
-  custom!: CheckboxElement;
+  @state()
+  private allowCustomGreeting = false;
+
+  @state()
+  private greeting = 'Hi';
 
   render() {
     return html`
       <vaadin-combo-box
-        id="greeting"
         label="Greeting"
-        items='["Hi", "Hello", "Dear"]'
-        value="Hi"
+        .items="${this.greetings}"
+        .allowCustomValue="${this.allowCustomGreeting}"
+        .value="${this.greeting}"
+        @value-changed="${(e: ComboBoxValueChangedEvent) => (this.greeting = e.detail.value)}"
       ></vaadin-combo-box>
-      <vaadin-checkbox id="custom" @checked-changed="${this.checkboxChanged}"
-        >Type Custom greeting</vaadin-checkbox
-      >
+      <vaadin-checkbox
+        @change="${this.checkboxChange}"
+        label="Type Custom greeting"
+      ></vaadin-checkbox>
     `;
   }
 
-  checkboxChanged() {
-    this.greeting.allowCustomValue = this.custom.checked;
-    if (!this.greeting.allowCustomValue) {
-      this.greeting.value = this.greeting.items![0] as string;
+  checkboxChange(event: Event) {
+    this.allowCustomGreeting = (event.target as HTMLInputElement).checked;
+    if (!this.allowCustomGreeting) {
+      this.greeting = this.greetings[0];
     }
   }
 }

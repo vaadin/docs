@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-combo-box/vaadin-combo-box';
+import '@vaadin/combo-box';
+import { ComboBoxRenderer } from '@vaadin/combo-box';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { ComboBoxRenderer } from '@vaadin/vaadin-combo-box/vaadin-combo-box';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 

@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 /* prettier-ignore */ import {createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB} from './upload-demo-mock-files'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
-import '@vaadin/vaadin-upload/vaadin-upload';
-import { UploadElement } from '@vaadin/vaadin-upload';
-import '@vaadin/vaadin-form-layout/vaadin-form-layout';
-import type { FormLayoutResponsiveStep } from '@vaadin/vaadin-form-layout/vaadin-form-layout';
+import '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import '@vaadin/upload';
+import { Upload } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
@@ -23,10 +23,10 @@ export class Example extends LitElement {
   }
 
   @query('#upload-caution')
-  private uploadCaution!: UploadElement;
+  private uploadCaution!: Upload;
 
   @query('#upload-recommended')
-  private uploadRecommended!: UploadElement;
+  private uploadRecommended!: Upload;
 
   // tag::snippet[]
   firstUpdated() {

@@ -1,8 +1,8 @@
 import { createFakeUploadFiles, mockErrorXhrGenerator } from './upload-demo-helpers';
-import { UploadElement } from '@vaadin/vaadin-upload';
+import { Upload } from '@vaadin/upload';
 
-declare module '@vaadin/vaadin-upload' {
-  class UploadElement {
+declare module '@vaadin/upload' {
+  class Upload {
     createFakeFilesUploadBasic(): void;
     createFakeFilesUploadAutoUploadDisabled(): void;
     createFakeFilesUploadAllFiles(): void;
@@ -65,14 +65,13 @@ export function createFakeFilesUploadErrorMessagesB() {
 }
 
 // Expose functions for Java examples
-UploadElement.prototype.createFakeFilesUploadBasic = createFakeFilesUploadBasic;
-UploadElement.prototype.createFakeFilesUploadAutoUploadDisabled =
-  createFakeFilesUploadAutoUploadDisabled;
-UploadElement.prototype.createFakeFilesUploadAllFiles = createFakeFilesUploadAllFiles;
-UploadElement.prototype.createFakeFilesUploadErrorMessagesA = createFakeFilesUploadErrorMessagesA;
-UploadElement.prototype.createFakeFilesUploadErrorMessagesB = createFakeFilesUploadErrorMessagesB;
+Upload.prototype.createFakeFilesUploadBasic = createFakeFilesUploadBasic;
+Upload.prototype.createFakeFilesUploadAutoUploadDisabled = createFakeFilesUploadAutoUploadDisabled;
+Upload.prototype.createFakeFilesUploadAllFiles = createFakeFilesUploadAllFiles;
+Upload.prototype.createFakeFilesUploadErrorMessagesA = createFakeFilesUploadErrorMessagesA;
+Upload.prototype.createFakeFilesUploadErrorMessagesB = createFakeFilesUploadErrorMessagesB;
 
-UploadElement.prototype.setupMockErrorResponse = function setupMockErrorResponse() {
+Upload.prototype.setupMockErrorResponse = function setupMockErrorResponse() {
   // Monkey-patch vaadin-upload instance to use XHRs that always return a mock error response
   (this as any)._createXhr = mockErrorXhrGenerator;
 };

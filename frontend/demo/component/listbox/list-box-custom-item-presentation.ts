@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-avatar/vaadin-avatar';
-import '@vaadin/vaadin-item/vaadin-item';
-import '@vaadin/vaadin-list-box';
+import '@vaadin/avatar';
+import '@vaadin/item';
+import '@vaadin/list-box';
+import '@vaadin/horizontal-layout';
 import '@vaadin/vaadin-lumo-styles/typography';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
-import '@vaadin/vaadin-ordered-layout/vaadin-vertical-layout';
+import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from '../../domain/DataService';
 import Person from '../../../generated/com/vaadin/demo/domain/Person';

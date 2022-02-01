@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
-import '@vaadin/vaadin-select/vaadin-select';
-import '@vaadin/vaadin-list-box/vaadin-list-box';
-import '@vaadin/vaadin-item/vaadin-item';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/item';
+import '@vaadin/list-box';
+import '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-placeholder')
@@ -17,29 +16,34 @@ export class Example extends LitElement {
     return root;
   }
 
+  @state()
+  private items = [
+    {
+      label: 'XS',
+      value: 'xs',
+    },
+    {
+      label: 'S',
+      value: 's',
+    },
+    {
+      label: 'M',
+      value: 'm',
+    },
+    {
+      label: 'L',
+      value: 'l',
+    },
+    {
+      label: 'XL',
+      value: 'xl',
+    },
+  ];
+
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-select
-        label="Size"
-        placeholder="Select size"
-        .renderer="${guard(
-          [],
-          () => (root: HTMLElement) =>
-            render(
-              html`
-                <vaadin-list-box>
-                  <vaadin-item value="xs">XS</vaadin-item>
-                  <vaadin-item value="s">S</vaadin-item>
-                  <vaadin-item value="m">M</vaadin-item>
-                  <vaadin-item value="l">L</vaadin-item>
-                  <vaadin-item value="xl">XL</vaadin-item>
-                </vaadin-list-box>
-              `,
-              root
-            )
-        )}"
-      ></vaadin-select>
+      <vaadin-select label="Size" placeholder="Select size" .items="${this.items}"></vaadin-select>
       <!-- end::snippet[] -->
     `;
   }

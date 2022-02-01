@@ -2,10 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/vaadin-icon/vaadin-icon';
-import '@vaadin/vaadin-icons/vaadin-iconset';
-import '@vaadin/vaadin-text-field/vaadin-text-field';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/horizontal-layout';
+import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-min-max-input-length')
@@ -33,8 +31,7 @@ export class Example extends LitElement {
           helper-text="Max 16 characters"
           minlength="1"
           maxlength="16"
-        >
-        </vaadin-text-field>
+        ></vaadin-text-field>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;

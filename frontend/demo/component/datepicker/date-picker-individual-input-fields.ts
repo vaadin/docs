@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/vaadin-combo-box/vaadin-combo-box';
-import '@vaadin/vaadin-ordered-layout/vaadin-horizontal-layout';
+import '@vaadin/combo-box';
+import { ComboBoxSelectedItemChangedEvent } from '@vaadin/combo-box';
+import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import { ComboBoxSelectedItemChangedEvent } from '@vaadin/vaadin-combo-box';
 import getDaysInMonth from 'date-fns/getDaysInMonth';
 
 @customElement('date-picker-individual-input-fields')
