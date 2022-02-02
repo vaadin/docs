@@ -1,39 +1,31 @@
 // @ts-ignore
 import { withPrefix } from 'gatsby';
 
-// Stores the last time UI polls the server
-let timestamp: number;
-let interval: ReturnType<typeof setInterval>;
-let sessionTimeout: number;
+function testHeartbeat() {
+  fetch(withPrefix('/vaadin/?v-r=heartbeat&v-uiId=0'), { method: 'POST' }).then((data) => {
+    const reloadTimestamp = localStorage.getItem('reloadTimestamp');
+    // Make sure session is still opened, otherwise reload the page
+    if (!data.ok && (!reloadTimestamp || Date.now() - parseInt(reloadTimestamp) > 5 * 60 * 1000)) {
+      // Save the previous reload timestamp to avoid reloading in less than 5 minutes
+      localStorage.setItem('reloadTimestamp', Date.now().toString());
+      location.reload();
+    }
+  });
+}
 
-const compareTimestamps = () => {
-  // Event could be emitted with a delay up to 2 seconds after the poll
-  // Check if the timestamp is not updated after two intervals
-  if (Date.now() - timestamp > 2 * sessionTimeout) {
-    // Make sure we are not reloading the page before the server becomes available
-    fetch(withPrefix('/vaadin/index')).then((serverData) => {
+const initialListener = ((e: CustomEvent<string>) => {
+  window.removeEventListener('included-example-loaded', initialListener);
+  // Make sure flow example is upgraded and requested content from server
+  customElements.whenDefined(e.detail).then(() => {
+    // Make sure server is up and running
+    fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
       if (serverData.ok) {
-        // If the server is up and running and the session is expired, reload the page
-        location.reload();
+        window.addEventListener('included-example-loaded', () => testHeartbeat());
+        testHeartbeat();
       }
     });
-  }
-};
-
-const updateTimestamps = ((e: CustomEvent) => {
-  // Check if session is expired
-  compareTimestamps();
-  timestamp = Date.now();
-  // Avoid setting multiple intervals
-  if (interval) {
-    clearInterval(interval);
-  }
-
-  sessionTimeout = e.detail;
-  // Make sure interval starts at the time of UI polling the server
-  interval = setInterval(compareTimestamps, e.detail);
+  });
 }) as EventListener;
 
-// Examples are not available when session expires
-// Event is emitted when UI polls the server. It keeps session alive
-window.addEventListener('update-timestamp', updateTimestamps);
+// Examples are not available when session is expired. Logic prevents that by reloading the page.
+window.addEventListener('included-example-loaded', initialListener);
