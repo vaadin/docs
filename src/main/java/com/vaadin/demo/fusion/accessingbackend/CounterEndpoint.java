@@ -1,6 +1,6 @@
 package com.vaadin.demo.fusion.accessingbackend;
 
-import com.vaadin.fusion.Endpoint;
+import dev.hilla.Endpoint;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 // tag::snippet[]
