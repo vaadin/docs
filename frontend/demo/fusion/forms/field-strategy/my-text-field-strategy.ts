@@ -1,5 +1,5 @@
 // tag::snippet[]
-import type { FieldStrategy } from '@vaadin/form';
+import type { FieldStrategy } from '@hilla/form';
 import type { MyTextField } from './my-text-field';
 
 export class MyTextFieldStrategy implements FieldStrategy {
