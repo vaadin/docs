@@ -34,6 +34,9 @@ public class CollaborationListExample extends VerticalLayout {
 
                     // Get an item value using its key
                     String bar = list.getItem(key, String.class);
+
+                    // Remove an item using its key
+                    list.remove(key);
                     // end::key[]
                     // end::result[]
                     return null;
