@@ -46,7 +46,7 @@ Project related scripts (tests, validation builds, preview deployment, etc).
 
 ### `.github`
 
-Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](https://vaadin.com/docs/latest/contributing-docs/editing-tools/#vale).
+Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](https://vaadin.com/docs/latest/contributing-docs/authoring/editing-tools/#vale).
 
 ### `versions.json`
 
