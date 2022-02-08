@@ -3,6 +3,7 @@ import '@vaadin/polymer-legacy-adapter/style-modules.js';
 
 import './init-flow-namespace';
 import './init-flow-components';
+import '../generated/vaadin-featureflags';
 // @ts-ignore
 import Appointment from 'Frontend/generated/com/vaadin/demo/domain/Appointment';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
