@@ -1,7 +1,7 @@
 package com.vaadin.demo.pwa.offline;
 
-import com.vaadin.fusion.Endpoint;
-import com.vaadin.fusion.exception.EndpointException;
+import dev.hilla.Endpoint;
+import dev.hilla.exception.EndpointException;
 
 @Endpoint
 public class DataEndpoint {

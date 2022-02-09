@@ -27,7 +27,7 @@ export class Example extends LitElement {
     this.items = people.map((person) => {
       return {
         label: `${person.firstName} ${person.lastName}`,
-        value: person.id,
+        value: `${person.id}`,
       };
     });
     // end::snippet[]
