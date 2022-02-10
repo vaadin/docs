@@ -1,5 +1,5 @@
-import { Binder } from '@vaadin/form';
-import type { AbstractModel, FieldStrategy, ModelConstructor } from '@vaadin/form';
+import { Binder } from '@hilla/form';
+import type { AbstractModel, FieldStrategy, ModelConstructor } from '@hilla/form';
 import { MyTextFieldStrategy } from './my-text-field-strategy';
 
 export class MyBinder<T, M extends AbstractModel<T>> extends Binder<T, M> {

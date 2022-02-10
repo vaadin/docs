@@ -1,7 +1,7 @@
 package com.vaadin.demo;
 
 import com.vaadin.demo.domain.*;
-import com.vaadin.fusion.Endpoint;
+import dev.hilla.Endpoint;
 
 @Endpoint
 public class DummyEndpoint {

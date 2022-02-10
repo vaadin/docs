@@ -1,4 +1,4 @@
-import { EndpointValidationError } from '@vaadin/fusion-frontend';
+import { EndpointValidationError } from '@hilla/frontend';
 
 import { DateEndpoint } from 'Frontend/generated/endpoints';
 
