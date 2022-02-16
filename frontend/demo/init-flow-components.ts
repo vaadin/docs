@@ -18,6 +18,7 @@ import '@vaadin/flow-frontend/datepickerConnector.js';
 import '@vaadin/flow-frontend/gridConnector.js';
 import '@vaadin/flow-frontend/vaadin-grid-flow-selection-column.js';
 import '@vaadin/flow-frontend/gridProConnector.js';
+import '@vaadin/flow-frontend/vaadin-map/mapConnector.js';
 import '@vaadin/flow-frontend/menubarConnector.js';
 import '@vaadin/flow-frontend/messageListConnector.js';
 import '@vaadin/flow-frontend/selectConnector.js';
