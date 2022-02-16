@@ -19,19 +19,8 @@ In reactive UI programming, the application UI is the value of a function.
 The function gets the component's state as a parameter and returns HTML.
 Whenever the state changes, the UI is re-rendered.
 
-The following example is given in both imperative (Flow/Java) and reactive (Hilla/TypeScript):
-
 [.example.show-code]
 --
-
-In imperative UI programming, like with Vaadin Flow, there are two states: the data model and the UI.
-It is your responsibility as a developer to keep them in sync.
-You need to keep references to elements so you can update their values when the underlying state (the `Contact`) changes.
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/fusion/application/basic/ImperativeView.java[render, tags=snippet, indent=0, group=Java]
-----
 
 In reactive programming, there is only one state: the data.
 The UI always reflects that state.
@@ -72,13 +61,11 @@ The TypeScript entry point of the application.
 This is where you set up routing and other application tasks.
 To navigate between views, you need to define routes (see <<../routing/defining#,Defining Routes>> for more details).
 
-See <<starting#, Starting the Application>> on how to run a Hilla application initially stateless and then start a session from TypeScript code.
-
 Most of an application consists of _views_, as described next.
 
 == Adding a View
 
-Views in Hilla are custom HTML elements that extend [classname]#LitElement#, which handles rendering the component state reactively.
+Views in Hilla are custom HTML elements that extend [classname]#LitElement#, [classname]#View#, or [classname]#Layout#, which handle rendering the component state reactively.
 You minimally need to implement a [methodname]#render()# function that returns the rendered HTML representation of the component.
 You can also provide custom styling by implementing a [methodname]#styles()# function that returns custom CSS.
 See <<lit#, LitElement Basics>> for a more thorough introduction to using LitElement.
@@ -99,72 +86,25 @@ include::{root}/frontend/demo/fusion/application/basic/my-view.ts[render, tags=s
 
 In order to see the new client-side view in the browser, you need to define a new client-side _route_ for it.
 A route is a path in the URL.
-That requires the following changes in the `index.html` and `index.ts` files:
+This requires the following changes in the `routes.ts` file:
 
-[.example.show-code]
---
-
-.`frontend/index.ts`
+.`frontend/routes.ts`
 [source,typescript]
 ----
-import { Flow } from '@vaadin/flow-frontend';
 import { Router } from '@vaadin/router';
+import './my-view'; // <1>
 
-import './my-view';
-
-const {serverSideRoutes} = new Flow({
-  // @ts-ignore
-  imports: () => import('../target/frontend/generated-flow-imports')
-});
-
-const routes = [
-    {path: '', component: 'my-view'},
-    ...serverSideRoutes
+export const routes = [
+    // other views
+    { path: 'my-view-path', component: 'my-view' }, // <2>
 ];
-
-export const router = new Router(document.querySelector('#outlet'));
-router.setRoutes(routes);
 ----
+<1> Import the view.
+<2> Define the route mapping.
 
-.`frontend/index.html`
-[source,html]
-----
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>TypeScript Support in Hilla</title>
-  <!-- index.ts is included here automatically (either by the dev server or during the build) -->
-</head>
-<body>
-  <script src="VAADIN/build/webcomponentsjs/webcomponents-loader.js"></script>
-  <div id="outlet"></div>
-</body>
-</html>
-----
-
-
---
-
-Now `my-view` is accessible by the root path, that is, `http://localhost:8080/`.
+Now `my-view` is accessible at the `my-view-path` path, that is, `http://localhost:8080/my-view-path`.
 All the other routes are handled by the server-side router.
 See <<../routing/defining#, Defining Routes>> for more information.
-
-[role="since:com.vaadin:vaadin@15"]
-== Prerequisites
-
-Hilla applications have some prerequisites.
-
-To write the bootstrapping code for an application or create views in TypeScript, make sure that:
-
- - <<starting#, Client-side bootstrapping>> is enabled.
-
- - The `index.html` page template and the `index.ts` entry point exist in the `frontend/` folder.
-
-If you are starting with a starter application, they should already have been taken care of.
-
-After that, any `.ts` file imported from `index.ts` (statically or dynamically) is going to be built as a part of the application.
 
 
 == Accessing Backend Data
