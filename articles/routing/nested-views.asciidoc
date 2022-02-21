@@ -30,7 +30,7 @@ In a nested view configuration, you have a route to the main view, and child rou
 Usually the route to the main view is the root route.
 You can configure the child views either with explicit full paths, such as `/main-view/users`, or hierarchically with child routes as below.
 
-The following configuration in `index.ts` sets up a main view with two child views:
+The following configuration in `routes.ts` sets up a main view with two child views:
 
 [source,typescript]
 ----
@@ -38,56 +38,19 @@ const routes = [
 {
 	path: '',
 	component: 'main-view',
-	action: async () => { await import ('./views/main/main-view'); },
 	children: [
 		{
-			path: 'hello',
+			path: '',
 			component: 'hello-world-view',
-			action: async () => { await import ('./views/helloworld/hello-world-view'); }
 		},
 		{
 			path: 'about',
 			component: 'about-view',
 			action: async () => { await import ('./views/about/about-view'); }
-		},
- 		// for server-side, the next magic line sends all unmatched routes:
-		...serverSideRoutes // IMPORTANT: this must be the last entry in the array
+		}
 	]
 },
 ];
-
-export const router = new Router(document.querySelector('#outlet'));
-router.setRoutes(routes);
-----
-
-The client-side Hilla Router instance provides helpful APIs for generating links.
-This is helpful for the menu links covered later in this article.
-
-In your `index.ts`, make sure to `export` the router instance to enable importing it in client-side views and layouts:
-
-.index.ts
-[source,typescript]
-----
-...
-export const router = new Router(outlet);
-...
-----
-
-== Import Theme Global Styles
-
-In Hilla, themes have some global styles that need to be applied to the page.
-With a server-side main layout in Java, these are automatically applied for convenience.
-With a client-side main layout in TypeScript, they need to be imported manually to get consistent styling between server-side and client-side views.
-
-Make sure to have an import of theme styles in your `main-layout.ts`:
-
-.main-layout.ts
-[source,typescript]
-----
-...
-// Import global styles of the theme
-import '@vaadin/vaadin-lumo-styles/all-imports';
-...
 ----
 
 == Establish an Application Layout
@@ -100,26 +63,14 @@ You can use the https://vaadin.com/docs/ds/components/app-layout[App Layout] com
 ----
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-
-// Import global styles of the theme
-import '@vaadin/vaadin-lumo-styles/all-imports';
-
+import { Layout } from './view';
 import '@vaadin/app-layout';
 
 @customElement('main-layout')
-export class MainLayoutElement extends LitElement {
-  static get styles() {
-    return css`
-      :host {
-        display: block;
-        height: 100%;
-      }
-    `;
-  }
-
+export class MainLayout extends Layout {
   render() {
     return html`
-      <vaadin-app-layout id="layout">
+      <vaadin-app-layout>
         <slot></slot>
       </vaadin-app-layout>
     `;
@@ -133,30 +84,25 @@ Hilla Router adds views as children in the main layout.
 
 == Create Navigation Menu
 
-The main layout usually contains a navigation bar with the menu. Here we create the navigation bar with the menu using `<vaadin-tabs>`:
+The main layout usually contains a navigation bar with the menu. Here we create the navigation bar with the menu using plain anchor tags:
 
 .main-layout.ts
 [source,typescript]
 ----
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-
-// Import global styles of the theme
-import '@vaadin/vaadin-lumo-styles/all-imports';
-
+import { Layout } from './view';
 import '@vaadin/app-layout';
-import '@vaadin/tabs';
 
 @customElement('main-layout')
-export class MainLayoutElement extends LitElement {
+export class MainLayout extends Layout {
   render() {
     return html`
       <vaadin-app-layout id="layout">
-        <vaadin-tabs slot="navbar" id="tabs">
-          <vaadin-tab>
-            <a href="/dashboard">Dashboard</a>
-          </vaadin-tab>
-        </vaadin-tabs>
+        <div slot="drawer">
+          <a href="/">Hello world</a>
+          <a href="/about">About</a>
+        </div>
         <slot></slot>
       </vaadin-app-layout>
     `;
@@ -164,192 +110,36 @@ export class MainLayoutElement extends LitElement {
 }
 ----
 
-== Highlighting the Active Menu Link
+== Create Header
 
-Hilla client-side router does not provide link highlighting itself, instead this is done with template bindings and helper methods.
-
-=== When Not Using the Tabs Component
-
-When not using `<vaadin-tabs>`, you can style active links by binding the `active` attribute. In this example, we start by define the `location` property, then add a helper method `isCurrentLocation` for determining active links, and use it in the template binding in `render()`:
+The Vaadin App Layout supports a header by adding content to the `navbar` slot. 
 
 .main-layout.ts
-[source,typescript]
-----
-...
-import { router } from './index';
-
-@customElement('main-layout')
-export class MainLayoutElement extends LitElement {
-  // updated automatically from Hilla Router
-  @property({type: Object}) location = router.location;
-
-  static get styles() {
-    return css`
-      [active] {
-        color: var(--lumo-body-text-color);
-      }
-    `;
-  }
-
-  render() {
-    return html`
-      <a href="${router.urlForPath('dashboard')}"
-          ?active="${this.isCurrentLocation('dashboard')}">
-        Dashboard
-      </a>
-      <slot></slot>
-    `;
-  }
-
-  private isCurrentLocation(route: string): boolean {
-    return router.urlForPath(route) === this.location.getUrl();
-  }
-}
-----
-
-=== Using the Tabs Component
-
-When using `<vaadin-tabs>`, we need to bind the `selected` property to the index of selected tab.
-
-First, we create a list of the tabs of the menu:
-
-.main-layout.ts
-[source,typescript]
-----
-...
-import { router } from './index';
-
-interface MenuTab {
-  route: string;
-  name: string;
-}
-
-const menuTabs: MenuTab[] = [
-  {route: 'dashboard', name: 'Dashboard'},
-  {route: 'masterdetail', name: 'MasterDetail'},
-];
-----
-
-Now, let us extract the links from the template into a TypeScript array, and generate the menu from the array.
-
-[source,typescript]
-----
-@customElement('main-layout')
-export class MainLayoutElement extends LitElement {
-  @property({type: Object}) location = router.location;
-
-  render() {
-    return html`
-      <vaadin-app-layout id="layout">
-        <vaadin-tabs slot="navbar" id="tabs" .selected="${this.getIndexOfSelectedTab()}">
-          ${menuTabs.map(menuTab => html`
-            <vaadin-tab>
-              <a href="${router.urlForPath(menuTab.route)}" tabindex="-1">${menuTab.name}</a>
-            </vaadin-tab>
-          `)}
-        </vaadin-tabs>
-        <slot></slot>
-      </vaadin-app-layout>
-    `;
-  }
-----
-
-We need to know if a given route is the current route:
-
-----
-  private isCurrentLocation(route: string): boolean {
-    return router.urlForPath(route) === this.location.getUrl();
-  }
-----
-
-Then we can calculate the index in the array in another helper:
-
-----
-  private getIndexOfSelectedTab(): number {
-    const index = menuTabs.findIndex(
-      menuTab => this.isCurrentLocation(menuTab.route)
-    );
-
-    // Select first tab if there is no tab for home in the menu
-    if (index === -1 && this.isCurrentLocation('')) {
-      return 0;
-    }
-
-    return index;
-  }
-}
-----
-
-== Final View
-
-The complete main view is as follows:
-
-.main-layout.ts
-[source,typescript]
+[source, typescript]
 ----
 import { css, html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-import { router } from './index';
-
-// Import global styles of the theme
-import '@vaadin/vaadin-lumo-styles/all-imports';
-
+import { customElement } from 'lit/decorators.js';
+import { Layout } from './view';
 import '@vaadin/app-layout';
-import '@vaadin/tabs';
-
-interface MenuTab {
-  route: string;
-  name: string;
-}
-
-const menuTabs: MenuTab[] = [
-  {route: 'dashboard', name: 'Dashboard'},
-  {route: 'masterdetail', name: 'MasterDetail'},
-];
 
 @customElement('main-layout')
-export class MainLayoutElement extends LitElement {
-  @property({type: Object}) location = router.location;
-
-  static get styles() {
-    return css`
-      :host {
-        display: block;
-        height: 100%;
-      }
-    `;
-  }
-
+export class MainLayout extends Layout {
   render() {
     return html`
       <vaadin-app-layout id="layout">
-        <vaadin-tabs slot="navbar" id="tabs" .selected="${this.getIndexOfSelectedTab()}">
-          ${menuTabs.map(menuTab => html`
-            <vaadin-tab>
-              <a href="${menuTab.route}" tabindex="-1">${menuTab.name}</a>
-            </vaadin-tab>
-          `)}
-        </vaadin-tabs>
+        <header slot="navbar">
+          <vaadin-drawer-toggle aria-label="Menu toggle">
+          </vaadin-drawer-toggle><!--1-->
+          <h1>App Title</h1>
+        </header>
+        <div slot="drawer">
+          <a href="/">Hello world</a>
+          <a href="/about">About</a>
+        </div>
         <slot></slot>
       </vaadin-app-layout>
     `;
   }
-
-  private isCurrentLocation(route: string): boolean {
-    return router.urlForPath(route) === this.location.getUrl();
-  }
-
-  private getIndexOfSelectedTab(): number {
-    const index = menuTabs.findIndex(
-      menuTab => this.isCurrentLocation(menuTab.route)
-    );
-
-    // Select first tab if there is no tab for home in the menu
-    if (index === -1 && this.isCurrentLocation('')) {
-      return 0;
-    }
-
-    return index;
-  }
 }
 ----
+<1> Adding the `<vaadin-drawer-toggle>` element will show a toggle for hiding and showing the navigation drawer.

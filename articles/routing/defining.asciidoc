@@ -6,100 +6,67 @@ layout: page
 
 = Defining Routes
 
-TypeScript routes, typically for views or sub-views, are defined in a `Router` instance in the `index.ts` script.
-If you also have server-side views defined in Java, you need to configure the router to fall back to those.
+Routes for views or sub-views, are defined in the `routes.ts` file.
 
-A typical router configuration that supports both TypeScript and Java routes goes as follows:
+.routes.ts
+[source,typescript]
+----
+import { Route } from '@vaadin/router';
+import './views/helloworld/hello-world-view'; // <1>
+import './views/main-layout';
+
+
+export const views: Route[] = [
+  {
+    path: '',
+    component: 'hello-world-view', // <2>
+    title: '',
+  },
+  {
+    path: 'hello',
+    component: 'hello-world-view',
+    title: 'Hello World',
+  },
+  {
+    path: 'about',
+    component: 'about-view',
+    title: 'About',
+    action: async () => await import('./views/about/about-view'), // <3>
+  },
+];
+
+export const routes: Route[] = [
+  {
+    path: '',
+    component: 'main-layout',
+    children: [...views], // <4>
+  },
+];
+
+----
+<1> Import views in `routes.ts` to include them in the main bundle. 
+You should only include those views that are needed on startup to keep the JavaScript bundle size as small as possible.
+<2> Map view tag names to paths in the route definition object.
+<3> Use dynamic imports to import other views. 
+This way, the views and their dependencies will only get downloaded if the user navigates to the view. 
+<4> Optional: define a main layout for things like header, footer, and navigation. 
+Include the views as children.
+
+== Initializing the Router
+
+The router is initialized in `index.ts` using the routes defined in `routes.ts`. 
+The router in
 
 .index.ts
 [source,typescript]
 ----
 import { Router } from '@vaadin/router';
-import { Flow } from '@vaadin/flow-frontend';
+import { routes } from './routes';
 
-// Get the server-side routes from imports generated in the server
-const {serverSideRoutes} = new Flow({
-  imports: () => import('../target/frontend/generated-flow-imports')
-});
+export const router = new Router(document.querySelector('#outlet')); // <1>
 
-export const router = new Router(document.querySelector('#outlet'));
-router.setRoutes([
-  // A single route here
-  {
-    path: 'users',            // The route
-  	component: 'users-view',  // The component handling the route
-    // Import the view component when needed
-  	action: async () => { await import ('./views/users/users-view'); },
-  },
-  // For server-side, the next magic line sends all unmatched routes:
-  ...serverSideRoutes // IMPORTANT: this must be the last entry in the array
-]);
+router.setRoutes(routes); // <2>
 ----
+<1> Create a new `Router` instance that outputs its content into the element with the `outlet` id in `index.html`.
+<2> Register the routes defined in `routes.ts` with the Router. 
 
-Client-side routes are explicitly listed in the configuration, and server-side routes are added there through the `serverSideRoutes` variable.
-
-In the example above, we have a single client-side route `users`, which maps to a `users-view` component.
-It would be defined in a file `views/users/users-view.ts` under the `frontend` folder where the `index.ts` is located.
-
-In the following sections, we break up the client-side and server-side routing.
-
-== Pure Client Side Routing
-
-In a pure TypeScript application with no server-side Java routes, you can configure routing as follows:
-
-.index.ts
-[source,typescript]
-----
-import { Router } from '@vaadin/router';
-
-export const router = new Router(document.querySelector('#outlet'));
-router.setRoutes([
-  // A single route here
-  {
-    path: 'users',            // The route
-  	component: 'users-view',  // The component handling the route
-    // Import the view component when needed
-  	action: async () => { await import ('./views/users/users-view'); },
-  }
-]);
-----
-
-
-=== Using the Client
-
-First, you have to import the module, and then you have to create the `Flow` instance.
-
-At this point, it is needed to specify the location to the Flow generated file with the imports for Java views, typically `/target/frontend/generated-flow-imports.js` in a Hilla Maven project.
-
-Notice that the `import()` function should be used to lazy load Flow dependencies the first time the user navigates to a server-side view.
-
-[source,typescript]
-----
-import { Flow } from '@vaadin/flow-frontend';
-const flow = new Flow({
-  imports: () => import('../target/frontend/generated-flow-imports')
-});
-----
-
-Finally, make Hilla Router pass all unmatched paths to Flow server by adding `...serverSideRoutes` at the end of the router configuration block:
-
-[source,typescript]
-----
-import { Router } from '@vaadin/router';
-import { Flow } from '@vaadin/flow-frontend';
-
-const {serverSideRoutes} = new Flow({
-  imports: () => import('../target/frontend/generated-flow-imports')
-});
-
-export const router = new Router(document.querySelector('#outlet'));
-router.setRoutes([
-  {
-    path: 'categories',
-    component: 'app-categories',
-    action: async () => { await import('./views/app-categories-view'); }
-  },
-  // for server-side, the next magic line sends all unmatched routes:
-  ...serverSideRoutes // IMPORTANT: this must be the last entry in the array
-]);
-----
