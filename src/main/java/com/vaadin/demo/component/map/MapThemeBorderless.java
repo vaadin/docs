@@ -4,6 +4,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.flow.routing.Route;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.map.Map;
+import com.vaadin.flow.component.map.MapVariant;
 
 @Route("map-theme-borderless")
 public class MapThemeBorderless extends Div {
@@ -12,7 +13,7 @@ public class MapThemeBorderless extends Div {
         Map map = new Map();
         add(map);
         // tag::snippet[]
-        map.setThemeName("borderless");
+        map.addThemeVariants(MapVariant.BORDERLESS);
         // end::snippet[]
     }
 
