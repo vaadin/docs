@@ -204,7 +204,7 @@ export default class UpgradeTool extends LitElement {
   private hideOldInstructions() {
     document
       .querySelectorAll(
-        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
+        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='styling'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
       )
       .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
   }
@@ -302,6 +302,7 @@ export default class UpgradeTool extends LitElement {
 
     this.isSpring = val.includes('spring') || this.isFusion;
     this.isTypeScript = val.includes('typescript') || this.isFusion;
+    this.isCustomStyling = val.includes('styling');
   }
 
   connectedCallback() {
