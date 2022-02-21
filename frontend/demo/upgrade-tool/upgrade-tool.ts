@@ -54,6 +54,7 @@ export default class UpgradeTool extends LitElement {
   private isFusion = false;
   private isSpring = true;
   private isTypeScript = true;
+  private isCustomStyling = false;
 
   render() {
     return html`
@@ -107,6 +108,12 @@ export default class UpgradeTool extends LitElement {
               id="typescript-checkbox"
               ?disabled=${this.isFusion || (!this.isFusion && !this.isFlow)}
             ></vaadin-checkbox>
+            <vaadin-checkbox
+              value="styling"
+              label="Changes to custom styling of components"
+              id="styling-checkbox"
+              }
+            ></vaadin-checkbox>
           </vaadin-checkbox-group>
         </div>
         <vaadin-button
@@ -146,6 +153,10 @@ export default class UpgradeTool extends LitElement {
 
     if (this.isTypeScript) {
       this.showElementsWithClassname('ts');
+    }
+
+    if (this.isCustomStyling) {
+      this.showElementsWithClassname('styling');
     }
 
     if (this.isFlow) {
