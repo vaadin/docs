@@ -61,17 +61,19 @@ public class MapLayers extends Div {
     private Layer selectedOverlayLayer;
 
     public MapLayers() {
-        // Create a new map, this will use the OpenStreetMap service by default
         Map map = new Map();
         map.setWidthFull();
         map.setHeight("300px");
         add(map);
 
-        // tag::snippet[]
-        // Configure radio buttons for changing background layer
         RadioButtonGroup<LayerOption> backgroundLayerGroup = new RadioButtonGroup<>();
+        backgroundLayerGroup.setLabel("Background Layer");
+        backgroundLayerGroup.setItemLabelGenerator(LayerOption::getName);
+        backgroundLayerGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         backgroundLayerGroup.setItems(OPEN_STREET_MAP_LAYER, OPEN_CYCLE_MAP_LAYER, TRANSPORT_MAP_LAYER);
         backgroundLayerGroup.setValue(OPEN_STREET_MAP_LAYER);
+        // tag::snippet1[]
+        // Replace background layer when option changes
         backgroundLayerGroup.addValueChangeListener(e -> {
             LayerOption selectedOption = e.getValue();
             XYZSource source = new XYZSource(new XYZSource.Options()
@@ -82,7 +84,9 @@ public class MapLayers extends Div {
             layer.setSource(source);
             map.setBackgroundLayer(layer);
         });
+        // end::snippet1[]
 
+        // tag::snippet2[]
         // Add all overlay layers at once, make them invisible initially
         List.of(PRECIPITATION_LAYER, AIR_TEMPERATURE_LAYER, WIND_SPEED_LAYER).forEach(option -> {
             XYZSource source = new XYZSource(new XYZSource.Options()
@@ -96,11 +100,16 @@ public class MapLayers extends Div {
             map.addLayer(layer);
             overlayLayerMap.put(option, layer);
         });
+        // end::snippet2[]
 
-        // Configure radio buttons for toggling visibility of overlays
         RadioButtonGroup<LayerOption> overlayLayerGroup = new RadioButtonGroup<>();
+        overlayLayerGroup.setLabel("Overlay Layer");
+        overlayLayerGroup.setItemLabelGenerator(LayerOption::getName);
+        overlayLayerGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         overlayLayerGroup.setItems(NONE_LAYER, PRECIPITATION_LAYER, AIR_TEMPERATURE_LAYER, WIND_SPEED_LAYER);
         overlayLayerGroup.setValue(NONE_LAYER);
+        // tag::snippet3[]
+        // Toggle visibility of overlay layer when option changes
         overlayLayerGroup.addValueChangeListener(e -> {
             LayerOption selectedOption = e.getValue();
             // Make previously selected layer invisible
@@ -114,15 +123,7 @@ public class MapLayers extends Div {
                 selectedOverlayLayer.setVisible(true);
             }
         });
-        // end::snippet[]
-
-        backgroundLayerGroup.setLabel("Background Layer");
-        backgroundLayerGroup.setItemLabelGenerator(LayerOption::getName);
-        backgroundLayerGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-
-        overlayLayerGroup.setLabel("Overlay Layer");
-        overlayLayerGroup.setItemLabelGenerator(LayerOption::getName);
-        overlayLayerGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        // end::snippet3[]
 
         add(new HorizontalLayout(backgroundLayerGroup, overlayLayerGroup));
     }
