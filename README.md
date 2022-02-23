@@ -34,7 +34,7 @@ See the [contribution guides](https://vaadin.com/docs/latest/contributing-docs/o
 
 ### `frontend`
 
-Fusion/TypeScript examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples.
+TypeScript examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples.
 
 ### `src`
 
