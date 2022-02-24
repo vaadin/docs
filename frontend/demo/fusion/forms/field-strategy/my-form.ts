@@ -1,6 +1,6 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { field } from '@vaadin/form';
+import { field } from '@hilla/form';
 import './my-text-field';
 import { MyBinder } from './my-binder';
 import SamplePersonModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/fieldstrategy/SamplePersonModel';

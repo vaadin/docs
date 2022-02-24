@@ -2,7 +2,7 @@ package com.vaadin.demo.fusion.errorhandling;
 
 import java.time.LocalDate;
 
-import com.vaadin.fusion.Endpoint;
+import dev.hilla.Endpoint;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 @Endpoint

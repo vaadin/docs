@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.fusion.Endpoint;
+import dev.hilla.Endpoint;
 
 /**
  * A Vaadin endpoint that shows principles of work with entities.
