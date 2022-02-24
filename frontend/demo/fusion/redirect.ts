@@ -11,8 +11,10 @@ export default class FusionRedirect extends HTMLElement {
       path = path.replace('forms', 'data-binding');
     }
 
-    const link = document.querySelector('.hilla-docs-link');
-    link.href += path;
+    const link = document.querySelector('.hilla-docs-link') as HTMLAnchorElement;
+    if (link) {
+      link.href += path;
+    }
   }
 }
 
