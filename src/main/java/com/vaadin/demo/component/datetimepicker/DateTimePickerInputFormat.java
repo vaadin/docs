@@ -14,8 +14,8 @@ public class DateTimePickerInputFormat extends Div {
         DateTimePicker dateTimePicker = new DateTimePicker();
         dateTimePicker.setLabel("Select date and time");
         dateTimePicker.setHelperText("Format: DD/MM/YYYY and HH:MM");
-        dateTimePicker.setDatePlaceholder("DD/MM/YYYY");
-        dateTimePicker.setTimePlaceholder("HH:MM");
+        dateTimePicker.setDatePlaceholder("Date");
+        dateTimePicker.setTimePlaceholder("Time");
         add(dateTimePicker);
         // end::snippet[]
     }
