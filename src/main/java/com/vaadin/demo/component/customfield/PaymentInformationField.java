@@ -27,6 +27,9 @@ public class PaymentInformationField extends CustomField<PaymentInformation> {
     // Adds small amount of space between the components
     layout.getThemeList().add("spacing-s");
 
+    // Increases padding of field's label
+    getElement().getThemeList().add("whitespace");
+    
     add(layout);
   }
 
