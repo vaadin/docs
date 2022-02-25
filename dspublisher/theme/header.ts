@@ -9,12 +9,10 @@ export default class Example extends LitElement {
     const script = document.createElement('script');
     script.onload = () => (window as any).haas.loader.initMenu();
     script.defer = true;
-    // script.src =
-    //   window.location.hostname != 'vaadin.com'
-    //     ? 'https://vaadin.com/vaadincom/haas-service/v2/haas-loader.js';
-    //     : 'https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js'
-    // TODO change back before merging to production branches
-    script.src = 'https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js';
+    script.src =
+      window.location.hostname != 'vaadin.com'
+        ? 'https://vaadin.com/vaadincom/haas-service/v2/haas-loader.js'
+        : 'https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js';
     return script;
   }
 
