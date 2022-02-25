@@ -27,7 +27,75 @@ There are various ways to modify it:
 
 == Customizing the Application Shell Template
 
-By default, during the first request, Vaadin parses the [filename]#frontend/index.html# template file and delivers it with a few modifications as described in https://vaadin.com/docs/v22/fusion/application/starting/#default-bootstrap-template-and-entry-point[Default Bootstrap Template and Entry Point].
+The Vaadin servlet uses the [filename]#frontend/index.html# file as a template to generate the bootstrap page response.
+The servlet processes the template and injects the following information:
+
+  - `<base href='./relative/to/root'>`: Vaadin calculates the relative path from the current request path to the root path of the application.
+  That is required for relative links in view templates to work correctly.
+
+  - Bundled script: Vaadin automatically adds the bundled and optimized script generated from the [filename]#frontend/index.ts# file.
+  It uses a pre-configured https://webpack.js.org/[webpack^] instance that is included together with `vaadin-maven-plugin` as a module bundler.
+  Therefore, the [filename]#frontend/index.html# template does not need to include the [filename]#index.ts# (or [filename]#index.js#) script explicitly.
+
+.You can change the [filename]#frontend# diretory path
+[TIP]
+The frontend directory path can be changed by providing the property `vaadin.frontend.frontend.folder` when running the Maven goals `prepare-frontend`  or `build-frontend` from `vaadin-maven-plugin`.
+
+=== Default Bootstrap Template and Entry Point [[default-bootstrap-template-and-entry-point]]
+
+If the [filename]#index.html# or [filename]#index.ts# files in the frontend folder are missing, `vaadin-maven-plugin` generates a default corresponding file in the [filename]#target# folder.
+In that case the application uses server-side routing only.
+You can take control of these files by moving them into the [filename]#frontend# folder.
+By default these files look similar to the following:
+
+.Default `index.html`
+[source,html]
+----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body, #outlet {
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+    }
+  </style>
+  <!-- index.ts is included here automatically (either by the dev server or during the build) -->
+</head>
+<body>
+  <!-- vaadin-router in index.ts needs an outlet for displaying the views -->
+  <div id="outlet"></div>
+</body>
+</html>
+----
+
+.Default `index.ts` [[default-index-ts]]
+[source,typescript]
+----
+// import Vaadin client-router to handle client-side and server-side navigation
+import { Router } from '@vaadin/router';
+
+// import Flow module to enable navigation to Vaadin server-side views
+import { Flow } from '@vaadin/flow-frontend';
+
+const {serverSideRoutes} = new Flow({
+  imports: () => import('../target/frontend/generated-flow-imports')
+});
+
+const routes = [
+  // for client-side, place routes below (more info https://hilla.dev/docs/routing)
+
+  // for server-side, the next magic line sends all unmatched routes:
+  ...serverSideRoutes // IMPORTANT: this must be the last entry in the array
+];
+
+// Vaadin router needs an outlet in the index.html page to display views
+export const router = new Router(document.querySelector('#outlet'));
+router.setRoutes(routes);
+----
 
 This is the best place to customize the application shell, for example to put an analytics tag in the page.
 
