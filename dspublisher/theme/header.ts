@@ -31,7 +31,7 @@ export default class Example extends LitElement {
       <link
         rel="preload"
         as="style"
-        href="https://cdn.vaadin.com/staging/website/hubspot-theme/v2/haas/css/haas.css"
+        href="https://cdn.vaadin.com/website/hubspot-theme/v2/haas/css/haas.css"
       />
 
       <div id="haas-container"></div>
