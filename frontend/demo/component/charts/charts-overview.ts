@@ -43,6 +43,7 @@ export class Example extends LitElement {
       <div class="wrapper">
         <div class="panel">
             <vaadin-chart
+              style="height: 300px;"
               id="vaadin-chart-1"
               type="column"
               categories='["Jan", "Feb", "Mar"]'
@@ -74,6 +75,7 @@ export class Example extends LitElement {
         
         <div class="panel dark">
           <vaadin-chart
+            style="height: 300px;"
             type="area"
             stacking="normal"
             categories='["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]'
@@ -110,6 +112,7 @@ export class Example extends LitElement {
         
         <div class="panel dark">
             <vaadin-chart
+              style="height: 300px;"
               type="pie"
               tooltip
               additional-options='{
@@ -153,6 +156,7 @@ export class Example extends LitElement {
         
         <div class="panel">
           <vaadin-chart
+            style="height: 300px;"
             polar
             additional-options='{
               "xAxis": {
