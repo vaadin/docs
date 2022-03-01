@@ -24,8 +24,6 @@ public class MapEvents extends VerticalLayout {
 
     public MapEvents() {
         Map map = new Map();
-        map.setWidthFull();
-        map.setHeight("300px");
         map.getView().setCenter(new Coordinate(-441077.2276714613, 5166904.667008546));
         add(map);
 

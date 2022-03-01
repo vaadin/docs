@@ -24,8 +24,6 @@ public class MapSources extends VerticalLayout {
 
     public MapSources() {
         map = new Map();
-        map.setWidthFull();
-        map.setHeight("300px");
         add(map);
 
         RadioButtonGroup<String> sourceRadioGroup = new RadioButtonGroup<>();

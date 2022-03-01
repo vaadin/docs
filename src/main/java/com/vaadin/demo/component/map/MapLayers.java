@@ -62,8 +62,6 @@ public class MapLayers extends Div {
 
     public MapLayers() {
         Map map = new Map();
-        map.setWidthFull();
-        map.setHeight("300px");
         add(map);
 
         RadioButtonGroup<LayerOption> backgroundLayerGroup = new RadioButtonGroup<>();

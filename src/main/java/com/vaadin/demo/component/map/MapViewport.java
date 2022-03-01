@@ -18,8 +18,6 @@ public class MapViewport extends VerticalLayout {
 
     public MapViewport() {
         Map map = new Map();
-        map.setWidthFull();
-        map.setHeight("300px");
         add(map);
 
         // tag::snippet1[]
