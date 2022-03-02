@@ -32,7 +32,7 @@ for (const k in VAADIN_VERSIONS) {
 }
 
 const DEFAULT_FROM = '14';
-const DEFAULT_TO = '22';
+const DEFAULT_TO = '23';
 
 const HARDCODED_VERSIONS_CLASS = 'vaadin-to-version-full';
 
