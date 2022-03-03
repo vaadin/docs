@@ -85,7 +85,7 @@ export default class UpgradeTool extends LitElement {
             theme="horizontal"
           >
             <vaadin-checkbox value="flow" label="Flow" id="flow-checkbox"></vaadin-checkbox>
-            <vaadin-checkbox value="fusion" label="Fusion" id="fusion-checkbox"></vaadin-checkbox>
+            <vaadin-checkbox value="fusion" label="Fusion/Hilla" id="fusion-checkbox"></vaadin-checkbox>
           </vaadin-checkbox-group>
         </div>
         <div>
