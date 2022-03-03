@@ -1,44 +1,23 @@
-# Vaadin documentation
+# Hilla documentation
 
-Official documentation and code examples for Vaadin.
-
-> **CONTENT ONLY**  
-> This repository does not generate the vaadin.com/docs website. It only contains the content for it.
-
-## Branches
-
-All official documentation version branches (listed below) can and should contain documentation for pre-release features once they are available in a Vaadin pre-release. Remember to indicate new features with a “since version” indicator in Asciidoc, for example, `[role="since:com.vaadin:vaadin@V18"]`.
-
-### `latest`
-
-Documentation for the latest major Vaadin version, including all previous major versions since the latest LTS version. If in doubt, make documentation updates against this branch.
-
-### `v14`
-
-Documentation Vaadin 14, the latest long-term supported version (LTS).
-
-## Contents
-
-Files not explicitly listed below are from the standard Vaadin project setup.
+Official documentation and code examples for Hilla.
 
 ### `articles`
 
-A hierarchy of AsciiDoc (either `.asciidoc` or `.adoc`) files, documenting the use of all Vaadin features. The file path defines the resulting URL on the documentation site.
+A hierarchy of AsciiDoc (either `.asciidoc` or `.adoc`) files, documenting the use of all Hilla features. The file path defines the resulting URL on the documentation site.
 
 For example:
 
 - `articles/intro/index.asciidoc` → `/intro/`
 - `articles/forms/data-binding.asciidoc` → `/forms/data-binding/`
 
-See the [contribution guides](https://vaadin.com/docs/latest/contributing-docs/overview) to learn how to write documentation articles.
-
 ### `frontend`
 
-Hilla/TypeScript examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples.
+TypeScript/client-side code examples (views, components, etc), which are included in the documentation. Follow Hilla best practices when creating code examples.
 
 ### `src`
 
-Flow/Java examples, which are included as rendered examples in the documentation. Follow Vaadin best practices when creating code examples.
+Java/server-side code examples (Endpoints, etc), which are included in the documentation. Follow Hilla best practices when creating code examples.
 
 ### `scripts`
 
@@ -47,7 +26,3 @@ Project related scripts (tests, validation builds, preview deployment, etc).
 ### `.github`
 
 Files related to linting the articles against the writing style guidelines with [Vale](https://docs.errata.ai/vale/about). See [Vale linter setup instructions](https://vaadin.com/docs/latest/contributing-docs/editing-tools/#vale).
-
-### `versions.json`
-
-Describes the publicly available documentation versions. These versions will appear in the published website, as options for the users. This file is only relevant in the `latest` branch.

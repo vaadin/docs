@@ -8,68 +8,68 @@ description: Hilla endpoints are a type-safe alternative to REST. Call the serve
 
 = Fetching Data From the Server With Hilla Endpoints
 
-One of the unique features of Hilla is type-safe server access through endpoints. 
+One of the unique features of Hilla is type-safe server access through endpoints.
 Instead of using REST and JSON, Hilla gives you type-safe asynchronous server access.
 
-Annotating a class with `@Endpoint` makes the methods available to the TypeScript frontend as async methods. 
+Annotating a class with `@Endpoint` makes the methods available to the TypeScript frontend as async methods.
 Hilla generates TypeScript types based on the Java method parameters and return types, so you have type safety throughout your application.
 
-You can find the backend code in the `src/main/java` directory. 
+You can find the backend code in the `src/main/java` directory.
 
 This chapter covers:
 
-* The backend architecture.
-* How to create an endpoint.
-* How to optimize communication by using data transfer objects (DTO).
+* the backend architecture,
+* how to create an endpoint,
+* how to optimize communication by using data transfer objects (DTO).
 
 == Backend Overview
 
-The starter you downloaded contains the _entities_ and _repositories_ you need, along with a sample data generator. 
+The starter you downloaded contains the _entities_ and _repositories_ you need, along with a sample data generator.
 
 === Domain Model: Entities
 
-The Hilla CRM application has three JPA entities that make up its domain model: `Contact`, `Company`, and `Status`. 
-A contact belongs to a company and has a status. 
+The Hilla CRM application has three JPA entities that make up its domain model: [classname]#Contact#, [classname]#Company#, and [classname]#Status#.
+A contact belongs to a company and has a status.
 
-You can find the entities in the `com.example.application.data.entity` package. 
+You can find the entities in the `com.example.application.data.entity` package.
 
 image::images/entity-model.png[Entity model diagram]
 
 === Database Access: Repositories
 
-The application uses Spring Data JPA repositories for database access. 
-Spring Data provides implementations of basic create, read, update, and delete (CRUD) database operations when you extend from the `JpaRepository` interface. 
+The application uses Spring Data JPA repositories for database access.
+Spring Data provides implementations of basic create, read, update, and delete (CRUD) database operations when you extend from the [interfacename]#JpaRepository# interface.
 
-You can find the repositories in the `com.example.application.data.repository` package. 
+You can find the repositories in the `com.example.application.data.repository` package.
 
 === Sample Data Generator
 
-The `com.example.application.data.generator` package contains a sample data generator that populates the database with data. 
-It uses `CommandLineRunner`, which Spring Boot runs when the application starts up. 
+The `com.example.application.data.generator` package contains a sample data generator that populates the database with data.
+It uses `CommandLineRunner`, which Spring Boot runs when the application starts up.
 
 === What About a Service Layer?
 
-In a more complex application, you want to also have a service layer that runs business logic, coordinates data layer access, and maps entities to data-transfer objects (DTO) to decouple entities from business objects. 
+In a more complex application, you want to also have a service layer that runs business logic, coordinates data layer access, and maps entities to data transfer objects to decouple entities from business objects.
 
 This tutorial omits the service layer for the sake of simplicity.
 
 == Creating a Hilla Endpoint
 
-You can turn a class into an endpoint by adding an `@Endpoint` annotation to it. 
+You can turn a class into an endpoint by adding an `@Endpoint` annotation to it.
 When you create an endpoint, Hilla:
 
-* Exposes secured REST endpoints for each method.
-* Generates TypeScript type definitions for method parameters and return types.
-* Creates asynchronous TypeScript methods for calling the endpoints in a type-safe manner.
+* exposes secured REST endpoints for each method,
+* generates TypeScript type definitions for method parameters and return types, and
+* creates asynchronous TypeScript methods to call the endpoints in a type-safe manner.
 
 === Creating the CRM Endpoint
 
-For this application, you need an endpoint that: 
+For this application, you need an endpoint that:
 
-* Provides all contacts, companies, and statuses in the database.
-* Lets you save and delete contacts. 
+* provides all contacts, companies, and statuses in the database, and
+* lets you save and delete contacts.
 
-Create a new file, `CrmEndpoint.java`, in the `com.example.application.data.endpoint` package with the following content: 
+Create a new file, [filename]#CrmEndpoint.java#, in the `com.example.application.data.endpoint` package with the following content:
 
 .`CrmEndpoint.java`
 [source,java]
@@ -94,11 +94,11 @@ public class CrmEndpoint {
 }
 ----
 
-Turn the class into an endpoint with `@Endpoint` and allow anonymous access with `@AnonymousAllowed`. 
-The tutorial covers authentication and securing endpoints later in the <<login-and-authentication#, Adding a login screen and authenticating users>> chapter. 
+Turn the class into an endpoint with `@Endpoint` and allow anonymous access with `@AnonymousAllowed`.
+The tutorial covers authentication and securing endpoints later, in the <<login-and-authentication#, Adding a login screen and authenticating users>> chapter.
 
-Inject the needed repositories into the endpoint class though the constructor. 
-Hilla endpoints are Spring components, so you can use the Spring dependency injection container as you would for any other Spring components. 
+Inject the required repositories into the endpoint class through the constructor.
+Hilla endpoints are Spring components, so you can use the Spring dependency injection container as you would for any other Spring components.
 Save the repositories in fields for later access.
 
 .`CrmEndpoint.java`
@@ -107,7 +107,7 @@ Save the repositories in fields for later access.
 private ContactRepository contactRepository;
 private CompanyRepository companyRepository;
 private StatusRepository statusRepository;
- 
+
 public CrmEndpoint(ContactRepository contactRepository, CompanyRepository companyRepository,
    StatusRepository statusRepository) {
  this.contactRepository = contactRepository;
@@ -116,12 +116,12 @@ public CrmEndpoint(ContactRepository contactRepository, CompanyRepository compan
 }
 ----
 
-Use a data-transfer object (DTO) to wrap the contacts, companies, and statuses into one return type. 
-That way, the client only needs to make one server call to get all the needed data.
+Use a data transfer object to wrap the contacts, companies, and statuses into one return type.
+This way, the client only needs to make one server call to get all the required data.
 
-Within the same class, create an inner class `CrmData`. 
-Note that because this class is only used as a data wrapper, it doesn't need data encapsulation and the associated getters and setters. 
-Instead, it uses public fields. 
+Within the same class, create an inner class, [classname]#CrmData#.
+Note that, because this class is only used as a data wrapper, it does not need data encapsulation and the associated getters and setters.
+Instead, it uses public fields.
 
 .`CrmEndpoint.java`
 [source,java]
@@ -136,13 +136,14 @@ public static class CrmData {
   }
 ----
 
-TypeScript is more strict with handling `null` values than Java is. 
+TypeScript is stricter about handling `null` values than Java is.
 Because of this, Hilla generates optional (nullable) TypeScript types for all non-primitive Java types.
-In this case, you need to ensure that you never return `null` values or collections with `null` elements by annotating the types with `@Nonnull`.
-It creates non-nullable TypeScript types that are easier to work with. 
+Hence, you need to ensure that you never return `null` values or collections with `null` elements.
+You do this by annotating the types with `@Nonnull`.
+This creates non-nullable TypeScript types that are easier to work with.
 You can read more about type nullability in the <<../../advanced/endpoints-generator/#type-nullability,TypeScript Endpoints Generator>> article.
 
-Next, implement API methods for getting, updating, and deleting data. 
+Next, implement API methods to get, update, and delete data.
 
 .`CrmEndpoint.java`
 [source,java]
@@ -172,7 +173,7 @@ public void deleteContact(UUID contactId) {
 }
 ----
 
-Note that `saveContact()` looks up the `company` and `status` by ID to avoid saving changes to them by accident. 
+Note that [methodname]#saveContact()# looks up the `company` and `status` by ID to avoid saving changes to them by accident.
 
-Save the file and ensure the development server build is successful. 
-If you have shut down the server, re-start it with the `./mvnw` command from the command line. 
+Save the file and confirm that the development server build is successful.
+If you have shut down the server, restart it with the `./mvnw` command from the command line.
