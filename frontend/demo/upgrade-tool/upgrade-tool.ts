@@ -22,8 +22,8 @@ const VAADIN_VERSIONS: Record<string, string> = {
   19: '19.0.9',
   20: '20.0.8',
   21: '21.0.9',
-  22: '22.0.5',
-  23: '23.0.0.beta3',
+  22: '22.0.7',
+  23: '23.0.0',
 };
 
 const SIMPLE_VERSIONS: string[] = [];
@@ -32,7 +32,7 @@ for (const k in VAADIN_VERSIONS) {
 }
 
 const DEFAULT_FROM = '14';
-const DEFAULT_TO = '22';
+const DEFAULT_TO = '23';
 
 const HARDCODED_VERSIONS_CLASS = 'vaadin-to-version-full';
 
@@ -54,6 +54,7 @@ export default class UpgradeTool extends LitElement {
   private isFusion = false;
   private isSpring = true;
   private isTypeScript = true;
+  private isCustomStyling = false;
 
   render() {
     return html`
@@ -84,7 +85,7 @@ export default class UpgradeTool extends LitElement {
             theme="horizontal"
           >
             <vaadin-checkbox value="flow" label="Flow" id="flow-checkbox"></vaadin-checkbox>
-            <vaadin-checkbox value="fusion" label="Fusion" id="fusion-checkbox"></vaadin-checkbox>
+            <vaadin-checkbox value="fusion" label="Fusion/Hilla" id="fusion-checkbox"></vaadin-checkbox>
           </vaadin-checkbox-group>
         </div>
         <div>
@@ -106,6 +107,12 @@ export default class UpgradeTool extends LitElement {
               label="TypeScript-based views"
               id="typescript-checkbox"
               ?disabled=${this.isFusion || (!this.isFusion && !this.isFlow)}
+            ></vaadin-checkbox>
+            <vaadin-checkbox
+              value="styling"
+              label="Changes to custom styling of components"
+              id="styling-checkbox"
+              }
             ></vaadin-checkbox>
           </vaadin-checkbox-group>
         </div>
@@ -146,6 +153,10 @@ export default class UpgradeTool extends LitElement {
 
     if (this.isTypeScript) {
       this.showElementsWithClassname('ts');
+    }
+
+    if (this.isCustomStyling) {
+      this.showElementsWithClassname('styling');
     }
 
     if (this.isFlow) {
@@ -193,7 +204,7 @@ export default class UpgradeTool extends LitElement {
   private hideOldInstructions() {
     document
       .querySelectorAll(
-        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
+        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='styling'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
       )
       .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
   }
@@ -291,6 +302,7 @@ export default class UpgradeTool extends LitElement {
 
     this.isSpring = val.includes('spring') || this.isFusion;
     this.isTypeScript = val.includes('typescript') || this.isFusion;
+    this.isCustomStyling = val.includes('styling');
   }
 
   connectedCallback() {

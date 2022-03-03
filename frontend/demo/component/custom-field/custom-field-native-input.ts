@@ -23,6 +23,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-custom-field
         label="Payment information"
+        theme="whitespace"
         @change="${(e: CustomFieldValueChangedEvent) => (this.customFieldValue = e.detail.value)}"
       >
         <vaadin-horizontal-layout theme="spacing-s">
