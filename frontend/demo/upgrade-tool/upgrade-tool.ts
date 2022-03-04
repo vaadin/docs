@@ -46,15 +46,17 @@ export default class UpgradeTool extends LitElement {
   @state()
   private toVersion = '';
   @state()
-  private frameworkValue = ['flow'];
+  private frameworkValue: string[] = [];
   @state()
-  private extraSettingsValue = ['spring'];
+  private extraSettingsValue: string[] = [];
 
   private isFlow = true;
   private isFusion = false;
   private isSpring = true;
-  private isTypeScript = true;
+  private isTypeScript = false;
   private isCustomStyling = false;
+  private isInstructionsDisplayed = false;
+  private isFirstUpdated = false;
 
   render() {
     return html`
@@ -85,7 +87,11 @@ export default class UpgradeTool extends LitElement {
             theme="horizontal"
           >
             <vaadin-checkbox value="flow" label="Flow" id="flow-checkbox"></vaadin-checkbox>
-            <vaadin-checkbox value="fusion" label="Fusion/Hilla" id="fusion-checkbox"></vaadin-checkbox>
+            <vaadin-checkbox
+              value="fusion"
+              label="Fusion/Hilla"
+              id="fusion-checkbox"
+            ></vaadin-checkbox>
           </vaadin-checkbox-group>
         </div>
         <div>
@@ -166,6 +172,9 @@ export default class UpgradeTool extends LitElement {
     if (this.isFusion) {
       this.showElementsWithClassname('fusion');
     }
+
+    this.isInstructionsDisplayed = true;
+    this.updateUrlParameters();
   }
 
   private showElementsWithClassname(classname: string) {
@@ -207,6 +216,8 @@ export default class UpgradeTool extends LitElement {
         "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='styling'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
       )
       .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
+
+    this.isInstructionsDisplayed = false;
   }
 
   private replaceHardCodedVersions() {
@@ -263,19 +274,27 @@ export default class UpgradeTool extends LitElement {
   }
 
   private fromVersionChanged(e: SelectValueChangedEvent) {
+    if (!this.isFirstUpdated) return;
+
     const val = e.detail.value;
     if (parseInt(val) >= parseInt(this.toVersion)) {
       const idx = SIMPLE_VERSIONS.indexOf(val);
       this.toVersion = SIMPLE_VERSIONS[idx + 1];
     }
     this.fromVersion = val;
+    this.updateUrlParameters();
   }
 
   private toVersionChanged(e: SelectValueChangedEvent) {
+    if (!this.isFirstUpdated) return;
+
     this.toVersion = e.detail.value;
+    this.updateUrlParameters();
   }
 
   private frameworkChanged(e: CheckboxGroupValueChangedEvent) {
+    if (!this.isFirstUpdated) return;
+
     const val = e.detail.value;
     this.frameworkValue = val;
 
@@ -294,15 +313,69 @@ export default class UpgradeTool extends LitElement {
     } else {
       this.isFusion = false;
     }
+
+    this.updateUrlParameters();
   }
 
   private extraSettingsChanged(e: CheckboxGroupValueChangedEvent) {
+    if (!this.isFirstUpdated) return;
+
     const val = e.detail.value;
     this.extraSettingsValue = val;
 
     this.isSpring = val.includes('spring') || this.isFusion;
     this.isTypeScript = val.includes('typescript') || this.isFusion;
     this.isCustomStyling = val.includes('styling');
+
+    this.updateUrlParameters();
+  }
+
+  private updateUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('from', this.fromVersion);
+    urlParams.set('to', this.toVersion);
+    urlParams.set('isFlow', String(this.isFlow));
+    urlParams.set('isFusion', String(this.isFusion));
+    urlParams.set('isSpring', String(this.isSpring));
+    urlParams.set('isTypeScript', String(this.isTypeScript));
+    urlParams.set('isCustomStyling', String(this.isCustomStyling));
+    urlParams.set('isInstructionsDisplayed', String(this.isInstructionsDisplayed));
+
+    const pathname = location.pathname.replace(/\/$/, '');
+    window.history.replaceState({}, '', `${pathname}/?${urlParams}`);
+  }
+
+  private getParamVal(urlParams: URLSearchParams, param: string) {
+    const isParam = urlParams.get(param);
+
+    if (isParam) {
+      const property = Boolean(JSON.parse(isParam));
+      return property;
+    }
+
+    return null;
+  }
+
+  private initializeProperties() {
+    if (this.isFlow) {
+      this.frameworkValue.push('flow');
+    }
+    if (this.isFusion) {
+      this.frameworkValue.push('fusion');
+    }
+
+    if (this.isSpring) {
+      this.extraSettingsValue.push('spring');
+    }
+    if (this.isTypeScript) {
+      this.extraSettingsValue.push('typescript');
+    }
+    if (this.isCustomStyling) {
+      this.extraSettingsValue.push('styling');
+    }
+
+    this.frameworkValue = [...this.frameworkValue];
+    this.extraSettingsValue = [...this.extraSettingsValue];
   }
 
   connectedCallback() {
@@ -310,7 +383,44 @@ export default class UpgradeTool extends LitElement {
   }
 
   firstUpdated() {
-    this.fromVersion = DEFAULT_FROM;
-    this.toVersion = DEFAULT_TO;
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    const toParam = urlParams.get('to');
+
+    fromParam ? (this.fromVersion = fromParam) : (this.fromVersion = DEFAULT_FROM);
+    toParam ? (this.toVersion = toParam) : (this.toVersion = DEFAULT_TO);
+
+    const isFlowParam = this.getParamVal(urlParams, 'isFlow');
+    const isFusionParam = this.getParamVal(urlParams, 'isFusion');
+    const isSpringParam = this.getParamVal(urlParams, 'isSpring');
+    const isTypeScriptParam = this.getParamVal(urlParams, 'isTypeScript');
+    const isCustomStylingParam = this.getParamVal(urlParams, 'isCustomStyling');
+    const isInstructionsDisplayedParam = this.getParamVal(urlParams, 'isInstructionsDisplayed');
+
+    if (isFlowParam != null) {
+      this.isFlow = isFlowParam;
+    }
+    if (isFusionParam != null) {
+      this.isFusion = isFusionParam;
+    }
+    if (isSpringParam != null) {
+      this.isSpring = isSpringParam;
+    }
+    if (isTypeScriptParam != null) {
+      this.isTypeScript = isTypeScriptParam;
+    }
+    if (isCustomStylingParam != null) {
+      this.isCustomStyling = isCustomStylingParam;
+    }
+
+    this.initializeProperties();
+
+    this.isFirstUpdated = true;
+    this.updateUrlParameters();
+
+    if (isInstructionsDisplayedParam) {
+      this.isInstructionsDisplayed = true;
+      this.showUpdateInstructions();
+    }
   }
 }
