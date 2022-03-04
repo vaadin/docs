@@ -341,7 +341,8 @@ export default class UpgradeTool extends LitElement {
     urlParams.set('isCustomStyling', String(this.isCustomStyling));
     urlParams.set('isInstructionsDisplayed', String(this.isInstructionsDisplayed));
 
-    window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
+    const pathname = location.pathname.replace(/\/$/, '');
+    window.history.replaceState({}, '', `${pathname}/?${urlParams}`);
   }
 
   private getParamVal(urlParams: URLSearchParams, param: string) {
