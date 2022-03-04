@@ -6,3 +6,6 @@ import { applyTheme } from 'Frontend/generated/theme';
 window.__applyTheme = { applyTheme };
 // @ts-ignore
 import('all-flow-imports-or-empty').catch(() => {});
+
+// Verify if session is still active and reload the page otherwise
+import './session-verification';
