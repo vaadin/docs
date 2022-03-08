@@ -1,32 +1,103 @@
 ---
-title: Modifying the Bootstrap Page at the Runtime
+title: Modifying the Bootstrap Page at Runtime
+description: How to customize the application shell, or bootstrap page, to improve page loading speed
 order: 30
 layout: page
 ---
 
 
-= Modifying the Bootstrap Page at the Runtime
+= Modifying the Bootstrap Page at Runtime
 
 == Application Shell [[application-shell]]
 
-The link:https://developers.google.com/web/fundamentals/architecture/app-shell[App Shell Model] tries to make your website faster by loading the 'important' parts of the web page at first causing a good first impression. The key for this, is to deliver the minimal HTML, CSS and JavaScript required to display the user interface during the first visit, and eventually cache it to be used in future revisits.
+The link:https://developers.google.com/web/fundamentals/architecture/app-shell[App Shell Model] aims to make your website faster by loading the 'important' parts of the web page first, so improving the user experience.
+The key to this is to deliver the minimum HTML, CSS and JavaScript required to display the user interface on the first visit, and eventually cache it for use on subsequent revisits.
 
-The _Application Shell_ in Vaadin is also known as _Bootstrap Page_ or simply _index.html_.
+The _Application Shell_ in Vaadin is also known as the _Bootstrap Page_, or simply [filename]#index.html#.
 
 == Modifying the Application Shell
 
-In Vaadin 15+ the user has full control on the `index.html` contents, which can by modified in different ways:
+In Vaadin 15 and later, the developer has full control of the contents of [filename]#index.html#.
+There are various ways to modify it:
 
-1. In client-side by editing the `frontend/index.html` when the content is static, for instance the `<viewport>` tag.
-2. In server-side for changes that require some dynamic server content or just when Java syntax is preferred, for example making the application installable by enabling the `@PWA` built-in feature.
-- Implement the `AppShellConfigurator` for cases covered by the `AppShellSettings` API, or by annotations.
-- Configure an `IndexHtmlRequestListener` for advanced cases modifying the document structure.
+. On the client side, by editing [filename]#frontend/index.html# when the content is static, for instance the `<viewport>` tag.
+. On the server side, for changes that require some dynamic server content, or simply when Java syntax is preferred; for example, making the application installable by enabling the `@PWA` built-in feature.
+- Implement [interfacename]#AppShellConfigurator# for cases covered by the [classname]#AppShellSettings# API, or by annotations.
+- Configure an [interfacename]#IndexHtmlRequestListener# for advanced cases that modify the document structure.
 
 == Customizing the Application Shell Template
 
-By default, during the first request, Vaadin parses the `frontend/index.html` template file and delivers it with a few modifications as described in the <<{articles}/fusion/application/starting#default-bootstrap-template-and-entry-point,Default Bootstrap Template>>
+The Vaadin servlet uses the [filename]#frontend/index.html# file as a template to generate the bootstrap page response.
+The servlet processes the template and injects the following information:
 
-This is the best place for customizing the app-shell, for example to put an analytics tag in the page.
+  - `<base href='./relative/to/root'>`: Vaadin calculates the relative path from the current request path to the root path of the application.
+  That is required for relative links in view templates to work correctly.
+
+  - Bundled script: Vaadin automatically adds the bundled and optimized script generated from the [filename]#frontend/index.ts# file.
+  It uses a pre-configured https://webpack.js.org/[webpack^] instance that is included together with `vaadin-maven-plugin` as a module bundler.
+  Therefore, the [filename]#frontend/index.html# template does not need to include the [filename]#index.ts# (or [filename]#index.js#) script explicitly.
+
+.You can change the [filename]#frontend# directory path
+[TIP]
+The frontend directory path can be changed by providing the property `vaadin.frontend.frontend.folder` when running the Maven goals `prepare-frontend`  or `build-frontend` from `vaadin-maven-plugin`.
+
+=== Default Bootstrap Template and Entry Point [[default-bootstrap-template-and-entry-point]]
+
+If the [filename]#index.html# or [filename]#index.ts# files in the frontend folder are missing, `vaadin-maven-plugin` generates a default corresponding file in the [filename]#target# folder.
+In that case the application uses server-side routing only.
+You can take control of these files by moving them into the [filename]#frontend# folder.
+By default these files look similar to the following:
+
+.Default `index.html`
+[source,html]
+----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body, #outlet {
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+    }
+  </style>
+  <!-- index.ts is included here automatically (either by the dev server or during the build) -->
+</head>
+<body>
+  <!-- vaadin-router in index.ts needs an outlet for displaying the views -->
+  <div id="outlet"></div>
+</body>
+</html>
+----
+
+.Default `index.ts` [[default-index-ts]]
+[source,typescript]
+----
+// import Vaadin client-router to handle client-side and server-side navigation
+import { Router } from '@vaadin/router';
+
+// import Flow module to enable navigation to Vaadin server-side views
+import { Flow } from '@vaadin/flow-frontend';
+
+const {serverSideRoutes} = new Flow({
+  imports: () => import('../target/frontend/generated-flow-imports')
+});
+
+const routes = [
+  // for client-side, place routes below (more info https://hilla.dev/docs/routing)
+
+  // for server-side, the next magic line sends all unmatched routes:
+  ...serverSideRoutes // IMPORTANT: this must be the last entry in the array
+];
+
+// Vaadin router needs an outlet in the index.html page to display views
+export const router = new Router(document.querySelector('#outlet'));
+router.setRoutes(routes);
+----
+
+This is the best place to customize the application shell, for example to put an analytics tag in the page.
 
 .index.html
 [source,xml]
@@ -51,33 +122,33 @@ This is the best place for customizing the app-shell, for example to put an anal
 ----
 
 
-== Customizing the Application Shell during Runtime
+== Customizing the Application Shell at Runtime
 
 === The AppShellConfigurator Interface [[application-shell-configurator]]
 
-In Java code, use the `AppShellConfigurator` marker interface rather than editing the `index.html` when adding dynamic content during the bootstrap process.
+In Java code, when adding dynamic content during the bootstrap process, use the [interfacename]#AppShellConfigurator# marker interface rather than editing the [filename]#index.html#.
 
 [NOTE]
-There must be a single application shell for the entire Vaadin application, and therefore there can be at max one class implementing `AppShellConfigurator`.
+There must be a single application shell for the entire Vaadin application, so that no more than one class can implement [interfacename]#AppShellConfigurator#.
 
 [NOTE]
-`AppShellConfigurator` is a replacement of the obsolete `PageConfigurator` interface.
+[interfacename]#AppShellConfigurator# replaces the obsolete [interfacename]#PageConfigurator# interface.
 
-==== The AppShellConfigurator#configurePage Method
+==== The AppShellConfigurator.configurePage() Method
 
-Override `configurePage` for adding content to the `index.html` template by calling the following `AppShellSettings` methods:
+Override [methodname]#configurePage()# to add content to the [filename]#index.html# template by calling the following [classname]#AppShellSettings# methods:
 
-- `AppShellSettings#setViewport` to set the viewport value, it replaces the viewport present in the `index.html` template.
-- `AppShellSettings#setPageTitle` to set the initial page title, replaces the template title tag.
-- `AppShellSettings#setBodySize` to configure the body width and height values.
-- `AppShellSettings#addMetaTag` to append meta tags to the head.
-- `AppShellSettings#addInlineFromFile` to include content from resource files.
-- `AppShellSettings#addInlineWithContents` to add arbitrary content.
-- `AppShellSettings#addLink` to add links to the head.
-- `AppShellSettings#addFavIcon` to configure the favicon.
-- `AppShellSettings#getLoadingIndicatorConfiguration` for configuring loading indicator when legacy bootstrapping is used (deprecated, see details after code example).
-- `AppShellSettings#getReconnectDialogConfiguration` for configuring the reconnect dialog when legacy bootstrapping is used (deprecated, see details after code example).
-- `AppShellSettings#getPushConfiguration` to customize the push mechanism when legacy bootstrapping is used (deprecated, see details after code example).
+- [methodname]#AppShellSettings.setViewport()# to set the viewport value; this replaces the viewport present in the [filename]#index.html# template.
+- [methodname]#AppShellSettings.setPageTitle()# to set the initial page title; this replaces the template title tag.
+- [methodname]#AppShellSettings.setBodySize()# to configure the body width and height values.
+- [methodname]#AppShellSettings.addMetaTag()# to append meta tags to the head.
+- [methodname]#AppShellSettings.addInlineFromFile()# to include content from resource files.
+- [methodname]#AppShellSettings.addInlineWithContents()# to add arbitrary content.
+- [methodname]#AppShellSettings.addLink()# to add links to the head.
+- [methodname]#AppShellSettings.addFavIcon()# to configure the favicon.
+- [methodname]#AppShellSettings.getLoadingIndicatorConfiguration()# to configure a loading indicator when legacy bootstrapping is used (deprecated; see the details after the code example).
+- [methodname]#AppShellSettings.getReconnectDialogConfiguration()# to configure the reconnect dialog when legacy bootstrapping is used (deprecated; see the details after the code example).
+- [methodname]#AppShellSettings.getPushConfiguration()# to customize the push mechanism when legacy bootstrapping is used (deprecated; see the details after the code example).
 
 [source,java]
 ----
@@ -111,15 +182,16 @@ include::{root}/src/main/java/com/vaadin/demo/flow/advanced/bootstrap/ServiceLis
 
 ==== Java Annotations[[java-annotations]]
 
-Vaadin provide a set annotations for modifying the application shell, though, unlike in previous versions, in Vaadin 15 these annotations must be placed in the application shell class.
+Vaadin provides a set of annotations to modify the application shell.
+However, in Vaadin 15, unlike in previous versions, these annotations must be placed in the application shell class.
 
 - `@Viewport` to set the viewport value.
 - `@PageTitle` to set the initial page title.
 - `@BodySize` to configure the body size.
 - `@Meta` to append meta tags to the head.
-- `@Inline` to include content from resource files in the `index.html`.
+- `@Inline` to include content from resource files in the [filename]#index.html#.
 - `@PWA` to define application PWA properties.
-- `@Push` to configures server push.
+- `@Push` to configure server push.
 
 [source,java]
 ----
@@ -138,18 +210,19 @@ public class AppShell implements AppShellConfigurator {
 ----
 
 [NOTE]
-Modifications in the  `AppShellConfigurator#configurePage` do have priority over the equivalent annotations.
+Modifications in [methodname]#AppShellConfigurator.configurePage()# have priority over the equivalent annotations.
 
 [NOTE]
-Annotations do not cover all the cases that can be done when overriding the `AppShellConfigurator#configurePage` method
+Annotations do not cover all the cases that can be achieved when overriding the [methodname]#AppShellConfigurator.configurePage()# method.
 
 === The IndexHtmlRequestListener Interface [[IndexHtmlRequestListener-interface]]
 
-In addition, for advance cases not covered in the previous section, the content can be modified via an `IndexHtmlRequestListener`.
+In addition, for advanced cases not covered in the previous section, content can be modified via an [interfacename]#IndexHtmlRequestListener#.
 
-An implementation of the listener should be added via a `ServiceInitEvent` when a `VaadinService` is initialized. Check the <<../advanced/service-init-listener#,ServiceInitListener tutorial>> for the details about using Vaadin `ServiceInitListeners`.
+An implementation of the listener should be added via a [classname]#ServiceInitEvent# when a [classname]#VaadinService# is initialized.
+Check the <<../advanced/service-init-listener#,ServiceInitListener tutorial>> for details of using Vaadin [classname]#ServiceInitListeners#.
 
-The example below changes the body class dynamically:
+The following example changes the body class dynamically:
 
 [source,java]
 ----
@@ -172,4 +245,4 @@ public class MyIndexHtmlRequestListener implements
 }
 ----
 
-It can also be provided as a servlet container deployment property with the name `useDeprecatedV14Bootstrapping`.
+This can also be achieved using a servlet container deployment property with the name `useDeprecatedV14Bootstrapping`.

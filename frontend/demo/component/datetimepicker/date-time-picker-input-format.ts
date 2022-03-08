@@ -20,8 +20,8 @@ export class Example extends LitElement {
       <vaadin-date-time-picker
         label="Select date and time"
         helper-text="Format: DD/MM/YYYY and HH:MM"
-        date-placeholder="DD/MM/YYYY"
-        time-placeholder="HH:MM"
+        date-placeholder="Date"
+        time-placeholder="Time"
       ></vaadin-date-time-picker>
       <!-- end::snippet[] -->
     `;
