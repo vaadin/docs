@@ -18,7 +18,7 @@ const initialListener = ((e: CustomEvent<string>) => {
   // Make sure flow example is upgraded and requested content from server
   customElements.whenDefined(e.detail).then(() => {
     // Make sure server is up and running
-    fetch(withPrefix('/vaadin/index.html')).then((serverData) => {
+    fetch(withPrefix('/vaadin/?v-r=uidl')).then((serverData) => {
       if (serverData.ok) {
         window.addEventListener('included-example-loaded', () => testHeartbeat());
         testHeartbeat();
