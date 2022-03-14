@@ -44,8 +44,15 @@ public class ConfirmDialogBasic extends Div {
     });
     // end::snippet[]
 
+    dialog.open();
+
     layout.add(button, status);
     add(layout);
+
+    // Center the button within the example
+    getStyle().set("position", "fixed").set("top","0").set("right", "0")
+            .set("bottom", "0").set("left", "0").set("display", "flex")
+            .set("align-items", "center").set("justify-content", "center");
   }
 
   private void setStatus(String value) {

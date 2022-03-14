@@ -1,8 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement } from 'lit';
+import { html, css, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/confirm-dialog';
+import '@vaadin/horizontal-layout';
+import '@vaadin/button';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-basic')
@@ -15,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private dialogOpened = false;
+  private dialogOpened = true;
 
   @state()
   private status = '';
@@ -58,4 +60,18 @@ export class Example extends LitElement {
       this.status = '';
     }
   }
+
+  static styles = css`
+    /* Center the button within the example */
+    :host {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+  `;
 }
