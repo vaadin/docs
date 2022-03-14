@@ -1,0 +1,185 @@
+== Before You Start
+
+* Delete the `node_modules` folder and either lock file: `package-lock.json` (with npm) or `pnpm-lock.yaml` (with pnpm)
+
+* Edit the `pom.xml` file and change the Vaadin version to [.vaadin-to-version-full]`new version`.
+
+== Update to Java 11
+
+- Java version requirement changes from Java 8 to Java 11
++
+For Maven update the java.version
++
+[source, xml]
+----
+<properties>
+    <java.version>11</java.version>
+</properties>
+----
++
+or compiler.source and compiler.target
++
+[source, xml]
+----
+<properties>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+</properties>
+----
+
+- For Java 9+ `maven-failsafe-plugin` requires jaxb-impl to be added
++
+The dependency can be added directly in the plugin definition as:
++
+[source, xml]
+----
+<plugin>
+    <artifactId>maven-failsafe-plugin</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>${jaxb.version}</version>
+        </dependency>
+    </dependencies>
+</plugin>
+----
+
+== Update Spring Version
+
+Vaadin is compatible with Spring 5.3.0 or newer, and Spring Boot 2.4.0 or newer.
+If your application uses an older version of Spring, update it to a compatible version:
+
+[source,xml]
+----
+include::../../../pom.xml[tag=spring-version, indent=0]
+----
+
+== Update Main Layout/View Annotations
+
+Several annotations typically placed on the `MainLayout` / `MainView` class must be moved to a class that implements the `AppShellConfigurator` interface, for example:
+
+[source,java]
+----
+@PWA(name = "My Vaadin App", shortName = "my-app")
+public class AppShell implements AppShellConfigurator {
+
+}
+----
+
+see <<{articles}/flow/advanced/modifying-the-bootstrap-page#java-annotations, set of annotations to modify the Bootstrap page>> for more details.
+
+== Replace Obsolete APIs
+
+A set of API breaking changes and their replacements are listed below:
+
+- Property synchronization methods in `Element` are replaced with similar API in `DomListenerRegistration`: `getSynchronizedPropertyEvents`, `getSynchronizedProperties`, `removeSynchronizedPropertyEvent`, `removeSynchronizedProperty`, `addSynchronizedPropertyEvent`, `addSynchronizedProperty`,  `synchronizeProperty`.
+- JavaScript execution APIs `executeJavaScript` and `callFunction` in `Element` and `Page` are replaced with similarly named methods that give access to the return value `executeJs` and `callJsFunction`:
+- Miscellaneous `Element` methods: `Element(String, boolean)`, `addEventListener(String, DomEventListener, String...)`
+- Device and platform detection methods `WebBrowser#isIOS()`, `WebBrowser#isIPad()`, `BrowserDetails#isSafariOrIOS()`, `BrowserDetails#isIOS()`, `BrowserDetails#isIPad()` are replaced with method in `ExtendedClientDetails`: `isIPad()`, `isIOS()`
+- Methods `JsModule#loadMode()` and `Page#addJsModule(String, LoadMode)` for setting the load mode of JsModule are removed since it does not function with JavaScript modules.
+- The construction methods `BeforeEvent(NavigationEvent, Class<?>)` and `BeforeEvent(Router, NavigationTrigger, Location, Class<?>, UI)` in `BeforeEvent` are replaced with `BeforeEvent(NavigationEvent, Class, List)` and `BeforeEvent(Router, NavigationTrigger, Location, Class, UI, List)`
+-  Methods `getUrl()`, `getUrlBase()` and `getRoutes()` in `Router` are replaced with methods `getUrl()`, `getUrlBase()` and `getAvailableRoutes()` in `RouterConfiguration`. The `resolve()` method in `Router` is replaced with the `resolve()` method in `RouteUtil`. The `getRoutesByParent()` method in `Router` is removed and has no replacement.
+- `ServletHelper` is replaced with `HandlerHelper`
+- `ExecutionCanceler` is replaced with `PendingJavaScriptResult`
+- The `getBodyAttributes` method in `AbstractTheme`, `Lumo` and `Material` is replaced with `getHtmlAttributes`
+- The `removeDataGenerator` method in `HasDataGenerators` and `CompositeDataGenerator` is removed in favor of using the registration returned from `addDataGenerator(DataGenerator)`
+- The methods `preventsDefault` and `stopsPropagation` in `ShortcutRegistration` are replaced with `isBrowserDefaultAllowed ` and `isEventPropagationAllowed`
+-  The `safeEscapeForHtml` method in `VaadinServlet` is removed in favor of using `org.jsoup.nodes.Entities#escape(String)`
+- The static method `getInstance` in `ApplicationRouteRegistry` is removed in favor of the instance method.
+- The protected instance method `getApplicationUrl` from `VaadinServlet` is removed
+
+
+== Bootstrapping Changes
+
+For applications upgraded from earlier versions of Vaadin, client-side bootstrapping requires replacing the usages of the V10-14 `BootstrapHandler` APIs with their `IndexHtmlRequestHandler` API counterparts as described in <<{articles}/flow/advanced/modifying-the-bootstrap-page#IndexHtmlRequestListener-interface, _IndexHtmlRequestListener interface_>> section.
+
+The reason for this API change is that with client-side bootstrapping the initial page HTML generation is separated from loading the Flow client and creating a server-side `UI` instance.
+
+- In Vaadin 10 to 14 these two steps are combined and the `index.html` page includes the code and configuration needed to start the Flow client engine and link the browser page to the server-side `UI` instance.
+
+- In Vaadin 15+ with client-side bootstrapping the `index.html` page includes only the basic HTML markup and links to the TypeScript UI code. If you have https://hilla.dev/docs/routing[client-side/Hilla views], the `UI` is not guaranteed to be created, thus is optional. It will be only available after the user navigates to a server-side route.
+
+It is also possible to continue using the bootstrapping mode in V10-14 with the `useDeprecatedV14Bootstrapping` flag.
+See how the use the flag in <<{articles}/flow/configuration/properties#, Configuration Properties>>.
+
+
+== Frontend Package Manager Changes from pnpm to npm
++
+The default package manager is now npm, but if using a version older than
+8.3 it is recommended to use pnpm instead.
++
+To keep using pnpm the configuration pnpm.enable should be set.
++
+.Maven
+[source, xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>flow-maven-plugin</artifactId>
+    <configuration>
+        <pnpmEnable>true</pnpmEnable>
+    </configuration>
+</plugin>
+----
++
+.Gradle
+[source, groovy]
+----
+vaadin {
+  pnpmEnable = true
+}
+----
++
+Or using the system property `vaadin.pnpm.enable=true`
++
+[NOTE]
+Running `npm` without a [filename]#package-lock.json# will be slow for the initial installation.
+A project that comes from `pnpm` will not have an `npm` [filename]#package-lock.json#, as it uses [filename]#pnpm-lock.yaml#.
+
+- Recommended minimum version of npm is v8.3
++
+This is to have the support for overrides to lock transitive dependencies versions.
+
+- When the global node is not compatible, the version in `~/.vaadin` will be used.
++
+If a version does not exist or is too old it will be automatically downloaded and installed.
+
+== Vaadin Charts
+
+*Vaadin Charts* now defaults to Java styling mode in Flow, instead of CSS styling mode.
+If you have applied custom styles to charts using CSS, you need to make the following change to switch your charts back to CSS styling mode
+
+[source,java]
+----
+Chart chart = new Chart();
+Configuration conf = chart.getConfiguration();
+conf.getChart().setStyledMode(true);
+----
+
+== Assorted Changes
+
+- `AppShellRegistry` method `getTitle()` is removed 
+It was broken and could not work. Instead, if needed, use `getUI().getUIInternals().getAppShellTitle()`. 
+
+- Having the `@Theme` annotation on Flow views or router layouts will no longer be allowed.
+The annotation should be on [interfacename]#AppShellConfigurator# instead. 
+This is now consistent with the `@PWA` annotation.
+It is also cleaner, since you can only have one `@Theme` per application. 
+
+
+- `AbstractListDataView` now requires an extra constructor argument - a callback, which is invoked each time when the component's filter and/or sorting changes through the data view API.
+
+- Setting the tabindex attribute to a value > 0 (for example, by calling [methodname]#setTabIndex(10)#) is no longer supported on input field components.
+pass:[<!-- vale Vale.Spelling = NO -->]
+However, tabindex values of 0 and -1 are still supported.
+
+== Input Fields: Removed Support for tabindex > 0
+
+pass:[<!-- vale Vale.Spelling = YES -->]
+The following general changes have been made to all input field components:
+
+* https://github.com/vaadin/web-components/issues/3275[Removed support for using positive `tabindex` values] (for example, `setTabIndex(1)`) on all input field components. 
+This will not cause errors but has no effect.
+However, setting `tabindex` to `0` or `-1` is still supported.
+It is recommended to ensure that input fields are in the correct order in the DOM, instead of overriding the tab order with `tabindex`.
