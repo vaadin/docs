@@ -1,0 +1,92 @@
+== Before You Start
+
+* Delete the `node_modules` folder and either lock file: `package-lock.json` (with npm) or `pnpm-lock.yaml` (with pnpm)
+
+* Edit the `pom.xml` file and change the Vaadin version to `23.0.2`.
+
+== Update to Java 11
+
+- Java version requirement changes from Java 8 to Java 11
++
+For Maven update the java.version
++
+[source, xml]
+----
+<properties>
+    <java.version>11</java.version>
+</properties>
+----
++
+or compiler.source and compiler.target
++
+[source, xml]
+----
+<properties>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+</properties>
+----
+
+- For Java 9+ `maven-failsafe-plugin` requires jaxb-impl to be added
++
+The dependency can be added directly in the plugin definition as:
++
+[source, xml]
+----
+<plugin>
+    <artifactId>maven-failsafe-plugin</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>${jaxb.version}</version>
+        </dependency>
+    </dependencies>
+</plugin>
+----
+
+== Update Spring Version
+
+Vaadin is compatible with Spring 5.3.0 or newer, and Spring Boot 2.4.0 or newer.
+If your application uses an older version of Spring, update it to a compatible version:
+
+[source,xml]
+----
+include::../../../../pom.xml[tag=spring-version, indent=0]
+----
+
+== Update Main Layout/View Annotations
+
+Several annotations typically placed on the `MainLayout` / `MainView` class must be moved to a class that implements the `AppShellConfigurator` interface, for example:
+
+[source,java]
+----
+@PWA(name = "My Vaadin App", shortName = "my-app")
+public class AppShell implements AppShellConfigurator {
+
+}
+----
+
+see <<{articles}/flow/advanced/modifying-the-bootstrap-page#java-annotations, set of annotations to modify the Bootstrap page>> for more details.
+
+== Replace API usage
+
+A set of API breaking changes and their replacements are listed below:
+
+- `AppShellRegistry` method `getTitle()` is now removed.
+- `AbstractListDataView` now requires an extra constructor argument - a callback, which is invoked each time when the component's filter and/or sorting changes through the data view API.
+- Property synchronization methods in `Element` are replaced with similar API in `DomListenerRegistration`: `getSynchronizedPropertyEvents`, `getSynchronizedProperties`, `removeSynchronizedPropertyEvent`, `removeSynchronizedProperty`, `addSynchronizedPropertyEvent`, `addSynchronizedProperty`,  `synchronizeProperty`.
+- Methods `JsModule#loadMode()` and `Page#addJsModule(String, LoadMode)` for setting the load mode of JsModule are removed since it does not function with JavaScript modules.
+- The construction methods `BeforeEvent(NavigationEvent, Class<?>)` and `BeforeEvent(Router, NavigationTrigger, Location, Class<?>, UI)` in `BeforeEvent` are replaced with `BeforeEvent(NavigationEvent, Class, List)` and `BeforeEvent(Router, NavigationTrigger, Location, Class, UI, List)`
+-  Methods `getUrl()`, `getUrlBase()` and `getRoutes()` in `Router` are replaced with methods `getUrl()`, `getUrlBase()` and `getAvailableRoutes()` in `RouterConfiguration`. The `resolve()` method in `Router` is replaced with the `resolve()` method in `RouteUtil`. The `getRoutesByParent()` method in `Router` is removed and has no replacement.
+- `ServletHelper` is replaced with `HandlerHelper`
+- The `getBodyAttributes` method in `AbstractTheme`, `Lumo` and `Material` is replaced with `getHtmlAttributes`
+- The `removeDataGenerator` method in `HasDataGenerators` and `CompositeDataGenerator` is removed in favor of using the registration returned from `addDataGenerator(DataGenerator)`
+- The methods `preventsDefault` and `stopsPropagation` in `ShortcutRegistration` are replaced with `isBrowserDefaultAllowed ` and `isEventPropagationAllowed`
+-  The `safeEscapeForHtml` method in `VaadinServlet` is removed in favor of using `org.jsoup.nodes.Entities#escape(String)`
+- The static method `getInstance` in `ApplicationRouteRegistry` is removed in favor of the instance method.
+- The protected instance method `getApplicationUrl` from `VaadinServlet` is removed
+-  https://github.com/vaadin/web-components/issues/3275[Removed support for using positive `tabindex` values] (for example, `setTabIndex(1)`) on all input field components. 
+This will not cause errors but has no effect.
+However, setting `tabindex` to `0` or `-1` is still supported.
+It is recommended to ensure that input fields are in the correct order in the DOM, instead of overriding the tab order with `tabindex`.
