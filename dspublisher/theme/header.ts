@@ -36,6 +36,8 @@ export default class Example extends LitElement {
 
       <div id="haas-container"></div>
       ${this.haasImportScript()}
+      <iframe src='https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=12345&url=/&name=Test&description='>
+      </iframe>
     `;
   }
 }
