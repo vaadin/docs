@@ -29,8 +29,9 @@ public class MapMarkers extends Div {
 
         // Add marker for Vaadin office in Germany, using image from URL
         Coordinate germanOfficeCoordinates = Coordinate.fromLonLat(13.45489, 52.51390);
-        Icon germanFlagIcon = new Icon(new Icon.Options()
-                .setSrc("images/german_flag.png"));
+        Icon.Options germanFlagIconOptions = new Icon.Options();
+        germanFlagIconOptions.setSrc("images/german_flag.png");
+        Icon germanFlagIcon = new Icon(germanFlagIconOptions);
         MarkerFeature germanOffice = new MarkerFeature(germanOfficeCoordinates, germanFlagIcon);
         map.getFeatureLayer().addFeature(germanOffice);
 
@@ -38,15 +39,17 @@ public class MapMarkers extends Div {
         Coordinate usOfficeCoordinates = Coordinate.fromLonLat(-121.92163, 37.36821);
         StreamResource streamResource = new StreamResource("us-flag.png",
                 () -> getClass().getResourceAsStream("/META-INF/resources/images/us-flag.png"));
-        Icon usFlagIcon = new Icon(new Icon.Options().setImg(streamResource));
+        Icon.Options usFlagIconOptions = new Icon.Options();
+        usFlagIconOptions.setImg(streamResource);
+        Icon usFlagIcon = new Icon(usFlagIconOptions);
         MarkerFeature usOffice = new MarkerFeature(usOfficeCoordinates, usFlagIcon);
         map.getFeatureLayer().addFeature(usOffice);
         // end::snippet[]
 
         // Override marker icons to use inline images // hidden-source-line
-        vaadinHq.setIcon(Icons.defaultMarkerIcon); // hidden-source-line
-        germanOffice.setIcon(Icons.germanFlagIcon); // hidden-source-line
-        usOffice.setIcon(Icons.usFlagIcon); // hidden-source-line
+        vaadinHq.setIcon(Icons.DEFAULT_MARKER_ICON); // hidden-source-line
+        germanOffice.setIcon(Icons.GERMAN_FLAG_ICON); // hidden-source-line
+        usOffice.setIcon(Icons.US_FLAG_ICON); // hidden-source-line
     }
 
     public static class Exporter extends DemoExporter<MapMarkers> {} // hidden-source-line
