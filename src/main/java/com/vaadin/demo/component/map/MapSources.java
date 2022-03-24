@@ -58,42 +58,42 @@ public class MapSources extends VerticalLayout {
     }
 
     private void setupXyzSource() {
-        XYZSource source = new XYZSource(new XYZSource.Options()
-                // set the URL pattern for the map service containing x, y, and z parameters
-                // mapbox requires an access token, register on
-                // mapbox.com to get one, and place it in the line below
-                .setUrl("https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=<your-access-token>")
-                // set actual URL with access token for demo // hidden-source-line
-                .setUrl("https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=pk.eyJ1Ijoic2lzc2JydWVja2VyLXZhYWRpbiIsImEiOiJja3pjcjVwaWkwMXJrMzJtdDlrOWRubHFtIn0.UEQ0LqkVtBcVNRatstiVeQ") // hidden-source-line
-                // using a map service usually requires setting
-                // attributions with copyright notices
-                .setAttributions(List.of(
-                        "<a href=\"https://www.mapbox.com/about/maps/\">© Mapbox</a>",
-                        "<a href=\"https://www.openstreetmap.org/about/\">© OpenStreetMap</a>"
-                ))
-                .setAttributionsCollapsible(false)
-        );
+        XYZSource.Options sourceOptions = new XYZSource.Options();
+        // set the URL pattern for the map service containing x, y, and z parameters
+        // mapbox requires an access token, register on
+        // mapbox.com to get one, and place it in the line below
+        sourceOptions.setUrl("https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=<your-access-token>");
+        // set actual URL with access token for demo // hidden-source-line
+        sourceOptions.setUrl("https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=pk.eyJ1Ijoic2lzc2JydWVja2VyLXZhYWRpbiIsImEiOiJja3pjcjVwaWkwMXJrMzJtdDlrOWRubHFtIn0.UEQ0LqkVtBcVNRatstiVeQ"); // hidden-source-line
+        // using a map service usually requires setting
+        // attributions with copyright notices
+        sourceOptions.setAttributions(List.of(
+            "<a href=\"https://www.mapbox.com/about/maps/\">© Mapbox</a>",
+            "<a href=\"https://www.openstreetmap.org/about/\">© OpenStreetMap</a>"
+        ));
+        sourceOptions.setAttributionsCollapsible(false);
+        XYZSource source = new XYZSource(sourceOptions);
         TileLayer tileLayer = new TileLayer();
         tileLayer.setSource(source);
         map.setBackgroundLayer(tileLayer);
     }
 
     private void setupWmsSource() {
+        TileWMSSource.Options sourceOptions = new TileWMSSource.Options();
+        // set the URL for the WMS
+        sourceOptions.setUrl("https://ows.mundialis.de/services/service");
         // WMS require configuration of request parameters,
         // at least the LAYERS parameter must be specified.
         // Required parameters and possible values can be
         // found in the respective documentation of the service
         HashMap<String, Object> params = new HashMap<>();
         params.put("LAYERS", "TOPO-WMS");
-        TileWMSSource source = new TileWMSSource(new TileWMSSource.Options()
-                // set the URL for the WMS
-                .setUrl("https://ows.mundialis.de/services/service")
-                .setParams(params)
-                // using a map service usually requires setting
-                // attributions with copyright notices
-                .setAttributions(List.of("Contains modified SRTM data (2014)/NASA, processed by <a href=\"https://www.mundialis.de\">mundialis<a/>"))
-                .setAttributionsCollapsible(false)
-        );
+        sourceOptions.setParams(params);
+        // using a map service usually requires setting
+        // attributions with copyright notices
+        sourceOptions.setAttributions(List.of("Contains modified SRTM data (2014)/NASA, processed by <a href=\"https://www.mundialis.de\">mundialis<a/>"));
+        sourceOptions.setAttributionsCollapsible(false);
+        TileWMSSource source = new TileWMSSource(sourceOptions);
         TileLayer layer = new TileLayer();
         layer.setSource(source);
         map.setBackgroundLayer(layer);
