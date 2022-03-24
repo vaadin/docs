@@ -37,6 +37,8 @@ public class BasicLayoutsHorizontalLayoutHorizontalAlignment extends Div {
         // tag::layout[]
         HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
+        // Spacing can interfere with the alignment modes
+        layout.setSpacing(false);
         layout.add(new LayoutItem("Item 1"));
         layout.add(new LayoutItem("Item 2"));
         layout.add(new LayoutItem("Item 3"));
