@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.map;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.demo.flow.routing.Route;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.layer.TileLayer;
 import com.vaadin.flow.component.map.configuration.source.OSMSource;
