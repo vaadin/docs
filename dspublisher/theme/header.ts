@@ -11,6 +11,10 @@ export default class Example extends LitElement {
       label: 'Docs',
     },
     {
+      href: '/support',
+      label: 'Support',
+    },
+    {
       href: '/blog',
       label: 'Blog',
     },
