@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.map;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.demo.flow.routing.Route;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.layer.Layer;
@@ -74,10 +74,11 @@ public class MapLayers extends Div {
         // Replace background layer when option changes
         backgroundLayerGroup.addValueChangeListener(e -> {
             LayerOption selectedOption = e.getValue();
-            XYZSource source = new XYZSource(new XYZSource.Options()
-                    .setUrl(selectedOption.getUrl())
-                    .setAttributions(List.of(selectedOption.getAttributions()))
-                    .setAttributionsCollapsible(false));
+            XYZSource.Options sourceOptions = new XYZSource.Options();
+            sourceOptions.setUrl(selectedOption.getUrl());
+            sourceOptions.setAttributions(List.of(selectedOption.getAttributions()));
+            sourceOptions.setAttributionsCollapsible(false);
+            XYZSource source = new XYZSource(sourceOptions);
             TileLayer layer = new TileLayer();
             layer.setSource(source);
             map.setBackgroundLayer(layer);
@@ -87,10 +88,11 @@ public class MapLayers extends Div {
         // tag::snippet2[]
         // Add all overlay layers at once, make them invisible initially
         List.of(PRECIPITATION_LAYER, AIR_TEMPERATURE_LAYER, WIND_SPEED_LAYER).forEach(option -> {
-            XYZSource source = new XYZSource(new XYZSource.Options()
-                    .setUrl(option.getUrl())
-                    .setAttributions(List.of(option.getAttributions()))
-                    .setAttributionsCollapsible(false));
+            XYZSource.Options sourceOptions = new XYZSource.Options();
+            sourceOptions.setUrl(option.getUrl());
+            sourceOptions.setAttributions(List.of(option.getAttributions()));
+            sourceOptions.setAttributionsCollapsible(false);
+            XYZSource source = new XYZSource(sourceOptions);
             TileLayer layer = new TileLayer();
             layer.setSource(source);
             layer.setVisible(false);
