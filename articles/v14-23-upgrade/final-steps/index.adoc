@@ -96,3 +96,153 @@ include::instructions/_typescript.adoc[]
 ====
 include::instructions/_iron.adoc[]
 ====
+
+
+== Replace JsModule Stylesheets With CssImports
+.Click and read if you have styles imported with [annotationname]`@JsModule` annotations.
+[%collapsible]
+====
+
+Loading stylesheets with the [annotationname]`@JsModule` annotation in Flow is deprecated.
+JS-wrapped stylesheets should be refactored to regular CSS files and loaded with @CssImport, or, preferably, using <<custom-theme-folder,the new theme folder format>> recommended for styling applications since Vaadin 19.
+
+[discrete]
+=== Move the CSS Out of JsModule Files
+
+Styles loaded with [annotationname]`@JsModule` are wrapped in `<dom-module>` and `<custom-style>` tags inside JavaScript files:
+
+[source,javascript,highlight=8]
+.`shared-styles.js`
+----
+import '@polymer/polymer/lib/elements/custom-style.js';
+const $_documentContainer = document.createElement('template');
+
+$_documentContainer.innerHTML = `
+<custom-style>
+  <style>
+    /* Global CSS */
+    html {...}
+  </style>
+</custom-style>
+
+<dom-module id="my-text-field-styles" theme-for="vaadin-text-field">
+  <template>
+    <style>
+	  /* CSS for vaadin-text-field */
+      :host {...}
+	</style>
+  </template>
+</dom-module>`;
+document.head.appendChild($_documentContainer.content);
+----
+
+Move the contents of each `<dom-module>` and `<custom-style>` tag into its own CSS file:
+
+[source,css]
+.`styles.css`
+----
+/* Global CSS */
+html {...}
+----
+
+[source,css]
+.`text-field.css`
+----
+/* CSS for vaadin-text-field */
+:host {...}
+----
+
+[discrete]
+=== Replace JsModule Annotations With CssImport
+
+Replace all [annotationname]`@JsModule` annotations with [annotationname]`@CssImport` annotations for each stylesheet.
+
+Styles that were applied to specific Vaadin components with a `theme-for` attribute in their `dom-module` need a corresponding `themeFor` parameter in their CssImport.
+
+[source,java]
+----
+/* Before */
+@JsModule("./styles/shared-styles.js")
+
+/* After */
+@CssImport("./styles/styles.css")
+@CssImport(value="./styles/text-field.css", themeFor="vaadin-text-field")
+----
+
+====
+
+
+[[custom-theme-folder]]
+== Refactor Styles to a Custom Theme Folder
+
+While importing styles using `@CssImport` still works, the recommended way to apply CSS to Vaadin applications is using <<{articles}/ds/customization/custom-theme#,the theme folder format>> introduced in Vaadin 19.
+
+.Does not work with Material theme
+[NOTE]
+The new custom theme format does not yet work with the Material theme.
+Applications using Material should stick to `@CssImport` based styling.
+
+1. Create a `themes` folder under the project's `frontend` folder.
+
+2. Create a folder inside `themes` named, for example, according to the project (`my-theme` will be used as an example here).
+
+3. Create a stylesheet called `styles.css` inside the folder (or, if you already have one, move it there).
+
+4. Create a `components` folder inside the same folder.
++
+You should now have a folders structure like this:
++
+----
+frontend
+└── themes
+    └── my-theme
+        ├── components/
+        └── styles.css
+----
+
+5. Move all Vaadin component stylesheets, that have a `themeFor` parameter (or, if refactoring from JsModules, a `theme-for` attribute in the `dom-module`) into the `components` folder and rename them to correspond to the `themeFor` value (the component's HTML element name)
++
+----
+/* Before */
+@CssImport(value="text-field.css", themeFor="vaadin-text-field")
+
+/* After */
+frontend/themes/my-theme/components/vaadin-text-field.css
+----
+
+6. Move other stylesheets next to `styles.css`
++
+----
+frontend
+└── themes
+    └── my-theme
+        ├── components/
+        ├── styles.css
+        ├── navigation.css
+		├── dashboard.css
+        └── ...
+----
++
+and import each one into `styles.css` using `@import`
++
+[source,css]
+.`styles.css`
+----
+@import 'navigation.css';
+@import 'dashboard.css';
+----
+
+7. Remove all `@CssImport` annotations.
+
+8. Apply the theme using the `@Theme` annotation, using the theme folder's name as parameter
++
+[source,java]
+----
+@Theme("my-theme")
+public class Application extends SpringBootServletInitializer
+                         implements AppShellConfigurator {
+  ...
+}
+----
+
+9. See <<{articles}/ds/customization/custom-theme#, the theme folder format documentation>> for more details on the new format.
