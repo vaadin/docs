@@ -174,3 +174,126 @@ item: Order;
 @property()
 review: boolean;
 ----
+
+[discrete]
+=== Replace Template Elements With Renderers
+
+Certain Vaadin Web Components require the application to explicitly define how to render some parts of their content.
+For example, the `<vaadin-dialog>` component needs to know how to render the content of the overlay.
+
+With [classname]`PolymerTemplate` it was possible to use a `<template>` element for this purpose.
+This approach is not recommended with [classname]`LitTemplate` and you should favor using renderer functions instead.
+
+[source,javascript]
+----
+/* Before */
+import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
+
+...
+
+html`
+  <vaadin-dialog>
+    <template>
+      <h1>Title</h1>
+      <p>Content</p>
+    </template>
+  </vaadin-dialog>
+`;
+
+/* After */
+import { html, LitElement, render } from 'lit';
+
+...
+
+html`
+  <vaadin-dialog .renderer="${this.dialogRenderer}"></vaadin-dialog>
+`;
+
+...
+
+dialogRenderer(root) {
+  render(html`
+    <h1>Title</h1>
+    <p>Content</p>
+  `, root);
+}
+
+----
+
+A renderer function is a JavaScript function that the component calls whenever it needs some parts of its content to be updated.
+The function is called with the following arguments:
+
+- `root`: the DOM element that the renderer should fill with the content.
+- `rendererOwner`: the element the renderer is attached to.
+- `model`: (optional) the data that the renderer should use to render the content.
+Includes properties such as `index` and `item`.
+
+[discrete]
+==== Updating The Content Dynamically
+
+Sometimes the component content needs to be updated dynamically.
+Typically, this is due to some change in the state properties of the view.
+
+With `PolymerElement` based views and the `<template>` API, much of this happened automatically.
+[source,javascript]
+----
+html`
+  <vaadin-dialog>
+    <template>
+      <h1>[[title]]</h1>
+      <p>Content</p>
+    </template>
+  </vaadin-dialog>
+`;
+----
+
+When the `title` property of the view changed, the content of the `<h1>` element got updated.
+
+With `LitElement` and the renderer functions, some more wiring is needed.
+Let's say you have the following content in the `LitElement` based view:
+
+[source,javascript]
+----
+render() {
+  return html`
+    <h1 id="view-title">${this.title}</h1>
+
+    <vaadin-dialog .renderer="${this.dialogRenderer}"></vaadin-dialog>
+  `;
+}
+
+dialogRenderer(root) {
+  render(html`
+    <h1 id="dialog-title">${this.title}</h1>
+    <p>Content</p>
+  `, root);
+}
+----
+
+In this case, when the state property `title` changes, `LitElement` automatically re-renders the view.
+As the result, the `<h1>` element with the id `view-title` is updated with the new value, but the `<h1>` element inside the renderer function is not.
+
+This is because changes in the reactive properties only cause the _view_ to re-render, but not the components.
+In order to get components to re-render, they need to be explicitly requested to do so.
+One way to do this is to call the component's `requestContentUpdate()` function inside the `updated()` lifecycle callback.
+
+[source,javascript]
+----
+updated(changedProperties) {
+  if (changedProperties.has('title')) {
+    this.renderRoot.querySelector('vaadin-dialog').requestContentUpdate();
+  }
+}
+----
+
+.Bind this context for renderer functions
+[NOTE]
+One important thing to note is that if you reference `this` inside a renderer function, the view should be bound as the function's `this` context in the constructor.
+
+[source,javascript]
+----
+constructor() {
+  super();
+  this.dialogRenderer = this.dialogRenderer.bind(this);
+}
+----
