@@ -7,9 +7,49 @@ Please see sections for individual components for details and other component-sp
 
 
 [discrete]
+==== Input Fields No Longer Inherit Text Field Styles
+The following components _used to_ be based on the Text Field component, so styles applied to Text Field were automatically applied to them as well:
+
+* Combo Box
+* Date Picker
+* Number Field and Integer Field
+* Select
+* Time Picker
+
+[source,css]
+.`vaadin-text-field.css`
+----
+/* This used to apply to all of the above components */
+[part="input-field"] {
+  border: 1px solid gray;
+}
+----
+
+This is no longer the case, so any styles shared between these components need to be applied to each of them separately.
+To avoid duplicating CSS, you can place all styles shared between input field components in a separate stylesheet as follows:
+
+[source,css]
+.`input-fields-shared-styles.css`
+----
+[part="input-field"] {
+  border: 1px solid gray;
+}
+----
+
+These styles can then be applied to each component by importing the shared stylesheet into each component-specific stylesheet:
+
+[source,css]
+.`components/vaadin-combo-box.css`
+----
+@import '../input-fields-shared-styles.css';
+----
+
+
+[discrete]
 ==== Labels
 Labels have been changed to slotted child elements.
 While the `[part="label"]` selector still works, some derived selectors may need to be adjusted.
+
 The `:empty` selector no longer works correctly to distinguish empty and non-empty labels, and should be replaced by the `[has-label]` attribute selector:
 [source,css]
 ----
@@ -17,9 +57,20 @@ The `:empty` selector no longer works correctly to distinguish empty and non-emp
 [part="label"]:not(:empty) {...}
 
 /* After */
-[has-label] [part="label"] {...}
+:host([has-label]) [part="label"] {...}
 /* Or, to target the slotted element itself */
-[has-label] ::slotted(label) {...}
+:host([has-label]) ::slotted(label) {...}
+----
+
+Setting an input field's label in Flow no longer generates a `label` attribute on the component's root element.
+Selectors using it need to be rewritten to use the `has-label` attribute instead:
+[source,css]
+----
+/* Before */
+:host([label]) {...}
+
+/* After */
+:host([has-label]) {...}
 ----
 
 
@@ -64,25 +115,27 @@ html {
 ----
 
 
-
-[discrete]
-==== Text Field Derivatives Refactored
-The following components used to be based on the Text Field component, and were mostly styled through it:
-
-* Combo Box
-* Date Picker
-* Number Field and Integer Field
-* Select
-* Time Picker
-
-These have now been refactored to no longer be based on Text Field, which means that they need to be styled separately from it.
-Please see upgrade guides for each of these separately below.
-
-
-
 [discrete]
 === Button
 
+[discrete]
+==== Styles Inherited by Select
+The <<Select>> component has been refactored to use an internal button which inherits styles applied to the Button component.
+To get rid of unwanted Button styles in Select, you need to either override them or scope Button styles to only apply to actual Buttons by specifying the element name in their selectors:
+[source,css]
+.`vaadin-button.css`
+----
+/* Before */
+:host {...}
+:host([theme~="primary"]) {...}
+
+/* After */
+:host(vaadin-button) {...}
+:host(vaadin-button[theme~="primary"]) {...}
+----
+
+[discrete]
+==== Disabled Button Styles
 The styling of disabled buttons has changed from reduced opacity to a separate grayscale coloring, which may affect custom styling of buttons: secondary and tertiary buttons now use `--lumo-disabled-text-color` for text, while primary buttons use `--lumo-contrast-30pct` for background and `--lumo-base-color for text`.
 
 
@@ -157,6 +210,7 @@ See changes common to all <<styling-input-field-components>>.
 [discrete]
 === Combo Box
 
+* No longer inherits Text Field styles.
 * See changes common to all <<styling-input-field-components>>.
 * See changes to <<styling-text-field>>, as these also apply to Combo Box.
 
@@ -214,6 +268,7 @@ Depending on the editor position, styles for the CRUD’s editor should now targ
 [discrete]
 === Date Picker
 
+* No longer inherits Text Field styles.
 * See changes common to all <<styling-input-field-components>>.
 * See changes to <<styling-text-field>>, as these also apply to Date Picker.
 
@@ -279,7 +334,19 @@ The color and opacity of inactive sort indicators were changed from `--lumo-body
 Vertical Layout and Horizontal Layout have been refactored to use the CSS `gap` property for spacing between components, instead of margins.
 This makes it possible to use `flex-wrap` to wrap the contents of these layouts without spacing conflicts.
 Custom margins applied to components in these layouts will now be applied _in addition to_ the spacing, instead of _overriding_ the spacing.
+While the best approach is to simply refator all custom margins applied to elements inside layouts with spacing, a quick fix is to subtract `var(--lumo-space-m)` from affected margins (`margin-top` for Vertical Layouts and `margin-left` for Horizontal Layouts):
+[source,css]
+----
+/* Before */
+.some-layout-child {
+  margin-left: 50px;
+}
 
+/* After */
+.some-layout-child {
+  margin-left: calc(50px - var(--lumo-space-m));
+}
+----
 
 
 [discrete]
@@ -300,6 +367,7 @@ Icons are now rendered as `vaadin-icon` elements instead of `iron-icon`.
 [discrete]
 === Number Field and Integer Field
 
+* No longer inherits Text Field styles.
 * See changes common to all <<styling-input-field-components>>.
 * See changes to <<styling-text-field>>, as those also apply to Number Field and Integer Field.
 
@@ -331,7 +399,8 @@ All styles are still inherited from <<styling-text-field>>, so the same changes 
 [discrete]
 === Select
 
-See changes common to all <<styling-input-field-components>>.
+* No longer inherits Text Field styles.
+* See changes common to all <<styling-input-field-components>>.
 
 
 [discrete]
@@ -453,12 +522,12 @@ See changes common to all <<styling-input-field-components>>.
 
 
 [discrete]
-==== Other Text Input Components No Longer Based on Text Field
-Note that the following components that used to be based on Text Field are no longer so, and need to be styled separately instead of inheriting styles from Text Field:
+==== Other Components No Longer Inherit Text Field Styles
+The following components no longer inherit styles applied to Text Field, and need to be styled separately. See <<styling-input-field-components>> for details.
 
 * Combo Box
 * Date Picker
-* Number Field
+* Number Field & Integer Field
 * Select
 * Time Picker
 
@@ -500,6 +569,7 @@ Placeholder text now uses the `--lumo-secondary-text-color` color property, inst
 [discrete]
 === Time Picker
 
+* No longer inherits Text Field styles.
 * See changes common to all <<styling-input-field-components>>.
 * See changes to <<styling-text-field>>, as these also apply to Number Field and Integer Field.
 
