@@ -3,8 +3,7 @@
 
 * Delete the `node_modules` folder and either lock file: `package-lock.json` (with npm) or `pnpm-lock.yaml` (with pnpm)
 
-* Edit the `pom.xml` file and change the Vaadin version to `23.0.2`.
-
+* Edit the `pom.xml` file and change the Vaadin version to the latest Vaadin 23 version available.
 
 == Update to Java 11
 
@@ -59,6 +58,14 @@ If your application uses an older version of Spring, update it to a compatible v
 include::../../../../pom.xml[tag=spring-version, indent=0]
 ----
 
+.Cyclic dependency in Bakery starter
+[NOTE]
+====
+If your project is based on the link:https://vaadin.com/docs/v14/flow/starters/bakeryflow[V14 Bakery starter] and you encounter an error regarding cyclic dependencies after updating the Spring version, it could be due having an [annotationname]`@Autowired` field of type [classname]`PasswordEncoder` and a method that provides the bean for the same type in the [classname]`SecurityConfiguration` class.
+
+Fix this by moving them to separate classes, or preferably, remove the field in favor of using <<{articles}/flow/integrations/spring/view-based-access-control#, Vaadin Spring Security helpers>>.
+====
+
 === Update Spring Security
 
 If your application uses Spring security, ensure that [filename]#offline-stub.html# and [filename]#sw-runtime-resources-precache.js# files are added to the list of static resources that are allowed to bypass Spring security.
@@ -79,22 +86,37 @@ public void configure(WebSecurity web) {
 }
 ----
 
-== Update Main Layout/View Annotations
+== Enable Server-Side Bootstrapping 
 
-Several annotations typically placed on the `MainLayout` / `MainView` class must be moved to a class that implements the `AppShellConfigurator` interface, for example:
+Vaadin 23 uses a client-side bootstrapping approach that is different from the server-side mode that is used in Vaadin 14.
+This change requires some alteration to your Vaadin 14 codebase.
+However, to quickly get your application up and running in Vaadin 23, you can enable the Vaadin 14 server-side bootstrapping using the `useDeprecatedV14Bootstrapping` flag. We describe later in this guide the code changes required to use the new bootstrapping mode.
 
-[source,java]
+To do that in a Spring project, you can add the following to [filename]#application.properties#.
+
+.`application.properties`
+[source]
 ----
-@PWA(name = "My Vaadin App", shortName = "my-app")
-public class AppShell implements AppShellConfigurator {
-
-}
+vaadin.useDeprecatedV14Bootstrapping=true
 ----
 
-see <<{articles}/flow/advanced/modifying-the-bootstrap-page#java-annotations, set of annotations to modify the Bootstrap page>> for more details.
+Alternatively, if yours is a plain Java project, you can enable `useDeprecatedV14Bootstrapping` by adjusting the `vaadin-maven-plugin` configuration in [filename]#pom.xml# as follows:
 
+.`pom.xml`
+[source]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-maven-plugin</artifactId>
+    <configuration>
+        <useDeprecatedV14Bootstrapping>true</useDeprecatedV14Bootstrapping>
+    </configuration>
+</plugin>
+----
 
-== Replace API usage
+To migrate the deprecated server-side bootstrapping to the modern client-side one, see the <<../final-steps/#bootstrapping-changes, required Bootstrapping Changes>> section.
+
+== Replace API Usage
 
 A set of API breaking changes and their replacements are listed below:
 
@@ -109,6 +131,8 @@ A set of API breaking changes and their replacements are listed below:
 - The methods `preventsDefault` and `stopsPropagation` in `ShortcutRegistration` are replaced with `isBrowserDefaultAllowed ` and `isEventPropagationAllowed`
 -  The `safeEscapeForHtml` method in `VaadinServlet` is removed in favor of using `org.jsoup.nodes.Entities#escape(String)`
 - The static method `getInstance` in `ApplicationRouteRegistry` is removed in favor of the instance method.
+- The [methodname]`enableInstallPrompt` parameter of the `@PWA` annotation has been removed without a replacement.
+See this https://github.com/vaadin/flow/issues/8038[GitHub issue] for the motivation of this removal.
 - The protected instance method `getApplicationUrl` from `VaadinServlet` is removed
 -  https://github.com/vaadin/web-components/issues/3275[Removed support for using positive `tabindex` values] (for example, `setTabIndex(1)`) on all input field components. 
 This will not cause errors but has no effect.
