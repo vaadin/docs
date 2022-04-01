@@ -173,8 +173,23 @@ export default class UpgradeTool extends LitElement {
       this.showElementsWithClassname('fusion');
     }
 
+    // A one time hack for 14 -> 23 upgrade
+    this.perform14To23CleanupIfNecessary();
+
     this.isInstructionsDisplayed = true;
     this.updateUrlParameters();
+  }
+
+  private perform14To23CleanupIfNecessary() {
+    if (!this.is14To23Upgrade()) return;
+
+    document
+      .querySelectorAll("[class*='all'], [class*='spring']")
+      .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
+  }
+
+  private is14To23Upgrade() {
+    return this.fromVersion == '14' && this.toVersion == '23';
   }
 
   private showElementsWithClassname(classname: string) {
@@ -380,6 +395,18 @@ export default class UpgradeTool extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.removeLinksFromHeaders();
+  }
+
+  private removeLinksFromHeaders() {
+    // Remove links from headers as clicking them resets the query parameters.
+    const anchors = document.getElementsByTagName('a');
+    Array.from(anchors).forEach((a) => {
+      const parent = a.parentNode;
+      if (parent && parent.nodeName == 'H2') {
+        a.remove();
+      }
+    });
   }
 
   firstUpdated() {
