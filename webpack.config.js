@@ -10,6 +10,7 @@ const fileNameOfTheFlowGeneratedMainEntryPoint = require('path').resolve(
 const filteredFileNameOfTheFlowGeneratedMainEntryPoint =
   fileNameOfTheFlowGeneratedMainEntryPoint + '-filtered.js';
 
+  
 // @ts-ignore
 module.exports = merge(flowDefaults, {
   entry: {
