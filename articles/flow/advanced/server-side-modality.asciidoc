@@ -7,10 +7,11 @@ layout: page
 
 = Server-Side Modality
 
-A dialog with a client-side modality curtain alone does not disable the UI to which it belongs to on the server side. If the dialog or its modality curtain is removed from the DOM on the client side, its parent UI remains active on the server and can be interacted with.
+A dialog with a client-side modality curtain alone does not disable the UI to which it belongs to on the server side.
+If the dialog or its modality curtain is removed from the DOM on the client side, its parent UI remains active on the server and can be interacted with.
 
 To fully prevent interactions with components that are underneath a modal dialog (or any modal component, for that matter) Flow has a feature called server-side modality.
-This feature makes Flow ignore interactions with all components that are not childern of the modal component while it is attached or marked as modal.
+This feature makes Flow ignore interactions with all components that are not children of the modal component while it is attached or marked as modal.
 The components that are not children of the modal component are said to be _inert_, that is, they are not available for interaction.
 
 As the server-side modality feature is purely a server-side security feature that only prevents interaction, it does not add a modality curtain or change the visible state of the components in the UI. 
@@ -18,6 +19,7 @@ Adding a modality curtain should be handled by the component.
 
 Router Links, and navigation in general, are an exception.
 Navigation is also allowed when inert, as there is no way to block navigation entirely on the server side.
+Also JavaScript return values are accepted for server initiated executions.
 
 The [classname]`UI` class provides methods that allow working with the server-side modality feature. 
 The following Vaadin components make use of the feature: Dialog, Notification and Login View.
@@ -28,107 +30,59 @@ The implementation relies on a server-side-only state tree feature called [class
 By default, the inert state is inherited to child nodes.
 However, any child can declare itself to ignore parent inert state, which means that updates are allowed for itself and its children, unless these are explicitly made inert.
 
-[methodname]`UI.addModal()`.
-[methodname]`UI.setChildComponentModal()`.
+[methodname]`UI.addModal(Component)`.
+[methodname]`UI.setChildComponentModal(Component, boolean)`.
 [methodname]`UI.hasModalComponent()`.
-[methodname]`UI.addToModalComponent()`.
+[methodname]`UI.addToModalComponent(Component)`.
 
-== Adding a Modal Component
+== Using Modal Components
 
-Use the [methodname]`UI.addModal()` method to add a modal component to the UI. This makes all other components in the UI inert. When the component is later removed from the UI using [methodname]`UI.remove()`, the UI will no longer be inert (unless there was another modal component underneath the removed component).
+Use the [methodname]`UI.addModal(Component)` method to add a modal component to the UI or make an attached component modal with [methodname]`UI.setChildComponentModal(Component, true)`.
+
+This makes all components not children to the modal component in the UI inert.
+
+[NOTE] If there is a modal component and you add a new one with `addModal(Component)` the new component will be the active component.
+Removing the modality/component will return the last modal component to active status keeping modality.
+
+When the component is later removed from the UI or defined as non modal with `setChildComponentModal(Component, false)`, the UI will no longer be inert (unless there was another modal component underneath the removed component).
+
+Too add a component that should be modal use `UI.addModal(Component)`
 
 .Adding a modal component
 [source,java]
 ----
 // Add a modal component, and make the rest of the UI inert
 UI.addModal(component);
-...
+
+/* other code*/
+
 // Remove the modal component. The UI will no longer be inert.
 UI.remove(component);
 ----
 
-== Setting an Existing Component Modal
+To make an already added component modal, use [methodname]`UI.setChildComponentModal(Component, boolean)`.
 
-To make an already added component modal, use [methodname]`UI.setChildComponentModal()`. It is
-
-
-     * Makes the child component modal or modeless. The component needs to be a
-     * child of this UI. By default all child components are modeless.
-     *
-     * @param childComponent
-     *            the child component to change state for
-     * @param modal
-     *            {@code true} for modal, {@code false} for modeless
-     */
-    /*
-     * TODO decide and document whether resize listener still works for UI even
-     * when it is inert.
-     */
-
-
- ...
-
-.Getting the screen width
+.Making a component modal
 [source,java]
 ----
+// Make a component modal, and make the rest of the UI inert
+UI.setChildComponentModal(component, true);
+
+/* other code*/
+
+// Make the component non modal. The UI will no longer be inert.
+UI.setChildComponentModal(component, false);
 ----
-
-== Checking if UI is Currently Modal
-
-    /**
-     * Check if UI has a defined modal component.
-     *
-     * @return {@code true} if a modal component has been set
-     */
-
-
-...
-
-[source,java]
-----
-public static void logElementSize(String name,
-        Element element) {
-    Page page = UI.getCurrent().getPage();
-
-    page.executeJs(
-            "console.log($0 + ' size:', "
-            + "$1.offsetWidth, $1.offsetHeight)",
-            name, element);
-}
-----
-
-The supported parameter types are: `String`, `Boolean`, `Integer`, `Double`, `JsonValue`, and `Element`.
-
-The script is executed after the DOM tree has been updated based on server-side changes.
-The parameter value is `null` for a parameter of type [classname]`Element` that is not attached after the update (according to the server-side component structure).
 
 == Adding to Modal Component
 
+Adding a component to the currently active modal component use `UI.addToModalComponent(Component)` which will add the component under the current modal component.
 
-    /**
-     * Add component as child to modal component if one is active. Else it will
-     * be added to the UI normally.
-     * <p>
-     * This is meant to be used with components that are not added as part of a
-     * layout, like dialog, so that they are interactive when a modal component
-     * opens up an overlay component.
-     *
-     * @param component
-     *            component to add to modal component
-     */
+This is meant to be used with components that are not added as part of a  layout, like dialog, so that they are interactive when a modal component opens up an overlay component.
 
+To check if there is a defined modal component use `UI.hasModalComponent`.
+This is usually needed if a new component is added, and it should be usable it needs to be added under the modal component.
 
+[NOTE]
+Using `addToModalComponent(Component)` when there is no active modal component the component will be added to the UI.
 
-The [classname]`Page` class allows you to register a listener for events that affect the web page and the browser window in which the Vaadin UI resides.
-The [classname]`Page` instance corresponding to a given [classname]`UI` is accessed by the [methodname]`getPage()` method of the [classname]`UI`.
-
-You can get the browser window size by adding a resize listener, as follows:
-
-[source,java]
-----
-Page page = UI.getCurrent().getPage();
-page.addBrowserWindowResizeListener(
-        event -> Notification.show("Window width="
-                + event.getWidth()
-                + ", height=" + event.getHeight()));
-----
