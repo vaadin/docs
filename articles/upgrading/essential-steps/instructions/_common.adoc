@@ -114,9 +114,9 @@ Alternatively, if yours is a plain Java project, you can enable `useDeprecatedV1
 </plugin>
 ----
 
-To migrate the deprecated server-side bootstrapping to the modern client-side one, see the <<../final-steps/#bootstrapping-changes, required Bootstrapping Changes>> section.
+To migrate the deprecated server-side bootstrapping to the modern client-side one, see the <<../recommended-changes/#bootstrapping-changes, required Bootstrapping Changes>> section.
 
-== Replace API Usage
+== Changed APIs
 
 A set of API breaking changes and their replacements are listed below:
 
@@ -134,20 +134,53 @@ A set of API breaking changes and their replacements are listed below:
 - The [methodname]`enableInstallPrompt` parameter of the `@PWA` annotation has been removed without a replacement.
 See this https://github.com/vaadin/flow/issues/8038[GitHub issue] for the motivation of this removal.
 - The protected instance method `getApplicationUrl` from `VaadinServlet` is removed
--  https://github.com/vaadin/web-components/issues/3275[Removed support for using positive `tabindex` values] (for example, `setTabIndex(1)`) on all input field components. 
-This will not cause errors but has no effect.
-However, setting `tabindex` to `0` or `-1` is still supported.
-It is recommended to ensure that input fields are in the correct order in the DOM, instead of overriding the tab order with `tabindex`.
+
+
+
+== Miscellaneous Changes
+
+The following features have changes in their behavior although their APIs are unchanged.
+
+
 - If necessary, add a `router-ignore` attribute to the anchor elements whose navigation should be bypassing Vaadin router.
 This is needed, for example, if an anchor is used to log users out in Spring Security.
 Without the `router-ignore` attribute, Vaadin router will intercept the navigation to `/logout`, preventing Spring Security from handling logout as intended.
 To fix this, add the `router-ignore` attribute as in the following example:
-
++
 [source, java]
 ----
 Anchor logoutLink = new Anchor("/logout", "Logout from app");
 logoutLink.getElement().setAttribute("router-ignore", true);
 ----
+
+- The server-side modality mechanism introduced in V23 changes the behavior of modal Dialogs.
+Opening another Dialog when a modal Dialog is already open automatically makes the new Dialog a child of the previously opened one.
+Closing the "parent" modal also closes all subsequently opened Dialogs.
+To keep other Dialogs open when closing a modal Dialog, add them to the UI explicitly before opening:
++
+[source, java]
+----
+Dialog firstDialog = new Dialog(new Span("First"));
+Dialog secondDialog = new Dialog(new Span("Second");
+
+// Add dialogs explicitly to UI
+add(firstDialog, secondDialog);
+
+// Later open dialogs
+firstDialog.open();
+secondDialog.open();
+----
+
+-  Positive tabindex values (such as `setTabIndex(5)`) are no longer supported on input fields. Doing this will not cause errors, but will simply not have any effect on tab order.
+Tabindex values of `0` (to add a tab stop) and `-1` (to remove a tab stop) are still supported however.
+It is recommended to ensure that input fields are in the correct order in the DOM, instead of overriding the tab order with `setTabIndex`.
+
+- The DOM structure of many components has changed since V14. While this has no effect on their regular Java APIs, code utilizing Flow's Element API to access a component's internal elements may be affected.
+
+
+- For Vaadin Charts, if [classname]`XAxis` or [classname]`YAxis` are added to a chart, then the ticks of those axes are now hidden by default.
+To display the ticks, provide the axes with a tick width greater than 0 using [methodname]`XAxis.setTickWidth()` and [methodname]`YAxis.setTickWidth()`.
+
 
 == Update Selenium Version
 
