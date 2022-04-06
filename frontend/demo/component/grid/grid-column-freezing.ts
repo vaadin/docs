@@ -45,7 +45,7 @@ export class Example extends LitElement {
         <!-- tag::snippet2[] -->
         <vaadin-grid-column
           frozen-to-end
-          renderer="${this.actionRenderer}"
+          .renderer="${this.actionRenderer}"
           auto-width
           flex-grow="0"
         ></vaadin-grid-column>
