@@ -2,10 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/avatar';
+import '@vaadin/button';
 import '@vaadin/grid';
 import type { GridItemModel } from '@vaadin/grid';
-import '@vaadin/horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -30,7 +29,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-grid .items="${this.items}">
-        <!-- tag::snippet[] -->
+        <!-- tag::snippet1[] -->
         <vaadin-grid-column
           frozen
           header="Name"
@@ -38,30 +37,28 @@ export class Example extends LitElement {
           auto-width
           flex-grow="0"
         ></vaadin-grid-column>
-        <!-- end::snippet[] -->
+        <!-- end::snippet1[] -->
         <vaadin-grid-column path="email" auto-width></vaadin-grid-column>
         <vaadin-grid-column path="address.phone" auto-width></vaadin-grid-column>
         <vaadin-grid-column path="profession" auto-width></vaadin-grid-column>
         <vaadin-grid-column path="address.street" auto-width></vaadin-grid-column>
+        <!-- tag::snippet2[] -->
+        <vaadin-grid-column
+          frozen-to-end
+          .renderer="${this.actionRenderer}"
+          auto-width
+          flex-grow="0"
+        ></vaadin-grid-column>
+        <!-- end::snippet2[] -->
       </vaadin-grid>
     `;
   }
 
   private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    const person = model.item;
-    render(
-      html`
-        <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
-          <vaadin-avatar
-            style="height: var(--lumo-size-m)"
-            img="${person.pictureUrl}"
-            name="${person.firstName} ${person.lastName}"
-            alt="User avatar"
-          ></vaadin-avatar>
-          <div>${person.firstName} ${person.lastName}</div>
-        </vaadin-horizontal-layout>
-      `,
-      root
-    );
+    render(html`${model.item.firstName} ${model.item.lastName}`, root);
+  };
+
+  private actionRenderer = (root: HTMLElement) => {
+    render(html`<vaadin-button theme="tertiary-inline">Edit</vaadin-button>`, root);
   };
 }
