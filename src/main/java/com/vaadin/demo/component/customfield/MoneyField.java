@@ -1,9 +1,12 @@
 package com.vaadin.demo.component.customfield;
 
 import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.customfield.CustomFieldVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.select.SelectVariant;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.TextFieldVariant;
 
 // tag::snippet[]
 public class MoneyField extends CustomField<Money> {
@@ -42,10 +45,10 @@ public class MoneyField extends CustomField<Money> {
     add(layout);
   }
 
-  public void addThemeVariant(String theme) {
-    getElement().getThemeList().add(theme);
-    amount.addThemeName(theme);
-    currency.getElement().getThemeList().add(theme);
+  public void addThemeVariant(CustomFieldVariant variant) {
+    super.addThemeVariants(variant);
+    amount.addThemeVariants(TextFieldVariant.valueOf(variant.name()));
+    currency.addThemeVariants(SelectVariant.valueOf(variant.name()));
   }
 
   @Override

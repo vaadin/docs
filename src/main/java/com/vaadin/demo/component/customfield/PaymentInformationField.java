@@ -1,9 +1,9 @@
 package com.vaadin.demo.component.customfield;
 
 import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.customfield.CustomFieldVariant;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.customfield.CustomFieldVariant;
 
 // tag::snippet[]
 public class PaymentInformationField extends CustomField<PaymentInformation> {
