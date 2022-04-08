@@ -1,7 +1,8 @@
-const { ApplicationThemePlugin } = require('@vaadin/application-theme-plugin');
-
 const path = require('path');
 const fs = require('fs');
+
+const buildDirectory = path.resolve(__dirname, 'target');
+const { ApplicationThemePlugin } = require(buildDirectory + '/plugins/application-theme-plugin');
 
 // Folders in the project which can contain static assets.
 const projectStaticAssetsFolders = [

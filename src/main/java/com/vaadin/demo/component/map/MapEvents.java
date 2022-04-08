@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.map;
 
 import com.vaadin.demo.DemoExporter;
-import com.vaadin.demo.flow.routing.Route;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.Coordinate;
 import com.vaadin.flow.component.map.configuration.Extent;
@@ -47,7 +47,7 @@ public class MapEvents extends VerticalLayout {
         CITIES.forEach(city -> {
             MarkerFeature cityMarker = new MarkerFeature(city.coordinates);
             // Override marker icons to use inline images // hidden-source-line
-            cityMarker.setIcon(Icons.defaultMarkerIcon); // hidden-source-line
+            cityMarker.setIcon(Icons.DEFAULT_MARKER_ICON); // hidden-source-line
             map.getFeatureLayer().addFeature(cityMarker);
             // Store relation between cities and markers in a hash map
             cityLookup.put(cityMarker, city);
