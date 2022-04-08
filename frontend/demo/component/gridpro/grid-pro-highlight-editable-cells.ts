@@ -30,6 +30,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid-pro theme="highlight-editable-cells" .items="${this.items}">
+      <!-- end::snippet[] -->
         <vaadin-grid-column path="firstName"> </vaadin-grid-column>
         <vaadin-grid-column path="lastName"> </vaadin-grid-column>
         <vaadin-grid-column path="membership"></vaadin-grid-column>
@@ -37,6 +38,7 @@ export class Example extends LitElement {
           path="email"
           header="Email (Editable)"
         ></vaadin-grid-pro-edit-column>
+      <!-- tag::snippet[] -->
       </vaadin-grid-pro>
       <!-- end::snippet[] -->
     `;
