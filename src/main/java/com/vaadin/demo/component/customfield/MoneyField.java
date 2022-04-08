@@ -25,11 +25,11 @@ public class MoneyField extends CustomField<Money> {
 
     // aria-label for screen readers
     amount.getElement()
-      .executeJs("const amount = this.shadowRoot.querySelector('[part=\"value\"]');" +
+      .executeJs("const amount = this.inputElement;" +
         "amount.setAttribute('aria-label', 'Amount');" +
         "amount.removeAttribute('aria-labelledby');");
     currency.getElement()
-      .executeJs("const currency = this.shadowRoot.querySelector('vaadin-select-text-field').shadowRoot.querySelector('[part=\"input-field\"]');" +
+      .executeJs("const currency = this.focusElement;" +
         "currency.setAttribute('aria-label', 'Currency');" +
         "currency.removeAttribute('aria-labelledby');");
 
