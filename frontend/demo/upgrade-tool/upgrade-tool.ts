@@ -14,7 +14,7 @@ import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const VAADIN_VERSIONS: Record<string, string> = {
-  14: '14.8.6',
+  14: '14.8.7',
   15: '15.0.6',
   16: '16.0.5',
   17: '17.0.11',
@@ -22,8 +22,8 @@ const VAADIN_VERSIONS: Record<string, string> = {
   19: '19.0.9',
   20: '20.0.8',
   21: '21.0.9',
-  22: '22.0.9',
-  23: '23.0.1',
+  22: '22.0.12',
+  23: '23.0.4',
 };
 
 const SIMPLE_VERSIONS: string[] = [];
@@ -173,8 +173,23 @@ export default class UpgradeTool extends LitElement {
       this.showElementsWithClassname('fusion');
     }
 
+    // A one time hack for 14 -> 23 upgrade
+    this.perform14To23CleanupIfNecessary();
+
     this.isInstructionsDisplayed = true;
     this.updateUrlParameters();
+  }
+
+  private perform14To23CleanupIfNecessary() {
+    if (!this.is14To23Upgrade()) return;
+
+    document
+      .querySelectorAll("[class*='all'], [class*='spring']")
+      .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
+  }
+
+  private is14To23Upgrade() {
+    return this.fromVersion == '14' && this.toVersion == '23';
   }
 
   private showElementsWithClassname(classname: string) {
@@ -380,6 +395,18 @@ export default class UpgradeTool extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.removeLinksFromHeaders();
+  }
+
+  private removeLinksFromHeaders() {
+    // Remove links from headers as clicking them resets the query parameters.
+    const anchors = document.getElementsByTagName('a');
+    Array.from(anchors).forEach((a) => {
+      const parent = a.parentNode;
+      if (parent && parent.nodeName == 'H2') {
+        a.remove();
+      }
+    });
   }
 
   firstUpdated() {

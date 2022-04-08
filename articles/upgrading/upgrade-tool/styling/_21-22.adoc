@@ -20,10 +20,22 @@ The `:empty` selector no longer works correctly to distinguish empty and non-emp
 [part="label"]:not(:empty) {...}
 
 /* After */
-[has-label] [part="label"] {...}
+:host([has-label]) [part="label"] {...}
 /* Or, to target the slotted element itself */
-[has-label] ::slotted(label) {...}
+:host([has-label]) ::slotted(label) {...}
 ----
+
+Setting an input field's label in Flow no longer generates a `label` attribute on the component's root element.
+Selectors using it need to be rewritten to use the `has-label` attribute instead:
+[source,css]
+----
+/* Before */
+:host([label]) {...}
+
+/* After */
+:host([has-label]) {...}
+----
+
 
 [discrete]
 ==== Error Messages
@@ -83,6 +95,24 @@ Please see upgrade guides for each of these separately below.
 [discrete]
 === Button
 
+[discrete]
+==== Styles Inherited by Select
+The <<Select>> component has been refactored to use an internal button which inherits styles applied to the Button component.
+To get rid of unwanted Button styles in Select, you need to either override them or scope Button styles to only apply to actual Buttons by specifying the element name in their selectors:
+[source,css]
+.`vaadin-button.css`
+----
+/* Before */
+:host {...}
+:host([theme~="primary"]) {...}
+
+/* After */
+:host(vaadin-button) {...}
+:host(vaadin-button[theme~="primary"]) {...}
+----
+
+[discrete]
+==== Disabled Button Styles
 The styling of disabled buttons has changed from reduced opacity to a separate grayscale coloring, which may affect custom styling of buttons: secondary and tertiary buttons now use `--lumo-disabled-text-color` for text, while primary buttons use `--lumo-contrast-30pct` for background and `--lumo-base-color for text`.
 
 
@@ -240,6 +270,19 @@ The color and opacity of inactive sort indicators were changed from `--lumo-body
 Vertical Layout and Horizontal Layout have been refactored to use the CSS `gap` property for spacing between components, instead of margins.
 This makes it possible to use `flex-wrap` to wrap the contents of these layouts without spacing conflicts.
 Custom margins applied to components in these layouts will now be applied _in addition to_ the spacing, instead of _overriding_ the spacing.
+While the best approach is to simply refator all custom margins applied to elements inside layouts with spacing, a quick fix is to subtract `var(--lumo-space-m)` from affected margins (`margin-top` for Vertical Layouts and `margin-left` for Horizontal Layouts):
+[source,css]
+----
+/* Before */
+.some-layout-child {
+  margin-left: 50px;
+}
+
+/* After */
+.some-layout-child {
+  margin-left: calc(50px - var(--lumo-space-m));
+}
+----
 
 
 
