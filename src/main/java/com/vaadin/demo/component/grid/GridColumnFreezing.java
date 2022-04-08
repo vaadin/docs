@@ -16,10 +16,10 @@ public class GridColumnFreezing extends Div {
 
     public GridColumnFreezing() {
         Grid<Person> grid = new Grid<>(Person.class, false);
-        // tag::snippet[]
+        // tag::snippet1[]
         grid.addColumn(createPersonRenderer()).setHeader("Name").setFrozen(true)
                 .setAutoWidth(true).setFlexGrow(0);
-        // end::snippet[]
+        // end::snippet1[]
         grid.addColumn(Person::getEmail).setHeader("Email").setAutoWidth(true);
         grid.addColumn(person -> person.getAddress().getPhone())
                 .setHeader("Phone").setAutoWidth(true);
@@ -27,6 +27,10 @@ public class GridColumnFreezing extends Div {
                 .setAutoWidth(true);
         grid.addColumn(person -> person.getAddress().getStreet())
                 .setHeader("Street").setAutoWidth(true);
+        // tag::snippet2[]
+        grid.addColumn(createActionRenderer()).setFrozenToEnd(true)
+                .setAutoWidth(true).setFlexGrow(0);
+        // end::snippet2[]
 
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
@@ -36,12 +40,13 @@ public class GridColumnFreezing extends Div {
 
     private static Renderer<Person> createPersonRenderer() {
         return LitRenderer.<Person>of(
-                "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "  <vaadin-avatar style=\"height: var(--lumo-size-m)\" img=\"${item.pictureUrl}\" name=\"${item.fullName}\" alt=\"User avatar\"></vaadin-avatar>"
-                        + "  <span> ${item.fullName} </span>"
-                        + "</vaadin-horizontal-layout>")
-                .withProperty("pictureUrl", Person::getPictureUrl)
+                "${item.fullName}")
                 .withProperty("fullName", Person::getFullName);
+    }
+
+    private static Renderer<Person> createActionRenderer() {
+        return LitRenderer.<Person>of(
+                "<vaadin-button theme=\"tertiary-inline\">Edit</vaadin-button>");
     }
 
     public static class Exporter // hidden-source-line
