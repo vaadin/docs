@@ -14,7 +14,7 @@ import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const VAADIN_VERSIONS: Record<string, string> = {
-  14: '14.8.7',
+  14: '14.8.8',
   15: '15.0.6',
   16: '16.0.5',
   17: '17.0.11',
@@ -22,7 +22,7 @@ const VAADIN_VERSIONS: Record<string, string> = {
   19: '19.0.9',
   20: '20.0.8',
   21: '21.0.9',
-  22: '22.0.12',
+  22: '22.0.13',
   23: '23.0.4',
 };
 
