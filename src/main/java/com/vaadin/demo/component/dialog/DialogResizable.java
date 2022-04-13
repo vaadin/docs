@@ -7,7 +7,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
@@ -19,7 +18,7 @@ public class DialogResizable extends Div {
 
     public DialogResizable() {
         Dialog dialog = new Dialog();
-        dialog.getElement().setAttribute("aria-label", "Employee list");
+        dialog.setHeaderTitle("Employee list");
 
         VerticalLayout dialogLayout = createDialogLayout();
         dialog.add(dialogLayout);
@@ -33,9 +32,6 @@ public class DialogResizable extends Div {
     }
 
     private static VerticalLayout createDialogLayout() {
-        H2 headline = new H2("Employee list");
-        headline.getStyle().set("margin", "var(--lumo-space-m) 0 0 0")
-                .set("font-size", "1.5em").set("font-weight", "bold");
 
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFirstName).setHeader("First name");
@@ -47,7 +43,7 @@ public class DialogResizable extends Div {
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
 
-        VerticalLayout dialogLayout = new VerticalLayout(headline, grid);
+        VerticalLayout dialogLayout = new VerticalLayout(grid);
         dialogLayout.setPadding(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
         dialogLayout.getStyle().set("min-width", "300px")
