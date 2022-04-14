@@ -6,7 +6,6 @@ import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
-import '@vaadin/horizontal-layout';
 import '@vaadin/text-area';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
@@ -31,6 +30,17 @@ export class Example extends LitElement {
       <vaadin-dialog
         aria-label="Add note"
         draggable
+        .headerRenderer="${guard([], () => (root: HTMLElement) => {
+          render(
+            html` <h2
+              class="draggable"
+              style="flex: 1; cursor: move; margin: 0; font-size: 1.5em; font-weight: bold; padding: var(--lumo-space-m) 0;"
+            >
+              Add note
+            </h2>`,
+            root
+          );
+        })}"
         modeless
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
@@ -41,26 +51,23 @@ export class Example extends LitElement {
                 theme="spacing"
                 style="width: 300px; max-width: 100%; align-items: stretch;"
               >
-                <vaadin-horizontal-layout
-                  class="draggable"
-                  style="border-bottom: 1px solid var(--lumo-contrast-20pct); cursor: move; padding: var(--lumo-space-m) var(--lumo-space-l); margin: calc(var(--lumo-space-s) * -1) calc(var(--lumo-space-l) * -1) 0"
-                >
-                  <h2 style="margin: 0; font-size: 1.5em; font-weight: bold;">Add note</h2>
-                </vaadin-horizontal-layout>
                 <vaadin-vertical-layout style="align-items: stretch;">
                   <vaadin-text-field label="Title"></vaadin-text-field>
                   <vaadin-text-area label="Description"></vaadin-text-area>
                 </vaadin-vertical-layout>
-                <vaadin-horizontal-layout theme="spacing" style="justify-content: flex-end">
-                  <vaadin-button @click="${() => (this.dialogOpened = false)}">
-                    Cancel
-                  </vaadin-button>
-                  <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
-                    Add note
-                  </vaadin-button>
-                </vaadin-horizontal-layout>
               </vaadin-vertical-layout>
             `,
+            root
+          );
+        })}"
+        .footerRenderer="${guard([], () => (root: HTMLElement) => {
+          render(
+            html`<vaadin-button @click="${() => (this.dialogOpened = false)}">
+                Cancel
+              </vaadin-button>
+              <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
+                Add note
+              </vaadin-button>`,
             root
           );
         })}"
