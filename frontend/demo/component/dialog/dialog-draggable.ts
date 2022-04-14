@@ -26,7 +26,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet1[] -->
+      <!-- tag::snippet[] -->
       <vaadin-dialog
         aria-label="Add note"
         draggable
