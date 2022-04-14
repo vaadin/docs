@@ -61,7 +61,6 @@ export class Example extends LitElement {
   }
 
   dialogRenderer = (root: HTMLElement) => {
-    console.log('got here', this.user, this.dialogOpened);
     render(
       html`
         <vaadin-vertical-layout

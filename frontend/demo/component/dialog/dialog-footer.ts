@@ -64,10 +64,6 @@ export class Example extends LitElement {
     `;
   }
 
-  dialogRenderer = (root: HTMLElement) => {
-    render(html`<p>Are you sure you want to delete this user permanently?</p>`, root);
-  };
-
   addressDescription() {
     if (!this.user) {
       return '';

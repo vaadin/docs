@@ -9,7 +9,6 @@ import '@vaadin/dialog';
 
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
-import '@vaadin/button';
 
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
