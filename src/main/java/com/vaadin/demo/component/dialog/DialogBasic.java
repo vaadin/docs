@@ -4,9 +4,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -19,8 +17,15 @@ public class DialogBasic extends Div {
         // tag::snippet[]
         Dialog dialog = new Dialog();
 
-        VerticalLayout dialogLayout = createDialogLayout(dialog);
+        dialog.setHeaderTitle("New employee");
+
+        VerticalLayout dialogLayout = createDialogLayout();
         dialog.add(dialogLayout);
+
+        Button saveButton = createSaveButton(dialog);
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+        dialog.getFooter().add(cancelButton);
+        dialog.getFooter().add(saveButton);
 
         Button button = new Button("Show dialog", e -> dialog.open());
 
@@ -30,32 +35,18 @@ public class DialogBasic extends Div {
         dialog.open();
 
         // Center the button within the example
-        getStyle().set("position", "fixed").set("top","0").set("right", "0")
+        getStyle().set("position", "fixed").set("top", "0").set("right", "0")
                 .set("bottom", "0").set("left", "0").set("display", "flex")
                 .set("align-items", "center").set("justify-content", "center");
     }
 
-    private static VerticalLayout createDialogLayout(Dialog dialog) {
-        dialog.getElement().setAttribute("aria-label", "New employee");
-
-        H2 headline = new H2("New employee");
-        headline.getStyle().set("margin-top", "0");
+    private static VerticalLayout createDialogLayout() {
 
         TextField firstNameField = new TextField("First name");
         TextField lastNameField = new TextField("Last name");
 
-        Button cancelButton = new Button("Cancel", e -> dialog.close());
-        Button saveButton = new Button("Add", e -> dialog.close());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        HorizontalLayout buttonLayout = new HorizontalLayout(cancelButton,
-                saveButton);
-        buttonLayout
-                .setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.getStyle().set("margin-top", "var(--lumo-space-m)");
-
-        VerticalLayout dialogLayout = new VerticalLayout(headline, firstNameField,
-                lastNameField,
-                buttonLayout);
+        VerticalLayout dialogLayout = new VerticalLayout(firstNameField,
+                lastNameField);
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
@@ -64,5 +55,13 @@ public class DialogBasic extends Div {
         return dialogLayout;
     }
 
-    public static class Exporter extends DemoExporter<DialogBasic> {} // hidden-source-line
+    private static Button createSaveButton(Dialog dialog) {
+        Button saveButton = new Button("Add", e -> dialog.close());
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        return saveButton;
+    }
+
+    public static class Exporter extends DemoExporter<DialogBasic> {
+    } // hidden-source-line
 }
