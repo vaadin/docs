@@ -6,7 +6,6 @@ import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
-import '@vaadin/horizontal-layout';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 
@@ -28,9 +27,12 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog
-        aria-label="New employee"
+        header-title="New employee"
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        .footerRenderer="${guard([], () => (root: HTMLElement) => {
+          render(this.footerLayout, root);
+        })}"
         .renderer="${guard([], () => (root: HTMLElement) => {
           render(this.dialogLayout, root);
         })}"
@@ -43,19 +45,16 @@ export class Example extends LitElement {
 
   dialogLayout = html`
     <vaadin-vertical-layout style="align-items: stretch; width: 18rem; max-width: 100%;">
-      <h2 style="margin-top: 0;">New employee</h2>
       <vaadin-text-field label="First name"></vaadin-text-field>
       <vaadin-text-field label="Last name"></vaadin-text-field>
-      <vaadin-horizontal-layout
-        theme="spacing"
-        style="justify-content: flex-end; margin-top: var(--lumo-space-m);"
-      >
-        <vaadin-button @click="${() => (this.dialogOpened = false)}"> Cancel </vaadin-button>
-        <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
-          Add
-        </vaadin-button>
-      </vaadin-horizontal-layout>
     </vaadin-vertical-layout>
+  `;
+
+  footerLayout = html`
+    <vaadin-button @click="${() => (this.dialogOpened = false)}"> Cancel </vaadin-button>
+    <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
+      Add
+    </vaadin-button>
   `;
 
   static styles = css`
