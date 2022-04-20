@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.customfield;
 
 import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.customfield.CustomFieldVariant;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
@@ -28,7 +29,7 @@ public class PaymentInformationField extends CustomField<PaymentInformation> {
     layout.getThemeList().add("spacing-s");
 
     // Increases padding of field's label
-    getElement().getThemeList().add("whitespace");
+    addThemeVariants(CustomFieldVariant.LUMO_WHITESPACE);
     
     add(layout);
   }
