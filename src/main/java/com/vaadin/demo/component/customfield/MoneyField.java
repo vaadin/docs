@@ -1,9 +1,12 @@
 package com.vaadin.demo.component.customfield;
 
 import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.customfield.CustomFieldVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.select.SelectVariant;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.TextFieldVariant;
 
 // tag::snippet[]
 public class MoneyField extends CustomField<Money> {
@@ -25,11 +28,11 @@ public class MoneyField extends CustomField<Money> {
 
     // aria-label for screen readers
     amount.getElement()
-      .executeJs("const amount = this.shadowRoot.querySelector('[part=\"value\"]');" +
+      .executeJs("const amount = this.inputElement;" +
         "amount.setAttribute('aria-label', 'Amount');" +
         "amount.removeAttribute('aria-labelledby');");
     currency.getElement()
-      .executeJs("const currency = this.shadowRoot.querySelector('vaadin-select-text-field').shadowRoot.querySelector('[part=\"input-field\"]');" +
+      .executeJs("const currency = this.focusElement;" +
         "currency.setAttribute('aria-label', 'Currency');" +
         "currency.removeAttribute('aria-labelledby');");
 
@@ -42,10 +45,10 @@ public class MoneyField extends CustomField<Money> {
     add(layout);
   }
 
-  public void addThemeVariant(String theme) {
-    getElement().getThemeList().add(theme);
-    amount.addThemeName(theme);
-    currency.getElement().getThemeList().add(theme);
+  public void addThemeVariant(CustomFieldVariant variant) {
+    super.addThemeVariants(variant);
+    amount.addThemeVariants(TextFieldVariant.valueOf(variant.name()));
+    currency.addThemeVariants(SelectVariant.valueOf(variant.name()));
   }
 
   @Override
