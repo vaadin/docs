@@ -10,7 +10,7 @@ import com.vaadin.demo.domain.DataService;
 
 import java.util.List;
 
-@Route("vaadin-grid-pro-highligh-read-only-cells")
+@Route("vaadin-grid-pro-highlight-read-only-cells")
 public class GridProThemeHighlightReadOnlyCells extends Div {
 
     public GridProThemeHighlightReadOnlyCells() {
@@ -36,6 +36,3 @@ public class GridProThemeHighlightReadOnlyCells extends Div {
     public static class Exporter extends DemoExporter<GridProStylingEditableCells> { // hidden-source-line
     } // hidden-source-line
 }
-
-
-

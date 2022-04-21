@@ -10,7 +10,7 @@ import com.vaadin.demo.domain.DataService;
 
 import java.util.List;
 
-@Route("vaadin-grid-pro-highligh-editable-cells")
+@Route("vaadin-grid-pro-highlight-editable-cells")
 public class GridProThemeHighlightEditableCells extends Div {
 
     public GridProThemeHighlightEditableCells() {
@@ -36,6 +36,3 @@ public class GridProThemeHighlightEditableCells extends Div {
     public static class Exporter extends DemoExporter<GridProStylingEditableCells> { // hidden-source-line
     } // hidden-source-line
 }
-
-
-
