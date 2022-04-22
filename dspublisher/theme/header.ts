@@ -1,10 +1,29 @@
 import { html, LitElement } from 'lit';
 
-const discussionFrame = document.createElement('iframe');
-discussionFrame.style.border = '0';
-discussionFrame.style.width = '100%';
-discussionFrame.style.marginTop = '3rem';
-discussionFrame.style.borderTop = '1px solid var(--docs-divider-color-1)';
+const discussion = document.createElement('section');
+discussion.classList.add('discussion-wrapper');
+discussion.innerHTML = `
+<style>
+.discussion-wrapper {
+  margin-top: 3rem;
+  padding: 2rem 0;
+  border-top: 1px solid var(--docs-divider-color-1);
+}
+
+.discussion-wrapper p b {
+  color: var(--docs-heading-text-color);
+}
+
+.discussion-wrapper iframe {
+  border: 0;
+  margin: 0 -8px;
+  width: calc(100% + 16px);
+  max-width: none;
+}
+</style>
+<p><b>Was this page helpful?</b><br>Leave a comment or a question below. You can also join the <a href="https://discord.gg/MYFq5RTbBn" rel="noopened">chat on Discord</a> or <a href="https://stackoverflow.com/questions/tagged/vaadin" rel="noopened">ask questions on StackOverflow</a>.</p>
+<iframe></iframe>
+`;
 
 export default class Example extends LitElement {
   createRenderRoot() {
@@ -22,15 +41,17 @@ export default class Example extends LitElement {
   }
 
   _locationChange() {
-    // The discussion frame needs to be re-attached after every page change, since React is not
-    // aware of its existence, so it clears it from the DOM. Attach the discussion frame lazily.
+    // The discussion element needs to be re-attached after every page change, since React is not
+    // aware of its existence and clears it from the DOM. Attach it lazily.
     setTimeout(() => {
-      document.querySelector('main > article').append(discussionFrame);
+      document.querySelector('main > article').append(discussion);
       // Drop '/docs' from the beginning of the pathname
       const id = btoa(document.location.pathname.substring(5));
       const url = encodeURI(document.location.pathname.substring(5));
       const name = encodeURI(document.title);
-      discussionFrame.src = `https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${name}&description=`;
+      discussion.querySelector(
+        'iframe'
+      ).src = `https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${name}&description=`;
     }, 1000);
   }
 
