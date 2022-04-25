@@ -1,0 +1,243 @@
+---
+title: Spreadsheet
+page-links:
+  - 'API: https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/spreadsheet/Spreadsheet.html[Java]'
+  - 'Source: https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-spreadsheet-flow-parent[Java]'
+section-nav: commercial
+---
+
+= Spreadsheet
+:experimental:
+
+:commercial-feature: Spreadsheet
+include::{articles}/_commercial-banner.asciidoc[opts=optional]
+
+.Experimental Feature
+[IMPORTANT]
+====
+Spreadsheet is currently considered an experimental feature, which means that its behavior, API, and look and feel might still change.
+In order to use Spreadsheet, it must be explicitly enabled with a feature flag. See the <<Feature Flag>> section on how to do so.
+====
+
+// tag::description[]
+The Spreadsheet component allows you to work on Excel spreadsheets in a Vaadin application.
+// end::description[]
+You can directly modify the cell data in the active worksheet by entering textual and numerical values, as well as using Excel formulas for spreadsheet calculations.
+
+image::spreadsheet.png[]
+
+Vaadin Spreadsheet uses Apache POI to work on Microsoft Excel documents.
+You can access the Apache POI data model to perform low-level tasks, although you should note that if you make modifications to the data model, you have the responsibility to notify the spreadsheet to update itself.
+
+== Features
+
+* Excel XLSX files, limited support for XLS files
+* Support for Excel formulas
+* Excel-like editing with keyboard support
+* Lazy loading of cell data from server to browser in large spreadsheets
+* Protected cells and sheets
+* Handle changes in cell data
+* Support for touch devices
+
+== Working with Sheets
+
+A "spreadsheet" in reality works on a workbook, which contains one or more worksheets.
+You can create new sheets and delete existing ones with `createNewSheet()` and `deleteSheet()`, respectively.
+
+[.example]
+--
+[source,java]
+----
+// Recreate the initial sheet to configure it
+Spreadsheet sheet = new Spreadsheet();
+sheet.createNewSheet("New Sheet", 10, 5);
+sheet.deleteSheet(0);
+----
+--
+
+
+When a sheet is deleted, the index of the sheets with a higher index is decremented by one.
+When the active worksheet is deleted, the next one by index is set as active, or if there are none, the previous one.
+
+All operations on the spreadsheet content are done through the currently active worksheet.
+You can set an existing sheet as active with `setActiveSheetIndex()`.
+
+
+== Working with an Apache POI Workbook
+
+If you have an Apache POI workbook created otherwise, you can wrap it toSpreadsheet with the respective constructor.
+
+You can access the underlying workbook with `getWorkbook()`.
+However, if you make modifications to the workbook, you must allow the spreadsheet update itself by calling appropriate update methods for the modified element or elements.
+
+== Configuration
+The Spreadsheet object provides the following configuration of various UI elements:
+
+[cols="1,4"]
+|===
+| Element | Description
+
+|Grid lines
+|Cells are by default separated by grid lines. You can control their visibility with `setGridlinesVisible()`.
+
+|Column and row headings
+|Headings for rows and columns display the row and column indexes, and allow selecting and resizing the rows and columns.
+You can control their visibility with `setRowColHeadingsVisible()`.
+
+|Top bar
+|The top bar displays the address of the currently selected cell and an editor for cell content. You can control its visibility with `setFunctionBarVisible()`.
+
+|Bottom bar
+|The bottom bar displays the address of the currently selected cell and an editor for cell content.
+You can control its visibility with `setSheetSelectionBarVisible()`.
+
+|Report mode
+|In the report mode, both the top and bottom bars are hidden. You can enable the mode with `setReportStyle()`.
+
+|===
+
+== Frozen Row and Column Panes
+
+You can define panes of rows and columns that are frozen in respect to scrolling.
+You can create the pane for the current worksheet with `createFreezePane()`, which takes the number of frozen rows and columns as parameters.
+
+image::freeze-panels.gif[]
+
+[.example]
+--
+[source,java]
+----
+sheet.createFreezePane(1, 2);
+----
+--
+
+== Cell Formatting
+
+Formatting cell values can be accomplished by using cell styles.
+
+[.example]
+--
+[source,java]
+----
+// Define a cell style for dates
+CellStyle dateStyle = sheet.getWorkbook().createCellStyle();
+DataFormat format = sheet.getWorkbook().createDataFormat();
+dateStyle.setDataFormat(format.getFormat("yyyy-mm-dd"));
+
+// Add some data rows
+sheet.createCell(1, 0, "Nicolaus");
+sheet.createCell(1, 1, "Copernicus");
+sheet.createCell(1, 2,
+    new GregorianCalendar(1999,2,19).getTime());
+
+// Style the date cell
+sheet.getCell(1,2).setCellStyle(dateStyle);
+
+----
+--
+
+== Cell Font Style
+
+Cells can be styled by different fonts.
+A font definition not only includes a particular typeface, but also weight (bold or normal), emphasis, underlining, and other such font attributes.
+
+[.example]
+--
+[source,java]
+----
+// Create some column captions in the first row
+sheet.createCell(0, 0, "First Name");
+sheet.createCell(0, 1, "Last Name");
+sheet.createCell(0, 2, "Born");
+
+// Create a bold font
+Font bold = sheet.getWorkbook().createFont();
+bold.setBold(true);
+
+// Set the cells in the first row as bold
+for (int col=0; col <= 2; col++)
+    sheet.getCell(0, col).getCellStyle().setFont(bold);
+
+----
+--
+
+== Cell Comments
+
+Cells may have comments that are indicated by ticks in the corner of the cells, and the comment is shown when mouse is hovered on the cells.
+`TheSpreadsheetDefaultActionHandler` described in <<Default Context Menu>> enables adding comments from the context menu.
+
+A new comment can be added through the POI API of a cell, with `addComment()`.
+For a detailed example for managing cell comments, we refer to the `InsertDeleteCellCommentAction` and `EditCellCommentAction` classes employed by the default action handler.
+
+== Merging Cells
+
+You can merge spreadsheet cells with any variant of the `addMergedRegion()` method in Spreadsheet.
+
+The `SpreadsheetDefaultActionHandler` described in <<Default Context Menu>> enables merging selected cells from the context menu.
+
+Previously merged cells can be unmerged with `removeMergedRegion()`.
+The method takes as its parameter a region index.
+You can search for a particular region through the POI Sheet API for the active sheet, which you can obtain with `getActiveSheet()`.
+The `getMergedRegion()` returns a merged region by index and you can iterate through them by knowing the number of regions, which you can find out with `getNumMergedRegions()`.
+
+== Hyperlinks
+
+Hyperlinks in cells can point to other worksheets in the current workbook, or to external URLs.
+Links must be added through the POI API.
+Spreadsheet provides default handling for hyperlink clicks, which can be overridden with a `customHyperlinkCellClickHandler`, which you assign `withsetHyperlinkCellClickHandler()`.
+
+== Popup Buttons in Cells
+You can add a popup button in a cell, clicking which opens a drop-down popup overlay, which can contain any Vaadin components.
+You can add a popup button with any of the `setPopup()` methods for different cell addressing forms.
+A popup button is a PopupButton object, which is a regular Vaadin component container, so you can add any components to it by `addComponent()`.
+You can create popup buttons for a row of cells in a cell range by defining a table, as described in https://vaadin.com/docs/v8/spreadsheet/spreadsheet-overview[Tables Within Spreadsheets].
+
+== Default Context Menu
+The `SpreadsheetDefaultActionHandler` provides a ready set of common spreadsheet editing operations.
+Add, delete, hide, and show rows and columns
+Insert, edit, and delete cell comments
+Merge and unmerge cells
+Add filter table to selected range
+The default context menu is not enabled by default; to enable it, you need to create and set it as the action handler explicitly.
+
+[.example]
+--
+[source,java]
+----
+sheet.addActionHandler(new SpreadsheetDefaultActionHandler());
+----
+--
+
+== Custom Context Menus
+
+You can implement custom context menus either by implementing anActionHandler or extending the `SpreadsheetDefaultActionHandler`.
+The source code of the default handler should serve as a good example of implementing context menu items for different purposes.
+
+== Limitations
+* No provided toolbars, menus, or other controls for formatting cells
+* Limited support for the older XSL format
+* Limitations of Apache POI
+* Using a table as a named range in formulas is not supported.
+As a workaround, you can manually convert tables to ranges.
+Open the spreadsheet in Excel, right-click on the table, select the Convert to Range action, and save the spreadsheet.
+* The SUBTOTAL formula is limited to aggregate functions that do not ignore hidden values (function codes from 1 to 7, as well as 9), because they are not implemented in Apache POI
+* Strict OOXML format is not supported by Apache POI
+
+== Feature Flag
+
+In order to use Spreadsheet, it must be explicitly enabled with a feature flag. There are two methods to do so:
+
+=== Using Vaadin Developer Tools
+
+1. Click on the Vaadin Developer Tools icon button in your running application
+2. Open the [guilabel]#Experimental Features# tab
+3. Enable the [guilabel]#Spreadsheet component (Pro)# feature
+4. Restart the application
+
+image::enable-feature-flag.png[]
+
+=== Adding a Feature Flags Properties File
+
+1. Create a `src/main/resources/vaadin-featureflags.properties` in your application folder
+2. Add the following content: `com.vaadin.experimental.spreadsheetComponent=true`
+3. Restart the application
