@@ -125,6 +125,53 @@ binder.bindInstanceFields(this);
 
 If you use JSR-303 validators, you should use [classname]`BeanValidationBinder`, which picks validators automatically when using [methodname]`bindInstanceFields()`.
 
+=== Automatically Applied Converters
+
+The [methodname]`bindInstanceFields()` method can simplify [classname]`Binder` configuration by automatically applying out of the box converters from package `com.vaadin.flow.data.converter` for known types.
+Automatic choice is made only for fields that are not manually configured using [methodname]`forField()` or [methodname]`forMemberField()`.
+Converter instances are created using the [classname]`ConverterFactory` provided by [methodname]`Binder.getConverterFactory()` method.
+If a suitable converter cannot be created, [methodname]`bindInstanceFields()` throws an [classname]`IllegalStateException`.
+
+Converter's list can be augmented with custom converters, by extending [classname]`Binder` and overriding [methodname]`getConverterFactory()`, so that it returns a custom [classname]`ConverterFactory` implementation.
+When using a custom converter factory it is a good practice to fallback to the default one, if there's no specific match for types to be converted.
+
+*Example*: Providing a custom [classname]`ConverterFactory` for [classname]`Binder`.
+
+[source,java]
+----
+
+class CustomBinder<BEAN> extends Binder<BEAN> {
+
+    private final ConverterFactory converterFactory = new CustomConverterFactory(super.getConverterFactory());
+
+    @Override
+    protected ConverterFactory getConverterFactory() {
+        return converterFactory;
+    }
+}
+
+class CustomConverterFactory implements ConverterFactory {
+
+    private final ConverterFactory fallback;
+
+    CustomConverterFactory(ConverterFactory fallback) {
+        this.fallback = fallback;
+    }
+
+    public <P, M> Optional<Converter<P, M>> newInstance(Class<P> presentationType, Class<M> modelType) {
+        return getCustomConverter(presentationType, modelType)
+                .or(() -> fallback.newInstance(presentationType, modelType));
+    }
+
+    private <P, M> Optional<Converter<P, M>> getCustomConverter(Class<P> presentationType, Class<M> modelType) {
+        // custom logic
+        return ...;
+    }
+}
+
+----
+
+
 == Using JSR 303 Bean Validation
 
 You can use [classname]`BeanValidationBinder` if you prefer to use JSR 303 Bean Validation annotations, such as `Max`, `Min`, `Size`, etc.
