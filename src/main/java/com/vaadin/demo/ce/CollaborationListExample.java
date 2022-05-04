@@ -35,6 +35,30 @@ public class CollaborationListExample extends VerticalLayout {
                     // Get an item value using its key
                     String bar = list.getItem(key, String.class);
 
+                    // tag::advanced[]
+                    // Insert an item at the end of the list
+                    // Only succeeds if key is currently last
+                    ListInsertOperation operation1 = ListInsertOperation
+                            .insertLast("baz")
+                            .ifLast(key);
+                    ListInsertResult<Boolean> result1 = list.insert(operation1);
+                    ListKey key1 = result1.getKey();
+
+                    // Insert an item before key1
+                    // Only succeeds if key1 is currently last
+                    ListInsertOperation operation2 = ListInsertOperation
+                            .insertBefore(key1, "qux")
+                            .ifLast(key1);
+                    ListInsertResult<Boolean> result2 = list.insert(operation2);
+                    ListKey key2 = result2.getKey();
+
+                    // Insert an item between two keys
+                    // Only succeeds if the keys are consecutive
+                    ListInsertOperation operation3 = ListInsertOperation
+                            .insertBetween(key2, key1, "xyz");
+                    ListInsertResult<Boolean> result3 = list.insert(operation3);
+                    // end::advanced[]
+
                     // Remove an item using its key
                     list.remove(key);
                     // end::key[]
