@@ -75,9 +75,10 @@ module.exports = function (config) {
       : // false not supported in Webpack 4, let's use a resource that would get included anyway
         applyThemePath;
 
+  // Create an alias for each parent theme (if any)
   const themeName = extractThemeName(frontendGeneratedFolder);
   const parentThemePaths = findParentThemes(themeName, themeOptions);
-  parentThemePaths.map(parentThemePath => {
+  parentThemePaths.forEach((parentThemePath) => {
     const parentThemeName = parentThemePath.split('/').pop();
     config.resolve.alias[`themes/${parentThemeName}`] = parentThemePath;
   });
