@@ -23,7 +23,7 @@ const VAADIN_VERSIONS: Record<string, string> = {
   20: '20.0.8',
   21: '21.0.9',
   22: '22.0.14',
-  23: '23.0.7',
+  23: '23.0.8',
 };
 
 const SIMPLE_VERSIONS: string[] = [];
