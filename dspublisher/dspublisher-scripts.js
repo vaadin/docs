@@ -6,12 +6,15 @@ const path = require('path');
 
 const DSP_VERSION = '2.0.0-alpha.6';
 
+const firstLaunch = !fs.existsSync(path.resolve(__dirname, '..', 'node_modules'));
+const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
+
 // License check helper command
 const LICENSE_CHECK = {
   shell: 'mvn -C -P dspublisher-license-check',
   phases: [
     {
-      text: 'Checking license',
+      text: `Checking license${firstLaunchMessage}`,
       readySignal: 'BUILD SUCCESS',
       doneText: 'License check passed',
       weight: 10,
@@ -27,7 +30,7 @@ const SCRIPTS = {
         shell: `npx @vaadin/dspublisher@${DSP_VERSION} --clean`,
         phases: [
           {
-            text: 'Cleaning up dspublisher cache',
+            text: `Cleaning up dspublisher cache${firstLaunchMessage}`,
             readySignal: 'Successfully deleted directories',
             weight: 5,
           },
@@ -37,7 +40,7 @@ const SCRIPTS = {
         shell: 'mvn -C clean',
         phases: [
           {
-            text: 'Cleaning up project',
+            text: `Cleaning up project${firstLaunchMessage}`,
             readySignal: 'BUILD SUCCESS',
             doneText: 'Ready. Caches cleaned up',
             weight: 5,
@@ -62,19 +65,19 @@ const SCRIPTS = {
         ],
         phases: [
           {
-            text: 'Initializing',
+            text: `Initializing${firstLaunchMessage}`,
             readySignal: 'success building schema',
             weight: 30,
           },
           {
-            text: 'Creating pages',
+            text: `Creating pages${firstLaunchMessage}`,
             readySignal: 'success createPages',
             weight: 15,
           },
           {
             text: 'Building development bundle',
             readySignal: 'You can now view',
-            doneText: 'Ready. Open http://localhost:8000 in the browser.',
+            doneText: 'Ready at http://localhost:8000. Stop the server with Ctrl+C',
             weight: 95,
             lastPhase: true,
           },
