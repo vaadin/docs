@@ -209,11 +209,15 @@ function logProgress(state, output) {
   if (!process.env.NO_PROGRESS_LOG) {
     // Build the progress bar
     const progressBarWidth = 20;
-    const progressBar = `${'█'.repeat(
+    const defaultColor = '\x1b[0m';
+    const finishedColor = '\x1b[37;1m';
+    const unfinishedColor = '\x1b[30;1m';
+
+    const progressBar = `${finishedColor}${'█'.repeat(
       Math.floor((state.progress / totalWeight) * progressBarWidth)
-    )}\x1b[90m${'█'.repeat(
+    )}${unfinishedColor}${'█'.repeat(
       progressBarWidth - Math.floor((state.progress / totalWeight) * progressBarWidth)
-    )}\x1b[0m`;
+    )}${defaultColor}`;
 
     // Render the state
     process.stdout.write(`\n${state.name} ${progressBar} ${state.phase}${state.spinner}`);
