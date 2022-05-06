@@ -195,7 +195,7 @@ function clearLines(n) {
  * Logs to console and renders the progress bar.
  */
 function logProgress(state, output) {
-  if (this.progressLogged) {
+  if (this.progressLogged && !process.env.NO_PROGRESS_LOG) {
     // Clear the progress bar
     clearLines(2);
   }
@@ -206,16 +206,18 @@ function logProgress(state, output) {
     process.stdout.write(`${output}`);
   }
 
-  // Build the progress bar
-  const progressBarWidth = 20;
-  const progressBar = `${'█'.repeat(
-    Math.floor((state.progress / totalWeight) * progressBarWidth)
-  )}\x1b[90m${'█'.repeat(
-    progressBarWidth - Math.floor((state.progress / totalWeight) * progressBarWidth)
-  )}\x1b[0m`;
+  if (!process.env.NO_PROGRESS_LOG) {
+    // Build the progress bar
+    const progressBarWidth = 20;
+    const progressBar = `${'█'.repeat(
+      Math.floor((state.progress / totalWeight) * progressBarWidth)
+    )}\x1b[90m${'█'.repeat(
+      progressBarWidth - Math.floor((state.progress / totalWeight) * progressBarWidth)
+    )}\x1b[0m`;
 
-  // Render the state
-  process.stdout.write(`\n${state.name} ${progressBar} ${state.phase}${state.spinner}`);
+    // Render the state
+    process.stdout.write(`\n${state.name} ${progressBar} ${state.phase}${state.spinner}`);
+  }
 }
 
 // Interval for rendering the "spinner"
