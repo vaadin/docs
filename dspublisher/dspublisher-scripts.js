@@ -24,7 +24,7 @@ const LICENSE_CHECK = {
 
 const SCRIPTS = {
   clean: {
-    name: 'DSP Clean',
+    name: `dsp@${DSP_VERSION}:clean`,
     commands: [
       {
         shell: `npx @vaadin/dspublisher@${DSP_VERSION} --clean`,
@@ -50,7 +50,7 @@ const SCRIPTS = {
     ],
   },
   develop: {
-    name: 'DSP Start',
+    name: `dsp@${DSP_VERSION}:start`,
     commands: [
       LICENSE_CHECK,
       // Starts docs-app and docs server (concurrently)
@@ -87,7 +87,7 @@ const SCRIPTS = {
     ],
   },
   build: {
-    name: 'DSP Build',
+    name: `dsp@${DSP_VERSION}:build`,
     commands: [
       LICENSE_CHECK,
       {
@@ -181,27 +181,47 @@ const progressState = {
   progress: 0,
 };
 
-/**
- * Renders the progress bar.
- */
-function renderProgress(state) {
-  process.stdout.clearLine(0);
+function clearLines(n) {
+  for (let i = 0; i < n; i++) {
+    const y = i === 0 ? null : -1;
+    process.stdout.moveCursor(0, y);
+    process.stdout.clearLine(i);
+    process.stdout.line;
+  }
   process.stdout.cursorTo(0);
+}
 
-  const progressBarWidth = 30;
-  const progressBar = `[${'='.repeat(
+/**
+ * Logs to console and renders the progress bar.
+ */
+function logProgress(state, output) {
+  if (this.progressLogged) {
+    // Clear the progress bar
+    clearLines(2);
+  }
+  this.progressLogged = true;
+
+  // Log the output
+  if (output) {
+    process.stdout.write(`${output}`);
+  }
+
+  // Build the progress bar
+  const progressBarWidth = 20;
+  const progressBar = `${'█'.repeat(
     Math.floor((state.progress / totalWeight) * progressBarWidth)
-  )}${' '.repeat(
+  )}\x1b[90m${'█'.repeat(
     progressBarWidth - Math.floor((state.progress / totalWeight) * progressBarWidth)
-  )}]`;
+  )}\x1b[0m`;
 
-  process.stdout.write(`${state.name} ${progressBar} ${state.phase}${state.spinner}`);
+  // Render the state
+  process.stdout.write(`\n${state.name} ${progressBar} ${state.phase}${state.spinner}`);
 }
 
 // Interval for rendering the "spinner"
 const spinnerInterval = setInterval(() => {
   progressState.spinner = progressState.spinner.length === 3 ? '' : progressState.spinner + '.';
-  renderProgress(progressState);
+  logProgress(progressState);
 }, 500);
 
 function finish() {
@@ -217,7 +237,7 @@ function finish() {
   const lastPhase = lastCommand.phases[lastCommand.phases.length - 1];
   progressState.phase = lastPhase.doneText;
 
-  renderProgress(progressState);
+  logProgress(progressState);
 }
 
 /**
@@ -240,14 +260,9 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
     });
 
     ps.stdout.on('data', (data) => {
-      process.stdout.clearLine(0);
-      process.stdout.cursorTo(0);
-
       if (ignoredLogSignals.every((signal) => !data.toString().includes(signal))) {
-        process.stdout.write(data.toString());
+        logProgress(progressState, data.toString());
       }
-
-      renderProgress(progressState);
 
       // Find if the output includes the ready signal for one of the phases.
       const phase = phases.find((p) => data.includes(p.readySignal));
@@ -268,7 +283,7 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
             progressState.phase = nextPhase.text;
           }
 
-          renderProgress(progressState);
+          logProgress(progressState);
         }
 
         phase.done = true;
@@ -282,7 +297,7 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
   for (let command of activeScript.commands) {
     // Render the text from the first phase of the current command
     progressState.phase = command.phases[0].text;
-    renderProgress(progressState);
+    logProgress(progressState);
 
     // Run either a shell command or a function associated with the command
     if (command.shell) {
