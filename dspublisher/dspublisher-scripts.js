@@ -310,4 +310,5 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
   }
 
   finish();
+  process.stdout.write('\n');
 })();
