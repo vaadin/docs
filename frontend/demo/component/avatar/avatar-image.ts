@@ -30,8 +30,7 @@ export class Example extends LitElement {
       <vaadin-avatar
         .img="${this.person?.pictureUrl}"
         .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
-      >
-      </vaadin-avatar>
+      ></vaadin-avatar>
       <vaadin-avatar .img="${companyLogo}" name="Company Inc."></vaadin-avatar>
       <!-- end::snippet[] -->
     `;

@@ -88,8 +88,7 @@ export class Example extends LitElement {
             <vaadin-avatar
               .img=${person.pictureUrl}
               .name=${`${person.firstName} ${person.lastName}`}
-            >
-            </vaadin-avatar>
+            ></vaadin-avatar>
             <vaadin-vertical-layout>
               <span> ${person.firstName} ${person.lastName} </span>
               <span
