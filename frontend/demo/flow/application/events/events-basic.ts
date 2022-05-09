@@ -13,7 +13,7 @@ export class EventsBasic extends LitElement {
   private count = 0;
 
   render() {
-    return html` <vaadin-button @click="${this.onClick}">${this.caption}</vaadin-button> `;
+    return html`<vaadin-button @click="${this.onClick}">${this.caption}</vaadin-button>`;
   }
 
   onClick() {

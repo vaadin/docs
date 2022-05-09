@@ -46,7 +46,7 @@ export class Example extends LitElement {
       moreOptions: 'More actions',
     };
 
-    return html` <vaadin-menu-bar .i18n="${customI18n}" .items="${this.items}"></vaadin-menu-bar> `;
+    return html`<vaadin-menu-bar .i18n="${customI18n}" .items="${this.items}"></vaadin-menu-bar>`;
     // end::snippet[]
   }
 }

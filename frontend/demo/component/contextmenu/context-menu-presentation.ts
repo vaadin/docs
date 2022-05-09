@@ -130,7 +130,7 @@ export class Example extends LitElement {
   private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
     if (model?.item) {
       const person = model.item;
-      render(html` <span>${person.firstName} ${person.lastName}</span> `, root);
+      render(html`<span>${person.firstName} ${person.lastName}</span>`, root);
     }
   };
 }
