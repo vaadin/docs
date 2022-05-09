@@ -32,7 +32,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid-pro .items="${this.items}" enter-next-row>
-        <vaadin-grid-pro-edit-column path="firstName"> </vaadin-grid-pro-edit-column>
+        <vaadin-grid-pro-edit-column path="firstName"></vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column
           path="membership"
           editor-type="select"

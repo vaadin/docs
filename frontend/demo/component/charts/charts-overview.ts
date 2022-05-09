@@ -57,9 +57,9 @@ export class Example extends LitElement {
         categories='["Jan", "Feb", "Mar"]'
         additional-options='{ "yAxis": { "title": { "text": "" } } }'
       >
-        <vaadin-chart-series title="Tokyo" values="[49.9, 71.5, 106.4]"> </vaadin-chart-series>
-        <vaadin-chart-series title="New York" values="[83.6, 78.8, 98.5]"> </vaadin-chart-series>
-        <vaadin-chart-series title="London" values="[48.9, 38.8, 39.3]"> </vaadin-chart-series>
+        <vaadin-chart-series title="Tokyo" values="[49.9, 71.5, 106.4]"></vaadin-chart-series>
+        <vaadin-chart-series title="New York" values="[83.6, 78.8, 98.5]"></vaadin-chart-series>
+        <vaadin-chart-series title="London" values="[48.9, 38.8, 39.3]"></vaadin-chart-series>
       </vaadin-chart>
 
       <vaadin-chart
