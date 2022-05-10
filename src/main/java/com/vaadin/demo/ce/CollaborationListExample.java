@@ -2,6 +2,7 @@ package com.vaadin.demo.ce;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationList;
+import com.vaadin.collaborationengine.ListInsertOperation;
 import com.vaadin.collaborationengine.ListInsertResult;
 import com.vaadin.collaborationengine.ListKey;
 import com.vaadin.collaborationengine.UserInfo;
