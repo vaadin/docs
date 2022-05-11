@@ -1,0 +1,312 @@
+---
+title: Creating Vaadin Portlets
+order: 2
+description: Describes how to build your own Vaadin Portlets and run them
+---
+
+= Creating Vaadin Portlets
+
+In this chapter we will learn how to create Vaadin Portlets and how to deploy those portlets to https://liferay.com/products/dxp[Liferay 7 Digital Experience Platform].
+
+== Creating a Vaadin Portlet
+
+We have two ways to start the creation of our Vaadin Portlet: starting from scratch or from https://github.com/vaadin/base-starter-flow-portlet[base-starter-flow-portlet] project.
+The starter project contains everything needed to quickly create your own Vaadin Portlet, with the code laid out in advance.
+
+In order to become familiar with setting up a Vaadin Portlet project manually, we will start with a simple Vaadin project and then convert it into a Vaadin Portlet project.
+
+=== Setting Up Portlet Project
+
+First, download the https://github.com/vaadin/skeleton-starter-flow/tree/v14/[Vaadin base starter]
+
+Next, update your [filename]#pom.xml#:
+
+. Add the following dependencies:
++
+.pom.xml additions
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-portlet</artifactId>
+    <version>1.0.0</version>
+</dependency>
+----
++
+[source,xml]
+----
+<dependency>
+    <groupId>javax.portlet</groupId>
+    <artifactId>portlet-api</artifactId>
+    <version>3.0.1</version>
+    <scope>provided</scope>
+</dependency>
+----
+
+. Add `build-frontend` goal to `vaadin-maven-plugin` as Vaadin Portlet does not work in development mode running webpack-dev-server.
+
+=== Creating the Portlet
+
+In the most basic setup, Vaadin Portlets consist of two classes:
+
+* A **portlet class**, which extends  [classname]`VaadinLiferayPortlet` or [classname]`VaadinPortlet` (when running in non-Liferay Portal)
+
+The portlet class acts as the entry point for our Vaadin Portlet application.
+It serves a similar function to a Servlet, but in a portlet context.
+
+* A portlet **view class**, which extends [classname]`Component`
+
+The view class, which can be any normal Vaadin component, contains the contents of our Vaadin Portlet.
+You could use an existing component through extension, composition, or as is.
+Or just create an entirely new component for your Vaadin Portlet.
+[classname]`VaadinPortlet` and [classname]`VaadinLiferayPortlet` are generic classes and take the selected view class as a type parameter.
+
+==== Preparing the Classes
+
+Find the [filename]#MainView.java# provided with the project and create [filename]#MyPortlet.java# in the same folder.
+Inside the file, add the following code:
+
+MyLiferayPortlet.java for Liferay Portals
+[source,java]
+----
+@PortletConfiguration(
+    portletName = "MyLiferayPortlet",
+    dependencies = @Dependency(name = "PortletHub", scope = "javax.portlet", version = "3.0.0")
+)
+public class MyLiferayPortlet extends VaadinLiferayPortlet<MainView> {
+
+}
+----
+
+MyPortlet.java for non-Liferay Portals
+[source,java]
+----
+public class MyPortlet extends VaadinPortlet<MainView> {
+
+}
+----
+
+Next, open the [filename]#MainView.java#.
+Remove both the [annotationname]`@Route` and [annotationname]`@PWA` annotations, which do not make sense for our portlet.
+
+The final code should look something like this:
+
+.MainView.java
+[source,java]
+----
+public class MainView extends VerticalLayout {
+
+    public MainView() {
+        Button button = new Button("Click me",
+                event -> Notification.show("Clicked!"));
+        add(button);
+    }
+}
+----
+
+When a user clicks on the button, a notification with the text "Clicked!" should appear in the lower-left corner of the browser window.
+Your Vaadin Portlet is almost ready to go; we only need to make it ready for deployment.
+
+=== Setting Portlet Deployment Descriptor
+
+In the Portlet 3.0 specification, the portlet deployment descriptor can be configured in two ways:
+
+- [filename]#portlet.xml# (backwards-compatible)
+- annotations (only 3.0)
+
+We will use the [filename]#portlet.xml# to configure our portlet deployment.
+The [filename]#portlet.xml# serves the same purpose as [filename]#web.xml# does for servlets.
+
+Create [filename]#portlet.xml# under `{project directory}/src/main/webapp/WEB-INF` and add the following contents:
+
+.portlet.xml
+[source,xml]
+----
+<?xml version="1.0"?>
+<portlet-app xmlns="http://xmlns.jcp.org/xml/ns/portlet"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/portlet http://xmlns.jcp.org/xml/ns/portlet/portlet-app_3_0.xsd"
+             version="3.0">
+    <portlet>
+        <portlet-name>MyLiferayPortlet</portlet-name>
+        <display-name>MyLiferayPortlet</display-name>
+        <portlet-class>org.vaadin.example.MyPortlet</portlet-class>
+        <expiration-cache>0</expiration-cache>
+        <supports>
+            <mime-type>text/html</mime-type>
+            <portlet-mode>view</portlet-mode>
+        </supports>
+        <portlet-info>
+            <title>My Test Portlet - MyPortlet</title>
+            <short-title>My Test Portlet</short-title>
+            <keywords></keywords>
+        </portlet-info>
+    </portlet>
+</portlet-app>
+----
+
+The `<portlet-class>` points to your class extending [classname]`VaadinPortlet`/[classname]`VaadinLiferayPortlet` with a fully qualified name.
+The `<supports>` section contains the portlet modes (`<portlet-mode>` tag) the portlet supports.
+You can learn more about portlet modes for Vaadin Portlet in <<handling-portlet-phases.asciidoc#,the next chapter>>
+
+=== Setting Portlet Descriptors Specific to Liferay
+
+To run Vaadin Portlets in Liferay Portal the following descriptors are also needed:
+
+- `liferay-display.xml` - describes the category the portlet appears under in the `Add` menu of Liferay's Widgets bar.
+- `liferay-portlet.xml` - describes Liferay-specific enhancements for JSR-286 portlets installed on a Liferay Portal server.
+
+Create [filename]#liferay-display.xml# and [filename]#liferay-portlet.xml# under `{project directory}/src/main/webapp/WEB-INF` and add the following contents:
+
+.[filename]#liferay-display.xml#
+[source,xml]
+----
+<?xml version="1.0"?>
+<!DOCTYPE display PUBLIC "-//Liferay//DTD Display 6.2.0//EN" "http://www.liferay.com/dtd/liferay-display_6_2_0.dtd">
+
+<display>
+    <category name="Vaadin Liferay Portlets">
+        <portlet id="MyLiferayPortlet" />
+    </category>
+</display>
+----
+
+.[filename]#liferay-portlet.xml#
+[source,xml]
+----
+<?xml version="1.0"?>
+<!DOCTYPE liferay-portlet-app PUBLIC "-//Liferay//DTD Portlet Application 7.1.0//EN" "http://www.liferay.com/dtd/liferay-portlet-app_7_1_0.dtd">
+
+<liferay-portlet-app>
+    <portlet>
+        <portlet-name>MyLiferayPortlet</portlet-name>
+        <!-- Instanceable parameter means whether we can add the Portlet more than once on same page.-->
+        <instanceable>false</instanceable>
+    </portlet>
+</liferay-portlet-app>
+----
+[NOTE]
+The parameter `instanceable` specifies whether the Portlet can be added more than once on same page.
+If it is `false`, it can be added only once on a page.
+
+=== Setting External Stats URL for Liferay
+
+If your portlet runs in *Liferay Portal*, add the following resource file [filename]#flow-build-info.json# into `{project directory}/src/main/resources/META-INF/VAADIN/config` with the contents:
+
+.[filename]#flow-build-info.json#
+[source,json]
+----
+{
+    "externalStatsUrl": "/o/vaadin-portlet-static/VAADIN/config/stats.json"
+}
+----
+
+== Deploying Your Vaadin Portlet
+
+=== Building Vaadin Portlet
+
+In order to build the portlet we just created, we must add some more configuration to the [filename]#pom.xml#.
+Vaadin Portlet deployments are packaged into two `WAR` files.
+One `WAR` file contains all the static resources shared by the Vaadin Portlets, and the other `WAR` file contains the actual portlets.
+This allows for more complex scenarios where multiple portlets come from separate `WAR` files; see <<creating-multi-module-portlet-project.asciidoc#,Creating Multi-Module Portlet Project>>.
+
+Add the following plugin configuration to the [filename]#pom.xml#:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-war-plugin</artifactId>
+    <version>3.2.3</version>
+    <configuration>
+        <archive>
+            <manifestEntries>
+                <Implementation-Title>${project.name}</Implementation-Title>
+                <Implementation-Version>${project.version}</Implementation-Version>
+            </manifestEntries>
+        </archive>
+    </configuration>
+    <!-- Generate 2 war archives for portlet. One for the portlet(s) and another for the static files -->
+    <executions>
+        <!-- Generate a static war 'vaadin-portlet-static.war' with all static files -->
+        <execution>
+            <id>static-files</id>
+            <goals>
+                <goal>war</goal>
+            </goals>
+            <configuration>
+                <warName>vaadin-portlet-static</warName>
+                <!-- static files should contain flow-client and all build files generated in VAADIN/ -->
+                <packagingIncludes>WEB-INF/lib/flow-client*.jar,WEB-INF/lib/vaadin-portlet*.jar,VAADIN/</packagingIncludes>
+
+                <webResources>
+                    <resource>
+                        <!-- this is relative to the pom.xml directory -->
+                        <directory>target/classes/META-INF/webapp/</directory>
+                        <!-- Include all files and folders below <directory> -->
+                        <includes>
+                            <include>**</include>
+                        </includes>
+                        <!-- do not include configuration files -->
+                        <excludes>
+                            <exclude>VAADIN/config/**</exclude>
+                        </excludes>
+                    </resource>
+                </webResources>
+            </configuration>
+        </execution>
+        <!-- Generate the portlet war excluding any static build files -->
+        <execution>
+            <id>portlet-war</id>
+            <goals>
+                <goal>war</goal>
+            </goals>
+            <configuration>
+                <primaryArtifact>true</primaryArtifact>
+                <packagingExcludes>WEB-INF/classes/META-INF/VAADIN/build/**,VAADIN/</packagingExcludes>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+Here we build two `WAR` files: one for the application (all portlets in this project), and one for the static files needed by the portlets (which contains the frontend bundle and client engine).
+
+The static `WAR` is built as a portal window that can only load a single Vaadin bundle and client engine at a time.
+This provides a simple way for all the portlets on the page to use the same static bundle.
+
+==== Configuring Static Resources
+
+If you need to change the name of the static assets `WAR` (by default, `vaadin-portlet-static`), you can do this via the `vaadin.portlet.static.resources.mapping` application property.
+For example, if you would like to serve static resources from `vaadin-static-resources.war`, you will need to +
+
+* rename the static `WAR` to `vaadin-static-resources` in the [filename]#pom.xml#;
+* change the static portlet name in [filename]#flow-build-info.json# (if Liferay is used);
+* pass the value `/vaadin-static-resources/` (for *Liferay Portal*, it would be `/o/vaadin-portlet-resources/`) via the application property to the Vaadin application; that is, on the Tomcat web server you would:
+** on *nix-based operating systems, create or edit the file [filename]#$CATALINA_BASE/bin/setenv.sh# with the line +
+`JAVA_OPTS="$JAVA_OPTS -Dvaadin.portlet.static.resources.mapping=/vaadin-static-resources/"`;
+** on Windows operating systems, create or edit the file [filename]#%CATALINA_BASE%\bin\setenv.bat# with the line +
+`set "JAVA_OPTS=%JAVA_OPTS% -Dvaadin.portlet.static.resources.mapping=/vaadin-static-resources/"`.
+
+=== Deploying Vaadin Portlet to Liferay 7
+
+. Run `mvn install` in your project directory.
+. Download https://github.com/liferay/liferay-portal/releases[Liferay Bundle] and extract it to a location you prefer.
+. Add the following parameter to Liferay Tomcat's [filename]#setenv.sh# (`{liferay home}/tomcat-<version>/bin`):
+`-Dvaadin.portlet.static.resources.mapping=/o/vaadin-portlet-static/`
+. Download and copy the JNA dependency `JARs` of the specific version into `{liferay home}/tomcat-<version>/webapps/ROOT/WEB-INF/lib` (or `shielded-container-lib` depending on the version): https://mvnrepository.com/artifact/net.java.dev.jna/jna/5.7.0[net.java.dev.jna:jna:5.7.0], https://mvnrepository.com/artifact/net.java.dev.jna/jna-platform/5.7.0[net.java.dev.jna:jna-platform:5.7.0].
+This is needed because Vaadin Portlet uses a newer version of the JNA library which can cause conflicts with the version that Liferay uses.
+. Create a [filename]#portal-ext.properties# file in Liferay's home directory and place the following property there: `javascript.single.page.application.enabled=false`.
+. Copy both `WAR` files from `{project directory}/target` into `{liferay home}/deploy`.
+. Start the web server by
+* opening a command prompt in the `{bundle extract directory}` folder;
+* running the command `./{tomcat-version}/bin/startup.sh` or `./{tomcat-version}/bin/startup.bat` (Unix/Windows).
+. Once the web server has started, navigate to http://localhost:8080/
+. Follow the instructions of the Liferay wizard to set up a new user and sign in to the Portal.
+. Click on the "Menu" button at the top-left corner to open the menu console.
+. Find and click on the "Page tree" link and click on "+" button to add a new page.
+. Select "Widget Page", give it a name and select appropriate layout.
+. In the "Look and Feel" tab select "Define a specific look and feel for this page" and enable "Show Maximize/Minimize".
+. Click "Save" and navigate to the home page, then to the layout you just created.
+. Click the "Add" button, which is usually placed at the top-right corner, find the category "Vaadin Liferay Portlets", open it and drag and drop the portlet item from the panel to the page.
+. You should see the portlet with the title "MY TEST PORTLET - MYPORTLET" and a "Click me" button in the content area.
