@@ -88,8 +88,7 @@ export class Example extends LitElement {
             <vaadin-avatar
               .img=${person.pictureUrl}
               .name=${`${person.firstName} ${person.lastName}`}
-            >
-            </vaadin-avatar>
+            ></vaadin-avatar>
             <vaadin-vertical-layout>
               <span> ${person.firstName} ${person.lastName} </span>
               <span
@@ -131,7 +130,7 @@ export class Example extends LitElement {
   private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
     if (model?.item) {
       const person = model.item;
-      render(html` <span>${person.firstName} ${person.lastName}</span> `, root);
+      render(html`<span>${person.firstName} ${person.lastName}</span>`, root);
     }
   };
 }

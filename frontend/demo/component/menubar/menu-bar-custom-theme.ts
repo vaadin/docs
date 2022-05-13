@@ -26,7 +26,7 @@ export class Example extends LitElement {
   ];
 
   render() {
-    return html` <vaadin-menu-bar .items="${this.items}"></vaadin-menu-bar> `;
+    return html`<vaadin-menu-bar .items="${this.items}"></vaadin-menu-bar>`;
   }
   // end::snippet[]
 }

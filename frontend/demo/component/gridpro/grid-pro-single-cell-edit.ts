@@ -29,8 +29,8 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid-pro .items="${this.items}" single-cell-edit>
-        <vaadin-grid-pro-edit-column path="firstName"> </vaadin-grid-pro-edit-column>
-        <vaadin-grid-pro-edit-column path="lastName"> </vaadin-grid-pro-edit-column>
+        <vaadin-grid-pro-edit-column path="firstName"></vaadin-grid-pro-edit-column>
+        <vaadin-grid-pro-edit-column path="lastName"></vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column path="email"></vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column path="profession"></vaadin-grid-pro-edit-column>
       </vaadin-grid-pro>

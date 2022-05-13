@@ -17,7 +17,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-text-field value="Value" clear-button-visible> </vaadin-text-field>
+      <vaadin-text-field value="Value" clear-button-visible></vaadin-text-field>
       <!-- end::snippet[] -->
     `;
   }
