@@ -56,7 +56,7 @@ export class Example extends LitElement {
   ) => {
     const item = model.item;
     const rating = item ? this.ratingFormatter.format(item.customerRating) : '';
-    render(html` <span>${rating}</span> `, root);
+    render(html`<span>${rating}</span>`, root);
   };
 
   private cellClassNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {

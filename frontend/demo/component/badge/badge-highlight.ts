@@ -78,7 +78,7 @@ export class Example extends LitElement {
                   break;
               }
 
-              render(html` <span theme="badge ${theme} primary"> ${title} </span> `, root);
+              render(html`<span theme="badge ${theme} primary">${title}</span>`, root);
             }
           )}"
         ></vaadin-grid-column>

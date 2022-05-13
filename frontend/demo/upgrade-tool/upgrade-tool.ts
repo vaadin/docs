@@ -118,7 +118,6 @@ export default class UpgradeTool extends LitElement {
               value="styling"
               label="Changes to custom styling of components"
               id="styling-checkbox"
-              }
             ></vaadin-checkbox>
           </vaadin-checkbox-group>
         </div>

@@ -37,8 +37,7 @@ export class Example extends LitElement {
         .value="${this.text}"
         @value-changed="${(e: CustomEvent) => (this.text = e.detail.value)}"
         .helperText="${`${this.text.length}/${this.charLimit}`}"
-      >
-      </vaadin-text-area>
+      ></vaadin-text-area>
     `;
   }
   // end::snippet[]

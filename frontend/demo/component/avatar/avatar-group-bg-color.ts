@@ -33,8 +33,7 @@ export class Example extends LitElement {
             colorIndex: colorIndex,
           };
         })}"
-      >
-      </vaadin-avatar-group>
+      ></vaadin-avatar-group>
       <!-- end::snippet[] -->
     `;
   }
