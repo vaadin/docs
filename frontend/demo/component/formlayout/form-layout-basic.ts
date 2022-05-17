@@ -31,8 +31,8 @@ export class Example extends LitElement {
         <vaadin-text-field label="Last name"></vaadin-text-field>
         <!-- Stretch the username field over 2 columns -->
         <vaadin-text-field colspan="2" label="Username"></vaadin-text-field>
-        <vaadin-password-field label="Password"> </vaadin-password-field>
-        <vaadin-password-field label="Confirm password"> </vaadin-password-field>
+        <vaadin-password-field label="Password"></vaadin-password-field>
+        <vaadin-password-field label="Confirm password"></vaadin-password-field>
       </vaadin-form-layout>
     `;
   }

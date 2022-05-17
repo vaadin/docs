@@ -28,7 +28,7 @@ export class Example extends LitElement {
 
       vaadin-tabs {
         margin: auto;
-      )
+      }
     `;
   }
 

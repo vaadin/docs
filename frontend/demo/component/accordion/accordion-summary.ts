@@ -133,8 +133,7 @@ export class Example extends LitElement {
               item-label-path="name"
               item-value-path="id"
               .items="${this.countries}"
-            >
-            </vaadin-combo-box>
+            ></vaadin-combo-box>
           </vaadin-form-layout>
           <vaadin-button theme="primary" @click="${() => (this.openedPanelIndex = 2)}">
             Continue

@@ -56,8 +56,7 @@ export class Example extends LitElement {
               <vaadin-checkbox
                 .value="${String(person.id)}"
                 label="${person.firstName} ${person.lastName}"
-              >
-              </vaadin-checkbox>
+              ></vaadin-checkbox>
             `;
           })}
         </vaadin-checkbox-group>
