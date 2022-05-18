@@ -1,7 +1,5 @@
 package com.vaadin.demo.ce;
 
-import java.util.Objects;
-
 import com.vaadin.collaborationengine.FormManager;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -29,27 +27,24 @@ public class FormManagerExample {
         manager.highlight("name", true); // <2>
 
         manager.setHighlightHandler(context -> { // <3>
-            setHelperText(context.getPropertyName(),
-                    context.getUser().getName() + " is editing this field");
-            return () -> setHelperText(context.getPropertyName(), null); // <4>
+            String propertyName = context.getPropertyName();
+            UserInfo user = context.getUser();
+
+            // Executed when a field is highlighted
+
+            return () -> { // <4>
+                // Executed when a field is no longer highlighted
+            };
         });
 
         manager.setValue("name", "John"); // <5>
 
-        manager.setPropertyChangeHandler(event -> // <6>
-                setValue(event.getPropertyName(), event.getValue().toString()));
+        manager.setPropertyChangeHandler(event -> { // <6>
+                String propertyName = event.getPropertyName();
+                Object value = event.getValue();
+
+                // Executed when a property value is changed
+            });
         // end::snippet[]
-    }
-
-    void setHelperText(String property, String text) {
-        if (Objects.equals(property, "name")) {
-            nameField.setHelperText(text);
-        }
-    }
-
-    void setValue(String property, String value) {
-        if (Objects.equals(property, "name")) {
-            nameField.setValue(value);
-        }
     }
 }
