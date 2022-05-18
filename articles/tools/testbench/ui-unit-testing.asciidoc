@@ -81,3 +81,72 @@ class MyViewTest extends UIUnitTest {
 
 }
 ----
+
+[[testbench.uiunit.components]]
+=== Testing Components
+
+The target of the UI Unit tests is not to test the components as is, but to simulate user
+actions and data "seen" on the client side.
+
+To help with actions and getting data there are wrappers for components that have methods for use with components.
+In a UIUnitTest class wrapping a component can be done with `wrap(component)` or `wrap(Wrapper.class, component)`.
+
+- `wrap(component)` will return a component specific wrapper if one can be determined for the given component or the ComponentWrap generic wrapper.
+- `wrap(Wrapper.class, component)` always returns an instance of the given wrapper.
+
+For each method call, where it is applicable, the wrapper methods check that the component is in a state where it could be used by the user.
+This means that the component should be visible, enabled, attached to the UI and not be behind a modal component.
+
+[NOTE]
+Modality check only works when the modal component is server-side modal.
+
+Sample test of the HelloWorld view.
+
+.HelloWorld
+[source, java]
+----
+@Route(value = "", layout = MainLayout.class)
+public class HelloWorldView extends HorizontalLayout {
+
+    TextField name;
+    Button sayHello;
+
+    public HelloWorldView() {
+        name = new TextField("Your name");
+        sayHello = new Button("Say hello");
+        sayHello.addClickListener(e -> {
+            Notification.show("Hello " + name.getValue());
+        });
+
+        setMargin(true);
+        setVerticalComponentAlignment(Alignment.END, name, sayHello);
+
+        add(name, sayHello);
+    }
+}
+----
+
+[NOTE]
+The components are package protected so that we can use them directly in the UIUnitTest.
+
+.HelloWorldViewTest
+[source, java]
+----
+class HelloWorldViewTest extends UIUnitTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        // TextField and Button are available as package protected in the view
+        // So wwe can use those simply from there
+        wrap(TextFieldWrap.class, helloView.name).setValue("Test");
+        wrap(ButtonWrap.class, helloView.sayHello).click();
+
+        // Notification is not referenced in the view so we need to use the component
+        // query API to find the notification that opened
+        NotificationWrap notification_ = $(Notification.class).first();
+        Assertions.assertEquals("Hello Test", notification_.getText());
+    }
+}
+----
