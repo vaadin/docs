@@ -32,12 +32,14 @@ export class Example extends LitElement {
         draggable
         .headerRenderer="${guard([], () => (root: HTMLElement) => {
           render(
-            html` <h2
-              class="draggable"
-              style="flex: 1; cursor: move; margin: 0; font-size: 1.5em; font-weight: bold; padding: var(--lumo-space-m) 0;"
-            >
-              Add note
-            </h2>`,
+            html`
+              <h2
+                class="draggable"
+                style="flex: 1; cursor: move; margin: 0; font-size: 1.5em; font-weight: bold; padding: var(--lumo-space-m) 0;"
+              >
+                Add note
+              </h2>
+            `,
             root
           );
         })}"

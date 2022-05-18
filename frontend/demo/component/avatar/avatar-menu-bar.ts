@@ -56,7 +56,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-menu-bar .items="${this.menuBarItems}" theme="tertiary-inline"> </vaadin-menu-bar>
+      <vaadin-menu-bar .items="${this.menuBarItems}" theme="tertiary-inline"></vaadin-menu-bar>
       <!-- end::snippet[] -->
     `;
   }
