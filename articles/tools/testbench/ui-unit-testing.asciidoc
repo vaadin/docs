@@ -81,3 +81,61 @@ class MyViewTest extends UIUnitTest {
 
 }
 ----
+
+[[testbench.uiunit.search-components]]
+== Searching for Components
+
+The [classname]`UIUnitTest` base class is able to get the instantiated view, but child components may not be always accessible directly.
+For example components may be stored in fields with private visibility or they may even not be referenced at all in the view class.
+To overcome this limitation, [classname]`UIUnitTest` provides a Component query functionality, that lets you search the component tree for the components you need to interact with in test methods.
+
+The [classname]`ComponentQuery` object can be obtained by calling the [methodname]`$()` method, providing the type of the component you are searching for.
+You can also restrict search scope to the children of the current view, using the [methodname]`$view()` method.
+The query object has many filtering utilities that can be used to refine the search.
+For example you can filter by component `id`, by a property value, or using custom predicates on potential candidates.
+Once the query is ready with all required conditions configured, you can get test wrappers for specific components found by query execution by calling terminal operators.
+Examples of terminal operators are [methodname]`first()`, [methodname]`last()`, [methodname]`atIndex()`, [methodname]`all()` and [methodname]`id()`.
+
+.Using Query API to get component wrappers
+[source,java]
+----
+// Get a wrapper for the first TextField in the UI
+TextFieldWrap nameField_ = $(TextField.class).first();
+
+// Get a wrapper for the first TextField in the current view
+TextFieldWrap nameField_ = $view(TextField.class).first();
+
+// Get a wrapper for the first TextField with the given label
+TextFieldWrap nameField_ = $view(TextField.class)
+        .withPropertyValue(TextField::getLabel, "First name")
+        .first();
+
+// Get a wrapper for the first TextField that satisfies the conditions
+Predicate<TextField> fieldHasNotValue = field -> field.getOptionalValue().isEmpty();
+Predicate<TextField> fieldIsInvalid = TextField::isInvalid;
+TextFieldWrap<TextField, String> textField = $view(TextField.class)
+        .withCondition(fieldHasNotValue.or(fieldIsInvalid))
+        .first();
+
+----
+
+
+Sometimes you may need to do a query for components nested inside the UI, in a hierarchy composed of many different types of components.
+To simplify such situations, the query object offers methods to chain a new query starting with a found component, so that complex query can be created in a fluent way.
+The [methodname]`thenOn()` method and its variants, for example [methodname]`thenOnFirst()`, provide you with a new query object for the given component type, setting the search scope to the component selected from the current query.
+
+.Chained query example
+[source,java]
+----
+
+// Search for all 'VerticalLayout's in the view
+TextFieldWrap<TextField, String> button = $view(VerticalLayout.class)
+        // take the second one and start searching for 'TextField's
+        .thenOn(2, TextField.class)
+        // filter for disabled 'TextField's
+        .withCondition(tf -> !tf.isEnabled())
+        // and get the last one
+        .last();
+----
+
+
