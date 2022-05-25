@@ -128,3 +128,128 @@ nameField_.setValue("User input");
 // Assert in another component that the change event fired and it has the correct value
 Assertions.assertEquals("User input", input.changeText.getText());
 ----
+
+[[testbench.uiunit.components]]
+=== Testing Components
+
+The aim of UI unit tests is not to test the components as is, but to simulate user actions and data "seen" on the client side.
+
+To help with actions and getting data there are wrappers for components that have methods for use with components.
+In a [classname]`UIUnitTest` class, wrapping a component can be done with [methodname]`wrap(component)` or [methodname]`wrap(Wrapper.class, component)`.
+
+- [methodname]`wrap(component)` will return a component-specific wrapper, if one can be determined for the given component, or the [classname]`ComponentWrap` generic wrapper.
+- [methodname]`wrap(Wrapper.class, component)` always returns an instance of the given wrapper.
+
+For each method call, where it is applicable, the wrapper methods check that the component is in a state where it could be used by the user.
+This means that the component should be visible, enabled, attached to the UI and not be behind a modal component.
+
+[NOTE]
+The modality check only works when the modal component is server-side modal.
+
+Sample test of the HelloWorld view.
+
+.HelloWorld.java
+[source,java]
+----
+@Route(value = "", layout = MainLayout.class)
+public class HelloWorldView extends HorizontalLayout {
+
+    TextField name;
+    Button sayHello;
+
+    public HelloWorldView() {
+        name = new TextField("Your name");
+        sayHello = new Button("Say hello");
+        sayHello.addClickListener(e -> {
+            Notification.show("Hello " + name.getValue());
+        });
+
+        setMargin(true);
+        setVerticalComponentAlignment(Alignment.END, name, sayHello);
+
+        add(name, sayHello);
+    }
+}
+----
+
+[NOTE]
+The components are package-protected, so that we can use them directly in the [classname]`UIUnitTest`.
+
+.HelloWorldViewTest.java
+[source,java]
+----
+class HelloWorldViewTest extends UIUnitTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        // TextField and Button are available as package protected in the view
+        // So wwe can use those simply from there
+        wrap(TextFieldWrap.class, helloView.name).setValue("Test");
+        wrap(ButtonWrap.class, helloView.sayHello).click();
+
+        // Notification is not referenced in the view so we need to use the component
+        // query API to find the notification that opened
+        NotificationWrap notification_ = $(Notification.class).first();
+        Assertions.assertEquals("Hello Test", notification_.getText());
+    }
+}
+----
+
+[[testbench.uiunit.search-components]]
+== Searching for Components
+
+The [classname]`UIUnitTest` base class is able to get the instantiated view, but child components may not be always accessible directly.
+For example components may be stored in fields with private visibility or they may even not be referenced at all in the view class.
+To overcome this limitation, [classname]`UIUnitTest` provides a Component query functionality, that lets you search the component tree for the components you need to interact with in test methods.
+
+The [classname]`ComponentQuery` object can be obtained by calling the [methodname]`$()` method, providing the type of the component you are searching for.
+You can also restrict search scope to the children of the current view, using the [methodname]`$view()` method.
+The query object has many filtering utilities that can be used to refine the search.
+For example you can filter by component `id`, by a property value, or using custom predicates on potential candidates.
+Once the query is ready with all required conditions configured, you can get test wrappers for specific components found by query execution by calling terminal operators.
+Examples of terminal operators are [methodname]`first()`, [methodname]`last()`, [methodname]`atIndex()`, [methodname]`all()` and [methodname]`id()`.
+
+.Using Query API to get component wrappers
+[source,java]
+----
+// Get a wrapper for the first TextField in the UI
+TextFieldWrap nameField_ = $(TextField.class).first();
+
+// Get a wrapper for the first TextField in the current view
+TextFieldWrap nameField_ = $view(TextField.class).first();
+
+// Get a wrapper for the first TextField with the given label
+TextFieldWrap nameField_ = $view(TextField.class)
+        .withPropertyValue(TextField::getLabel, "First name")
+        .first();
+
+// Get a wrapper for the first TextField that satisfies the conditions
+Predicate<TextField> fieldHasNotValue = field -> field.getOptionalValue().isEmpty();
+Predicate<TextField> fieldIsInvalid = TextField::isInvalid;
+TextFieldWrap<TextField, String> textField = $view(TextField.class)
+        .withCondition(fieldHasNotValue.or(fieldIsInvalid))
+        .first();
+
+----
+
+
+Sometimes you may need to do a query for components nested inside the UI, in a hierarchy composed of many different types of components.
+To simplify such situations, the query object offers methods to chain a new query starting with a found component, so that complex query can be created in a fluent way.
+The [methodname]`thenOn()` method and its variants, for example [methodname]`thenOnFirst()`, provide you with a new query object for the given component type, setting the search scope to the component selected from the current query.
+
+.Chained query example
+[source,java]
+----
+
+// Search for all 'VerticalLayout's in the view
+TextFieldWrap<TextField, String> button = $view(VerticalLayout.class)
+        // take the second one and start searching for 'TextField's
+        .thenOn(2, TextField.class)
+        // filter for disabled 'TextField's
+        .withCondition(tf -> !tf.isEnabled())
+        // and get the last one
+        .last();
+----
+
