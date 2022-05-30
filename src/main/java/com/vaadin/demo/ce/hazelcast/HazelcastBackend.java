@@ -28,17 +28,19 @@ public class HazelcastBackend extends Backend {
     // end::id-payload[]
 
     // tag::event-log[]
-    private static class HazelcastEventLog implements EventLog {
-
-        private BiConsumer<UUID, String> eventConsumer;
+    public static class HazelcastEventLog implements EventLog {
 
         private final IList<IdAndPayload> list;
 
+        // tag::event-log-fields[]
         private int nextEventIndex = 0;
 
         private UUID newerThan;
 
-        private HazelcastEventLog(IList<IdAndPayload> list) {
+        private BiConsumer<UUID, String> eventConsumer;
+        // end::event-log-fields[]
+
+        public HazelcastEventLog(IList<IdAndPayload> list) {
             this.list = list;
         }
 
@@ -47,8 +49,9 @@ public class HazelcastBackend extends Backend {
         public void submitEvent(UUID id, String payload) {
             list.add(new IdAndPayload(id, payload));
         }
-
         // end::submit-event[]
+
+        // tag::deliver-events[]
         private synchronized void deliverEvents() {
             while (nextEventIndex < list.size()) {
                 IdAndPayload event = list.get(nextEventIndex++);
@@ -61,13 +64,17 @@ public class HazelcastBackend extends Backend {
                 }
             }
         }
+        // end::deliver-events[]
 
+        // tag::handle-remove[]
         private synchronized void handleRemoveItem() {
             if (nextEventIndex > 0) {
                 nextEventIndex--;
             }
         }
+        // end::handle-remove[]
 
+        // tag::subscribe[]
         @Override
         public synchronized Registration subscribe(UUID newerThan,
                 BiConsumer<UUID, String> eventConsumer)
@@ -111,7 +118,9 @@ public class HazelcastBackend extends Backend {
                 }
             };
         }
+        // end::subscribe[]
 
+        // tag::truncate[]
         @Override
         public synchronized void truncate(UUID olderThan) {
             Predicate<IdAndPayload> filter = e -> true;
@@ -134,6 +143,7 @@ public class HazelcastBackend extends Backend {
             }
             list.removeIf(filter);
         }
+        // end::truncate[]
     }
     // end::event-log[]
 
