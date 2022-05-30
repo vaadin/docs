@@ -1,0 +1,59 @@
+---
+title: Clustering Support
+order: 20
+layout: page
+---
+
+[[ce.backend]]
+= Implementing support for clustered environments
+:experimental:
+
+.Experimental Feature
+[IMPORTANT]
+====
+This is currently considered an experimental feature, which means that its behavior, API, and look and feel might still change.
+In order to use the Backend API, it must be explicitly enabled with a feature flag.
+See the <<Feature Flag>> section for how to do this.
+====
+
+Using Collaboration Engine in an application running in a clustered environment would result in users being able to collaborate only with others connected to the same app instance.
+To properly run clustered application deployments, Collaboration Engine provides the [classname]`Backend` superclass that can be extended to support such multi-instance environments.
+In this article we will show how to implement a custom backend to support clustering based on the Hazelcast platform.
+
+== Understanding the concept of Event Log
+
+A custom [classname]`Backend` implementation is the gateway Collaboration Engine uses to obtain access to Event Logs.
+An Event Log is a strictly ordered log of submitted events involving Topic data, such as newly added items or value changes.
+The [classname]`EventLog` API provides methods to submit new events to the log and to add a subscriber to receive all past and future events.
+All events are marked by a unique identifier and the API provides a method to remove all events in the log before a given identifier.
+
+=== Implementing an Event Log for Hazelcast
+
+Let's start implementing the [classname]`EvengLog` interface for our reference Hazelcast platform.
+Hazelcast provides a very straightforward streaming API based on shared maps and lists.
+The Event Log can be easily implemented making use of an Hazelcast [classname]`IList`, but first we need a class to store both the event identifier and payload.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=id-payload,indent=0]
+----
+
+Once we have that, we can start implementing the interface methods.
+The [methodname]`submitEvent` takes the event identifier and payload, so we can simply store them in a new [classname]`IdAndPayload` object and add it to the Hazelcast list for this log.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=event-log;submit-event;!*,indent=0]
+----
+
+== Snapshots
+
+== Membership
+
+== Feature Flag
+
+In order to use the Backend API, it must be explicitly enabled with a feature flag:
+
+1. Create a [filename]#src/main/resources/vaadin-featureflags.properties# file in your application folder
+2. Add the following content: `com.vaadin.experimental.collaborationEngineBackend=true`
+3. Restart the application.
