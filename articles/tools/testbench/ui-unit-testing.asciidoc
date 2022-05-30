@@ -82,6 +82,51 @@ class MyViewTest extends UIUnitTest {
 }
 ----
 
+[[testbench.uiunit.navigation]]
+== Navigating in Unit Tests
+
+On test initialization, the loaded view will be the root view.
+
+To navigate to another registered view, the [classname]`UIUnitTest` base class contains [methodname]`navigate()` methods that
+support navigation to different supported views.
+
+- For a normal view with only a path defined
++
+[methodname]`navigate(MyView.class)`
++
+[methodname]`navigate("myView", MyView.class)`
+- For a view with [interfacename]`HasUrlParameter`
++
+[methodname]`navigate(MyParam.class, "parameter")`
++
+[methodname]`navigate("myParam/parameter", MyParam.class)`
+- For a view with URL template `@Route("template/:param")`
++
+[methodname]`navigate(Template.class, Collections.singletonMap("param", PARAMETER))`
++
+[methodname]`navigate("template/myParam", Template.class)`
+
+All navigation methods will return the instantiated view, so that the package private fields can be used directly from the view for testing.
+
+[NOTE]
+Navigation by location string takes in the view class, so that the initialized view can be automatically validated to be the expected one.
+
+.Using TextField From View
+[source, java]
+----
+// Navigate to InputView
+InputView input = navigate(InputView.class);
+
+//Get the nameField TextField from InputView and wrap it in a test wrapper
+TextFieldWrap nameField_ = wrap(TextFieldWrap.class, input.nameField);
+
+// use test wrapper to set the value to do required checks and fire expected events
+nameField_.setValue("User input");
+
+// Assert in another component that the change event fired and it has the correct value
+Assertions.assertEquals("User input", input.changeText.getText());
+----
+
 [[testbench.uiunit.components]]
 === Testing Components
 
@@ -96,8 +141,9 @@ In a [classname]`UIUnitTest` class, wrapping a component can be done with [metho
 For each method call, where it is applicable, the wrapper methods check that the component is in a state where it could be used by the user.
 This means that the component should be visible, enabled, attached to the UI and not be behind a modal component.
 
+.Only server modality is checked
 [NOTE]
-The modality check only works when the modal component is server-side modal.
+The modality check only works when the modal component is <<{articles}/flow/advanced/server-side-modality, server-side modal>>, as client modality is not defined on the server.
 
 Sample test of the HelloWorld view.
 
@@ -206,3 +252,13 @@ TextFieldWrap<TextField, String> button = $view(VerticalLayout.class)
         .last();
 ----
 
+[[testbench.uiunit.wrappers]]
+== Custom Test Wrappers
+
+There are custom wrappers for components that give a testing API for the component or one extending it.
+Test wrappers are annotated using the [annotationname]`@Wraps` annotation, which specifies which components the wrapper is for.
+
+Getting a generic wrapper using [methodname]`wrap(Component.class)` will check the available test wrappers to determine whether one exists that `Wraps` the component or its supertype.
+The same feature is also used when searching with [classname]`ComponentQuery` and getting the wrapper.
+
+A custom wrapper should extend [classname]`ComponentWrap` and be defined under the package `com.vaadin.flow.component`, so that it will be found when scanning.
