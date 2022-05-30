@@ -5,6 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
+const DSP_VERSION = '2.0.0-beta.1';
+
 async function checkPreConditions() {
   try {
     // Verify the necessary ports are available on localhost
@@ -61,8 +63,6 @@ async function checkPreConditions() {
     process.exit(1);
   }
 }
-
-const DSP_VERSION = '2.0.0-alpha.6';
 
 const firstLaunch = !fs.existsSync(path.resolve(__dirname, '..', 'node_modules'));
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
