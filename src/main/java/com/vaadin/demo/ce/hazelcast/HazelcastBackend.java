@@ -15,7 +15,7 @@ import com.vaadin.flow.shared.Registration;
 
 public class HazelcastBackend extends Backend {
 
-    // tag::id-event[]
+    // tag::id-payload[]
     private static final class IdAndPayload implements Serializable {
         private final UUID id;
         private final String payload;
@@ -25,8 +25,9 @@ public class HazelcastBackend extends Backend {
             this.payload = payload;
         }
     }
-    // end::id-event[]
+    // end::id-payload[]
 
+    // tag::event-log[]
     private static class HazelcastEventLog implements EventLog {
 
         private BiConsumer<UUID, String> eventConsumer;
@@ -41,6 +42,13 @@ public class HazelcastBackend extends Backend {
             this.list = list;
         }
 
+        // tag::submit-event[]
+        @Override
+        public void submitEvent(UUID id, String payload) {
+            list.add(new IdAndPayload(id, payload));
+        }
+
+        // end::submit-event[]
         private synchronized void deliverEvents() {
             while (nextEventIndex < list.size()) {
                 IdAndPayload event = list.get(nextEventIndex++);
@@ -105,11 +113,6 @@ public class HazelcastBackend extends Backend {
         }
 
         @Override
-        public void submitEvent(UUID id, String payload) {
-            list.add(new IdAndPayload(id, payload));
-        }
-
-        @Override
         public synchronized void truncate(UUID olderThan) {
             Predicate<IdAndPayload> filter = e -> true;
             if (olderThan != null) {
@@ -132,6 +135,7 @@ public class HazelcastBackend extends Backend {
             list.removeIf(filter);
         }
     }
+    // end::event-log[]
 
     private final HazelcastInstance hz;
 
