@@ -2,8 +2,8 @@ package com.vaadin.demo.ce;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationList;
-import com.vaadin.collaborationengine.ListInsertOperation;
-import com.vaadin.collaborationengine.ListInsertResult;
+import com.vaadin.collaborationengine.ListOperation;
+import com.vaadin.collaborationengine.ListOperationResult;
 import com.vaadin.collaborationengine.ListKey;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.UI;
@@ -21,7 +21,7 @@ public class CollaborationListExample extends VerticalLayout {
                 localUser, connection -> {
                     CollaborationList list = connection.getNamedList("my-list");
                     // tag::result[]
-                    ListInsertResult<Void> result = list.insertLast("foo");
+                    ListOperationResult<Void> result = list.insertLast("foo");
                     // tag::future[]
                     result.getCompletableFuture().thenAccept(v -> {
                         // do something when the insertion completes
@@ -39,25 +39,28 @@ public class CollaborationListExample extends VerticalLayout {
                     // tag::advanced[]
                     // Insert an item at the end of the list
                     // Only succeeds if key is currently last
-                    ListInsertOperation operation1 = ListInsertOperation
+                    ListOperation operation1 = ListOperation
                             .insertLast("baz")
                             .ifLast(key);
-                    ListInsertResult<Boolean> result1 = list.insert(operation1);
+                    ListOperationResult<Boolean> result1 =
+                            list.apply(operation1);
                     ListKey key1 = result1.getKey();
 
                     // Insert an item before key1
                     // Only succeeds if key1 is currently last
-                    ListInsertOperation operation2 = ListInsertOperation
+                    ListOperation operation2 = ListOperation
                             .insertBefore(key1, "qux")
                             .ifLast(key1);
-                    ListInsertResult<Boolean> result2 = list.insert(operation2);
+                    ListOperationResult<Boolean> result2 =
+                            list.apply(operation2);
                     ListKey key2 = result2.getKey();
 
                     // Insert an item between two keys
                     // Only succeeds if the keys are consecutive
-                    ListInsertOperation operation3 = ListInsertOperation
+                    ListOperation operation3 = ListOperation
                             .insertBetween(key2, key1, "xyz");
-                    ListInsertResult<Boolean> result3 = list.insert(operation3);
+                    ListOperationResult<Boolean> result3 =
+                            list.apply(operation3);
                     // end::advanced[]
 
                     // Remove an item using its key
