@@ -1,0 +1,170 @@
+---
+title: Getting Started
+order: 10
+layout: page
+---
+
+[[testbench.uiunit.quickstart]]
+= Getting Started
+
+[[testbench.uiunit.quickstart.create-a-test-class]]
+== Creating a Simple Test
+
+To start unit testing your Vaadin application, create a class that extends [classname]`UIUnitTest` (for JUnit 5) or [classname]`UIUnit4Test` (for JUnit 4).
+The base class instantiates UI along with all the necessary Vaadin environment, which will be available on your test methods.
+
+[source,java]
+----
+class MyViewTest extends UIUnitTest {
+
+    @Test
+    void extendingBaseClass_runTest_vaadinInstancesAvailable() {
+        Assertions.assertNotNull(UI.getCurrent(),
+                "Expecting current UI to be available, but was not");
+        Assertions.assertNotNull(VaadinService.getCurrent(),
+                "Expecting VaadinService to be available up, but was not");
+        Assertions.assertNotNull(VaadinRequest.getCurrent(),
+                "Expecting VaadinRequest to be available up, but was not");
+        Assertions.assertNotNull(VaadinResponse.getCurrent(),
+                "Expecting VaadinResponse to be available up, but was not");
+        Assertions.assertNotNull(VaadinSession.getCurrent(),
+                "Expecting VaadinSession to be available up, but was not");
+    }
+
+}
+----
+
+By default, the base class scans whole classpath for routes and error views, but this behavior can be changed for a faster bootstrap.
+To restrict the scan to a specific package and its sub-packages, override the [methodname]`scanPackage()` method and return the package name.
+
+[source,java]
+----
+class MyViewTest extends UIUnitTest {
+
+        @Override
+        protected String scanPackage() {
+                return MyView.class.getPackageName();
+        }
+
+}
+----
+
+[[testbench.uiunit.quickstart.running-tests]]
+== Running Tests
+
+UI Unit Test do not require any particular setup to be executed.
+Just run the test directly from your IDE or use Maven, for example by typing `mvn test` command on the terminal.
+
+[[testbench.uiunit.quickstart.navigation]]
+== Navigating in Unit Tests
+
+On test initialization, the loaded view will be the root view.
+
+To navigate to another registered view, the [classname]`UIUnitTest` base class contains [methodname]`navigate()` methods that
+support navigation to different supported views.
+
+- For a normal view with only a path defined
++
+[methodname]`navigate(MyView.class)`
++
+[methodname]`navigate("myView", MyView.class)`
+- For a view with [interfacename]`HasUrlParameter`
++
+[methodname]`navigate(MyParam.class, "parameter")`
++
+[methodname]`navigate("myParam/parameter", MyParam.class)`
+- For a view with URL template `@Route("template/:param")`
++
+[methodname]`navigate(Template.class, Collections.singletonMap("param", PARAMETER))`
++
+[methodname]`navigate("template/myParam", Template.class)`
+
+All navigation methods will return the instantiated view, so that the package private fields can be used directly from the view for testing.
+
+[NOTE]
+Navigation by location string takes in the view class, so that the initialized view can be automatically validated to be the expected one.
+
+.Using TextField From View
+[source, java]
+----
+// Navigate to InputView
+InputView input = navigate(InputView.class);
+
+//Get the nameField TextField from InputView and wrap it in a test wrapper
+TextFieldWrap nameField_ = wrap(TextFieldWrap.class, input.nameField);
+
+// use test wrapper to set the value to do required checks and fire expected events
+nameField_.setValue("User input");
+
+// Assert in another component that the change event fired and it has the correct value
+Assertions.assertEquals("User input", input.changeText.getText());
+----
+
+[[testbench.uiunit.quickstart.components]]
+=== Testing Components
+
+The aim of UI unit tests is not to test the components as is, but to simulate user actions and data "seen" on the client side.
+
+To help with actions and getting data there are wrappers for components that have methods for use with components.
+In a [classname]`UIUnitTest` class, wrapping a component can be done with [methodname]`wrap(component)` or [methodname]`wrap(Wrapper.class, component)`.
+
+- [methodname]`wrap(component)` will return a component-specific wrapper, if one can be determined for the given component, or the [classname]`ComponentWrap` generic wrapper.
+- [methodname]`wrap(Wrapper.class, component)` always returns an instance of the given wrapper.
+
+For each method call, where it is applicable, the wrapper methods check that the component is in a state where it could be used by the user.
+This means that the component should be visible, enabled, attached to the UI and not be behind a modal component.
+
+.Only server modality is checked
+[NOTE]
+The modality check only works when the modal component is <<{articles}/flow/advanced/server-side-modality#, server-side modal>>, as client modality is not defined on the server.
+
+Sample test of the HelloWorld view.
+
+.HelloWorld.java
+[source,java]
+----
+@Route(value = "", layout = MainLayout.class)
+public class HelloWorldView extends HorizontalLayout {
+
+    TextField name;
+    Button sayHello;
+
+    public HelloWorldView() {
+        name = new TextField("Your name");
+        sayHello = new Button("Say hello");
+        sayHello.addClickListener(e -> {
+            Notification.show("Hello " + name.getValue());
+        });
+
+        setMargin(true);
+        setVerticalComponentAlignment(Alignment.END, name, sayHello);
+
+        add(name, sayHello);
+    }
+}
+----
+
+[NOTE]
+The components are package-protected, so that we can use them directly in the [classname]`UIUnitTest`.
+
+.HelloWorldViewTest.java
+[source,java]
+----
+class HelloWorldViewTest extends UIUnitTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        // TextField and Button are available as package protected in the view
+        // So wwe can use those simply from there
+        wrap(TextFieldWrap.class, helloView.name).setValue("Test");
+        wrap(ButtonWrap.class, helloView.sayHello).click();
+
+        // Notification is not referenced in the view so we need to use the component
+        // query API to find the notification that opened
+        NotificationWrap notification_ = $(Notification.class).first();
+        Assertions.assertEquals("Hello Test", notification_.getText());
+    }
+}
+----
