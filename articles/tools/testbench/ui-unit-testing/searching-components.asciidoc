@@ -69,4 +69,57 @@ Test wrappers are annotated using the [annotationname]`@Wraps` annotation, which
 Getting a generic wrapper using [methodname]`wrap(Component.class)` will check the available test wrappers to determine whether one exists that `Wraps` the component or its supertype.
 The same feature is also used when searching with [classname]`ComponentQuery` and getting the wrapper.
 
-A custom wrapper should extend [classname]`ComponentWrap` and be defined under the package `com.vaadin.flow.component`, so that it will be found when scanning.
+Wrapper implementations are by default scanned from the package `com.vaadin.flow.component`, so adding a custom wrapper extending [classname]`ComponentWrap` to the package will make it immediately available.
+
+To have the custom wrapper in another package the test needs to be annotated with [annotationname]`@ComponentWrapPackages` containing packages to scan for wrappers.
+
+.Defining custom wrapper package
+[source, java]
+----
+@ComponentWrapPackages("com.example.application.views.personform")
+class PersonFormViewTest extends UIUnitTest {
+}
+----
+
+Custom test wrap classes can internally use other wrappers as demonstrated in the [classname]`PhoneNumberFieldWrap`.
+
+.Sample custom wrapper for a CustomField
+[source, java]
+----
+// Wraps defines the components this wrapper should be used for automatically
+@Wraps(PersonFormView.PhoneNumberField.class)
+public class PhoneNumberFieldWrap extends ComponentWrap<PersonFormView.PhoneNumberField> {
+    // Other wrappers can be used inside the custom wrapper
+    final ComboBoxWrap<ComboBox<String>, String> combo_;
+    final TextFieldWrap<TextField, String> number_;
+
+    public PhoneNumberFieldWrap(PersonFormView.PhoneNumberField component) {
+        super(component);
+        combo_ = new ComboBoxWrap<>(
+                getComponent().countryCode);
+        number_ = new TextFieldWrap<>(getComponent().number);
+    }
+
+    public List<String> getCountryCodes() {
+        return combo_.getSuggestionItems();
+    }
+
+    public void setCountryCode(String code) {
+        ensureComponentIsUsable();
+        if(!getCountryCodes().contains(code)) {
+            throw new IllegalArgumentException("Given code is not available for selection");
+        }
+        combo_.selectItem(code);
+    }
+
+    public void setNumber(String number) {
+        ensureComponentIsUsable();
+        number_.setValue(number);
+    }
+
+    public String getValue() {
+        return getComponent().generateModelValue();
+    }
+
+}
+----
