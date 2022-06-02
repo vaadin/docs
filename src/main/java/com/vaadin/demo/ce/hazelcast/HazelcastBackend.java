@@ -17,7 +17,9 @@ public class HazelcastBackend extends Backend {
 
     // tag::id-payload[]
     private static final class IdAndPayload implements Serializable {
+
         private final UUID id;
+
         private final String payload;
 
         private IdAndPayload(UUID id, String payload) {
@@ -26,12 +28,10 @@ public class HazelcastBackend extends Backend {
         }
     }
     // end::id-payload[]
-
     // tag::event-log[]
     public static class HazelcastEventLog implements EventLog {
 
         private final IList<IdAndPayload> list;
-
         // tag::event-log-fields[]
         private int nextEventIndex = 0;
 
@@ -39,18 +39,15 @@ public class HazelcastBackend extends Backend {
 
         private BiConsumer<UUID, String> eventConsumer;
         // end::event-log-fields[]
-
         public HazelcastEventLog(IList<IdAndPayload> list) {
             this.list = list;
         }
-
         // tag::submit-event[]
         @Override
         public void submitEvent(UUID id, String payload) {
             list.add(new IdAndPayload(id, payload));
         }
         // end::submit-event[]
-
         // tag::deliver-events[]
         private synchronized void deliverEvents() {
             while (nextEventIndex < list.size()) {
@@ -65,7 +62,6 @@ public class HazelcastBackend extends Backend {
             }
         }
         // end::deliver-events[]
-
         // tag::handle-remove[]
         private synchronized void handleRemoveItem() {
             if (nextEventIndex > 0) {
@@ -73,7 +69,6 @@ public class HazelcastBackend extends Backend {
             }
         }
         // end::handle-remove[]
-
         // tag::subscribe[]
         @Override
         public synchronized Registration subscribe(UUID newerThan,
@@ -119,7 +114,6 @@ public class HazelcastBackend extends Backend {
             };
         }
         // end::subscribe[]
-
         // tag::truncate[]
         @Override
         public synchronized void truncate(UUID olderThan) {
@@ -146,7 +140,6 @@ public class HazelcastBackend extends Backend {
         // end::truncate[]
     }
     // end::event-log[]
-
     private final HazelcastInstance hz;
 
     private final IMap<String, Snapshot> snapshots;

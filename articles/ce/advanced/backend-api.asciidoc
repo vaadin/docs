@@ -18,7 +18,8 @@ See the <<Feature Flag>> section for how to do this.
 
 Using Collaboration Engine in an application running in a clustered environment would result in users being able to collaborate only with others connected to the same app instance.
 To properly run clustered application deployments, Collaboration Engine provides the [classname]`Backend` superclass that can be extended to support such multi-instance environments.
-In this article we will show how to implement a custom backend to support clustering based on the Hazelcast platform.
+
+In this article we will show how to implement a custom backend to support clustering based on the https://hazelcast.com[Hazelcast] platform.
 
 == Understanding the concept of Event Log
 
@@ -39,13 +40,44 @@ include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java
 ----
 
 Once we have that, we can start implementing the interface methods.
-The [methodname]`submitEvent` takes the event identifier and payload, so we can simply store them in a new [classname]`IdAndPayload` object and add it to the Hazelcast list for this log.
+The [methodname]`submitEvent` takes the event identifier and payload, so we can simply store them in a new [classname]`IdAndPayload` object and add it to the Hazelcast list for this Event Log.
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=event-log;submit-event;!*,indent=0]
 ----
 
+To implement subscriptions to events, we're going to add an item listener to the Hazelcast list.
+The subscriber receives all past and future events for this Event Log.
+A newly added subscriber should initially receive all previous event in the log based on their original order so that it can catch up with the latest state.
+New events should be delivered (in order) only after all previous events have been delivered.
+It is not allowed to invoke the subscriber again until the previous invocation has returned.
+
+The [methodname]`subscribe` method optionally takes the identifier of the last known event, so that only newer events will be notified to the subscriber.
+If the provided identifier is provided and not found in the Event Log, a [classname]`EventIdNotFoundException` should be thrown.
+
+[TIP]
+When the exception is caught by the code calling this method, it may want to re-attempt the subscription with another identifier.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=subscribe,indent=0]
+----
+<1> Only a single subscriber is allowed, so we throw if one's already set.
+<2> If an event identifier is provided, we check if it exists in the list otherwise we throw a [classname]`EventIdNotFoundException`.
+<3> We add an item listener to the Hazelcast list to handle new items and removed ones.
+<4> Then all past events are initially delivered.
+<5> Finally we return a [classname]`Registration` that can be used to remove the subscriber.
+
+Let's now dive in into the custom method that effectively deliver the events, the [methodname]`deliverEvents` method.
+This is a `synchronized` method to prevent it to be invoked by multiple threads simultaneously and avoid duplicate event to be notified to the subscriber.
+The method keeps track of the Hazelcast list index to identify the next event and increments this index until all the events are delivered.
+If an event identifier has been set as the starting point, no events are delivered until that identifier is reached.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=deliver-events,indent=0]
+----
 == Snapshots
 
 == Membership
