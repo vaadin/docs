@@ -149,7 +149,40 @@ public class HazelcastBackend extends Backend {
         this.snapshots = hz
                 .getMap(HazelcastBackend.class.getName() + ".snapshots");
     }
+    // tag::openEventLog[]
+    @Override
+    public EventLog openEventLog(String logId) {
+        return new HazelcastEventLog(hz.getList(logId));
+    }
+    // end::openEventLog[]
+    // tag::loadLatestSnapshot[]
+    @Override
+    public CompletableFuture<Snapshot> loadLatestSnapshot(String name) {
+        return CompletableFuture.completedFuture(snapshots.get(name));
+    }
+    // end::loadLatestSnapshot[]
+    // tag::replaceSnapshot[]
+    @Override
+    public CompletableFuture<Void> replaceSnapshot(String name, UUID expectedId,
+            UUID newId, String payload) {
+        Snapshot currentSnapshot = snapshots.computeIfAbsent(name,
+                k -> new Snapshot(null, null));
 
+        if (Objects.equals(expectedId, currentSnapshot.getId())) {
+            Snapshot idAndPayload = new Snapshot(newId, payload);
+            snapshots.put(name, idAndPayload);
+        }
+
+        return CompletableFuture.completedFuture(null);
+    }
+    // end::replaceSnapshot[]
+    // tag::getNodeId[]
+    @Override
+    public UUID getNodeId() {
+        return hz.getCluster().getLocalMember().getUuid();
+    }
+    // end::getNodeId[]
+    // tag::addMembershipListener[]
     @Override
     public Registration addMembershipListener(
             MembershipListener membershipListener) {
@@ -185,33 +218,5 @@ public class HazelcastBackend extends Backend {
                 });
         return () -> hz.getCluster().removeMembershipListener(registrationId);
     }
-
-    @Override
-    public EventLog openEventLog(String topicId) {
-        return new HazelcastEventLog(hz.getList(topicId));
-    }
-
-    @Override
-    public UUID getNodeId() {
-        return hz.getCluster().getLocalMember().getUuid();
-    }
-
-    @Override
-    public CompletableFuture<Snapshot> loadLatestSnapshot(String name) {
-        return CompletableFuture.completedFuture(snapshots.get(name));
-    }
-
-    @Override
-    public CompletableFuture<Void> replaceSnapshot(String name, UUID expectedId,
-            UUID newId, String payload) {
-        Snapshot currentSnapshot = snapshots.computeIfAbsent(name,
-                k -> new Snapshot(null, null));
-
-        if (Objects.equals(expectedId, currentSnapshot.getId())) {
-            Snapshot idAndPayload = new Snapshot(newId, payload);
-            snapshots.put(name, idAndPayload);
-        }
-
-        return CompletableFuture.completedFuture(null);
-    }
+    // end::addMembershipListener[]
 }
