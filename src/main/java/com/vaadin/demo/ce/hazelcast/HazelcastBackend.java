@@ -37,7 +37,7 @@ public class HazelcastBackend extends Backend {
 
         private UUID newerThan;
 
-        private BiConsumer<UUID, String> eventConsumer;
+        private BiConsumer<UUID, String> eventSubscriber;
         // end::event-log-fields[]
         public HazelcastEventLog(IList<IdAndPayload> list) {
             this.list = list;
@@ -53,7 +53,7 @@ public class HazelcastBackend extends Backend {
             while (nextEventIndex < list.size()) {
                 IdAndPayload event = list.get(nextEventIndex++);
                 if (this.newerThan == null) {
-                    eventConsumer.accept(event.id, event.payload);
+                    eventSubscriber.accept(event.id, event.payload);
                 } else {
                     if (event.id.equals(newerThan)) {
                         this.newerThan = null;
@@ -72,10 +72,10 @@ public class HazelcastBackend extends Backend {
         // tag::subscribe[]
         @Override
         public synchronized Registration subscribe(UUID newerThan,
-                BiConsumer<UUID, String> eventConsumer)
+                BiConsumer<UUID, String> eventSubscriber)
                 throws EventIdNotFoundException {
-            if (this.eventConsumer != null) {
-                throw new IllegalStateException();
+            if (this.eventSubscriber != null) {
+                throw new IllegalStateException(); // <1>
             }
 
             if (newerThan != null) {
@@ -83,11 +83,11 @@ public class HazelcastBackend extends Backend {
                         .filter(item -> newerThan.equals(item.id)).findFirst();
                 if (newerThanIdAndEvent.isEmpty()) {
                     throw new EventIdNotFoundException(
-                            "newerThan doesn't " + "exist in the log.");
+                            "newerThan doesn't " + "exist in the log."); // <2>
                 }
             }
             this.newerThan = newerThan;
-            this.eventConsumer = eventConsumer;
+            this.eventSubscriber = eventSubscriber;
             nextEventIndex = 0;
 
             UUID registrationId = list
@@ -101,17 +101,17 @@ public class HazelcastBackend extends Backend {
                         public void itemRemoved(ItemEvent<IdAndPayload> item) {
                             handleRemoveItem();
                         }
-                    }, false);
+                    }, false); // <3>
 
             // Deliver initial events
-            deliverEvents();
+            deliverEvents(); // <4>
 
             return () -> {
                 synchronized (this) {
                     list.removeItemListener(registrationId);
-                    this.eventConsumer = null;
+                    this.eventSubscriber = null;
                 }
-            };
+            }; // <5>
         }
         // end::subscribe[]
         // tag::truncate[]
