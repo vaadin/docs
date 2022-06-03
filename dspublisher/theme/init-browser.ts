@@ -56,20 +56,6 @@ customElements.define(
       return this;
     }
 
-    // connectedCallback() {
-    //   super.connectedCallback();
-    //   window.addEventListener('on-location-change', this._locationChange);
-    // }
-    //
-    // disconnectedCallback() {
-    //   super.disconnectedCallback();
-    //   window.removeEventListener('on-location-change', this._locationChange);
-    // }
-    //
-    // _locationChange() {
-    //   this.requestUpdate();
-    // }
-
     updated() {
       iframeResizer({ log: true }, '#discussion-iframe');
     }
