@@ -1,4 +1,5 @@
 import { html, LitElement } from 'lit';
+import { until } from 'lit-html/directives/until';
 import { iframeResizer } from 'iframe-resizer';
 
 customElements.define(
@@ -57,39 +58,52 @@ customElements.define(
     }
 
     updated() {
-      iframeResizer({ log: true }, '#discussion-iframe');
+      // TODO any better way to detect when the render is really done?
+      setTimeout(() => iframeResizer({ log: true }, '#discussion-iframe'), 100);
     }
 
     render() {
       // Drop '/docs' from the beginning of the pathname
       const id = btoa(document.location.pathname.substring(5));
       const url = encodeURI(document.location.pathname.substring(5));
-      const name = encodeURI(document.title);
+      const content = this.getTitle().then(
+        (name) => html`
+        <style>
+          .discussion-wrapper {
+            margin-top: 3rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--docs-divider-color-1);
+          }
 
-      return html`
-      <style>
-        .discussion-wrapper {
-          margin-top: 3rem;
-          padding: 2rem 0;
-          border-top: 1px solid var(--docs-divider-color-1);
-        }
+          .discussion-wrapper p b {
+            color: var(--docs-heading-text-color);
+          }
 
-        .discussion-wrapper p b {
-          color: var(--docs-heading-text-color);
-        }
+          .discussion-wrapper iframe {
+            border: 0;
+            margin: 0 -8px;
+            width: calc(100% + 16px);
+            max-width: none;
+          }
+        </style>
+        <section class="discussion-wrapper">
+          <p><b>Was this page helpful?</b><br>Leave a comment or a question below. You can also join the <a href="https://discord.gg/MYFq5RTbBn" rel="noopened">chat on Discord</a> or <a href="https://stackoverflow.com/questions/tagged/vaadin" rel="noopened">ask questions on StackOverflow</a>.</p>
+          <iframe id="discussion-iframe" src="https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${name}&description=">
+        </section>
+      `
+      );
 
-        .discussion-wrapper iframe {
-          border: 0;
-          margin: 0 -8px;
-          width: calc(100% + 16px);
-          max-width: none;
+      return html`${until(content, html``)}`;
+    }
+
+    async getTitle() {
+      return new Promise(async (resolve) => {
+        let limit = 1000;
+        while (!document.title && limit-- > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
-      </style>
-      <section class="discussion-wrapper">
-        <p><b>Was this page helpful?</b><br>Leave a comment or a question below. You can also join the <a href="https://discord.gg/MYFq5RTbBn" rel="noopened">chat on Discord</a> or <a href="https://stackoverflow.com/questions/tagged/vaadin" rel="noopened">ask questions on StackOverflow</a>.</p>
-        <iframe id="discussion-iframe" src="https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${name}&description=">
-      </section>
-    `;
+        resolve(encodeURI(document.title));
+      });
     }
   }
 );
