@@ -51,9 +51,10 @@ async function checkPreConditions() {
 
     // Verify the Node.js version is supported
     const MINIMUM_NODE_VERSION = 14;
+    const MAXIMUM_NODE_VERSION = 16;
     const RECOMMENDED_NODE_VERSION = 16;
     const nodeMajor = process.versions.node.split('.')[0];
-    if (nodeMajor < MINIMUM_NODE_VERSION) {
+    if (nodeMajor < MINIMUM_NODE_VERSION || nodeMajor > MAXIMUM_NODE_VERSION) {
       throw Error(
         `You're running Node.js ${process.versions.node} which is not supported. Node.js ${RECOMMENDED_NODE_VERSION} is recommended.`
       );
