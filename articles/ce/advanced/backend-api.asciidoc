@@ -82,7 +82,7 @@ include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java
 
 Finally, the last method to implement for the [classname]`EventLog` interface is the [methodname]`truncate` method.
 This method serves the purpose to limit the number of events contained in the log, to avoid it to grow infinitely.
-It takes the identifier of the older know event that should be preserved, or—if a null identifier is provided—it empties the whole log.
+It takes the identifier of the older know event that should be preserved, or — if a `null` identifier is provided — it empties the whole log.
 
 To implement this behavior for Hazelcast, we create a simple [classname]`Predicate` and pass it to the list [methodname]`removeIf` method.
 
@@ -127,7 +127,29 @@ To implement this method for Hazelcast, we need some logic to verify that the la
 include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=replaceSnapshot,indent=0]
 ----
 
-== Membership
+== Node identity and Membership events
+
+The primary purpose of the Backend API is to support collaboration in applications deployed in clustered environments.
+Every [classname]`Backend` instance represents a member of the cluster and is uniquely identified by a [classname]`UUID` which should be returned by the [methodname]`getNodeId` method.
+For our Hazelcast implementation, we simply return the local member identifier.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=getNodeId,indent=0]
+----
+
+When multiple [classname]`Backend` instances are involved, it is necessary to know when a they join or leave the cluster.
+For this purpose, the [classname]`Backend` should provide an implementation of the [methodname]`addMembershipListener` method that takes a [classname]`MembershipListener` and notifies it when cluster members join or leave.
+Hazelcast comes itself with the same concept, so the implementation is very straightforward: we only need to map Hazelcast's events to Collaboration Engine's [classname]`MembershipEvent` events, which take the [classname]`MembershipEventType` (`JOIN` or `LEAVE`) and the identifier of the member.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=addMembershipListener,indent=0]
+----
+
+.Returning a registration object
+[NOTE]
+The [methodname]`addMembershipListener` should return a [classname]`Registration` object that can be used later to remove the listener.
 
 == Feature Flag
 
