@@ -1,20 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { css, html, LitElement, unsafeCSS } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/tabs';
-import '@vaadin/vaadin-lumo-styles/badge';
+import { badge } from '@vaadin/vaadin-lumo-styles/badge.js';
 
 @customElement('tabs-badges')
 export class Example extends LitElement {
   static get styles() {
     return [
-      // Workaround for applying `lumo-badge` styles
-      unsafeCSS(
-        Array.from(document.head.querySelectorAll('style')).find(
-          (style) => style.innerText.indexOf("theme~='badge'") > 0
-        )?.textContent
-      ),
+      badge,
       css`
         span[theme~='badge'] {
           margin-inline-start: var(--lumo-space-xs);
