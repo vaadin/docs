@@ -1,0 +1,136 @@
+---
+title: Searching for Components
+order: 20
+layout: page
+---
+
+[[testbench.uiunit.search-components]]
+= Searching for Components
+
+The [classname]`UIUnitTest` base class is able to get the instantiated view, but child components may not be always accessible directly.
+For example components may be stored in fields with private visibility or they may even not be referenced at all in the view class.
+To overcome this limitation, [classname]`UIUnitTest` provides a Component query functionality, that lets you search the component tree for the components you need to interact with in test methods.
+
+The [classname]`ComponentQuery` object can be obtained by calling the [methodname]`$()` method, providing the type of the component you are searching for.
+You can also restrict search scope to the children of the current view, using the [methodname]`$view()` method.
+The query object has many filtering utilities that can be used to refine the search.
+For example you can filter by component `id`, by a property value, or using custom predicates on potential candidates.
+Once the query is ready with all required conditions configured, you can get test wrappers for specific components found by query execution by calling terminal operators.
+Examples of terminal operators are [methodname]`first()`, [methodname]`last()`, [methodname]`atIndex()`, [methodname]`all()` and [methodname]`id()`.
+
+.Using Query API to get component wrappers
+[source,java]
+----
+// Get a wrapper for the first TextField in the UI
+TextFieldWrap nameField_ = $(TextField.class).first();
+
+// Get a wrapper for the first TextField in the current view
+TextFieldWrap nameField_ = $view(TextField.class).first();
+
+// Get a wrapper for the first TextField with the given label
+TextFieldWrap nameField_ = $view(TextField.class)
+        .withPropertyValue(TextField::getLabel, "First name")
+        .first();
+
+// Get a wrapper for the first TextField that satisfies the conditions
+Predicate<TextField> fieldHasNotValue = field -> field.getOptionalValue().isEmpty();
+Predicate<TextField> fieldIsInvalid = TextField::isInvalid;
+TextFieldWrap<TextField, String> textField = $view(TextField.class)
+        .withCondition(fieldHasNotValue.or(fieldIsInvalid))
+        .first();
+
+----
+
+
+Sometimes you may need to do a query for components nested inside the UI, in a hierarchy composed of many different types of components.
+To simplify such situations, the query object offers methods to chain a new query starting with a found component, so that complex query can be created in a fluent way.
+The [methodname]`thenOn()` method and its variants, for example [methodname]`thenOnFirst()`, provide you with a new query object for the given component type, setting the search scope to the component selected from the current query.
+
+.Chained query example
+[source,java]
+----
+
+// Search for all 'VerticalLayout's in the view
+TextFieldWrap<TextField, String> button = $view(VerticalLayout.class)
+        // take the second one and start searching for 'TextField's
+        .thenOn(2, TextField.class)
+        // filter for disabled 'TextField's
+        .withCondition(tf -> !tf.isEnabled())
+        // and get the last one
+        .last();
+----
+
+[[testbench.uiunit.wrappers]]
+== Custom Test Wrappers
+
+There are custom wrappers for components that give a testing API for the component or one extending it.
+Test wrappers are annotated using the [annotationname]`@Wraps` annotation, which specifies which components the wrapper is for.
+
+Getting a generic wrapper using [methodname]`wrap(Component.class)` will check the available test wrappers to determine whether one exists that `Wraps` the component or its supertype.
+The same feature is also used when searching with [classname]`ComponentQuery` and getting the wrapper.
+
+Wrapper implementations are by default scanned from the package `com.vaadin.flow.component`, so adding a custom wrapper extending [classname]`ComponentWrap` to the package will make it immediately available.
+
+To have the custom wrapper in another package the test needs to be annotated with [annotationname]`@ComponentWrapPackages` containing packages to scan for wrappers.
+
+.Defining custom wrapper package
+[source,java]
+----
+@ComponentWrapPackages("com.example.application.views.personform")
+class PersonFormViewTest extends UIUnitTest {
+}
+----
+
+Custom test wrap classes can internally use other wrappers as demonstrated in [classname]`PhoneNumberFieldWrap`.
+
+.Sample custom wrapper for a CustomField
+[source,java]
+----
+// Wraps defines the components this wrapper should be used for automatically
+@Wraps(PersonFormView.PhoneNumberField.class)
+public class PhoneNumberFieldWrap extends ComponentWrap<PersonFormView.PhoneNumberField> {
+    // Other wrappers can be used inside the custom wrapper
+    final ComboBoxWrap<ComboBox<String>, String> combo_;
+    final TextFieldWrap<TextField, String> number_;
+
+    public PhoneNumberFieldWrap(PersonFormView.PhoneNumberField component) {
+        super(component);
+        combo_ = new ComboBoxWrap<>(
+                getComponent().countryCode);
+        number_ = new TextFieldWrap<>(getComponent().number);
+    }
+
+    public List<String> getCountryCodes() {
+        return combo_.getSuggestionItems();
+    }
+
+    public void setCountryCode(String code) {
+        ensureComponentIsUsable();
+        if(!getCountryCodes().contains(code)) {
+            throw new IllegalArgumentException("Given code is not available for selection");
+        }
+        combo_.selectItem(code);
+    }
+
+    public void setNumber(String number) {
+        ensureComponentIsUsable();
+        number_.setValue(number);
+    }
+
+    public String getValue() {
+        return getComponent().generateModelValue();
+    }
+
+}
+----
+
+.PhoneNumberField
+[source,java]
+----
+static class PhoneNumberField extends CustomField<String> {
+    ComboBox<String> countryCode = new ComboBox<>();
+    TextField number = new TextField();
+
+    // ...
+}
+----
