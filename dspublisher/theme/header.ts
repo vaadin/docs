@@ -17,6 +17,11 @@ export default class Example extends LitElement {
   }
 
   render() {
+    // Don't render HaaS in development (avoid noise in analytics)
+    if (process.env.NODE_ENV === 'development') {
+      return html``;
+    }
+
     return html`
       <link
         rel="preload"
