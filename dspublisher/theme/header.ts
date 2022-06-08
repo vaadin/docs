@@ -40,6 +40,14 @@ export default class Example extends LitElement {
       />
 
       <div id="haas-container"></div>
+      <div class="restructuring-notice">
+        <p>
+          <span
+            >We reorganized the documentation to offer you a more streamlined navigation
+            structure!</span
+          >
+        </p>
+      </div>
       ${this.haasImportScript()}
     `;
   }
