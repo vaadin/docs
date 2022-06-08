@@ -44,7 +44,7 @@ export default class Example extends LitElement {
         <p>
           <span
             >We reorganized the documentation to offer you a more streamlined navigation
-            structure!</span
+            structure.</span
           >
         </p>
       </div>
