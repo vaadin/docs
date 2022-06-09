@@ -110,6 +110,10 @@ class Footer extends LitElement {
     const id = btoa(document.location.pathname.substring('/docs'.length));
     const url = encodeURI(document.location.pathname.substring('/docs'.length));
 
+    const iframeSrc = `https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${encodeURI(
+      this.documentTitle
+    )}&description)=`;
+
     return html`
       <section class="discussion-wrapper">
         <p>
@@ -119,12 +123,7 @@ class Footer extends LitElement {
             >ask questions on StackOverflow</a
           >.
         </p>
-        <iframe
-          id="discussion-iframe"
-          src="https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${encodeURI(
-            this.documentTitle
-          )}&description)="
-        ></iframe>
+        <iframe id="discussion-iframe" src="${iframeSrc}"></iframe>
       </section>
     `;
   }
