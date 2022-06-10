@@ -112,7 +112,7 @@ class Footer extends LitElement {
 
     const iframeSrc = `https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${encodeURI(
       this.documentTitle
-    )}&description)=`;
+    )}&description=`;
 
     return html`
       <section class="discussion-wrapper">
