@@ -61,25 +61,6 @@ class Footer extends LitElement {
     this.documentTitle = document.title;
   });
 
-  static styles = css`
-    .discussion-wrapper {
-      margin-top: 3rem;
-      padding: 2rem 0;
-      border-top: 1px solid var(--docs-divider-color-1);
-    }
-
-    .discussion-wrapper p b {
-      color: var(--docs-heading-text-color);
-    }
-
-    .discussion-wrapper iframe {
-      border: 0;
-      margin: 0 -8px;
-      width: calc(100% + 16px);
-      max-width: none;
-    }
-  `;
-
   connectedCallback() {
     super.connectedCallback();
 
@@ -115,6 +96,24 @@ class Footer extends LitElement {
     )}&description=`;
 
     return html`
+      <style>
+        .discussion-wrapper {
+          margin-top: 3rem;
+          padding: 2rem 0;
+          border-top: 1px solid var(--docs-divider-color-1);
+        }
+
+        .discussion-wrapper p b {
+          color: var(--docs-heading-text-color);
+        }
+
+        .discussion-wrapper iframe {
+          border: 0;
+          margin: 0 -8px;
+          width: calc(100% + 16px);
+          max-width: none;
+        }
+      </style>
       <section class="discussion-wrapper">
         <p>
           <b>Was this page helpful?</b><br />Leave a comment or a question below. You can also join
