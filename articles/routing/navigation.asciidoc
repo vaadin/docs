@@ -6,12 +6,69 @@ layout: page
 
 = Navigating Between Routes
 
+Switching between routes/views can be initiated in two ways: programmatically using [methodname]`UI.navigate()` methods or using links. The navigate method is more agile for Java programmer, as the view change can be issued from anywhere in you code and you can interact with the target view. Using links on the other hand is the native web way of moving from view to another, allowing you for example to share the direct link to a specific view with your colleague and they work even if session has expired.
+
+
+== Server-Side Navigation
+
+You can trigger navigation from the server side code using various [methodname]`UI.navigate()` methods.
+
+You should primarily use [methodname]`UI.navigate(Class<? extends Component> navigationTarget)` or [methodname]`navigate(Class<? extends C> navigationTarget, RouteParameters parameters)` methods, where you pass the [classname]`Class` of the target view as a parameter.
+Compared to [classname]`String` versions, this avoids having to generate the route string manually.
+
+In the browser, navigate methods triggers a location update and the addition of a new history state entry, but does not issue a full page reload.
+
+*Example*: Navigation to the `company` route target when clicking a button:
+
+[source,java]
+----
+NativeButton button = new NativeButton(
+        "Navigate to company");
+button.addClickListener(e ->
+     button.getUI().ifPresent(ui ->
+           ui.navigate("company"))
+);
+----
+
+*Example*: Navigation to the `user/123/edit` route target when clicking a button:
+
+[source,java]
+----
+NativeButton editButton = new NativeButton(
+        "Edit user details");
+editButton.addClickListener(e ->
+        editButton.getUI().ifPresent(ui -> ui.navigate(
+                UserProfileEdit.class,
+                new RouteParameters("userID", "123")))
+);
+----
+
+[role="since:react-dom@v23.2"]
+=== Configuring the target view
+
+The navigate methods where you give the target view class as a parameter returns the actual target view as [classname]`Optional`. This allows you to further configure the new view with native Java API. 
+
+The optional may be empty if the target view is not immediately available for some reason. This may happen for example because of security constraints or if the navigation was cancelled or posponed in navigation lifecycle events TODO link.
+
+*Example*: Creating an edit button that navigates to a separate view and assigns the DTO to the target view with its native Java API:
+
+[source,java]
+----
+new Button("Edit " + user.getName(), event -> {
+    ui.navigate(UserEditor.class)
+            .ifPresent(editor -> editor.editUser(user));
+})
+----
+
+Note, that with the above code Vaadin don't have the data to maintain deep link to edit the very same user. 
+In many use cases this is fine, but if you expect to share links to the target view, the target view must maintain enough details in the URL and add de-serialise the parameters, as described in <<route-parameters#, Route Parameters>>.
+
 == Using the RouterLink Component
 
-You can use the [classname]`RouterLink` component to create links pointing to route targets in your application.
+[classname]`RouterLink` is a special component based on <a> tag to create links pointing to route targets in your application.
 
 Navigation with [classname]`RouterLink` fetches the content of the new component without reloading the page.
-The page is updated in place.
+The page is updated in place without a full page reload, but the URL in the browser is updated.
 
 *Example*: Using [classname]`RouterLink` for a simple navigation target.
 [source,java]
@@ -82,41 +139,3 @@ It is also possible to navigate with standard `<a href="company">` type links.
 
 Standard links result in a page reload, but you can enable navigation without page reload by adding the `router-link` attribute; for example, `<a router-link href="company">Go to the company page</a>`.
 
-
-== Server-Side Navigation
-
-You can trigger navigation from the server side using [methodname]`UI.navigate(String)`, where the string parameter is the location to navigate to.
-
-You can also use [methodname]`UI.navigate(Class<? extends Component> navigationTarget)` or [methodname]`navigate(Class<? extends C> navigationTarget, RouteParameters parameters)`.
-This avoids having to generate the route string manually.
-In the browser, it triggers a location update and the addition of a new history state entry.
-
-*Example*: Navigation to the `company` route target when clicking a button:
-
-[source,java]
-----
-NativeButton button = new NativeButton(
-        "Navigate to company");
-button.addClickListener(e ->
-     button.getUI().ifPresent(ui ->
-           ui.navigate("company"))
-);
-----
-
-*Example*: Navigation to the `user/123/edit` route target when clicking a button:
-
-[source,java]
-----
-NativeButton editButton = new NativeButton(
-        "Edit user details");
-editButton.addClickListener(e ->
-        editButton.getUI().ifPresent(ui -> ui.navigate(
-                UserProfileEdit.class,
-                new RouteParameters("userID", "123")))
-);
-----
-
-
-[NOTE]
-`Router` links work even if the session has expired.
-We recommend that you use them instead of handling navigation on the server side.

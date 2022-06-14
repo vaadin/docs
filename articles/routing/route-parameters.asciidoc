@@ -102,6 +102,62 @@ public class WildcardGreeting extends Div
 Note that more specific route always takes precedence over wildcard route.
 Note also that if no value was passed to the wildcard route parameter, then its value will be an empty String.
 
+== Maintaining Route Parameters manually
+
+In certain cases, developer might want to maintain the parameters in the browser URL. 
+Like if the edited entity in a form changes via instance method instead of via passing URL parameters.
+In this case developer can use the History object to maintain the RouteParameters.
+
+*Example*: A view that is updating the deep linking parameters based on a parameter given in a public API. The view also implements HasUrlParameter to de-serialise the parameter in case a user arrives directly to the page:
+
+[source,java]
+----
+@Route
+public class UserEditor extends VerticalLayout implements HasUrlParameter<Integer> {
+
+    /**
+     * This method can be called directly by other views.
+     *
+     * @param user the User instance to edit
+     */
+    public void editUser(User user) {
+        // do the actual UI changes
+        createFormForUser(user);
+        // maintain a complete url in the browser
+        updateQueryParameters(user);
+    }
+
+    private void updateQueryParameters(User o) {
+        String deepLinkingUrl = RouteConfiguration.forSessionScope()
+                .getUrl(getClass(), o.getId());
+        // Assign the full deep linking URL directly using
+        // History object: changes the URL in the browser,
+        // but does not reload the page. 
+        getUI().get().getPage().getHistory()
+                .replaceState(null, deepLinkingUrl);
+    }
+
+    @Override // HasUrlParameter interface 
+    public void setParameter(BeforeEvent event,
+                             @OptionalParameter Integer id) {
+        if(id != null) {
+            // This method is called if user arrives via "deep link"
+            // directly to this form. In a real world app, one would
+            // likely fetch an entity/DTO via service based on its id
+            createFormForUser(new User("User " + id, id));
+        }
+    }
+
+    private void createFormForUser(User user) {
+        // just show the user ID as this is really not a form example
+        add(new Paragraph("User: " + user.getId()) );
+    }
+
+}
+----
+
+See more about maintaining the browser URL from the <<../advanced/history-api#, History API>>
+
 == Alternatives to Route Parameters
 
 Route parameters, the approach described in this guide, is the easiest method for accepting parameters, and it should work for most common use cases.
