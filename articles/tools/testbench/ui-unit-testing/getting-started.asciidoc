@@ -15,20 +15,21 @@ The base class instantiates UI along with all the necessary Vaadin environment, 
 
 [source,java]
 ----
-class MyViewTest extends UIUnitTest {
+class HelloWorldViewTest extends UIUnitTest {
 
     @Test
-    void extendingBaseClass_runTest_vaadinInstancesAvailable() {
-        Assertions.assertNotNull(UI.getCurrent(),
-                "Expecting current UI to be available, but was not");
-        Assertions.assertNotNull(VaadinService.getCurrent(),
-                "Expecting VaadinService to be available up, but was not");
-        Assertions.assertNotNull(VaadinRequest.getCurrent(),
-                "Expecting VaadinRequest to be available up, but was not");
-        Assertions.assertNotNull(VaadinResponse.getCurrent(),
-                "Expecting VaadinResponse to be available up, but was not");
-        Assertions.assertNotNull(VaadinSession.getCurrent(),
-                "Expecting VaadinSession to be available up, but was not");
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        // TextField and Button are available as package protected in the view
+        // So we can use those simply from there
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        // Notification is not referenced in the view so we need to use the component
+        // query API to find the notification that opened
+        Notification notification = $(Notification.class).first();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
     }
 
 }
@@ -108,10 +109,10 @@ Navigation by location string takes in the view class, so that the initialized v
 // Navigate to InputView
 InputView input = navigate(InputView.class);
 
-//Get the nameField TextField from InputView and wrap it in a test wrapper
-TextFieldWrap nameField_ = wrap(TextFieldWrap.class, input.nameField);
+//Get the nameField TextField from InputView and then obtain the Tester to operate on it
+TextFieldTester nameField_ = test(input.nameField);
 
-// use test wrapper to set the value to do required checks and fire expected events
+// use the tester to set the value, to do required checks and fire expected events
 nameField_.setValue("User input");
 
 // Assert in another component that the change event fired and it has the correct value
@@ -123,13 +124,13 @@ Assertions.assertEquals("User input", input.changeText.getText());
 
 The aim of UI unit tests is not to test the components as is, but to simulate user actions and data "seen" on the client side.
 
-To help with actions and getting data there are wrappers for components that have methods for use with components.
-In a [classname]`UIUnitTest` class, wrapping a component can be done with [methodname]`wrap(component)` or [methodname]`wrap(Wrapper.class, component)`.
+To help with actions and getting data there are testers for components that have methods for use with components.
+In a [classname]`UIUnitTest` class, obtaining a tester for a component can be done with [methodname]`test(component)` or [methodname]`test(Tester.class, component)`.
 
-- [methodname]`wrap(component)` will return a component-specific wrapper, if one can be determined for the given component, or the [classname]`ComponentWrap` generic wrapper.
-- [methodname]`wrap(Wrapper.class, component)` always returns an instance of the given wrapper.
+- [methodname]`test(component)` will return a component-specific tester, if one can be determined for the given component, or the [classname]`ComponentTester` generic tester.
+- [methodname]`test(Tester.class, component)` always returns an instance of the given tester.
 
-For each method call, where it is applicable, the wrapper methods check that the component is in a state where it could be used by the user.
+For each method call, where it is applicable, the tester methods check that the component is in a state where it could be used by the user.
 This means that the component should be visible, enabled, attached to the UI and not be behind a modal component.
 
 .Only server modality is checked
@@ -176,13 +177,13 @@ class HelloWorldViewTest extends UIUnitTest {
 
         // TextField and Button are available as package protected in the view
         // So wwe can use those simply from there
-        wrap(TextFieldWrap.class, helloView.name).setValue("Test");
-        wrap(ButtonWrap.class, helloView.sayHello).click();
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
 
         // Notification is not referenced in the view so we need to use the component
         // query API to find the notification that opened
-        NotificationWrap notification_ = $(Notification.class).first();
-        Assertions.assertEquals("Hello Test", notification_.getText());
+        Notification notification = $(Notification.class).first();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
     }
 }
 ----
