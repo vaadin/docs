@@ -1,42 +1,66 @@
 import { Iconset } from '@vaadin/icon/vaadin-iconset.js';
 import '@vaadin/icon';
+import '@vaadin/icons';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 
 const DEPRECATED_ICONS: Record<string, string> = {
-  buss: 'bus',
-  palete: 'palette',
-  funcion: 'function',
-  megafone: 'megaphone',
-  'trendind-down': 'trending-down',
+  'vaadin:buss': 'vaadin:bus',
+  'vaadin:palete': 'vaadin:palette',
+  'vaadin:funcion': 'vaadin:function',
+  'vaadin:megafone': 'vaadin:megaphone',
+  'vaadin:trendind-down': 'vaadin:trending-down',
 };
 
 export class IconsPreview extends HTMLElement {
   connectedCallback() {
-    const iconsetName = this.getAttribute('name');
-    const iconset = Iconset.getIconset(iconsetName as string);
+    const lumoIconset = Iconset.getIconset('lumo');
+    const vaadinIconset = Iconset.getIconset('vaadin');
 
     // A hack to get the `_icons` property computed.
     // https://github.com/vaadin/web-components/blob/447e95e0e08d396167af9a42f68b04529b412ebd/packages/vaadin-icon/src/vaadin-iconset.js#L90
-    iconset.applyIcon('');
+    lumoIconset.applyIcon('');
+    vaadinIconset.applyIcon('');
 
     // @ts-ignore
-    const iconNames = Object.keys(iconset._icons);
+    let iconNames = Object.keys(lumoIconset._icons).map((name) => 'lumo:' + name);
+    // @ts-ignore
+    iconNames = iconNames.concat(Object.keys(vaadinIconset._icons).map((name) => 'vaadin:' + name));
 
+    this.classList.add('icons-preview');
     let html = `
       <style>
-        icons-preview {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-          max-height: 80vh;
-          overflow: auto;
+        .icons-preview {
+          display: flex !important;
+          flex-direction: column;
+          align-items: center;
           border: 1px solid var(--docs-divider-color-1);
           border-radius: var(--docs-border-radius-l);
-          margin: 2rem 0;
+        }
+
+        .icons-preview ul {
+          display: grid;
+          list-style: none;
+          grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+          width: 100%;
+          max-height: 60vh;
+          margin: 0;
+          padding: 1px;
+          overflow: auto;
+        }
+
+        .icons-preview li {
+          display: block;
         }
 
         .docs-icon-preview {
           text-align: center;
           padding-bottom: var(--docs-space-l);
           line-height: 1;
+        }
+
+        .docs-icon-preview vaadin-icon {
+          outline: 1px dashed var(--docs-divider-color-2);
+          margin-bottom: 0.5em;
         }
 
         .docs-icon-preview.deprecated {
@@ -47,13 +71,6 @@ export class IconsPreview extends HTMLElement {
           display: none;
         }
 
-        .docs-icon-preview svg {
-          width: 24px !important;
-          height: 24px !important;
-          display: inline-block !important;
-          fill: currentColor;
-        }
-
         .docs-icon-preview-name {
           display: block;
           font-size: var(--docs-font-size-2xs);
@@ -61,9 +78,9 @@ export class IconsPreview extends HTMLElement {
         }
 
         .docs-icon-search {
-          grid-column: 1 / -1;
+          flex: none;
           max-width: 20em;
-          margin: var(--docs-space-xl) auto;
+          margin: var(--docs-space-m) auto;
           font: inherit;
           font-size: var(--docs-font-size-m);
           border: 1px solid var(--docs-divider-color-2);
@@ -74,7 +91,8 @@ export class IconsPreview extends HTMLElement {
         }
       </style>
 
-      <input class="docs-icon-search" type="search" aria-label="Search icons" placeholder="Search icons…">
+      <input class="docs-icon-search" type="search" aria-label="Search all icons" placeholder="Search all icons">
+      <ul>
     `;
 
     iconNames.forEach((name: string) => {
@@ -86,14 +104,16 @@ export class IconsPreview extends HTMLElement {
       }
 
       html += `
-        <div
+        <li
           class="docs-icon-preview icon-${name} ${isDeprecated ? 'deprecated' : ''}"
           title="${title}"
         >
-          <vaadin-icon icon="${iconsetName}:${name}"></vaadin-icon>
+          <vaadin-icon icon="${name}"></vaadin-icon>
           <span class="docs-icon-preview-name">${name}</div>
-        </div>`;
+        </li>`;
     });
+
+    html += '</ul>';
 
     this.innerHTML = html;
 
