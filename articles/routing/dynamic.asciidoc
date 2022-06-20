@@ -7,41 +7,51 @@ layout: page
 
 = Registering Routes Dynamically
 
-In addition to registering routes and route templates using the <<index#,`@Route` annotation>>, you can add and remove routes dynamically at runtime.
+In addition to registering routes and route templates using the <<index#, `@Route`>> annotation, you can add and remove routes dynamically at runtime. 
 This is useful, for example, when a route should be added or removed based on changed business data or application configuration at startup.
 
-The [classname]`RouteConfiguration` class allows you to configure routes to a specific scope.
-You can configure routes to:
+The [classname]`RouteConfiguration` class can be used to limit route access to:
 
 * all users using the *application* scope, or
 * only certain active users using the *session* scope.
 
-You can access the scope using the [methodname]`forSessionScope()` and [methodname]`forApplicationScope()` static methods.
-All components with an `@Route` annotation are added to the application scope.
+You can access the scope using the static methods [methodname]`forSessionScope()` and [methodname]`forApplicationScope()` from the [classname]`RouteConfiguration` class.
+
+[NOTE]
+All components annotated with `@Route` are added to the application scope at startup, unless the <<Dynamic Registration of @Route Annotated Classes, `registerAtStartup`>> element has been set to `false`.
 
 == Configuring User-Specific Routes
 
 You can add and remove routes for certain users; for example, based on their access rights.
 
-*Example*: Adding two views for currently active users.
+*Example*: Adding *admin* and *home* views for users with an active session.
 
 [source,java]
 ----
-RouteConfiguration.forSessionScope().setRoute("admin",
-        AdminView.class);
+RouteConfiguration.forSessionScope()
+        .setRoute(
+                "admin", //path
+                AdminView.class //navigation target
+         );
 
 // parent layouts can be given as a vargargs parameter
-RouteConfiguration.forSessionScope().setRoute("home",
-        HomeView.class, MainLayout.class);
+RouteConfiguration.forSessionScope()
+        .setRoute(
+                "home", //path
+                HomeView.class, //navigation target
+                MainLayout.class //one or more parents
+        );
 ----
 
-A route set for the user can override a route with the same path from the application scope.
-This means that any statically registered `@Route` can be overridden for a specific user, if necessary.
+Any registered `@Route` in the application scope can be overridden for a specific user in the session scope.
 
 The routes in the session scope are accessible for the current user only for as
 long as the session is valid.
-When the session is invalidated by the user logging out, the session-scoped routes are no longer available automatically.
-It is not necessary to specifically remove these routes.
+
+When the session is invalidated by the user logging out, the session-scoped routes are no longer available.
+It is unnecessary to manually remove these routes.
+
+== Removing Routes
 
 When removing routes, you need to define precisely which route to remove.
 
@@ -65,6 +75,13 @@ configuration.removeRoute(AdminView.class);
 configuration.removeRoute("admin");
 ----
 
+[NOTE]
+Removing a route in the session scope that had previously overridden a route in the application scope makes the application-scoped route accessible once again.
+
+[NOTE]
+When dynamically registering a route, any annotations on classes *are ignored*, except when the method used contains `Annotated`; for example, [methodname]`setAnnotatedRoute()`.
+See <<Dynamic Registration of @Route Annotated Classes>> below for more.
+
 For further related information, see:
 
 pass:[<!-- vale Vale.Spelling = NO -->]
@@ -72,13 +89,6 @@ pass:[<!-- vale Vale.Spelling = NO -->]
 * <<Adding Route Aliases for Dynamic Routes>> (below).
 * <<additional-guides/route-templates#,Route Templates>>
 * <<route-parameters#,Route Parameters>>
-
-[NOTE]
-Removing a route in the session scope that had previously overridden a route in the application scope makes the application-scoped route accessible once again.
-
-[NOTE]
-When dynamically registering a route, any annotations on classes *are ignored*, except when the method used contains `Annotated`; for example, [methodname]`setAnnotatedRoute()`.
-See <<Dynamic Registration of @Route Annotated Classes>> below for more.
 
 [[application.startup]]
 == Adding Routes on Application Startup
@@ -101,8 +111,10 @@ public class ApplicationServiceInitListener
             RouteConfiguration configuration =
                RouteConfiguration.forApplicationScope();
 
-            configuration.setRoute("crud",
-               DBCrudView.class);
+            configuration.setRoute(
+                "crud", //path
+                DBCrudView.class //navigation target
+            );
         }
     }
 }
@@ -146,9 +158,9 @@ configuration.addRoutesChangeListener(event -> {
 
 == Adding Route Aliases for Dynamic Routes
 
-When adding dynamic routes, the first route for which a navigation target is added is marked as the main route.
-The main route URL is returned by the [methodname]`getUrl()` methods in [classname]`RouteConfiguration`.
-Any additional registered route is considered to be as a route alias.
+When adding dynamic routes, the first route for which a navigation target is added is marked as the main route, which can be retrieved by the [methodname]`getUrl()` methods in [classname]`RouteConfiguration`.
+
+Any additional registered route is considered a route alias.
 
 *Example*: Adding multiple routes as navigation targets in a [classname]`RouteConfiguration`.
 
@@ -173,7 +185,7 @@ private class MyRoute extends Div {
 }
 ----
 
-If the `"main"` path is removed and an alias path remains available for use, the main path is updated to the first alias path found in the registry.
+If the `"main"` path is removed and an alias path remains available for use, the first alias in the registry will become the main path.
 
 [WARNING]
 Be cautious when adding or removing routes from the [classname]`ApplicationRouteRegistry`, because this impacts every user of the system.
@@ -183,9 +195,8 @@ Be cautious when adding or removing routes from the [classname]`ApplicationRoute
 
 If you want to map all routes in the same way using the `@Route` annotation, you can configure the routes statically, but postpone registration until runtime.
 
-To skip static registration on servlet initialization, add the `registerAtStartup = false` parameter to the `@Route` annotation.
-This prevents the route being registered to the application-scoped registry on start-up.
-It also makes it easier to use existing parent chains and paths that are modified from the parent.
+To skip static registration to the application-scoped registry on start-up, add the `registerAtStartup = false` parameter to the `@Route` annotation.
+This also makes it easier to use existing parent chains and paths that are modified from the parent.
 
 *Example*: Using the `registerAtStartup` parameter to postpone route registration.
 [source,java]
