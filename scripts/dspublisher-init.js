@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const RELATIVE_THEME_PATH = `dspublisher/docs-theme`;
 
 function updateTemplate(targetPath, replacements = {}) {
   const content = fs.readFileSync(targetPath, 'utf-8');
@@ -24,7 +23,6 @@ module.exports = async function (config) {
   // .env file for dspublisher
   updateTemplate(path.resolve(ROOT, 'dspublisher/.env'), {
     title: config.dsName,
-    themePath: RELATIVE_THEME_PATH,
   });
 
   // Root index file under ds
