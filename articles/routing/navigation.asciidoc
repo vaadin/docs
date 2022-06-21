@@ -1,0 +1,150 @@
+---
+title: Navigating Between Routes
+order: 15
+layout: page
+---
+
+= Navigating Between Routes
+
+Switching between routes/views can be initiated in two ways: programmatically using [methodname]`UI.navigate()` methods or using links.
+The [methodname]`navigate()` method is more agile for a Java programmer, as the view change can be issued from anywhere in your code and you can interact with the target view.
+Using links, on the other hand, is the native web way of moving from one view to another, allowing you for example to share the direct link to a specific view with your colleague, and they work even if the session has expired.
+
+
+== Server-Side Navigation
+
+You can trigger navigation from the server-side code using various [methodname]`UI.navigate()` methods.
+
+You should primarily use [methodname]`UI.navigate(Class<? extends Component> navigationTarget)` or [methodname]`navigate(Class<? extends C> navigationTarget, RouteParameters parameters)` methods, where you pass the [classname]`Class` of the target view as a parameter.
+Compared to [classname]`String` versions, this avoids having to generate the route string manually.
+
+In the browser, the [methodname]`navigate()` method triggers a location update and the addition of a new history state entry, but does not issue a full page reload.
+
+*Example*: Navigation to the `company` route target when clicking a button:
+
+[source,java]
+----
+Button button = new Button("Navigate to company");
+button.addClickListener(e ->
+     button.getUI().ifPresent(ui ->
+           ui.navigate("company"))
+);
+----
+
+[role="since:com.vaadin:vaadin@V23.2"]
+=== Interacting directly With the Target View
+
+The [methodname]`navigate()` method where you give the target view class as a parameter returns the actual target view as [classname]`Optional`.
+This allows you to further configure the new view with its Java API. 
+
+The return value may be empty if the target view is not immediately available for some reason.
+This may happen, for example, because of security constraints or if the navigation was canceled or postponed in a <<lifecycle#, navigation lifecycle events>>.
+
+*Example*: Creating an edit button that navigates to a separate view and assigns the DTO to the target view with its Java API:
+
+[source,java]
+----
+new Button("Edit " + user.getName(), event -> {
+    ui.navigate(UserEditor.class)
+            .ifPresent(editor -> editor.editUser(user));
+})
+----
+
+Note that, with this code, Vaadin does not have the data to maintain a deep link to edit the same entity.
+For the active user of the application, a view to edit the selected entity is opened, but they cannot share a direct link to edit the same entity with their colleague.
+If deep linking is required, the target view must <<updating-url-parameters#,maintain enough details about the UI state in the URL>>, or the developer must use route parameters to pass the data, instead of the direct Java API.
+
+=== Passing Data Using Route Parameters
+
+If your target view implements [interfacename]`HasRouteParameters`, you can submit trivial data to the target view as route parameters. 
+Compared to directly interacting with the target views Java API, this method automatically maintains the URL for deep linking. 
+However, you cannot pass more complex objects as route parameters as such, and you always need to consider data safety parameters that end up in URLs.
+
+*Example*: Navigation to the `user/123/edit` route target when clicking a button:
+
+[source,java]
+----
+Button editButton = new Button("Edit user details");
+editButton.addClickListener(e ->
+        editButton.getUI().ifPresent(ui -> ui.navigate(
+                UserProfileEdit.class,
+                new RouteParameters("userID", "123")))
+);
+----
+
+== Using the RouterLink Component
+
+[classname]`RouterLink` is a special component based on the <a> tag to create links pointing to route targets in your application.
+
+Navigation with [classname]`RouterLink` fetches the content of the new component without reloading the page.
+The page is updated in place without a full page reload, but the URL in the browser is updated.
+
+*Example*: Using [classname]`RouterLink` for a simple navigation target.
+[source,java]
+----
+void routerLink() {
+    Div menu = new Div();
+    menu.add(new RouterLink("Home", HomeView.class));
+}
+
+@Route(value = "")
+public class HomeView extends Component {
+}
+----
+
+*Example*: Using [classname]`RouterLink` for a navigation target with Route template route.
+[source,java]
+----
+void routerLink() {
+    Div menu = new Div();
+    // user/123/edit
+    menu.add(new RouterLink("Edit user details",
+            UserProfileEdit.class, new RouteParameters("userID", "123")));
+    // user/edit
+    menu.add(new RouterLink("Edit my details",
+            UserProfileEdit.class));
+}
+
+@Route("user/:userID?/edit")
+public class UserProfileEdit extends Div implements BeforeEnterObserver {
+
+    private String userID;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        userID = event.getRouteParameters().get("userID").
+                orElse(CurrentUser.get().getUserID());
+    }
+}
+----
+
+[NOTE]
+Because the parameter is defined as optional, URL links are possible both with and without the parameter.
+
+*Example*: Using [classname]`RouterLink` for navigation targets with route parameters, where the navigation target class implements [interfacename]`HasUrlParameter`.
+[source,java]
+----
+void routerLink() {
+    Div menu = new Div();
+    menu.add(new RouterLink("Greeting",
+            GreetingComponent.class, "default"));
+}
+
+@Route(value = "greet")
+public class GreetingComponent extends Div
+        implements HasUrlParameter<String> {
+
+    @Override
+    public void setParameter(BeforeEvent event,
+            String parameter) {
+        setText(String.format("Hello, %s!", parameter));
+    }
+}
+----
+
+== Using Standard Links
+
+It is also possible to navigate with standard `<a href="company">` type links.
+
+Standard links result in a page reload, but you can enable navigation without page reload by adding the `router-link`  <<../create-ui/element-api/properties-attributes/#about-attributes, attribute>>; for example, `<a router-link href="company">Go to the company page</a>`.
+

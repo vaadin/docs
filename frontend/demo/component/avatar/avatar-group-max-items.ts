@@ -33,8 +33,7 @@ export class Example extends LitElement {
             name: `${person.firstName} ${person.lastName}`,
           };
         })}"
-      >
-      </vaadin-avatar-group>
+      ></vaadin-avatar-group>
       <!-- end::snippet[] -->
     `;
   }

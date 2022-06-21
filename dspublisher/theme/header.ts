@@ -17,6 +17,11 @@ export default class Example extends LitElement {
   }
 
   render() {
+    // Don't render HaaS in development (avoid noise in analytics)
+    if (process.env.NODE_ENV === 'development') {
+      return html``;
+    }
+
     return html`
       <link
         rel="preload"
@@ -35,6 +40,14 @@ export default class Example extends LitElement {
       />
 
       <div id="haas-container"></div>
+      <div class="restructuring-notice">
+        <p>
+          <span
+            >We reorganized the documentation to offer you a more streamlined navigation
+            structure</span
+          >
+        </p>
+      </div>
       ${this.haasImportScript()}
     `;
   }

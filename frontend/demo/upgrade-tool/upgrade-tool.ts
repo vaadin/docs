@@ -14,7 +14,7 @@ import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const VAADIN_VERSIONS: Record<string, string> = {
-  14: '14.8.9',
+  14: '14.8.13',
   15: '15.0.6',
   16: '16.0.5',
   17: '17.0.11',
@@ -22,8 +22,8 @@ const VAADIN_VERSIONS: Record<string, string> = {
   19: '19.0.9',
   20: '20.0.8',
   21: '21.0.9',
-  22: '22.0.14',
-  23: '23.0.8',
+  22: '22.0.17',
+  23: '23.1.1',
 };
 
 const SIMPLE_VERSIONS: string[] = [];
@@ -118,7 +118,6 @@ export default class UpgradeTool extends LitElement {
               value="styling"
               label="Changes to custom styling of components"
               id="styling-checkbox"
-              }
             ></vaadin-checkbox>
           </vaadin-checkbox-group>
         </div>

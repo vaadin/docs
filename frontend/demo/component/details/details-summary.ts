@@ -75,8 +75,7 @@ export class Example extends LitElement {
             item-label-path="name"
             item-value-path="id"
             .items="${this.items}"
-          >
-          </vaadin-combo-box>
+          ></vaadin-combo-box>
         </vaadin-form-layout>
       </vaadin-details>
     `;

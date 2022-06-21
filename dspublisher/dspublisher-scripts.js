@@ -3,24 +3,95 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 
-const DSP_VERSION = '2.0.0-alpha.6';
+const DSP_VERSION = '2.0.0-beta.1';
+
+async function checkPreConditions() {
+  try {
+    // Verify the necessary ports are available on localhost
+    const ports = [8000, 8080];
+    await Promise.all(
+      ports.map((port) => {
+        return new Promise((resolve, reject) => {
+          http
+            .get(`http://localhost:${port}`, () => {
+              reject(
+                new Error(
+                  `Port ${port} is already in use. Please close the application using that port.`
+                )
+              );
+            })
+            .on('error', () => resolve());
+        });
+      })
+    );
+
+    // Verify Maven is installed
+    await new Promise((resolve, reject) => {
+      const ps = spawn('mvn', ['--version'], {
+        stdio: 'ignore',
+        shell: true,
+      });
+
+      ps.on('close', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(
+            new Error('Maven is not installed. Plase make sure it is installed and in your PATH.')
+          );
+        }
+      });
+
+      ps.on('error', () => {
+        new Error('Maven is not installed. Plase make sure it is installed and in your PATH.');
+      });
+    });
+
+    // Verify the Node.js version is supported
+    const MINIMUM_NODE_VERSION = 14;
+    const MAXIMUM_NODE_VERSION = 16;
+    const RECOMMENDED_NODE_VERSION = 16;
+    const nodeMajor = process.versions.node.split('.')[0];
+    if (nodeMajor < MINIMUM_NODE_VERSION) {
+      throw Error(
+        `You're running Node.js ${process.versions.node} which is not supported. Node.js ${RECOMMENDED_NODE_VERSION} is recommended.`
+      );
+    } else if (nodeMajor > MAXIMUM_NODE_VERSION && process.argv.includes('--develop')) {
+      console.warn(
+        `\nYou're running Node.js ${process.versions.node} which may have issues with DSP dev mode locally! Node.js ${RECOMMENDED_NODE_VERSION} is recommended.\n`
+      );
+    }
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
+  }
+}
 
 const firstLaunch = !fs.existsSync(path.resolve(__dirname, '..', 'node_modules'));
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
 
 // License check helper command
-const LICENSE_CHECK = {
-  shell: 'mvn -C -P dspublisher-license-check',
-  phases: [
-    {
-      text: `Checking license${firstLaunchMessage}`,
-      readySignal: 'BUILD SUCCESS',
-      doneText: 'License check passed',
-      weight: 10,
-    },
-  ],
-};
+const hasLicenseChecker = (() => {
+  const pomFilePath = path.resolve(__dirname, '..', 'pom.xml');
+  const pomFile = fs.readFileSync(pomFilePath, 'utf8');
+  return pomFile.includes('dspublisher-license-check');
+})();
+
+const LICENSE_CHECK = hasLicenseChecker
+  ? {
+      shell: 'mvn -C -P dspublisher-license-check',
+      phases: [
+        {
+          text: `Checking license${firstLaunchMessage}`,
+          readySignal: 'BUILD SUCCESS',
+          doneText: 'License check passed',
+          weight: 10,
+        },
+      ],
+    }
+  : undefined;
 
 const SCRIPTS = {
   clean: {
@@ -84,7 +155,7 @@ const SCRIPTS = {
         ],
         ignoredLogSignals: ['ERR_REQUIRE_ESM'],
       },
-    ],
+    ].filter((p) => !!p),
   },
   build: {
     name: `dsp@${DSP_VERSION}:build`,
@@ -156,7 +227,7 @@ const SCRIPTS = {
           },
         ],
       },
-    ],
+    ].filter((p) => !!p),
   },
 };
 
@@ -299,6 +370,8 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
 }
 
 (async () => {
+  await checkPreConditions();
+
   // Run each command in the active script sequentially
   for (let command of activeScript.commands) {
     // Render the text from the first phase of the current command

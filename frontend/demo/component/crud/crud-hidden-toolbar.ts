@@ -31,8 +31,7 @@ export class Example extends LitElement {
         .items="${this.items}"
         @size-changed="${() => this.requestUpdate()}"
         no-toolbar
-      >
-      </vaadin-crud>
+      ></vaadin-crud>
       <!-- end::snippet[] -->
     `;
   }

@@ -23,8 +23,7 @@ export class Example extends LitElement {
           It has to have at least one letter and one digit."
         pattern="^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$"
         error-message="Not a valid password"
-      >
-      </vaadin-password-field>
+      ></vaadin-password-field>
       <!-- end::snippet[] -->
     `;
   }

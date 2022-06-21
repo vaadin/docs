@@ -12,8 +12,8 @@ export class LoginView extends LitElement {
     return html`
       <vaadin-vertical-layout style="width: 15em">
         <vaadin-form-layout>
-          <vaadin-text-field label="Username" clear-button-visible> </vaadin-text-field>
-          <vaadin-password-field label="Password" clear-button-visible> </vaadin-password-field>
+          <vaadin-text-field label="Username" clear-button-visible></vaadin-text-field>
+          <vaadin-password-field label="Password" clear-button-visible></vaadin-password-field>
         </vaadin-form-layout>
 
         <a href="routing-registration">Register</a>

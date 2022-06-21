@@ -1,0 +1,106 @@
+---
+title: Server-Side Modality
+description: How to prevent interactions on the server side.
+order: 700
+layout: page
+---
+
+[[server-side-modality]]
+= Server-Side Modality
+
+A dialog with a client-side modality curtain alone does not disable the UI to which it belongs on the server side.
+If the dialog or its modality curtain is removed from the DOM on the client side, its parent UI remains active on the server and can be interacted with.
+
+To fully prevent interactions with components that are underneath a modal dialog (or any modal component, for that matter), Flow has a feature called server-side modality.
+This feature makes Flow ignore interactions with all components that are not children of the modal component while it is attached or marked as modal.
+Components that are not children of the modal component are said to be _inert_, that is, they are not available for interaction.
+
+As server-side modality is purely a server-side security feature that only prevents interaction, it does not add a modality curtain or change the visible state of the components in the UI.
+Adding a modality curtain should be handled by the component.
+
+Router Links, and navigation in general, are an exception.
+Navigation is also allowed when inert, as there is no way to block navigation entirely on the server side.
+Also, JavaScript return values are accepted for server-initiated executions.
+
+The [classname]`UI` class provides methods that allow access to the server-side modality feature.
+The following Vaadin components make use of the feature: Dialog, Notification, and Login View.
+
+Modal dialogs can be stacked on top of each other, but only the most recent will be active.
+A modal dialog can open another modal dialog, or several modeless dialogs, which again can open modal or modeless dialogs.
+
+[NOTE]
+Opening a new Dialog, Confirm Dialog, or Notification when a modal Dialog is already open automatically makes the new Dialog or Notification a child of the previously opened Dialog.
+Closing the "parent" Dialog also closes all subsequently opened Dialogs and Notifications.
+
+The implementation relies on a server-side-only state tree feature called [classname]`InertData`, which makes it possible to stop a component/element/state node and its children from accepting any updates from the client side.
+By default, the inert state is inherited to child nodes.
+However, any child can declare itself as ignoring the parent's inert state, which means that updates are allowed for itself and its children, unless these are explicitly made inert.
+
+This documentation is focused on the usage of the following methods of a [classname]`UI` instance:
+
+* [methodname]`addModal(Component)`
+* [methodname]`setChildComponentModal(Component, boolean)`
+* [methodname]`hasModalComponent()`
+* [methodname]`addToModalComponent(Component)`
+
+== Using Modal Components
+
+Use the [methodname]`UI.addModal(Component)` method to add a modal component to the UI or to make an attached component modal with [methodname]`UI.setChildComponentModal(Component, true)`.
+
+This makes inert all components that are not children of the modal component in the UI.
+
+[NOTE]
+If you have a modal component and you add a new one with [methodname]`addModal(Component)`, the new component will be the active component.
+Removing the modality/component will return the last modal component to active status, keeping its modality.
+
+When the component is later removed from the UI or defined as non-modal with [methodname]`setChildComponentModal(Component, false)`, the UI will no longer be inert (unless there was another modal component underneath the removed component).
+
+.Adding a modal component
+[source,java]
+----
+// Add a modal component, and make the rest of the UI inert
+UI.getCurrent().addModal(component);
+
+/* other code*/
+
+// Remove the modal component. The UI will no longer be inert.
+UI.getCurrent().remove(component);
+----
+
+To make an already-added component modal, use [methodname]`UI.setChildComponentModal(Component, boolean)`.
+
+.Making a component modal
+[source,java]
+----
+// Make a component modal, and make the rest of the UI inert
+UI.getCurrent().setChildComponentModal(component, true);
+
+/* other code*/
+
+// Make the component non modal. The UI will no longer be inert.
+UI.getCurrent().setChildComponentModal(component, false);
+----
+
+== Adding to a Modal Component
+
+To add a component to the currently active modal component, use [methodname]`UI.addToModalComponent(Component)`, which will add the component under the current modal component.
+
+This is intended to be used with components that are not added as part of a  layout, such as a dialog, so that they are interactive when a modal component opens up an overlay component.
+
+To check if there is a defined modal component, use [methodname]`UI.hasModalComponent()`.
+This is usually needed if a new component is added.
+To be usable, it needs to be added under the modal component.
+
+[NOTE]
+When there is no active modal component, calling [methodname]`addToModalComponent(Component)` will add the component to the UI.
+
+== Demo
+
+An example project that demonstrates these APIs in action can be found https://github.com/taefi/server-modality-demo[here].
+This demo application contains the following views to present some possibilities
+with server modality:
+
+* **Dialog Modality Showcase**: Basic usage and comparison between modeless vs. client modal vs. server modal for dialogs.
+* **Grid With Large Dataset**: Shows a server-modal dialog on the view while a long-running process is in progress.
+* **Modality on Top of Dialog**: Shows how to use [methodname]`UI#addToModalComponent()` to add a modal component to the *current*
+modal component.
