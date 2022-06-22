@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { css, html, LitElement, render, unsafeCSS } from 'lit';
+import { css, html, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/context-menu';
 import '@vaadin/icon';
-import '@vaadin/vaadin-lumo-styles/badge';
+import { badge } from '@vaadin/vaadin-lumo-styles/badge.js';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -20,12 +20,7 @@ export class Example2 extends LitElement {
 
   static get styles() {
     return [
-      // Workaround for applying `lumo-badge` styles,
-      // which is a legacy Polymer style module
-      unsafeCSS(
-        document.head.querySelector('dom-module#lumo-badge')?.querySelector('template')?.content
-          .firstElementChild?.textContent
-      ),
+      badge,
       css`
         vaadin-context-menu {
           /* Wrap the click target around the button */
