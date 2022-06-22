@@ -51,11 +51,16 @@ async function checkPreConditions() {
 
     // Verify the Node.js version is supported
     const MINIMUM_NODE_VERSION = 14;
+    const MAXIMUM_NODE_VERSION = 16;
     const RECOMMENDED_NODE_VERSION = 16;
     const nodeMajor = process.versions.node.split('.')[0];
     if (nodeMajor < MINIMUM_NODE_VERSION) {
       throw Error(
         `You're running Node.js ${process.versions.node} which is not supported. Node.js ${RECOMMENDED_NODE_VERSION} is recommended.`
+      );
+    } else if (nodeMajor > MAXIMUM_NODE_VERSION && process.argv.includes('--develop')) {
+      console.warn(
+        `\nYou're running Node.js ${process.versions.node} which may have issues with DSP dev mode locally! Node.js ${RECOMMENDED_NODE_VERSION} is recommended.\n`
       );
     }
   } catch (e) {
@@ -68,17 +73,25 @@ const firstLaunch = !fs.existsSync(path.resolve(__dirname, '..', 'node_modules')
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
 
 // License check helper command
-const LICENSE_CHECK = {
-  shell: 'mvn -C -P dspublisher-license-check',
-  phases: [
-    {
-      text: `Checking license${firstLaunchMessage}`,
-      readySignal: 'BUILD SUCCESS',
-      doneText: 'License check passed',
-      weight: 10,
-    },
-  ],
-};
+const hasLicenseChecker = (() => {
+  const pomFilePath = path.resolve(__dirname, '..', 'pom.xml');
+  const pomFile = fs.readFileSync(pomFilePath, 'utf8');
+  return pomFile.includes('dspublisher-license-check');
+})();
+
+const LICENSE_CHECK = hasLicenseChecker
+  ? {
+      shell: 'mvn -C -P dspublisher-license-check',
+      phases: [
+        {
+          text: `Checking license${firstLaunchMessage}`,
+          readySignal: 'BUILD SUCCESS',
+          doneText: 'License check passed',
+          weight: 10,
+        },
+      ],
+    }
+  : undefined;
 
 const SCRIPTS = {
   clean: {
@@ -142,7 +155,7 @@ const SCRIPTS = {
         ],
         ignoredLogSignals: ['ERR_REQUIRE_ESM'],
       },
-    ],
+    ].filter((p) => !!p),
   },
   build: {
     name: `dsp@${DSP_VERSION}:build`,
@@ -214,7 +227,7 @@ const SCRIPTS = {
           },
         ],
       },
-    ],
+    ].filter((p) => !!p),
   },
 };
 
