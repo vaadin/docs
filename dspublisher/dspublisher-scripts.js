@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-const DSP_VERSION = '2.0.0-beta.1';
+const DSP_VERSION = '2.0.1';
 
 async function checkPreConditions() {
   try {
@@ -73,17 +73,25 @@ const firstLaunch = !fs.existsSync(path.resolve(__dirname, '..', 'node_modules')
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
 
 // License check helper command
-const LICENSE_CHECK = {
-  shell: 'mvn -C -P dspublisher-license-check',
-  phases: [
-    {
-      text: `Checking license${firstLaunchMessage}`,
-      readySignal: 'BUILD SUCCESS',
-      doneText: 'License check passed',
-      weight: 10,
-    },
-  ],
-};
+const hasLicenseChecker = (() => {
+  const pomFilePath = path.resolve(__dirname, '..', 'pom.xml');
+  const pomFile = fs.readFileSync(pomFilePath, 'utf8');
+  return pomFile.includes('dspublisher-license-check');
+})();
+
+const LICENSE_CHECK = hasLicenseChecker
+  ? {
+      shell: 'mvn -C -P dspublisher-license-check',
+      phases: [
+        {
+          text: `Checking license${firstLaunchMessage}`,
+          readySignal: 'BUILD SUCCESS',
+          doneText: 'License check passed',
+          weight: 10,
+        },
+      ],
+    }
+  : undefined;
 
 const SCRIPTS = {
   clean: {
@@ -147,7 +155,7 @@ const SCRIPTS = {
         ],
         ignoredLogSignals: ['ERR_REQUIRE_ESM'],
       },
-    ],
+    ].filter((p) => !!p),
   },
   build: {
     name: `dsp@${DSP_VERSION}:build`,
@@ -219,7 +227,7 @@ const SCRIPTS = {
           },
         ],
       },
-    ],
+    ].filter((p) => !!p),
   },
 };
 
