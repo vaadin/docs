@@ -1,4 +1,4 @@
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
