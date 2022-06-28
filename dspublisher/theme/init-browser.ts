@@ -94,11 +94,21 @@ class Footer extends LitElement {
   }
 
   render() {
+    // Don't render discussions in development builds
+    if (process.env.NODE_ENV === 'development') {
+      return html``;
+    }
+
     // Drop '/docs' from the beginning of the pathname
     const id = btoa(document.location.pathname.substring('/docs'.length));
     const url = encodeURI(document.location.pathname.substring('/docs'.length));
 
-    const iframeSrc = `https://preview.vaadin.com/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${encodeURI(
+    let iframeSrc =
+      window.location.hostname == 'preview.vaadin.com'
+        ? 'https://preview.vaadin.com'
+        : 'https://vaadin.com';
+
+    iframeSrc += `/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${encodeURI(
       this.documentTitle
     )}&description=`;
 
