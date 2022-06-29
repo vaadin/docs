@@ -24,6 +24,7 @@ export class Example extends LitElement {
     return root;
   }
 
+  // tag::snippet[]
   @state()
   private items: Country[] = [];
 
@@ -33,14 +34,13 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-multi-select-combo-box
         label="Countries"
         item-label-path="name"
         item-id-path="id"
         .items="${this.items}"
       ></vaadin-multi-select-combo-box>
-      <!-- end::snippet[] -->
     `;
   }
+  // end::snippet[]
 }
