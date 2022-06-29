@@ -296,3 +296,71 @@ binder.forField(yearOfBirthField)
 ----
 
 * The provided [classname]`ValueContext` can be used to find the [classname]`Locale` to be used for the conversion.
+
+=== Binding Automatic Validation Upon Changes In Component Validation Status
+
+When a component such as DatePicker (or any other component that accept a formatted text as input) is used as an optional field, what happens if the user provide some invalid value for it and try to save the form?
+Since the provided value cannot be parsed correctly, a `null` will be provided to the binder, and as the field is optional, then the binder will not complain and the validation status would be `true`.
+This behavior can create an illusion for the user that they could save an invalid value!
+Thus, there must be a way to prevent the form submission until that invalid value is either cleared out or fixed, no matter the field is a required or not.
+
+There might be different workarounds for such cases, but the preferred solution is the one that keeps Binder Validation Status as the _single source of truth_ when it comes to check the sanity of the data in the form.
+That is why [methodname]`addValidationStatusChangeListener` method exists in [interfacename]`HasValidator` interface.
+
+Components that implement [interfacename]`HasValidator` interface and override the default implementation of [methodname]`addValidationStatusChangeListener` to fire the [classname]`ValidationStatusChangeEvent` properly,
+will automatically benefit from an up-to-date validation status of their associated binding all the time, since the associated binding instance (upon creation) will register itself for the changes in component's validation status and revalidates itself accordingly.
+
+The following code snippet shows how a component can enable the binding instance to subscribe itself to [classname]`ValidationStatusChangeEvent`:
+[source,java]
+----
+@Tag("date-picker-demo")
+public class DatePickerDemo implements HasValidator<LocalDate> /*, HasValue<...>*/ {
+
+    // Each web-component has a way to communicate its validation status
+    // to its server-side component instance. The following `clientSideValid`
+    // state is introduced here just for the sake of simplicity of this code
+    // snippet:
+    private boolean clientSideValid = true;
+
+     /**
+      * Note how <code>clientSideValid</code> engaged in the definition
+      * of this method. It is important to reflect this status either
+      * in the returning validation result of this method or any other
+      * validation that is associated with this component.
+      */
+     @Override
+     public Validator getDefaultValidator() { // <1>
+          return (value, valueContext) -> clientSideValid ? ValidationResult.ok()
+                  : ValidationResult.error("Invalid date format");
+     }
+
+     private final Collection<ValidationStatusChangeListener<LocalDate>>
+         validationStatusListeners = new ArrayList<>();
+
+     /**
+      * This enables the binding to subscribe for the validation status
+      * change events that are fired by this component and revalidate
+      * itself respectively.
+      */
+     @Override
+     public Registration addValidationStatusChangeListener(
+             ValidationStatusChangeListener<LocalDate> listener) {
+         validationStatusListeners.add(listener);
+         return () -> validationStatusListeners.remove(listener);
+     }
+
+     protected void fireValidationStatusChangeEvent(
+             boolean newValidationStatus) {
+         if (this.clientSideValid != newValidationStatus) {
+             this.clientSideValid = newValidationStatus;
+             var event = new ValidationStatusChangeEvent<>(this,
+                     newValidationStatus);
+             validationStatusListeners.forEach(
+                     listener -> listener.validationStatusChanged(event));
+         }
+     }
+ }
+----
+<1> The validator instance returned by [methodname]`getDefaultValidator` gets called everytime the binding instance validates/revalidates (as a part of the validator chain of the binding).
+
+For a complete implementation, please refer to https://github.com/vaadin/flow-components/blob/master/vaadin-date-picker-flow-parent/vaadin-date-picker-flow/src/main/java/com/vaadin/flow/component/datepicker/DatePicker.java[DatePicker's source code] as an example.
