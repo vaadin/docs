@@ -38,3 +38,4 @@ Files related to linting the articles against the writing style guidelines with 
 ### `versions.json`
 
 Describes the publicly available documentation versions. These versions will appear in the published website, as options for the users. This file is only relevant in the `latest` branch.
+
