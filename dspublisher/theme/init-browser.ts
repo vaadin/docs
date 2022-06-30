@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
@@ -94,13 +94,14 @@ class Footer extends LitElement {
   }
 
   render() {
-    // Don't render discussions in development builds
-    if (process.env.NODE_ENV === 'development') {
-      return html``;
+    const id = document.querySelector('.discussion-id')?.textContent;
+
+    // Don't render discussions in development builds and if no discussion ID is set
+    if (process.env.NODE_ENV === 'development' || !id) {
+      return nothing;
     }
 
     // Drop '/docs' from the beginning of the pathname
-    const id = btoa(document.location.pathname.substring('/docs'.length));
     const url = encodeURI(document.location.pathname.substring('/docs'.length));
 
     let iframeSrc =
