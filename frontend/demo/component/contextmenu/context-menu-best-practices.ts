@@ -55,7 +55,7 @@ export class Example extends LitElement {
           <vaadin-grid-column path="name"></vaadin-grid-column>
           <vaadin-grid-column path="size"></vaadin-grid-column>
           <vaadin-grid-column
-            auto-width
+            width="70px"
             flex-grow="0"
             .renderer="${this.menuBarRenderer}"
           ></vaadin-grid-column>
@@ -66,7 +66,7 @@ export class Example extends LitElement {
   }
 
   makeIcon() {
-    const item = window.document.createElement('vaadin-context-menu-item');
+    const item = document.createElement('vaadin-context-menu-item');
     item.textContent = '•••';
     item.setAttribute('aria-label', 'More options');
     return item;
