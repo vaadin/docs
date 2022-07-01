@@ -2,6 +2,7 @@ package com.vaadin.demo.component.contextmenu;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Div;
@@ -27,12 +28,16 @@ public class ContextMenuBestPractices extends Div {
     // tag::snippet[]
     grid.addComponentColumn(file -> {
       MenuBar menuBar = new MenuBar();
-      menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+      menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
       MenuItem menuItem = menuBar.addItem("•••");
       menuItem.getElement().setAttribute("aria-label", "More options");
+      SubMenu subMenu = menuItem.getSubMenu();
+      subMenu.addItem("Preview", event -> {});
+      subMenu.addItem("Edit", event -> {});
+      subMenu.addItem("Delete", event -> {});
       return menuBar;
     })
-      .setAutoWidth(true)
+      .setWidth("70px")
       .setFlexGrow(0);
 
     GridContextMenu<File> menu = grid.addContextMenu();
