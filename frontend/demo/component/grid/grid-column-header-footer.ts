@@ -1,9 +1,14 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
-import type { GridItemModel } from '@vaadin/grid';
+import {
+  columnBodyRenderer,
+  columnFooterRenderer,
+  columnHeaderRenderer,
+  GridColumnBodyLitRenderer,
+} from '@vaadin/grid/lit.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -37,69 +42,62 @@ export class Example extends LitElement {
         <vaadin-grid-column
           header="Name"
           path="displayName"
-          .footerRenderer="${this.displayNameFooterRenderer}"
+          ${columnFooterRenderer(this.displayNameFooterRenderer, [])}
         ></vaadin-grid-column>
         <vaadin-grid-column
-          .renderer="${this.subscriberRenderer}"
-          .headerRenderer="${this.subscriberHeaderRenderer}"
-          .footerRenderer="${this.subscriberFooterRenderer}"
+          ${columnHeaderRenderer(this.subscriberHeaderRenderer, [])}
+          ${columnBodyRenderer(this.subscriberRenderer, [])}
+          ${columnFooterRenderer(this.subscriberFooterRenderer, [])}
         ></vaadin-grid-column>
         <vaadin-grid-column
           path="membership"
-          .headerRenderer="${this.membershipHeaderRenderer}"
-          .footerRenderer="${this.membershipFooterRenderer}"
+          ${columnHeaderRenderer(this.membershipHeaderRenderer, [])}
+          ${columnFooterRenderer(this.membershipFooterRenderer, [])}
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
 
-  displayNameFooterRenderer = (root: HTMLElement) => {
-    render(html`<span>200 total members</span>`, root);
+  private displayNameFooterRenderer = () => {
+    return html`<span>200 total members</span>`;
   };
 
-  subscriberHeaderRenderer = (root: HTMLElement) => {
-    render(
-      html`
-        <vaadin-horizontal-layout style="align-items: center;">
-          <span>Subscriber</span>
-          <vaadin-icon
-            icon="vaadin:info-circle"
-            title="Subscribers are paying customers"
-            style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
-          ></vaadin-icon>
-        </vaadin-horizontal-layout>
-      `,
-      root
-    );
+  private subscriberHeaderRenderer = () => {
+    return html`
+      <vaadin-horizontal-layout style="align-items: center;">
+        <span>Subscriber</span>
+        <vaadin-icon
+          icon="vaadin:info-circle"
+          title="Subscribers are paying customers"
+          style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
+        ></vaadin-icon>
+      </vaadin-horizontal-layout>
+    `;
   };
 
-  subscriberRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    const person = model.item;
-    render(html`<span>${person.subscriber ? 'Yes' : 'No'}</span>`, root);
+  private subscriberRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
+    return html`<span>${person.subscriber ? 'Yes' : 'No'}</span>`;
   };
 
-  subscriberFooterRenderer = (root: HTMLElement) => {
-    render(html`<span>102 subscribers</span>`, root);
+  private subscriberFooterRenderer = () => {
+    return html`<span>102 subscribers</span>`;
   };
 
-  membershipHeaderRenderer = (root: HTMLElement) => {
-    render(
-      html`
-        <vaadin-horizontal-layout style="align-items: center;">
-          <span>Membership</span>
-          <vaadin-icon
-            icon="vaadin:info-circle"
-            title="Membership levels determines which features a client has access to"
-            style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
-          ></vaadin-icon>
-        </vaadin-horizontal-layout>
-      `,
-      root
-    );
+  private membershipHeaderRenderer = () => {
+    return html`
+      <vaadin-horizontal-layout style="align-items: center;">
+        <span>Membership</span>
+        <vaadin-icon
+          icon="vaadin:info-circle"
+          title="Membership levels determines which features a client has access to"
+          style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
+        ></vaadin-icon>
+      </vaadin-horizontal-layout>
+    `;
   };
 
-  membershipFooterRenderer = (root: HTMLElement) => {
-    render(html`<span>103 regular, 71 premium , 66 VIP</span>`, root);
+  private membershipFooterRenderer = () => {
+    return html`<span>103 regular, 71 premium , 66 VIP</span>`;
   };
   // end::snippet[]
 }

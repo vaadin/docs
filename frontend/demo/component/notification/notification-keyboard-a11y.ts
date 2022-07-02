@@ -1,10 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/notification';
-import { NotificationRenderer, NotificationOpenedChangedEvent } from '@vaadin/notification';
+import { NotificationOpenedChangedEvent } from '@vaadin/notification';
+import { notificationRenderer, NotificationLitRenderer } from '@vaadin/notification/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-keyboard-a11y')
@@ -42,7 +43,7 @@ export class Example extends LitElement {
         @opened-changed="${(e: NotificationOpenedChangedEvent) => {
           this.notificationOpened = e.detail.value;
         }}"
-        .renderer="${this.renderer}"
+        ${notificationRenderer(this.renderer, [])}
       ></vaadin-notification>
     `;
   }
@@ -50,25 +51,22 @@ export class Example extends LitElement {
   // end::snippet[]
 
   // tag::renderer[]
-  renderer: NotificationRenderer = (root) => {
-    render(
-      html`
-        <vaadin-horizontal-layout style="align-items: center;">
-          <div>5 tasks deleted</div>
-          <vaadin-button
-            style="margin-left: var(--lumo-space-xl);"
-            theme="primary"
-            @click="${() => (this.notificationOpened = false)}"
-          >
-            Undo
-            <!-- Ideally, this should be hidden if the
+  renderer: NotificationLitRenderer = () => {
+    return html`
+      <vaadin-horizontal-layout style="align-items: center;">
+        <div>5 tasks deleted</div>
+        <vaadin-button
+          style="margin-left: var(--lumo-space-xl);"
+          theme="primary"
+          @click="${this.close}"
+        >
+          Undo
+          <!-- Ideally, this should be hidden if the
                  device does not have a physical keyboard -->
-            ${this.isMac ? '⌘' : 'Ctrl-'}Z
-          </vaadin-button>
-        </vaadin-horizontal-layout>
-      `,
-      root
-    );
+          ${this.isMac ? '⌘' : 'Ctrl-'}Z
+        </vaadin-button>
+      </vaadin-horizontal-layout>
+    `;
   };
 
   // end::renderer[]
@@ -95,4 +93,8 @@ export class Example extends LitElement {
     }
   };
   // end::key-down[]
+
+  private close() {
+    this.notificationOpened = false;
+  }
 }

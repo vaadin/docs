@@ -1,10 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/grid';
-import type { GridDragStartEvent, GridDropEvent, GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import type { GridDragStartEvent, GridDropEvent } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -61,9 +62,9 @@ export class Example extends LitElement {
       >
         <vaadin-grid-column
           header="Image"
-          .renderer="${this.avatarRenderer}"
           flex-grow="0"
           auto-width
+          ${columnBodyRenderer(this.avatarRenderer, [])}
         ></vaadin-grid-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
@@ -73,17 +74,12 @@ export class Example extends LitElement {
     `;
   }
 
-  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    render(
-      html`
-        <vaadin-avatar
-          img="${model.item.pictureUrl}"
-          name="${model.item.firstName} ${model.item.lastName}"
-          alt="User avatar"
-        ></vaadin-avatar>
-      `,
-      root
-    );
-  };
+  private avatarRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
+    <vaadin-avatar
+      img="${person.pictureUrl}"
+      name="${person.firstName} ${person.lastName}"
+      alt="User avatar"
+    ></vaadin-avatar>
+  `;
 }
 // end::snippet[]

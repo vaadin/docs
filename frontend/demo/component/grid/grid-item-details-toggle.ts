@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
 import '@vaadin/grid';
-import type { Grid, GridColumn, GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer, gridRowDetailsRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/form-layout';
 import '@vaadin/text-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -41,74 +40,65 @@ export class Example extends LitElement {
         theme="row-stripes"
         .items="${this.items}"
         .detailsOpenedItems="${this.detailsOpenedItems}"
-        .rowDetailsRenderer="${guard(
-          [],
-          () => (root: HTMLElement, _: Grid, model: GridItemModel<Person>) => {
-            const person = model.item;
-
-            render(
-              html` <vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">
-                <vaadin-text-field
-                  label="Email address"
-                  .value="${person.email}"
-                  colspan="3"
-                  readonly
-                ></vaadin-text-field>
-                <vaadin-text-field
-                  label="Phone number"
-                  .value="${person.address.phone}"
-                  colspan="3"
-                  readonly
-                ></vaadin-text-field>
-                <vaadin-text-field
-                  label="Street address"
-                  .value="${person.address.street}"
-                  colspan="3"
-                  readonly
-                ></vaadin-text-field>
-                <vaadin-text-field
-                  label="ZIP code"
-                  .value="${person.address.zip}"
-                  readonly
-                ></vaadin-text-field>
-                <vaadin-text-field
-                  label="City"
-                  .value="${person.address.city}"
-                  readonly
-                ></vaadin-text-field>
-                <vaadin-text-field
-                  label="State"
-                  .value="${person.address.state}"
-                  readonly
-                ></vaadin-text-field>
-              </vaadin-form-layout>`,
-              root
-            );
-          }
-        )}"
+        ${gridRowDetailsRenderer<Person>(
+          (person) => html`
+            <vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">
+              <vaadin-text-field
+                label="Email address"
+                .value="${person.email}"
+                colspan="3"
+                readonly
+              ></vaadin-text-field>
+              <vaadin-text-field
+                label="Phone number"
+                .value="${person.address.phone}"
+                colspan="3"
+                readonly
+              ></vaadin-text-field>
+              <vaadin-text-field
+                label="Street address"
+                .value="${person.address.street}"
+                colspan="3"
+                readonly
+              ></vaadin-text-field>
+              <vaadin-text-field
+                label="ZIP code"
+                .value="${person.address.zip}"
+                readonly
+              ></vaadin-text-field>
+              <vaadin-text-field
+                label="City"
+                .value="${person.address.city}"
+                readonly
+              ></vaadin-text-field>
+              <vaadin-text-field
+                label="State"
+                .value="${person.address.state}"
+                readonly
+              ></vaadin-text-field>
+            </vaadin-form-layout>
+          `,
+          []
+        )}
       >
         <vaadin-grid-column path="displayName" header="Name"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>
         <vaadin-grid-column
-          .renderer="${guard(
-            [],
-            () => (root: HTMLElement, _: GridColumn, model: GridItemModel<Person>) => {
-              const person = model.item;
-              render(
-                html`<vaadin-button
-                  theme="tertiary"
-                  @click="${() => {
-                    const isOpened = this.detailsOpenedItems.includes(person);
-                    this.detailsOpenedItems = isOpened
-                      ? this.detailsOpenedItems.filter((p) => p != person)
-                      : [...this.detailsOpenedItems, person];
-                  }}"
-                  >Toggle details
-                </vaadin-button>`,
-                root
-              );
-            }
-          )}"
+          ${columnBodyRenderer<Person>(
+            (person) => html`
+              <vaadin-button
+                theme="tertiary"
+                @click="${() => {
+                  const isOpened = this.detailsOpenedItems.includes(person);
+                  this.detailsOpenedItems = isOpened
+                    ? this.detailsOpenedItems.filter((p) => p != person)
+                    : [...this.detailsOpenedItems, person];
+                }}"
+                >Toggle details
+              </vaadin-button>
+            `,
+            []
+          )}
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
