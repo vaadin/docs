@@ -1,0 +1,114 @@
+= Selenium Testing
+
+Although Flow does not support Selenium officially, you can still run simple tests using Selenium.
+
+== Setting up Selenium
+
+Follow the steps below to set up your Flow application with Selenium:
+
+. Add the Selenium library dependency to your project’s `pom.xml` file.
++
+.`pom.xml`
+[source,xml]
+----
+<!-- Selenium Library -->
+<dependency>
+   <groupId>org.seleniumhq.selenium</groupId>
+   <artifactId>selenium-java</artifactId>
+   <version>4.3.0</version>
+</dependency>
+----
+
+. Install Web Browser Drivers using one of the three methods below.
+* <<#Use WebDriverManager to manage Drivers, WebDriverManager>>. This is the simplest way.
+* https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#2-the-path-environment-variable[Adding the driver location to the PATH environment variable].
+* https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#3-hard-coded-location[Hard-coding the location in test code].
+
+[NOTE]
+The list of available drivers can be found at the https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#quick-reference[official Selenium guide].
+
+=== Use WebDriverManager to manage Drivers
+
+The steps below illustrate how to use WebDriverManage to manage drivers.
+
+. Add the WebDriverManager dependency to your project’s `pom.xml` file.
++
+.`pom.xml`
+[source,xml]
+----
+<!-- Web Driver Management Software -->
+<dependency>
+   <groupId>io.github.bonigarcia</groupId>
+   <artifactId>webdrivermanager</artifactId>
+   <version>5.1.1</version>
+   <scope>test</scope>
+</dependency>
+----
+
+. Import WebDriverManager into your test class.
++
+.`SimpleTest.java`
+[source,java]
+----
+import io.github.bonigarcia.wdm.WebDriverManager;
+----
+
+. Call `setup()` on the driver that you would like to use. 
+We used the Chrome driver in code snippet below, but you can also use other drivers such as `edgedriver`, `firefoxdriver`, `safaridriver`, `iedriver`, `operadriver` instead.
++
+.`SimpleTest.java`
+[source,java]
+----
+WebDriverManager.chromedriver().setup();
+----
+
+== Create your first Test
+The code snippet below tests whether the page title is “Hello World”. 
+
+.`SimpleTest.java`
+[source,java]
+----
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.FluentWait;
+
+import java.time.Duration;
+
+public class SimpleTest {
+
+   @Test
+   public void checkTitle() {
+       //Set up the web driver
+       WebDriverManager.chromedriver().setup(); // <1>
+
+       //Use this ChromeDriver to interact with Chrome
+       var driver = new ChromeDriver(); // <2>
+
+       //Loads the page
+       driver.get("http://localhost:8080/hello"); // <3>
+
+       //Have to explicitly wait because it takes time for compiled html to load
+       new FluentWait<WebDriver>(driver)
+               .withTimeout(Duration.ofSeconds(30))
+               .pollingEvery(Duration.ofSeconds(1))
+               .ignoring(NoSuchElementException.class)
+               .until(_driver -> !_driver.getTitle().isEmpty()); // <4>
+
+       //Gets the title now that the compiled html resources have loaded
+       var title = driver.getTitle(); // <5>
+
+       //Checks whether the title matches
+       Assertions.assertEquals("Hello World", title); // <6>
+   }
+}
+----
+<1> If you are using `WebDriverManager`, you will need to setup your driver for the test.
+<2> Instantiates the [classname]`ChromeDriver`, which will be used to interact with the Chrome web browser.
+<3> Directs the [classname]`ChromeDriver` to load the URL.
+<4> Because Flow produces a single-page frontend, Selenium is not aware of DOM manipulation after the initial page has been loaded, so we had to use Selenium's https://www.selenium.dev/documentation/webdriver/waits/#fluentwait[FluentWait] API to wait until the DOM has been _compiled_.
+<5> After we are sure that the page title is available, we retrieve the page title.
+<6> We check whether the page title is "Hello World".
