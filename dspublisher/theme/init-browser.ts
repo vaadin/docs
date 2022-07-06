@@ -2,6 +2,10 @@ import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
+if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
+  localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
+}
+
 class Header extends LitElement {
   createRenderRoot() {
     return this;
