@@ -48,47 +48,25 @@ You can handle creation and destruction of the webdriver manually also when runn
 
 [[testbench.grid.sauce-labs]]
 == Using Sauce Labs Test Grid
-For using Sauce Labs you will need:
+To run your tests on Sauce Labs you first need to get an account at https://saucelabs.com/ and take note of your user name and access key.
 
-1. Provide valid Sauce Labs credentials as a system property `sauce.user` and `sauce.sauceAccessKey` or environment variables `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY`
-2. Configure pom.xml to have `sauce-connect-plugin` open a tunnel with a tunnel identifier to Sauce Labs test grid
-3. Write your tests as described in <<testbench.grid.test-remote>>
+Before starting a test, you need to setup the https://docs.saucelabs.com/secure-connections/sauce-connect/quickstart/[Sauce Connect proxy]. The proxy creates a secure connection between the Sauce Labs browser environment and your machine so the Sauce Labs browsers can access a server you are running locally. You should run the proxy with a tunnel identifier (`-i some-tunnel-identifier`) to avoid conflicts with other tunnels you or a CI server might create later.
 
-After you have your Sauce Labs credentials you can pass them to your build e.g. `mvn verify -Dsauce.user=<yourusername> -Dsauce.sauceAccessKey=<youraccesskey>`.
+When the proxy is up and running, you can run your tests by passing the Sauce Labs username and access key to it. This can be done using system properties, e.g.
+```sh
+mvn verify -Dsauce.user=<yourusername> -Dsauce.sauceAccessKey=<youraccesskey> -Dsauce.tunnelId=some-tunnel-identifier
+```
+or by first setting the credentials as environment variables and then running the tests, e.g.
+```sh
+export SAUCE_USERNAME=<yourusername>
+export SAUCE_ACCESS_KEY=<youraccesskey>
+export SAUCE_TUNNEL_ID=some-tunnel-identifier
+mvn verify
+```
 
+When writing your tests there is nothing special about Sauce Labs that needs to be taken into account. You write them as described in <<testbench.grid.test-remote>>
 
-Sauce Connect plugin opens a tunnel before the integration tests are run and closes it after they are run.
-The plugin needs an identifier for the tunnel. The identifier is passed with `--tunnel-identifier` attribute in `sauce.options` system property e.g. in pom.xml `<sauce.options>--tunnel-identifier ${maven.build.timestamp}</sauce.options>`.
-
-[source,xml]
-----
-<plugins>
-    <plugin>
-        <groupId>com.saucelabs.maven.plugin</groupId>
-        <artifactId>sauce-connect-plugin</artifactId>
-        <version>2.1.23</version>
-        <executions>
-            <!-- Start Sauce Connect prior to running the integration tests -->
-            <execution>
-                <id>start-sauceconnect</id>
-                <phase>pre-integration-test</phase>
-                <goals>
-                    <goal>start-sauceconnect</goal>
-                </goals>
-            </execution>
-            <!-- Stop the Sauce Connect process after the integration tests have
-                finished -->
-            <execution>
-                <id>stop-sauceconnect</id>
-                <phase>post-integration-test</phase>
-                <goals>
-                    <goal>stop-sauceconnect</goal>
-                </goals>
-            </execution>
-        </executions>
-    </plugin>
-</plugins>
-----
+When running tests on a CI/build server you typically have a build step before the tests where the Sauce Connect Proxy is started and a build step after the tests where the tunnel is teared down.
 
 [[testbench.grid.test-browsers]]
 == Defining the Browsers to Run Tests On
