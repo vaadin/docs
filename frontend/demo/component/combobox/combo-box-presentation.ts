@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/combo-box';
-import { ComboBoxRenderer } from '@vaadin/combo-box';
+import { comboBoxRenderer, ComboBoxLitRenderer } from '@vaadin/combo-box/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -39,9 +39,9 @@ export class Example extends LitElement {
         label="Choose doctor"
         item-label-path="displayName"
         .filteredItems="${this.filteredItems}"
-        .renderer="${this.renderer}"
         style="--vaadin-combo-box-overlay-width: 16em"
         @filter-changed="${this.filterChanged}"
+        ${comboBoxRenderer(this.renderer, [])}
       ></vaadin-combo-box>
       <!-- end::combobox[] -->
     `;
@@ -60,27 +60,22 @@ export class Example extends LitElement {
   // We recommend placing CSS in a separate style sheet and
   // encapsulating the styling in a new component.
 
-  private renderer: ComboBoxRenderer<Person> = (root, _, { item: person }) => {
-    render(
-      html`
-        <div style="display: flex;">
-          <img
-            style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
-            src="${person.pictureUrl}"
-            alt="Portrait of ${person.firstName} ${person.lastName}"
-          />
-          <div>
-            ${person.firstName} ${person.lastName}
-            <div
-              style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-            >
-              ${person.profession}
-            </div>
+  private renderer: ComboBoxLitRenderer<Person> = (person) => {
+    return html`
+      <div style="display: flex;">
+        <img
+          style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
+          src="${person.pictureUrl}"
+          alt="Portrait of ${person.firstName} ${person.lastName}"
+        />
+        <div>
+          ${person.firstName} ${person.lastName}
+          <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
+            ${person.profession}
           </div>
         </div>
-      `,
-      root
-    );
+      </div>
+    `;
   };
   // end::renderer[]
 }

@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/notification';
+import { notificationRenderer } from '@vaadin/notification/lit.js';
 import type { Notification } from '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -24,112 +24,106 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-notification
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-horizontal-layout theme="spacing" style="align-items: center">
-                <vaadin-icon icon="vaadin:check-circle"></vaadin-icon>
-                <div>Application submitted!</div>
-                <vaadin-button
-                  style="margin: 0 0 0 var(--lumo-space-l)"
-                  @click="${this.close.bind(this, 1)}"
-                  >View</vaadin-button
-                >
-                <vaadin-button
-                  theme="tertiary-inline"
-                  @click="${this.close.bind(this, 1)}"
-                  aria-label="Close"
-                >
-                  <vaadin-icon icon="lumo:cross"></vaadin-icon>
-                </vaadin-button>
-              </vaadin-horizontal-layout>
-            `,
-            root
-          );
-        })}"
+        ${notificationRenderer(
+          (notification) => html`
+            <vaadin-horizontal-layout theme="spacing" style="align-items: center">
+              <vaadin-icon icon="vaadin:check-circle"></vaadin-icon>
+              <div>Application submitted!</div>
+              <vaadin-button
+                style="margin: 0 0 0 var(--lumo-space-l)"
+                @click="${() => notification.close()}"
+              >
+                View
+              </vaadin-button>
+              <vaadin-button
+                theme="tertiary-inline"
+                @click="${() => notification.close()}"
+                aria-label="Close"
+              >
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
+              </vaadin-button>
+            </vaadin-horizontal-layout>
+          `,
+          []
+        )}
         theme="success"
         position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-horizontal-layout theme="spacing" style="align-items: center">
-                <vaadin-icon icon="vaadin:warning"></vaadin-icon>
-                <div>Failed to generate report</div>
-                <vaadin-button
-                  style="margin: 0 0 0 var(--lumo-space-l)"
-                  @click="${this.close.bind(this, 2)}"
-                  >Retry</vaadin-button
-                >
-                <vaadin-button
-                  theme="tertiary-inline"
-                  @click="${this.close.bind(this, 2)}"
-                  aria-label="Close"
-                >
-                  <vaadin-icon icon="lumo:cross"></vaadin-icon>
-                </vaadin-button>
-              </vaadin-horizontal-layout>
-            `,
-            root
-          );
-        })}"
+        ${notificationRenderer(
+          (notification) => html`
+            <vaadin-horizontal-layout theme="spacing" style="align-items: center">
+              <vaadin-icon icon="vaadin:warning"></vaadin-icon>
+              <div>Failed to generate report</div>
+              <vaadin-button
+                style="margin: 0 0 0 var(--lumo-space-l)"
+                @click="${() => notification.close()}"
+              >
+                Retry
+              </vaadin-button>
+              <vaadin-button
+                theme="tertiary-inline"
+                @click="${() => notification.close()}"
+                aria-label="Close"
+              >
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
+              </vaadin-button>
+            </vaadin-horizontal-layout>
+          `,
+          []
+        )}
         theme="error"
         position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-horizontal-layout theme="spacing" style="align-items: center">
-                <vaadin-avatar name="Jason Bailey"></vaadin-avatar>
-                <div><b>Jason Bailey</b> mentioned you in <a href="#">Project Q4</a></div>
-                <vaadin-button
-                  theme="tertiary-inline"
-                  @click="${this.close.bind(this, 3)}"
-                  aria-label="Close"
-                >
-                  <vaadin-icon icon="lumo:cross"></vaadin-icon>
-                </vaadin-button>
-              </vaadin-horizontal-layout>
-            `,
-            root
-          );
-        })}"
+        ${notificationRenderer(
+          (notification) => html`
+            <vaadin-horizontal-layout theme="spacing" style="align-items: center">
+              <vaadin-avatar name="Jason Bailey"></vaadin-avatar>
+              <div><b>Jason Bailey</b> mentioned you in <a href="#">Project Q4</a></div>
+              <vaadin-button
+                theme="tertiary-inline"
+                @click="${() => notification.close()}"
+                aria-label="Close"
+              >
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
+              </vaadin-button>
+            </vaadin-horizontal-layout>
+          `,
+          []
+        )}
         position="middle"
       ></vaadin-notification>
 
       <vaadin-notification
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-horizontal-layout theme="spacing" style="align-items: center">
-                <vaadin-icon
-                  icon="vaadin:check-circle"
-                  style="color: var(--lumo-success-color)"
-                ></vaadin-icon>
-                <div>
-                  <b style="color: var(--lumo-success-text-color);">Upload successful</b>
-                  <div
-                    style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color)"
-                  >
-                    <b>Financials.xlsx</b> is now available in <a href="#">Documents</a>
-                  </div>
-                </div>
-                <vaadin-button
-                  theme="tertiary-inline"
-                  @click="${this.close.bind(this, 4)}"
-                  aria-label="Close"
+        ${notificationRenderer(
+          (notification) => html`
+            <vaadin-horizontal-layout theme="spacing" style="align-items: center">
+              <vaadin-icon
+                icon="vaadin:check-circle"
+                style="color: var(--lumo-success-color)"
+              ></vaadin-icon>
+              <div>
+                <b style="color: var(--lumo-success-text-color);">Upload successful</b>
+                <div
+                  style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color)"
                 >
-                  <vaadin-icon icon="lumo:cross"></vaadin-icon>
-                </vaadin-button>
-              </vaadin-horizontal-layout>
-            `,
-            root
-          );
-        })}"
+                  <b>Financials.xlsx</b> is now available in <a href="#">Documents</a>
+                </div>
+              </div>
+              <vaadin-button
+                theme="tertiary-inline"
+                @click="${() => notification.close()}"
+                aria-label="Close"
+              >
+                <vaadin-icon icon="lumo:cross"></vaadin-icon>
+              </vaadin-button>
+            </vaadin-horizontal-layout>
+          `,
+          []
+        )}
         position="middle"
       ></vaadin-notification>
       <!-- end::snippet[] -->
@@ -151,12 +145,5 @@ export class Example extends LitElement {
       `vaadin-notification:nth-child(${which})`
     ) as Notification;
     notification?.open();
-  }
-
-  close(which: number) {
-    const notification = this.shadowRoot?.querySelector(
-      `vaadin-notification:nth-child(${which})`
-    ) as Notification;
-    notification?.close();
   }
 }

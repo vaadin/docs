@@ -1,11 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-sorter.js';
-import type { GridItemModel } from '@vaadin/grid';
+import {
+  columnBodyRenderer,
+  columnHeaderRenderer,
+  GridColumnBodyLitRenderer,
+} from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -37,60 +41,50 @@ export class Example extends LitElement {
         <vaadin-grid-sort-column
           header="Employee"
           path="lastName"
-          .renderer="${this.employeeRenderer}"
+          ${columnBodyRenderer(this.employeeRenderer, [])}
         ></vaadin-grid-sort-column>
         <vaadin-grid-column
-          .renderer="${this.birthdayRenderer}"
-          .headerRenderer="${this.birthdayHeaderRenderer}"
+          ${columnHeaderRenderer(this.birthdayHeaderRenderer, [])}
+          ${columnBodyRenderer(this.birthdayRenderer, [])}
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
 
-  private employeeRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    const person = model.item;
-    render(
-      html`
-        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-          <vaadin-avatar
-            img="${person.pictureUrl}"
-            name="${person.firstName} ${person.lastName}"
-            alt="User avatar"
-          ></vaadin-avatar>
-          <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-            <span> ${person.firstName} ${person.lastName} </span>
-            <span
-              style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-            >
-              ${person.email}
-            </span>
-          </vaadin-vertical-layout>
-        </vaadin-horizontal-layout>
-      `,
-      root
-    );
-  };
-
-  private birthdayHeaderRenderer = (root: HTMLElement) => {
-    render(html`<vaadin-grid-sorter path="birthday">Birthdate</vaadin-grid-sorter>`, root);
-  };
-
-  private birthdayRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    const person = model.item;
-    const birthday = parseISO(person.birthday);
-    render(
-      html`
+  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
+    return html`
+      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+        <vaadin-avatar
+          img="${person.pictureUrl}"
+          name="${person.firstName} ${person.lastName}"
+          alt="User avatar"
+        ></vaadin-avatar>
         <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-          <span> ${format(birthday, 'P')} </span>
+          <span>${person.firstName} ${person.lastName}</span>
           <span
             style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
           >
-            Age: ${differenceInYears(Date.now(), birthday)}
+            ${person.email}
           </span>
         </vaadin-vertical-layout>
-      `,
-      root
-    );
+      </vaadin-horizontal-layout>
+    `;
+  };
+
+  private birthdayHeaderRenderer = () => {
+    return html`<vaadin-grid-sorter path="birthday">Birthdate</vaadin-grid-sorter>`;
+  };
+
+  private birthdayRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
+    const birthday = parseISO(person.birthday);
+    return html`
+      <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+        <span> ${format(birthday, 'P')} </span>
+        <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
+          Age: ${differenceInYears(Date.now(), birthday)}
+        </span>
+      </vaadin-vertical-layout>
+    `;
   };
   // end::snippet[]
 }

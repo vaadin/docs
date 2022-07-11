@@ -1,8 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
+import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import type { GridColumn, GridItemModel } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -43,21 +44,15 @@ export class Example extends LitElement {
         <vaadin-grid-column path="profession"></vaadin-grid-column>
         <vaadin-grid-column
           header="Customer rating (0-10)"
-          .renderer="${this.ratingRenderer}"
+          ${columnBodyRenderer(this.ratingRenderer, [])}
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
 
-  private ratingRenderer = (
-    root: HTMLElement,
-    _column: GridColumn,
-    model: GridItemModel<PersonWithRating>
-  ) => {
-    const item = model.item;
-    const rating = item ? this.ratingFormatter.format(item.customerRating) : '';
-    render(html`<span>${rating}</span>`, root);
-  };
+  private ratingRenderer: GridColumnBodyLitRenderer<PersonWithRating> = (person) => html`
+    <span>${this.ratingFormatter.format(person.customerRating)}</span>
+  `;
 
   private cellClassNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {
     const item = model.item;

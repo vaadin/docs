@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/grid';
-import type { GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -32,44 +32,30 @@ export class Example extends LitElement {
       <vaadin-grid .items="${this.items}" theme="wrap-cell-content">
         <vaadin-grid-column
           header="Image"
-          .renderer="${this.avatarRenderer}"
           flex-grow="0"
           auto-width
+          ${columnBodyRenderer(this.avatarRenderer, [])}
         ></vaadin-grid-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column
           header="Address"
-          .renderer="${this.addressRenderer}"
+          ${columnBodyRenderer(this.addressRenderer, [])}
         ></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
 
-  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    render(
-      html`
-        <vaadin-avatar
-          img="${model.item.pictureUrl}"
-          name="${model.item.firstName} ${model.item.lastName}"
-          alt="User avatar"
-        ></vaadin-avatar>
-      `,
-      root
-    );
-  };
+  private avatarRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
+    <vaadin-avatar
+      img="${person.pictureUrl}"
+      name="${person.firstName} ${person.lastName}"
+      alt="User avatar"
+    ></vaadin-avatar>
+  `;
 
-  private addressRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    const item = model.item;
-    render(
-      html`
-        <span
-          >${item.address.street} ${item.address.city} ${item.address.zip}
-          ${item.address.state}</span
-        >
-      `,
-      root
-    );
-  };
+  private addressRenderer: GridColumnBodyLitRenderer<Person> = ({ address }) => html`
+    <span>${address.street} ${address.city} ${address.zip} ${address.state}</span>
+  `;
 }
 // end::snippet[]

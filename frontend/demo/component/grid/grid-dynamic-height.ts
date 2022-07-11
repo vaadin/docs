@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/combo-box';
 import { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
 import '@vaadin/grid';
-import type { GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
@@ -73,21 +73,16 @@ export class Example extends LitElement {
     `;
   }
 
-  private manageRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    const { id } = model.item;
-    render(
-      html`
-        <vaadin-button
-          theme="error tertiary icon"
-          @click="${() => {
-            this.invitedPeople = this.invitedPeople.filter((p) => p.id !== id);
-          }}"
-          ><vaadin-icon icon="vaadin:trash"></vaadin-icon
-        ></vaadin-button>
-      `,
-      root
-    );
-  };
+  private manageRenderer: GridColumnBodyLitRenderer<Person> = ({ id }) => html`
+    <vaadin-button
+      theme="error tertiary icon"
+      @click="${() => {
+        this.invitedPeople = this.invitedPeople.filter((p) => p.id !== id);
+      }}"
+    >
+      <vaadin-icon icon="vaadin:trash"></vaadin-icon>
+    </vaadin-button>
+  `;
 
   private renderNoInvitationAlert = () => {
     return html`
@@ -106,7 +101,10 @@ export class Example extends LitElement {
         <vaadin-grid-column header="Name" path="displayName" auto-width></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
         <vaadin-grid-column path="address.phone"></vaadin-grid-column>
-        <vaadin-grid-column header="Manage" .renderer="${this.manageRenderer}"></vaadin-grid-column>
+        <vaadin-grid-column
+          header="Manage"
+          ${columnBodyRenderer(this.manageRenderer, [])}
+        ></vaadin-grid-column>
       </vaadin-grid>
       <!-- end::snippet[] -->
     `;
