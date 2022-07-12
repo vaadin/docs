@@ -5,7 +5,8 @@ import '@vaadin/avatar';
 import '@vaadin/context-menu';
 import type { ContextMenuItem } from '@vaadin/context-menu';
 import '@vaadin/grid';
-import type { Grid, GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import type { Grid } from '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
@@ -65,7 +66,7 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Applicant"
-            .renderer=${this.nameRenderer}
+            ${columnBodyRenderer(this.nameRenderer, [])}
           ></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column header="Phone number" path="address.phone"></vaadin-grid-column>
@@ -127,10 +128,7 @@ export class Example extends LitElement {
     }
   }
 
-  private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    if (model?.item) {
-      const person = model.item;
-      render(html`<span>${person.firstName} ${person.lastName}</span>`, root);
-    }
+  private nameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
+    return html`<span>${person.firstName} ${person.lastName}</span>`;
   };
 }
