@@ -25,33 +25,31 @@ export class Example extends LitElement {
       this.dateTimePicker.i18n = {
         ...this.dateTimePicker.i18n,
         monthNames: [
-          'Jan',
-          'Feb',
-          'Mar',
-          'Apr',
-          'May',
-          'Jun',
-          'Jul',
-          'Aug',
-          'Sep',
-          'Oct',
-          'Nov',
-          'Dec',
+          'Januar',
+          'Februar',
+          'März',
+          'April',
+          'Mai',
+          'Juni',
+          'Juli',
+          'August',
+          'September',
+          'Oktober',
+          'November',
+          'Dezember',
         ],
-        weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-        weekdaysShort: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        week: 'Week',
-        today: 'Today',
-        cancel: 'Cancel',
+        weekdays: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'],
+        weekdaysShort: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+        week: 'Woche',
+        today: 'Heute',
+        cancel: 'Abbrechen',
         firstDayOfWeek: 0,
       };
     }
   }
 
   render() {
-    return html`
-      <vaadin-date-time-picker label="Meeting date and time"></vaadin-date-time-picker>
-    `;
+    return html` <vaadin-date-time-picker label="Sitzungsdatum"></vaadin-date-time-picker> `;
   }
   // end::snippet[]
 }

@@ -12,18 +12,17 @@ import com.vaadin.flow.router.Route;
 public class DateTimePickerInternationalization extends Div {
 
     public DateTimePickerInternationalization() {
-        DateTimePicker dateTimePicker = new DateTimePicker("Meeting date and time");
+        DateTimePicker dateTimePicker = new DateTimePicker("Sitzungsdatum");
 
         // tag::snippet[]
         DatePicker.DatePickerI18n customI18n = new DatePicker.DatePickerI18n();
-        customI18n.setMonthNames(List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"));
-        customI18n.setWeekdays(List.of("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"));
-        customI18n.setWeekdaysShort(List.of("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"));
-        customI18n.setFirstDayOfWeek(0);
-        customI18n.setWeek("Week");
-        customI18n.setToday("Today");
-        customI18n.setCancel("Abort");
-
+        customI18n.setMonthNames(List.of("Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"));
+        customI18n.setWeekdays(List.of("Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"));
+        customI18n.setWeekdaysShort(List.of("So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"));        
+        customI18n.setWeek("Woche");
+        customI18n.setToday("Heute");
+        customI18n.setCancel("Abbrechen");
+        
         dateTimePicker.setDatePickerI18n(customI18n);
         // end::snippet[]
 
