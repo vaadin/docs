@@ -16,16 +16,14 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-date-picker')
-  private datePicker?: DatePicker;
+  private datePicker!: DatePicker;
 
   // tag::snippet[]
   firstUpdated() {
-    if (this.datePicker) {
-      this.datePicker.i18n = {
-        ...this.datePicker.i18n,
-        firstDayOfWeek: 1,
-      };
-    }
+    this.datePicker.i18n = {
+      ...this.datePicker.i18n,
+      firstDayOfWeek: 1,
+    };
   }
 
   render() {

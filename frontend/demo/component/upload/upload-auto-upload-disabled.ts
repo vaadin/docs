@@ -18,13 +18,11 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('vaadin-upload')
-  private upload?: Upload;
+  private upload!: Upload;
 
   firstUpdated() {
-    if (this.upload?.i18n) {
-      this.upload.i18n.addFiles.many = 'Select Files...';
-      this.upload.i18n = { ...this.upload.i18n };
-    }
+    this.upload.i18n.addFiles.many = 'Select Files...';
+    this.upload.i18n = { ...this.upload.i18n };
   }
 
   render() {
