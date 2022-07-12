@@ -49,7 +49,7 @@ export class Example extends LitElement {
   }
 
   render() {
-    return html` <vaadin-date-time-picker label="Sitzungsdatum"></vaadin-date-time-picker> `;
+    return html`<vaadin-date-time-picker label="Sitzungsdatum"></vaadin-date-time-picker>`;
   }
   // end::snippet[]
 }
