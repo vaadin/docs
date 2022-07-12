@@ -43,7 +43,6 @@ export class Example extends LitElement {
         week: 'Woche',
         today: 'Heute',
         cancel: 'Abbrechen',
-        firstDayOfWeek: 0,
       };
     }
   }
