@@ -29,16 +29,14 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: Upload;
+  private upload!: Upload;
 
   firstUpdated() {
-    if (this.upload?.i18n) {
-      this.upload.i18n.addFiles.one = 'Upload Report...';
-      this.upload.i18n.dropFiles.one = 'Drop report here';
-      this.upload.i18n.error.incorrectFileType =
-        'The provided file does not have the correct format. Please provide a PDF document.';
-      this.upload.i18n = { ...this.upload.i18n };
-    }
+    this.upload.i18n.addFiles.one = 'Upload Report...';
+    this.upload.i18n.dropFiles.one = 'Drop report here';
+    this.upload.i18n.error.incorrectFileType =
+      'The provided file does not have the correct format. Please provide a PDF document.';
+    this.upload.i18n = { ...this.upload.i18n };
   }
 
   render() {

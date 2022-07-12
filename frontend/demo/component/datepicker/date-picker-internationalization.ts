@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { DatePicker } from '@vaadin/date-picker';
-
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/date-picker';
+import { DatePicker } from '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-internationalization')
@@ -18,33 +17,31 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('vaadin-date-picker')
-  private datePicker?: DatePicker;
+  private datePicker!: DatePicker;
 
   firstUpdated() {
-    if (this.datePicker) {
-      this.datePicker.i18n = {
-        ...this.datePicker.i18n,
-        monthNames: [
-          'Januar',
-          'Februar',
-          'März',
-          'April',
-          'Mai',
-          'Juni',
-          'Juli',
-          'August',
-          'September',
-          'Oktober',
-          'November',
-          'Dezember',
-        ],
-        weekdays: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
-        weekdaysShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
-        week: 'Woche',
-        today: 'Heute',
-        cancel: 'Abbrechen',
-      };
-    }
+    this.datePicker.i18n = {
+      ...this.datePicker.i18n,
+      monthNames: [
+        'Januar',
+        'Februar',
+        'März',
+        'April',
+        'Mai',
+        'Juni',
+        'Juli',
+        'August',
+        'September',
+        'Oktober',
+        'November',
+        'Dezember',
+      ],
+      weekdays: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+      weekdaysShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+      week: 'Woche',
+      today: 'Heute',
+      cancel: 'Abbrechen',
+    };
   }
 
   render() {
