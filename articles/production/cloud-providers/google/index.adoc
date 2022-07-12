@@ -1,12 +1,12 @@
 ---
-title: Google Cloud
-description: Learn how to deploy your Vaadin application to Google Cloud.
+title: Google App Engine
+description: Learn how to deploy your Vaadin application to Google App Engine.
 order: 30
 ---
 
-= Deploying a Vaadin Application to Google Cloud
+= Deploying a Vaadin Application to Google App Engine
 
-This tutorial shows you how to deploy a Vaadin application to Google Cloud App Engine.
+This tutorial shows you how to deploy a Vaadin application to Google App Engine.
 Google Cloud has free-trial and free-tier offerings that you can read more about on the link:https://cloud.google.com/free/[Google Cloud website].
 
 .Google Cloud account required
@@ -74,19 +74,20 @@ gcloud app create
 You will then be asked to select a region.
 You may want to choose the region that is geographically closest to your users.
 
-== Step 5: Create a Production Build
+== Step 5: Create a Production Build and Deploy the Application
 
-Open the project directory from a terminal window, and enter the following command to generate a `JAR` file of your application:
+Google App Engine defaults to use the Java 11 runtime. 
+If your Vaadin project is already configured to run with Java 11, then you can execute the two commands below, in the project directory, to 
 
+. Generate the `JAR`.
++
 [source,terminal]
 ----
 mvn package -Pproduction
 ----
 
-== Step 6: Deploy the Application
-
-From a terminal window, in the project root directory, enter the following command to deploy the application to Google Cloud:
-
+. Deploy your application.
++
 [source,terminal]
 ----
 gcloud app deploy target/myapp-1.0-SNAPSHOT.jar
@@ -94,7 +95,79 @@ gcloud app deploy target/myapp-1.0-SNAPSHOT.jar
 
 When the deployment has finished, the application URL will be displayed in the logs.
 
-.Ensure that Google Cloud billing is enabled
+If your project needs to run on a *different Java version*, then you have two options:
+
+. Generate the `JAR` using the command `mvn package -Pproduction` in this section and <<Manually Linking the `app.yaml` File,manually linking an `app.yaml` file during deployment>>.
+. Build and deploy the production JAR using the <<App Engine Maven Plugin,App Engine Maven plugin>>.
+
+== Manually Linking the `app.yaml` File
+
+To override the default Java runtime version, you would need to have a file called `app.yaml` with the content below.
+
+.app.yaml
+[source,yaml]
+----
+runtime: java17
+----
+
+Assuming that the `app.yaml` file is located under your home directory (`~/app.yaml`), then you can link to it during deployment using the command below:
+
+[source,terminal]
+----
+gcloud app deploy target/myapp-1.0-SNAPSHOT.jar --appyaml ~/app.yaml
+----
+
+== App Engine Maven Plugin
+
+You can follow the steps below to override the Java runtime version using the App Engine Maven plugin.
+
+. Create a directory called `appengine` under `src/main`.
+. Create an empty file called `app.yaml` under `appengine`.
+. Add the code below into the `app.yaml` file.
++
+.app.yaml
+[source,yaml]
+----
+runtime: java17
+----
+
+. Add the App Engine Maven plugin to your project's `pom.xml` file.
++
+.pom.xml
+[source,xml]
+----
+<plugin>
+    <groupId>com.google.cloud.tools</groupId>
+    <artifactId>appengine-maven-plugin</artifactId>
+    <version>2.4.3</version>
+    <configuration>
+        <projectId>GCLOUD_CONFIG</projectId>
+        <version>GCLOUD_CONFIG</version>
+    </configuration>
+</plugin>
+----
++
 [NOTE]
+`projectId` and `version` must be set for the plugin to work.
+The value `GCLOUD_CONFIG` tells the Google Cloud CLI tools to use the `projectId` configured at step 4.
+
+. Finally, you can build and deploy using a single command below:
++
+[source,terminal]
+----
+mvn package appengine:deploy -Pproduction
+----
+
+== Common Problems
+
+=== Ensure that Google Cloud Billing is Enabled
+
 If the deployment fails with an error similar to `ERROR: (gcloud.app.deploy) Error Response: [7] Access Not Configured.`, then ensure that your Google Cloud account has billing enabled.
-When it is enabled, try the deployment again.
+After it is enabled, try to deploy again.
+
+=== Memory Limit
+
+If you notice log messages similar to `Exceeded soft memory limit of 256 MB with X MB`, then that means your instance has ran out of RAM. You should consider <<https://cloud.google.com/appengine/docs/standard/java-gen2/config/appref,upgrading to a larger App Engine instance>> that fits your needs.
+
+[WARNING]
+Be mindful of costs when upgrading. Larger instances will most likely inccur more fees.
