@@ -112,3 +112,143 @@ public class SimpleTest {
 <4> Because Flow produces a single-page frontend, Selenium is not aware of DOM manipulation after the initial page has been loaded, so we had to use Selenium's https://www.selenium.dev/documentation/webdriver/waits/#fluentwait[FluentWait] API to wait until the DOM has been _compiled_.
 <5> After we are sure that the page title is available, we retrieve the page title.
 <6> We check whether the page title is "Hello World".
+
+== Verify the URL After Navigation Action
+
+You can also test the web browser's URL after a navigation action. 
+
+.`SimpleTest.java`
+[source,java]
+----
+@Test
+public void routeSwitch(){
+  //Set up the web driver
+  WebDriverManager.chromedriver().setup();
+
+  //Use this ChromeDriver to interact with Chrome
+  var driver = new ChromeDriver();
+
+  //Loads the page
+  driver.get("http://localhost:8080");
+
+  //Have to explicitly wait because it takes time for compiled html to load
+  new FluentWait<WebDriver>(driver)
+          .withTimeout(Duration.ofSeconds(30))
+          .pollingEvery(Duration.ofSeconds(1))
+          .ignoring(NoSuchElementException.class)
+          .until(_driver -> !_driver.getTitle().isEmpty());
+
+  //Clicks on the About button
+  driver.findElement(By.linkText("About")).click();
+
+  //Gets the current URL
+  var url = driver.getCurrentUrl();
+
+  //Checks whether the url matches
+  assertEquals("http://localhost:8080/about", url);
+}
+----
+
+== Add User to Master Detail Template
+
+If your Vaadin app contains the Master Detail Template from <<../guide/start#, Vaadin Start>>, then you can use the Selenium test below to add users and verify that the new user is inserted correctly.
+
+.`SimpleTest.java`
+[source,java]
+----
+@Test
+public void addUser(){
+  //Set up the web driver
+  WebDriverManager.chromedriver().setup();
+
+  //Use this ChromeDriver to interact with Chrome
+  var driver = new ChromeDriver();
+
+  //Loads the page
+  driver.get("http://localhost:8080/master-detail");
+
+  //Have to explicitly wait because it takes time for compiled html to load
+  new FluentWait<WebDriver>(driver)
+          .withTimeout(Duration.ofSeconds(30))
+          .pollingEvery(Duration.ofSeconds(1))
+          .ignoring(NoSuchElementException.class)
+          .until(_driver -> !_driver.getTitle().isEmpty());
+
+  //Test data
+  var firstName = "FirstName";
+  var lastName = "LastName";
+  var email = "first.last@example.com";
+  var phone = "(111) 111-1111";
+  //Cannot use simple String because the form and table display the dob differently
+  var dob = LocalDate.of(2000, Month.JANUARY, 1);
+  var occupation = "Forester";
+
+  //Adds First Name
+  var firstNameTextInput = driver.findElement(By.id("vaadin-text-field-0"));
+  firstNameTextInput.click();
+  firstNameTextInput.sendKeys(firstName);
+
+  //Adds Last Name
+  var lastNameTextInput = driver.findElement(By.id("vaadin-text-field-1"));
+  lastNameTextInput.click();
+  lastNameTextInput.sendKeys(lastName);
+
+  //Adds Email
+  var emailTextInput = driver.findElement(By.id("vaadin-text-field-2"));
+  emailTextInput.click();
+  emailTextInput.sendKeys(email);
+
+  //Adds Phone
+  var phoneTextInput = driver.findElement(By.id("vaadin-text-field-3"));
+  phoneTextInput.click();
+  phoneTextInput.sendKeys(phone);
+
+  //Adds DOB
+  var dobTextInput = driver.findElement(By.id("vaadin-date-picker-4"));
+  dobTextInput.click();
+  dobTextInput.sendKeys(DateTimeFormatter.ofPattern("dd/MM/uuuu").format(dob));
+  dobTextInput.sendKeys(Keys.ENTER); //Closes the pop-up Date Picker
+
+  //Adds Occupation
+  var occupationTextInput = driver.findElement(By.id("vaadin-text-field-5"));
+  occupationTextInput.click();
+  occupationTextInput.sendKeys(occupation);
+
+  //Marks as Important
+  driver.findElement(By.id("vaadin-checkbox-6"))
+          .click();
+
+  //Clicks Save
+  driver.findElement(By.xpath("//vaadin-button[contains(.,'Save')]")).click();
+
+  //Sorts by Phone number so the sample user is visible on the screen
+  driver.findElement(By.xpath("//vaadin-grid-sorter[contains(.,'Phone')]")).click();
+
+  //Reduces verbosity
+  var xPathStart = "//vaadin-grid-cell-content[contains(.,'";
+  var xPathEnd = "')]";
+
+  //Waits for the page to sort
+  new FluentWait<WebDriver>(driver)
+          .withTimeout(Duration.ofSeconds(30))
+          .pollingEvery(Duration.ofSeconds(1))
+          .ignoring(NoSuchElementException.class)
+          .until(_driver -> _driver.findElement(By.xpath(xPathStart + firstName + xPathEnd)).isDisplayed());
+
+  //Gets the cells in the table for the newly added user
+  var firstNameCell = driver.findElement(By.xpath(xPathStart + firstName + xPathEnd));
+  var lastNameCell = driver.findElement(By.xpath(xPathStart + lastName + xPathEnd));
+  var emailCell = driver.findElement(By.xpath(xPathStart + email + xPathEnd));
+  var phoneCell = driver.findElement(By.xpath(xPathStart + phone + xPathEnd));
+  var dobCell = driver.findElement(By.xpath(xPathStart + dob + xPathEnd));
+  var occupationCell = driver.findElement(By.xpath(xPathStart + occupation + xPathEnd));
+
+  //Assertions
+  assertEquals(firstName, firstNameCell.getText());
+  assertEquals(lastName, lastNameCell.getText());
+  assertEquals(email, emailCell.getText());
+  assertEquals(phone, phoneCell.getText());
+  assertEquals(dob.toString(), dobCell.getText());
+  assertEquals(occupation, occupationCell.getText());
+}
+----
