@@ -52,8 +52,8 @@ include::{root}/src/main/java/com/vaadin/demo/component/map/MapBasic.java[render
 Map provides interactions, controls, and APIs to control the viewport.
 This includes setting the center, the zoom level, and the rotation.
 
-By default, map coordinates, such as the view's center, are specified in https://en.wikipedia.org/wiki/Web_Mercator_projection[EPSG:3857 / Web Mercator Projection^], unless the map service uses a custom projection.
-As coordinates are often provided as latitude and longitude, Map provides utilities for converting these into Web Mercator projection.
+By default, map coordinates such as the view's center are specified in EPSG:4326 projection, also known as latitude and longitude, unless a custom user projection is configured.
+See <<#coordinate-systems, Coordinate Systems>> for more information.
 
 The zoom level is a decimal number that starts at zero as the most zoomed-out level, and then progressively increases to zoom further in.
 By default, the maximum zoom level is currently restricted to `28`.
@@ -188,8 +188,8 @@ A marker is defined by a coordinate and an icon.
 Icons can be configured as either a URL or a <<{articles}/advanced/dynamic-content#using-streamresource,StreamResource>>.
 If no custom icon is provided, the marker will use a default icon.
 
-By default, map coordinates, such as a marker's location, are specified in https://en.wikipedia.org/wiki/Web_Mercator_projection[EPSG:3857 / Web Mercator Projection^], unless the map service uses a custom projection.
-As coordinates are often provided as latitude and longitude, Map provides utilities for converting these into Web Mercator projection.
+By default, map coordinates such as a marker's location are specified in EPSG:4326 projection, also known as latitude and longitude, unless a custom user projection is configured.
+See <<#coordinate-systems, Coordinate Systems>> for more information.
 
 [.example]
 --
@@ -256,6 +256,110 @@ include::{root}/frontend/demo/component/map/map-events.ts[preimport,hidden]
 include::{root}/src/main/java/com/vaadin/demo/component/map/MapEvents.java[render,tags=snippet,indent=0,group=Java]
 ----
 --
+
+[role="since:com.vaadin:vaadin@V23.2"]
+== Coordinate Systems
+
+The default coordinate system, or projection, for all coordinates passed to, or received from the component is EPSG:4326, also referred to as GPS coordinates or latitude and longitude.
+This is called the user projection, as it affects all the coordinates that the user of the component, in this case the developer, is working with.
+That means when setting coordinates, for example of the viewport or for a marker, coordinates must be specified in EPSG:4326 by default, and coordinates received from events are guaranteed to be in that projection.
+
+Internally, the component converts all coordinates into the projection that is used by the map's view, which is called the view projection.
+The default view projection is EPSG:3857, also known as https://en.wikipedia.org/wiki/Web_Mercator_projection[Web Mercator Projection^].
+
+=== Changing the User Projection
+
+The user projection can be changed, for example when working with coordinates that are not in the EPSG:4326 projection.
+Out of the box the component only has support for the EPSG:4326 and EPSG:3857 projections, however the component allows <<#defining-custom-projections, defining custom projections>>.
+As mentioned above, changing the user projection affects *all* coordinates, using coordinates with different projections is not allowed.
+
+.Example for setting a different user projection
+[.example]
+--
+[source,Java]
+----
+// Set user projection to EPSG:3857
+Map.setUserProjection("EPSG:3857");
+
+// Create a map, center viewport on New York using
+// coordinates in EPSG:3857 projection
+Map map = new Map();
+map.setCenter(new Coordinate(-8235375.352932, 4967773.457877));
+map.setZoom(10);
+----
+--
+
+.User Projection Scope
+[NOTE]
+====
+The user projection setting is valid for the lifetime of the current browser page, which means it stays defined when navigating using the router, but not when doing a hard location change, or reloading the page.
+In practice, we recommend setting the user projection on every page where it is used.
+
+The user projection affects all maps on the browser page, and should be set before creating any maps.
+Changing the user projection does not affect existing maps, specifically coordinates configured in an existing map are not automatically converted into the new projection.
+Instead, maps should be recreated after changing this setting.
+====
+
+=== Defining Custom Projections
+
+Custom projections can be defined when working with coordinates that are neither in the EPSG:4326 nor EPSG:3857 projection.
+Defining a custom projection requires a name, which can later be referenced, as well as a projection definition in the Well Known Text (WKT) format.
+https://epsg.io[epsg.io^] is a handy resource for looking up WKT definitions of projections, as well as converting coordinates between specific projections. After a custom projection has been defined, it can be used as either user projection or view projection.
+
+.Example for defining a custom projection
+[.example]
+--
+[source,Java]
+----
+// Define EPSG:3067, which is a projection specifically for use in Finland
+String wkt = ""
+    + "PROJCS[\"ETRS89 / TM35FIN(E,N)\",\n"
+    + "    GEOGCS[\"ETRS89\",\n"
+    + "        DATUM[\"European_Terrestrial_Reference_System_1989\",\n"
+    + "            SPHEROID[\"GRS 1980\",6378137,298.257222101,\n"
+    + "                AUTHORITY[\"EPSG\",\"7019\"]],\n"
+    + "            TOWGS84[0,0,0,0,0,0,0],\n"
+    + "            AUTHORITY[\"EPSG\",\"6258\"]],\n"
+    + "        PRIMEM[\"Greenwich\",0,\n"
+    + "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+    + "        UNIT[\"degree\",0.0174532925199433,\n"
+    + "            AUTHORITY[\"EPSG\",\"9122\"]],\n"
+    + "        AUTHORITY[\"EPSG\",\"4258\"]],\n"
+    + "    PROJECTION[\"Transverse_Mercator\"],\n"
+    + "    PARAMETER[\"latitude_of_origin\",0],\n"
+    + "    PARAMETER[\"central_meridian\",27],\n"
+    + "    PARAMETER[\"scale_factor\",0.9996],\n"
+    + "    PARAMETER[\"false_easting\",500000],\n"
+    + "    PARAMETER[\"false_northing\",0],\n"
+    + "    UNIT[\"metre\",1,\n"
+    + "        AUTHORITY[\"EPSG\",\"9001\"]],\n"
+    + "    AXIS[\"Easting\",EAST],\n"
+    + "    AXIS[\"Northing\",NORTH],\n"
+    + "    AUTHORITY[\"EPSG\",\"3067\"]]";
+Map.defineProjection("EPSG:3067", wkt);
+
+// Set user projection to EPSG:3067
+Map.setUserProjection("EPSG:3067");
+
+// Create a map, change view projection to EPSG:3067 as well
+Map map = new Map();
+map.setView(new View("EPSG:3067"));
+
+// Center viewport on Helsinki using
+// coordinates in EPSG:3067 projection
+map.setCenter(new Coordinate(385725.63, 6671616.89));
+map.setZoom(10);
+----
+--
+
+.Custom Projection Scope
+[NOTE]
+====
+Custom projections are valid for the lifetime of the current browser page, which means they stay defined when navigating using the router, but not when doing a hard location change, or reloading the page.
+In practice, we recommend defining projections on every page where they are used.
+
+Custom projections must be defined before using them as either user projection or view projection.
+====
 
 == Theme Variants
 
