@@ -18,17 +18,17 @@ public class MapMarkers extends Div {
         add(title);
 
         Map map = new Map();
-        map.getView().setCenter(new Coordinate(-441077.2276714613, 5166904.667008546));
+        map.setCenter(new Coordinate(-3.9622642, 42.0395433));
         add(map);
 
         // tag::snippet[]
         // Add marker for Vaadin HQ, using default marker image
-        Coordinate vaadinHqCoordinates = Coordinate.fromLonLat(22.29985, 60.45234);
+        Coordinate vaadinHqCoordinates = new Coordinate(22.29985, 60.45234);
         MarkerFeature vaadinHq = new MarkerFeature(vaadinHqCoordinates);
         map.getFeatureLayer().addFeature(vaadinHq);
 
         // Add marker for Vaadin office in Germany, using image from URL
-        Coordinate germanOfficeCoordinates = Coordinate.fromLonLat(13.45489, 52.51390);
+        Coordinate germanOfficeCoordinates = new Coordinate(13.45489, 52.51390);
         Icon.Options germanFlagIconOptions = new Icon.Options();
         germanFlagIconOptions.setSrc("images/german_flag.png");
         Icon germanFlagIcon = new Icon(germanFlagIconOptions);
@@ -36,7 +36,7 @@ public class MapMarkers extends Div {
         map.getFeatureLayer().addFeature(germanOffice);
 
         // Add marker for Vaadin office in the US, using image from a StreamResource
-        Coordinate usOfficeCoordinates = Coordinate.fromLonLat(-121.92163, 37.36821);
+        Coordinate usOfficeCoordinates = new Coordinate(-121.92163, 37.36821);
         StreamResource streamResource = new StreamResource("us-flag.png",
                 () -> getClass().getResourceAsStream("/META-INF/resources/images/us-flag.png"));
         Icon.Options usFlagIconOptions = new Icon.Options();

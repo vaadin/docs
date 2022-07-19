@@ -15,16 +15,16 @@ import java.util.List;
 
 @Route("map-events")
 public class MapEvents extends VerticalLayout {
-    private static final City BERLIN = new City("Berlin", Coordinate.fromLonLat(13.404954, 52.520008));
-    private static final City HONG_KONG = new City("Hong Kong", Coordinate.fromLonLat(114.162813, 22.279328));
-    private static final City MOSCOW = new City("Moscow", Coordinate.fromLonLat(37.617298, 55.755825));
-    private static final City NEW_YORK = new City("New York", Coordinate.fromLonLat(-74.005974, 40.712776));
-    private static final City RIO = new City("Rio de Janeiro", Coordinate.fromLonLat(-43.2093727, -22.9110137));
+    private static final City BERLIN = new City("Berlin", new Coordinate(13.404954, 52.520008));
+    private static final City HONG_KONG = new City("Hong Kong", new Coordinate(114.162813, 22.279328));
+    private static final City MOSCOW = new City("Moscow", new Coordinate(37.617298, 55.755825));
+    private static final City NEW_YORK = new City("New York", new Coordinate(-74.005974, 40.712776));
+    private static final City RIO = new City("Rio de Janeiro", new Coordinate(-43.2093727, -22.9110137));
     private static final List<City> CITIES = List.of(BERLIN, HONG_KONG, MOSCOW, NEW_YORK, RIO);
 
     public MapEvents() {
         Map map = new Map();
-        map.getView().setCenter(new Coordinate(-441077.2276714613, 5166904.667008546));
+        map.setCenter(new Coordinate(-3.9622642, 42.0395433));
         add(map);
 
         // Setup text areas for logging event data
