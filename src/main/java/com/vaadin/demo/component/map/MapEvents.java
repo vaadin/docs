@@ -15,6 +15,8 @@ import java.util.List;
 
 @Route("map-events")
 public class MapEvents extends VerticalLayout {
+    // For Vaadin 23.1, use Coordinate.fromLonLat to create coordinates
+    // from longitude and latitude
     private static final City BERLIN = new City("Berlin", new Coordinate(13.404954, 52.520008));
     private static final City HONG_KONG = new City("Hong Kong", new Coordinate(114.162813, 22.279328));
     private static final City MOSCOW = new City("Moscow", new Coordinate(37.617298, 55.755825));
@@ -24,6 +26,8 @@ public class MapEvents extends VerticalLayout {
 
     public MapEvents() {
         Map map = new Map();
+        // For Vaadin 23.1, use Coordinate.fromLonLat to create coordinates
+        // from longitude and latitude
         map.setCenter(new Coordinate(-3.9622642, 42.0395433));
         add(map);
 

@@ -26,6 +26,8 @@ public class MapViewport extends VerticalLayout {
 
         // Add menu items for moving the viewport to different cities
         moveToSubMenu.addItem("Berlin", e -> {
+            // For Vaadin 23.1, use Coordinate.fromLonLat to create coordinates
+            // from longitude and latitude
             Coordinate coordinate = new Coordinate(13.404954, 52.520008);
             map.setCenter(coordinate);
             map.setZoom(10);
