@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/crud';
+import { Crud } from '@vaadin/crud';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -18,38 +19,38 @@ export class Example extends LitElement {
   @state()
   private items: Person[] = [];
 
+  @query('vaadin-crud')
+  private crud!: Crud<Person>;
+
   async firstUpdated() {
     this.items = (await getPeople()).people;
     // tag::snippet[]
-    const crud = this.shadowRoot?.querySelector('vaadin-crud');
-    if (crud) {
-      crud.i18n = {
-        newItem: 'Luo uusi',
-        editItem: 'Muuta tietoja',
-        saveItem: 'Tallenna',
-        cancel: 'Peruuta',
-        deleteItem: 'Poista...',
-        editLabel: 'Muokkaa',
-        confirm: {
-          delete: {
-            title: 'Poista kohde',
-            content: 'Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.',
-            button: {
-              confirm: 'Poista',
-              dismiss: 'Peruuta',
-            },
-          },
-          cancel: {
-            title: 'Hylkää muutokset',
-            content: 'Kohteessa on tallentamattomia muutoksia',
-            button: {
-              confirm: 'Hylkää',
-              dismiss: 'Peruuta',
-            },
+    this.crud.i18n = {
+      newItem: 'Luo uusi',
+      editItem: 'Muuta tietoja',
+      saveItem: 'Tallenna',
+      cancel: 'Peruuta',
+      deleteItem: 'Poista...',
+      editLabel: 'Muokkaa',
+      confirm: {
+        delete: {
+          title: 'Poista kohde',
+          content: 'Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.',
+          button: {
+            confirm: 'Poista',
+            dismiss: 'Peruuta',
           },
         },
-      };
-    }
+        cancel: {
+          title: 'Hylkää muutokset',
+          content: 'Kohteessa on tallentamattomia muutoksia',
+          button: {
+            confirm: 'Hylkää',
+            dismiss: 'Peruuta',
+          },
+        },
+      },
+    };
     // end::snippet[]
   }
 
