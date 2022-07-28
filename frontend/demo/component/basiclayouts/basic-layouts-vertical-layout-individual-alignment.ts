@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
+import '@vaadin/button';
 import '@vaadin/radio-group';
 import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import '@vaadin/vertical-layout';
-import './layout-item';
 
 @customElement('basic-layouts-vertical-layout-individual-alignment')
 export class Example extends LitElement {
@@ -31,9 +31,11 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-vertical-layout theme="spacing padding" style="align-items: ${this.alignLayoutItems}">
-        <layout-item style="align-self: ${this.alignFirstItem}">Item 1</layout-item>
-        <layout-item theme="inactive">Item 2</layout-item>
-        <layout-item theme="inactive">Item 3</layout-item>
+        <vaadin-button style="align-self: ${this.alignFirstItem}" theme="primary">
+          Button 1
+        </vaadin-button>
+        <vaadin-button>Button 2</vaadin-button>
+        <vaadin-button>Button 3</vaadin-button>
       </vaadin-vertical-layout>
       <vaadin-radio-group
         label="Layout alignment"
