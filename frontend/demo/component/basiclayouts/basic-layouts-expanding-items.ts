@@ -5,7 +5,6 @@ import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/horizontal-layout';
 import '@vaadin/radio-group';
 import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
-import './layout-item';
 
 @customElement('basic-layouts-expanding-items')
 export class Example extends LitElement {
@@ -28,9 +27,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-horizontal-layout theme="padding spacing">
-        <layout-item style="flex-grow: ${this.size}">Item 1</layout-item>
-        <layout-item>Item 2</layout-item>
-        <layout-item>Item 3</layout-item>
+        <vaadin-button style="flex-grow: ${this.size}">Button 1</vaadin-button>
+        <vaadin-button>Button 2</vaadin-button>
+        <vaadin-button>Button 3</vaadin-button>
       </vaadin-horizontal-layout>
       <vaadin-radio-group
         label="Item sizing"
