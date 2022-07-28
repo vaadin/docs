@@ -29,13 +29,11 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: Upload;
+  private upload!: Upload;
 
   firstUpdated() {
-    if (this.upload?.i18n) {
-      this.upload.i18n.error.fileIsTooBig = 'The file exceeds the maximum allowed size of 10MB.';
-      this.upload.i18n = { ...this.upload.i18n };
-    }
+    this.upload.i18n.error.fileIsTooBig = 'The file exceeds the maximum allowed size of 10MB.';
+    this.upload.i18n = { ...this.upload.i18n };
   }
 
   // tag::snippet[]

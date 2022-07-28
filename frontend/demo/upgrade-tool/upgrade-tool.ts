@@ -5,16 +5,16 @@ import '@vaadin/checkbox';
 import '@vaadin/checkbox-group';
 import '@vaadin/details';
 import '@vaadin/notification';
-import { html, LitElement, render } from 'lit';
-import { guard } from 'lit/directives/guard';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators';
 import { Checkbox } from '@vaadin/checkbox';
 import { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { Notification } from '@vaadin/notification';
+import { selectRenderer } from '@vaadin/select/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const VAADIN_VERSIONS: Record<string, string> = {
-  14: '14.8.13',
+  14: '14.8.14',
   15: '15.0.6',
   16: '16.0.5',
   17: '17.0.11',
@@ -23,7 +23,7 @@ const VAADIN_VERSIONS: Record<string, string> = {
   20: '20.0.8',
   21: '21.0.9',
   22: '22.0.18',
-  23: '23.1.2',
+  23: '23.1.3',
 };
 
 const SIMPLE_VERSIONS: string[] = [];
@@ -243,48 +243,42 @@ export default class UpgradeTool extends LitElement {
   private createSelectComponents() {
     const fromVersionList = SIMPLE_VERSIONS.slice(0, -1);
     const toVersionList = SIMPLE_VERSIONS.slice(1);
-    return html`<vaadin-select
+    return html`
+      <vaadin-select
         label="From"
         id="from-select"
         style="width: fit-content; margin-right: 10px"
         value=${this.fromVersion}
         @value-changed=${this.fromVersionChanged}
-        .renderer="${guard(
-          [],
-          () => (root: HTMLElement) =>
-            render(
-              html`
-                <vaadin-list-box>
-                  ${fromVersionList.map((v) => html`<vaadin-item value="${v}">${v}</vaadin-item>`)}
-                </vaadin-list-box>
-              `,
-              root
-            )
-        )}"
+        ${selectRenderer(
+          () => html`
+            <vaadin-list-box>
+              ${fromVersionList.map((v) => html`<vaadin-item value="${v}">${v}</vaadin-item>`)}
+            </vaadin-list-box>
+          `,
+          []
+        )}
       ></vaadin-select>
       <vaadin-select
         label="To"
         id="to-select"
         value=${this.toVersion}
         @value-changed=${this.toVersionChanged}
-        .renderer="${guard(
-          [],
-          () => (root: HTMLElement) =>
-            render(
-              html`
-                <vaadin-list-box>
-                  ${toVersionList.map(
-                    (v) =>
-                      html`<vaadin-item value="${v}" ?hidden=${v <= this.fromVersion}
-                        >${v}</vaadin-item
-                      >`
-                  )}
-                </vaadin-list-box>
-              `,
-              root
-            )
-        )}"
-      ></vaadin-select>`;
+        ${selectRenderer(
+          () => html`
+            <vaadin-list-box>
+              ${toVersionList.map(
+                (v) =>
+                  html`
+                    <vaadin-item value="${v}" ?hidden=${v <= this.fromVersion}>${v}</vaadin-item>
+                  `
+              )}
+            </vaadin-list-box>
+          `,
+          []
+        )}
+      ></vaadin-select>
+    `;
   }
 
   private fromVersionChanged(e: SelectValueChangedEvent) {

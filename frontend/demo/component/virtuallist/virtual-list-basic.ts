@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render, css } from 'lit';
+import { html, LitElement, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import '@vaadin/avatar';
@@ -9,7 +9,7 @@ import { Details } from '@vaadin/details';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import '@vaadin/virtual-list';
-import type { VirtualListRenderer } from '@vaadin/virtual-list';
+import { virtualListRenderer, VirtualListLitRenderer } from '@vaadin/virtual-list/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -42,10 +42,9 @@ export class Example extends LitElement {
     this.people = people;
   }
 
-  private personCardRenderer: VirtualListRenderer<Person> = (root, _, model) => {
-    const person = model.item;
-    render(
-      html`<vaadin-horizontal-layout theme="spacing margin">
+  private personCardRenderer: VirtualListLitRenderer<Person> = (person) => {
+    return html`
+      <vaadin-horizontal-layout theme="spacing margin">
         <vaadin-avatar
           .img="${person.pictureUrl}"
           .name="${`${person.firstName} ${person.lastName}`}"
@@ -74,9 +73,8 @@ export class Example extends LitElement {
             </vaadin-vertical-layout>
           </vaadin-details>
         </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>`,
-      root
-    );
+      </vaadin-horizontal-layout>
+    `;
   };
 
   render() {
@@ -84,7 +82,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-virtual-list
         .items="${this.people}"
-        .renderer="${this.personCardRenderer}"
+        ${virtualListRenderer(this.personCardRenderer, [])}
       ></vaadin-virtual-list>
       <!-- end::snippet[] -->
     `;

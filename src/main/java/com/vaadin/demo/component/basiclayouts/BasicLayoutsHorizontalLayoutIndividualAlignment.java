@@ -5,6 +5,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.Route;
 
 import java.util.Arrays;
@@ -35,12 +36,12 @@ public class BasicLayoutsHorizontalLayoutIndividualAlignment extends Div {
 
     public BasicLayoutsHorizontalLayoutIndividualAlignment() {
         // tag::layout[]
-        LayoutItem item1 = new LayoutItem("Item 1");
+        TextArea textArea1 = new TextArea("Text area 1");
         HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
-        layout.add(item1);
-        layout.add(new LayoutItem("Item 2", true));
-        layout.add(new LayoutItem("Item 3", true));
+        layout.add(textArea1);
+        layout.add(new TextArea("Text area 2"));
+        layout.add(new TextArea("Text area 3"));
         // end::layout[]
 
         List<AlignmentOption> layoutOptions = Arrays
@@ -85,7 +86,7 @@ public class BasicLayoutsHorizontalLayoutIndividualAlignment extends Div {
         // tag::eventhandler2[]
         itemRadioGroup.addValueChangeListener(e -> {
             FlexComponent.Alignment alignment = e.getValue().getAlignment();
-            layout.setAlignSelf(alignment, item1);
+            layout.setAlignSelf(alignment, textArea1);
         });
         // end::eventhandler2[]
 

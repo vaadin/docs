@@ -1,19 +1,19 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
+import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { GridColumn, GridItemModel } from '@vaadin/grid';
 
 @customElement('dialog-no-padding')
 export class Example extends LitElement {
@@ -43,39 +43,34 @@ export class Example extends LitElement {
         header-title="Filter reports by users:"
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-grid .items="${this.people}" style="width: 500px; max-width: 100%;">
-                <vaadin-grid-selection-column></vaadin-grid-selection-column>
-                <vaadin-grid-column
-                  header="Name"
-                  .renderer="${(
-                    root: HTMLElement,
-                    _: GridColumn<Person>,
-                    model: GridItemModel<Person>
-                  ) => {
-                    render(html`${model.item.firstName} ${model.item.lastName}`, root);
-                  }}"
-                ></vaadin-grid-column>
-              </vaadin-grid>
-            `,
-            root
-          );
-        })}"
-        .footerRenderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
-                Filter
-              </vaadin-button>
-            `,
-            root
-          );
-        })}"
+        ${dialogRenderer(
+          () => html`
+            <vaadin-grid .items="${this.people}" style="width: 500px; max-width: 100%;">
+              <vaadin-grid-selection-column></vaadin-grid-selection-column>
+              <vaadin-grid-column
+                header="Name"
+                ${columnBodyRenderer<Person>(
+                  (item) => html`${item.firstName} ${item.lastName}`,
+                  []
+                )}
+              ></vaadin-grid-column>
+            </vaadin-grid>
+          `,
+          this.people
+        )}
+        ${dialogFooterRenderer(
+          () => html`
+            <vaadin-button theme="primary" @click="${this.close}">Filter</vaadin-button>
+          `,
+          []
+        )}
       ></vaadin-dialog>
       <!-- end::snippet[]  -->
       <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
+  }
+
+  private close() {
+    this.dialogOpened = false;
   }
 }

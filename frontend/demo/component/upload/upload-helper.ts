@@ -29,17 +29,15 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: Upload;
+  private upload!: Upload;
 
   // tag::snippet[]
   firstUpdated() {
-    if (this.upload?.i18n) {
-      this.upload.i18n.addFiles.one = 'Upload Spreadsheet...';
-      this.upload.i18n.dropFiles.one = 'Drop spreadsheet here';
-      this.upload.i18n.error.incorrectFileType =
-        'Please provide the file in one of the supported formats (.xls, .xlsx, .csv).';
-      this.upload.i18n = { ...this.upload.i18n };
-    }
+    this.upload.i18n.addFiles.one = 'Upload Spreadsheet...';
+    this.upload.i18n.dropFiles.one = 'Drop spreadsheet here';
+    this.upload.i18n.error.incorrectFileType =
+      'Please provide the file in one of the supported formats (.xls, .xlsx, .csv).';
+    this.upload.i18n = { ...this.upload.i18n };
   }
 
   render() {

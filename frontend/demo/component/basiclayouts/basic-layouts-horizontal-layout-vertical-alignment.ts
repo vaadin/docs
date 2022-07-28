@@ -5,7 +5,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/horizontal-layout';
 import '@vaadin/radio-group';
 import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
-import './layout-item';
+import '@vaadin/text-area';
 
 @customElement('basic-layouts-horizontal-layout-vertical-alignment')
 export class Example extends LitElement {
@@ -32,9 +32,9 @@ export class Example extends LitElement {
         class="height-5xl"
         style="align-items: ${this.alignItems}"
       >
-        <layout-item>Item 1</layout-item>
-        <layout-item>Item 2</layout-item>
-        <layout-item>Item 3</layout-item>
+        <vaadin-text-area label="Text area 1"></vaadin-text-area>
+        <vaadin-text-area label="Text area 2"></vaadin-text-area>
+        <vaadin-text-area label="Text area 3"></vaadin-text-area>
       </vaadin-horizontal-layout>
       <vaadin-radio-group
         label="Vertical alignment"

@@ -1,13 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { css, html, LitElement, render } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -30,12 +30,8 @@ export class Example extends LitElement {
         header-title="New employee"
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
-        .footerRenderer="${guard([], () => (root: HTMLElement) => {
-          render(this.footerLayout, root);
-        })}"
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(this.dialogLayout, root);
-        })}"
+        ${dialogRenderer(this.renderDialog, [])}
+        ${dialogFooterRenderer(this.renderFooter, [])}
       ></vaadin-dialog>
 
       <vaadin-button @click="${() => (this.dialogOpened = true)}">Show dialog</vaadin-button>
@@ -43,19 +39,21 @@ export class Example extends LitElement {
     `;
   }
 
-  dialogLayout = html`
+  private renderDialog = () => html`
     <vaadin-vertical-layout style="align-items: stretch; width: 18rem; max-width: 100%;">
       <vaadin-text-field label="First name"></vaadin-text-field>
       <vaadin-text-field label="Last name"></vaadin-text-field>
     </vaadin-vertical-layout>
   `;
 
-  footerLayout = html`
-    <vaadin-button @click="${() => (this.dialogOpened = false)}"> Cancel </vaadin-button>
-    <vaadin-button theme="primary" @click="${() => (this.dialogOpened = false)}">
-      Add
-    </vaadin-button>
+  private renderFooter = () => html`
+    <vaadin-button @click="${this.close}">Cancel</vaadin-button>
+    <vaadin-button theme="primary" @click="${this.close}">Add</vaadin-button>
   `;
+
+  private close() {
+    this.dialogOpened = false;
+  }
 
   static styles = css`
     /* Center the button within the example */

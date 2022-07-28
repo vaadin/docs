@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/grid';
-import type { GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -33,9 +33,9 @@ export class Example extends LitElement {
         <vaadin-grid-column
           frozen
           header="Name"
-          .renderer="${this.nameRenderer}"
           auto-width
           flex-grow="0"
+          ${columnBodyRenderer(this.nameRenderer, [])}
         ></vaadin-grid-column>
         <!-- end::snippet1[] -->
         <vaadin-grid-column path="email" auto-width></vaadin-grid-column>
@@ -45,20 +45,20 @@ export class Example extends LitElement {
         <!-- tag::snippet2[] -->
         <vaadin-grid-column
           frozen-to-end
-          .renderer="${this.actionRenderer}"
           auto-width
           flex-grow="0"
+          ${columnBodyRenderer(this.actionRenderer, [])}
         ></vaadin-grid-column>
         <!-- end::snippet2[] -->
       </vaadin-grid>
     `;
   }
 
-  private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    render(html`${model.item.firstName} ${model.item.lastName}`, root);
+  private nameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
+    return html`${person.firstName} ${person.lastName}`;
   };
 
-  private actionRenderer = (root: HTMLElement) => {
-    render(html`<vaadin-button theme="tertiary-inline">Edit</vaadin-button>`, root);
+  private actionRenderer: GridColumnBodyLitRenderer<Person> = () => {
+    return html`<vaadin-button theme="tertiary-inline">Edit</vaadin-button>`;
   };
 }

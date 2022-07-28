@@ -2,6 +2,8 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -35,11 +37,12 @@ public class BasicLayoutsVerticalLayoutIndividualAlignment extends Div {
 
     public BasicLayoutsVerticalLayoutIndividualAlignment() {
         // tag::layout[]
-        LayoutItem item1 = new LayoutItem("Item 1");
+        Button button1 = new Button("Button 1");
+        button1.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         VerticalLayout layout = new VerticalLayout();
-        layout.add(item1);
-        layout.add(new LayoutItem("Item 2", true));
-        layout.add(new LayoutItem("Item 3", true));
+        layout.add(button1);
+        layout.add(new Button("Button 2"));
+        layout.add(new Button("Button 3"));
         // end::layout[]
 
         List<AlignmentOption> layoutOptions = Arrays
@@ -80,7 +83,7 @@ public class BasicLayoutsVerticalLayoutIndividualAlignment extends Div {
         // tag::eventhandler2[]
         itemRadioGroup.addValueChangeListener(e -> {
             FlexComponent.Alignment alignment = e.getValue().getAlignment();
-            layout.setAlignSelf(alignment, item1);
+            layout.setAlignSelf(alignment, button1);
         });
         // end::eventhandler2[]
 
