@@ -17,15 +17,13 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('vaadin-date-time-picker')
-  private dateTimePicker?: DateTimePicker;
+  private dateTimePicker!: DateTimePicker;
 
   firstUpdated() {
-    if (this.dateTimePicker) {
-      this.dateTimePicker.i18n = {
-        ...this.dateTimePicker.i18n,
-        firstDayOfWeek: 1,
-      };
-    }
+    this.dateTimePicker.i18n = {
+      ...this.dateTimePicker.i18n,
+      firstDayOfWeek: 1,
+    };
   }
 
   render() {

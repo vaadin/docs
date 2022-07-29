@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { GridColumn, GridItemModel } from '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-column.js';
 import '@vaadin/grid-pro';
 import '@vaadin/grid-pro/vaadin-grid-pro-edit-column.js';
+import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -33,12 +33,7 @@ export class Example extends LitElement {
       <vaadin-grid-pro .items="${this.items}" enter-next-row>
         <vaadin-grid-column
           header="Name (read-only)"
-          .renderer="${(root: HTMLElement, _column: GridColumn, model: GridItemModel<Person>) => {
-            if (model.item) {
-              const { firstName, lastName } = model.item;
-              root.textContent = `${firstName} ${lastName}`;
-            }
-          }}"
+          ${columnBodyRenderer(this.nameRenderer, [])}
         ></vaadin-grid-column>
         <vaadin-grid-pro-edit-column
           header="Profession (editable)"
@@ -48,4 +43,8 @@ export class Example extends LitElement {
       <!-- end::snippet[] -->
     `;
   }
+
+  private nameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
+    return html`${person.firstName} ${person.lastName}`;
+  };
 }

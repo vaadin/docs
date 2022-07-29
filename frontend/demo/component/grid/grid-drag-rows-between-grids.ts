@@ -1,9 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { css, html, LitElement, render } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
-import type { GridDragStartEvent, GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import type { GridDragStartEvent } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -83,7 +84,7 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Full name"
-            .renderer="${this.fullNameRenderer}"
+            ${columnBodyRenderer(this.fullNameRenderer, [])}
           ></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
         </vaadin-grid>
@@ -109,7 +110,7 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Full name"
-            .renderer="${this.fullNameRenderer}"
+            ${columnBodyRenderer(this.fullNameRenderer, [])}
           ></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
         </vaadin-grid>
@@ -118,8 +119,7 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  private fullNameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    const person: Person = model.item;
-    render(html`${person.firstName} ${person.lastName}`, root);
+  private fullNameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
+    return html`${person.firstName} ${person.lastName}`;
   };
 }

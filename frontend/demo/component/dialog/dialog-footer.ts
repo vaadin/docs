@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
+import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -36,39 +36,25 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-dialog
         header-title="${`Delete user "${this.user?.firstName} ${this.user?.lastName}"?`}"
-        .footerRenderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-button
-                theme="primary error"
-                @click="${() => (this.dialogOpened = false)}"
-                style="margin-right: auto;"
-              >
-                Delete
-              </vaadin-button>
-              <vaadin-button theme="tertiary" @click="${() => (this.dialogOpened = false)}"
-                >Cancel</vaadin-button
-              >
-            `,
-            root
-          );
-        })}"
         .opened="${this.dialogOpened}"
         @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(html`Are you sure you want to delete this user permanently?`, root);
-        })}"
+        ${dialogRenderer(() => html`Are you sure you want to delete this user permanently?`, [])}
+        ${dialogFooterRenderer(
+          () => html`
+            <vaadin-button theme="primary error" @click="${this.close}" style="margin-right: auto;">
+              Delete
+            </vaadin-button>
+            <vaadin-button theme="tertiary" @click="${this.close}">Cancel</vaadin-button>
+          `,
+          []
+        )}
       ></vaadin-dialog>
       <!-- end::snippet[]  -->
       <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }
 
-  addressDescription() {
-    if (!this.user) {
-      return '';
-    }
-    const { address } = this.user;
-    return `${address.street}, ${address.city}, ${address.country}`;
+  private close() {
+    this.dialogOpened = false;
   }
 }

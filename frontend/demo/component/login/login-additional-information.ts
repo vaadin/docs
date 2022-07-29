@@ -16,15 +16,13 @@ export class Example extends LitElement {
 
   //tag::snippet[]
   @query('vaadin-login-overlay')
-  private login?: LoginOverlay;
+  private login!: LoginOverlay;
 
   firstUpdated() {
-    if (this.login && this.login.i18n) {
-      this.login.i18n = {
-        ...this.login.i18n,
-        additionalInformation: `Please, contact admin@company.com if you're experiencing issues logging into your account`,
-      };
-    }
+    this.login.i18n = {
+      ...this.login.i18n,
+      additionalInformation: `Please, contact admin@company.com if you're experiencing issues logging into your account`,
+    };
   }
 
   render() {
