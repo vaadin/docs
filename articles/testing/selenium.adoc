@@ -4,13 +4,14 @@ description: Test automation of a Vaadin application using Selenium.
 order: 170
 ---
 
-= Selenium Testing
+= Selenium Introduction
+
+Selenium is a popular browser automation library. 
+Vaadin's testing tool <<index.asciidoc#, TestBench>> is also based on Selenium.
 
 Although Vaadin Flow does not support Selenium officially, you can still run simple tests using Selenium.
 
 == Setting Up Selenium
-
-Follow the steps below to set up your Flow application with Selenium:
 
 . Add the Selenium library dependency to your project’s `pom.xml` file.
 +
@@ -24,21 +25,15 @@ Follow the steps below to set up your Flow application with Selenium:
    <version>4.3.0</version>
 </dependency>
 ----
++
+The latest version of Selenium can be found https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java[here].
 
-. Install Web Browser Drivers using one of the three methods below.
-* <<use.webdrivermanager, WebDriverManager>>. This is the simplest way.
-* https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#2-the-path-environment-variable[Adding the driver location to the PATH environment variable].
-* https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#3-hard-coded-location[Hard-coding the location in test code].
-
-[NOTE]
-The list of available drivers can be found at the https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#quick-reference[official Selenium guide].
-
-[[use.webdrivermanager]]
-=== Use WebDriverManager to manage Drivers
-
-The steps below illustrate how to use WebDriverManage to manage drivers.
-
-. Add the WebDriverManager dependency to your project’s `pom.xml` file.
+. Use WebDriverManager to manage Web Browser Drivers
++
+Using WebDriverManager is the easiest way to manage Drivers because you don't have to download and set up the driver manually by yourself.
++
+[loweralpha]
+.. Add the WebDriverManager dependency to your project’s `pom.xml` file.
 +
 .`pom.xml`
 [source,xml]
@@ -47,12 +42,14 @@ The steps below illustrate how to use WebDriverManage to manage drivers.
 <dependency>
    <groupId>io.github.bonigarcia</groupId>
    <artifactId>webdrivermanager</artifactId>
-   <version>5.1.1</version>
+   <version>5.2.1</version>
    <scope>test</scope>
 </dependency>
 ----
 
-. Import WebDriverManager into your test class.
+The latest version of WebDriverManager can be found https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager[here].
+
+.. Import WebDriverManager into your test class.
 +
 .`SimpleTest.java`
 [source,java]
@@ -60,14 +57,21 @@ The steps below illustrate how to use WebDriverManage to manage drivers.
 import io.github.bonigarcia.wdm.WebDriverManager;
 ----
 
-. Call `setup()` on the driver that you would like to use. 
-We used the Chrome driver in code snippet below, but you can also use other drivers such as `edgedriver`, `firefoxdriver`, `safaridriver`, `iedriver`, `operadriver` instead.
+.. Call `setup()` on the driver that you would like to use. 
+We used the Chrome driver in the code snippet below, but drivers for other browsers can be found at the https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#quick-reference[official Selenium guide].
 +
 .`SimpleTest.java`
 [source,java]
 ----
 WebDriverManager.chromedriver().setup();
 ----
+
+[NOTE]
+====
+.Besides using WebDriverManager, you can also install drivers by:
+* https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#2-the-path-environment-variable[Adding the driver location to the PATH environment variable].
+* https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#3-hard-coded-location[Hard-coding the location in your test code].
+====
 
 == Create Your first Test
 As a simple example, the code snippet below tests whether the page title is “Hello World”. 
@@ -105,7 +109,7 @@ public class SimpleTest {
    }
 }
 ----
-<1> If you are using `WebDriverManager`, you will need to setup your driver for the test.
+<1> Setup the driver for the test.
 <2> Instantiates the [classname]`ChromeDriver`, which will be used to interact with the Chrome web browser.
 <3> Directs the [classname]`ChromeDriver` to load the URL.
 <4> Because Flow produces a single-page frontend, Selenium is not aware of DOM manipulation after the initial page has been loaded, so we had to use Selenium's https://www.selenium.dev/documentation/webdriver/waits/#fluentwait[FluentWait] API to wait until the DOM has been _compiled_.
@@ -113,7 +117,7 @@ public class SimpleTest {
 <6> We check whether the page title is "Hello World".
 <7> It is important that we close the browser session after the test.
 
-== Verify the URL After Navigation Action
+== Finding and Interacting with Elements
 
 You can also test the web browser's URL after a navigation action. 
 
@@ -139,15 +143,16 @@ public void routeSwitch(){
           .until(_driver -> !_driver.getTitle().isEmpty());
 
   //Clicks on the About button
-  driver.findElement(By.linkText("About")).click();
+  driver.findElement(By.linkText("About")) <1>
+      .click(); <2>
   
   new FluentWait<WebDriver>(driver)
           .withTimeout(Duration.ofSeconds(30))
           .pollingEvery(Duration.ofSeconds(1))
           .ignoring(NoSuchElementException.class)
-          .until(_driver -> driver.getTitle().equals("About")); // <1>
+          .until(_driver -> driver.getTitle().equals("About")); // <3>
 
-  var url = driver.getCurrentUrl(); // <2>
+  var url = driver.getCurrentUrl(); // <4>
 
   //Checks whether the url matches
   assertEquals("http://localhost:8080/about", url);
@@ -156,12 +161,14 @@ public void routeSwitch(){
   driver.quit();
 }
 ----
-<1> We wait for the "About" page to load first before attempting to get the URL. This reduces flakiness.
-<2> We use the convenient method to get the full current URL.
+<1> You can find elements using https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/By.html[[classname]`By`] matchers.
+<2> We call `click()` to click on the https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/WebElement.html[[classname]`WebElement`].
+<2> We wait for the "About" page to load first before attempting to get the URL. This reduces flakiness.
+<3> We use the convenient method to get the full current URL.
 
-== Add User to Master Detail Template
+== Advanced Selenium Test
 
-If your Vaadin app contains the Master Detail Template from <<../guide/start#, Vaadin Start>>, then you can use the Selenium test below to add users and verify that the new user is inserted correctly.
+The test below demonstrates how to use advanced [classname]`By` matchers such as `id()` and `xpath()`.
 
 .`SimpleTest.java`
 [source,java]
@@ -265,8 +272,10 @@ public void addUser(){
   driver.quit();
 }
 ----
-<1> Finds the first field in the form to input First Name.
+<1> We can use the `By.id()` matcher to find fields with a unique `id`. You can retrieve the `id` using your browser's inspector.
 <2> We must click on the field to simulate real behavior of an end user.
-<3> Sending key strokes to this field.
-<4> We use xpath expression to find the element.
+<3> You can send key strokes using the `sendKeys()` method.
+<4> For elements that dont have an `id`, you can use https://developer.mozilla.org/en-US/docs/Web/XPath[xpath expression] to find the element. The xpath can be generated by the https://www.selenium.dev/selenium-ide/[Selenium IDE].
 <5> Finally, we test whether all of the information in the table cells match our original data.
+
+For more usage scenarios, you can check out the official https://www.selenium.dev/documentation/webdriver/elements/[Selenium doc]
