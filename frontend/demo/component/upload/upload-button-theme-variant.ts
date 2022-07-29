@@ -22,16 +22,14 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: Upload;
+  private upload!: Upload;
 
   @state()
   private maxFilesReached = false;
 
   firstUpdated() {
-    if (this.upload?.i18n) {
-      this.upload.i18n.dropFiles.one = 'Drop PDF here';
-      this.upload.i18n = { ...this.upload.i18n };
-    }
+    this.upload.i18n.dropFiles.one = 'Drop PDF here';
+    this.upload.i18n = { ...this.upload.i18n };
   }
 
   render() {
