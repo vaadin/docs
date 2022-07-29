@@ -6,48 +6,154 @@ layout: page
 ---
 
 
-= Displaying a Progress Bar for Async Tasks
+= Handling Long-Running Tasks
 
-== Generate a New Vaadin Project
+Often, server-side tasks can take a long time to complete.
+For example, a task that requires fetching a large amount of data from the database can take a long time until it is finished.
+In such cases, a poorly designed application can freeze the UI and prevent the user from interacting with the application.
 
-Generate a new https://start.vaadin.com/app[Vaadin project] with one single view like the screenshot below.
+This guide will show you how to handle long-running tasks in Vaadin applications in a way that:
 
-image::images/Screen Shot 2022-07-12 at 6.08.08 PM.png[Vaadin Start view.]
+. Allows the user to continue interacting with the application while the task is running, possibly allowing the user to cancel the task.
+. Allows the user to see the progress of the task.
 
-== Enable Spring's Async Method and Vaadin Server Push
+Note that the examples used here are based on Spring Boot, but a similar approach can be used with other technologies.
 
-Annotate your Application class with `@EnableAsync` and `@Push`.
+== A Poorly Designed Example
+
+To illustrate how a poorly designed handling of long-running tasks can affect users, consider the following backend service that simulates a long-running task.
+
+.BackendService.java
+[source,java]
+----
+@Service
+public class BackendService {
+
+    public String longRunningTask() {
+        try {
+            // Simulate a long running task
+            Thread.sleep(6000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return "Some result";
+    }
+
+}
+----
+
+Consider also that the [methodname]`BackendService.longRunningTask()` method is being called from the following Vaadin UI:
+
+.MainView.java
+[source,java]
+----
+@Route("")
+public class MainView extends VerticalLayout {
+
+    public MainView(BackendService backendService) {
+        Button startButton = new Button("Start long-running task", e -> {
+            String result = backendService.longRunningTask();
+            Notification.show(result);
+        });
+        Button otherComponent = new Button("Another component", e -> {
+            Notification.show("Clicked");
+        });
+
+        add(startButton, otherComponent);
+    }
+
+}
+----
+
+In this example, if the user clicks the "Start long-running task" button, the application will freeze the UI and prevent the user from interacting with the other parts of the application (for example, with the `otherComponent` button).
+This happens because Vaadin is waiting for the long-running task to finish before it sends back the response to the user, at which point the user can continue interacting with the application.
+
+== Handling Long-Running Tasks Asynchronously
+
+The recommended way to handle long-running tasks is to use an asynchronous approach.
+This means that the long-running task is executed in a separate thread, and the UI is not blocked while the task is running. 
+
+There are several ways to achieve an asynchronous model.
+But in the context of a Spring Boot application, one simple way is to use the [annotationname]`@Async` annotation.
+The [annotationname]`@Async` annotation is used to mark a method as an asynchronous task.
+From the side of Vaadin UI, a response to the user request is immediately sent back to the browser, and thus the user can continue interacting with the application right away without being blocked by the long-running task.
+When the asynchronous task is finished, Vaadin uses <<{articles}/advanced/server-push#, Server Push>> to let the user know that the task is completed.
+
+The following example shows how the [methodname]`BackendService.longRunningTask()` method can be adjusted to run asynchronously in a separate thread.
+
+.BackendService.java
+[source,java]
+----
+@Service
+public class BackendService {
+
+    @Async
+    public ListenableFuture<String> longRunningTask() {
+        try {
+            // Simulate a long running task
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return AsyncResult.forValue("Some result");
+    }
+
+}
+----
+
+Now the [methodname]`BackendService.longRunningTask()` method is annotated with the [annotationname]`@Async` annotation, and the long-running task is executed in a separate thread.
+Note also that the [methodname]`BackendService.longRunningTask()` method now returns a [interfacename]`ListenableFuture<String>` instead of a `String` (returning a [interfacename]`ListenableFuture` or a [interfacename]`CompletableFuture` is a requirement for any asynchronous service).
+The [interfacename]`ListenableFuture` is a special type of [interfacename]`Future` that allows the caller to register a callback to be notified when the task is completed.
+
+With these changes in place, we can change the UI to allow the user to start the long-running task and still be able to interact with the application.
+Vaadin can then use the [interfacename]`ListenableFuture` and the [methodname]`UI.access()` method of <<{articles}/advanced/server-push#, Server Push>> to notify the user when the task is completed.
+This is how [filename]#MainView.java# could look like now:
+
+.MainView.java
+[source,java]
+----
+@Route("")
+public class MainView extends VerticalLayout {
+
+    public MainView(BackendService backendService) {
+        Button startButton = new Button("Start long-running task", e -> {
+            UI ui = UI.getCurrent();
+            ListenableFuture<String> future = backendService.longRunningTask();
+            future.addCallback(
+                    s -> updateUi(ui, "Task finished: " + s),
+                    ex -> updateUi(ui, "Task failed: " + ex.getMessage())
+            );
+        });
+        Button otherComponent = new Button("Another component", e -> {
+            Notification.show("Clicked");
+        });
+
+        add(startButton, otherComponent);
+    }
+
+    private void updateUi(UI ui, String s) {
+        ui.access(() -> {
+            Notification.show(s);
+        });
+    }
+
+}
+----
+
+*We are still not done.*
+For the above example to work as intended, we need two extra annotations for the [annotationname]`@Async` annotation and the [methodname]`UI.access()` method to work.
+
+* For the [annotationname]`@Async` annotation, we need to add the [annotationname]`@EnableAsync` annotation to the application.
+* For the [methodname]`UI.access()` method, we need to add the [annotationname]`@Push` annotation to the class implementing the [interfacename]`AppShellConfigurator` interface.
+
+We can do both changes in the same class as illustrated in the following [classname]`Application` class (which both extends [classname]`SpringBootServletInitializer` and implements [interfacename]`AppShellConfigurator`):
 
 .Application.java
 [source,java]
 ----
-package com.example.application;
-
-import com.vaadin.flow.component.dependency.NpmPackage;
-import com.vaadin.flow.component.page.AppShellConfigurator;
-import com.vaadin.flow.component.page.Push;
-import com.vaadin.flow.server.PWA;
-import com.vaadin.flow.theme.Theme;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.scheduling.annotation.EnableAsync;
-
-/**
- * The entry point of the Spring Boot application.
- *
- * Use the @PWA annotation make the application installable on phones, tablets
- * and some desktop browsers.
- *
- */
-@SpringBootApplication
-@EnableAsync // <1>
-@Push // <2>
-@Theme(value = "myasynctaskapp")
-@PWA(name = "My Async Task App", shortName = "My Async Task App", offlineResources = {})
-@NpmPackage(value = "line-awesome", version = "1.3.0")
-@NpmPackage(value = "@vaadin-component-factory/vcf-nav", version = "1.0.6")
-public class Application extends SpringBootServletInitializer implements AppShellConfigurator { // <3>
+@Push
+@EnableAsync
+public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -55,144 +161,7 @@ public class Application extends SpringBootServletInitializer implements AppShel
 
 }
 ----
-<1> `@EnableAsync` https://docs.spring.io/spring-framework/docs/current/reference/html/integration.html#scheduling-enable-annotation-support[enables] Spring's asynchronous method execution capability. 
-<2> <<server-push/#push.configuration.enabling,`@Push`>> enables your Vaadin backend to push updates to the frontend.
-<3> `@Push` can only be used on an `AppShellConfigurator` class.
 
-== Configuring the Backend Service to Run Asynchronously
+== Showing Progress to the User
 
-Create a new package called `service` under `com.example.application`.
-
-Copy and paste the `BackendService` class below into the `service` package.
-
-.BackendService.java
-[source,java]
-----
-package com.example.application.service;
-
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
-import org.springframework.stereotype.Service;
-import org.springframework.util.concurrent.ListenableFuture;
-
-@Service
-public class BackendService {
-
-    @Async // <1>
-    public ListenableFuture<Void> longRunningTask() { // <2>
-        try {
-            Thread.sleep(6000); // <3>
-        } catch (InterruptedException e) {
-            return AsyncResult.forExecutionException(new RuntimeException("Error"));
-        }
-
-        return AsyncResult.forValue(null); // <4>
-    }
-}
-----
-
-<1> The `@Async` annotation tells Spring to run this method on a https://docs.spring.io/spring-framework/docs/current/reference/html/integration.html#scheduling-annotation-support-async[new `Thread`].
-<2> `ListenableFuture` is a Spring interface that is simlar to a Java `Future`, but callbacks can be added to listen to its status.
-<3> Puts the calling `Thread` to sleep for 6 seconds.
-<4> Returns an `AsyncResult` after waiting.
-
-== Safely Updating the UI Asynchronously
-
-Replace the content of `AsyncTaskView.java` with the code below.
-
-.AsyncTaskView.java
-[source,java]
-----
-package com.example.application.views.asynctask;
-
-import com.example.application.service.BackendService;
-import com.example.application.views.MainLayout;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.progressbar.ProgressBar;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
-import org.springframework.util.concurrent.ListenableFutureCallback;
-
-@PageTitle("Async Task")
-@Route(value = "task", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
-public class AsyncTaskView extends VerticalLayout {
-
-    private final BackendService backendService;
-    private Button button = new Button("Start long-running task");
-    private ProgressBar progressBar = new ProgressBar(); // <1>
-    private Paragraph message = new Paragraph();
-
-    public AsyncTaskView(BackendService backendService) {
-        this.backendService = backendService;
-
-        button.setWidth("15em");
-        progressBar.setWidth("15em");
-
-        add(new HorizontalLayout(button, progressBar), message);
-        button.addClickListener(event -> startLongRunningTask()); // <2>
-
-        // initial setup
-        progressBar.setIndeterminate(true); // <3>
-        progressBar.setVisible(false); // <4>
-    }
-
-    private void startLongRunningTask() {
-        // setup for starting the task
-        button.setEnabled(false); // <5>
-        progressBar.setVisible(true); // <6>
-        message.setText("Please wait...");
-        UI ui = UI.getCurrent(); // get the instance before running a new thread
-
-        backendService
-                .longRunningTask() // <7>
-                .addCallback(
-                        new ListenableFutureCallback<>() { // <8>
-                            @Override
-                            public void onFailure(Throwable ex) {
-                                ui.access( // <9>
-                                        () -> {
-                                            // setup for error
-                                            button.setEnabled(true);
-                                            progressBar.setVisible(false);
-                                            message.setText("Error.");
-                                        }
-                                );
-                            }
-
-                            @Override
-                            public void onSuccess(Void result) {
-                                ui.access(
-                                        () -> {
-                                            // setup for task completed
-                                            button.setEnabled(true);
-                                            progressBar.setVisible(false); <10>
-                                            message.setText("Task completed.");
-                                        }
-                                );
-                            }
-                        }
-                );
-    }
-
-}
-----
-<1> We created the `ProgressBar`.
-<2> The method `startLongRunningTask()` will be called on the `Button` click.
-<3> Sets the `ProgressBar` mode to <<{articles}/components/progress-bar/#indeterminatem, _indeterminate_>>.
-<4> Keeps the `ProgressBar` invisible until the async task starts.
-<5> Disable the `Button` after it is clicked.
-<6> We can now show the `ProgressBar` because the `Button` has been clicked.
-<7> Calls the method `longRunningTask()` from the `BackendService` class. Remember that this method is executed on a new Thread.
-<8> Implementing `ListenableFutureCallback` so we can use it as a callback for `ListenableFuture`.
-<9> <<{articles}/advanced/server-push/#push.access, Safely pushing to the UI>> using Vaadin's `UI.access()` abstraction.
-<10> We make the `ProgressBar` invisible when the async task is done.
-
-If you have done everything correctly, your app should behave similarly to the animation below.
-
-image::images/Untitled.gif[Async Task App Preview.]
+TO DO (by adjusting the MainView.java file above)
