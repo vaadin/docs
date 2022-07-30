@@ -164,4 +164,55 @@ public class Application extends SpringBootServletInitializer implements AppShel
 
 == Showing Progress to the User
 
-TO DO (by adjusting the MainView.java file above)
+With the Vaadin component <<../components/progress-bar#, ProgressBar>>, you can easily provide an indicator that a long running action is currently in progress.
+
+.MainView.java
+[source,java]
+----
+@Route("")
+public class MainView extends VerticalLayout {
+
+    private ProgressBar progressBar = new ProgressBar(); // <1>
+
+    public MainView(BackendService backendService) {
+        // initial setup
+        progressBar.setWidth("15em");
+        progressBar.setIndeterminate(true);
+        progressBar.setVisible(false); // <2>
+
+        Button startButton = new Button("Start long-running task", e -> {
+            progressBar.setVisible(true); // <3>
+            UI ui = UI.getCurrent();
+            ListenableFuture<String> future = backendService.longRunningTask();
+            future.addCallback(
+                    s -> updateUi(ui, "Task finished: " + s, progressBar),
+                    ex -> updateUi(ui, "Task failed: " + ex.getMessage(), progressBar)
+            );
+        });
+
+        Button otherComponent = new Button("Another component", e -> {
+            Notification.show("Clicked");
+        });
+
+        add(startButton, progressBar, otherComponent); // <4>
+    }
+
+    private void updateUi(UI ui, String s, ProgressBar p) { // <5>
+        ui.access(() -> {
+            p.setVisible(false); // <6>
+            Notification.show(s);
+        });
+    }
+
+}
+----
+<1> First, we create a [classname]`ProgressBar` object.
+<2> After configuring the [classname]`ProgressBar`, we need to set it to invisible.
+<3> When the button is clicked, we show the [classname]`ProgressBar`.
+<4> Make sure that you add the [classname]`ProgressBar` to the parent layout.
+<5> We need to modify the `updateUi()` method to additionally receive the [classname]`ProgressBar` argument.
+<6> When the long running task is completed or errors out, we set the [classname]`ProgressBar` back to invisible again.
+
+Here is the animation of the [classname]`MainView` showing the progress bar.
+
+image::images/async-progress-bar.gif[Long Running ProgressBar]
