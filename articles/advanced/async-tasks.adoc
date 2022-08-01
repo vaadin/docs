@@ -19,7 +19,7 @@ This guide will show you how to handle long-running tasks in Vaadin applications
 
 Note that the examples used here are based on Spring Boot, but a similar approach can be used with other technologies.
 
-== A Poorly Designed Example
+== The Problem With Long-Running Tasks
 
 To illustrate how a poorly designed handling of long-running tasks can affect users, consider the following backend service that simulates a long-running task.
 
@@ -87,19 +87,22 @@ The following example shows how the [methodname]`BackendService.longRunningTask(
 @Service
 public class BackendService {
 
-    @Async
-    public ListenableFuture<String> longRunningTask() {
+    @Async // <1>
+    public ListenableFuture<String> longRunningTask() { // <2>
         try {
             // Simulate a long running task
             Thread.sleep(10000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return AsyncResult.forValue("Some result");
+        return AsyncResult.forValue("Some result"); // <3>
     }
 
 }
 ----
+<1> [annotationname]`@Async` annotation to mark the method for asynchronous execution.
+<2> The method now returns a [classname]`ListenableFuture` object.
+<3> The method's return value is a [classname]`ListenableFuture` object that contains the result of the asynchronous task.
 
 Now the [methodname]`BackendService.longRunningTask()` method is annotated with the [annotationname]`@Async` annotation, and the long-running task is executed in a separate thread.
 Note also that the [methodname]`BackendService.longRunningTask()` method now returns a [interfacename]`ListenableFuture<String>` instead of a `String` (returning a [interfacename]`ListenableFuture` or a [interfacename]`CompletableFuture` is a requirement for any asynchronous service).
@@ -117,11 +120,11 @@ public class MainView extends VerticalLayout {
 
     public MainView(BackendService backendService) {
         Button startButton = new Button("Start long-running task", e -> {
-            UI ui = UI.getCurrent();
+            UI ui = UI.getCurrent(); // <1> 
             ListenableFuture<String> future = backendService.longRunningTask();
             future.addCallback(
-                    s -> updateUi(ui, "Task finished: " + s),
-                    ex -> updateUi(ui, "Task failed: " + ex.getMessage())
+                    s -> updateUi(ui, "Task finished: " + s), // <2> 
+                    ex -> updateUi(ui, "Task failed: " + ex.getMessage()) // <3>
             );
         });
         Button otherComponent = new Button("Another component", e -> {
@@ -132,13 +135,17 @@ public class MainView extends VerticalLayout {
     }
 
     private void updateUi(UI ui, String s) {
-        ui.access(() -> {
+        ui.access(() -> { // <4>
             Notification.show(s);
         });
     }
 
 }
 ----
+<1> We save the current UI in a local variable, so that we can use it later to update the UI through the [methodname]`UI.access()` method.
+<2> The callback is called when the task is completed successfully.
+<3> The callback is called if the task failed.
+<4> The [methodname]`UI.access()` method is used to update the UI in a thread-safe manner through server-side push.
 
 *We are still not done.*
 For the above example to work as intended, we need two extra annotations for the [annotationname]`@Async` annotation and the [methodname]`UI.access()` method to work.
@@ -151,6 +158,7 @@ We can do both changes in the same class as illustrated in the following [classn
 .Application.java
 [source,java]
 ----
+@SpringBootApplication
 @Push
 @EnableAsync
 public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
@@ -164,7 +172,8 @@ public class Application extends SpringBootServletInitializer implements AppShel
 
 == Showing Progress to the User
 
-With the Vaadin component <<../components/progress-bar#, ProgressBar>>, you can easily provide an indicator that a long running action is currently in progress.
+With the Vaadin component <<{articles}/components/progress-bar#, ProgressBar>>, you can easily provide an indicator that a long-running action is currently in progress.
+The following adjusts the above [classname]`MainView` example to show a progress bar when the user clicks the "Start long-running task" button.
 
 .MainView.java
 [source,java]
@@ -207,12 +216,16 @@ public class MainView extends VerticalLayout {
 }
 ----
 <1> First, we create a [classname]`ProgressBar` object.
-<2> After configuring the [classname]`ProgressBar`, we need to set it to invisible.
-<3> When the button is clicked, we show the [classname]`ProgressBar`.
+<2> After configuring the [classname]`ProgressBar`, we need to set it to invisible initially.
+<3> When the button is clicked to start the long-running task, we show the [classname]`ProgressBar`.
 <4> Make sure that you add the [classname]`ProgressBar` to the parent layout.
 <5> We need to modify the `updateUi()` method to additionally receive the [classname]`ProgressBar` argument.
-<6> When the long running task is completed or errors out, we set the [classname]`ProgressBar` back to invisible again.
+<6> When the long-running task is completed or errors out, we set the [classname]`ProgressBar` back to invisible again.
 
 Here is the animation of the [classname]`MainView` showing the progress bar.
 
-image::images/async-progress-bar.gif[Long Running ProgressBar]
+image::images/async-progress-bar.gif[Long-Running ProgressBar, width=50%]
+
+
+[.discussion-id]
+F2F7864F-F727-4333-AF3E-1E05597483DC
