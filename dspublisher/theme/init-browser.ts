@@ -144,7 +144,7 @@ class Footer extends LitElement {
             >ask questions on StackOverflow</a
           >.
         </p>
-        <iframe id="discussion-iframe" src="${iframeSrc}"></iframe>
+        <iframe id="discussion-iframe" src="${iframeSrc}" style="color-scheme: normal"></iframe>
       </section>
     `;
   }
