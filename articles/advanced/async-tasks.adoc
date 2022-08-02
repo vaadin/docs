@@ -229,3 +229,65 @@ image::images/async-progress-bar.gif[Long-Running ProgressBar, width=50%]
 
 [.discussion-id]
 F2F7864F-F727-4333-AF3E-1E05597483DC
+
+== Canceling a Long Running Task
+
+For your task to be cancellable, the following conditions must be met:
+
+. Your `@Async` method must return a [interfacename]`Future`.
+. The running task must be https://docs.oracle.com/en/java/javase/18/docs/api/java.base/java/util/concurrent/Future.html#cancel(boolean)[interuptable].
+
+The modified [classname]`MainView` class below shows how to add a [classname]`Button` to cancel the long running task.
+
+.MainView.java
+[source,java]
+----
+@Route("")
+public class MainView extends VerticalLayout {
+
+    private ProgressBar progressBar = new ProgressBar();
+
+    public MainView(BackendService backendService) {
+        // initial setup
+        progressBar.setWidth("15em");
+        progressBar.setIndeterminate(true);
+        progressBar.setVisible(false);
+
+        Button startButton = new Button("Start long-running task", e -> {
+            progressBar.setVisible(true);
+            UI ui = UI.getCurrent();
+            ListenableFuture<String> future = backendService.longRunningTask();
+
+            var cancelButton = new Button("Cancel", _e -> {
+                future.cancel(true);
+            }); // <1>
+
+            add(cancelButton); // <2>
+
+            future.addCallback(
+                    s -> updateUi(ui, "Task finished: " + s, progressBar, cancelButton),
+                    ex -> updateUi(ui, "Task failed: " + ex.getMessage(), progressBar, cancelButton)
+            );
+        });
+
+        Button otherComponent = new Button("Another component", e -> {
+            Notification.show("Clicked");
+        });
+
+        add(startButton, progressBar, otherComponent);
+    }
+
+    private void updateUi(UI ui, String s, ProgressBar p, Button cancelButton) {
+        ui.access(() -> {
+            p.setVisible(false);
+            Notification.show(s);
+            remove(cancelButton); // <3>
+        });
+    }
+
+}
+----
+
+<1> Add a callback to the *Cancel* [classname]`Button`.
+<2> Add this [classname]`Button` to the layout.
+<3> When the task is cancelled, we remove the [classname]`Button`.
