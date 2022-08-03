@@ -5,7 +5,6 @@ order: 175
 layout: page
 ---
 
-
 = Handling Long-Running Tasks
 
 Often, server-side tasks can take a long time to complete.
@@ -51,15 +50,16 @@ Consider also that the [methodname]`BackendService.longRunningTask()` method is 
 public class MainView extends VerticalLayout {
 
     public MainView(BackendService backendService) {
-        Button startButton = new Button("Start long-running task", e -> {
+        Button startButton = new Button("Start long-running task", _startEvent -> {
             String result = backendService.longRunningTask();
             Notification.show(result);
         });
-        Button otherComponent = new Button("Another component", e -> {
-            Notification.show("Clicked");
+
+        Button isBlockedButton = new Button("Is UI blocked?", _event -> {
+            Notification.show("UI is not blocked!");
         });
 
-        add(startButton, otherComponent);
+        add(startButton, isBlockedButton);
     }
 
 }
@@ -119,24 +119,25 @@ This is how [filename]#MainView.java# could look now:
 public class MainView extends VerticalLayout {
 
     public MainView(BackendService backendService) {
-        Button startButton = new Button("Start long-running task", e -> {
-            UI ui = UI.getCurrent(); // <1> 
+        Button startButton = new Button("Start long-running task", startEvent -> {
+            Optional<UI> ui = startEvent.getSource().getUI(); // <1>
             ListenableFuture<String> future = backendService.longRunningTask();
             future.addCallback(
-                    s -> updateUi(ui, "Task finished: " + s), // <2> 
-                    ex -> updateUi(ui, "Task failed: " + ex.getMessage()) // <3>
+                    successResult -> updateUi(ui.orElseThrow(), "Task finished: " + successResult) // <2>
+                    failureException -> updateUi(ui.orElseThrow(), "Task failed: " + failureException.getMessage()) // <3>
             );
         });
-        Button otherComponent = new Button("Another component", e -> {
-            Notification.show("Clicked");
+        
+        Button isBlockedButton = new Button("Is UI blocked?", _event -> {
+            Notification.show("UI is not blocked!");
         });
 
-        add(startButton, otherComponent);
+        add(startButton, isBlockedButton);
     }
 
-    private void updateUi(UI ui, String s) {
-        ui.access(() -> { // <4>
-            Notification.show(s);
+    private void updateUi(UI ui, String result) { // <4>
+        ui.access(() -> {
+            Notification.show(result);
         });
     }
 
@@ -181,54 +182,52 @@ The following adjusts the above [classname]`MainView` example to show a progress
 @Route("")
 public class MainView extends VerticalLayout {
 
-    private ProgressBar progressBar = new ProgressBar(); // <1>
-
     public MainView(BackendService backendService) {
-        // initial setup
-        progressBar.setWidth("15em");
-        progressBar.setIndeterminate(true);
-        progressBar.setVisible(false); // <2>
-
-        Button startButton = new Button("Start long-running task", e -> {
-            progressBar.setVisible(true); // <3>
-            UI ui = UI.getCurrent();
+        Button startButton = new Button("Start long-running task", startEvent -> {
+            Optional<UI> ui = startEvent.getSource().getUI();
             ListenableFuture<String> future = backendService.longRunningTask();
+
+            ProgressBar progressBar = new ProgressBar(); // <1>
+            progressBar.setWidth("15em");
+            progressBar.setIndeterminate(true);
+            addComponentAtIndex(1, progressBar); // <2>
+
             future.addCallback(
-                    s -> updateUi(ui, "Task finished: " + s, progressBar),
-                    ex -> updateUi(ui, "Task failed: " + ex.getMessage(), progressBar)
+                    successResult -> updateUi(
+                            ui.orElseThrow(),
+                            "Task finished: " + successResult,
+                            progressBar),
+                    failureException -> updateUi(
+                            ui.orElseThrow(),
+                            "Task failed: " + failureException.getMessage(),
+                            progressBar)
             );
         });
 
-        Button otherComponent = new Button("Another component", e -> {
-            Notification.show("Clicked");
+        Button isBlockedButton = new Button("Is UI blocked?", _event -> {
+            Notification.show("UI is not blocked!");
         });
 
-        add(startButton, progressBar, otherComponent); // <4>
+        add(startButton, isBlockedButton);
     }
 
-    private void updateUi(UI ui, String s, ProgressBar p) { // <5>
+    private void updateUi(UI ui, String result, ProgressBar progressBar) { // <3>
         ui.access(() -> {
-            p.setVisible(false); // <6>
-            Notification.show(s);
+            Notification.show(result);
+            remove(progressBar); // <4>
         });
     }
 
 }
 ----
 <1> First, we create a [classname]`ProgressBar` object.
-<2> After configuring the [classname]`ProgressBar`, we need to set it to invisible initially.
-<3> When the button is clicked to start the long-running task, we show the [classname]`ProgressBar`.
-<4> Make sure that you add the [classname]`ProgressBar` to the parent layout.
-<5> We need to modify the [methodname]`updateUi()` method to additionally receive the [classname]`ProgressBar` argument.
-<6> When the long-running task is completed or errors out, we set the [classname]`ProgressBar` back to invisible again.
+<2> After configuring the [classname]`ProgressBar`, we need to add it to the layout.
+<3> We need to modify the [methodname]`updateUi()` method to additionally receive the [classname]`ProgressBar` argument.
+<4> When the long-running task is completed or errors out, we remove the [classname]`ProgressBar`.
 
 Here is the animation of the [classname]`MainView` showing the progress bar.
 
-image::images/async-progress-bar.gif[Long-Running ProgressBar, width=50%]
-
-
-[.discussion-id]
-F2F7864F-F727-4333-AF3E-1E05597483DC
+image::images/vaadin-progress-bar-no-cancel.gif[Long-Running ProgressBar]
 
 == Canceling a Long Running Task
 
@@ -245,49 +244,59 @@ The modified [classname]`MainView` class below shows how to add a [classname]`Bu
 @Route("")
 public class MainView extends VerticalLayout {
 
-    private ProgressBar progressBar = new ProgressBar();
-
     public MainView(BackendService backendService) {
-        // initial setup
-        progressBar.setWidth("15em");
-        progressBar.setIndeterminate(true);
-        progressBar.setVisible(false);
-
-        Button startButton = new Button("Start long-running task", e -> {
-            progressBar.setVisible(true);
-            UI ui = UI.getCurrent();
+        Button startButton = new Button("Start long-running task", startEvent -> {
+            Optional<UI> ui = startEvent.getSource().getUI();
             ListenableFuture<String> future = backendService.longRunningTask();
 
-            Button cancelButton = new Button("Cancel", _e -> {
-                future.cancel(true);
-            }); // <1>
-
-            add(cancelButton); // <2>
+            HorizontalLayout progressGroup = getProgressGroup(future); // <1>
+            addComponentAtIndex(1, progressGroup);
 
             future.addCallback(
-                    s -> updateUi(ui, "Task finished: " + s, progressBar, cancelButton),
-                    ex -> updateUi(ui, "Task failed: " + ex.getMessage(), progressBar, cancelButton)
+                    successResult -> updateUi(
+                            ui.orElseThrow(),
+                            "Task finished: " + successResult,
+                            progressGroup),
+                    failureException -> updateUi(
+                            ui.orElseThrow(),
+                            "Task failed: " + failureException.getMessage(),
+                            progressGroup)
             );
         });
 
-        Button otherComponent = new Button("Another component", e -> {
-            Notification.show("Clicked");
+        Button isBlockedButton = new Button("Is UI blocked?", _event -> {
+            Notification.show("UI is not blocked!");
         });
 
-        add(startButton, progressBar, otherComponent);
+        add(startButton, isBlockedButton);
     }
 
-    private void updateUi(UI ui, String s, ProgressBar p, Button cancelButton) {
+    private void updateUi(UI ui, String result, HorizontalLayout progress) {
         ui.access(() -> {
-            p.setVisible(false);
-            Notification.show(s);
-            remove(cancelButton); // <3>
+            Notification.show(result);
+            remove(progress); // <2>
         });
+    }
+
+    private HorizontalLayout getProgressGroup(Future<String> future){
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.setWidth("15em");
+        progressBar.setIndeterminate(true);
+
+        Button cancelButton = new Button("Cancel", cancelEvent -> {
+            future.cancel(true);
+        }); // <3>
+
+        return new HorizontalLayout(progressBar, cancelButton); // <4>
     }
 
 }
 ----
+<1> Because we have both a [classname]`ProgressBar` and a [classname]`Button`, it is better to group them together in a [classnane]`HorizontalLayout`.
+<2> We need to remove the entire [classname]`HorizontalLayout` when the task completes or fails.
+<3> The [classname]`Future` is canceled when the *Cancel* [classname]`Button` is clicked.
+<4> When the task is completed or canceled, we remove the cancel [classname]`Button`.
 
-<1> Add a callback to the *Cancel* [classname]`Button`.
-<2> Add this [classname]`Button` to the layout.
-<3> When the task is completed or canceled, we remove the cancel [classname]`Button`.
+Here is the animation of the [classname]`MainView` with a *Cancel* [classname]`Button`.
+
+image::images/vaadin-progress-bar-with-cancel.gif[Long-Running ProgressBar with cancel Button]
