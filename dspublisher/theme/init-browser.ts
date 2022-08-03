@@ -130,6 +130,7 @@ class Footer extends LitElement {
         }
 
         .discussion-wrapper iframe {
+          color-scheme: normal;
           border: 0;
           margin: 0 -8px;
           width: calc(100% + 16px);
@@ -144,7 +145,7 @@ class Footer extends LitElement {
             >ask questions on StackOverflow</a
           >.
         </p>
-        <iframe id="discussion-iframe" src="${iframeSrc}" style="color-scheme: normal"></iframe>
+        <iframe id="discussion-iframe" src="${iframeSrc}"></iframe>
       </section>
     `;
   }
