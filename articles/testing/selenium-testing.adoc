@@ -10,8 +10,9 @@ Selenium is a popular browser automation library that is often used to automate 
 While it is more convenient to use TestBench, Selenium can be used for testing Vaadin apps as well.
 
 This guide describes:
+
 . The differences between TestBench and Selenium.
-. The setup and configuration of Selenium.
+. How to setup Selenium.
 . The making of a simple Selenium test.
 . The basics of finding and interacting with elements in a Selenium test.
 . How a more complex Selenium test can be created.
@@ -24,10 +25,12 @@ Compared to Selenium, TestBench is designed to:
 
 . *Facilitate the handling of Vaadin components.* Unlike Selenium which operates on the DOM of the web page and provides basic methods to interact with elements like "click" or "sendKeys", TestBench provides helper methods to interact with Vaadin components like "select" or "setValue". Moreover, TestBench provides a more convenient way to interact with elements in the shadow DOM of Vaadin components.
 . *Take the nature of client-server communication in Vaadin apps into account.* During the course of a test, TestBench will automatically suspend client-side execution if the server is busy and resume it when the server is ready. This makes it possible to write tests in TestBench without the need to explicitly set wait timeouts for various events like page load or waiting for long-running server calls to finish.
-. *Provide an easy to use API for conducting screen-comparison tests.*
+. *Provide an easy-to-use API for conducting screen-comparison tests.*
 . *Enable parallel testing of Vaadin apps.*
 
 == Setting Up Selenium
+
+To use Selenium in a Vaadin app, you need to perform the following steps:
 
 . Add the Selenium library dependency to your project's `pom.xml` file.
 +
@@ -67,7 +70,7 @@ The latest version of WebDriverManager can be found https://search.maven.org/art
 
 .. Import WebDriverManager into your test class.
 +
-.`SimpleTest.java`
+.`ExampleIT.java`
 [source,java]
 ----
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -76,23 +79,22 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 .. Call `setup()` on the driver that you would like to use. 
 We used the Chrome driver in the code snippet below, but drivers for other browsers can be found at the https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#quick-reference[official Selenium guide].
 +
-.`SimpleTest.java`
+.`ExampleIT.java`
 [source,java]
 ----
 WebDriverManager.chromedriver().setup();
 ----
-+
-[NOTE]
-====
-.Besides using WebDriverManager, you can also install drivers by:
+
+Note that apart from WebDriverManager, you can also install drivers by:
+
 * https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#2-the-path-environment-variable[Adding the driver location to the PATH environment variable].
 * https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#3-hard-coded-location[Hard-coding the location in your test code].
-====
 
 == Create Your First Selenium Test
-As a simple example, the code snippet below tests whether the page title is “Hello World”. 
 
-.`SimpleTest.java`
+As an example, the code snippet below tests whether the page title is “Hello World”. 
+
+.`ExampleIT.java`
 [source,java]
 ----
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -105,7 +107,7 @@ import org.openqa.selenium.support.ui.FluentWait;
 
 import java.time.Duration;
 
-public class SimpleTest {
+public class ExampleIT {
 
    @Test
    public void checkTitle() {
@@ -126,18 +128,67 @@ public class SimpleTest {
 }
 ----
 <1> Setup the driver for the test.
-<2> Instantiates the [classname]`ChromeDriver`, which will be used to interact with the Chrome web browser.
-<3> Directs the [classname]`ChromeDriver` to load the URL.
-<4> Because Flow produces a single-page frontend, Selenium is not aware of DOM manipulation after the initial page has been loaded, so we had to use Selenium's https://www.selenium.dev/documentation/webdriver/waits/#fluentwait[FluentWait] API to wait until the DOM has been _compiled_.
+<2> Instantiate the [classname]`ChromeDriver`, which will be used to interact with the Chrome web browser.
+<3> Direct the [classname]`ChromeDriver` to load the URL.
+<4> Because Flow produces a single-page frontend, Selenium is not aware of DOM manipulation after the initial page has been loaded.
+So we need to use Selenium's https://www.selenium.dev/documentation/webdriver/waits/#fluentwait[FluentWait] API to wait until the DOM has been _compiled_.
 <5> After we are sure that the page title is available, we retrieve the page title.
 <6> We check whether the page title is "Hello World".
 <7> It is important that we close the browser session after the test.
 
+== Running the Tests
+
+If you added your Selenium tests to a project that's generated from https://start.vaadin.com/[Vaadin Start], you can run those by executing the following command from the terminal:
+
+[source,terminal]
+----
+mvn verify -Pit,production
+----
+
+This will run the tests in the `it` profile, which starts the Spring Boot server before the tests are run, and stops it afterwards.
+The following lists the part of the `pom.xml` file that is responsible for starting and stopping the Spring Boot server.
+
+.`pom.xml`
+[source,xml]
+----
+<profile>
+    <id>it</id>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>start-spring-boot</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop-spring-boot</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            ...
+----
+
+For a non-Spring Boot project, there are examples at GitHub of the `it` profile for other technology stacks, including for a https://github.com/vaadin/skeleton-starter-flow[plain Java project] and a https://github.com/vaadin/skeleton-starter-flow-cdi[projects].
+
 == Finding and Interacting With Elements
 
-You can also test the web browser's URL after a navigation action. 
+The following demonstrates a test that require finding and interacting with a web element.
+Specifically, it finds the link with the text “About” and clicks it.
+This action triggers a navigation to the “About” page.
+The test then waits until the "About" page is loaded and checks that the URL of the page is correct.
 
-.`SimpleTest.java`
+.`ExampleIT.java`
 [source,java]
 ----
 @Test
@@ -159,8 +210,8 @@ public void routeSwitch(){
           .until(_driver -> !_driver.getTitle().isEmpty());
 
   //Clicks on the About button
-  driver.findElement(By.linkText("About")) <1>
-      .click(); <2>
+  driver.findElement(By.linkText("About")) // <1>
+      .click(); // <2>
   
   new FluentWait<WebDriver>(driver)
           .withTimeout(Duration.ofSeconds(30))
@@ -177,16 +228,18 @@ public void routeSwitch(){
   driver.quit();
 }
 ----
-<1> You can find elements using https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/By.html[[classname]`By`] matchers.
-<2> We call `click()` to click on the https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/WebElement.html[[classname]`WebElement`].
-<2> We wait for the "About" page to load first before attempting to get the URL. This reduces flakiness.
-<3> We use the convenient method to get the full current URL.
+<1> You can find elements using the https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/By.html[`By`] matcher.
+<2> We call [methodname]`click()` to click on the https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/WebElement.html[`WebElement`].
+<3> We wait for the "About" page to load first before attempting to get the URL.
+This reduces flakiness.
+<4> We use the convenient method to get the full current URL.
 
 == Advanced Selenium Test
 
 The test below demonstrates how to use advanced [classname]`By` matchers such as `id()` and `xpath()`.
+This test assumes a Master-Detail view of the kind that could be generated from https://start.vaadin.com/[Vaadin Start].
 
-.`SimpleTest.java`
+.`ExampleIT.java`
 [source,java]
 ----
 @Test
@@ -291,7 +344,7 @@ public void addUser(){
 <1> We can use the `By.id()` matcher to find fields with a unique `id`. You can retrieve the `id` using your browser's inspector.
 <2> We must click on the field to simulate real behavior of an end user.
 <3> You can send key strokes using the `sendKeys()` method.
-<4> For elements that dont have an `id`, you can use https://developer.mozilla.org/en-US/docs/Web/XPath[xpath expression] to find the element. The xpath can be generated by the https://www.selenium.dev/selenium-ide/[Selenium IDE].
+<4> For elements that don't have an `id`, you can use https://developer.mozilla.org/en-US/docs/Web/XPath[xpath expression] to find the element. The xpath can be generated by the https://www.selenium.dev/selenium-ide/[Selenium IDE].
 <5> Finally, we test whether all of the information in the table cells match our original data.
 
 For more usage scenarios, you can check out the official https://www.selenium.dev/documentation/webdriver/elements/[Selenium doc]
