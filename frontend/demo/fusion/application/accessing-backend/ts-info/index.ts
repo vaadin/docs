@@ -1,6 +1,6 @@
 // Import and use a declaration from another module
 import type City from './city';
-// @ts-ignore // hidden-source-line
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const cityObject: City = {
   country: 'Finland',
   name: 'Turku',

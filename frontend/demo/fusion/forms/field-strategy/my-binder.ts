@@ -7,6 +7,7 @@ export class MyBinder<T, M extends AbstractModel<T>> extends Binder<T, M> {
     super(context, model);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getFieldStrategy(element: any): FieldStrategy {
     if (element.localName === 'my-text-field') {
       return new MyTextFieldStrategy(element);

@@ -1,7 +1,12 @@
-const { ApplicationThemePlugin } = require('@vaadin/application-theme-plugin');
-
 const path = require('path');
 const fs = require('fs');
+
+const buildDirectory = path.resolve(__dirname, 'target');
+const {
+  ApplicationThemePlugin,
+  extractThemeName,
+  findParentThemes,
+} = require(buildDirectory + '/plugins/application-theme-plugin');
 
 // Folders in the project which can contain static assets.
 const projectStaticAssetsFolders = [
@@ -12,7 +17,7 @@ const projectStaticAssetsFolders = [
 
 const projectStaticAssetsOutputFolder = path.resolve(
   __dirname,
-  'target/META-INF/VAADIN/webapp/VAADIN/static'
+  'target/classes/META-INF/VAADIN/webapp/VAADIN/static'
 );
 
 // Folders in the project which can contain application themes
@@ -69,6 +74,14 @@ module.exports = function (config) {
       ? allFlowImportsPath
       : // false not supported in Webpack 4, let's use a resource that would get included anyway
         applyThemePath;
+
+  // Create an alias for each parent theme (if any)
+  const themeName = extractThemeName(frontendGeneratedFolder);
+  const parentThemePaths = findParentThemes(themeName, themeOptions);
+  parentThemePaths.forEach((parentThemePath) => {
+    const parentThemeName = parentThemePath.split('/').pop();
+    config.resolve.alias[`themes/${parentThemeName}`] = parentThemePath;
+  });
 
   config.resolve.alias['Frontend/generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
