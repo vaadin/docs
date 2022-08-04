@@ -6,7 +6,7 @@ order: 30
 
 = Deploying a Vaadin Application to Google Cloud
 
-This tutorial shows you how to deploy a Vaadin application to Google Cloud App Engine.
+This tutorial shows you how to deploy a Vaadin application to Google App Engine.
 Google Cloud has free-trial and free-tier offerings that you can read more about on the link:https://cloud.google.com/free/[Google Cloud website].
 
 .Google Cloud account required
@@ -31,6 +31,8 @@ Download a minimal Vaadin project and unpack the downloaded zip into a folder on
 
 link:https://start.vaadin.com/dl[Download project]
 
+[WARNING]
+Due to issue https://github.com/vaadin/flow/issues/14164[14164], you will need to disable the `@PWA` annotation found on the `Application` class.
 
 == Step 3: Initialize a Google Cloud Project
 
@@ -74,27 +76,74 @@ gcloud app create
 You will then be asked to select a region.
 You may want to choose the region that is geographically closest to your users.
 
-== Step 5: Create a Production Build
+== Step 5: Setup the App Engine Plugin for Maven
 
-Open the project directory from a terminal window, and enter the following command to generate a `JAR` file of your application:
+Add the App Engine Maven plugin to your project's `pom.xml` file.
+
+.pom.xml
+[source,xml]
+----
+<plugin>
+    <groupId>com.google.cloud.tools</groupId>
+    <artifactId>appengine-maven-plugin</artifactId>
+    <version>2.4.3</version>
+    <configuration>
+        <projectId>GCLOUD_CONFIG</projectId>
+        <version>GCLOUD_CONFIG</version>
+    </configuration>
+</plugin>
+----
+
+Note that `projectId` and `version` must be set for the plugin to work.
+The value `GCLOUD_CONFIG` tells the Google Cloud CLI tools to use the `projectId` configured at <<Step 4: Create an App Engine Instance, step 4>>.
+Also, make sure to use the latest version of the `appengine-maven-plugin`, which you can find at this link:https://search.maven.org/artifact/com.google.cloud.tools/appengine-maven-plugin[link].
+
+== Step 6: Create the app.yaml File
+
+Next, you need to create an `app.yaml` file.
+
+[loweralpha]
+. Create a directory called `appengine` under `src/main`.
+. Create a file called `app.yaml` under `src/main/appengine`.
+This file should have the following content.
++
+.app.yaml
+[source,yaml]
+----
+runtime: java11
+----
+You should change the java runtime version number (`java11`) in the `yaml` file to match the value of the `<java.version>` property in your `pom.xml` file.
+
+== Step 7: Enable Cloud Build
+
+You will also need to enable Cloud Build.
+
+[loweralpha]
+. Navigate to `https://console.cloud.google.com/cloud-build/builds?project=PROJECT_NAME`, replacing *PROJECT_NAME* with your project name found at https://console.cloud.google.com/cloud-resource-manager[Google Cloud Resource Manager].
+. Click *Enable*.
+
+== Step 8: Deploy to Google App Engine
+
+Finally, you can build and deploy using a single command below:
 
 [source,terminal]
 ----
-mvn package -Pproduction
-----
-
-== Step 6: Deploy the Application
-
-From a terminal window, in the project root directory, enter the following command to deploy the application to Google Cloud:
-
-[source,terminal]
-----
-gcloud app deploy target/myapp-1.0-SNAPSHOT.jar
+mvn package appengine:deploy -Pproduction
 ----
 
 When the deployment has finished, the application URL will be displayed in the logs.
 
-.Ensure that Google Cloud billing is enabled
-[NOTE]
+== Common Problems
+
+=== Ensure Google Cloud Billing is Enabled
+
 If the deployment fails with an error similar to `ERROR: (gcloud.app.deploy) Error Response: [7] Access Not Configured.`, then ensure that your Google Cloud account has billing enabled.
-When it is enabled, try the deployment again.
+After it is enabled, try to deploy again.
+
+=== Memory Limit
+
+If you notice log messages similar to `Exceeded soft memory limit of 256 MB with X MB`, then that means your instance has ran out of RAM. You should consider https://cloud.google.com/appengine/docs/standard/java-gen2/config/appref[upgrading to a larger App Engine instance] that fits your needs.
+
+[WARNING]
+Be mindful of costs when upgrading.
+Larger instances will most likely incur more fees.
