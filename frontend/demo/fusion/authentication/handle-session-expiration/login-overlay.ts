@@ -1,13 +1,14 @@
 import { LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
-import { LoginResult } from '@vaadin/fusion-frontend';
+import { LoginResult } from '@hilla/frontend';
 
 @customElement('login-view')
 export class LoginView extends LitElement {
   private returnUrl = '/';
 
   // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private onSuccess = (_: LoginResult) => {
     Router.go(this.returnUrl);
   };

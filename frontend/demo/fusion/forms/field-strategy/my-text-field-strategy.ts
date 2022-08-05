@@ -1,5 +1,5 @@
 // tag::snippet[]
-import type { FieldStrategy } from '@vaadin/form';
+import type { FieldStrategy } from '@hilla/form';
 import type { MyTextField } from './my-text-field';
 
 export class MyTextFieldStrategy implements FieldStrategy {
@@ -28,7 +28,7 @@ export class MyTextFieldStrategy implements FieldStrategy {
     this.element.value = value;
   }
 
-  setAttribute(key: string, val: any) {
+  setAttribute(key: string, val: unknown) {
     if (val) {
       this.element.setAttribute(key, '');
     } else {

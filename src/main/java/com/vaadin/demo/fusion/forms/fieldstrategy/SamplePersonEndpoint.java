@@ -1,6 +1,6 @@
 package com.vaadin.demo.fusion.forms.fieldstrategy;
 
-import com.vaadin.fusion.Endpoint;
+import dev.hilla.Endpoint;
 
 @Endpoint
 public class SamplePersonEndpoint {
