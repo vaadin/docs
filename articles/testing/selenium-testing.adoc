@@ -41,11 +41,10 @@ To use Selenium in a Vaadin app, you need to perform the following steps:
 <dependency>
    <groupId>org.seleniumhq.selenium</groupId>
    <artifactId>selenium-java</artifactId>
-   <version>4.3.0</version>
 </dependency>
 ----
 +
-The latest version of Selenium can be found https://search.maven.org/artifact/org.seleniumhq.selenium/selenium-java[here].
+We can skip the version number here because it has already been declared by the `<selenium.version>` property in the `pom.xml` file.
 
 . Use WebDriverManager to manage Web Browser Drivers
 +
@@ -61,7 +60,7 @@ Using WebDriverManager is the easiest way to manage Drivers because you don't ha
 <dependency>
    <groupId>io.github.bonigarcia</groupId>
    <artifactId>webdrivermanager</artifactId>
-   <version>5.2.1</version>
+   <version>5.2.3</version>
    <scope>test</scope>
 </dependency>
 ----
@@ -92,49 +91,58 @@ Note that apart from WebDriverManager, you can also install drivers by:
 
 == Create Your First Selenium Test
 
-As an example, the code snippet below tests whether the page title is “Hello World”. 
+As an example, the code snippet below tests whether the loaded [classname]`Button` text matches "Say Hello".
 
-.`ExampleIT.java`
+.`SimpleTestIT.java`
 [source,java]
 ----
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
+import org.junit.jupiter.api.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
 
-public class ExampleIT {
+import static java.time.Duration.ofSeconds;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.openqa.selenium.support.ui.ExpectedConditions.titleIs;
+import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated;
 
-   @Test
-   public void checkTitle() {
-       WebDriverManager.chromedriver().setup(); // <1>
-       var driver = new ChromeDriver(); // <2>
-       driver.get("http://localhost:8080/hello"); // <3>
-       
-       new FluentWait<WebDriver>(driver)
-               .withTimeout(Duration.ofSeconds(30))
-               .pollingEvery(Duration.ofSeconds(1))
-               .ignoring(NoSuchElementException.class)
-               .until(_driver -> !_driver.getTitle().isEmpty()); // <4>
+public class SimpleTestIT {
 
-       var title = driver.getTitle(); // <5>
-       Assertions.assertEquals("Hello World", title); // <6>
-       driver.quit(); // <7>
-   }
+    @Test
+    public void checkPageLoad() {
+        WebDriverManager.chromedriver().setup(); // <1>
+        var driver = new ChromeDriver(); // <2>
+
+        try { // <3>
+            driver.get("http://localhost:8080/hello"); // <4>
+
+            new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+                    .until(titleIs("Hello World")); // <5>
+
+            var button = driver.findElement(By.xpath("//vaadin-button[contains(.,'Say hello')]")); // <6>
+
+            assertEquals(button.getText(), "Say hello"); // <7>
+        } finally {
+            driver.quit(); // <8>
+        }
+    }
 }
 ----
 <1> Setup the driver for the test.
 <2> Instantiate the [classname]`ChromeDriver`, which will be used to interact with the Chrome web browser.
-<3> Direct the [classname]`ChromeDriver` to load the URL.
-<4> Because Flow produces a single-page frontend, Selenium is not aware of DOM manipulation after the initial page has been loaded.
-So we need to use Selenium's https://www.selenium.dev/documentation/webdriver/waits/#fluentwait[FluentWait] API to wait until the DOM has been _compiled_.
-<5> After we are sure that the page title is available, we retrieve the page title.
-<6> We check whether the page title is "Hello World".
-<7> It is important that we close the browser session after the test.
+<3> We wrap the test in a `try/finally` block so that the session will close even when the test fails.
+<4> Direct the [classname]`ChromeDriver` to load the URL.
+<5> Because Flow produces a single-page frontend, Selenium is not aware of DOM manipulation after the initial page has been loaded.
+So we can use Selenium's https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/support/ui/WebDriverWait.html[WebDriverWait] API to wait until the DOM has been _compiled_.
+<6> After we are sure that the page title is available, we attempt to retrieve a [classname]`Button` on this page.
+<7> We check whether the [classname]`Button` text is "Say Hello".
+<8> Finally, we close the browser session after the test.
 
 == Running the Tests
 
@@ -146,6 +154,8 @@ mvn verify -Pit,production
 ----
 
 This will run the tests in the `it` profile, which starts the Spring Boot server before the tests are run, and stops it afterwards.
+If you are running the test this way, then your test classes must end with `IT`.
+
 The following lists the part of the `pom.xml` file that is responsible for starting and stopping the Spring Boot server.
 
 .`pom.xml`
@@ -184,11 +194,11 @@ For a non-Spring Boot project, there are examples at GitHub of the `it` profile 
 == Finding and Interacting With Elements
 
 The following demonstrates a test that require finding and interacting with a web element.
-Specifically, it finds the link with the text “About” and clicks it.
+Specifically, it finds the link to the "About" page and clicks it.
 This action triggers a navigation to the “About” page.
 The test then waits until the "About" page is loaded and checks that the URL of the page is correct.
 
-.`ExampleIT.java`
+.`SimpleTestIT.java`
 [source,java]
 ----
 @Test
@@ -199,33 +209,28 @@ public void routeSwitch(){
   //Use this ChromeDriver to interact with Chrome
   var driver = new ChromeDriver();
 
-  //Loads the page
-  driver.get("http://localhost:8080");
+  try {
+      //Loads the page
+      driver.get("http://localhost:8080");
 
-  //Have to explicitly wait because it takes time for compiled html to load
-  new FluentWait<WebDriver>(driver)
-          .withTimeout(Duration.ofSeconds(30))
-          .pollingEvery(Duration.ofSeconds(1))
-          .ignoring(NoSuchElementException.class)
-          .until(_driver -> !_driver.getTitle().isEmpty());
+      //Have to explicitly wait because it takes time for compiled html to load
+      new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+              .until(titleIs("Hello World"));
 
-  //Clicks on the About button
-  driver.findElement(By.linkText("About")) // <1>
-      .click(); // <2>
-  
-  new FluentWait<WebDriver>(driver)
-          .withTimeout(Duration.ofSeconds(30))
-          .pollingEvery(Duration.ofSeconds(1))
-          .ignoring(NoSuchElementException.class)
-          .until(_driver -> driver.getTitle().equals("About")); // <3>
+      driver.findElement(By.cssSelector("vcf-nav-item:nth-child(2)")) // <1>
+              .click(); // <2>
 
-  var url = driver.getCurrentUrl(); // <4>
+      new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+              .until(titleIs("About")); // <3>
 
-  //Checks whether the url matches
-  assertEquals("http://localhost:8080/about", url);
-  
-  //Ends the browser session
-  driver.quit();
+      var url = driver.getCurrentUrl(); // <4>
+
+      //Checks whether the url matches
+      assertEquals("http://localhost:8080/about", url);
+  } finally {
+      //Ends the browser session
+      driver.quit();
+  }
 }
 ----
 <1> You can find elements using the https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/By.html[`By`] matcher.
@@ -234,12 +239,12 @@ public void routeSwitch(){
 This reduces flakiness.
 <4> We use the convenient method to get the full current URL.
 
-== Advanced Selenium Test
+== Long Selenium Test
 
-The test below demonstrates how to use advanced [classname]`By` matchers such as `id()` and `xpath()`.
+The test below demonstrates how a long Selenium test might look like.
 This test assumes a Master-Detail view of the kind that could be generated from https://start.vaadin.com/[Vaadin Start].
 
-.`ExampleIT.java`
+.`SimpleTestIT.java`
 [source,java]
 ----
 @Test
@@ -249,99 +254,95 @@ public void addUser(){
 
   //Use this ChromeDriver to interact with Chrome
   var driver = new ChromeDriver();
-  
-  //Maximizes the screen, reducing flakiness on screens with low DPI
-  driver.manage().window().maximize();
 
-  //Loads the page
-  driver.get("http://localhost:8080/master-detail");
+  try {
+      //Maximizes the screen
+      driver.manage().window().maximize();
 
-  //Have to explicitly wait because it takes time for compiled html to load
-  new FluentWait<WebDriver>(driver)
-          .withTimeout(Duration.ofSeconds(30))
-          .pollingEvery(Duration.ofSeconds(1))
-          .ignoring(NoSuchElementException.class)
-          .until(_driver -> !_driver.getTitle().isEmpty());
+      //Loads the page
+      driver.get("http://localhost:8080/master-detail");
 
-  //Test data
-  var firstName = "FirstName";
-  var lastName = "LastName";
-  var email = "first.last@example.com";
-  var phone = "(111) 111-1111";
-  //Cannot use simple String because the form and table display the dob differently
-  var dob = LocalDate.of(2000, Month.JANUARY, 1);
-  var occupation = "Forester";
+      //Have to explicitly wait because it takes time for compiled html to load
+      new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+              .until(titleIs("Master-Detail"));
 
-  //Adds First Name
-  var firstNameTextInput = driver.findElement(By.id("vaadin-text-field-0")); // <1>
-  firstNameTextInput.click(); // <2>
-  firstNameTextInput.sendKeys(firstName); // <3>
+      //Test data
+      var firstName = "FirstName";
+      var lastName = "LastName";
+      var email = "first.last@example.com";
+      var phone = "(111) 111-1111";
+      //Cannot use simple String because the form and table display the dob differently
+      var dob = LocalDate.of(2000, Month.JANUARY, 1);
+      var occupation = "Forester";
 
-  //Adds Last Name
-  var lastNameTextInput = driver.findElement(By.id("vaadin-text-field-1"));
-  lastNameTextInput.click();
-  lastNameTextInput.sendKeys(lastName);
+      //Adds First Name
+      var firstNameTextInput = driver.findElement(By.id("vaadin-text-field-0")); // <1>
+      firstNameTextInput.click(); // <2>
+      firstNameTextInput.sendKeys(firstName); // <3>
 
-  //Adds Email
-  var emailTextInput = driver.findElement(By.id("vaadin-text-field-2"));
-  emailTextInput.click();
-  emailTextInput.sendKeys(email);
+      //Adds Last Name
+      var lastNameTextInput = driver.findElement(By.id("vaadin-text-field-1"));
+      lastNameTextInput.click();
+      lastNameTextInput.sendKeys(lastName);
 
-  //Adds Phone
-  var phoneTextInput = driver.findElement(By.id("vaadin-text-field-3"));
-  phoneTextInput.click();
-  phoneTextInput.sendKeys(phone);
+      //Adds Email
+      var emailTextInput = driver.findElement(By.id("vaadin-text-field-2"));
+      emailTextInput.click();
+      emailTextInput.sendKeys(email);
 
-  //Adds DOB
-  var dobTextInput = driver.findElement(By.id("vaadin-date-picker-4"));
-  dobTextInput.click();
-  dobTextInput.sendKeys(DateTimeFormatter.ofPattern("dd/MM/uuuu").format(dob));
-  dobTextInput.sendKeys(Keys.ENTER); //Closes the pop-up Date Picker
+      //Adds Phone
+      var phoneTextInput = driver.findElement(By.id("vaadin-text-field-3"));
+      phoneTextInput.click();
+      phoneTextInput.sendKeys(phone);
 
-  //Adds Occupation
-  var occupationTextInput = driver.findElement(By.id("vaadin-text-field-5"));
-  occupationTextInput.click();
-  occupationTextInput.sendKeys(occupation);
+      //Adds DOB
+      var dobTextInput = driver.findElement(By.id("vaadin-date-picker-4"));
+      dobTextInput.click();
+      dobTextInput.sendKeys(DateTimeFormatter.ofPattern("dd/MM/uuuu").format(dob));
+      dobTextInput.sendKeys(Keys.ENTER); //Closes the pop-up Date Picker
 
-  //Marks as Important
-  driver.findElement(By.id("vaadin-checkbox-6"))
-          .click();
+      //Adds Occupation
+      var occupationTextInput = driver.findElement(By.id("vaadin-text-field-5"));
+      occupationTextInput.click();
+      occupationTextInput.sendKeys(occupation);
 
-  //Clicks Save
-  driver.findElement(By.xpath("//vaadin-button[contains(.,'Save')]")).click();
+      //Marks as Important
+      driver.findElement(By.id("vaadin-checkbox-6"))
+              .click();
 
-  //Sorts by Phone number so the sample user is visible on the screen
-  driver.findElement(By.xpath("//vaadin-grid-sorter[contains(.,'Phone')]")).click();
+      //Clicks Save
+      driver.findElement(By.xpath("//vaadin-button[contains(.,'Save')]")).click(); // <4>
 
-  //Reduces verbosity
-  var xPathStart = "//vaadin-grid-cell-content[contains(.,'";
-  var xPathEnd = "')]";
+      //Sorts by Phone number so the sample user is visible on the screen
+      driver.findElement(By.xpath("//vaadin-grid-sorter[contains(.,'Phone')]")).click();
 
-  //Waits for the page to sort
-  new FluentWait<WebDriver>(driver)
-          .withTimeout(Duration.ofSeconds(30))
-          .pollingEvery(Duration.ofSeconds(1))
-          .ignoring(NoSuchElementException.class)
-          .until(_driver -> _driver.findElement(By.xpath(xPathStart + firstName + xPathEnd)).isDisplayed());
+      //Reduces verbosity
+      var xPathStart = "//vaadin-grid-cell-content[contains(.,'";
+      var xPathEnd = "')]";
 
-  //Gets the cells in the table for the newly added user
-  var firstNameCell = driver.findElement(By.xpath(xPathStart + firstName + xPathEnd)); // <4>
-  var lastNameCell = driver.findElement(By.xpath(xPathStart + lastName + xPathEnd));
-  var emailCell = driver.findElement(By.xpath(xPathStart + email + xPathEnd));
-  var phoneCell = driver.findElement(By.xpath(xPathStart + phone + xPathEnd));
-  var dobCell = driver.findElement(By.xpath(xPathStart + dob + xPathEnd));
-  var occupationCell = driver.findElement(By.xpath(xPathStart + occupation + xPathEnd));
+      //Waits for the page to sort
+      new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+              .until(visibilityOfElementLocated(By.xpath(xPathStart + firstName + xPathEnd)));
 
-  // <5>
-  assertEquals(firstName, firstNameCell.getText());
-  assertEquals(lastName, lastNameCell.getText());
-  assertEquals(email, emailCell.getText());
-  assertEquals(phone, phoneCell.getText());
-  assertEquals(dob.toString(), dobCell.getText());
-  assertEquals(occupation, occupationCell.getText());
-  
-  //Ends the browser session
-  driver.quit();
+      //Gets the cells in the table for the newly added user
+      var firstNameCell = driver.findElement(By.xpath(xPathStart + firstName + xPathEnd));
+      var lastNameCell = driver.findElement(By.xpath(xPathStart + lastName + xPathEnd));
+      var emailCell = driver.findElement(By.xpath(xPathStart + email + xPathEnd));
+      var phoneCell = driver.findElement(By.xpath(xPathStart + phone + xPathEnd));
+      var dobCell = driver.findElement(By.xpath(xPathStart + dob + xPathEnd));
+      var occupationCell = driver.findElement(By.xpath(xPathStart + occupation + xPathEnd));
+
+      //Assertions <5>
+      assertEquals(firstName, firstNameCell.getText());
+      assertEquals(lastName, lastNameCell.getText());
+      assertEquals(email, emailCell.getText());
+      assertEquals(phone, phoneCell.getText());
+      assertEquals(dob.toString(), dobCell.getText());
+      assertEquals(occupation, occupationCell.getText());
+  } finally {
+      //Ends the browser session
+      driver.quit();
+  }
 }
 ----
 <1> We can use the `By.id()` matcher to find fields with a unique `id`. You can retrieve the `id` using your browser's inspector.
