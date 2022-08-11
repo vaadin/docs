@@ -186,7 +186,8 @@ export class IconsetGenerator extends LitElement {
     `;
   }
 
-  handleDragOver(e: any) {
+  // @ts-ignore
+  handleDragOver(e) {
     e.preventDefault();
     this.classList.add('drag-active');
   }
