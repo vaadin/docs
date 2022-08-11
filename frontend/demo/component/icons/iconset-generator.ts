@@ -90,9 +90,10 @@ export class IconsetGenerator extends LitElement {
       font-family: var(--docs-font-family-monospace);
       border: 0;
       padding: var(--docs-space-m);
-      margin: 0 calc(var(--docs-space-m) * -1);
-      margin-bottom: calc(var(--docs-space-m) * -1);
+      margin: 0;
       resize: vertical;
+      pointer-events: auto;
+      box-sizing: border-box;
     }
 
     .output ul {
@@ -101,7 +102,6 @@ export class IconsetGenerator extends LitElement {
     }
 
     .output li {
-      padding: var(--docs-space-s) var(--docs-space-m);
       border: 2px solid var(--docs-divider-color-1);
       border-radius: var(--docs-border-radius-l);
       margin: var(--docs-space-s) 0;
@@ -111,10 +111,16 @@ export class IconsetGenerator extends LitElement {
     .output li details {
       font-size: var(--docs-font-size-xs);
       color: var(--docs-secondary-text-color);
+      pointer-events: none;
+      margin-top: -2em;
     }
 
     .output summary {
       cursor: pointer;
+      padding: 0 var(--docs-space-m);
+      padding-bottom: var(--docs-space-s);
+      width: max-content;
+      pointer-events: auto;
     }
 
     .output summary:hover,
@@ -127,6 +133,8 @@ export class IconsetGenerator extends LitElement {
       font-weight: var(--docs-font-weight-strong);
       text-decoration: none;
       display: block;
+      padding: var(--docs-space-s) var(--docs-space-m);
+      padding-bottom: 2em;
     }
 
     .output li a:hover::before {
@@ -147,7 +155,7 @@ export class IconsetGenerator extends LitElement {
       position: absolute;
       height: 1em;
       width: 2em;
-      top: calc(50% - 0.5em);
+      top: 1.25em;
       right: 0;
       pointer-events: none;
       font-size: 1.25em;
