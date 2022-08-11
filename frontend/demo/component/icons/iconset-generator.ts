@@ -191,7 +191,7 @@ export class IconsetGenerator extends LitElement {
     this.classList.add('drag-active');
   }
 
-  handleDragLeave(e: any) {
+  handleDragLeave() {
     this.classList.remove('drag-active');
   }
 
