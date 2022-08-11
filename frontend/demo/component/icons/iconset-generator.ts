@@ -278,9 +278,9 @@ export class IconsetGenerator extends LitElement {
     const output = this.shadowRoot?.querySelector('.output') as HTMLElement;
     render(
       html`<p>
-          Download the following files. Place the <code>.js</code> files under the
-          <code>frontend</code> folder and the <code>.java</code> files under the
-          <code>src</code> folder.
+          Download the following files. Place the <code>.js</code> files in the
+          <code>frontend/icons/</code> folder and the <code>.java</code> files under the
+          <code>src/</code> folder (you are free to choose the Java package).
         </p>
         <ul>
           ${outputHtml}
@@ -320,7 +320,14 @@ async function generateVaadinIconset(set, jsName, enumName): { js: string; java:
     size = '24'; // Default if not defined by any icon
   }
 
-  const enums = files.map((f) => f.name.toUpperCase().replaceAll('-', '_'));
+  const enums = files.map((f) => {
+    let name = f.name.toUpperCase().replaceAll('-', '_');
+    // Java enums can't start with a number. Prefix with underscore
+    if (name.match(/^\d/)) {
+      name = '_' + name;
+    }
+    return name;
+  });
 
   const output = { js: '', java: '' };
 
@@ -337,13 +344,16 @@ template.innerHTML = \`<vaadin-iconset name="${jsName}" size="${size}">
 document.head.appendChild(template.content);
 `;
 
-  output.java = `import com.vaadin.flow.component.icon.IconFactory;
+  output.java = `import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.icon.IconFactory;
+import java.util.Locale;
 
+@JsModule("./icons/${jsName}.js")
 public enum ${enumName} implements IconFactory {
     ${enums.join(', ')};
 
     public Icon create() {
-        return new Icon(this.name().toLowerCase(Locale.ENGLISH).replace('_', '-'));
+        return new Icon(this.name().toLowerCase(Locale.ENGLISH).replace('_', '-').replaceAll("^-", ""));
     }
 
     public static final class Icon extends com.vaadin.flow.component.icon.Icon {
