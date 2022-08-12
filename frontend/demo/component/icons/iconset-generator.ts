@@ -87,6 +87,7 @@ export class IconsetGenerator extends LitElement {
       height: 10em;
       background: transparent;
       font: inherit;
+      color: inherit;
       font-family: var(--docs-font-family-monospace);
       border: 0;
       padding: var(--docs-space-m);
@@ -99,6 +100,7 @@ export class IconsetGenerator extends LitElement {
     .output ul {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
 
     .output li {
@@ -110,7 +112,6 @@ export class IconsetGenerator extends LitElement {
 
     .output li details {
       font-size: var(--docs-font-size-xs);
-      color: var(--docs-secondary-text-color);
       pointer-events: none;
       margin-top: -2em;
     }
@@ -121,6 +122,7 @@ export class IconsetGenerator extends LitElement {
       padding-bottom: var(--docs-space-s);
       width: max-content;
       pointer-events: auto;
+      color: var(--docs-secondary-text-color);
     }
 
     .output summary:hover,
@@ -160,6 +162,11 @@ export class IconsetGenerator extends LitElement {
       pointer-events: none;
       font-size: 1.25em;
       line-height: 1;
+    }
+
+    .output details :is(p, label) {
+      padding: 0 var(--docs-space-m);
+      margin-top: 0;
     }
   `;
 
@@ -268,8 +275,15 @@ export class IconsetGenerator extends LitElement {
         html`<li>
             <a download="${jsName}.js" .href=${URL.createObjectURL(jsBlob)}>${jsName}.js</a>
             <details>
-              <summary>View contents</summary>
-              <textarea readonly>${iconsetStrings.js}</textarea>
+              <summary>Usage and contents</summary>
+              <p>
+                <b>Usage:</b>
+                <code>
+                  &lt;vaadin-icon icon="${jsName}:${set[0].name.split('.')[0]}">&lt;/vaadin-icon>
+                </code>
+              </p>
+              <label for="jsOutput"><b>File contents:</b></label>
+              <textarea readonly id="jsOutput">${iconsetStrings.js}</textarea>
             </details>
           </li>
           <li>
@@ -277,19 +291,31 @@ export class IconsetGenerator extends LitElement {
               ${enumName}.java
             </a>
             <details>
-              <summary>View contents</summary>
-              <textarea readonly>${iconsetStrings.java}</textarea>
+              <summary>Usage and contents</summary>
+              <p>
+                <b>Usage:</b>
+                <code>${enumName}.${convertToEnunName(set[0].name.split('.')[0])}.create();</code>
+              </p>
+              <label for="javaOutput"><b>File contents:</b></label>
+              <textarea readonly id="javaOutput">${iconsetStrings.java}</textarea>
             </details>
           </li>`
       );
     }
 
+    const plural = Object.keys(iconsets).length > 1;
+
     const output = this.shadowRoot?.querySelector('.output') as HTMLElement;
     render(
       html`<p>
-          Download the following files. Place the <code>.js</code> files in the
-          <code>frontend/icons/</code> folder and the <code>.java</code> files under the
-          <code>src/</code> folder (you are free to choose the Java package).
+          Download the following files. The <code>.js</code> ${
+            plural ? 'files are' : 'file is'
+          } required. Place ${plural ? 'them' : 'it'} into the <code>frontend/icons/</code> folder.
+        </p>
+          The <code>.java</code> ${plural ? 'files are' : 'file is'} optional. Place ${
+        plural ? 'them' : 'it'
+      } under the <code>src/</code> folder (you are free to choose the Java
+                package).
         </p>
         <ul>
           ${outputHtml}
@@ -329,14 +355,7 @@ async function generateVaadinIconset(set, jsName, enumName): { js: string; java:
     size = '24'; // Default if not defined by any icon
   }
 
-  const enums = files.map((f) => {
-    let name = f.name.toUpperCase().replaceAll('-', '_');
-    // Java enums can't start with a number. Prefix with underscore
-    if (name.match(/^\d/)) {
-      name = '_' + name;
-    }
-    return name;
-  });
+  const enums = files.map((f) => convertToEnunName(f.name));
 
   const output = { js: '', java: '' };
 
@@ -402,3 +421,13 @@ async function fileListToText(fileList) {
 }
 
 const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
+
+const convertToEnunName = (s: string) => {
+  // @ts-ignore
+  let name = s.toUpperCase().replaceAll('-', '_');
+  // Java enums can't start with a number. Prefix with underscore
+  if (name.match(/^\d/)) {
+    name = '_' + name;
+  }
+  return name;
+};
