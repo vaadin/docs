@@ -130,6 +130,7 @@ class Footer extends LitElement {
         }
 
         .discussion-wrapper iframe {
+          color-scheme: normal;
           border: 0;
           margin: 0 -8px;
           width: calc(100% + 16px);
