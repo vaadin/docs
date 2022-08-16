@@ -558,6 +558,46 @@ public class PersonDataProvider implements CallbackDataProvider.FetchCallback<Pe
 personGrid.setItems(dataProvider);
 ----
 
+== Beware of Lombok's [classname]`@EqualsAndHashCode`
+
+By default, [classname]`@EqualsAndHashCode` generates [methodname]`equals()` and [methodname]`hashCode()` implementations using all of the entity's properties. 
+This behavior often interferes with Vaadin's data model.
+Vaadin expects the beans to be _invariant_, i.e. changing value of properties like `phoneNumber` should not affect the bean's identity.
+
+There are two recommended ways to solve this problem:
+
+. Set `onlyExplicitlyIncluded = true` for [classname]`@EqualsAndHashCode`, and then annotate the entity's `id` property with `@EqualsAndHashCode.Include`.
++
+.SamplePerson.java
+[source,java]
+----
+@Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class SamplePerson {
+
+    @Id
+    @GeneratedValue
+    @Type(type = "uuid-char")
+    @EqualsAndHashCode.Include
+    private UUID id;
+
+    private String phoneNumber;
+----
+
+. Extends [classname]`DataProvider` and overrides `getId()`
++
+[source,java]
+----
+class PersonDataProvider extends CallbackDataProvider<SamplePerson,Void> {
+    
+    ...
+
+    @Override
+    public Object getId(SamplePerson item) {
+        return item.getId();
+    }
+}
+----
 
 [.discussion-id]
 8D0BFB55-CF96-456D-9312-9018D9413CA2
