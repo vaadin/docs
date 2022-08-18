@@ -33,6 +33,8 @@ The easiest way is to provide a [classname]`List` of objects to be shown in such
 
 If there are many items, requiring a lot of memory, `Grid` and `ComboBox` allow lazy data binding using callbacks to fetch only the required set of items from the back end.
 
+include::{articles}/binding-data/_items-identities.adoc[]
+
 == Configuring How Items Are Displayed
 
 Component-specific APIs allow you to adjust how items are displayed.
@@ -558,6 +560,68 @@ public class PersonDataProvider implements CallbackDataProvider.FetchCallback<Pe
 personGrid.setItems(dataProvider);
 ----
 
+[[data-binding.data-provider.item-identifiers]]
+== Ensuring That Item Identities Are Stable and Unique
+
+When you bind items to a component, the identities of those items will be essential for the component to work properly.
+For example, if you bind a list of `Person` objects to a `Grid`, the `Grid` will rely on the identities of the `Person` objects for various operations, such as for highlighting the selected rows and updating the data in an edited row.
+
+**It is, therefore, important that the identities of the items are stable and unique.**
+To ensure that, your Java class should implement [methodname]`hashCode()` and [methodname]`equals()` methods based on the invariant properties of the class.
+For example, the [classname]`Person` class in the following example has a `final long id` property that is used in the [methodname]`hashCode()` and [methodname]`equals()` methods as the identity of the [classname]`Person` object.
+This way even if the [classname]`Person` object has a property such as its `phoneNumber` modified, the identity of the [classname]`Person` object will not change, and a component like the `Grid` will still be able to identify the object correctly.
+
+[source,java]
+----
+class Person {
+    private final long id;
+    private String name;
+    private String phoneNumber;
+
+    public Person(long id, String name, String phoneNumber) {
+        this.id = id;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+    }
+
+    // Getters and setters omitted for brevity
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Person person = (Person) o;
+        return id == person.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+----
+
+If you are using the Lombok library to generate [methodname]`hashCode()` and [methodname]`equals()` methods, you need to ensure that only the invariant properties are being used.
+You can do this by setting `onlyExplicitlyIncluded = true` for [annotationname]`@EqualsAndHashCode`, and then annotating the entity's `id` property with [annotationname]`@EqualsAndHashCode.Include`.
+
+[source,java]
+----
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+class Person {
+    @EqualsAndHashCode.Include
+    private final long id;
+    private String name;
+    private String phoneNumber;
+
+    public Person(long id, String name, String phoneNumber) {
+        this.id = id;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+    }
+
+    // Getters and setters omitted for brevity
+}
+----
 
 [.discussion-id]
 8D0BFB55-CF96-456D-9312-9018D9413CA2
