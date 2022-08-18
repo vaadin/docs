@@ -105,8 +105,7 @@ class Footer extends LitElement {
       return nothing;
     }
 
-    // Drop '/docs' from the beginning of the pathname
-    const url = encodeURI(document.location.pathname.substring('/docs'.length));
+    const url = encodeURI(document.location.pathname);
 
     let iframeSrc =
       window.location.hostname == 'preview.vaadin.com'
