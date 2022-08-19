@@ -2,6 +2,16 @@ import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
+// Import all Lumo CSS custom properties into the global style scope
+import '@vaadin/vaadin-lumo-styles/color.js';
+import '@vaadin/vaadin-lumo-styles/typography.js';
+import '@vaadin/vaadin-lumo-styles/sizing.js';
+import '@vaadin/vaadin-lumo-styles/spacing.js';
+import '@vaadin/vaadin-lumo-styles/style.js';
+// Import all Material CSS custom properties into the global style scope
+import '@vaadin/vaadin-material-styles/color';
+import '@vaadin/vaadin-material-styles/typography';
+
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
 }
