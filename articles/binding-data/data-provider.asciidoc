@@ -28,8 +28,8 @@ grid.setItems(
 ----
 
 All listing components in Vaadin have a number of overloaded [methodname]`setItems()` methods to define the items to display.
-Items can be basic objects, such as strings or numbers, or plain old Java objects (POJOs), such as data transfer objects (DTOs) or Java Persistence API (JPA) entities, from your domain model.
-The easiest way is to provide a [classname]`List` of objects to be shown in such a component.
+Items can be basic objects (such as strings or numbers), or POJOs (such as DTOs and JPA entities).
+The easiest way to bind items to a component is to provide a [classname]`List` of objects to be shown in such a component.
 
 If there are many items, requiring a lot of memory, `Grid` and `ComboBox` allow lazy data binding using callbacks to fetch only the required set of items from the back end.
 
@@ -135,9 +135,16 @@ grid.setItems(personRepository.findAll());
 Using callback methods is a more advanced way to bind data to components.
 This way, only the required portion of the data is loaded from your back end to the server memory.
 This approach is harder to implement and provides fewer features out of the box, but can save a lot of resources on the back end and the UI server.
-The component passes a query object as a parameter to your callback methods, where you can check what part of the data set is needed.
 
 Currently, only `Grid` and `ComboBox` properly support lazy data binding.
+
+Lazy data binding works as follows:
+
+. The user performs an action that requires the component to display more data.
+For example, the user might be scrolling down the list of items in a `Grid` component.
+. The component automatically detects that more data is needed, and it passes a link:https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/data/provider/Query.html[`Query`] object as a parameter to your callback methods.
+This object contains the necessary information about the data that should be displayed next to the user.
+. Your callback methods use this [classname]`Query` object to fetch only the required data (usually from the back end) and return it to the component, which displays it automatically once the data is available.
 
 For example, to bind data lazily to a `Grid`:
 
@@ -145,15 +152,18 @@ For example, to bind data lazily to a `Grid`:
 ----
 grid.setItems(query -> // <1>
     getPersonService() // <2>
-            .fetchPersons(query.getOffset(), query.getLimit()) // <3>
-            .stream() // <4>
+            .fetchPersons(
+                query.getOffset(), // <3>
+                query.getLimit() // <4>
+            )
+            .stream() // <5>
 );
 ----
 <1> To create a lazy binding, use an overloaded version of the [methodname]`setItems()` method that uses a callback instead of passing data directly to the component.
 <2> Typically, you call your service layer from the callback, as is done here.
-<3> Use the query object's parameters to limit the data you pass from the back end to the component.
-<4> The callbacks return the data as a [classname]`Stream`.
-In this example, the back end returns a [classname]`List`, so we need to convert it to a [classname]`Stream`.
+<3> The link:https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/data/provider/Query.html#getOffset()[_offset_] refers to the first index of the item to fetch.
+<4> The link:https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/data/provider/Query.html#getLimit()[_limit_] refers to the number of items to fetch. When fetching for more data, you should utilize [classname]`Query` properties to litmit the amount of data to fetch.
+<5> In this example, it is assumed that the back end returns a [classname]`List`, so we need to convert it to a [classname]`Stream`.
 
 The example above works well with JDBC back ends, where you can request a set of rows from a given index.
 Vaadin executes your data binding call in paged manner, so it is possible to bind also to "paging back ends", such as Spring Data-based solutions.
