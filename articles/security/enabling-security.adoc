@@ -27,7 +27,7 @@ To enable the mechanism in a Vaadin Flow Spring Boot application without any sec
 - A Login view.
 - Spring Security dependencies.
 - Log-out capability.
-- A security configuration class that extends [classname]`VaadinWebSecurityConfigurerAdapter`.
+- A security configuration class that extends [classname]`VaadinWebSecurity`.
 - One of the following annotations on each view class: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, or [annotationname]`@RolesAllowed`.
 
 A complete example project, including the source code from this document, is available at https://github.com/vaadin/flow-crm-tutorial[`github.com/vaadin/flow-crm-tutorial`].
@@ -159,7 +159,7 @@ public class SecurityService {
 
 == Security Configuration Class
 
-The next step is to have a Spring Security Configuration class that extends [classname]`VaadinWebSecurityConfigurerAdapter`.
+The next step is to have a Spring Security class that extends [classname]`VaadinWebSecurity`.
 There is no convention for naming this class, so in this documentation it is named [classname]`SecurityConfiguration`.
 However, take care with Spring Security annotations.
 Here is a minimal implementation of such a class:
@@ -170,7 +170,7 @@ Here is a minimal implementation of such a class:
 @EnableWebSecurity // <1>
 @Configuration
 public class SecurityConfiguration
-                extends VaadinWebSecurityConfigurerAdapter { // <2>
+                extends VaadinWebSecurity { // <2>
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -186,6 +186,11 @@ public class SecurityConfiguration
 
         // http.rememberMe().alwaysRemember(false);
 
+        // Configure your static resources with public access before calling
+        // super.configure(HttpSecurity) as it adds final anyRequest matcher
+        http.authorizeRequests().antMatchers("/public/**")
+            .permitAll();
+
         super.configure(http); // <3>
 
         // This is important to register your login view to the
@@ -194,28 +199,12 @@ public class SecurityConfiguration
     }
 
     /**
-     * Allows access to static resources, bypassing Spring security.
-     */
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        // Configure your static resources with public access here:
-        web.ignoring().antMatchers(
-                "/images/**"
-        );
-
-        // Delegating the ignoring configuration for Vaadin's
-        // related static resources to the super class:
-        super.configure(web); // <3>
-    }
-
-    /**
-     * Demo UserDetailService which only provide two hardcoded
+     * Demo UserDetailsManager which only provides two hardcoded
      * in memory users and their roles.
      * NOTE: This should not be used in real world applications.
      */
     @Bean
-    @Override
-    public UserDetailsService userDetailsService() {
+    public UserDetailsManager userDetailsService() {
         UserDetails user =
                 User.withUsername("user")
                         .password("{noop}user")
@@ -233,7 +222,7 @@ public class SecurityConfiguration
 
 <1> Notice the presence of [annotationname]`@EnableWebSecurity` and [annotationname]`@Configuration` annotations on top of the above class.
 As their names imply, they tell Spring to enable its security features.
-<2> [classname]`VaadinWebSecurityConfigurerAdapter` is a helper class that extends Spring's [classname]`WebSecurityConfigurerAdapter` and configures the common Vaadin-related Spring security settings.
+<2> [classname]`VaadinWebSecurity` is a helper class that configures the common Vaadin-related Spring security settings.
 By extending it, the view-based access control mechanism is enabled automatically, and no further configuration is needed to enable it.
 Other benefits are covered as follows.
 <3> The default implementation of the `configure` methods takes care of all the Vaadin-related configuration, for example ignoring static resources, or enabling `CSRF` checking, while ignoring unnecessary checking for Vaadin internal requests, etc.
@@ -244,6 +233,13 @@ Other benefits are covered as follows.
 Obviously, the implementation of the [methodname]`userDetailsService()` method is just an in-memory implementation for the sake of brevity in this documentation.
 In a real-world application, you can change the Spring Security configuration to use an authentication provider for LDAP, JAAS, and other real-world sources.
 https://dzone.com/articles/spring-security-authentication[Read more about Spring Security authentication providers].
+
+.Component-based security configuration
+[NOTE]
+Spring Security 5.7.0-M2 deprecates the `WebSecurityConfigurerAdapter` and encourages users to move towards a component-based security configuration.
+Vaadin supports both approaches, although it is recommended to use component-based security configuration as in `SecurityConfiguration` example above.
+https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter[Read more about updating from WebSecurityConfigurerAdapter to component-based security configuration].
+`VaadinWebSecurityConfigurerAdapter` is still available for Vaadin 23.1 users but has been marked as deprecated and will be removed in the future.
 
 The most important configuration in the above example is the call to  [methodname]`setLoginView(http, LoginView.class)` inside the first configure method.
 This is how the view-based access control mechanism knows where to redirect  users when they attempt to navigate to a protected view.
