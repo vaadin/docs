@@ -1,5 +1,5 @@
 import { css, html, LitElement, render } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, query } from 'lit/decorators.js';
 
 @customElement('iconset-generator')
 export class IconsetGenerator extends LitElement {
@@ -170,6 +170,12 @@ export class IconsetGenerator extends LitElement {
     }
   `;
 
+  @query('.output')
+  private output!: HTMLElement;
+
+  @query('.name')
+  private nameInput!: HTMLInputElement;
+
   render() {
     return html`
       <label for="iconsetname">Icon set name</label><br />
@@ -185,6 +191,7 @@ export class IconsetGenerator extends LitElement {
             @dragover=${this.handleDragOver}
             @dragleave=${this.handleDragLeave}
             @drop=${this.handleDragLeave}
+            @change=${this.handleFiles}
           />
         </div>
       </div>
@@ -193,8 +200,7 @@ export class IconsetGenerator extends LitElement {
     `;
   }
 
-  // @ts-ignore
-  handleDragOver(e) {
+  handleDragOver(e: DragEvent) {
     e.preventDefault();
     this.classList.add('drag-active');
   }
@@ -203,38 +209,26 @@ export class IconsetGenerator extends LitElement {
     this.classList.remove('drag-active');
   }
 
-  protected firstUpdated() {
-    const input = this.shadowRoot?.querySelector('.drop input');
-    // @ts-ignore
-    input.addEventListener('change', this.handleFiles.bind(this));
-  }
+  async handleFiles(event: Event) {
+    const dropzone = event.target as HTMLInputElement;
 
-  async handleFiles() {
-    const dropzone = this.shadowRoot?.querySelector('.drop input') as HTMLInputElement;
-    const nameInput = this.shadowRoot?.querySelector('.name') as HTMLInputElement;
-
-    const iconsets = {};
-    const name = nameInput.value;
+    const iconsets: Record<string, File[]> = {};
+    const name = this.nameInput.value;
     let folderName = '';
 
     // Categorize into sets based on folder path
-    // @ts-ignore
-    Array.from(dropzone.files).forEach((f) => {
-      // @ts-ignore
+    const files = dropzone.files || [];
+    Array.from(files).forEach((f) => {
       if (f.webkitRelativePath) {
-        // @ts-ignore
         const parts = f.webkitRelativePath.split(/\/|\\/);
         folderName = parts[parts.length - 2].toLowerCase();
       }
 
       const iconsetName = folderName || '';
 
-      // @ts-ignore
       let set = iconsets[iconsetName];
       if (!set) {
-        // @ts-ignore
         iconsets[iconsetName] = [];
-        // @ts-ignore
         set = iconsets[iconsetName];
       }
       set.push(f);
@@ -242,11 +236,9 @@ export class IconsetGenerator extends LitElement {
 
     const outputHtml = [];
     for (const iconsetName in iconsets) {
-      // @ts-ignore
       const set = iconsets[iconsetName];
 
       // Sort alphabetically
-      // @ts-ignore
       set.sort((a, b) => {
         if (a.name < b.name) {
           return -1;
@@ -262,7 +254,6 @@ export class IconsetGenerator extends LitElement {
         enumName = 'Icons';
       }
 
-      // @ts-ignore
       const jsName = enumName.replaceAll(/([a-z])([A-Z]+)/g, '$1-$2').toLowerCase();
 
       // Generate <vaadin-iconset> JS import and Java enum class
@@ -272,7 +263,8 @@ export class IconsetGenerator extends LitElement {
       const javaBlob = new Blob([iconsetStrings.java], { type: 'text/plain' });
 
       outputHtml.push(
-        html`<li>
+        html`
+          <li>
             <a download="${jsName}.js" .href=${URL.createObjectURL(jsBlob)}>${jsName}.js</a>
             <details>
               <summary>Usage and contents</summary>
@@ -294,49 +286,52 @@ export class IconsetGenerator extends LitElement {
               <summary>Usage and contents</summary>
               <p>
                 <b>Usage:</b>
-                <code>${enumName}.${convertToEnunName(set[0].name.split('.')[0])}.create();</code>
+                <code>${enumName}.${convertToEnumName(set[0].name.split('.')[0])}.create();</code>
               </p>
               <label for="javaOutput"><b>File contents:</b></label>
               <textarea readonly id="javaOutput">${iconsetStrings.java}</textarea>
             </details>
-          </li>`
+          </li>
+        `
       );
     }
 
     const plural = Object.keys(iconsets).length > 1;
 
-    const output = this.shadowRoot?.querySelector('.output') as HTMLElement;
+    const tFiles = plural ? 'files are' : 'file is';
+    const tThem = plural ? 'them' : 'it';
+
     render(
-      html`<p>
-          Download the following files. The <code>.js</code> ${
-            plural ? 'files are' : 'file is'
-          } required. Place ${plural ? 'them' : 'it'} into the <code>frontend/icons/</code> folder.
+      html`
+        <p>
+          Download the following files. The <code>.js</code> ${tFiles} required.
+          Place ${tThem} into the <code>frontend/icons/</code> folder.
         </p>
-          The <code>.java</code> ${plural ? 'files are' : 'file is'} optional. Place ${
-        plural ? 'them' : 'it'
-      } under the <code>src/</code> folder (you are free to choose the Java
-                package).
+          The <code>.java</code> ${tFiles} optional.
+          Place ${tThem} under the <code>src/</code> folder (you are free to choose the Java
+          package).
         </p>
         <ul>
           ${outputHtml}
-        </ul>`,
-      output
+        </ul>
+      `,
+      this.output
     );
 
     dropzone.value = '';
   }
 }
 
-// @ts-ignore
-async function generateVaadinIconset(set, jsName, enumName): { js: string; java: string } {
+async function generateVaadinIconset(
+  set: File[],
+  jsName: string,
+  enumName: string
+): Promise<{ js: string; java: string }> {
   const files = await fileListToText(set);
   let size: string | undefined | number;
-  // @ts-ignore
   const svgs = files.map((f) => {
     // Get the viewbox size
-    // @ts-ignore
     if (!size && f.txt.match(/viewbox/i)) {
-      // @ts-ignore
       const viewbox = /viewbox=["']0 0 (.*?) (.*?)["']/i.exec(f.txt);
       if (!viewbox) {
         console.warn('Unusual viewBox definition. Ignoring icon', f.name, f.txt);
@@ -355,7 +350,7 @@ async function generateVaadinIconset(set, jsName, enumName): { js: string; java:
     size = '24'; // Default if not defined by any icon
   }
 
-  const enums = files.map((f) => convertToEnunName(f.name));
+  const enums = files.map((f) => convertToEnumName(f.name));
 
   const output = { js: '', java: '' };
 
@@ -394,16 +389,13 @@ public enum ${enumName} implements IconFactory {
   return output;
 }
 
-// @ts-ignore
-async function fileListToText(fileList) {
-  // @ts-ignore
-  function getText(file) {
+async function fileListToText(fileList: File[]): Promise<Array<{ name: string; txt: string }>> {
+  function getText(file: File): Promise<string> {
     const reader = new FileReader();
     return new Promise((resolve) => {
-      // @ts-ignore
       reader.onload = (e) => {
-        // @ts-ignore
-        resolve(e.target.result);
+        const target = e.target as FileReader;
+        resolve(target.result as string);
       };
       reader.readAsText(file);
     });
@@ -422,8 +414,7 @@ async function fileListToText(fileList) {
 
 const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
 
-const convertToEnunName = (s: string) => {
-  // @ts-ignore
+const convertToEnumName = (s: string) => {
   let name = s.toUpperCase().replaceAll('-', '_');
   // Java enums can't start with a number. Prefix with underscore
   if (name.match(/^\d/)) {
