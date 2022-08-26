@@ -59,7 +59,8 @@ class Header extends LitElement {
       <div class="restructuring-notice">
         <p>
           <span>
-            We reorganized the documentation to offer you a more streamlined navigation structure
+            Check out the
+            <a href="https://vaadin.com/docs/latest/styling">new styling guides</a>.
           </span>
         </p>
       </div>
