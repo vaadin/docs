@@ -27,8 +27,8 @@ updateV14Branch() {
  
 # update versions in latest branch
 updateLatestBranch() {
-  #https://github.com/vaadin/docs/blob/latest/articles/ds/customization/custom-theme-packaging.asciidoc
-  sed -i "s/vaadin.version>.*/vaadin.version>$1<\/vaadin.version>/g" "articles/components/ds-resources/customization/custom-theme-packaging.asciidoc" || exit 1
+  #https://github.com/vaadin/docs/blob/latest/articles/_vaadin-version.adoc
+  sed -i "s/version\:.*/version: $1/g" "articles/_vaadin-version.adoc" || exit 1
 }
 
 # return the major numbers of a version
