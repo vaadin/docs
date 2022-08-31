@@ -35,6 +35,16 @@ export default class Example extends LitElement {
       />
 
       <div id="haas-container"></div>
+      <div class="old-version-notice">
+        <p>
+          <span>
+            This docs is for an older Vaadin version. Check out the
+            <a href="https://vaadin.com/docs/latest/">
+              documentation for the latest Vaadin version</a
+            >.
+          </span>
+        </p>
+      </div>
       ${this.haasImportScript()}
     `;
   }
