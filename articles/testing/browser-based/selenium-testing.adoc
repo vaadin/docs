@@ -1,0 +1,369 @@
+---
+title: Selenium Testing
+description: Test automation of a Vaadin application using Selenium.
+order: 170
+---
+
+= Testing Vaadin Apps Using Selenium
+
+Selenium is a popular browser automation library that is often used to automate the testing of web apps.
+Although it is more convenient to use TestBench, Selenium can be used to test Vaadin apps as well.
+
+This guide describes:
+
+. the differences between TestBench and Selenium;
+. how to set up Selenium;
+. the making of a simple Selenium test;
+. the basics of finding and interacting with elements in a Selenium test;
+. how a more complex Selenium test can be created.
+
+== Differences Between TestBench and Selenium
+
+TestBench is a framework for testing that is itself based on Selenium.
+However, TestBench is specifically designed for testing Vaadin apps.
+Compared to Selenium, TestBench is designed to:
+
+. *facilitate the handling of Vaadin components.* Unlike Selenium, which operates on the DOM of the web page and provides basic methods to interact with elements like [methodname]`click()` or [methodname]`sendKeys()`, TestBench provides helper methods to interact with Vaadin components, like [methodname]`select()` or [methodname]`setValue()`.
+Moreover, TestBench provides a more convenient way to interact with elements in the shadow DOM of Vaadin components.
+. *take the nature of client-server communication in Vaadin apps into account.* During the course of a test, TestBench will automatically suspend client-side execution if the server is busy and resume it when the server is ready.
+This makes it possible to write tests in TestBench without the need to explicitly set wait timeouts for various events like page load or waiting for long-running server calls to finish.
+. *provide an easy-to-use API for conducting screen-comparison tests.*
+. *enable parallel testing of Vaadin apps.*
+
+== Setting Up Selenium
+
+To use Selenium in a Vaadin app, you need to perform the following steps:
+
+. Add the Selenium library dependency to your project's [filename]#pom.xml# file.
++
+.`pom.xml`
+[source,xml]
+----
+<!-- Selenium Library -->
+<dependency>
+   <groupId>org.seleniumhq.selenium</groupId>
+   <artifactId>selenium-java</artifactId>
+</dependency>
+----
++
+In a https://start.vaadin.com/[Vaadin Start] generated project, we can skip the version number here, because it has already been declared by the `<selenium.version>` property in the [filename]#pom.xml# file.
+You can find the latest version of Selenium https://search.maven.org/artifact/org.seleniumhq.selenium/selenium-java[here].
+
+. Use WebDriverManager to manage web browser drivers
++
+Using WebDriverManager is the easiest way to manage drivers, because you do not have to download and set up the driver manually.
++
+[loweralpha]
+.. Add the WebDriverManager dependency to your project's [filename]#pom.xml# file.
++
+.`pom.xml`
+[source,xml]
+----
+<!-- Web Driver Management Software -->
+<dependency>
+   <groupId>io.github.bonigarcia</groupId>
+   <artifactId>webdrivermanager</artifactId>
+   <version>5.2.3</version>
+   <scope>test</scope>
+</dependency>
+----
++
+The latest version of WebDriverManager can be found https://search.maven.org/artifact/io.github.bonigarcia/webdrivermanager[here].
+
+.. Import WebDriverManager into your test class.
++
+.`SimpleIT..java`
+[source,java]
+----
+import io.github.bonigarcia.wdm.WebDriverManager;
+----
+
+.. Call [methodname]`setup()` on the driver that you would like to use.
+We used the Chrome driver in the code snippet below, but drivers for other browsers can be found at the https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#quick-reference[official Selenium guide].
++
+.`SimpleIT.java`
+[source,java]
+----
+WebDriverManager.chromedriver().setup();
+----
+
+Note that, apart from WebDriverManager, you can also install drivers by:
+
+* https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#2-the-path-environment-variable[adding the driver location to the PATH environment variable].
+* https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#3-hard-coded-location[hard-coding the location in your test code].
+
+== Create Your First Selenium Test
+
+As an example, the following code snippet tests whether the loaded [classname]`Button` text matches "Say Hello".
+
+.`SimpleIT.java`
+[source,java]
+----
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.junit.jupiter.api.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
+
+import static java.time.Duration.ofSeconds;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.openqa.selenium.support.ui.ExpectedConditions.titleIs;
+import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated;
+
+public class SimpleIT {
+
+    @Test
+    public void checkPageLoad() {
+        WebDriverManager.chromedriver().setup(); // <1>
+        var driver = new ChromeDriver(); // <2>
+
+        try { // <3>
+            driver.get("http://localhost:8080/hello"); // <4>
+
+            new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+                    .until(titleIs("Hello World")); // <5>
+
+            var button = driver.findElement(By.xpath("//vaadin-button[contains(.,'Say hello')]")); // <6>
+
+            assertEquals(button.getText(), "Say hello"); // <7>
+        } finally {
+            driver.quit(); // <8>
+        }
+    }
+}
+----
+<1> Set up the driver for the test.
+<2> Instantiate the [classname]`ChromeDriver`, which will be used to interact with the Chrome web browser.
+<3> We wrap the test in a `try/finally` block so that the session will close even when the test fails.
+<4> Direct the [classname]`ChromeDriver` to load the URL.
+<5> Because Flow produces a single-page frontend, Selenium is not aware of DOM manipulation after the initial page has been loaded.
+So we can use Selenium's https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/support/ui/WebDriverWait.html[WebDriverWait] API to wait until the DOM has been _compiled_.
+<6> After we are sure that the page title is available, we attempt to retrieve a [classname]`Button` on this page.
+<7> We check whether the [classname]`Button` text is "Say Hello".
+<8> Finally, we close the browser session after the test.
+
+== Running the Tests
+
+If you added your Selenium tests to a project that was generated from https://start.vaadin.com/[Vaadin Start], you can run them by executing the following command from the terminal:
+
+[source,terminal]
+----
+mvn verify -Pit,production
+----
+
+This will run the tests in the `it` profile, which starts the Spring Boot server before the tests are run, and stops it afterwards.
+If you are running the test this way, your test classes must end with `IT`.
+
+The following lists the part of the [filename]#pom.xml# file that is responsible for starting and stopping the Spring Boot server.
+
+.`pom.xml`
+[source,xml]
+----
+<profile>
+    <id>it</id>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>start-spring-boot</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop-spring-boot</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            ...
+----
+
+For a non-Spring Boot project, there are examples at GitHub of the `it` profile for other technology stacks, including for a https://github.com/vaadin/skeleton-starter-flow[plain Java project] and a https://github.com/vaadin/skeleton-starter-flow-cdi[CDI project].
+
+== Finding and Interacting With Elements
+
+The following demonstrates a test that requires finding and interacting with a web element.
+Specifically, it finds the link to the "About" page and clicks it.
+This action triggers navigation to the “About” page.
+The test then waits until the "About" page is loaded and checks that the URL of the page is correct.
+
+.`SimpleIT.java`
+[source,java]
+----
+@Test
+public void routeSwitch(){
+  //Set up the web driver
+  WebDriverManager.chromedriver().setup();
+
+  //Use this ChromeDriver to interact with Chrome
+  var driver = new ChromeDriver();
+
+  try {
+      //Loads the page
+      driver.get("http://localhost:8080");
+
+      //Have to explicitly wait because it takes time for compiled html to load
+      new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+              .until(titleIs("Hello World"));
+
+      driver.findElement(By.cssSelector("vcf-nav-item:nth-child(2)")) // <1>
+              .click(); // <2>
+
+      new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+              .until(titleIs("About")); // <3>
+
+      var url = driver.getCurrentUrl(); // <4>
+
+      //Checks whether the url matches
+      assertEquals("http://localhost:8080/about", url);
+  } finally {
+      //Ends the browser session
+      driver.quit();
+  }
+}
+----
+<1> You can find elements using the https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/By.html[`By`] matcher.
+<2> We call [methodname]`click()` to click on the https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/WebElement.html[`WebElement`].
+<3> We wait for the "About" page to load first, before attempting to get the URL.
+This reduces flakiness.
+<4> We use the convenient method to get the full current URL.
+
+== Advanced Selenium Test
+
+The following test demonstrates what a long Selenium test might look like.
+This test assumes a master-detail view of the kind that could be generated from https://start.vaadin.com/[Vaadin Start].
+
+.`SimpleIT.java`
+[source,java]
+----
+@Test
+public void addUser(){
+  //Set up the web driver
+  WebDriverManager.chromedriver().setup();
+
+  //Use this ChromeDriver to interact with Chrome
+  var driver = new ChromeDriver();
+
+  try {
+      //Maximizes the screen
+      driver.manage().window().maximize();
+
+      //Loads the page
+      driver.get("http://localhost:8080/master-detail");
+
+      //Have to explicitly wait because it takes time for compiled html to load
+      new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+              .until(titleIs("Master-Detail"));
+
+      //Test data
+      var firstName = "FirstName";
+      var lastName = "LastName";
+      var email = "first.last@example.com";
+      var phone = "(111) 111-1111";
+      //Cannot use simple String because the form and table display the dob differently
+      var dob = LocalDate.of(2000, Month.JANUARY, 1);
+      var occupation = "Forester";
+
+      //Adds First Name
+      var firstNameTextInput = driver.findElement(By.id("vaadin-text-field-0")); // <1>
+      firstNameTextInput.click(); // <2>
+      firstNameTextInput.sendKeys(firstName); // <3>
+
+      //Adds Last Name
+      var lastNameTextInput = driver.findElement(By.id("vaadin-text-field-1"));
+      lastNameTextInput.click();
+      lastNameTextInput.sendKeys(lastName);
+
+      //Adds Email
+      var emailTextInput = driver.findElement(By.id("vaadin-text-field-2"));
+      emailTextInput.click();
+      emailTextInput.sendKeys(email);
+
+      //Adds Phone
+      var phoneTextInput = driver.findElement(By.id("vaadin-text-field-3"));
+      phoneTextInput.click();
+      phoneTextInput.sendKeys(phone);
+
+      //Adds DOB
+      var dobTextInput = driver.findElement(By.id("vaadin-date-picker-4"));
+      dobTextInput.click();
+      dobTextInput.sendKeys(DateTimeFormatter.ofPattern("dd/MM/uuuu").format(dob));
+      dobTextInput.sendKeys(Keys.ENTER); //Closes the pop-up Date Picker
+
+      //Adds Occupation
+      var occupationTextInput = driver.findElement(By.id("vaadin-text-field-5"));
+      occupationTextInput.click();
+      occupationTextInput.sendKeys(occupation);
+
+      //Marks as Important
+      driver.findElement(By.id("vaadin-checkbox-6"))
+              .click();
+
+      //Clicks Save
+      driver.findElement(By.xpath("//vaadin-button[contains(.,'Save')]")).click(); // <4>
+
+      //Sorts by Phone number so the sample user is visible on the screen
+      driver.findElement(By.xpath("//vaadin-grid-sorter[contains(.,'Phone')]")).click();
+
+      //Reduces verbosity
+      var xPathStart = "//vaadin-grid-cell-content[contains(.,'";
+      var xPathEnd = "')]";
+
+      //Waits for the page to sort
+      new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
+              .until(visibilityOfElementLocated(By.xpath(xPathStart + firstName + xPathEnd)));
+
+      //Gets the cells in the table for the newly added user
+      var firstNameCell = driver.findElement(By.xpath(xPathStart + firstName + xPathEnd));
+      var lastNameCell = driver.findElement(By.xpath(xPathStart + lastName + xPathEnd));
+      var emailCell = driver.findElement(By.xpath(xPathStart + email + xPathEnd));
+      var phoneCell = driver.findElement(By.xpath(xPathStart + phone + xPathEnd));
+      var dobCell = driver.findElement(By.xpath(xPathStart + dob + xPathEnd));
+      var occupationCell = driver.findElement(By.xpath(xPathStart + occupation + xPathEnd));
+
+      //Assertions <5>
+      assertEquals(firstName, firstNameCell.getText());
+      assertEquals(lastName, lastNameCell.getText());
+      assertEquals(email, emailCell.getText());
+      assertEquals(phone, phoneCell.getText());
+      assertEquals(dob.toString(), dobCell.getText());
+      assertEquals(occupation, occupationCell.getText());
+  } finally {
+      //Ends the browser session
+      driver.quit();
+  }
+}
+----
+
+pass:[<!-- vale Vale.Spelling = NO -->]
+
+<1> We can use the [methodname]`By.id()` matcher to find fields with a unique `id`.
+You can retrieve the `id` using your browser's inspector.
+<2> We must click on the field to simulate real behavior of an end user.
+<3> You can send key strokes using the [methodname]`sendKeys()` method.
+<4> For elements that do not have an `id`, you can use https://developer.mozilla.org/en-US/docs/Web/XPath[xpath expression] to find the element.
+The xpath can be generated by the https://www.selenium.dev/selenium-ide/[Selenium IDE].
+
+<5> Finally, we test whether all the information in the table cells matches our original data.
+
+pass:[<!-- vale Vale.Spelling = YES -->]
+
+For more usage scenarios, you can check out the official https://www.selenium.dev/documentation/webdriver/elements/[Selenium doc].
+
+
+[.discussion-id]
+D341245B-909F-455A-B78B-AC8CF58356C5
