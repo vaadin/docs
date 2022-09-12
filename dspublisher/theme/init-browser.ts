@@ -2,6 +2,16 @@ import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
+// Import all Lumo CSS custom properties into the global style scope
+import '@vaadin/vaadin-lumo-styles/color.js';
+import '@vaadin/vaadin-lumo-styles/typography.js';
+import '@vaadin/vaadin-lumo-styles/sizing.js';
+import '@vaadin/vaadin-lumo-styles/spacing.js';
+import '@vaadin/vaadin-lumo-styles/style.js';
+// Import all Material CSS custom properties into the global style scope
+import '@vaadin/vaadin-material-styles/color';
+import '@vaadin/vaadin-material-styles/typography';
+
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
 }
@@ -49,7 +59,8 @@ class Header extends LitElement {
       <div class="restructuring-notice">
         <p>
           <span>
-            We reorganized the documentation to offer you a more streamlined navigation structure
+            Check out the
+            <a href="https://vaadin.com/docs/latest/styling">new styling guides</a>.
           </span>
         </p>
       </div>
@@ -105,8 +116,7 @@ class Footer extends LitElement {
       return nothing;
     }
 
-    // Drop '/docs' from the beginning of the pathname
-    const url = encodeURI(document.location.pathname.substring('/docs'.length));
+    const url = encodeURI(document.location.pathname);
 
     let iframeSrc =
       window.location.hostname == 'preview.vaadin.com'
