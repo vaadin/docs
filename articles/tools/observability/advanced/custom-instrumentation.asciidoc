@@ -1,0 +1,95 @@
+---
+title: Custom Instrumentation
+order: 2
+---
+
+= Custom Instrumentation
+
+As the automatic instrumentation doesn't know possible problematic parts in the application and might
+not generate informative spans, there is the possibility to add tracing and spans to the application code.
+
+=== Manual Instrumentation
+
+Manual instrumentation can be added to the application code so that specific code executions generate a span to the trace.
+This is done by manually starting and ending a span inside the application code.
+
+Start by adding the OpenTelemetry api dependency to the project.
+
+.pom.xml
+[source, xml]
+----
+<dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-api</artifactId>
+    <version>1.17.0</version>
+</dependency>
+----
+
+[NOTE]
+It would be good to match the version with the used JavaAgent version of OpenTelemetry
+
+Now you can in the application code generate a span using the OpenTelemetry global instance as:
+
+[source, java]
+----
+void myTrace() {
+        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
+        "1.0");
+        final Span span = trace.spanBuilder("My Problematic Task").startSpan();
+        try {
+            // Do possibly problematic task
+        } finally {
+            span.end();
+        }
+}
+----
+
+For more detail on https://opentelemetry.io/docs/instrumentation/java/manual/[manual instrumentation].
+
+=== Annotation Instrumentation
+
+Instrumenting using annotations is basically the same as <<Manual Instrumentation,manual instrumentation>>, but needs less custom code to generate spans.
+
+
+Start by adding the OpenTelemetry instrumentation annotations dependency to the project.
+
+.pom.xml
+[source, xml]
+----
+<dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-instrumentation-annotations</artifactId>
+    <version>1.17.0</version>
+</dependency>
+----
+
+Now one can generate custom spans for methods by adding the `@WithSpan` annotation on a method:
+
+[source,java]
+----
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+
+public class ImageListView {
+  @WithSpan
+  public void fetchImages() {
+      // execution code
+  }
+}
+----
+
+To automatically add method parameters as attributes to the span there is the `@SpanAttibute`:
+
+[source,java]
+----
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+
+public class ImageListView {
+  @WithSpan
+  public void fetchImages(@SpanAttribute("fetch.url") String fetchUrl) {
+      // execution code
+  }
+}
+----
+
+For more details see https://opentelemetry.io/docs/instrumentation/java/automatic/annotations/[Annotations]
