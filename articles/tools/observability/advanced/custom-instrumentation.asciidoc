@@ -32,7 +32,8 @@ Now you can in the application code generate a span using the OpenTelemetry glob
 
 [source, java]
 ----
-void myTrace() {
+public class ImageListView {
+    void fetchImages() {
         Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
         "1.0");
         final Span span = trace.spanBuilder("My Problematic Task").startSpan();
@@ -41,10 +42,84 @@ void myTrace() {
         } finally {
             span.end();
         }
+    }
 }
 ----
 
-For more detail on https://opentelemetry.io/docs/instrumentation/java/manual/[manual instrumentation].
+The started span will automatically be nested into the currently active span on the thread.
+
+https://opentelemetry.io/docs/concepts/signals/traces/#attributes[Attributes] can be added to the span for more details on the state of the application.
+Attirbutes can be added simply with `span.setAttribute(key, value)` where key is a `String` and value can be a non-null string, boolean, floating point value, integer, or an array of these values.
+
+
+[source, java]
+----
+public class ImageListView {
+    void fetchImages(String fetchUrl) {
+        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
+        "1.0");
+        final Span span = trace.spanBuilder("My Problematic Task").startSpan();
+        try {
+            // Do possibly problematic task
+            span.setAttribute("fetch.url", fetchUrl);
+        } finally {
+            span.end();
+        }
+    }
+}
+----
+
+https://opentelemetry.io/docs/concepts/signals/traces/#span-events[Events] can be also recorded on spans to get a timestamp when something happened during exceution.
+
+[source, java]
+----
+public class ImageListView {
+    void fetchImages(String fetchUrl) {
+        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
+        "1.0");
+        final Span span = trace.spanBuilder("My Problematic Task").startSpan();
+        try {
+            // Do possibly problematic task
+            span.addEvent("Image fetch start");
+            // load from external
+            span.addEvent("Images loaded");
+        } finally {
+            span.end();
+        }
+    }
+}
+----
+
+Events may also contain attributes that are associated with the event and not the span as with `span::setAttribute`.
+
+When the code executed in a span throws and the exception is handled it would be good to add the exception to the span for later insights.
+
+[source,java]
+----
+public class ImageListView {
+    void fetchImages(String fetchUrl) {
+        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
+        "1.0");
+        final Span span = trace.spanBuilder("My Problematic Task").startSpan();
+        try {
+            // Do possibly problematic task
+            span.addEvent("Image fetch start");
+            // load from external
+            span.addEvent("Images loaded");
+        } catch(Exception exception) {
+            // Handle exception
+            // Mark the span as having an error
+            span.setStatus(StatusCode.ERROR, exception.getMessage());
+            // Add exception trace to the span
+            span.recordException(throwable);
+        } finally {
+            span.end();
+        }
+    }
+}
+----
+
+For more details see https://opentelemetry.io/docs/instrumentation/java/manual/[manual instrumentation].
 
 === Annotation Instrumentation
 
