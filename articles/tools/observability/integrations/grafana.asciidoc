@@ -1,0 +1,96 @@
+---
+title: Grafana
+tab-tile: Grafana
+order: 4
+layout: page
+---
+
+= Grafana
+
+https://grafana.com/[Grafana] is a stack of related services for collecting and viewing telemetry data, which can be self-hosted.
+
+The Grafana integration supports metrics, traces and logs.
+
+== Setup
+
+For this integration we provide a local setup for a Grafana stack that can be run using https://docs.docker.com/compose/[docker-compose].
+Alternatively Grafana provides a managed hosting service for their products.
+
+[IMPORTANT]
+The setup is intended for local testing only, it is not production ready.
+Please refer to the Grafana documentation on how to properly configure and secure a self-hosted setup.
+
+Start by cloning https://github.com/vaadin/observability-grafana-setup[this git repository] that contains the setup:
+```Shell
+git clone git@github.com:vaadin/observability-grafana-setup.git
+```
+
+From the setup folder, run:
+```Shell
+docker-compose up
+```
+
+This command spins up a set of services for collecting and displaying data from the Vaadin Observability agent:
+
+- Grafana Tempo for collecting and storing traces
+- Prometheus for collecting and storing metrics
+- Grafana Loki for collecting and storing logs
+- OpenTelemetry collector for ingesting telemetry data from the agent, and distributing it to the services above
+- Grafana for displaying traces, metrics and logs from the services above
+
+== Agent Configuration
+
+To configure the Vaadin Observability agent, create an `agent.properties` file with the following contents:
+
+.`*agent.properties*`
+[source,properties]
+----
+otel.service.name=vaadin
+otel.traces.exporter=otlp
+otel.metrics.exporter=otlp
+otel.logs.exporter=otlp
+----
+
+The service name can be customized, note however that the pre-configured Grafana dashboard queries data from the `vaadin` service, and needs to be edited when using a custom service name.
+
+== Running the App
+
+include::./_run-app.asciidoc[opts=optional]
+
+== Viewing Data
+
+The Grafana setup provides a http://localhost:3000/d/6_bNYpGVz/vaadin-dashboard?orgId=1[sample dashboard] that shows basic metrics, like JVM memory usage and CPU utilization, traces and errors, as well as logs.
+
+[NOTE]
+The service name needs to be configured as `vaadin` in the agent properties file, otherwise the dashboard will not show any data.
+
+The individual panels of the dashboard can be used to explore the data in more detail.
+Click on a panel's name to open the dropdown menu, and then click on `Explore`.
+
+=== Viewing Traces
+
+To view traces, open the http://localhost:3000/explore[Explore view], and select `Tempo` as data source.
+Change the `Query type` to `Search`, and select the name of the service from the `Service name` menu.
+Then click the refresh button in the top-right to search for traces.
+
+Use the `Tags` option to filter for specific span attributes, for example to filter for traces that contains errors, enter `error=true`.
+
+Clicking on a trace ID brings up a side panel that shows detailed information about a specific trace, such as nested spans, and their attributes and events.
+
+Please refer to the https://grafana.com/docs/grafana/latest/explore/[Grafana documentation] for further information on how to use the explore view.
+
+=== Viewing Metrics
+
+To view metrics, open the http://localhost:3000/explore[Explore view], and select `Prometheus` as data source.
+Select a metric from the `Metric` dropdown, for example `process_runtime_jvm_memory_usage` to view JVM memory usage.
+Then click the refresh button in the top-right display the metric.
+
+Please refer to the https://grafana.com/docs/grafana/latest/explore/[Grafana documentation] for further information on how to use the explore view.
+
+=== Viewing Logs
+
+To view logs, open the http://localhost:3000/explore[Explore view], and select `Loki` as data source.
+Under `Labels`, configure a label for `service_name`, with the value that is defined as service name in the agent properties file (`vaadin` by default).
+Then click the refresh button in the top-right to search for logs.
+
+Please refer to the https://grafana.com/docs/grafana/latest/explore/[Grafana documentation] for further information on how to use the explore view.
