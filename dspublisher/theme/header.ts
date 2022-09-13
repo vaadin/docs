@@ -34,16 +34,6 @@ export default class Example extends HTMLElement {
           href="https://cdn.vaadin.com/website/hubspot-theme/v2/haas/css/haas.css"
         />
         <div id="haas-container"></div>
-        <div class="old-version-notice">
-        <p>
-          <span>
-            This docs is for an older Vaadin version. Check out the
-            <a href="https://vaadin.com/docs/latest/">
-              documentation for the latest Vaadin version</a
-            >.
-          </span>
-        </p>
-      </div>
       `;
 
       const haasImportScriptElement = this.haasImportScript();
