@@ -183,3 +183,41 @@ public class ImageListView {
 ----
 
 For more details about manual instrumentation, please see the  https://opentelemetry.io/docs/instrumentation/java/manual/[OpenTelemetry manual instrumentation docs].
+
+=== Long Running Spans
+
+At times the important information is not the method execution time, but in the execution of a threaded piece of code.
+
+For the annotation `@WithSpan` if the annotated method returns a future or promise, then the span will end only when the future completes.
+For supported future types see https://opentelemetry.io/docs/instrumentation/java/automatic/annotations/#creating-spans-around-methods-with-withspan[Creating spans around methods with @WithSpan]
+
+.Span For JavaScript Result
+[source,java]
+----
+    @WithSpan
+    private CompletableFuture<JsonValue> getJsResult(String js) {
+        return getElement().executeJs(js).toCompletableFuture();
+    }
+----
+
+For manual implementation it is possible to keep the span open until a threaded task completes.
+
+.Window Width From Browser
+[source,java]
+----
+    private void getWindowWidth() {
+        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
+        "1.0");
+        final Span span = trace.spanBuilder("Fetch window width").startSpan();
+
+        getJsResult("return window.outerWidth").whenComplete((value, throwable) -> {
+            System.out.println(value);
+            span.end();
+        });
+    }
+
+    private CompletableFuture<JsonValue> getJsResult(String js) {
+        return getElement().executeJs(js)toCompletableFuture();
+    }
+----
+
