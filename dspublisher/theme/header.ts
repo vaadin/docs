@@ -34,12 +34,6 @@ export default class Example extends HTMLElement {
           href="https://cdn.vaadin.com/website/hubspot-theme/v2/haas/css/haas.css"
         />
         <div id="haas-container"></div>
-        <div class="eol-notice">
-          <p>
-            <span>Vaadin 8 reached End of Life on February 21, 2022.</span>
-            <a href="https://vaadin.com/vaadin-8">Discover how to make your Vaadin 8 app futureproof →</a>
-          </p>
-        </div>
       `;
 
       const haasImportScriptElement = this.haasImportScript();
