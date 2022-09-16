@@ -61,7 +61,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 <4> Set the `LoginForm` action to `"login"` to post the login form to Spring Security.
 <5> Read query parameters and show an error if a login attempt fails.
 
-Build the application and navigate to http://localhost/login. You should see a centered login form.
+Build the application and navigate to http://localhost:8080/login. You should see a centered login form.
 
 image::images/login/login-form.png[Login view]
 
@@ -103,7 +103,7 @@ Enable and configure Spring Security with a new class, [classname]`SecurityConfi
 package com.example.application.security;
 
 import com.example.application.views.LoginView;
-import com.vaadin.flow.spring.security.VaadinWebSecurityConfigurerAdapter;
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -115,43 +115,45 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 @EnableWebSecurity // <1>
 @Configuration
-public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter { // <2>
+public class SecurityConfig extends VaadinWebSecurity { // <2>
+
+    /**
+     * Demo SimpleInMemoryUserDetailsManager, which only provides
+     * two hardcoded in-memory users and their roles.
+     * NOTE: This should not be used in real-world applications.
+     */
+    private static class SimpleInMemoryUserDetailsManager extends InMemoryUserDetailsManager {
+        public SimpleInMemoryUserDetailsManager() {
+            createUser(new User("user",
+                "{noop}userpass",
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
+            ));
+            createUser(new User("admin",
+                "{noop}userpass",
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_ADMIN"))
+            ));
+        }
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests().antMatchers("/images/**").permitAll(); // <3>
+
         super.configure(http);
 
-        setLoginView(http, LoginView.class); // <3>
+        setLoginView(http, LoginView.class); // <4>
     }
 
-    /**
-     * Allows access to static resources, bypassing Spring security.
-     */
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/images/**"); // <4>
-        super.configure(web);
-    }
-
-    /**
-     * Demo UserDetailService, which only provides two hardcoded
-     * in-memory users and their roles.
-     * NOTE: This should not be used in real-world applications.
-     */
     @Bean
-    @Override
-    public UserDetailsService userDetailsService() {
-        return new InMemoryUserDetailsManager(User.withUsername("user") // <5>
-            .password("{noop}userpass")
-            .roles("USER")
-            .build());
+    public InMemoryUserDetailsManager userDetailsService() {
+        return new CrmInMemoryUserDetailsManager(); // <5>
     }
 }
 ----
 <1> Enable Spring Security.
-<2> Extend from [classname]`VaadinWebSecurityConfigurerAdapter` to configure Spring Security for Vaadin.
-<3> Allow access to the login view.
-<4> Exclude the image directory to allow public access.
+<2> Extend from [classname]`VaadinWebSecurity` to configure Spring Security for Vaadin.
+<3> Allow public access to the image directory.
+<4> Allow access to the login view.
 <5> Configure an in-memory user for testing (see note below).
 
 .Never use hard-coded credentials in production
@@ -295,7 +297,7 @@ This pushes the logout button to the far right.
 
 **Stop and restart the server to pick up the new Maven dependencies.**
 You should now be able to log in and out of the app.
-Verify that you cannot access http://localhost/dashboard without being logged in.
+Verify that you cannot access http://localhost:8080/dashboard without being logged in.
 You can log in with:
 
 * Username: `user`
