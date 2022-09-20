@@ -56,14 +56,6 @@ class Header extends LitElement {
       />
 
       <div id="haas-container"></div>
-      <div class="restructuring-notice">
-        <p>
-          <span>
-            Check out the
-            <a href="https://vaadin.com/docs/latest/styling">new styling guides</a>.
-          </span>
-        </p>
-      </div>
       ${this.haasImportScript()}
     `;
   }
