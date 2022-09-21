@@ -4,11 +4,13 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
 public class NewsletterSubscription {
+    // tag::snippet[]
     private boolean privacyAccepted;
 
     @NotBlank
     @Email
     private String email;
+    // end::snippet[]
 
     public boolean isPrivacyAccepted() {
         return privacyAccepted;

@@ -8,8 +8,10 @@ import dev.hilla.Nonnull;
 @Endpoint
 @AnonymousAllowed
 public class NewsletterEndpoint {
+    // tag::snippet[]
     @Nonnull
     public String subscribe(@Nonnull NewsletterSubscription subscription) {
         return subscription.getEmail() + " is now subscribed";
     }
+    // end::snippet[]
 }
