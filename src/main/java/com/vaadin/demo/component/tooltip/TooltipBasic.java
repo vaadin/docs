@@ -9,16 +9,16 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("tooltip-basic")
 public class TooltipBasic extends Div {
 
-  public TooltipBasic() {
-    // tag::snippet[]
-    TextField textField = new TextField();
-    textField.setPlaceholder("Search");
-    textField.setPrefixComponent(new Icon("lumo", "search"));
-    // textField.setTooltip("Wrap in “quotes” for exact phrase");
-    add(textField);
-    // end::snippet[]
-  }
+    public TooltipBasic() {
+        // tag::snippet[]
+        TextField textField = new TextField();
+        textField.setPlaceholder("Search");
+        textField.setPrefixComponent(new Icon("lumo", "search"));
+        // textField.setTooltipText("Wrap in “quotes” for exact phrase");
+        add(textField);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<TooltipBasic> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<TooltipBasic> { // hidden-source-line
+    } // hidden-source-line
 }
