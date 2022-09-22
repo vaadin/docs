@@ -4,7 +4,6 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/crud';
 import '@vaadin/date-picker';
 import '@vaadin/email-field';
-import '@vaadin/text-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
