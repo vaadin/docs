@@ -40,5 +40,6 @@ public class LoginInternationalization extends Div {
         // Prevent the example from stealing focus when browsing the documentation
         loginForm.getElement().setAttribute("no-autofocus", "");
     }
+
     public static class Exporter extends DemoExporter<LoginInternationalization> {} // hidden-source-line
 }
