@@ -2,9 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/email-field';
+import '@vaadin/form-layout';
 import '@vaadin/grid';
 import { columnBodyRenderer, gridRowDetailsRenderer } from '@vaadin/grid/lit.js';
-import '@vaadin/form-layout';
 import '@vaadin/text-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -43,12 +44,12 @@ export class Example extends LitElement {
         ${gridRowDetailsRenderer<Person>(
           (person) => html`
             <vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">
-              <vaadin-text-field
+              <vaadin-email-field
                 label="Email address"
                 .value="${person.email}"
                 colspan="3"
                 readonly
-              ></vaadin-text-field>
+              ></vaadin-email-field>
               <vaadin-text-field
                 label="Phone number"
                 .value="${person.address.phone}"

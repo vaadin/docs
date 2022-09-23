@@ -7,6 +7,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
@@ -41,7 +42,7 @@ public class GridItemDetails extends Div {
     }
 
     private static class PersonDetailsFormLayout extends FormLayout {
-        private final TextField emailField = new TextField("Email address");
+        private final EmailField emailField = new EmailField("Email address");
         private final TextField phoneField = new TextField("Phone number");
         private final TextField streetField = new TextField("Street address");
         private final TextField zipField = new TextField("ZIP code");
