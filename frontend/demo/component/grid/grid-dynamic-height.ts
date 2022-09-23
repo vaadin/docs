@@ -63,8 +63,9 @@ export class Example extends LitElement {
               this.selectedValue = '';
             }
           }}"
-          >Send invite</vaadin-button
         >
+          Send invite
+        </vaadin-button>
       </vaadin-horizontal-layout>
 
       ${this.invitedPeople.length === 0
