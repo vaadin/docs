@@ -26,7 +26,7 @@ export class Example extends LitElement {
         label="Comment"
         .maxlength="${this.charLimit}"
         .value="${this.text}"
-        @value-changed="${(e: CustomEvent) => (this.text = e.detail.value)}"
+        @value-changed="${(e: CustomEvent<{ value: string }>) => (this.text = e.detail.value)}"
         .helperText="${`${this.text.length}/${this.charLimit}`}"
       ></vaadin-text-area>
       <!-- end::snippet[] -->

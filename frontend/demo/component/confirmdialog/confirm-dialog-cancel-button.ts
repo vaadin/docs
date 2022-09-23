@@ -51,7 +51,7 @@ export class Example extends LitElement {
     `;
   }
 
-  openedChanged(e: CustomEvent) {
+  openedChanged(e: CustomEvent<{ value: boolean }>) {
     this.dialogOpened = e.detail.value;
     if (this.dialogOpened) {
       this.status = '';

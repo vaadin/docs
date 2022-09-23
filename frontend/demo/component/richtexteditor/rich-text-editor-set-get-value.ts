@@ -33,7 +33,8 @@ export class Example extends LitElement {
 
       <vaadin-text-area
         label="Html Value"
-        @change="${(e: CustomEvent) => this.setHtmlValue((e.target as TextArea).value)}"
+        @change="${(e: CustomEvent<{ value: string }>) =>
+          this.setHtmlValue((e.target as TextArea).value)}"
         placeholder="Type html string here to set it as value to the Rich Text Editor above..."
         style="width: 100%;"
         .value="${this.htmlValue}"

@@ -7,6 +7,7 @@ import '@vaadin/message-list';
 import { MessageListItem } from '@vaadin/message-list';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import type { MessageInputSubmitEvent } from '@vaadin/message-input/vaadin-message-input.js';
 
 @customElement('message-basic')
 export class Example extends LitElement {
@@ -49,7 +50,7 @@ export class Example extends LitElement {
     `;
   }
 
-  _handleSubmit(e: CustomEvent) {
+  _handleSubmit(e: MessageInputSubmitEvent) {
     this.items = [
       ...this.items,
       {

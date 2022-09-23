@@ -42,7 +42,8 @@ export class Example extends LitElement {
         theme="no-padding"
         header-title="Filter reports by users:"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: CustomEvent<{ value: boolean }>) =>
+          (this.dialogOpened = e.detail.value)}"
         ${dialogRenderer(
           () => html`
             <vaadin-grid .items="${this.people}" style="width: 500px; max-width: 100%;">

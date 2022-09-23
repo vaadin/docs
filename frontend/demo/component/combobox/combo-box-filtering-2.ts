@@ -39,8 +39,8 @@ export class Example extends LitElement {
     `;
   }
 
-  private filterChanged(e: CustomEvent) {
-    const filter = e.detail.value as string;
+  private filterChanged(e: CustomEvent<{ value: string }>) {
+    const filter = e.detail.value;
     this.filteredItems = this.allItems.filter((country) => {
       return country.name.toLowerCase().startsWith(filter.toLowerCase());
     });

@@ -41,7 +41,8 @@ export class Example extends LitElement {
         resizable
         draggable
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: CustomEvent<{ value: boolean }>) =>
+          (this.dialogOpened = e.detail.value)}"
         ${dialogRenderer(
           () => html`
             <vaadin-vertical-layout

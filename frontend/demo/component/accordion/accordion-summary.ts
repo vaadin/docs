@@ -50,7 +50,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-accordion
         .opened="${this.openedPanelIndex}"
-        @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value)}"
+        @opened-changed="${(e: CustomEvent<{ value: number }>) =>
+          (this.openedPanelIndex = e.detail.value)}"
       >
         <vaadin-accordion-panel>
           <div slot="summary">

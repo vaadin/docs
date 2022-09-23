@@ -30,13 +30,16 @@ export class Example extends LitElement {
         <vaadin-date-time-picker
           label="Start date and time"
           .value="${this.startDateTime}"
-          @value-changed="${(e: CustomEvent) => (this.startDateTime = e.detail.value)}"
+          @value-changed="${(e: CustomEvent<{ value: string }>) =>
+            (this.startDateTime = e.detail.value)}"
         ></vaadin-date-time-picker>
+
         <vaadin-date-time-picker
           label="End date and time"
           .min="${this.startDateTime}"
           .value="${this.endDateTime}"
-          @value-changed="${(e: CustomEvent) => (this.endDateTime = e.detail.value)}"
+          @value-changed="${(e: CustomEvent<{ value: string }>) =>
+            (this.endDateTime = e.detail.value)}"
         ></vaadin-date-time-picker>
       </div>
       <!-- end::snippet[] -->

@@ -49,7 +49,8 @@ export class Example extends LitElement {
           label="Users to notify"
           theme="vertical"
           .value="${this.selectedIds}"
-          @value-changed="${(e: CustomEvent) => (this.selectedIds = e.detail.value)}"
+          @value-changed="${(e: CustomEvent<{ value: string[] }>) =>
+            (this.selectedIds = e.detail.value)}"
         >
           ${this.items.map((person) => {
             return html`

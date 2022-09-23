@@ -4,6 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/tabs';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { TabsSelectedChangedEvent } from '@vaadin/tabs';
 
 @customElement('tabs-content')
 export class Example extends LitElement {
@@ -36,7 +37,7 @@ export class Example extends LitElement {
     `;
   }
 
-  selectedChanged(e: CustomEvent) {
+  selectedChanged(e: TabsSelectedChangedEvent) {
     this.content = `This is the ${this.pages[e.detail.value]} tab`;
   }
 }

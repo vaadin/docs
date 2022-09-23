@@ -42,7 +42,8 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="User details"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: CustomEvent<{ value: boolean }>) =>
+          (this.dialogOpened = e.detail.value)}"
         ${dialogHeaderRenderer(
           () => html`
             <vaadin-button theme="tertiary" @click="${() => (this.dialogOpened = false)}">

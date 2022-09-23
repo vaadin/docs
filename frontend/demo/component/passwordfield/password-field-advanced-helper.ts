@@ -58,7 +58,7 @@ export class Example extends LitElement {
     `;
   }
 
-  private onPasswordChanged(e: CustomEvent) {
+  private onPasswordChanged(e: CustomEvent<{ value: string }>) {
     const value = e.detail.value;
     let strength: StrengthText = StrengthText.weak;
     if (value && new RegExp(this.pattern).exec(value)) {

@@ -32,7 +32,8 @@ export class Example extends LitElement {
         draggable
         modeless
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: CustomEvent<{ value: boolean }>) =>
+          (this.dialogOpened = e.detail.value)}"
         ${dialogHeaderRenderer(
           () => html`
             <h2
