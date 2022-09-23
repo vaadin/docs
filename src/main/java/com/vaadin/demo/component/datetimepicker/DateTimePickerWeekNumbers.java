@@ -6,8 +6,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-import java.util.Arrays;
-
 @Route("date-time-picker-week-numbers")
 public class DateTimePickerWeekNumbers extends Div {
 

@@ -3,7 +3,6 @@ package com.vaadin.demo.component.login;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
-import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
