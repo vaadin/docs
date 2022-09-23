@@ -42,7 +42,8 @@ public class DialogHeader extends Div {
         nameField.setReadOnly(true);
         nameField.getStyle().set("padding-top", "0");
 
-        EmailField emailField = new EmailField("Email", user.getEmail(), "email@company.com");
+        EmailField emailField = new EmailField("Email", user.getEmail());
+        emailField.setPlaceholder("email@company.com");
         emailField.setReadOnly(true);
 
         String addressValue = String.format("%s, %s, %s", user.getAddress().getStreet(), user.getAddress().getCity(),
