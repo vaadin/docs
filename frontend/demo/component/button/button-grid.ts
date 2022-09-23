@@ -10,7 +10,7 @@ import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { GridSelectedItemsChangedEvent } from '@vaadin/grid/src/vaadin-grid';
+import type { GridSelectedItemsChangedEvent } from '@vaadin/grid';
 
 @customElement('button-grid')
 export class Example extends LitElement {
