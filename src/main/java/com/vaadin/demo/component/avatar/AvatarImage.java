@@ -4,12 +4,12 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 
 @Route("avatar-image")
-public class AvatarImage extends Div {
+public class AvatarImage extends HorizontalLayout {
 
   private Person person = DataService.getPeople(1).get(0);
 
