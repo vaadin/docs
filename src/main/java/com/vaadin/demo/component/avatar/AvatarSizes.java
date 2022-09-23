@@ -5,11 +5,11 @@ import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
-import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route("avatar-sizes")
-public class AvatarSizes extends Div {
+public class AvatarSizes extends HorizontalLayout {
 
   private Person person = DataService.getPeople(1).get(0);
 
