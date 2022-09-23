@@ -99,17 +99,16 @@ export class Example extends LitElement {
               style="font-size: var(--lumo-font-size-s)"
             >
               <span>${this.personBinder.value.address?.street}</span>
-              <span
-                >${this.personBinder.value.address?.zip}
-                ${this.personBinder.value.address?.city}</span
-              >
+              <span>
+                ${this.personBinder.value.address?.zip} ${this.personBinder.value.address?.city}
+              </span>
 
-              <span
-                >${
+              <span>
+                ${
                   // @ts-ignore Workaround a Binder issue
                   this.personBinder.value.address?.country?.name
-                }</span
-              >
+                }
+              </span>
             </vaadin-vertical-layout>
           </div>
 

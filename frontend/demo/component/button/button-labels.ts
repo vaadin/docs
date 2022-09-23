@@ -48,8 +48,9 @@ export class Example extends LitElement {
           <vaadin-button
             arial-label="Remove primary email address"
             @click="${() => (this.primaryEmail = '')}"
-            >Remove</vaadin-button
           >
+            Remove
+          </vaadin-button>
         </vaadin-horizontal-layout>
 
         <vaadin-horizontal-layout theme="spacing">
@@ -63,8 +64,9 @@ export class Example extends LitElement {
           <vaadin-button
             arial-label="Remove secondary email address"
             @click="${() => (this.secondaryEmail = '')}"
-            >Remove</vaadin-button
           >
+            Remove
+          </vaadin-button>
         </vaadin-horizontal-layout>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->
