@@ -9,6 +9,7 @@ import {
   columnHeaderRenderer,
   GridColumnBodyLitRenderer,
 } from '@vaadin/grid/lit.js';
+import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import { getPeople } from 'Frontend/demo/domain/DataService';

@@ -5,8 +5,6 @@ import { customElement, state } from 'lit/decorators.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
-import '@vaadin/horizontal-layout';
-import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { dialogRenderer } from '@vaadin/dialog/lit.js';
 
