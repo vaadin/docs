@@ -3,6 +3,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/checkbox';
+import '@vaadin/checkbox-group';
+import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-adjacent-groups')
