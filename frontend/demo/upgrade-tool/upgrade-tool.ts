@@ -67,14 +67,14 @@ export default class UpgradeTool extends LitElement {
           <div slot="summary">Earlier Versions</div>
           <ul style="margin-top: 0">
             <li>
-              <a href="https://vaadin.com/docs/v14/flow/upgrading/v10-13/"
-                >Upgrading from Vaadin 10–13 to Vaadin 14</a
-              >
+              <a href="https://vaadin.com/docs/v14/flow/upgrading/v10-13/">
+                Upgrading from Vaadin 10–13 to Vaadin 14
+              </a>
             </li>
             <li>
-              <a href="https://vaadin.com/docs/v14/flow/upgrading/v8/"
-                >Upgrading from Vaadin 8 to Vaadin 14</a
-              >
+              <a href="https://vaadin.com/docs/v14/flow/upgrading/v8/">
+                Upgrading from Vaadin 8 to Vaadin 14
+              </a>
             </li>
           </ul>
         </vaadin-details>
@@ -125,8 +125,9 @@ export default class UpgradeTool extends LitElement {
           theme="primary"
           style="width: fit-content; margin-top: 30px; margin-bottom: 30px"
           @click=${this.showUpdateInstructions}
-          >Show update instructions!</vaadin-button
         >
+          Show update instructions!
+        </vaadin-button>
       </div>
     `;
   }
