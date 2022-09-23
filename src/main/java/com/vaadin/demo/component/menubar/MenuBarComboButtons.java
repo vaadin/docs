@@ -25,6 +25,7 @@ public class MenuBarComboButtons extends Div {
         // end::snippet[]
         add(menuBar);
     }
+
     public static class Exporter extends DemoExporter<MenuBarComboButtons> { // hidden-source-line
     } // hidden-source-line
 }

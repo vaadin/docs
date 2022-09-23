@@ -58,6 +58,7 @@ public class BadgeIconsOnlyTable extends Div {
         icon.getElement().setAttribute("title", label);
         return icon;
     }
+
     // end::snippet2[]
     public static class Exporter extends DemoExporter<BadgeIconsOnlyTable> { // hidden-source-line
     } // hidden-source-line
