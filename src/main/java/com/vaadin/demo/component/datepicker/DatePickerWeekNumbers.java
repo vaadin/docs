@@ -17,6 +17,7 @@ public class DatePickerWeekNumbers extends Div {
 
         add(datePicker);
     }
+
     public static class Exporter extends DemoExporter<DatePickerWeekNumbers> { // hidden-source-line
     } // hidden-source-line
 }

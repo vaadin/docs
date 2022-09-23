@@ -47,7 +47,7 @@ public class AccordionReversePanels extends Div {
         paymentLayout.setSpacing(false);
         paymentLayout.setPadding(false);
         paymentLayout.add(cardBrand, cardNumber, expiryDate);
-        
+
         // tag::snippet[]
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
         paymentPanel.addThemeVariants(DetailsVariant.REVERSE);
