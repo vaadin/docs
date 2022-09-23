@@ -14,6 +14,7 @@ import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 
 @customElement('dialog-no-padding')
 export class Example extends LitElement {
@@ -42,8 +43,7 @@ export class Example extends LitElement {
         theme="no-padding"
         header-title="Filter reports by users:"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent<{ value: boolean }>) =>
-          (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
         ${dialogRenderer(
           () => html`
             <vaadin-grid .items="${this.people}" style="width: 500px; max-width: 100%;">

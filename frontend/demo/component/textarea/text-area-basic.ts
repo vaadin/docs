@@ -4,6 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/text-area';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { TextAreaValueChangedEvent } from '@vaadin/text-area';
 
 @customElement('text-area-basic')
 export class Example extends LitElement {
@@ -26,7 +27,7 @@ export class Example extends LitElement {
         label="Comment"
         .maxlength="${this.charLimit}"
         .value="${this.text}"
-        @value-changed="${(e: CustomEvent<{ value: string }>) => (this.text = e.detail.value)}"
+        @value-changed="${(e: TextAreaValueChangedEvent) => (this.text = e.detail.value)}"
         .helperText="${`${this.text.length}/${this.charLimit}`}"
       ></vaadin-text-area>
       <!-- end::snippet[] -->

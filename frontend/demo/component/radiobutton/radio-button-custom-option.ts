@@ -9,6 +9,7 @@ import '@vaadin/vertical-layout';
 import { getCards } from 'Frontend/demo/domain/DataService';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 
 @customElement('radio-button-custom-option')
 export class Example extends LitElement {
@@ -38,7 +39,7 @@ export class Example extends LitElement {
           label="Payment method"
           theme="vertical"
           .value="${this.value}"
-          @value-changed="${(e: CustomEvent<{ value: string }>) => (this.value = e.detail.value)}"
+          @value-changed="${(e: RadioGroupValueChangedEvent) => (this.value = e.detail.value)}"
         >
           ${this.items.map(
             (card) => html`

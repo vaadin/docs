@@ -8,6 +8,7 @@ import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
@@ -49,7 +50,7 @@ export class Example extends LitElement {
           label="Users to notify"
           theme="vertical"
           .value="${this.selectedIds}"
-          @value-changed="${(e: CustomEvent<{ value: string[] }>) =>
+          @value-changed="${(e: CheckboxGroupValueChangedEvent) =>
             (this.selectedIds = e.detail.value)}"
         >
           ${this.items.map((person) => {

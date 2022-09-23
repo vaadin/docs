@@ -11,6 +11,7 @@ import '@vaadin/vertical-layout';
 import { dialogFooterRenderer, dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 
 import { applyTheme } from 'Frontend/generated/theme';
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 
 @customElement('dialog-draggable')
 export class Example extends LitElement {
@@ -32,8 +33,7 @@ export class Example extends LitElement {
         draggable
         modeless
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent<{ value: boolean }>) =>
-          (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
         ${dialogHeaderRenderer(
           () => html`
             <h2

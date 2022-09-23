@@ -11,6 +11,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import type { GridSelectedItemsChangedEvent } from '@vaadin/grid';
+import type { GridSelectionColumnSelectAllChangedEvent } from '@vaadin/grid/vaadin-grid-selection-column';
 
 @customElement('button-grid')
 export class Example extends LitElement {
@@ -48,7 +49,7 @@ export class Example extends LitElement {
         >
           <vaadin-grid-selection-column
             auto-select
-            @select-all-changed="${(ev: CustomEvent<{ value: boolean }>) =>
+            @select-all-changed="${(ev: GridSelectionColumnSelectAllChangedEvent) =>
               (this.selectedItems = ev.detail.value ? this.items : this.selectedItems)}"
           ></vaadin-grid-selection-column>
           <vaadin-grid-column path="firstName"></vaadin-grid-column>

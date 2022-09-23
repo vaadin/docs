@@ -6,6 +6,7 @@ import '@vaadin/combo-box';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 
 // tag::snippet[]
 @customElement('combo-box-filtering-2')
@@ -39,7 +40,7 @@ export class Example extends LitElement {
     `;
   }
 
-  private filterChanged(e: CustomEvent<{ value: string }>) {
+  private filterChanged(e: ComboBoxFilterChangedEvent) {
     const filter = e.detail.value;
     this.filteredItems = this.allItems.filter((country) => {
       return country.name.toLowerCase().startsWith(filter.toLowerCase());

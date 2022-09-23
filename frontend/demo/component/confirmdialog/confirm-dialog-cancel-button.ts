@@ -5,6 +5,7 @@ import '@vaadin/button';
 import '@vaadin/confirm-dialog';
 import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { ConfirmDialogOpenedChangedEvent } from '@vaadin/confirm-dialog';
 
 @customElement('confirm-dialog-cancel-button')
 export class Example extends LitElement {
@@ -51,7 +52,7 @@ export class Example extends LitElement {
     `;
   }
 
-  openedChanged(e: CustomEvent<{ value: boolean }>) {
+  openedChanged(e: ConfirmDialogOpenedChangedEvent) {
     this.dialogOpened = e.detail.value;
     if (this.dialogOpened) {
       this.status = '';

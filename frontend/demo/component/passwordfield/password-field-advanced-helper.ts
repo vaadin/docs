@@ -18,6 +18,7 @@ enum StrengthColor {
   strong = 'var(--lumo-success-color)',
 }
 import { applyTheme } from 'Frontend/generated/theme';
+import type { PasswordFieldValueChangedEvent } from '@vaadin/password-field';
 
 @customElement('password-field-advanced-helper')
 export class Example extends LitElement {
@@ -58,7 +59,7 @@ export class Example extends LitElement {
     `;
   }
 
-  private onPasswordChanged(e: CustomEvent<{ value: string }>) {
+  private onPasswordChanged(e: PasswordFieldValueChangedEvent) {
     const value = e.detail.value;
     let strength: StrengthText = StrengthText.weak;
     if (value && new RegExp(this.pattern).exec(value)) {

@@ -7,6 +7,7 @@ import { comboBoxRenderer, ComboBoxLitRenderer } from '@vaadin/combo-box/lit.js'
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {
@@ -47,7 +48,7 @@ export class Example extends LitElement {
     `;
   }
 
-  private filterChanged(e: CustomEvent<{ value: string }>) {
+  private filterChanged(e: ComboBoxFilterChangedEvent) {
     const filter = e.detail.value;
     this.filteredItems = this.allItems.filter(({ firstName, lastName, profession }) => {
       return `${firstName} ${lastName} ${profession}`.toLowerCase().includes(filter.toLowerCase());

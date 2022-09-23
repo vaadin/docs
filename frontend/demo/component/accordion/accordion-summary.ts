@@ -16,6 +16,7 @@ import { Binder, field } from '@hilla/form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { AccordionOpenedChangedEvent } from '@vaadin/accordion/vaadin-accordion';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },
@@ -34,7 +35,7 @@ export class Example extends LitElement {
   private cardBinder = new Binder(this, CardModel);
 
   @state()
-  private openedPanelIndex = 0;
+  private openedPanelIndex: number | null = 0;
   async firstUpdated() {
     this.countries = await getCountries();
   }
@@ -50,7 +51,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-accordion
         .opened="${this.openedPanelIndex}"
-        @opened-changed="${(e: CustomEvent<{ value: number }>) =>
+        @opened-changed="${(e: AccordionOpenedChangedEvent) =>
           (this.openedPanelIndex = e.detail.value)}"
       >
         <vaadin-accordion-panel>

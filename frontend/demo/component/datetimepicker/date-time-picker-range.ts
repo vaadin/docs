@@ -7,6 +7,7 @@ import '@vaadin/date-time-picker';
 const initialStartValue = '2020-08-25T20:00';
 const initialEndValue = '2020-09-01T20:00';
 import { applyTheme } from 'Frontend/generated/theme';
+import type { DateTimePickerValueChangedEvent } from '@vaadin/date-time-picker';
 
 @customElement('date-time-picker-range')
 export class Example extends LitElement {
@@ -30,7 +31,7 @@ export class Example extends LitElement {
         <vaadin-date-time-picker
           label="Start date and time"
           .value="${this.startDateTime}"
-          @value-changed="${(e: CustomEvent<{ value: string }>) =>
+          @value-changed="${(e: DateTimePickerValueChangedEvent) =>
             (this.startDateTime = e.detail.value)}"
         ></vaadin-date-time-picker>
 
@@ -38,7 +39,7 @@ export class Example extends LitElement {
           label="End date and time"
           .min="${this.startDateTime}"
           .value="${this.endDateTime}"
-          @value-changed="${(e: CustomEvent<{ value: string }>) =>
+          @value-changed="${(e: DateTimePickerValueChangedEvent) =>
             (this.endDateTime = e.detail.value)}"
         ></vaadin-date-time-picker>
       </div>
