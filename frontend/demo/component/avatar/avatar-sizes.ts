@@ -46,8 +46,7 @@ export class Example extends LitElement {
         <vaadin-avatar
           .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
           theme="xsmall"
-        >
-        </vaadin-avatar>
+        ></vaadin-avatar>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
