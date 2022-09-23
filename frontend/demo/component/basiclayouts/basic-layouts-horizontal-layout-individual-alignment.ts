@@ -23,10 +23,10 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private alignLayoutItems?: string;
+  private alignLayoutItems = 'stretch';
 
   @state()
-  private alignFirstItem?: string;
+  private alignFirstItem = 'auto';
 
   render() {
     return html`
@@ -44,14 +44,11 @@ export class Example extends LitElement {
       </vaadin-horizontal-layout>
       <vaadin-radio-group
         label="Vertical alignment"
+        .value="${this.alignLayoutItems}"
         @value-changed="${(e: RadioGroupValueChangedEvent) =>
           (this.alignLayoutItems = e.detail.value)}"
       >
-        <vaadin-radio-button
-          value="stretch"
-          label="Stretch (default)"
-          checked
-        ></vaadin-radio-button>
+        <vaadin-radio-button value="stretch" label="Stretch (default)"></vaadin-radio-button>
         <vaadin-radio-button value="flex-start" label="Start"></vaadin-radio-button>
         <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
         <vaadin-radio-button value="flex-end" label="End"></vaadin-radio-button>
@@ -59,10 +56,11 @@ export class Example extends LitElement {
       </vaadin-radio-group>
       <vaadin-radio-group
         label="Item 1: alignment"
+        .value="${this.alignFirstItem}"
         @value-changed="${(e: RadioGroupValueChangedEvent) =>
           (this.alignFirstItem = e.detail.value)}"
       >
-        <vaadin-radio-button value="auto" checked label="Auto (default)"></vaadin-radio-button>
+        <vaadin-radio-button value="auto" label="Auto (default)"></vaadin-radio-button>
         <vaadin-radio-button value="stretch" label="Stretch"></vaadin-radio-button>
         <vaadin-radio-button value="flex-start" label="Start"></vaadin-radio-button>
         <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
