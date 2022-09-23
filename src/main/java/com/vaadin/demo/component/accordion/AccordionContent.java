@@ -39,8 +39,8 @@ public class AccordionContent extends Div {
 
         add(accordion);
     }
-    
-    private VerticalLayout createContent(Anchor ...anchors) {
+
+    private VerticalLayout createContent(Anchor... anchors) {
         VerticalLayout content = new VerticalLayout();
         content.setPadding(false);
         content.setSpacing(false);
@@ -48,14 +48,14 @@ public class AccordionContent extends Div {
 
         return content;
     }
-    
+
     private Anchor createStyledAnchor(String href, String text) {
         Anchor anchor = new Anchor(href, text);
         anchor.getStyle().set(ElementConstants.STYLE_COLOR, "var(--lumo-primary-text-color)");
         anchor.getStyle().set("text-decoration", "none");
 
         return anchor;
-    } 
+    }
 
     public static class Exporter extends DemoExporter<AccordionContent> { // hidden-source-line
     } // hidden-source-line

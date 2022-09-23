@@ -84,5 +84,3 @@ public class GridProPreventSave extends Div {
     public static class Exporter extends DemoExporter<GridProPreventSave> { // hidden-source-line
     } // hidden-source-line
 }
-
-

@@ -1,6 +1,5 @@
 package com.vaadin.demo.ce;
 
-
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.ComponentConnectionContext;
 import com.vaadin.collaborationengine.ConnectionContext;
@@ -68,6 +67,7 @@ public class ConnectionContextExample extends VerticalLayout {
             context, topicId, localUser, connectionActivationCallback);
         // end::component-context[]
     }
+
     // tag::async-task[]
     @Async
     public void runAsynchronously(CollaborationEngine collaborationEngine) { // <1>

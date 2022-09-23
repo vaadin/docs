@@ -50,7 +50,7 @@ public class AccordionFilledPanels extends Div {
         paymentLayout.setSpacing(false);
         paymentLayout.setPadding(false);
         paymentLayout.add(cardBrand, cardNumber, expiryDate);
-        
+
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
         paymentPanel.addThemeVariants(DetailsVariant.FILLED);
 

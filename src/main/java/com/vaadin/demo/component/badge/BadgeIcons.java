@@ -55,6 +55,7 @@ public class BadgeIcons extends VerticalLayout {
         icon.getStyle().set("padding", "var(--lumo-space-xs");
         return icon;
     }
+
     // end::snippet3[]
     public static class Exporter extends DemoExporter<BadgeIcons> { // hidden-source-line
     } // hidden-source-line
