@@ -45,7 +45,7 @@ public class AccordionSummary extends Div {
         AccordionPanel billingAddressPanel = accordion.add(BILLING_ADDRESS,  billingAddressFormLayout);
         
         FormLayout paymentFormLayout = createFormLayout();
-        AccordionPanel paymentPanel = accordion.add(PAYMENT,  paymentFormLayout);
+        AccordionPanel paymentPanel = accordion.add(PAYMENT, paymentFormLayout);
 
         // Customer details fields
 

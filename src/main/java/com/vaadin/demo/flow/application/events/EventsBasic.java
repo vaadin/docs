@@ -30,5 +30,5 @@ public class EventsBasic extends Div {
     }
 
     public static class Exporter extends DemoExporter<EventsBasic> { // hidden-source-line
-    } // hidden-source-line    
+    } // hidden-source-line
 }

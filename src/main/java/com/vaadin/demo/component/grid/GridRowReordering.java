@@ -71,7 +71,7 @@ public class GridRowReordering extends Div {
     }
 
     private static Renderer<Person> createAvatarRenderer() {
-        return LitRenderer.<Person>of(
+        return LitRenderer.<Person> of(
                 "<vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\" alt=\"User avatar\"></vaadin-avatar>")
                 .withProperty("pictureUrl", Person::getPictureUrl);
     }

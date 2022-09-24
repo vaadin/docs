@@ -28,4 +28,3 @@ public class ButtonSuccess extends Div {
     public static class Exporter extends DemoExporter<ButtonSuccess> { // hidden-source-line
     } // hidden-source-line
 }
-

@@ -24,7 +24,7 @@ public class DateTimePickerInternationalization extends Div {
         germanI18n.setWeek("Woche");
         germanI18n.setToday("Heute");
         germanI18n.setCancel("Abbrechen");
-        
+
         dateTimePicker.setDatePickerI18n(germanI18n);
         // end::snippet[]
 

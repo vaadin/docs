@@ -8,7 +8,7 @@ import '@vaadin/dialog';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-basic')
@@ -29,7 +29,7 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="New employee"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
         ${dialogRenderer(this.renderDialog, [])}
         ${dialogFooterRenderer(this.renderFooter, [])}
       ></vaadin-dialog>

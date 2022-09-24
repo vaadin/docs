@@ -7,7 +7,7 @@ import '@vaadin/button';
 import '@vaadin/dialog';
 import '@vaadin/vertical-layout';
 import { dialogRenderer } from '@vaadin/dialog/lit.js';
-
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-closing')
@@ -28,7 +28,7 @@ export class Example extends LitElement {
       <vaadin-dialog
         aria-label="System maintenance notice"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
         ${dialogRenderer(
           () => html`
             <vaadin-vertical-layout
