@@ -3,6 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/combo-box';
+import type { ComboBoxCustomValueSetEvent } from '@vaadin/combo-box';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-custom-entry-2')
@@ -22,7 +23,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-combo-box
         allow-custom-value
-        @custom-value-set="${(e: CustomEvent) => (this.items = [...this.items, e.detail])}"
+        @custom-value-set="${(e: ComboBoxCustomValueSetEvent) =>
+          (this.items = [...this.items, e.detail])}"
         label="Browser"
         helper-text="Select or type a browser"
         .items="${this.items}"
