@@ -11,26 +11,26 @@ import com.vaadin.flow.server.StreamResource;
 @Route("avatar-image")
 public class AvatarImage extends HorizontalLayout {
 
-  private Person person = DataService.getPeople(1).get(0);
+    private Person person = DataService.getPeople(1).get(0);
 
-  public AvatarImage() {
-    String name = person.getFirstName() + " " + person.getLastName();
-    String pictureUrl = person.getPictureUrl();
+    public AvatarImage() {
+        String name = person.getFirstName() + " " + person.getLastName();
+        String pictureUrl = person.getPictureUrl();
 
-    // tag::snippet[]
-    Avatar user = new Avatar(name);
-    user.setImage(pictureUrl);
+        // tag::snippet[]
+        Avatar user = new Avatar(name);
+        user.setImage(pictureUrl);
 
-    Avatar company = new Avatar("Company Inc.");
-    StreamResource imageResource = new StreamResource(
-      "company-logo.png",
-      () -> getClass().getResourceAsStream("/images/company-logo.png"));
-    company.setImageResource(imageResource);
-    // end::snippet[]
+        Avatar company = new Avatar("Company Inc.");
+        StreamResource imageResource = new StreamResource("company-logo.png",
+                () -> getClass()
+                        .getResourceAsStream("/images/company-logo.png"));
+        company.setImageResource(imageResource);
+        // end::snippet[]
 
-    add(user, company);
-  }
+        add(user, company);
+    }
 
-  public static class Exporter extends DemoExporter<AvatarImage> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<AvatarImage> { // hidden-source-line
+    } // hidden-source-line
 }
