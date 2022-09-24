@@ -6,7 +6,6 @@ import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -47,7 +46,7 @@ public class AccordionReversePanels extends Div {
         paymentLayout.setSpacing(false);
         paymentLayout.setPadding(false);
         paymentLayout.add(cardBrand, cardNumber, expiryDate);
-        
+
         // tag::snippet[]
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
         paymentPanel.addThemeVariants(DetailsVariant.REVERSE);
