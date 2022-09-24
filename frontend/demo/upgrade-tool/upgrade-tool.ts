@@ -6,7 +6,7 @@ import '@vaadin/checkbox-group';
 import '@vaadin/details';
 import '@vaadin/notification';
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators';
+import { customElement, state } from 'lit/decorators.js';
 import { Checkbox } from '@vaadin/checkbox';
 import { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { Notification } from '@vaadin/notification';
