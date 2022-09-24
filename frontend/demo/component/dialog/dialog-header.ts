@@ -11,7 +11,7 @@ import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -42,7 +42,7 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="User details"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
         ${dialogHeaderRenderer(
           () => html`
             <vaadin-button theme="tertiary" @click="${() => (this.dialogOpened = false)}">

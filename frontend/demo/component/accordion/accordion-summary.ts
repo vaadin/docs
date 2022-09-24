@@ -9,6 +9,7 @@ import '@vaadin/email-field';
 import '@vaadin/form-layout';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
 import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
@@ -34,7 +35,7 @@ export class Example extends LitElement {
   private cardBinder = new Binder(this, CardModel);
 
   @state()
-  private openedPanelIndex = 0;
+  private openedPanelIndex: number | null = 0;
   async firstUpdated() {
     this.countries = await getCountries();
   }
@@ -50,7 +51,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-accordion
         .opened="${this.openedPanelIndex}"
-        @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value)}"
+        @opened-changed="${(e: AccordionOpenedChangedEvent) =>
+          (this.openedPanelIndex = e.detail.value)}"
       >
         <vaadin-accordion-panel>
           <div slot="summary">
