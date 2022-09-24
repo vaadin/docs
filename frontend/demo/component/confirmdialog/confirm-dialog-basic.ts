@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/confirm-dialog';
 import '@vaadin/horizontal-layout';
-import { applyTheme } from 'Frontend/generated/theme';
 import type { ConfirmDialogOpenedChangedEvent } from '@vaadin/confirm-dialog';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
