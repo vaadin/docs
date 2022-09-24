@@ -3,8 +3,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/tabs';
 import '@vaadin/vertical-layout';
-import { applyTheme } from 'Frontend/generated/theme';
 import type { TabsSelectedChangedEvent } from '@vaadin/tabs';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tabs-content')
 export class Example extends LitElement {

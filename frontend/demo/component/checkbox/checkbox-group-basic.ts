@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/checkbox';
 import '@vaadin/checkbox-group';
-import { applyTheme } from 'Frontend/generated/theme';
 import type { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-group-basic')
 export class Example extends LitElement {

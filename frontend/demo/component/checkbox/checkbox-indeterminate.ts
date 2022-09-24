@@ -5,10 +5,10 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/checkbox';
 import '@vaadin/checkbox-group';
 import '@vaadin/vertical-layout';
+import type { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {

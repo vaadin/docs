@@ -4,10 +4,10 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/message-input';
 import '@vaadin/message-list';
+import type { MessageInputSubmitEvent } from '@vaadin/message-input';
 import { MessageListItem } from '@vaadin/message-list';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type { MessageInputSubmitEvent } from '@vaadin/message-input/vaadin-message-input.js';
 
 @customElement('message-basic')
 export class Example extends LitElement {

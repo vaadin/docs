@@ -7,6 +7,8 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/password-field';
 import '@vaadin/text-field';
+import type { PasswordFieldValueChangedEvent } from '@vaadin/password-field';
+import { applyTheme } from 'Frontend/generated/theme';
 
 enum StrengthText {
   weak = 'weak',
@@ -19,8 +21,6 @@ enum StrengthColor {
   moderate = '#e7c200',
   strong = 'var(--lumo-success-color)',
 }
-import { applyTheme } from 'Frontend/generated/theme';
-import type { PasswordFieldValueChangedEvent } from '@vaadin/password-field';
 
 @customElement('input-field-helper')
 export class Example extends LitElement {

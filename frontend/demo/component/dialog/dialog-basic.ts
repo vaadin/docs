@@ -8,9 +8,8 @@ import '@vaadin/dialog';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-
-import { applyTheme } from 'Frontend/generated/theme';
 import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-basic')
 export class Example extends LitElement {

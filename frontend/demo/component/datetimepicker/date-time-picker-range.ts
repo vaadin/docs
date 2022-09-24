@@ -3,11 +3,11 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/date-time-picker';
+import type { DateTimePickerValueChangedEvent } from '@vaadin/date-time-picker';
+import { applyTheme } from 'Frontend/generated/theme';
 
 const initialStartValue = '2020-08-25T20:00';
 const initialEndValue = '2020-09-01T20:00';
-import { applyTheme } from 'Frontend/generated/theme';
-import type { DateTimePickerValueChangedEvent } from '@vaadin/date-time-picker';
 
 @customElement('date-time-picker-range')
 export class Example extends LitElement {

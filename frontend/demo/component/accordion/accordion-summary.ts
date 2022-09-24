@@ -9,6 +9,7 @@ import '@vaadin/email-field';
 import '@vaadin/form-layout';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
 import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
@@ -16,7 +17,6 @@ import { Binder, field } from '@hilla/form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { AccordionOpenedChangedEvent } from '@vaadin/accordion/vaadin-accordion';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },

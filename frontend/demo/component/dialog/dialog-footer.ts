@@ -6,11 +6,10 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/dialog';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 
 @customElement('dialog-footer')
 export class Example extends LitElement {

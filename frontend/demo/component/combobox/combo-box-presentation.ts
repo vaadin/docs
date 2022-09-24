@@ -4,10 +4,10 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/combo-box';
 import { comboBoxRenderer, ComboBoxLitRenderer } from '@vaadin/combo-box/lit.js';
+import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {

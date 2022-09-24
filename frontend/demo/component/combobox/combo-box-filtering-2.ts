@@ -3,10 +3,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/combo-box';
+import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 
 // tag::snippet[]
 @customElement('combo-box-filtering-2')

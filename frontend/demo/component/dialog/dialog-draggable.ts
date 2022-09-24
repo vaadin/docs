@@ -9,9 +9,8 @@ import '@vaadin/text-area';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { dialogFooterRenderer, dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-
-import { applyTheme } from 'Frontend/generated/theme';
 import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-draggable')
 export class Example extends LitElement {
