@@ -27,6 +27,7 @@ public class DatePickerCustomValidation extends Div {
 
         add(datePicker);
     }
+
     public static class Exporter extends DemoExporter<DatePickerCustomValidation> { // hidden-source-line
     } // hidden-source-line
 }
