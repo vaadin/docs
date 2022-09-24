@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.select;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
