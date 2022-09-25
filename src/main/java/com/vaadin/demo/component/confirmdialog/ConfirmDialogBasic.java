@@ -12,52 +12,55 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("confirm-dialog-basic")
 public class ConfirmDialogBasic extends Div {
 
-  private Span status;
+    private Span status;
 
-  public ConfirmDialogBasic() {
-    HorizontalLayout layout = new HorizontalLayout();
-    layout.setAlignItems(FlexComponent.Alignment.CENTER);
-    layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+    public ConfirmDialogBasic() {
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
 
-    // tag::snippet[]
-    status = new Span();
-    status.setVisible(false);
+        // tag::snippet[]
+        status = new Span();
+        status.setVisible(false);
 
-    ConfirmDialog dialog = new ConfirmDialog();
-    dialog.setHeader("Unsaved changes");
-    dialog.setText("There are unsaved changes. Do you want to discard or save them?");
+        ConfirmDialog dialog = new ConfirmDialog();
+        dialog.setHeader("Unsaved changes");
+        dialog.setText(
+                "There are unsaved changes. Do you want to discard or save them?");
 
-    dialog.setCancelable(true);
-    dialog.addCancelListener(event -> setStatus("Canceled"));
+        dialog.setCancelable(true);
+        dialog.addCancelListener(event -> setStatus("Canceled"));
 
-    dialog.setRejectable(true);
-    dialog.setRejectText("Discard");
-    dialog.addRejectListener(event -> setStatus("Discarded"));
+        dialog.setRejectable(true);
+        dialog.setRejectText("Discard");
+        dialog.addRejectListener(event -> setStatus("Discarded"));
 
-    dialog.setConfirmText("Save");
-    dialog.addConfirmListener(event -> setStatus("Saved"));
+        dialog.setConfirmText("Save");
+        dialog.addConfirmListener(event -> setStatus("Saved"));
 
-    Button button = new Button("Open confirm dialog");
-    button.addClickListener(event -> {
-      dialog.open();
-      status.setVisible(false);
-    });
-    // end::snippet[]
+        Button button = new Button("Open confirm dialog");
+        button.addClickListener(event -> {
+            dialog.open();
+            status.setVisible(false);
+        });
+        // end::snippet[]
 
-    dialog.open();
+        dialog.open();
 
-    layout.add(button, status);
-    add(layout);
+        layout.add(button, status);
+        add(layout);
 
-    // Center the button within the example
-    getStyle().set("position", "fixed").set("top","0").set("right", "0")
-            .set("bottom", "0").set("left", "0").set("display", "flex")
-            .set("align-items", "center").set("justify-content", "center");
-  }
+        // Center the button within the example
+        getStyle().set("position", "fixed").set("top", "0").set("right", "0")
+                .set("bottom", "0").set("left", "0").set("display", "flex")
+                .set("align-items", "center").set("justify-content", "center");
+    }
 
-  private void setStatus(String value) {
-    status.setText("Status: " + value);
-    status.setVisible(true);
-  }
-  public static class Exporter extends DemoExporter<ConfirmDialogBasic> {} // hidden-source-line
+    private void setStatus(String value) {
+        status.setText("Status: " + value);
+        status.setVisible(true);
+    }
+
+    public static class Exporter extends DemoExporter<ConfirmDialogBasic> { // hidden-source-line
+    } // hidden-source-line
 }
