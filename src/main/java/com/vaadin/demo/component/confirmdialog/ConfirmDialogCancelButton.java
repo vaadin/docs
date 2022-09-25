@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.confirmdialog;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.html.Div;

@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.menubar;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.html.Div;
