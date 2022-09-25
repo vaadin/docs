@@ -11,22 +11,22 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("menu-bar-right-aligned")
 public class MenuBarRightAligned extends Div {
 
-  public MenuBarRightAligned() {
-    // tag::snippet[]
-    MenuBar menuBar = new MenuBar();
-    menuBar.addThemeVariants(MenuBarVariant.LUMO_END_ALIGNED);
-    // end::snippet[]
+    public MenuBarRightAligned() {
+        // tag::snippet[]
+        MenuBar menuBar = new MenuBar();
+        menuBar.addThemeVariants(MenuBarVariant.LUMO_END_ALIGNED);
+        // end::snippet[]
 
-    menuBar.addItem("View");
-    menuBar.addItem("Edit");
-    MenuItem share = menuBar.addItem("Share");
-    SubMenu shareSubMenu = share.getSubMenu();
-    shareSubMenu.addItem("By email");
-    shareSubMenu.addItem("Get Link");
+        menuBar.addItem("View");
+        menuBar.addItem("Edit");
+        MenuItem share = menuBar.addItem("Share");
+        SubMenu shareSubMenu = share.getSubMenu();
+        shareSubMenu.addItem("By email");
+        shareSubMenu.addItem("Get Link");
 
-    add(menuBar);
-  }
+        add(menuBar);
+    }
 
-  public static class Exporter extends DemoExporter<MenuBarRightAligned> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<MenuBarRightAligned> { // hidden-source-line
+    } // hidden-source-line
 }

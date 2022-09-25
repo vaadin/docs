@@ -19,81 +19,75 @@ import java.util.List;
 @Route("crud-basic")
 public class CrudBasic extends Div {
 
-  private Crud<Person> crud;
+    private Crud<Person> crud;
 
-  private String FIRST_NAME = "firstName";
-  private String LAST_NAME = "lastName";
-  private String EMAIL = "email";
-  private String PROFESSION = "profession";
-  private String EDIT_COLUMN = "vaadin-crud-edit-column";
+    private String FIRST_NAME = "firstName";
+    private String LAST_NAME = "lastName";
+    private String EMAIL = "email";
+    private String PROFESSION = "profession";
+    private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudBasic() {
-    // tag::snippet[]
-    crud = new Crud<>(
-      Person.class,
-      createEditor()
-    );
+    public CrudBasic() {
+        // tag::snippet[]
+        crud = new Crud<>(Person.class, createEditor());
 
-    setupGrid();
-    setupDataProvider();
+        setupGrid();
+        setupDataProvider();
 
-    add(crud);
-    // end::snippet[]
-  }
+        add(crud);
+        // end::snippet[]
+    }
 
-  private CrudEditor<Person> createEditor() {
-    TextField firstName = new TextField("First name");
-    TextField lastName = new TextField("Last name");
-    EmailField email = new EmailField("Email");
-    TextField profession = new TextField("Profession");
-    FormLayout form = new FormLayout(firstName, lastName, email, profession);
+    private CrudEditor<Person> createEditor() {
+        TextField firstName = new TextField("First name");
+        TextField lastName = new TextField("Last name");
+        EmailField email = new EmailField("Email");
+        TextField profession = new TextField("Profession");
+        FormLayout form = new FormLayout(firstName, lastName, email,
+                profession);
 
-    Binder<Person> binder = new Binder<>(Person.class);
-    binder.forField(firstName).asRequired().bind(Person::getFirstName, Person::setFirstName);
-    binder.forField(lastName).asRequired().bind(Person::getLastName, Person::setLastName);
-    binder.forField(email).asRequired().bind(Person::getEmail, Person::setEmail);
-    binder.forField(profession).asRequired().bind(Person::getProfession, Person::setProfession);
+        Binder<Person> binder = new Binder<>(Person.class);
+        binder.forField(firstName).asRequired().bind(Person::getFirstName,
+                Person::setFirstName);
+        binder.forField(lastName).asRequired().bind(Person::getLastName,
+                Person::setLastName);
+        binder.forField(email).asRequired().bind(Person::getEmail,
+                Person::setEmail);
+        binder.forField(profession).asRequired().bind(Person::getProfession,
+                Person::setProfession);
 
-    return new BinderCrudEditor<>(binder, form);
-  }
+        return new BinderCrudEditor<>(binder, form);
+    }
 
-  private void setupGrid() {
-    Grid<Person> grid = crud.getGrid();
+    private void setupGrid() {
+        Grid<Person> grid = crud.getGrid();
 
-    // Only show these columns (all columns shown by default):
-    List<String> visibleColumns = Arrays.asList(
-      FIRST_NAME,
-      LAST_NAME,
-      EMAIL,
-      PROFESSION,
-      EDIT_COLUMN
-    );
-    grid.getColumns().forEach(column -> {
-      String key = column.getKey();
-      if (!visibleColumns.contains(key)) {
-        grid.removeColumn(column);
-      }
-    });
+        // Only show these columns (all columns shown by default):
+        List<String> visibleColumns = Arrays.asList(FIRST_NAME, LAST_NAME,
+                EMAIL, PROFESSION, EDIT_COLUMN);
+        grid.getColumns().forEach(column -> {
+            String key = column.getKey();
+            if (!visibleColumns.contains(key)) {
+                grid.removeColumn(column);
+            }
+        });
 
-    // Reorder the columns (alphabetical by default)
-    grid.setColumnOrder(
-      grid.getColumnByKey(FIRST_NAME),
-      grid.getColumnByKey(LAST_NAME),
-      grid.getColumnByKey(EMAIL),
-      grid.getColumnByKey(PROFESSION),
-      grid.getColumnByKey(EDIT_COLUMN)
-    );
-  }
+        // Reorder the columns (alphabetical by default)
+        grid.setColumnOrder(grid.getColumnByKey(FIRST_NAME),
+                grid.getColumnByKey(LAST_NAME), grid.getColumnByKey(EMAIL),
+                grid.getColumnByKey(PROFESSION),
+                grid.getColumnByKey(EDIT_COLUMN));
+    }
 
-  private void setupDataProvider() {
-    PersonDataProvider dataProvider = new PersonDataProvider();
-    crud.setDataProvider(dataProvider);
-    crud.addDeleteListener(deleteEvent ->
-      dataProvider.delete(deleteEvent.getItem())
-    );
-    crud.addSaveListener(saveEvent ->
-      dataProvider.persist(saveEvent.getItem())
-    );
-  }
-  public static class Exporter extends DemoExporter<CrudBasic> {} // hidden-source-line
+    private void setupDataProvider() {
+        PersonDataProvider dataProvider = new PersonDataProvider();
+        crud.setDataProvider(dataProvider);
+        crud.addDeleteListener(
+                deleteEvent -> dataProvider.delete(deleteEvent.getItem()));
+        crud.addSaveListener(
+                saveEvent -> dataProvider.persist(saveEvent.getItem()));
+    }
+
+    public static class Exporter extends DemoExporter<CrudBasic> { // hidden-source-line
+    } // hidden-source-line
 }
