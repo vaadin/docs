@@ -9,24 +9,27 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("rich-text-editor-set-get-value")
 public class RichTextEditorSetGetValue extends Div {
 
-  public RichTextEditorSetGetValue() {
-    // tag::snippet[]
-    TextArea textArea = new TextArea("Html Value", "Type html string here to set it as value to the Rich Text Editor above...");
-    textArea.setWidthFull();
+    public RichTextEditorSetGetValue() {
+        // tag::snippet[]
+        TextArea textArea = new TextArea("Html Value",
+                "Type html string here to set it as value to the Rich Text Editor above...");
+        textArea.setWidthFull();
 
-    RichTextEditor rte = new RichTextEditor();
-    rte.getStyle().set("max-height", "400px");
+        RichTextEditor rte = new RichTextEditor();
+        rte.getStyle().set("max-height", "400px");
 
-    rte.asHtml().addValueChangeListener(e -> textArea.setValue(e.getValue()));
-    textArea.addValueChangeListener(e -> {
-      if (!rte.asHtml().getValue().equals(e.getValue())) {
-        rte.asHtml().setValue(e.getValue());
-      }
-    });
-    add(rte, textArea);
-    // end::snippet[]
-  }
+        rte.asHtml()
+                .addValueChangeListener(e -> textArea.setValue(e.getValue()));
+        textArea.addValueChangeListener(e -> {
+            if (!rte.asHtml().getValue().equals(e.getValue())) {
+                rte.asHtml().setValue(e.getValue());
+            }
+        });
+        add(rte, textArea);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<RichTextEditorSetGetValue> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<RichTextEditorSetGetValue> { // hidden-source-line
+    } // hidden-source-line
 }

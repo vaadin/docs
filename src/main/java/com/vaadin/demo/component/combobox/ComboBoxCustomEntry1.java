@@ -8,16 +8,16 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("combo-box-custom-entry-1")
 public class ComboBoxCustomEntry1 extends Div {
 
-  public ComboBoxCustomEntry1() {
-    // tag::snippet[]
-    ComboBox<String> comboBox = new ComboBox<>("Browser");
-    comboBox.setAllowCustomValue(true);
-    add(comboBox);
-    // end::snippet[]
-    comboBox.setItems("Chrome", "Edge", "Firefox", "Safari");
-    comboBox.setHelperText("Select or type a browser");
-  }
+    public ComboBoxCustomEntry1() {
+        // tag::snippet[]
+        ComboBox<String> comboBox = new ComboBox<>("Browser");
+        comboBox.setAllowCustomValue(true);
+        add(comboBox);
+        // end::snippet[]
+        comboBox.setItems("Chrome", "Edge", "Firefox", "Safari");
+        comboBox.setHelperText("Select or type a browser");
+    }
 
-  public static class Exporter extends DemoExporter<ComboBoxCustomEntry1> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<ComboBoxCustomEntry1> { // hidden-source-line
+    } // hidden-source-line
 }
