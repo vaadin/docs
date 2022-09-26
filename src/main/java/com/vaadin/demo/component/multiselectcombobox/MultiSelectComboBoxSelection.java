@@ -12,18 +12,20 @@ import java.util.List;
 @Route("multi-select-combo-box-selection")
 public class MultiSelectComboBoxSelection extends Div {
 
-  public MultiSelectComboBoxSelection() {
-    MultiSelectComboBox<Country> comboBox = new MultiSelectComboBox<>("Countries");
-    List<Country> countries = DataService.getCountries();
-    comboBox.setItems(countries);
-    // tag::snippet[]
-    comboBox.select(countries.subList(0, 4));
-    // end::snippet[]
-    comboBox.setItemLabelGenerator(Country::getName);
-    comboBox.setWidth("300px");
-    add(comboBox);
-  }
+    public MultiSelectComboBoxSelection() {
+        MultiSelectComboBox<Country> comboBox = new MultiSelectComboBox<>(
+                "Countries");
+        List<Country> countries = DataService.getCountries();
+        comboBox.setItems(countries);
+        // tag::snippet[]
+        comboBox.select(countries.subList(0, 4));
+        // end::snippet[]
+        comboBox.setItemLabelGenerator(Country::getName);
+        comboBox.setWidth("300px");
+        add(comboBox);
+    }
 
-  public static class Exporter extends DemoExporter<MultiSelectComboBoxSelection> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<MultiSelectComboBoxSelection> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -15,29 +15,31 @@ import java.util.stream.Collectors;
 @Route("multi-select-combo-box-selection-change")
 public class MultiSelectComboBoxSelectionChange extends Div {
 
-  public MultiSelectComboBoxSelectionChange() {
-    MultiSelectComboBox<Country> comboBox = new MultiSelectComboBox<>("Countries");
-    List<Country> countries = DataService.getCountries();
-    comboBox.setItems(countries);
-    comboBox.setItemLabelGenerator(Country::getName);
+    public MultiSelectComboBoxSelectionChange() {
+        MultiSelectComboBox<Country> comboBox = new MultiSelectComboBox<>(
+                "Countries");
+        List<Country> countries = DataService.getCountries();
+        comboBox.setItems(countries);
+        comboBox.setItemLabelGenerator(Country::getName);
 
-    // tag::snippet[]
-    TextArea selectedCountries = new TextArea("Selected Countries");
-    selectedCountries.setReadOnly(true);
+        // tag::snippet[]
+        TextArea selectedCountries = new TextArea("Selected Countries");
+        selectedCountries.setReadOnly(true);
 
-    comboBox.addValueChangeListener(e -> {
-      String selectedCountriesText = e.getValue().stream()
-              .map(Country::getName)
-              .collect(Collectors.joining(", "));
+        comboBox.addValueChangeListener(e -> {
+            String selectedCountriesText = e.getValue().stream()
+                    .map(Country::getName).collect(Collectors.joining(", "));
 
-      selectedCountries.setValue(selectedCountriesText);
-    });
-    // end::snippet[]
+            selectedCountries.setValue(selectedCountriesText);
+        });
+        // end::snippet[]
 
-    HorizontalLayout layout = new HorizontalLayout(comboBox, selectedCountries);
-    add(layout);
-  }
+        HorizontalLayout layout = new HorizontalLayout(comboBox,
+                selectedCountries);
+        add(layout);
+    }
 
-  public static class Exporter extends DemoExporter<MultiSelectComboBoxSelectionChange> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+                DemoExporter<MultiSelectComboBoxSelectionChange> { // hidden-source-line
+    } // hidden-source-line
 }
