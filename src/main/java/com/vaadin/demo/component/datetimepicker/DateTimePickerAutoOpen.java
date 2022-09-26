@@ -15,6 +15,7 @@ public class DateTimePickerAutoOpen extends Div {
         // end::snippet[]
         add(dateTimePicker);
     }
+
     public static class Exporter extends DemoExporter<DateTimePickerAutoOpen> { // hidden-source-line
     } // hidden-source-line
 }

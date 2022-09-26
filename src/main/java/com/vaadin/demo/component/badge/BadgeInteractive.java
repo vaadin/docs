@@ -52,6 +52,7 @@ public class BadgeInteractive extends VerticalLayout {
 
         return badge;
     }
+
     // end::snippet2[]
     public static class Exporter extends DemoExporter<BadgeInteractive> { // hidden-source-line
     } // hidden-source-line

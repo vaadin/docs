@@ -41,7 +41,6 @@ public class NotificationPopup extends Div {
         add(bellBtn);
     }
 
-
     public static class Exporter extends DemoExporter<NotificationPopup> { // hidden-source-line
     } // hidden-source-line
 }

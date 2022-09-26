@@ -18,5 +18,6 @@ public class CookieConsentLocalization extends Div {
         add(cookieConsent);
         // end::snippet[]
     }
+
     public static class Exporter extends DemoExporter<CookieConsentLocalization> {} // hidden-source-line
 }

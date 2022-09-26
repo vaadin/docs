@@ -19,6 +19,7 @@ public class DatePickerDateRange extends Div {
 
         add(new HorizontalLayout(departureDate, returnDate));
     }
+
     public static class Exporter extends DemoExporter<DatePickerDateRange> { // hidden-source-line
     } // hidden-source-line
 }

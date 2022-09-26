@@ -2,16 +2,17 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { ifDefined } from 'lit/directives/if-defined';
+import { ifDefined } from 'lit/directives/if-defined.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
+import '@vaadin/email-field';
 import '@vaadin/icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -42,7 +43,7 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="User details"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
         ${dialogHeaderRenderer(
           () => html`
             <vaadin-button theme="tertiary" @click="${() => (this.dialogOpened = false)}">
@@ -70,11 +71,11 @@ export class Example extends LitElement {
           readonly
           style="padding-top: 0;"
         ></vaadin-text-field>
-        <vaadin-text-field
+        <vaadin-email-field
           label="Email"
           value="${ifDefined(this.user?.email)}"
           readonly
-        ></vaadin-text-field>
+        ></vaadin-email-field>
         <vaadin-text-field
           label="Address"
           value="${this.addressDescription()}"

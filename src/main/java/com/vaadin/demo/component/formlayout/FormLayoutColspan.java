@@ -12,23 +12,22 @@ import com.vaadin.flow.router.Route;
 @Route("form-layout-colspan")
 public class FormLayoutColspan extends Div {
 
-  public FormLayoutColspan() {
-    TextField title = new TextField("Title");
-    DatePicker date = new DatePicker("Date");
-    TimePicker from = new TimePicker("From");
-    TimePicker to = new TimePicker("To");
+    public FormLayoutColspan() {
+        TextField title = new TextField("Title");
+        DatePicker date = new DatePicker("Date");
+        TimePicker from = new TimePicker("From");
+        TimePicker to = new TimePicker("To");
 
-    FormLayout formLayout = new FormLayout();
-    formLayout.add(title, date, from, to);
-    // tag::snippet[]
-    formLayout.setColspan(title, 3);
-    // end::snippet[]
-    formLayout.setResponsiveSteps(
-            new ResponsiveStep("0", 1),
-            new ResponsiveStep("500px", 3)
-    );
-    add(formLayout);
-  }
-  public static class Exporter extends DemoExporter<FormLayoutColspan> { // hidden-source-line
-  } // hidden-source-line
+        FormLayout formLayout = new FormLayout();
+        formLayout.add(title, date, from, to);
+        // tag::snippet[]
+        formLayout.setColspan(title, 3);
+        // end::snippet[]
+        formLayout.setResponsiveSteps(new ResponsiveStep("0", 1),
+                new ResponsiveStep("500px", 3));
+        add(formLayout);
+    }
+
+    public static class Exporter extends DemoExporter<FormLayoutColspan> { // hidden-source-line
+    } // hidden-source-line
 }
