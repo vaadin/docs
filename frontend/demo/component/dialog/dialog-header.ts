@@ -6,6 +6,7 @@ import { ifDefined } from 'lit/directives/if-defined.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
+import '@vaadin/email-field';
 import '@vaadin/icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/text-field';
@@ -70,11 +71,11 @@ export class Example extends LitElement {
           readonly
           style="padding-top: 0;"
         ></vaadin-text-field>
-        <vaadin-text-field
+        <vaadin-email-field
           label="Email"
           value="${ifDefined(this.user?.email)}"
           readonly
-        ></vaadin-text-field>
+        ></vaadin-email-field>
         <vaadin-text-field
           label="Address"
           value="${this.addressDescription()}"
