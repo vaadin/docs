@@ -21,28 +21,46 @@ import java.util.List;
 public class GridTooltipGenerator extends Div {
 
     public GridTooltipGenerator() {
-        // tag::snippet[]
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFirstName).setHeader("First name");
         grid.addColumn(Person::getLastName).setHeader("Last name");
-        grid.addColumn(person -> {
-            LocalDate birthday = person.getBirthday().toInstant()
-                    .atZone(ZoneId.systemDefault()).toLocalDate();
-            return birthday.format(birthdayFormatter);
-        }).setHeader("Birthday");
-        grid.addComponentColumn(person ->
-                createStatusIcon(person.getStatus()))
+        // tag::snippet[]
+        grid.addColumn(GridTooltipGenerator::getFormattedPersonBirthday)
+                .setTooltipGenerator(GridTooltipGenerator::getFormattedAge)
+                .setHeader("Birthday");
+        grid.addComponentColumn(person -> createStatusIcon(person.getStatus()))
+                .setTooltipGenerator(person -> person.getStatus())
                 .setHeader("Status");
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
+        grid.setSelectionMode(Grid.SelectionMode.NONE);
 
         add(grid);
     }
 
     private static final DateTimeFormatter birthdayFormatter = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
+
+    private static String getFormattedAge(Person person) {
+        return "Age: " + GridTooltipGenerator.getPersonAge(person);
+    }
+
+    private static int getPersonAge(Person person) {
+        LocalDate birthday = person.getBirthday().toInstant()
+                .atZone(ZoneId.systemDefault()).toLocalDate();
+
+        return LocalDate.now(ZoneId.systemDefault()).getYear() - birthday
+                .getYear();
+    }
+
+    private static String getFormattedPersonBirthday(Person person) {
+        LocalDate birthday = person.getBirthday().toInstant()
+                .atZone(ZoneId.systemDefault()).toLocalDate();
+
+        return birthday.format(birthdayFormatter);
+    }
 
     private Icon createStatusIcon(String status) {
         boolean isAvailable = "Available".equals(status);

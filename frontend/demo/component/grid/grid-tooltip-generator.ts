@@ -5,6 +5,9 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
 import type { GridEventContext } from '@vaadin/grid';
 import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import '@vaadin/icon';
+import '@vaadin/icons';
+import '@vaadin/tooltip';
 import { differenceInYears, parseISO } from 'date-fns';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -60,7 +63,7 @@ export class Example extends LitElement {
           ${columnBodyRenderer(this.statusRenderer, [])}
         ></vaadin-grid-column>
         <!-- tag::snippethtml[] -->
-        <vaadin-tooltip slot="tooltip" .textGenerator="${this.tooltipGenerator}"></vaadin-tooltip>
+        <vaadin-tooltip slot="tooltip" .generator="${this.tooltipGenerator}"></vaadin-tooltip>
         <!-- end::snippethtml[] -->
       </vaadin-grid>
     `;
