@@ -14,7 +14,7 @@ public class TooltipBasic extends Div {
         TextField textField = new TextField();
         textField.setPlaceholder("Search");
         textField.setPrefixComponent(new Icon("lumo", "search"));
-        // textField.setTooltipText("Wrap in “quotes” for exact phrase");
+        textField.setTooltipText("Wrap in “quotes” for exact phrase");
         add(textField);
         // end::snippet[]
     }

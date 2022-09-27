@@ -5,6 +5,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -20,10 +21,10 @@ public class TooltipManual extends Div {
         button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
         textField.setSuffixComponent(button);
         // tag::snippet[]
-        // textField.setTooltipText("Wrap in “quotes” for exact phrase");
-        // Tooltip tooltip = textField.getTooltip().withManual(true);
+        textField.setTooltipText("Wrap in “quotes” for exact phrase");
+        Tooltip tooltip = textField.getTooltip().withManual(true);
         button.addClickListener(event -> {
-            // tooltip.setManual(!tooltip.isManual);
+            tooltip.setManual(!tooltip.isManual());
         });
         // end::snippet[]
         add(textField);

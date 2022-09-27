@@ -2,6 +2,7 @@ package com.vaadin.demo.component.tooltip;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -11,7 +12,9 @@ public class TooltipHtmlElement extends Div {
     public TooltipHtmlElement() {
         // tag::snippet[]
         H2 heading = new H2("Heading with tooltip");
-        // Tooltip tooltip = new Tooltip.forComponent(heading).withText("This is a tooltip");
+        Tooltip tooltip = Tooltip.forComponent(heading)
+                .withText("This is a tooltip")
+                .withPosition(Tooltip.TooltipPosition.TOP_START);
         add(heading);
         // end::snippet[]
   }

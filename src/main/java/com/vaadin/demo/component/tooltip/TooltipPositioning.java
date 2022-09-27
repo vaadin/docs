@@ -5,6 +5,7 @@ import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.shared.Tooltip.TooltipPosition;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Route;
@@ -46,7 +47,7 @@ public class TooltipPositioning extends AppLayout {
 
         // tag::snippet[]
         Tab tab = new Tab(link);
-        // tab.setTooltipText(viewName).withPosition(TooltipPosition.END);
+        tab.setTooltipText(viewName).withPosition(TooltipPosition.END);
         // end::snippet[]
 
         return tab;
