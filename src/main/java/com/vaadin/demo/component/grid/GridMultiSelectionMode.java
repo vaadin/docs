@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.grid;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;

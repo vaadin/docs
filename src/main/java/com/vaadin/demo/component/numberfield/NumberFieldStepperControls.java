@@ -11,7 +11,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NumberFieldStepperControls extends FormLayout {
 
     public NumberFieldStepperControls() {
-        setResponsiveSteps(new ResponsiveStep("0" , 1, LabelsPosition.ASIDE));
+        setResponsiveSteps(new ResponsiveStep("0", 1, LabelsPosition.ASIDE));
 
         // tag::snippet[]
         IntegerField adultsField = new IntegerField();

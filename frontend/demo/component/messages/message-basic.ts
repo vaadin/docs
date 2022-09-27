@@ -4,6 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/message-input';
 import '@vaadin/message-list';
+import type { MessageInputSubmitEvent } from '@vaadin/message-input';
 import { MessageListItem } from '@vaadin/message-list';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -49,7 +50,7 @@ export class Example extends LitElement {
     `;
   }
 
-  _handleSubmit(e: CustomEvent) {
+  _handleSubmit(e: MessageInputSubmitEvent) {
     this.items = [
       ...this.items,
       {

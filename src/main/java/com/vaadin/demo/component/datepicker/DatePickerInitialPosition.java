@@ -23,6 +23,7 @@ public class DatePickerInitialPosition extends Div {
 
         add(datePicker);
     }
+
     public static class Exporter extends DemoExporter<DatePickerInitialPosition> { // hidden-source-line
     } // hidden-source-line
 }

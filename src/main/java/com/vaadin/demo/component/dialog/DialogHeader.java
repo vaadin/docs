@@ -10,6 +10,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
@@ -41,7 +42,8 @@ public class DialogHeader extends Div {
         nameField.setReadOnly(true);
         nameField.getStyle().set("padding-top", "0");
 
-        TextField emailField = new TextField("Email", user.getEmail(), "email@company.com");
+        EmailField emailField = new EmailField("Email", user.getEmail());
+        emailField.setPlaceholder("email@company.com");
         emailField.setReadOnly(true);
 
         String addressValue = String.format("%s, %s, %s", user.getAddress().getStreet(), user.getAddress().getCity(),

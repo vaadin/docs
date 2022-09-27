@@ -3,7 +3,6 @@ package com.vaadin.demo.component.login;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
-import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
@@ -41,5 +40,6 @@ public class LoginInternationalization extends Div {
         // Prevent the example from stealing focus when browsing the documentation
         loginForm.getElement().setAttribute("no-autofocus", "");
     }
+
     public static class Exporter extends DemoExporter<LoginInternationalization> {} // hidden-source-line
 }

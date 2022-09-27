@@ -39,13 +39,13 @@ public class GridColumnFreezing extends Div {
     }
 
     private static Renderer<Person> createPersonRenderer() {
-        return LitRenderer.<Person>of(
+        return LitRenderer.<Person> of(
                 "${item.fullName}")
                 .withProperty("fullName", Person::getFullName);
     }
 
     private static Renderer<Person> createActionRenderer() {
-        return LitRenderer.<Person>of(
+        return LitRenderer.<Person> of(
                 "<vaadin-button theme=\"tertiary-inline\">Edit</vaadin-button>");
     }
 
