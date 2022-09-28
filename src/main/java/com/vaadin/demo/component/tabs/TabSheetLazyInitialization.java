@@ -11,29 +11,34 @@ import com.vaadin.flow.router.Route;
 @Route("tabsheet-lazy-initialization")
 public class TabSheetLazyInitialization extends Div {
 
-	public TabSheetLazyInitialization() {
-		TabSheet tabSheet = new TabSheet();
-		// tag::snippet[]
-		tabSheet.add("Dashboard", new LazyComponent(() -> new Text("This is the Dashboard tab content")));
-		// end::snippet[]
-		tabSheet.add("Payment", new LazyComponent(() -> new Text("This is the Payment tab content")));
-		tabSheet.add("Shipping", new LazyComponent(() -> new Text("This is the Shipping tab content")));
-		add(tabSheet);
-		
-	}
-	// tag::snippet[]
+    public TabSheetLazyInitialization() {
+        TabSheet tabSheet = new TabSheet();
+        // tag::snippet[]
+        tabSheet.add("Dashboard", new LazyComponent(
+                () -> new Text("This is the Dashboard tab content")));
+        // end::snippet[]
+        tabSheet.add("Payment", new LazyComponent(
+                () -> new Text("This is the Payment tab content")));
+        tabSheet.add("Shipping", new LazyComponent(
+                () -> new Text("This is the Shipping tab content")));
+        add(tabSheet);
 
-	public class LazyComponent extends Div {
-		public LazyComponent(SerializableSupplier<? extends Component> supplier) {
-			addAttachListener(e -> {
-				if (getElement().getChildCount() == 0) {
-					add(supplier.get());
-				}
-			});
-		}
-	}
-	// end::snippet[]
+    }
+    // tag::snippet[]
 
-	public static class Exporter extends DemoExporter<TabSheetLazyInitialization> { // hidden-source-line
-	} // hidden-source-line
+    public class LazyComponent extends Div {
+        public LazyComponent(
+                SerializableSupplier<? extends Component> supplier) {
+            addAttachListener(e -> {
+                if (getElement().getChildCount() == 0) {
+                    add(supplier.get());
+                }
+            });
+        }
+    }
+    // end::snippet[]
+
+    public static class Exporter
+            extends DemoExporter<TabSheetLazyInitialization> { // hidden-source-line
+    } // hidden-source-line
 }

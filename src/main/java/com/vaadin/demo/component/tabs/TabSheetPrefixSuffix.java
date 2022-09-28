@@ -13,24 +13,27 @@ import com.vaadin.flow.router.Route;
 @Route("tabsheet-prefix-suffix")
 public class TabSheetPrefixSuffix extends Div {
 
-	public TabSheetPrefixSuffix() {
-		TabSheet tabSheet = new TabSheet();
-		tabSheet.add("Dashboard", new Div(new Text("This is the Dashboard tab content")));
-		tabSheet.add("Payment", new Div(new Text("This is the Payment tab content")));
-		tabSheet.add("Shipping", new Div(new Text("This is the Shipping tab content")));
+    public TabSheetPrefixSuffix() {
+        TabSheet tabSheet = new TabSheet();
+        tabSheet.add("Dashboard",
+                new Div(new Text("This is the Dashboard tab content")));
+        tabSheet.add("Payment",
+                new Div(new Text("This is the Payment tab content")));
+        tabSheet.add("Shipping",
+                new Div(new Text("This is the Shipping tab content")));
 
-		// tag::snippet[]
-		tabSheet.setPrefixComponent(new Button("Close all"));
+        // tag::snippet[]
+        tabSheet.setPrefixComponent(new Button("Close all"));
 
-		Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
-		plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-		plusButton.getElement().setAttribute("aria-label", "Add tab");
-		tabSheet.setSuffixComponent(plusButton);
-		// end::snippet[]
+        Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
+        plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+        plusButton.getElement().setAttribute("aria-label", "Add tab");
+        tabSheet.setSuffixComponent(plusButton);
+        // end::snippet[]
 
-		add(tabSheet);
-	}
+        add(tabSheet);
+    }
 
-	public static class Exporter extends DemoExporter<TabSheetPrefixSuffix> { // hidden-source-line
-	} // hidden-source-line
+    public static class Exporter extends DemoExporter<TabSheetPrefixSuffix> { // hidden-source-line
+    } // hidden-source-line
 }
