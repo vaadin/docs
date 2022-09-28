@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, TemplateResult } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/tabs';
 import '@vaadin/tabsheet';
