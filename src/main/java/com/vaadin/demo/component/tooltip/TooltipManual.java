@@ -24,7 +24,7 @@ public class TooltipManual extends Div {
         textField.setTooltipText("Wrap in “quotes” for exact phrase");
         Tooltip tooltip = textField.getTooltip().withManual(true);
         button.addClickListener(event -> {
-            tooltip.setManual(!tooltip.isManual());
+            tooltip.setOpened(!tooltip.isOpened());
         });
         // end::snippet[]
         add(textField);
