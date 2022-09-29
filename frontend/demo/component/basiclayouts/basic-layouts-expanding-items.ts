@@ -23,7 +23,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private size!: string;
+  private size = '0';
 
   render() {
     return html`
@@ -34,9 +34,10 @@ export class Example extends LitElement {
       </vaadin-horizontal-layout>
       <vaadin-radio-group
         label="Item sizing"
+        .value="${this.size}"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.size = e.detail.value)}"
       >
-        <vaadin-radio-button value="0" label="Default size" checked></vaadin-radio-button>
+        <vaadin-radio-button value="0" label="Default size"></vaadin-radio-button>
         <vaadin-radio-button value="1" label="Expand"></vaadin-radio-button>
       </vaadin-radio-group>
     `;

@@ -23,7 +23,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private themeVariant!: string;
+  private themeVariant = 'spacing-xl';
 
   render() {
     return html`
@@ -38,13 +38,14 @@ export class Example extends LitElement {
       </vaadin-vertical-layout>
       <vaadin-radio-group
         label="Spacing variant"
+        .value="${this.themeVariant}"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.themeVariant = e.detail.value)}"
       >
         <vaadin-radio-button value="spacing-xs" label="spacing-xs"></vaadin-radio-button>
         <vaadin-radio-button value="spacing-s" label="spacing-s"></vaadin-radio-button>
         <vaadin-radio-button value="spacing" label="spacing"></vaadin-radio-button>
         <vaadin-radio-button value="spacing-l" label="spacing-l"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing-xl" label="spacing-xl" checked></vaadin-radio-button>
+        <vaadin-radio-button value="spacing-xl" label="spacing-xl"></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

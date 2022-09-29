@@ -6,7 +6,7 @@ import '@vaadin/checkbox-group';
 import '@vaadin/details';
 import '@vaadin/notification';
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators';
+import { customElement, state } from 'lit/decorators.js';
 import { Checkbox } from '@vaadin/checkbox';
 import { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { Notification } from '@vaadin/notification';
@@ -14,7 +14,7 @@ import { selectRenderer } from '@vaadin/select/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const VAADIN_VERSIONS: Record<string, string> = {
-  14: '14.8.17',
+  14: '14.8.18',
   15: '15.0.6',
   16: '16.0.5',
   17: '17.0.11',
@@ -22,8 +22,8 @@ const VAADIN_VERSIONS: Record<string, string> = {
   19: '19.0.9',
   20: '20.0.8',
   21: '21.0.9',
-  22: '22.0.22',
-  23: '23.2.1',
+  22: '22.0.23',
+  23: '23.2.2',
 };
 
 const SIMPLE_VERSIONS: string[] = [];
@@ -67,14 +67,14 @@ export default class UpgradeTool extends LitElement {
           <div slot="summary">Earlier Versions</div>
           <ul style="margin-top: 0">
             <li>
-              <a href="https://vaadin.com/docs/v14/flow/upgrading/v10-13/"
-                >Upgrading from Vaadin 10–13 to Vaadin 14</a
-              >
+              <a href="https://vaadin.com/docs/v14/flow/upgrading/v10-13/">
+                Upgrading from Vaadin 10–13 to Vaadin 14
+              </a>
             </li>
             <li>
-              <a href="https://vaadin.com/docs/v14/flow/upgrading/v8/"
-                >Upgrading from Vaadin 8 to Vaadin 14</a
-              >
+              <a href="https://vaadin.com/docs/v14/flow/upgrading/v8/">
+                Upgrading from Vaadin 8 to Vaadin 14
+              </a>
             </li>
           </ul>
         </vaadin-details>
@@ -125,8 +125,9 @@ export default class UpgradeTool extends LitElement {
           theme="primary"
           style="width: fit-content; margin-top: 30px; margin-bottom: 30px"
           @click=${this.showUpdateInstructions}
-          >Show update instructions!</vaadin-button
         >
+          Show update instructions!
+        </vaadin-button>
       </div>
     `;
   }

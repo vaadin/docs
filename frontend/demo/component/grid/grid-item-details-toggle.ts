@@ -94,7 +94,8 @@ export class Example extends LitElement {
                     ? this.detailsOpenedItems.filter((p) => p != person)
                     : [...this.detailsOpenedItems, person];
                 }}"
-                >Toggle details
+              >
+                Toggle details
               </vaadin-button>
             `,
             []

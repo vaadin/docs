@@ -8,14 +8,14 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("input-field-label")
 public class InputFieldLabel extends Div {
 
-  public InputFieldLabel() {
-    // tag::snippet[]
-    EmailField emailField = new EmailField();
-    emailField.setLabel("Email address");
-    add(emailField);
-    // end::snippet[]
-  }
+    public InputFieldLabel() {
+        // tag::snippet[]
+        EmailField emailField = new EmailField();
+        emailField.setLabel("Email address");
+        add(emailField);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<InputFieldLabel> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<InputFieldLabel> { // hidden-source-line
+    } // hidden-source-line
 }
