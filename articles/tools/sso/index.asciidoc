@@ -40,7 +40,7 @@ spring:
         registration:
           keycloak:
             client-id: my-client
-            client-secret: verySecretValue
+            client-secret: very-secret-value
             scope:
             - profile
             - openid
@@ -55,11 +55,11 @@ For that reason, SSO Kit provides the `AuthenticationContext` interface that can
 
 ==== Retrieving the Authenticated User
 
-To get the object containing the information about the user, you need first to inject the `AuthenticationContext` object created by the SSO Kit.
+To get the object containing the information about the user, you need first to inject the `AuthenticationContext` bean created by the SSO Kit.
 Then, to get the authenticated user, you need to call the method `AuthenciationContext::getAuthenticatedUser()`. 
 The method returns an `Optional` object containing the user information if the session contains an authenticated user or null, otherwise.
 
-[source,java]
+[source, java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/sso/ProfileView.java[tags=profile-view,indent=0]
 ----
@@ -67,3 +67,87 @@ include::{root}/src/main/java/com/vaadin/demo/sso/ProfileView.java[tags=profile-
 By default, the user object returned by `AuthenticationContext::getAuthenticatedUser()` is an instance of `OidcUser`.
 But sometimes, the application might define its implementation of the `OidcUser` interface for, e.g., translating the roles from string to enum objects.
 In that case, you can use `AuthenticationContext::getAuthenticatedUser(Class<U> userType)`, where `userType` is a class/interface that implements `OidcUser`.
+
+=== Single Sign-On
+
+SSO Kit provides a `SingleSignOnConfiguration` bean to auto-configure Vaadin and Spring to
+allow single sign-on against external identity providers.
+
+[NOTE]
+If you need a customized security configuration, you can disable this
+auto-configuration class by setting the `auto-configure` property to `false` and provide your own configuration class:
+
+.application.yml
+[source, yml]
+----
+vaadin:
+  sso:
+    auto-configure: false
+----
+
+==== Logging The User In
+
+This configuration enables login for the identity providers defined in the
+application configuration and instructs the application to accept
+requests for the login route, which can be configured setting the `login-route` property:
+
+.application.yml
+[source, yml]
+----
+vaadin:
+  sso:
+    login-route: your-login-route
+----
+
+The default value for this property is `/login`.
+
+==== Protecting Your Views
+
+This configuration will redirect to the provider's login page any unauthorized request.
+
+You can set which views require authentication annotating them as described in https://vaadin.com/docs/latest/security/enabling-security#annotating-the-view-classes:[Annotating the View Classes].
+For example:
+
+.PrivateView.java
+[source, java]
+----
+@PermitAll
+@Route(value = "private")
+public class PrivateView extends VerticalLayout {
+    // ...
+}
+----
+
+=== Single Sign-Off
+
+SSO Kit provides two methods for logging out the user, the `RP-Initiated Logout` (https://openid.net/specs/openid-connect-rpinitiated-1_0.html:[spec]) and the `Back-Channel Logout` (https://openid.net/specs/openid-connect-backchannel-1_0.html:[spec]).
+
+==== RP-Initiated Logout
+
+RP-Initiated Logout enables the Relying Party to request that an End-User be logged out by the OpenID Provider by redirecting the End-User's user agent to the OpenID Provider's logout endpoint.
+
+The `AuthenticationContext` bean provides the `AuthenciationContext::logout()` method to terminate both the local user session and the provider's session:
+
+.PrivateView.java
+[source, java]
+----
+@PermitAll
+@Route(value = "private")
+public class PrivateView extends VerticalLayout {
+    public PrivateView(AuthenticationContext authContext) {
+        add(new Button("Logout", e -> authContext.logout()));
+    }
+}
+----
+
+After a successful logout the user is redirected to the application's redirect route. We can set this by `logout-redirect-route` property:
+
+.application.yml
+[source, yml]
+----
+vaadin:
+  sso:
+    logout-redirect-route: your-logout-redirect-route
+----
+
+==== Back-Channel Logout
