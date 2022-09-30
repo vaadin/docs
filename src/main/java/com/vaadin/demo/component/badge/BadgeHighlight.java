@@ -63,6 +63,7 @@ public class BadgeHighlight extends Div {
         return report.getDue().toInstant().atZone(ZoneId.systemDefault())
                 .toLocalDate();
     }
+
     public static class Exporter extends DemoExporter<BadgeHighlight> { // hidden-source-line
     } // hidden-source-line
 }

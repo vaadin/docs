@@ -33,4 +33,3 @@ public class GridProEditColumn extends Div {
     public static class Exporter extends DemoExporter<GridProEditColumn> { // hidden-source-line
     } // hidden-source-line
 }
-

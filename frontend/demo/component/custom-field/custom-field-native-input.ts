@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/custom-field';
-import type { CustomFieldValueChangedEvent } from '@vaadin/custom-field';
+import type { CustomFieldChangeEvent } from '@vaadin/custom-field';
 import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -24,7 +24,7 @@ export class Example extends LitElement {
       <vaadin-custom-field
         label="Payment information"
         theme="whitespace"
-        @change="${(e: CustomFieldValueChangedEvent) => (this.customFieldValue = e.detail.value)}"
+        @change="${(e: CustomFieldChangeEvent) => (this.customFieldValue = e.target.value || '')}"
       >
         <vaadin-horizontal-layout theme="spacing-s">
           <input

@@ -18,5 +18,6 @@ public class LoginValidation extends Div {
         // Prevent the example from stealing focus when browsing the documentation
         loginOverlay.getElement().setAttribute("no-autofocus", "");
     }
+
     public static class Exporter extends DemoExporter<LoginValidation> {} // hidden-source-line
 }

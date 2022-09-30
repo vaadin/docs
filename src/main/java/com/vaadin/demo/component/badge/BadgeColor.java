@@ -46,6 +46,7 @@ public class BadgeColor extends VerticalLayout {
         setPadding(false);
         setSizeUndefined();
     }
+
     public static class Exporter extends DemoExporter<BadgeColor> { // hidden-source-line
     } // hidden-source-line
 }

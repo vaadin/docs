@@ -3,6 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/message-input';
+import type { MessageInputSubmitEvent } from '@vaadin/message-input';
 import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -26,7 +27,7 @@ export class Example extends LitElement {
     `;
   }
 
-  _handleSubmit(event: CustomEvent) {
+  _handleSubmit(event: MessageInputSubmitEvent) {
     this.message = event.detail.value;
     Notification.show(`Message received: ${this.message}`, { position: 'middle' });
   }

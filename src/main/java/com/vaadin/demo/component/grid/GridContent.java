@@ -37,7 +37,7 @@ public class GridContent extends Div {
 
     // tag::snippet2[]
     private static Renderer<Person> createEmployeeRenderer() {
-        return LitRenderer.<Person>of(
+        return LitRenderer.<Person> of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
                         + "<vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\" alt=\"User avatar\"></vaadin-avatar>"
                         + "  <vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"

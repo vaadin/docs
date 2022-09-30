@@ -23,6 +23,7 @@ public class DatePickerMinMax extends Div {
 
         add(datePicker);
     }
+
     public static class Exporter extends DemoExporter<DatePickerMinMax> { // hidden-source-line
     } // hidden-source-line
 }

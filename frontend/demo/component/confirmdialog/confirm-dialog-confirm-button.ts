@@ -1,7 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/button';
 import '@vaadin/confirm-dialog';
+import '@vaadin/horizontal-layout';
+import type { ConfirmDialogOpenedChangedEvent } from '@vaadin/confirm-dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-confirm-button')
@@ -47,7 +50,7 @@ export class Example extends LitElement {
     `;
   }
 
-  openedChanged(e: CustomEvent) {
+  openedChanged(e: ConfirmDialogOpenedChangedEvent) {
     this.dialogOpened = e.detail.value;
     if (this.dialogOpened) {
       this.status = '';

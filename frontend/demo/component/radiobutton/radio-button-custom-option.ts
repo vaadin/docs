@@ -6,6 +6,7 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/radio-group';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import { getCards } from 'Frontend/demo/domain/DataService';
 import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -38,7 +39,7 @@ export class Example extends LitElement {
           label="Payment method"
           theme="vertical"
           .value="${this.value}"
-          @value-changed="${(e: CustomEvent) => (this.value = e.detail.value)}"
+          @value-changed="${(e: RadioGroupValueChangedEvent) => (this.value = e.detail.value)}"
         >
           ${this.items.map(
             (card) => html`

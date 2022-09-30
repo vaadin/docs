@@ -23,7 +23,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private alignItems?: string;
+  private alignItems = 'stretch';
 
   render() {
     return html`
@@ -38,13 +38,10 @@ export class Example extends LitElement {
       </vaadin-horizontal-layout>
       <vaadin-radio-group
         label="Vertical alignment"
+        .value="${this.alignItems}"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.alignItems = e.detail.value)}"
       >
-        <vaadin-radio-button
-          value="stretch"
-          label="Stretch (default)"
-          checked
-        ></vaadin-radio-button>
+        <vaadin-radio-button value="stretch" label="Stretch (default)"></vaadin-radio-button>
         <vaadin-radio-button value="flex-start" label="Start"></vaadin-radio-button>
         <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
         <vaadin-radio-button value="flex-end" label="End"></vaadin-radio-button>

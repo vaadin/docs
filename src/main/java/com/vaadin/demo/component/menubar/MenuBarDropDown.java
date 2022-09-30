@@ -24,9 +24,7 @@ public class MenuBarDropDown extends Div {
 
         add(menuBar);
     }
+
     public static class Exporter extends DemoExporter<MenuBarDropDown> { // hidden-source-line
     } // hidden-source-line
 }
-
-
-

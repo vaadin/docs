@@ -20,5 +20,6 @@ public class LoginRichContent extends Div {
         // Prevent the example from stealing focus when browsing the documentation
         loginForm.getElement().setAttribute("no-autofocus", "");
     }
+
     public static class Exporter extends DemoExporter<LoginRichContent> {} // hidden-source-line
 }
