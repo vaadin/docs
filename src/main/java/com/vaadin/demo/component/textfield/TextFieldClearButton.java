@@ -8,15 +8,15 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("text-field-clear-button")
 public class TextFieldClearButton extends Div {
 
-  public TextFieldClearButton() {
-    // tag::snippet[]
-    TextField textField = new TextField();
-    textField.setClearButtonVisible(true);
-    textField.setValue("Value");
-    add(textField);
-    // end::snippet[]
-  }
+    public TextFieldClearButton() {
+        // tag::snippet[]
+        TextField textField = new TextField();
+        textField.setClearButtonVisible(true);
+        textField.setValue("Value");
+        add(textField);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<TextFieldClearButton> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<TextFieldClearButton> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -27,4 +27,3 @@ public abstract class DemoExporter<T extends Component> extends WebComponentExpo
   protected void configureInstance(final WebComponent<T> webComponent, final T demo) {
   }
 }
-

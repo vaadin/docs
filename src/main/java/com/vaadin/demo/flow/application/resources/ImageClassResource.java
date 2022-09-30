@@ -1,6 +1,6 @@
 package com.vaadin.demo.flow.application.resources;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.router.Route;
@@ -21,5 +21,5 @@ public class ImageClassResource extends Div {
     }
 
     public static class ImageClassResourceExporter extends DemoExporter<ImageClassResource> { // hidden-source-line
-    } // hidden-source-line    
+    } // hidden-source-line
 }

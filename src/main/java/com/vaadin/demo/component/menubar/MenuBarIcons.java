@@ -31,6 +31,7 @@ public class MenuBarIcons extends Div {
     private MenuItem createIconItem(HasMenuItems menu, VaadinIcon iconName, String label, String ariaLabel) {
         return createIconItem(menu, iconName, label, ariaLabel, false);
     }
+
     private MenuItem createIconItem(HasMenuItems menu, VaadinIcon iconName, String label, String ariaLabel, boolean isChild) {
         Icon icon = new Icon(iconName);
 

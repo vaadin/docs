@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.basiclayouts;
 
-import com.vaadin.demo.DemoExporter;  // hidden-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;

@@ -12,19 +12,21 @@ import java.util.List;
 @Route("multi-select-combo-box-read-only")
 public class MultiSelectComboBoxReadOnly extends Div {
 
-  public MultiSelectComboBoxReadOnly() {
-    MultiSelectComboBox<Country> comboBox = new MultiSelectComboBox<>("Countries");
-    List<Country> countries = DataService.getCountries();
-    comboBox.setItems(countries);
-    comboBox.select(countries.subList(0, 4));
-    comboBox.setItemLabelGenerator(Country::getName);
-    // tag::snippet[]
-    comboBox.setReadOnly(true);
-    // end::snippet[]
-    comboBox.setWidth("300px");
-    add(comboBox);
-  }
+    public MultiSelectComboBoxReadOnly() {
+        MultiSelectComboBox<Country> comboBox = new MultiSelectComboBox<>(
+                "Countries");
+        List<Country> countries = DataService.getCountries();
+        comboBox.setItems(countries);
+        comboBox.select(countries.subList(0, 4));
+        comboBox.setItemLabelGenerator(Country::getName);
+        // tag::snippet[]
+        comboBox.setReadOnly(true);
+        // end::snippet[]
+        comboBox.setWidth("300px");
+        add(comboBox);
+    }
 
-  public static class Exporter extends DemoExporter<MultiSelectComboBoxReadOnly> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<MultiSelectComboBoxReadOnly> { // hidden-source-line
+    } // hidden-source-line
 }

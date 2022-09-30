@@ -38,8 +38,7 @@ export class Example extends LitElement {
           path="membership"
           editor-type="select"
           .editorOptions="${['Regular', 'Premium', 'VIP']}"
-        >
-        </vaadin-grid-pro-edit-column>
+        ></vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column path="subscriber" editor-type="checkbox">
         </vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column

@@ -2,21 +2,23 @@ package com.vaadin.demo.component.avatar;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
 @Route("avatar-abbreviation")
-public class AvatarAbbreviation extends Div {
+public class AvatarAbbreviation extends HorizontalLayout {
 
-  public AvatarAbbreviation() {
-    // tag::snippet[]
-    Avatar avatarName = new Avatar("Augusta Ada King");
+    public AvatarAbbreviation() {
+        // tag::snippet[]
+        Avatar avatarName = new Avatar("Augusta Ada King");
 
-    Avatar avatarAbbr = new Avatar("Augusta Ada King");
-    avatarAbbr.setAbbreviation("AK");
-    // end::snippet[]
+        Avatar avatarAbbr = new Avatar("Augusta Ada King");
+        avatarAbbr.setAbbreviation("AK");
+        // end::snippet[]
 
-    add(avatarName, avatarAbbr);
-  }
-  public static class Exporter extends DemoExporter<AvatarAbbreviation> {} // hidden-source-line
+        add(avatarName, avatarAbbr);
+    }
+
+    public static class Exporter extends DemoExporter<AvatarAbbreviation> { // hidden-source-line
+    } // hidden-source-line
 }

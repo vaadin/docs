@@ -17,5 +17,6 @@ public class CookieConsentTheming extends Div {
         add(cookieConsent);
         // end::snippet[]
     }
+
     public static class Exporter extends DemoExporter<CookieConsentTheming> {} // hidden-source-line
 }

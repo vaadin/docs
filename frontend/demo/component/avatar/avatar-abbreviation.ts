@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/avatar';
+import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('avatar-abbreviation')
@@ -15,10 +16,13 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-avatar name="Augusta Ada King"></vaadin-avatar>
-      <vaadin-avatar name="Augusta Ada King" abbr="AK"></vaadin-avatar>
-      <!-- end::snippet[] -->
+      <vaadin-horizontal-layout theme="spacing">
+        <!-- tag::snippet[] -->
+        <vaadin-avatar name="Augusta Ada King"></vaadin-avatar>
+
+        <vaadin-avatar name="Augusta Ada King" abbr="AK"></vaadin-avatar>
+        <!-- end::snippet[] -->
+      </vaadin-horizontal-layout>
     `;
   }
 }

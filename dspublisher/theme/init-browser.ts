@@ -141,8 +141,9 @@ class Footer extends LitElement {
       </style>
       <section class="discussion-wrapper">
         <p>
-          <b>Was this page helpful?</b><br />Leave a comment or a question below. You can also join
-          the <a href="https://discord.gg/MYFq5RTbBn" rel="noopened">chat on Discord</a> or
+          <b>Was this page helpful?</b><br />Leave a comment or ask a question, or share your own
+          code examples. You can also join the
+          <a href="https://discord.gg/MYFq5RTbBn" rel="noopened">chat on Discord</a> or
           <a href="https://stackoverflow.com/questions/tagged/vaadin" rel="noopened"
             >ask questions on StackOverflow</a
           >.

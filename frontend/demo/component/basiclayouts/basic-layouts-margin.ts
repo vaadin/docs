@@ -23,7 +23,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private theme!: string;
+  private theme = 'margin';
 
   render() {
     return html`
@@ -36,9 +36,10 @@ export class Example extends LitElement {
       </div>
       <vaadin-radio-group
         label="Margin"
+        .value="${this.theme}"
         @value-changed="${(e: RadioGroupValueChangedEvent) => (this.theme = e.detail.value)}"
       >
-        <vaadin-radio-button value="margin" label="Enabled" checked></vaadin-radio-button>
+        <vaadin-radio-button value="margin" label="Enabled"></vaadin-radio-button>
         <vaadin-radio-button value="" label="Disabled"></vaadin-radio-button>
       </vaadin-radio-group>
     `;
