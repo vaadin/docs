@@ -17,5 +17,5 @@ public class ImageBasic extends Div {
     }
 
     public static class ImageBasicExporter extends DemoExporter<ImageBasic> { // hidden-source-line
-    } // hidden-source-line    
+    } // hidden-source-line
 }
