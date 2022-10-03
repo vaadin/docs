@@ -80,7 +80,9 @@ export class Example extends LitElement {
   createItemsArray(people: Person[]) {
     return people.map((person, index) => {
       const item = document.createElement('vaadin-item');
-      index == 0 && item.setAttribute('selected', '');
+      if (index === 0) {
+        item.setAttribute('selected', '');
+      }
       render(
         html`
           <vaadin-horizontal-layout
@@ -117,7 +119,9 @@ export class Example extends LitElement {
 
     icon.setAttribute('icon', iconName);
     item.appendChild(icon);
-    text && item.appendChild(document.createTextNode(text));
+    if (text) {
+      item.appendChild(document.createTextNode(text));
+    }
     return item;
   }
 
