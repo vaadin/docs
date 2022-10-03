@@ -5,11 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-sorter.js';
-import {
-  columnBodyRenderer,
-  columnHeaderRenderer,
-  GridColumnBodyLitRenderer,
-} from '@vaadin/grid/lit.js';
+import { columnBodyRenderer, columnHeaderRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';

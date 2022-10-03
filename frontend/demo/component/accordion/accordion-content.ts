@@ -17,6 +17,7 @@ export class Example extends LitElement {
       }
     `;
   }
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)

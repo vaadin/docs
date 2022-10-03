@@ -91,7 +91,7 @@ export class Example extends LitElement {
                 @click="${() => {
                   const isOpened = this.detailsOpenedItems.includes(person);
                   this.detailsOpenedItems = isOpened
-                    ? this.detailsOpenedItems.filter((p) => p != person)
+                    ? this.detailsOpenedItems.filter((p) => p !== person)
                     : [...this.detailsOpenedItems, person];
                 }}"
               >

@@ -4,9 +4,10 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/combo-box';
-import { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
+import type { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
 import '@vaadin/grid';
-import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
@@ -56,7 +57,7 @@ export class Example extends LitElement {
         <vaadin-button
           theme="primary"
           @click="${() => {
-            const person = this.items.find((p) => p.id == parseInt(this.selectedValue));
+            const person = this.items.find((p) => p.id === parseInt(this.selectedValue));
             const isInvited = person && this.invitedPeople.some((p) => p.id === person.id);
             if (person && !isInvited) {
               this.invitedPeople = [...this.invitedPeople, person];

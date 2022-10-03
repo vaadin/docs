@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/button';
 import '@vaadin/radio-group';
-import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import '@vaadin/vertical-layout';
 
 @customElement('basic-layouts-padding')

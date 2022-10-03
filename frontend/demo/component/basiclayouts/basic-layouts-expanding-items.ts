@@ -5,7 +5,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/radio-group';
-import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 
 @customElement('basic-layouts-expanding-items')
 export class Example extends LitElement {

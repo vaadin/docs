@@ -3,7 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/crud';
 import type { CrudEditedItemChangedEvent } from '@vaadin/crud';
-import { Grid } from '@vaadin/grid';
+import type { Grid } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

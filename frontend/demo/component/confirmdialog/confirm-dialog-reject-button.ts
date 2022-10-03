@@ -49,7 +49,7 @@ export class Example extends LitElement {
         </vaadin-confirm-dialog>
         <!-- end::snippet[] -->
 
-        <span ?hidden="${this.status == ''}">Status: ${this.status}</span>
+        <span ?hidden="${this.status === ''}">Status: ${this.status}</span>
       </vaadin-horizontal-layout>
     `;
   }

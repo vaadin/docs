@@ -1,4 +1,3 @@
-import { SelectValueChangedEvent } from '@vaadin/select';
 import '@vaadin/button';
 import '@vaadin/select';
 import '@vaadin/checkbox';
@@ -7,9 +6,10 @@ import '@vaadin/details';
 import '@vaadin/notification';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { Checkbox } from '@vaadin/checkbox';
-import { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
+import type { Checkbox } from '@vaadin/checkbox';
+import type { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { Notification } from '@vaadin/notification';
+import type { SelectValueChangedEvent } from '@vaadin/select';
 import { selectRenderer } from '@vaadin/select/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -26,10 +26,7 @@ const VAADIN_VERSIONS: Record<string, string> = {
   23: '23.2.3',
 };
 
-const SIMPLE_VERSIONS: string[] = [];
-for (const k in VAADIN_VERSIONS) {
-  SIMPLE_VERSIONS.push(k);
-}
+const SIMPLE_VERSIONS = Object.keys(VAADIN_VERSIONS);
 
 const DEFAULT_FROM = '14';
 const DEFAULT_TO = '23';
@@ -43,10 +40,13 @@ applyTheme(document);
 export default class UpgradeTool extends LitElement {
   @state()
   private fromVersion = '';
+
   @state()
   private toVersion = '';
+
   @state()
   private frameworkValue: string[] = [];
+
   @state()
   private extraSettingsValue: string[] = [];
 
@@ -181,7 +181,9 @@ export default class UpgradeTool extends LitElement {
   }
 
   private perform14To23CleanupIfNecessary() {
-    if (!this.is14To23Upgrade()) return;
+    if (!this.is14To23Upgrade()) {
+      return;
+    }
 
     document
       .querySelectorAll("[class*='all'], [class*='spring']")
@@ -189,7 +191,7 @@ export default class UpgradeTool extends LitElement {
   }
 
   private is14To23Upgrade() {
-    return this.fromVersion == '14' && this.toVersion == '23';
+    return this.fromVersion === '14' && this.toVersion === '23';
   }
 
   private showElementsWithClassname(classname: string) {
@@ -222,7 +224,7 @@ export default class UpgradeTool extends LitElement {
   }
 
   private getElementsByClassname(classname: string) {
-    return <HTMLElement[]>[...document.querySelectorAll('.' + classname)];
+    return <HTMLElement[]>[...document.querySelectorAll(`.${classname}`)];
   }
 
   private hideOldInstructions() {
@@ -236,9 +238,9 @@ export default class UpgradeTool extends LitElement {
   }
 
   private replaceHardCodedVersions() {
-    this.getElementsByClassname(HARDCODED_VERSIONS_CLASS).forEach(
-      (e) => (e.textContent = VAADIN_VERSIONS[this.toVersion])
-    );
+    this.getElementsByClassname(HARDCODED_VERSIONS_CLASS).forEach((e) => {
+      e.textContent = VAADIN_VERSIONS[this.toVersion];
+    });
   }
 
   private createSelectComponents() {
@@ -283,7 +285,9 @@ export default class UpgradeTool extends LitElement {
   }
 
   private fromVersionChanged(e: SelectValueChangedEvent) {
-    if (!this.isFirstUpdated) return;
+    if (!this.isFirstUpdated) {
+      return;
+    }
 
     const val = e.detail.value;
     if (parseInt(val) >= parseInt(this.toVersion)) {
@@ -295,14 +299,18 @@ export default class UpgradeTool extends LitElement {
   }
 
   private toVersionChanged(e: SelectValueChangedEvent) {
-    if (!this.isFirstUpdated) return;
+    if (!this.isFirstUpdated) {
+      return;
+    }
 
     this.toVersion = e.detail.value;
     this.updateUrlParameters();
   }
 
   private frameworkChanged(e: CheckboxGroupValueChangedEvent) {
-    if (!this.isFirstUpdated) return;
+    if (!this.isFirstUpdated) {
+      return;
+    }
 
     const val = e.detail.value;
     this.frameworkValue = val;
@@ -315,7 +323,9 @@ export default class UpgradeTool extends LitElement {
       this.isTypeScript = true;
 
       ['spring', 'typescript'].forEach((v) => {
-        this.extraSettingsValue.indexOf(v) === -1 ? this.extraSettingsValue.push(v) : null;
+        if (!this.extraSettingsValue.includes(v)) {
+          this.extraSettingsValue.push(v);
+        }
         const checkbox = <Checkbox>document.getElementById(`${v}-checkbox`);
         checkbox.checked = true;
       });
@@ -327,7 +337,9 @@ export default class UpgradeTool extends LitElement {
   }
 
   private extraSettingsChanged(e: CheckboxGroupValueChangedEvent) {
-    if (!this.isFirstUpdated) return;
+    if (!this.isFirstUpdated) {
+      return;
+    }
 
     const val = e.detail.value;
     this.extraSettingsValue = val;
@@ -397,7 +409,7 @@ export default class UpgradeTool extends LitElement {
     const anchors = document.getElementsByTagName('a');
     Array.from(anchors).forEach((a) => {
       const parent = a.parentNode;
-      if (parent && parent.nodeName == 'H2') {
+      if (parent && parent.nodeName === 'H2') {
         a.remove();
       }
     });
@@ -408,8 +420,8 @@ export default class UpgradeTool extends LitElement {
     const fromParam = urlParams.get('from');
     const toParam = urlParams.get('to');
 
-    fromParam ? (this.fromVersion = fromParam) : (this.fromVersion = DEFAULT_FROM);
-    toParam ? (this.toVersion = toParam) : (this.toVersion = DEFAULT_TO);
+    this.fromVersion = fromParam || DEFAULT_FROM;
+    this.toVersion = toParam || DEFAULT_TO;
 
     const isFlowParam = this.getParamVal(urlParams, 'isFlow');
     const isFusionParam = this.getParamVal(urlParams, 'isFusion');
