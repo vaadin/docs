@@ -25,8 +25,8 @@ public class GridTooltipGenerator extends Div {
         grid.addColumn(Person::getFirstName).setHeader("First name");
         grid.addColumn(Person::getLastName).setHeader("Last name");
         // tag::snippet[]
-        grid.addColumn(GridTooltipGenerator::getFormattedPersonBirthday)
-                .setTooltipGenerator(GridTooltipGenerator::getFormattedAge)
+        grid.addColumn(person -> getFormattedPersonBirthday(person))
+                .setTooltipGenerator(person -> "Age: " + getPersonAge(person))
                 .setHeader("Birthday");
         grid.addComponentColumn(person -> createStatusIcon(person.getStatus()))
                 .setTooltipGenerator(person -> person.getStatus())
@@ -43,19 +43,15 @@ public class GridTooltipGenerator extends Div {
     private static final DateTimeFormatter birthdayFormatter = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
 
-    private static String getFormattedAge(Person person) {
-        return "Age: " + GridTooltipGenerator.getPersonAge(person);
-    }
-
-    private static int getPersonAge(Person person) {
+    private int getPersonAge(Person person) {
         LocalDate birthday = person.getBirthday().toInstant()
                 .atZone(ZoneId.systemDefault()).toLocalDate();
 
-        return LocalDate.now(ZoneId.systemDefault()).getYear() - birthday
-                .getYear();
+        return LocalDate.now(ZoneId.systemDefault()).getYear()
+                - birthday.getYear();
     }
 
-    private static String getFormattedPersonBirthday(Person person) {
+    private String getFormattedPersonBirthday(Person person) {
         LocalDate birthday = person.getBirthday().toInstant()
                 .atZone(ZoneId.systemDefault()).toLocalDate();
 

@@ -16,7 +16,7 @@ public class EventsLambda extends Div {
         add(button);
         // end::snippet[]
       }
-    
+
       public static class Exporter extends DemoExporter<EventsLambda> { // hidden-source-line
-      } // hidden-source-line    
+      } // hidden-source-line
 }

@@ -26,7 +26,7 @@ public class EventsAnon extends Div {
         add(button);
         // end::snippet[]
       }
-    
+
       public static class Exporter extends DemoExporter<EventsAnon> { // hidden-source-line
-      } // hidden-source-line    
+      } // hidden-source-line
 }

@@ -36,7 +36,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-grid
         .items="${this.items}"
-        ?rows-draggable="${true}"
+        rows-draggable
         drop-mode="between"
         @grid-dragstart="${(event: GridDragStartEvent<Person>) => {
           this.draggedItem = event.detail.draggedItems[0];

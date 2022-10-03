@@ -19,7 +19,7 @@ public class ServiceListener implements VaadinServiceInitListener{
 
             PushConfiguration push = uiInitEvent.getUI().getPushConfiguration();
             push.setPushMode(PushMode.AUTOMATIC);
-            
+
             ReconnectDialogConfiguration dialog = uiInitEvent.getUI().getReconnectDialogConfiguration();
             dialog.setDialogText("reconnecting...");
         });

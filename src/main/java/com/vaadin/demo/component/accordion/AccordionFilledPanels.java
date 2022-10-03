@@ -38,7 +38,7 @@ public class AccordionFilledPanels extends Div {
         billingAddressLayout.setSpacing(false);
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
-        
+
         AccordionPanel billingAddressPanel = accordion.add("Billing address", billingAddressLayout);
         billingAddressPanel.addThemeVariants(DetailsVariant.FILLED);
 

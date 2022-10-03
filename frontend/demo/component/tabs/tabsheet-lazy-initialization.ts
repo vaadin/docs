@@ -22,7 +22,7 @@ export class Example extends LitElement {
 
   private selectedTabChanged(event: TabSheetSelectedChangedEvent) {
     this.visitedTabs = new Set([...this.visitedTabs, event.detail.value]);
-  };
+  }
 
   render() {
     return html`
