@@ -7,7 +7,7 @@ import '@vaadin/details';
 import '@vaadin/form-layout';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/horizontal-layout';
-import '@vaadin/icon/vaadin-icon';
+import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/text-field';
 import '@vaadin/vaadin-lumo-styles/sizing';
