@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/crud';
 import '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('crud-grid-replacement')

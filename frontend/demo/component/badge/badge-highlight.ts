@@ -1,6 +1,6 @@
 import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // hidden-source-line
 import 'Frontend/demo/init'; // hidden-source-line
-import Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-source-line
+import type Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';

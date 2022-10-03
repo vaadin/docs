@@ -12,7 +12,7 @@ import '@vaadin/virtual-list';
 import { virtualListRenderer } from '@vaadin/virtual-list/lit.js';
 import type { VirtualListLitRenderer } from '@vaadin/virtual-list/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('virtual-list-basic')

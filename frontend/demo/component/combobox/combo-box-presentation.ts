@@ -7,7 +7,7 @@ import { comboBoxRenderer } from '@vaadin/combo-box/lit.js';
 import type { ComboBoxLitRenderer } from '@vaadin/combo-box/lit.js';
 import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-presentation')

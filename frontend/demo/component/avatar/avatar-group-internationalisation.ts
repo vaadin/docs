@@ -5,7 +5,7 @@ import '@vaadin/avatar-group';
 import type { AvatarGroupI18n } from '@vaadin/avatar-group';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-group-internationalistion')
 export class Example extends LitElement {

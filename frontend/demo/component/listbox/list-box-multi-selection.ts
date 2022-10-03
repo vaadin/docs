@@ -5,7 +5,7 @@ import '@vaadin/item';
 import '@vaadin/list-box';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import type Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('list-box-multi-selection')
 export class Example extends LitElement {

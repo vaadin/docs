@@ -9,7 +9,7 @@ import '@vaadin/vaadin-lumo-styles/typography';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import type Person from '../../../generated/com/vaadin/demo/domain/Person';
 
 @customElement('list-box-custom-item-presentation')
 export class Example extends LitElement {

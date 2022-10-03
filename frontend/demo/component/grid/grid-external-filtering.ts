@@ -13,7 +13,7 @@ import '@vaadin/icons';
 import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 type PersonEnhanced = Person & { displayName: string };
