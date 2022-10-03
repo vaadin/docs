@@ -58,7 +58,7 @@ public class BasicLayoutsHorizontalLayoutHorizontalAlignment extends Div {
                                 FlexComponent.JustifyContentMode.EVENLY));
 
         RadioButtonGroup<JustifyContentModeOption> radioGroup = new RadioButtonGroup<>();
-        radioGroup.setLabel("Vertical alignment");
+        radioGroup.setLabel("Horizontal alignment");
         radioGroup.setItems(options);
         radioGroup.setValue(options.get(0));
         // tag::eventhandler[]

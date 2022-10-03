@@ -28,7 +28,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private grid!: Grid;
+  private grid!: Grid<Person>;
 
   @state()
   private draggedItem?: Person;
@@ -81,7 +81,7 @@ export class Example extends LitElement {
         @expanded-items-changed="${(event: GridExpandedItemsChangedEvent<Person>) => {
           this.expandedItems = event.detail.value;
         }}"
-        ?rows-draggable="${true}"
+        rows-draggable
         drop-mode="on-top"
         @grid-dragstart="${(event: GridDragStartEvent<Person>) => {
           this.draggedItem = event.detail.draggedItems[0];
