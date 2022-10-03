@@ -6,7 +6,8 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/notification';
 import type { NotificationOpenedChangedEvent } from '@vaadin/notification';
-import { notificationRenderer, NotificationLitRenderer } from '@vaadin/notification/lit.js';
+import { notificationRenderer } from '@vaadin/notification/lit.js';
+import type { NotificationLitRenderer } from '@vaadin/notification/lit.js';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { applyTheme } from 'Frontend/generated/theme';
 

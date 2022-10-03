@@ -7,8 +7,8 @@ import {
   columnBodyRenderer,
   columnFooterRenderer,
   columnHeaderRenderer,
-  GridColumnBodyLitRenderer,
 } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';

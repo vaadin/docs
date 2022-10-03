@@ -3,7 +3,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/context-menu';
-import { contextMenuRenderer, ContextMenuLitRenderer } from '@vaadin/context-menu/lit.js';
+import { contextMenuRenderer } from '@vaadin/context-menu/lit.js';
+import type { ContextMenuLitRenderer } from '@vaadin/context-menu/lit.js';
 import '@vaadin/grid';
 import type { Grid } from '@vaadin/grid';
 import '@vaadin/item';
