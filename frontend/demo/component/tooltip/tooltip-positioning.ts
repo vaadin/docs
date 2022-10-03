@@ -20,19 +20,19 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-app-layout theme="narrow-drawer">
         <vaadin-drawer-toggle slot="navbar">
           <vaadin-tooltip slot="tooltip" text="Expand menu" position="end"></vaadin-tooltip>
         </vaadin-drawer-toggle>
-
         <vaadin-tabs slot="drawer" orientation="vertical">
+          <!-- tag::snippet[] -->
           <vaadin-tab>
             <a tabindex="-1">
               <vaadin-icon icon="vaadin:home"></vaadin-icon>
             </a>
             <vaadin-tooltip slot="tooltip" text="Home" position="end"></vaadin-tooltip>
           </vaadin-tab>
+          <!-- end::snippet[] -->
           <vaadin-tab>
             <a tabindex="-1">
               <vaadin-icon icon="vaadin:calendar"></vaadin-icon>
@@ -47,7 +47,6 @@ export class Example extends LitElement {
           </vaadin-tab>
         </vaadin-tabs>
       </vaadin-app-layout>
-      <!-- end::snippet[] -->
     `;
   }
 }
