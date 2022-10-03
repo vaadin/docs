@@ -41,8 +41,8 @@ export class Example extends LitElement {
   }
 
   createItem(iconName: string, text: string, isChild = false) {
-    const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('vaadin-icon');
+    const item = document.createElement('vaadin-context-menu-item');
+    const icon = document.createElement('vaadin-icon');
 
     if (isChild) {
       icon.style.width = 'var(--lumo-icon-size-s)';
@@ -50,13 +50,15 @@ export class Example extends LitElement {
       icon.style.marginRight = 'var(--lumo-space-s)';
     }
 
-    if (iconName == 'copy') {
+    if (iconName === 'copy') {
       item.setAttribute('aria-label', 'duplicate');
     }
 
     icon.setAttribute('icon', `vaadin:${iconName}`);
     item.appendChild(icon);
-    text && item.appendChild(window.document.createTextNode(text));
+    if (text) {
+      item.appendChild(document.createTextNode(text));
+    }
     return item;
   }
 }

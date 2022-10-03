@@ -52,13 +52,13 @@ export class ExampleIndicator extends LitElement {
   }
 
   @property()
-  public title = 'Unknown';
+  title = 'Unknown';
 
   @property()
-  public current = '0';
+  current = '0';
 
-  @property()
-  public change = 0;
+  @property({ type: Number })
+  change = 0;
 
   protected createRenderRoot() {
     const root = super.createRenderRoot();

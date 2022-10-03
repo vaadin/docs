@@ -4,11 +4,11 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/multi-select-combo-box';
+import type { MultiSelectComboBoxSelectedItemsChangedEvent } from '@vaadin/multi-select-combo-box';
 import '@vaadin/text-area';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
-import { MultiSelectComboBoxSelectedItemsChangedEvent } from '@vaadin/multi-select-combo-box';
 
 @customElement('multi-select-combo-box-selection-change')
 export class Example extends LitElement {

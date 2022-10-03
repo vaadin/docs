@@ -9,7 +9,7 @@ import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import { TextFieldValueChangedEvent } from '@vaadin/text-field';
+import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';

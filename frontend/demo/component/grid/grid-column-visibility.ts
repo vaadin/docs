@@ -25,7 +25,7 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   @state()
-  private contextMenuItems: (ContextMenuItem & { key: string })[] = [
+  private contextMenuItems: Array<ContextMenuItem & { key: string }> = [
     { text: 'First name', checked: true, key: 'firstName' },
     { text: 'Last name', checked: true, key: 'lastName' },
     { text: 'Email', checked: true, key: 'email' },

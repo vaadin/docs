@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/login';
-import { LoginOverlay } from '@vaadin/login';
+import type { LoginOverlay } from '@vaadin/login';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-additional-information')
@@ -14,7 +14,7 @@ export class Example extends LitElement {
     return root;
   }
 
-  //tag::snippet[]
+  // tag::snippet[]
   @query('vaadin-login-overlay')
   private login!: LoginOverlay;
 
@@ -28,5 +28,5 @@ export class Example extends LitElement {
   render() {
     return html`<vaadin-login-overlay opened></vaadin-login-overlay>`;
   }
-  //end::snippet[]
+  // end::snippet[]
 }

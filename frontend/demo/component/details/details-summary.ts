@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/combo-box';
 import '@vaadin/details';
 import '@vaadin/form-layout';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon/vaadin-icon';
 import '@vaadin/icons';

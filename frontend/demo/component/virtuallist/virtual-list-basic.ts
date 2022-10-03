@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import '@vaadin/avatar';
 import '@vaadin/details';
-import { Details } from '@vaadin/details';
+import type { Details } from '@vaadin/details';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import '@vaadin/virtual-list';

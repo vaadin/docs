@@ -4,7 +4,7 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/email-field';
-import { EmailFieldValueChangedEvent } from '@vaadin/email-field';
+import type { EmailFieldValueChangedEvent } from '@vaadin/email-field';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
