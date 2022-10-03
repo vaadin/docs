@@ -65,7 +65,7 @@ export class Example extends LitElement {
           []
         )}
       ></vaadin-dialog>
-      <!-- end::snippet[]  -->
+      <!-- end::snippet[] -->
       <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }

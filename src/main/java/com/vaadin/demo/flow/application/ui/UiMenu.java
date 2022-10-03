@@ -35,5 +35,5 @@ public class UiMenu extends Div {
     }
 
     public static class UiMenuExporter extends DemoExporter<UiMenu> { // hidden-source-line
-    } // hidden-source-line    
+    } // hidden-source-line
 }

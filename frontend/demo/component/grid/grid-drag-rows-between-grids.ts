@@ -65,7 +65,7 @@ export class Example extends LitElement {
       <div class="grids-container">
         <vaadin-grid
           .items="${this.grid1Items}"
-          ?rows-draggable="${true}"
+          rows-draggable
           drop-mode="on-grid"
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
@@ -91,7 +91,7 @@ export class Example extends LitElement {
 
         <vaadin-grid
           .items="${this.grid2Items}"
-          ?rows-draggable="${true}"
+          rows-draggable
           drop-mode="on-grid"
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"

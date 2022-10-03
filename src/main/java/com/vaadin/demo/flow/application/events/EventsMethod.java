@@ -29,7 +29,7 @@ public class EventsMethod extends Div {
         add(new ButtonBar());
         // end::snippet[]
       }
-    
+
       public static class Exporter extends DemoExporter<EventsMethod> { // hidden-source-line
-      } // hidden-source-line    
+      } // hidden-source-line
 }
