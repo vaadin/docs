@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/form-layout';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/password-field';
 import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';

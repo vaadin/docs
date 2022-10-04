@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/checkbox';
 import '@vaadin/checkbox-group';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]

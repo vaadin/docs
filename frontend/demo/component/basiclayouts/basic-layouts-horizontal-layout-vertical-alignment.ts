@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/horizontal-layout';
 import '@vaadin/radio-group';
-import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import '@vaadin/text-area';
 
 @customElement('basic-layouts-horizontal-layout-vertical-alignment')

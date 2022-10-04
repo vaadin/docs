@@ -12,10 +12,10 @@ export class FakeProgressBar extends LitElement {
     `;
   }
 
-  @property()
+  @property({ type: Number })
   progress = 0;
 
-  public simulateProgress() {
+  simulateProgress() {
     this.progress = 0;
     const breakInterval = setInterval(() => {
       this.progress += 0.005;

@@ -2,7 +2,7 @@ import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/login/vaadin-login-form.js';
-import { LoginI18n } from '@vaadin/login';
+import type { LoginI18n } from '@vaadin/login';
 import * as img from '../../../../src/main/resources/images/starry-sky.png';
 
 @customElement('login-overlay-mockup')
@@ -78,16 +78,16 @@ export class LoginOverlayMockupElement extends LitElement {
   }
 
   @property({ type: String })
-  public headerTitle: string | undefined = 'App name';
+  headerTitle: string | undefined = 'App name';
 
   @property({ type: String })
-  public description: string | undefined = 'Application description';
+  description: string | undefined = 'Application description';
 
   @property({ type: Boolean })
-  public error = false;
+  error = false;
 
   @property({ type: Object })
-  public i18n: LoginI18n = {
+  i18n: LoginI18n = {
     form: {
       title: 'Log in',
       username: 'Username',

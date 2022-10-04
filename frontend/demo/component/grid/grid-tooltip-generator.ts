@@ -4,13 +4,14 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
 import type { GridEventContext } from '@vaadin/grid';
-import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/tooltip';
 import { differenceInYears, parseISO } from 'date-fns';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-tooltip-generator')

@@ -6,7 +6,7 @@ import '@vaadin/message-list';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { format, subDays, subMinutes } from 'date-fns';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('message-list-component')
 export class Example extends LitElement {

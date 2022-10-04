@@ -8,7 +8,7 @@ import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/cont
 import '@vaadin/grid';
 import '@vaadin/horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-column-visibility')
@@ -25,7 +25,7 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   @state()
-  private contextMenuItems: (ContextMenuItem & { key: string })[] = [
+  private contextMenuItems: Array<ContextMenuItem & { key: string }> = [
     { text: 'First name', checked: true, key: 'firstName' },
     { text: 'Last name', checked: true, key: 'lastName' },
     { text: 'Email', checked: true, key: 'email' },

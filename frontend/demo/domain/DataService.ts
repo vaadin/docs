@@ -1,10 +1,10 @@
-import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
-import RawReport from 'Frontend/generated/com/vaadin/demo/domain/Report';
-import ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
-import UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
-import ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import type RawReport from 'Frontend/generated/com/vaadin/demo/domain/Report';
+import type ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
+import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
+import type ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
 
 const datasetCache: { [key: string]: any[] } = {};
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {

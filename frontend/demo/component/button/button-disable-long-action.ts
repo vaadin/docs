@@ -7,7 +7,7 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/progress-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 import './fake-progress-bar';
-import { FakeProgressBar } from './fake-progress-bar';
+import type { FakeProgressBar } from './fake-progress-bar';
 
 @customElement('button-disable-long-action')
 export class Example extends LitElement {

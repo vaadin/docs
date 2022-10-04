@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/login';
-import { LoginI18n } from '@vaadin/login';
+import type { LoginI18n } from '@vaadin/login';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-overlay-internationalization')
@@ -14,7 +14,7 @@ export class Example extends LitElement {
     return root;
   }
 
-  //tag::snippet[]
+  // tag::snippet[]
   private i18n: LoginI18n = {
     header: {
       title: 'Sovelluksen nimi',
@@ -40,5 +40,5 @@ export class Example extends LitElement {
       <vaadin-login-overlay .i18n="${this.i18n}" opened no-autofocus></vaadin-login-overlay>
     `;
   }
-  //end::snippet[]
+  // end::snippet[]
 }
