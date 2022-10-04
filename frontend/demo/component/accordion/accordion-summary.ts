@@ -11,7 +11,7 @@ import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
-import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import { Binder, field } from '@hilla/form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';

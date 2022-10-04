@@ -6,7 +6,7 @@ import '@vaadin/grid';
 import type { Grid, GridCellFocusEvent } from '@vaadin/grid';
 import '@vaadin/text-area';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-cell-focus')

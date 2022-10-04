@@ -5,7 +5,7 @@ import '@vaadin/avatar';
 import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from '../../domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import * as companyLogo from '../../../../src/main/resources/images/company-logo.png';
 
 @customElement('avatar-image')

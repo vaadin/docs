@@ -10,7 +10,7 @@ import type { Grid } from '@vaadin/grid';
 import '@vaadin/item';
 import '@vaadin/list-box';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-context-menu')

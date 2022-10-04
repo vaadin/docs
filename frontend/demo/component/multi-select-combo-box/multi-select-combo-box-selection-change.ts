@@ -7,7 +7,7 @@ import '@vaadin/multi-select-combo-box';
 import type { MultiSelectComboBoxSelectedItemsChangedEvent } from '@vaadin/multi-select-combo-box';
 import '@vaadin/text-area';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('multi-select-combo-box-selection-change')

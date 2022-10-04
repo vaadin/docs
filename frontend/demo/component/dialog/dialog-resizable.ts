@@ -10,7 +10,7 @@ import '@vaadin/vertical-layout';
 import { dialogRenderer } from '@vaadin/dialog/lit.js';
 
 import { applyTheme } from 'Frontend/generated/theme';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 

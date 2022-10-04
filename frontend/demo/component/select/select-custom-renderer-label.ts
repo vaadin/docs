@@ -7,7 +7,7 @@ import '@vaadin/list-box';
 import '@vaadin/select';
 import { selectRenderer } from '@vaadin/select/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 const formatPersonFullName = (person: Person) => `${person.firstName} ${person.lastName}`;
