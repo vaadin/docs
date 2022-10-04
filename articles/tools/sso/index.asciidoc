@@ -9,12 +9,21 @@ section-nav: commercial
 :commercial-feature: SSO Kit
 include::{articles}/_commercial-banner.asciidoc[opts=optional]
 
-SSO Kit is an add-on for Vaadin Flow that provides all the configuration you need to add single sign-on capabilities to your applications.
+SSO Kit is an add-on for Vaadin Flow that provides all the configuration you need to add single sign-on capabilities to your applications, based on https://openid.net/connect/[OpenID Connect].
+These are the currently supported identity providers:
+
+- https://www.okta.com/[Okta]
+- https://www.keycloak.org/[Keycloak]
+- https://azure.microsoft.com/en-us/products/active-directory/[Azure Active Directory]
+
+SSO Kit needs at least one OpenID Connect client configured on an instance of these providers.
 
 [[sso.getting-started]]
 == Getting Started
 
 SSO Kit builds upon https://spring.io/projects/spring-security[Spring Security], and it comes with a starter module that takes care of configuring the security settings you need to authenticate against your identity provider.
+
+To get started you first need to add SSO Kit as a dependency to your application, for example to your Maven project:
 
 .`pom.xml`
 [source,xml]
@@ -25,13 +34,25 @@ SSO Kit builds upon https://spring.io/projects/spring-security[Spring Security],
 </dependency>
 ----
 
+Then, you need to set some configuration properties to connect SSO Kit to your OpenID Connect provider.
+These properties can be added to your `application.properties` file where you define the provider URL and the client registration details, such as credentials and scope.
+Provider definition is configured within the `spring.security.oauth2.provider` namespace where you define a key to identify your provider (for example `keycloak`).
+Then you can use the same key to register the client for that provider within the `spring.security.oauth2.registration` namespace, where you specify client credentials and the requested scope.
+The scope is a list of keywords to request the provider for a specific set of information, such as user `profile`, `email` or `roles`.
 This is an example of the properties to set to enable a Keycloak instance to perform authentication:
 
 [.example]
 --
-
-.application.yml
-[source,yml]
+.application.properties
+[source,properties]
+----
+spring.security.oauth2.client.provider.keycloak.issuer-uri=https://my-keycloak.io/realms/my-realm
+spring.security.oauth2.client.registration.keycloak.client-id= my-client
+spring.security.oauth2.client.registration.keycloak.client-secret=very-secret-value
+spring.security.oauth2.client.registration.keycloak.scope=profile,openid,email,roles
+----
+.application.yaml
+[source,yaml]
 ----
 spring:
   security:
@@ -50,98 +71,14 @@ spring:
             - email
             - roles
 ----
-
-.application.properties
-[source,properties]
-----
-spring.security.oauth2.client.provider.keycloak.issuer-uri=https://my-keycloak.io/realms/my-realm
-spring.security.oauth2.client.registration.keycloak.client-id= my-client
-spring.security.oauth2.client.registration.keycloak.client-secret=very-secret-value
-spring.security.oauth2.client.registration.keycloak.scope=profile,openid,email,roles
-----
 --
 
-=== Authentication Context
+Once you have at least one client configured, you're ready to secure your views.
 
-Most applications that have some sort of security need some common tasks, like getting the authenticated user or logging a user out.
-For that reason, SSO Kit provides the `AuthenticationContext` interface that can be injected into, for example, views and make it easier to perform these common tasks.
+[[sso.securing-views]]
+=== Securing Your Views
 
-==== Retrieving the Authenticated User
-
-To get the object containing the information about the user, you need first to inject the `AuthenticationContext` bean created by the SSO Kit.
-Then, to get the authenticated user, you need to call the method `AuthenciationContext::getAuthenticatedUser()`. 
-The method returns an `Optional` object containing the user information if the session has an authenticated user or null, otherwise.
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/sso/ProfileView.java[render,tags=profile-view;authenticated-user;!logout,indent=0,group=Java]
-----
-
-By default, the user object returned by `AuthenticationContext::getAuthenticatedUser()` is an instance of `OidcUser`.
-But sometimes, the application might define its implementation of the `OidcUser` interface, for example, translating the roles from string to enum objects.
-In that case, you can use `AuthenticationContext::getAuthenticatedUser(Class<U> userType)`, where `userType` is a class/interface that implements `OidcUser`.
-
-=== Single Sign-On
-
-SSO Kit provides a `SingleSignOnConfiguration` bean to auto-configure Vaadin and Spring to allow single sign-on against external identity providers.
-
-.Customized security configuration
-[NOTE]
-====
-If you need a customized security configuration, you can disable this auto-configuration class by setting the `auto-configure` property to `false` and define your own configuration class:
-
-[.example]
---
-
-.application.yml
-[source,yml]
-----
-vaadin:
-  sso:
-    auto-configure: false
-----
-
-.application.properties
-[source,properties]
-----
-vaadin.sso.auto-configure=false
-----
---
-====
-
-==== Login
-
-This configuration enables login for the identity providers defined in the application configuration.
-It instructs the application to accept requests for the login route, which can be configured setting the `login-route` property:
-
-[.example]
---
-
-.application.yml
-[source,yml]
-----
-vaadin:
-  sso:
-    login-route: your-login-route
-----
-
-.application.properties
-[source,properties]
-----
-vaadin.sso.login-route=your-login-route
-----
---
-
-The default value for this property is `/login`.
-
-.Custom Login Page
-[TIP]
-
-Some SSO providers enables to customize the default login theme, find out more in <<{articles}/tools/sso/theming, Theming>>.
-
-==== Protecting Your Views
-
-This configuration redirects to the provider's login page any unauthorized request.
+The default configuration redirects to the provider's login page requests to any view.
 You can set which views require authentication annotating them as described in <<{articles}/security/enabling-security#annotating-the-view-classes, Annotating the View Classes>>.
 For example:
 
@@ -150,41 +87,115 @@ For example:
 include::{root}/src/main/java/com/vaadin/demo/sso/ProfileView.java[render,tags=full-class;!class-content,indent=0,group=Java]
 ----
 
+[[sso.single-sign-on]]
+=== Single Sign-On
+
+SSO Kit provides the `SingleSignOnConfiguration` auto-configuration class to setup Vaadin and Spring to allow single sign-on against external identity providers.
+
+.Customized security configuration
+[NOTE]
+====
+If you need a customized security configuration, you can disable this auto-configuration class by setting the `vaadin.sso.auto-configure` property to `false` and define your own configuration class.
+
+This configuration enables login for the identity providers defined in the application configuration.
+It instructs the application to accept requests for the login route, which can be configured setting the `vaadin.sso.login-route` property, which defaults to `/login`.
+If there is no view defined for this route, Spring will auto-generate a page with links to each of the configured providers login forms.
+If you want to automatically redirect the users to the provider login form, you can set this property to `/oauth2/authorization/{provider-key}` where `{provider-key}` is the key used to configure the provider in `application.properties` file.
+
+[.Customize the login route]
+--
+.application.properties
+[source,properties]
+----
+vaadin.sso.login-route=/oauth2/authorization/keycloak
+----
+.application.yaml
+[source,yaml]
+----
+vaadin:
+  sso:
+    login-route: /oauth2/authorization/keycloak
+----
+--
+
+.Custom Login Page
+[TIP]
+
+Some providers support custom theme for their login pages, find out more in <<{articles}/tools/sso/theming, Theming>>.
+
+[[sso.authentication-context]]
+=== Authentication Context
+
+Upon successful authentication the provider redirects the user back to the protected view.
+To access the authenticated user's information (such as name, e-mail and roles), SSO Kit provides the [classname]`AuthenticationContext` bean that can be used as a view constructor argument.
+Then you can get the authenticated user with the [methodname]`getAuthenticatedUser()`, which will return a [classname]`Optional` object containing the user instance if the session has an authenticated user or empty otherwise.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/sso/ProfileView.java[render,tags=profile-view;authenticated-user;!logout,indent=0,group=Java]
+----
+
+By default, the user object returned by [methodname]`getAuthenticatedUser()` is an instance of [classname]`OidcUser`.
+If your application defines a custom user service to provide a specialized implementation of `OidcUser`, you can use the [methodname]`getAuthenticatedUser(Class<U> userType)`, where `userType` is your own type that implements `OidcUser`.
+
+[[sso.single-sign-off]]
 === Single Sign-Off
 
-SSO Kit provides two methods for logging out the user, the `https://openid.net/specs/openid-connect-rpinitiated-1_0.html:[RP-Initiated Logout]` and the `https://openid.net/specs/openid-connect-backchannel-1_0.html:[Back-Channel Logout]`.
+SSO Kit provides two methods for logging out the user, defined by the OpenID Connect specification:
 
+- `https://openid.net/specs/openid-connect-rpinitiated-1_0.html:[RP-Initiated Logout]`
+- `https://openid.net/specs/openid-connect-backchannel-1_0.html:[Back-Channel Logout]`
+
+[[sso.rp-initiated-logout]]
 ==== RP-Initiated Logout
 
-The RP-Initiated Logout enables the relying party to request that an end-user be logged out by the OpenID provider.
-It redirects the end-user's user agent to the OpenID provider's logout endpoint.
-
-The `AuthenticationContext` bean provides the `AuthenciationContext::logout()` method to end both the local user session and the provider's session:
+RP-Initiated Logout (RP stands for Relaying Party, the application) enables the user to logout from the application itself, taking care of terminating also the connected provider session.
+The [classname]`AuthenticationContext` bean provides the [methodname]`logout()` method to initiate the logout process programmatically, for example inside a button click-listener:
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/sso/ProfileView.java[render,tags=full-class;!authenticated-user,indent=0,group=Java]
 ----
 
-After a successful logout the user is redirected to the application's redirect route.
-You can set this by the `logout-redirect-route` property:
+After a successful logout the user is redirected to the configured logout redirect route, that can set with the `vaadin.sso.logout-redirect-route` property:
 
-[.example]
+[.Configuring the logout redirect route]
 --
-
-.application.yml
-[source,yml]
-----
-vaadin:
-  sso:
-    logout-redirect-route: your-logout-redirect-route
-----
-
 .application.properties
 [source,properties]
 ----
-vaadin.sso.logout-redirect-route=your-logout-redirect-route
+vaadin.sso.logout-redirect-route=/logout-successful
+----
+.application.yaml
+[source,yaml]
+----
+vaadin:
+  sso:
+    logout-redirect-route: /logout-successful
 ----
 --
 
+The default value of this property is the application root.
+
+[[sso.back-channel-logout]]
 ==== Back-Channel Logout
+Back-Channel Logout is a feature that enables the provider to terminate user sessions from outside the application, for example from the provider's user dashboard or from another application.
+To enable the feature, you need to set the `vaadin.sso.back-channel` property to `true`:
+
+[.Enabling Back-Channel Logout]
+--
+.application.properties
+[source,properties]
+----
+vaadin.sso.back-channel-logout=true
+----
+.application.yaml
+[source,yaml]
+----
+vaadin:
+  sso:
+    back-channel-logout: true
+----
+--
+
+Then, the client should be configured on the provider's dashboard to send logout requests to a specific application URL: `/logout/back-channel/{registration-key}` where `{registration-key}` is the provider key.
