@@ -25,7 +25,7 @@ router.setRoutes([
       await import('./routing-registration');
     },
   },
-  // for server-side, the next magic line sends all unmatched routes:
+  // For server-side, the next magic line sends all unmatched routes:
   ...serverSideRoutes, // IMPORTANT: this must be the last entry in the array
 ]);
 // end::snippet[]

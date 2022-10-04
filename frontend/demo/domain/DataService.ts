@@ -7,9 +7,10 @@ import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/User
 import type ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
 
 const datasetCache: { [key: string]: any[] } = {};
+
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
   if (!datasetCache[fileName]) {
-    datasetCache[fileName] = (await import('../../../src/main/resources/data/' + fileName)).default;
+    datasetCache[fileName] = (await import(`../../../src/main/resources/data/${fileName}`)).default;
   }
   return datasetCache[fileName].slice(0, count).map((item) => {
     // Create deep clones to avoid sharing the same item instances between examples
@@ -17,13 +18,10 @@ async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
   });
 }
 
-export async function getCountries(count?: number): Promise<Country[]> {
-  return await getDataset<Country>('countries.json', count);
-}
+export const getCountries = (count?: number): Promise<Country[]> =>
+  getDataset<Country>('countries.json', count);
 
-export async function getCards(count?: number): Promise<Card[]> {
-  return await getDataset<Card>('cards.json', count);
-}
+export const getCards = (count?: number): Promise<Card[]> => getDataset<Card>('cards.json', count);
 
 let peopleImages: string[];
 
@@ -37,6 +35,7 @@ type PeopleResults = {
   people: Person[];
   hierarchyLevelSize: number;
 };
+
 export async function getPeople(options?: PeopleOptions): Promise<PeopleResults> {
   if (!peopleImages) {
     peopleImages = (await import('../../../src/main/resources/data/peopleImages.json')).default;
@@ -46,7 +45,7 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   let people = [...allPeople];
 
   if (options?.managerId !== undefined) {
-    people = people.filter((person) => person.managerId == options?.managerId);
+    people = people.filter((person) => person.managerId === options?.managerId);
   }
 
   const hierarchyLevelSize = people.length;
@@ -67,7 +66,7 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   };
 }
 
-export const getUserPermissions = async (): Promise<readonly UserPermissions[]> =>
+export const getUserPermissions = (): Promise<readonly UserPermissions[]> =>
   getDataset<UserPermissions>('permissions.json');
 
 export enum ReportStatus {
@@ -82,13 +81,9 @@ export type Report = Omit<RawReport, 'status'> &
     status: ReportStatus;
   }>;
 
-export const getReports = async (): Promise<readonly Report[]> =>
-  await getDataset<Report>('reports.json');
+export const getReports = (): Promise<readonly Report[]> => getDataset<Report>('reports.json');
 
-export async function getServiceHealth(): Promise<ServiceHealth[]> {
-  return getDataset<ServiceHealth>('serviceHealth.json');
-}
+export const getServiceHealth = (): Promise<ServiceHealth[]> =>
+  getDataset<ServiceHealth>('serviceHealth.json');
 
-export async function getViewEvents(): Promise<ViewEvent[]> {
-  return getDataset<ViewEvent>('viewEvents.json');
-}
+export const getViewEvents = (): Promise<ViewEvent[]> => getDataset<ViewEvent>('viewEvents.json');
