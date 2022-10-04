@@ -7,7 +7,7 @@ import '@vaadin/checkbox-group';
 import '@vaadin/vertical-layout';
 import type { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-indeterminate')

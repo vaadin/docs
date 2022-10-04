@@ -10,8 +10,8 @@ import '@vaadin/form-layout';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
-import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import { Binder, field } from '@hilla/form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
@@ -36,9 +36,11 @@ export class Example extends LitElement {
 
   @state()
   private openedPanelIndex: number | null = 0;
+
   async firstUpdated() {
     this.countries = await getCountries();
   }
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)

@@ -1,4 +1,5 @@
 import { css, html, LitElement, render } from 'lit';
+import type { TemplateResult } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 
 @customElement('iconset-generator')
@@ -234,7 +235,7 @@ export class IconsetGenerator extends LitElement {
       set.push(f);
     });
 
-    const outputHtml = [];
+    const outputHtml: TemplateResult[] = [];
     for (const iconsetName in iconsets) {
       const set = iconsets[iconsetName];
 
@@ -328,18 +329,16 @@ async function generateVaadinIconset(
   enumName: string
 ): Promise<{ js: string; java: string }> {
   const files = await fileListToText(set);
-  let size: string | undefined | number;
+  let size: number | string | undefined;
   const svgs = files.map((f) => {
     // Get the viewbox size
     if (!size && f.txt.match(/viewbox/i)) {
       const viewbox = /viewbox=["']0 0 (.*?) (.*?)["']/i.exec(f.txt);
       if (!viewbox) {
         console.warn('Unusual viewBox definition. Ignoring icon', f.name, f.txt);
-      } else {
-        if (viewbox[1] != viewbox[2]) {
-          size = Math.max(parseInt(viewbox[1]), parseInt(viewbox[2]));
-          console.warn('Icons are not square. Using the largest value.', size);
-        }
+      } else if (viewbox[1] !== viewbox[2]) {
+        size = Math.max(parseInt(viewbox[1]), parseInt(viewbox[2]));
+        console.warn('Icons are not square. Using the largest value.', size);
       }
     }
 
@@ -418,7 +417,7 @@ const convertToEnumName = (s: string) => {
   let name = s.toUpperCase().replaceAll('-', '_');
   // Java enums can't start with a number. Prefix with underscore
   if (name.match(/^\d/)) {
-    name = '_' + name;
+    name = `_${name}`;
   }
   return name;
 };

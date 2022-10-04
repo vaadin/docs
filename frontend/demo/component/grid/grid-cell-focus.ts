@@ -6,7 +6,7 @@ import '@vaadin/grid';
 import type { Grid, GridCellFocusEvent } from '@vaadin/grid';
 import '@vaadin/text-area';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-cell-focus')
@@ -33,7 +33,7 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   @state()
-  private eventSummary?: string;
+  private eventSummary = '';
 
   async firstUpdated() {
     const { people } = await getPeople();
@@ -49,7 +49,7 @@ export class Example extends LitElement {
         @cell-focus="${(e: GridCellFocusEvent<Person>) => {
           const eventContext = this.grid.getEventContext(e);
           const section = eventContext.section || 'Not available';
-          const row = eventContext.index != undefined ? eventContext.index : 'Not available';
+          const row = eventContext.index != null ? eventContext.index : 'Not available';
           const column = eventContext.column?.path || 'Not available';
           const person = eventContext.item;
           const fullName =

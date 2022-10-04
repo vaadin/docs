@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar-group';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-group-bg-color')
 export class Example extends LitElement {
@@ -27,10 +27,10 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-avatar-group
-        .items="${this.items.map((person, colorIndex) => {
+        .items="${this.items.map((person, index) => {
           return {
             name: `${person.firstName} ${person.lastName}`,
-            colorIndex: colorIndex,
+            colorIndex: index,
           };
         })}"
       ></vaadin-avatar-group>

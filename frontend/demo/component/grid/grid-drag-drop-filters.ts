@@ -14,7 +14,7 @@ import type {
   GridItemModel,
 } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
@@ -46,11 +46,11 @@ export class Example extends LitElement {
     const { people } = await getPeople();
     this.items = people;
     this.managers = this.items.filter((item) => item.manager);
-    // avoid using this method
+    // Avoid using this method
     this.grid.clearCache();
   }
 
-  private dataProvider = async (
+  private dataProvider = (
     params: GridDataProviderParams<Person>,
     callback: GridDataProviderCallback<Person>
   ) => {
@@ -92,22 +92,22 @@ export class Example extends LitElement {
         @grid-drop="${(event: GridDropEvent<Person>) => {
           const manager = event.detail.dropTargetItem;
           if (this.draggedItem) {
-            // in a real application, when using a data provider, you should
+            // In a real application, when using a data provider, you should
             // change the persisted data instead of updating a field
             this.draggedItem.managerId = manager.id;
-            // avoid using this method
+            // Avoid using this method
             this.grid.clearCache();
           }
         }}"
         .dragFilter="${(model: GridItemModel<Person>) => {
           const item = model.item;
-          return !item.manager; // only drag non-managers
+          return !item.manager; // Only drag non-managers
         }}"
         .dropFilter="${(model: GridItemModel<Person>) => {
           const item = model.item;
           return (
-            item.manager && // can only drop on a supervisor
-            item.id !== this.draggedItem?.managerId // disallow dropping on the same manager
+            item.manager && // Can only drop on a supervisor
+            item.id !== this.draggedItem?.managerId // Disallow dropping on the same manager
           );
         }}"
       >

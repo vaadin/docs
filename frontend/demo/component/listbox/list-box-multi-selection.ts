@@ -4,8 +4,8 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/item';
 import '@vaadin/list-box';
 import { applyTheme } from 'Frontend/generated/theme';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('list-box-multi-selection')
 export class Example extends LitElement {

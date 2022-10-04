@@ -7,7 +7,7 @@ import { columnBodyRenderer, gridRowDetailsRenderer } from '@vaadin/grid/lit.js'
 import '@vaadin/form-layout';
 import '@vaadin/text-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
@@ -91,7 +91,7 @@ export class Example extends LitElement {
                 @click="${() => {
                   const isOpened = this.detailsOpenedItems.includes(person);
                   this.detailsOpenedItems = isOpened
-                    ? this.detailsOpenedItems.filter((p) => p != person)
+                    ? this.detailsOpenedItems.filter((p) => p !== person)
                     : [...this.detailsOpenedItems, person];
                 }}"
               >

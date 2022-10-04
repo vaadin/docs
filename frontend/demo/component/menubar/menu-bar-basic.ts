@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/menu-bar';
-import { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/menu-bar';
+import type { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-basic')

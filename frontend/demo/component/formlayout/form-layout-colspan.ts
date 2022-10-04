@@ -3,7 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/date-picker';
 import '@vaadin/form-layout';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/text-field';
 import '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/generated/theme';

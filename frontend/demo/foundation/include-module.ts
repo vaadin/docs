@@ -1,4 +1,4 @@
-import { CSSResult } from 'lit';
+import type { CSSResult } from 'lit';
 
 export function includeModule(cssModule: CSSResult, parseCss: (css: string) => string) {
   const css = cssModule.cssText;

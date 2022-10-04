@@ -3,10 +3,11 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
-import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import type { GridDragStartEvent } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-drag-rows-between-grids')
@@ -73,11 +74,11 @@ export class Example extends LitElement {
             const draggedPerson = this.draggedItem as Person;
             const draggedItemIndex = this.grid2Items.indexOf(draggedPerson);
             if (draggedItemIndex >= 0) {
-              // remove the item from its previous position
+              // Remove the item from its previous position
               this.grid2Items.splice(draggedItemIndex, 1);
-              // re-assign the array to refresh the grid
+              // Re-assign the array to refresh the grid
               this.grid2Items = [...this.grid2Items];
-              // re-assign the array to refresh the grid
+              // Re-assign the array to refresh the grid
               this.grid1Items = [...this.grid1Items, draggedPerson];
             }
           }}"
@@ -99,11 +100,11 @@ export class Example extends LitElement {
             const draggedPerson = this.draggedItem as Person;
             const draggedItemIndex = this.grid1Items.indexOf(draggedPerson);
             if (draggedItemIndex >= 0) {
-              // remove the item from its previous position
+              // Remove the item from its previous position
               this.grid1Items.splice(draggedItemIndex, 1);
-              // re-assign the array to refresh the grid
+              // Re-assign the array to refresh the grid
               this.grid1Items = [...this.grid1Items];
-              // re-assign the array to refresh the grid
+              // Re-assign the array to refresh the grid
               this.grid2Items = [...this.grid2Items, draggedPerson];
             }
           }}"
