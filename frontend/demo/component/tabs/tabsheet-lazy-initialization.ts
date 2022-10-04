@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/tabs';
 import '@vaadin/tabsheet';
+import type { TabSheetSelectedChangedEvent } from '@vaadin/tabsheet';
 import { applyTheme } from 'Frontend/generated/theme';
-import { TabSheetSelectedChangedEvent } from '@vaadin/tabsheet';
 
 @customElement('tabsheet-lazy-initialization')
 export class Example extends LitElement {
@@ -22,7 +22,7 @@ export class Example extends LitElement {
 
   private selectedTabChanged(event: TabSheetSelectedChangedEvent) {
     this.visitedTabs = new Set([...this.visitedTabs, event.detail.value]);
-  };
+  }
 
   render() {
     return html`

@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/login/vaadin-login-form.js';
-import { LoginI18n } from '@vaadin/login';
+import type { LoginI18n } from '@vaadin/login';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-internationalization')
@@ -25,7 +25,7 @@ export class Example extends LitElement {
     `;
   }
 
-  //tag::snippet[]
+  // tag::snippet[]
   private i18n: LoginI18n = {
     form: {
       title: 'Kirjaudu sisään',
@@ -46,5 +46,5 @@ export class Example extends LitElement {
       <vaadin-login-form .i18n="${this.i18n}" no-autofocus></vaadin-login-form>
     `;
   }
-  //end::snippet[]
+  // end::snippet[]
 }

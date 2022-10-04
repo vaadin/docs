@@ -8,7 +8,7 @@ import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import { getCards } from 'Frontend/demo/domain/DataService';
-import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-custom-option')

@@ -4,8 +4,9 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/notification';
-import { NotificationOpenedChangedEvent } from '@vaadin/notification';
-import { notificationRenderer, NotificationLitRenderer } from '@vaadin/notification/lit.js';
+import type { NotificationOpenedChangedEvent } from '@vaadin/notification';
+import { notificationRenderer } from '@vaadin/notification/lit.js';
+import type { NotificationLitRenderer } from '@vaadin/notification/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-keyboard-a11y')
@@ -85,7 +86,7 @@ export class Example extends LitElement {
   }
 
   onKeyDown = (event: KeyboardEvent) => {
-    if (this.notificationOpened && (event.metaKey || event.ctrlKey) && event.key == 'z') {
+    if (this.notificationOpened && (event.metaKey || event.ctrlKey) && event.key === 'z') {
       // Handle your custom undo logic here
       // Avoid triggering the native undo action
       event.preventDefault();

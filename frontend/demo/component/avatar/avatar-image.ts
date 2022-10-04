@@ -4,8 +4,8 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import { getPeople } from '../../domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import * as companyLogo from '../../../../src/main/resources/images/company-logo.png';
 
 @customElement('avatar-image')

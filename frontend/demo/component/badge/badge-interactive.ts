@@ -7,7 +7,7 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
-import { Button } from '@vaadin/button';
+import type { Button } from '@vaadin/button';
 import type { ComboBoxChangeEvent } from '@vaadin/combo-box';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';

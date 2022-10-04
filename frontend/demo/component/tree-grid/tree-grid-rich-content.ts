@@ -8,13 +8,14 @@ import '@vaadin/grid';
 import type { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-tree-toggle.js';
 import type { GridTreeToggleExpandedChangedEvent } from '@vaadin/grid/vaadin-grid-tree-toggle.js';
-import { columnBodyRenderer, GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-rich-content')

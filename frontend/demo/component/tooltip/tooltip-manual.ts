@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/text-field';
@@ -18,7 +18,7 @@ export class Example extends LitElement {
     return root;
   }
 
-  @property({ type: Boolean })
+  @state()
   private tooltipOpened = false;
 
   render() {

@@ -43,7 +43,7 @@ public class AccordionSummary extends Div {
 
         FormLayout billingAddressFormLayout = createFormLayout();
         AccordionPanel billingAddressPanel = accordion.add(BILLING_ADDRESS,  billingAddressFormLayout);
-        
+
         FormLayout paymentFormLayout = createFormLayout();
         AccordionPanel paymentPanel = accordion.add(PAYMENT, paymentFormLayout);
 
@@ -225,7 +225,7 @@ public class AccordionSummary extends Div {
             detailsLayout.setSpacing(false);
             detailsLayout.setPadding(false);
             detailsLayout.getStyle().set("font-size", "var(--lumo-font-size-s)");
-            
+
             for (String detail: details) {
                 if (detail != null && !detail.isEmpty()) {
                     detailsLayout.add(new Span(detail));

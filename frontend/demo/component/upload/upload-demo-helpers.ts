@@ -95,7 +95,7 @@ export class MockHttpRequest {
   responseHeaders: { [key: string]: string } = {};
   statusReasons = statusReasons;
 
-  /*** State ***/
+  // State
 
   UNSENT = 0;
   OPENED = 1;
@@ -112,18 +112,17 @@ export class MockHttpRequest {
   urlParts?: UrlParts;
   requestText?: string | null;
 
-  /*** Request ***/
+  // Request
 
   open(method: string, url: string, async: boolean, user: string, password: string) {
     if (typeof method !== 'string') {
-      throw 'INVALID_METHOD';
+      throw new Error('INVALID_METHOD');
     }
     switch (method.toUpperCase()) {
       case 'CONNECT':
       case 'TRACE':
       case 'TRACK':
-        throw 'SECURITY_ERR';
-
+        throw new Error('SECURITY_ERR');
       case 'DELETE':
       case 'GET':
       case 'HEAD':
@@ -131,11 +130,15 @@ export class MockHttpRequest {
       case 'POST':
       case 'PUT':
         method = method.toUpperCase();
+        break;
+      default:
+        break;
     }
+
     this.method = method;
 
     if (typeof url !== 'string') {
-      throw 'INVALID_URL';
+      throw new Error('INVALID_URL');
     }
     this.url = url;
     this.urlParts = this.parseUri(url);
@@ -174,34 +177,36 @@ export class MockHttpRequest {
       case 'user-agent':
       case 'via':
         return;
+      default:
+        break;
     }
     if (header.substr(0, 6) === 'proxy-' || header.substr(0, 4) === 'sec-') {
       return;
     }
 
-    // it's the first call on this header field
+    // It's the first call on this header field
     if (this.requestHeaders[header] === undefined) {
       this.requestHeaders[header] = value;
     } else {
       const prev = this.requestHeaders[header];
-      this.requestHeaders[header] = prev + ', ' + value;
+      this.requestHeaders[header] = `${prev}, ${value}`;
     }
   }
 
   send(data?: string | null) {
     if (this.readyState !== this.OPENED || this.sent) {
-      throw 'INVALID_STATE_ERR';
+      throw new Error('INVALID_STATE_ERR');
     }
     if (this.method === 'GET' || this.method === 'HEAD') {
       data = null;
     }
 
-    //TODO set Content-Type header?
+    // TODO set Content-Type header?
     this.error = false;
     this.sent = true;
     this.onreadystatechange();
 
-    // fake send
+    // Fake send
     this.requestText = data;
     this.onsend();
   }
@@ -218,7 +223,7 @@ export class MockHttpRequest {
     this.readyState = this.UNSENT;
   }
 
-  /*** Response ***/
+  // Response
 
   status = 0;
   statusText = '';
@@ -236,8 +241,8 @@ export class MockHttpRequest {
       if (header === 'set-cookie' || header === 'set-cookie2') {
         continue;
       }
-      //TODO title case header
-      r += header + ': ' + this.responseHeaders[header] + '\r\n';
+      // TODO title case header
+      r += `${header}: ${this.responseHeaders[header]}\r\n`;
     }
     return r;
   }
@@ -245,7 +250,7 @@ export class MockHttpRequest {
   responseText: string | null = '';
   responseXML = undefined; // TODO
 
-  /*** See http://www.w3.org/TR/progress-events/ ***/
+  // See http://www.w3.org/TR/progress-events/
 
   onload() {} // Instances should override this.
 
@@ -257,7 +262,7 @@ export class MockHttpRequest {
 
   onreadystatechange() {} // Instances should override this.
 
-  /*** Properties and methods for test interaction ***/
+  // Properties and methods for test interaction
 
   onsend() {} // Instances should override this.
 
@@ -271,7 +276,7 @@ export class MockHttpRequest {
 
   makeXMLResponse(data: string) {
     let xmlDoc;
-    // according to specs from point 3.7.5:
+    // According to specs from point 3.7.5:
     //  1. If the response entity body is null terminate these steps
     //     and return null.
     //  2. If final MIME type is not null, text/xml, application/xml,
@@ -280,9 +285,9 @@ export class MockHttpRequest {
     mimetype = mimetype && mimetype.split(';', 1)[0];
     if (
       mimetype == null ||
-      mimetype == 'text/xml' ||
-      mimetype == 'application/xml' ||
-      (mimetype && mimetype.substring(mimetype.length - 4) == '+xml')
+      mimetype === 'text/xml' ||
+      mimetype === 'application/xml' ||
+      (mimetype && mimetype.substring(mimetype.length - 4) === '+xml')
     ) {
       // Attempt to produce an xml response
       // and it will fail if not a good xml
@@ -297,7 +302,7 @@ export class MockHttpRequest {
           xmlDoc.loadXML(data);
         }
       } catch (e) {
-        // according to specs from point 3.7.5:
+        // According to specs from point 3.7.5:
         // "3. Let document be a cookie-free Document object that
         // represents the result of parsing the response entity body
         // into a document tree following the rules from the XML
@@ -306,22 +311,22 @@ export class MockHttpRequest {
         // these steps return null."
         xmlDoc = null;
       }
-      // parse errors also yield a null.
+      // Parse errors also yield a null.
       if (
-        (xmlDoc && xmlDoc.parseError && xmlDoc.parseError.errorCode != 0) ||
-        (xmlDoc && xmlDoc.documentElement && xmlDoc.documentElement.nodeName == 'parsererror') ||
+        (xmlDoc && xmlDoc.parseError && xmlDoc.parseError.errorCode !== 0) ||
+        (xmlDoc && xmlDoc.documentElement && xmlDoc.documentElement.nodeName === 'parsererror') ||
         (xmlDoc &&
           xmlDoc.documentElement &&
-          xmlDoc.documentElement.nodeName == 'html' &&
+          xmlDoc.documentElement.nodeName === 'html' &&
           xmlDoc.documentElement.firstChild &&
-          xmlDoc.documentElement.firstChild.nodeName == 'body' &&
+          xmlDoc.documentElement.firstChild.nodeName === 'body' &&
           xmlDoc.documentElement.firstChild.firstChild &&
-          xmlDoc.documentElement.firstChild.firstChild.nodeName == 'parsererror')
+          xmlDoc.documentElement.firstChild.firstChild.nodeName === 'parsererror')
       ) {
         xmlDoc = null;
       }
     } else {
-      // mimetype is specified, but not xml-ish
+      // MIME type is specified, but not xml-ish
       xmlDoc = null;
     }
     return xmlDoc;
@@ -331,11 +336,11 @@ export class MockHttpRequest {
   receive(status: number, data: string) {
     if (this.readyState !== this.OPENED || !this.sent) {
       // Can't respond to unopened request.
-      throw 'INVALID_STATE_ERR';
+      throw new Error('INVALID_STATE_ERR');
     }
 
     this.status = status;
-    this.statusText = status + ' ' + this.statusReasons[status];
+    this.statusText = `${status} ${this.statusReasons[status]}`;
     this.readyState = this.HEADERS_RECEIVED;
     this.onprogress();
     this.onreadystatechange();
@@ -357,7 +362,7 @@ export class MockHttpRequest {
   err(exception: Error | string) {
     if (this.readyState !== this.OPENED || !this.sent) {
       // Can't respond to unopened request.
-      throw 'INVALID_STATE_ERR';
+      throw new Error('INVALID_STATE_ERR');
     }
 
     this.responseText = null;
@@ -434,7 +439,7 @@ export class MockHttpRequest {
 
     partialUri.queryKey = {};
     const uri = partialUri as UrlParts;
-    uri.query.replace(querypattern, function (_, $1, $2) {
+    uri.query.replace(querypattern, (_, $1, $2) => {
       if ($1) {
         uri.queryKey[$1] = $2;
       }
@@ -488,7 +493,9 @@ export class MockHttpServer {
   }
 
   stop() {
-    if (window.OriginalHttpRequest) window.XMLHttpRequest = window.OriginalHttpRequest;
+    if (window.OriginalHttpRequest) {
+      window.XMLHttpRequest = window.OriginalHttpRequest;
+    }
   }
 }
 
@@ -510,7 +517,9 @@ function mockXhrGenerator() {
       setTimeout(progress, 1000);
     }
     function progress() {
-      if (xhr.upload.onprogress) xhr.upload.onprogress({ total: total, loaded: done });
+      if (xhr.upload.onprogress) {
+        xhr.upload.onprogress({ total, loaded: done });
+      }
       if (done < total) {
         setTimeout(progress, 200);
         done = Math.min(total, done + 254000);

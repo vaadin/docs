@@ -15,7 +15,7 @@ import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('dialog-header')
 export class Example extends LitElement {
@@ -54,7 +54,7 @@ export class Example extends LitElement {
         )}
         ${dialogRenderer(this.renderDialog, this.user)}
       ></vaadin-dialog>
-      <!-- end::snippet[]  -->
+      <!-- end::snippet[] -->
       <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }

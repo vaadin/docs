@@ -18,7 +18,7 @@ export class Example extends LitElement {
   }
 
   firstUpdated() {
-    // aria-label for screen readers
+    // Set `aria-label` for screen readers
     const amount = this.renderRoot.querySelector('#amount > input') as HTMLInputElement;
     amount.setAttribute('aria-label', 'Amount');
     amount.removeAttribute('aria-labelledby');

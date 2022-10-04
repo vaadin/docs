@@ -13,7 +13,7 @@ import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('dialog-no-padding')
 export class Example extends LitElement {
@@ -65,7 +65,7 @@ export class Example extends LitElement {
           []
         )}
       ></vaadin-dialog>
-      <!-- end::snippet[]  -->
+      <!-- end::snippet[] -->
       <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }
