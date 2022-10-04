@@ -1,20 +1,22 @@
 ---
-title: Custom Instrumentation
-order: 20
+title: Customization
+order: 30
 description: Instructions on adding custom instrumentation traces to the application.
 ---
 
-= Custom Instrumentation
+= Customizing Observability Kit
 
-The default instrumentation of the Observability Kit agent provides a reasonable amount of data out-of-the-box. However, it cannot cover all of the specifics of an application.
+The default instrumentation of Observability Kit provides a reasonable amount of data out-of-the-box.
+However, it cannot cover all the specifics of an application.
 Writing custom instrumentation allows the collection of application-specific telemetry data for possible problematic places or performance hotspots of an application.
 
 == Customizing Traces
 
-Custom instrumentation allows the execution of specific pieces of code to be recorded as spans. These will automatically be added to the current trace, and will provide additional details, such as attributes and errors.
+Custom instrumentation allows the execution of specific pieces of code to be recorded as spans.
+These are automatically be added to the current trace, and provide more details, such as attributes and errors.
 
 Custom spans can be added either by using annotations, or by using the OpenTelemetry API to create and end spans, manually.
-The following sections provide instructions for each of these methods.
+The following sections gives instructions for each of these methods.
 
 === Using Annotations
 
@@ -32,7 +34,7 @@ Annotations require the OpenTelemetry instrumentation annotations dependency to 
 ----
 
 [NOTE]
-The OpenTelemetry API version should match the version that is used by the Observability Kit agent.
+The OpenTelemetry API version should match the version that is used by Observability Kit.
 The used version is available in the release notes and can be seen when running the Java agent.
 
 Now methods that should be recorded, can be annotated with the `@WithSpan` annotation.
@@ -85,10 +87,11 @@ Creating manual spans requires adding the OpenTelemetry API dependency to the pr
 ----
 
 [NOTE]
-The OpenTelemetry API version should match the version that is used by the Observability Kit agent.
+The OpenTelemetry API version should match the version that is used by Observability Kit.
 The used version is available in the release notes and can be seen when running the Java agent.
 
-To create a span manually, acquire a tracer instance from the OpenTelemetry API, and then start and end a span around the code that should be traced. An example of how that might look is shown below:
+To create a span manually, get a tracer instance from the OpenTelemetry API, and then start and end a span around the code that should be traced.
+For example:
 
 [source, java]
 ----
@@ -222,3 +225,123 @@ For manual implementation, it is possible to keep the span open until a threaded
     }
 ----
 
+
+
+== Creating Custom Metrics
+
+Creating manual metrics requires adding the OpenTelemetry API dependency to the project:
+
+.pom.xml
+[source, xml]
+----
+<dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-api</artifactId>
+    <version>1.18.0</version>
+</dependency>
+----
+
+It is possible to make synchronous and asynchronous metric instrumentation.
+Synchronous is when measurements are recorded as they happen. Asynchronous is related to when a collection of measurements is invoked.
+
+.Create Meter Instance
+[source,java]
+----
+class MyMetrics {
+    void generateMetrics() {
+        Meter meter = GlobalOpenTelemetry.meterBuilder("app-instrumentation")
+            .setInstrumentationVersion("1.0.0").build();
+    }
+}
+----
+
+With the `Meter`, you can now create metric instrumentation for Counter, UpDownCounter, Gauge and Histogram. Each can be either a Long or a Double metric.
+
+- `Counter` records only positive values.
+- `UpDownCounter` records positive and negative values.
+- `Gauge` measures an instantaneous value with an asynchronous callback.
+- `Histogram` records measurements that are most useful to analyze as a histogram distribution.
+
+Adding a synchronous count for amount of generated images:
+
+.Counter Sample
+[source,java]
+----
+class MyMetrics {
+    static LongCounter counter;
+    void generateMetrics() {
+        // ...
+         counter = meter
+            .counterBuilder("generated_image")
+            .setDescription("Amount of images generated")
+            .setUnit("1").build();
+    }
+
+    public void generateImage() {
+        // generation code
+        counter.add(1);
+    }
+}
+----
+
+Adding an asynchronous gauge for measuring open sessions would could be the following:
+
+.Gauge Sample
+[source,java]
+----
+class MyMetrics {
+    void generateMetrics() {
+        // ...
+        meter.gaugeBuilder("vaadin.session.count").ofLongs()
+            .setDescription("Number of open sessions").setUnit("count")
+            .buildWithCallback(measurement -> {
+                measurement.record(getOpenSessions());
+            });
+    }
+}
+----
+
+Metrics can also be annotated with attributes to help describe what the metric represents.
+
+For more details about manual metrics, please see https://opentelemetry.io/docs/instrumentation/java/manual/#metrics[OpenTelemetry metrics^]
+
+== System and Process Metrics
+
+It's possible to collect systems and process metrics using OSHI https://github.com/oshi/oshi[Operating System and Hardware Information^] with OpenTelemetry instrumentation.
+
+First, the application needs to get the `opentelemetry-oshi` and `oshi-core` dependencies:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+  <!-- contains the implementation of the process- and systems-metrics collection for JavaAgent -->
+  <groupId>io.opentelemetry.instrumentation</groupId>
+  <artifactId>opentelemetry-oshi</artifactId>
+  <version>1.18.0-alpha</version>
+  <scope>compile</scope>
+</dependency>
+<dependency>
+  <groupId>com.github.oshi</groupId>
+  <artifactId>oshi-core</artifactId>
+  <version>5.3.1</version>
+</dependency>
+----
+
+Then to enable and register the metrics and observers, call `SystemMetrics.registerObservers()` and `ProcessMetrics.registerObservers()` once.
+
+For instance, here is how it might look in a spring-boot application:
+
+.SpringBootApplication
+[source,java]
+----
+@SpringBootApplication
+public class YourApplication implements AppShellConfigurator {
+
+    static {
+        SystemMetrics.registerObservers(GlobalOpenTelemetry.get());
+	    ProcessMetrics.registerObservers(GlobalOpenTelemetry.get());
+    }
+    //  other code
+}
+----

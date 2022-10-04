@@ -1,48 +1,50 @@
 ---
 title: Grafana
-tab-tile: Grafana
-order: 30
-description: Instructions for using Grafana
+description: Grafana is an observability stack with support for metrics, traces, and logs. It can be self-hosted, in addition to using the commercial managed hosting. Learn how to use Grafana together with Observability Kit.
+page-links:
+  - https://grafana.com[Website]
 ---
 
 = Grafana Integration
 
-https://grafana.com/[Grafana^] is a stack of related services for collecting and viewing telemetry data, which can be self-hosted.
-
-The Grafana integration supports metrics, traces and logs.
-
 == Setup
 
-For this integration, we provide a local setup for a Grafana stack that can be run using https://docs.docker.com/compose/[docker-compose^].
+These instructions are for a local Grafana setup which you can run using https://docs.docker.com/compose/[docker-compose].
 Alternatively, Grafana provides a managed hosting service for their products.
 
-[IMPORTANT]
-The setup is intended for local testing only. It is not production ready.
-Please refer to the Grafana documentation on how properly to configure and secure a self-hosted setup.
+.Not production-ready
+[CAUTION]
+The setup is intended for local testing only.
+It is not production ready.
+Please refer to the Grafana documentation on how to https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/[configure and secure a self-hosted setup].
 
-Start by cloning https://github.com/vaadin/observability-grafana-setup[this git repository^] that contains the setup:
-```Shell
+Start by cloning the https://github.com/vaadin/observability-grafana-setup[`observability-grafana-setup`] repository:
+
+[source,terminal]
 git clone https://github.com/vaadin/observability-grafana-setup.git
-```
 
 From the setup folder, run:
-```Shell
+
+[source,terminal]
+----
+cd observability-grafana-setup
 docker-compose up
-```
+----
 
-This command starts a set of services for collecting and displaying data from the Observability Kit agent:
+This command starts a set of services for collecting and displaying data from Observability Kit:
 
-- Grafana Tempo for collecting and storing traces;
-- Prometheus for collecting and storing metrics;
-- Grafana Loki for collecting and storing logs;
-- OpenTelemetry collector for ingesting telemetry data from the agent, and distributing it to the services above; and
-- Grafana for displaying traces, metrics and logs, also from the services above.
+- *Grafana Tempo* for collecting and storing traces;
+- *Prometheus* for collecting and storing metrics;
+- *Grafana Loki* for collecting and storing logs;
+- *OpenTelemetry collector* for ingesting telemetry data from the agent, and distributing it to the services above; and
+- *Grafana* for displaying traces, metrics and logs, also from the services above.
 
-== Agent Configuration
+[[configuration-file]]
+== Observability Kit Configuration
 
-To configure the Observability Kit agent, create an `agent.properties` file with the following content:
+To configure Observability Kit, create an [filename]`agent.properties` file with the following content:
 
-.`*agent.properties*`
+.agent.properties
 [source,properties]
 ----
 otel.service.name=vaadin
@@ -52,12 +54,14 @@ otel.logs.exporter=otlp
 ----
 
 In the configuration above, the service name is defined as `vaadin`, which is also the default of the agent.
-The service name can be customized. Note, however, that the pre-configured Grafana dashboard queries data from the `vaadin` service, and needs to be edited when using a custom service name.
+The service name can be customized.
+Note, however, that the pre-configured Grafana dashboard queries data from the `vaadin` service, and needs to be edited when using a custom service name.
 
-By default, the OTLP exporters assume that the OpenTelemetry collector is running locally. So there is no need to configure endpoints.
-If the collector is running on a different system, an endpoint must be configured for the exporter:
+By default, the OpenTelemetry Protocol (OTLP) exporters assume that the OpenTelemetry collector is running locally.
+You do not need to configure endpoints.
+If the collector is running on a different system, you need to configure an endpoint for the exporter:
 
-.`*agent.properties*`
+.agent.properties
 [source,properties]
 ----
 otel.exporter.otlp.endpoint=https://collector.my-domain.net:4317
@@ -69,39 +73,38 @@ include::./_run-app.asciidoc[opts=optional]
 
 == Viewing Data
 
-The Grafana setup provides a http://localhost:3000/d/6_bNYpGVz/vaadin-dashboard?orgId=1[sample dashboard^] that shows basic metrics, like JVM memory usage and CPU utilization, traces and errors, as well as logs.
+The Grafana setup provides a http://localhost:3000/d/6_bNYpGVz/vaadin-dashboard?orgId=1[sample dashboard] that shows basic metrics, like JVM memory usage and CPU usage, traces and errors, as well as logs.
 To log in, use the default credentials `admin` and `admin`.
 
+.Remember to configure the service name
 [NOTE]
-The service name needs to be configured as `vaadin` in the agent properties file. Otherwise, the dashboard will not show any data.
+The service name needs to be configured as `vaadin` in the <<configuration-file,configuration  file>>.
+Otherwise, the dashboard does not show any data.
 
 The individual panels of the dashboard may be used to explore the data in more detail.
-Click on a panel's name to open the dropdown menu, and then click on `Explore`.
+Click on a panel's name to open the drop-down menu, and then click on [guilabel]*Explore*.
+
+See the https://grafana.com/docs/grafana/latest/explore/[Grafana documentation] for more information on how to use the http://localhost:3000/explore[Explore view].
 
 === Viewing Traces
 
-To view traces, open the http://localhost:3000/explore[Explore view^], and select `Tempo` as the data source.
-Change the `Query type` to `Search`, and select the name of the service from the `Service name` menu.
+To view traces, open the http://localhost:3000/explore[Explore view], and select [guilabel]*Tempo* as the data source.
+Change the [guilabel]*Query type* to [guilabel]*Search*, and select the name of the service from the [guilabel]*Service name* menu.
 Then click the refresh button in the top-right to search for traces.
 
-Use the `Tags` option to filter for specific span attributes. For example, to filter for traces that contains errors, enter `error=true`.
+Use the [guilabel]*Tags* option to filter for specific span attributes.
+For example, to filter for traces that contains errors, enter `error=true`.
 
 Clicking on a trace ID brings up a side panel that shows detailed information about a specific trace, such as nested spans, and their attributes and events.
 
-Please refer to the https://grafana.com/docs/grafana/latest/explore/[Grafana documentation^] for further information on how to use the explore view.
-
 === Viewing Metrics
 
-To view metrics, open the http://localhost:3000/explore[Explore view^], and select `Prometheus` as the data source.
-Select a metric from the `Metric` dropdown (e.g., `process_runtime_jvm_memory_usage` to view JVM memory usage).
+To view metrics, open the http://localhost:3000/explore[Explore view], and select [guilabel]*Prometheus* as the data source.
+Select a metric from the [guilabel]*Metric* drop-down, for example, [guilabel]*process_runtime_jvm_memory_usage* to view JVM memory usage.
 Then click the refresh button in the top-right display the metric.
-
-Please refer to the https://grafana.com/docs/grafana/latest/explore/[Grafana documentation^] for further information on how to use the explore view.
 
 === Viewing Logs
 
-To view logs, open the http://localhost:3000/explore[Explore view^], and select `Loki` as data source.
-Under `Labels`, configure a label for `service_name`, with the value that is defined as service name in the agent properties file: `vaadin` by default.
+To view logs, open the http://localhost:3000/explore[Explore view], and select [guilabel]*Loki* as data source.
+Under [guilabel]*Labels*, configure a label for `service_name`, with the value that is defined as service name in the <<configuration-file,configuration file>>: `vaadin` by default.
 Then click the refresh button in the top-right to search for logs.
-
-Please refer to the https://grafana.com/docs/grafana/latest/explore/[Grafana documentation^] for further information on how to use the explore view.
