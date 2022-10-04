@@ -20,7 +20,7 @@ export class Example extends LitElement {
   private binder = new Binder(this, AppointmentModel);
 
   firstUpdated() {
-    // aria-label for screen readers
+    // Set `aria-label` for screen readers
     const start = this.renderRoot.querySelector('#start > input') as HTMLInputElement;
     start.setAttribute('aria-label', 'Start date');
     start.removeAttribute('aria-labelledby');

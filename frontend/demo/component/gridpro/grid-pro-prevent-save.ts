@@ -48,17 +48,19 @@ export class Example extends LitElement {
     switch (event.detail.path) {
       case 'address.phone':
         if (!/^[0-9-]+$/.test(event.detail.value)) {
-          // phone is not correct
+          // Incorrect phone
           event.preventDefault();
           this.showErrorNotification('Please enter a valid phone number');
         }
         break;
       case 'email':
         if (!/^[\w-.]+@([\w-]+.)+[\w-]{2,4}$/.test(event.detail.value)) {
-          // email is not correct
+          // Incorrect email
           event.preventDefault();
           this.showErrorNotification('Please enter a valid email address');
         }
+        break;
+      default:
         break;
     }
   }

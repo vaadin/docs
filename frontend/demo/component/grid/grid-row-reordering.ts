@@ -47,16 +47,16 @@ export class Example extends LitElement {
         }}"
         @grid-drop="${(event: GridDropEvent<Person>) => {
           const { dropTargetItem, dropLocation } = event.detail;
-          // only act when dropping on another item
+          // Only act when dropping on another item
           if (this.draggedItem && dropTargetItem !== this.draggedItem) {
-            // remove the item from its previous position
+            // Remove the item from its previous position
             const draggedItemIndex = this.items.indexOf(this.draggedItem);
             this.items.splice(draggedItemIndex, 1);
-            // re-insert the item at its new position
+            // Re-insert the item at its new position
             const dropIndex =
               this.items.indexOf(dropTargetItem) + (dropLocation === 'below' ? 1 : 0);
             this.items.splice(dropIndex, 0, this.draggedItem);
-            // re-assign the array to refresh the grid
+            // Re-assign the array to refresh the grid
             this.items = [...this.items];
           }
         }}"

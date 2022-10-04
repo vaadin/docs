@@ -17,8 +17,8 @@ export class EventsBasic extends LitElement {
   }
 
   onClick() {
-    this.count = this.count + 1;
-    this.caption = 'You have clicked me ' + this.count + ' times';
+    this.count += 1;
+    this.caption = `You have clicked me ${this.count} times`;
   }
 }
 // end::snippet[]

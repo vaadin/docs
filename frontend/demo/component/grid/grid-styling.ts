@@ -58,14 +58,14 @@ export class Example extends LitElement {
   private cellClassNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {
     const item = model.item;
     let classes = '';
-    // make the customer rating column bold
+    // Make the customer rating column bold
     if (column.header?.startsWith('Customer rating')) {
       classes += ' font-weight-bold';
     }
-    // add high-rating class to customer ratings of 8 or higher
+    // Add high-rating class to customer ratings of 8 or higher
     if (item.customerRating >= 8.0) {
       classes += ' high-rating';
-      // add low-rating class to customer ratings of 4 or lower
+      // Add low-rating class to customer ratings of 4 or lower
     } else if (item.customerRating <= 4.0) {
       classes += ' low-rating';
     }
