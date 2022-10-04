@@ -11,7 +11,7 @@ import type { GridSelectedItemsChangedEvent } from '@vaadin/grid';
 import type { GridSelectionColumnSelectAllChangedEvent } from '@vaadin/grid/vaadin-grid-selection-column';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('button-grid')
 export class Example extends LitElement {

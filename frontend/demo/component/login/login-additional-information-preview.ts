@@ -3,7 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
-import { LoginOverlayMockupElement } from './login-overlay-mockup';
+import type { LoginOverlayMockupElement } from './login-overlay-mockup';
 
 @customElement('login-additional-information')
 export class Example extends LitElement {

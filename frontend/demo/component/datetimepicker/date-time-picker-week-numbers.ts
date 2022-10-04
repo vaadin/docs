@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/date-time-picker';
-import { DateTimePicker } from '@vaadin/date-time-picker';
+import type { DateTimePicker } from '@vaadin/date-time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-week-numbers')

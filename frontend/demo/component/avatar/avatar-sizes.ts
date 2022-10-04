@@ -5,7 +5,7 @@ import '@vaadin/avatar';
 import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-sizes')
 export class Example extends LitElement {

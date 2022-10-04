@@ -24,6 +24,7 @@ export class Example extends LitElement {
       }
     `;
   }
+
   render() {
     return html`
       <vaadin-details opened>

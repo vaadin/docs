@@ -33,6 +33,7 @@ export class Example extends LitElement {
 
   @state()
   private strengthText: StrengthText = StrengthText.weak;
+
   @state()
   private strengthColor: StrengthColor = StrengthColor.weak;
 
