@@ -38,7 +38,7 @@ public class TabSheetLazyInitialization extends Div {
     }
     // end::snippet[]
 
-    public static class Exporter
-            extends DemoExporter<TabSheetLazyInitialization> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<TabSheetLazyInitialization> { // hidden-source-line
     } // hidden-source-line
 }

@@ -71,7 +71,7 @@ public class NotificationKeyboardA11y extends Div {
     }
     // end::setupUndoShortcut[]
 
-    public static class Exporter
-            extends DemoExporter<NotificationKeyboardA11y> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<NotificationKeyboardA11y> { // hidden-source-line
     } // hidden-source-line
 }

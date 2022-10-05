@@ -40,6 +40,6 @@ public class MultiSelectComboBoxSelectionChange extends Div {
     }
 
     public static class Exporter extends // hidden-source-line
-                DemoExporter<MultiSelectComboBoxSelectionChange> { // hidden-source-line
+            DemoExporter<MultiSelectComboBoxSelectionChange> { // hidden-source-line
     } // hidden-source-line
 }
