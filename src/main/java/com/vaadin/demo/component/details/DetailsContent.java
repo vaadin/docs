@@ -4,7 +4,6 @@ import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.dom.ElementConstants;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -49,8 +48,7 @@ public class DetailsContent extends Div {
 
     private Anchor createStyledAnchor(String href, String text) {
         Anchor anchor = new Anchor(href, text);
-        anchor.getStyle().set(ElementConstants.STYLE_COLOR,
-                "var(--lumo-primary-text-color)");
+        anchor.getStyle().set("color", "var(--lumo-primary-text-color)");
         anchor.getStyle().set("text-decoration", "none");
 
         return anchor;
