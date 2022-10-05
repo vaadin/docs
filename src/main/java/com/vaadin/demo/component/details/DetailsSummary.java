@@ -10,7 +10,6 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.dom.ElementConstants;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.domain.Country;
 import com.vaadin.demo.domain.DataService;
@@ -25,16 +24,13 @@ public class DetailsSummary extends Div {
         summary.setSpacing(false);
 
         Icon icon = VaadinIcon.EXCLAMATION_CIRCLE.create();
-        icon.getStyle().set(ElementConstants.STYLE_WIDTH,
-                "var(--lumo-icon-size-s)");
-        icon.getStyle().set(ElementConstants.STYLE_HEIGHT,
-                "var(--lumo-icon-size-s)");
+        icon.getStyle().set("width", "var(--lumo-icon-size-s)");
+        icon.getStyle().set("height", "var(--lumo-icon-size-s)");
 
         HorizontalLayout errorBadge = new HorizontalLayout(icon,
                 new Span(" 2 errors"));
         errorBadge.setSpacing(false);
-        errorBadge.getStyle().set(ElementConstants.STYLE_COLOR,
-                "var(--lumo-error-text-color)");
+        errorBadge.getStyle().set("color", "var(--lumo-error-text-color)");
         errorBadge.getStyle().set("margin-left", "var(--lumo-space-s)");
 
         summary.add(new Text("Contact information"), errorBadge);

@@ -17,7 +17,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <div style="font-family: var(--lumo-font-family); color: var(--lumo-secondary-text-color);">
+      <div style="color: var(--lumo-secondary-text-color);">
         <div>Generating report...</div>
         <vaadin-progress-bar indeterminate></vaadin-progress-bar>
       </div>
