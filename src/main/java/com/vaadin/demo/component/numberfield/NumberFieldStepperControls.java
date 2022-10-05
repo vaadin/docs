@@ -45,6 +45,7 @@ public class NumberFieldStepperControls extends FormLayout {
         addFormItem(infantsField, "Infants");
     }
 
-    public static class Exporter extends DemoExporter<NumberFieldStepperControls> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<NumberFieldStepperControls> { // hidden-source-line
     } // hidden-source-line
 }

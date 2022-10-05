@@ -33,6 +33,7 @@ public class GridProThemeHighlightEditableCells extends Div {
         add(grid);
     }
 
-    public static class Exporter extends DemoExporter<GridProThemeHighlightEditableCells> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<GridProThemeHighlightEditableCells> { // hidden-source-line
     } // hidden-source-line
 }

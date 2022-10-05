@@ -22,5 +22,6 @@ public class LoginOverlayBasic extends Div {
         add(login);
     }
 
-    public static class Exporter extends DemoExporter<LoginOverlayBasic> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<LoginOverlayBasic> { // hidden-source-line
+    } // hidden-source-line
 }

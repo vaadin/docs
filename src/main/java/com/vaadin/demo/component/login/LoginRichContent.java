@@ -21,5 +21,6 @@ public class LoginRichContent extends Div {
         loginForm.getElement().setAttribute("no-autofocus", "");
     }
 
-    public static class Exporter extends DemoExporter<LoginRichContent> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<LoginRichContent> { // hidden-source-line
+    } // hidden-source-line
 }

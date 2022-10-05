@@ -22,5 +22,8 @@ public class LoginAdditionalInformation extends Div {
         // Prevent the example from stealing focus when browsing the documentation
         loginOverlay.getElement().setAttribute("no-autofocus", "");
     }
-    public static class Exporter extends DemoExporter<LoginAdditionalInformation> {} // hidden-source-line
+
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<LoginAdditionalInformation> { // hidden-source-line
+    } // hidden-source-line
 }

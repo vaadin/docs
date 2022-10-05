@@ -100,5 +100,6 @@ public class MapSources extends VerticalLayout {
     }
     // end::snippet[]
 
-    public static class Exporter extends DemoExporter<MapSources> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapSources> { // hidden-source-line
+    } // hidden-source-line
 }

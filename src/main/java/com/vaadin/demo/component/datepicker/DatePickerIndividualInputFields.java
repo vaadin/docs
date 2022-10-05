@@ -92,6 +92,7 @@ public class DatePickerIndividualInputFields extends Div {
     }
     // end::snippet[]
 
-    public static class Exporter extends DemoExporter<DatePickerIndividualInputFields> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DatePickerIndividualInputFields> { // hidden-source-line
     } // hidden-source-line
 }

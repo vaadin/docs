@@ -33,6 +33,7 @@ public class GridProThemeHighlightReadOnlyCells extends Div {
         add(grid);
     }
 
-    public static class Exporter extends DemoExporter<GridProThemeHighlightReadOnlyCells> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<GridProThemeHighlightReadOnlyCells> { // hidden-source-line
     } // hidden-source-line
 }

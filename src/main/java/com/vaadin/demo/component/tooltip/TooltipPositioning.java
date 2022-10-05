@@ -53,5 +53,6 @@ public class TooltipPositioning extends AppLayout {
         return tab;
     }
 
-    public static class Exporter extends DemoExporter<TooltipPositioning> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<TooltipPositioning> { // hidden-source-line
+    } // hidden-source-line
 }

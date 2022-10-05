@@ -57,5 +57,6 @@ public class MapMarkers extends Div {
         usOffice.setIcon(Icons.US_FLAG_ICON); // hidden-source-line
     }
 
-    public static class Exporter extends DemoExporter<MapMarkers> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapMarkers> { // hidden-source-line
+    } // hidden-source-line
 }

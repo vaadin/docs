@@ -27,6 +27,7 @@ public class CheckboxCustomPresentation extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<CheckboxCustomPresentation> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<CheckboxCustomPresentation> { // hidden-source-line
     } // hidden-source-line
 }

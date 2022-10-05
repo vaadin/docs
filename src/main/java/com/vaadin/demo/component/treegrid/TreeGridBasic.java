@@ -28,5 +28,7 @@ public class TreeGridBasic extends Div {
     public List<Person> getStaff(Person manager) {
         return DataService.getPeople(manager.getId());
     }
-    public static class Exporter extends DemoExporter<TreeGridBasic> {} // hidden-source-line
+
+    public static class Exporter extends DemoExporter<TreeGridBasic> { // hidden-source-line
+    } // hidden-source-line
 }

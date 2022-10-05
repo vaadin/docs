@@ -48,7 +48,6 @@ public class DialogClosing extends Div {
         return dialogLayout;
     }
 
-    public static class Exporter // hidden-source-line
-            extends DemoExporter<DialogClosing> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DialogClosing> { // hidden-source-line
     } // hidden-source-line
 }
