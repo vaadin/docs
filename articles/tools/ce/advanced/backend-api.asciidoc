@@ -8,57 +8,54 @@ layout: page
 = Implementing Support for Clustered Environments
 :experimental:
 
-.Experimental Feature
+.Experimental feature
 [IMPORTANT]
-====
-This is currently considered an experimental feature, which means that its behavior, API, and look and feel might still change.
-In order to use the Backend API, it must be explicitly enabled with a feature flag.
-See the <<Feature Flag>> section for how to do this.
-====
+The Collaboration Engine backend for clustering support is an experimental feature, which means that its behavior, API, and look and feel might still change.
+You must enable it with a <<Feature Flag>>.
 
-Using Collaboration Engine out of the box in an application running in a clustered environment would result in users being able to collaborate only with others connected to the same app instance (i.e. on the same node).
-To properly run clustered application deployments, Collaboration Engine provides the [classname]`Backend` superclass that can be extended to support such multi-instance environments.
+Using Collaboration Engine out of the box in an application running in a clustered environment would result in users being able to collaborate only with others connected to the same application instance, meaning, on the same node.
+To run clustered application deployments, Collaboration Engine provides the [classname]`Backend` superclass that can be extended to support such multi-instance environments.
 
-In this article we will show how to implement a custom backend to support clustering based on the https://hazelcast.com[Hazelcast] platform.
+This page shows how to implement a custom backend to support clustering based on the https://hazelcast.com[Hazelcast] platform.
 
-== Understanding the concept of Event Log
+== Understanding the Concept of Event Log
 
-A custom [classname]`Backend` implementation is the gateway Collaboration Engine uses to obtain access to Event Logs.
+A custom [classname]`Backend` implementation is the gateway Collaboration Engine uses to get access to Event Logs.
 An Event Log is a strictly ordered log of submitted events involving Topic data, such as newly added items or value changes.
 The [classname]`EventLog` API provides methods to submit new events to the log and to add a subscriber to receive all past and future events.
 All events are marked by a unique identifier and the API provides a method to remove all events in the log before a given identifier.
 
 === Implementing an Event Log for Hazelcast
 
-Let's start implementing the [classname]`EvengLog` interface for our reference Hazelcast platform.
-Hazelcast provides a very straightforward streaming API based on shared maps and lists.
-The Event Log can be easily implemented making use of a Hazelcast [classname]`IList`, but first we need a class to store both the event identifier and payload.
+Start by implementing the [classname]`EvengLog` interface for the reference Hazelcast platform.
+Hazelcast provides a straightforward streaming API based on shared maps and lists.
+The Event Log can be implemented making use of a Hazelcast [classname]`IList`, but first you need a class to store both the event identifier and payload.
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=id-payload,indent=0]
 ----
 
-Once we have that, we can start implementing the interface methods.
-The [methodname]`submitEvent` takes the event identifier and payload, so we can simply store them in a new [classname]`IdAndPayload` object and add it to the Hazelcast list for this Event Log.
+Once you have that, you can start implementing the interface methods.
+The [methodname]`submitEvent` takes the event identifier and payload, so you can store them in a new [classname]`IdAndPayload` object and add it to the Hazelcast list for this Event Log.
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=event-log;submit-event;!*,indent=0]
 ----
 
-To implement subscriptions to events, we're going to add an item listener to the Hazelcast list.
+To implement subscriptions to events, you add an item listener to the Hazelcast list.
 The subscriber receives all past and future events for this Event Log.
 A newly added subscriber should initially receive all previous events in the log based on their original order, so that it can catch up with the latest state.
 New events should be delivered (in order) only after all previous events have been delivered.
 It is not allowed to invoke the [methodname]`subscribe` method again until the previous subscriber has been removed.
 
-The [methodname]`subscribe` method optionally takes the identifier of the last known event, so that only newer events will be notified to the subscriber.
+The [methodname]`subscribe` method optionally takes the identifier of the last known event, so that only newer events are notified to the subscriber.
 If an identifier is provided and not found in the Event Log, a [classname]`EventIdNotFoundException` should be thrown.
 
 .Exception handling
 [TIP]
-When the exception is caught by the code calling this method, it may want to re-attempt the subscription with another identifier.
+When the code calling this method catches the exception, it may want to re-attempt the subscription with another identifier.
 
 [source,java]
 ----
@@ -70,8 +67,7 @@ include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java
 <4> Then all past events are initially delivered.
 <5> Finally we return a [classname]`Registration` that can be used to remove the subscriber.
 
-Let's now dive in into the custom method that effectively delivers the events, the [methodname]`deliverEvents` method.
-This is a `synchronized` method to prevent it being invoked by multiple threads simultaneously and to avoid duplicate events being notified to the subscriber.
+The [methodname]`deliverEvents` method is `synchronized` to prevent it being invoked by multiple threads simultaneously and to avoid duplicate events being notified to the subscriber.
 The method keeps track of the Hazelcast list index to identify the next event and increments this index until all the events are delivered.
 If an event identifier has been set as the starting point, no events are delivered until that identifier is reached.
 
@@ -116,7 +112,7 @@ This method can be simply implemented for Hazelcast using a map to store the lat
 include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=loadLatestSnapshot,indent=0]
 ----
 
-=== Submitting a new Snapshot
+=== Submitting a New Snapshot
 
 To submit a new snapshot of data the [methodname]`replaceSnapshot` method should be used.
 It takes the name of the snapshot, the expected unique identifier of the latest snapshot, the unique identifier of the new snapshot and finally the payload of the snapshot itself.
@@ -127,7 +123,7 @@ To implement this method for Hazelcast, we need some logic to verify that the la
 include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=replaceSnapshot,indent=0]
 ----
 
-== Node identity and Membership events
+== Node Identity and Membership Events
 
 The primary purpose of the Backend API is to support collaboration in applications deployed in clustered environments.
 Every [classname]`Backend` instance represents a member of the cluster and is uniquely identified by a [classname]`UUID` which should be returned by the [methodname]`getNodeId` method.
@@ -138,9 +134,9 @@ For our Hazelcast implementation, we simply return the local member identifier.
 include::{root}/src/main/java/com/vaadin/demo/ce/hazelcast/HazelcastBackend.java[tags=getNodeId,indent=0]
 ----
 
-When multiple [classname]`Backend` instances are involved, it is necessary to know when a they join or leave the cluster.
+When many [classname]`Backend` instances are involved, it is necessary to know when a they join or leave the cluster.
 For this purpose, the [classname]`Backend` should provide an implementation of the [methodname]`addMembershipListener` method that takes a [classname]`MembershipListener` and notifies it when cluster members join or leave.
-Hazelcast itself uses the same concept, so the implementation is very straightforward: we only need to map Hazelcast's events to Collaboration Engine's [classname]`MembershipEvent` events, which take the [classname]`MembershipEventType` (`JOIN` or `LEAVE`) and the identifier of the member.
+Hazelcast itself uses the same concept, so the implementation is straightforward: you only need to map Hazelcast's events to Collaboration Engine's [classname]`MembershipEvent` events, which take the [classname]`MembershipEventType` (`JOIN` or `LEAVE`) and the identifier of the member.
 
 [source,java]
 ----
@@ -153,24 +149,9 @@ The [methodname]`addMembershipListener` should return a [classname]`Registration
 
 == Feature Flag
 
-To use the Backend API, it must be explicitly enabled with a feature flag.
-Feature flag can be activated with one of the following methods:
+To use the Collaboration Engine backend for clustering support, you must enable it with the `collaborationEngineBackend` feature flag.
 
-=== Using Vaadin Developer Tools
-
-1. Click on the Vaadin Developer Tools icon button in your running application
-2. Open the [guilabel]`Experimental Features` tab
-3. Enable the [guilabel]`Collaboration Engine backend for clustering support` feature
-4. Restart the application.
-
-=== Adding a Feature Flags Properties File
-
-1. Create a [filename]#src/main/resources/vaadin-featureflags.properties# file in your application folder
-2. Add the following content: `com.vaadin.experimental.collaborationEngineBackend=true`
-3. Restart the application.
-
-See <<{articles}/configuration/feature-flags#,Feature Flags>> for more information about feature flags.
+See <<{articles}/configuration/feature-flags#,Feature Flags>> for more information.
 
 [.discussion-id]
 AB472607-53E3-481D-AF99-93E3F6ED8B61
-
