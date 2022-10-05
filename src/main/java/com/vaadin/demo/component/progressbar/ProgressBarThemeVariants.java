@@ -12,7 +12,7 @@ public class ProgressBarThemeVariants extends VerticalLayout {
 
     public ProgressBarThemeVariants() {
         setPadding(false);
-        getStyle().set("font-family", "var(--lumo-font-family)").set("color", "var(--lumo-secondary-text-color)");
+        getStyle().set("color", "var(--lumo-secondary-text-color)");
 
         // Contrast
         // tag::snippet[]
