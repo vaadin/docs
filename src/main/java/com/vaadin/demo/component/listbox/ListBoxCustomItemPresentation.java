@@ -51,6 +51,7 @@ public class ListBoxCustomItemPresentation extends Div {
         add(listBox);
     }
 
-    public static class Exporter extends DemoExporter<ListBoxCustomItemPresentation> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<ListBoxCustomItemPresentation> { // hidden-source-line
     } // hidden-source-line
 }

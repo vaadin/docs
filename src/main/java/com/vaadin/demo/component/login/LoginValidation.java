@@ -19,5 +19,6 @@ public class LoginValidation extends Div {
         loginOverlay.getElement().setAttribute("no-autofocus", "");
     }
 
-    public static class Exporter extends DemoExporter<LoginValidation> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<LoginValidation> { // hidden-source-line
+    } // hidden-source-line
 }

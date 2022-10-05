@@ -128,5 +128,6 @@ public class MapLayers extends Div {
         add(new HorizontalLayout(backgroundLayerGroup, overlayLayerGroup));
     }
 
-    public static class Exporter extends DemoExporter<MapLayers> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapLayers> { // hidden-source-line
+    } // hidden-source-line
 }

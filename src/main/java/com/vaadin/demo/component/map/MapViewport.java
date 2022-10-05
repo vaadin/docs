@@ -73,5 +73,6 @@ public class MapViewport extends VerticalLayout {
         setPadding(false);
     }
 
-    public static class Exporter extends DemoExporter<MapViewport> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapViewport> { // hidden-source-line
+    } // hidden-source-line
 }

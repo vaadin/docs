@@ -33,6 +33,7 @@ public class TimePickerCustomValidation extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<TimePickerCustomValidation> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<TimePickerCustomValidation> { // hidden-source-line
     } // hidden-source-line
 }

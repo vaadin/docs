@@ -70,7 +70,6 @@ public class DialogDraggable extends Div {
         dialog.getFooter().add(saveButton);
     }
 
-    public static class Exporter // hidden-source-line
-            extends DemoExporter<DialogDraggable> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DialogDraggable> { // hidden-source-line
     } // hidden-source-line
 }

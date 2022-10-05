@@ -22,6 +22,7 @@ public class ProgressBarIndeterminate extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<ProgressBarIndeterminate> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<ProgressBarIndeterminate> { // hidden-source-line
     } // hidden-source-line
 }

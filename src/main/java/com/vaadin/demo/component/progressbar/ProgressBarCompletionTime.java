@@ -26,6 +26,7 @@ public class ProgressBarCompletionTime extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<ProgressBarCompletionTime> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<ProgressBarCompletionTime> { // hidden-source-line
     } // hidden-source-line
 }

@@ -41,5 +41,7 @@ public class LoginOverlayInternationalization extends Div {
         loginOverlay.getElement().setAttribute("no-autofocus", "");
     }
 
-    public static class Exporter extends DemoExporter<LoginOverlayInternationalization> {} // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<LoginOverlayInternationalization> { // hidden-source-line
+    } // hidden-source-line
 }

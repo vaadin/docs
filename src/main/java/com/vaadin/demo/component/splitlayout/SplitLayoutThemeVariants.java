@@ -22,6 +22,7 @@ public class SplitLayoutThemeVariants extends Div {
         add(splitLayout);
     }
 
-    public static class Exporter extends DemoExporter<SplitLayoutThemeVariants> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<SplitLayoutThemeVariants> { // hidden-source-line
     } // hidden-source-line
 }
