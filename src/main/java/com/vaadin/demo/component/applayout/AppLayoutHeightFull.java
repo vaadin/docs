@@ -36,11 +36,10 @@ public class AppLayoutHeightFull extends AppLayout {
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         // hidden-source-line - TODO: workaround to get the exported WC
         // hidden-source-line - height to take all the space within DSP
-        getElement().executeJavaScript( // hidden-source-line
-                "this.getRootNode().host.style.height='100vh'"); // hidden-source-line
+        getElement().executeJs("this.getRootNode().host.style.height='100vh'"); // hidden-source-line
         // hidden-source-line - TODO: workaround to remove the padding from
         // hidden-source-line - parent container (coming from DSP)
-        getElement().executeJavaScript( // hidden-source-line
+        getElement().executeJs( // hidden-source-line
                 "this.getRootNode().host.parentElement.style.padding='0'"); // hidden-source-line
     }
     // end::snippet[]
