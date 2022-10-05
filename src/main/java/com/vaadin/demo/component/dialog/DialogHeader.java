@@ -60,7 +60,6 @@ public class DialogHeader extends Div {
         return fieldLayout;
     }
 
-    public static class Exporter // hidden-source-line
-            extends DemoExporter<DialogHeader> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DialogHeader> { // hidden-source-line
     } // hidden-source-line
 }

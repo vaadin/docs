@@ -23,6 +23,7 @@ public class SplitLayoutInitialSplitterPosition extends Div {
         add(splitLayout);
     }
 
-    public static class Exporter extends DemoExporter<SplitLayoutInitialSplitterPosition> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<SplitLayoutInitialSplitterPosition> { // hidden-source-line
     } // hidden-source-line
 }

@@ -35,7 +35,6 @@ public class DialogFooter extends Div {
         add(dialog, button);
     }
 
-    public static class Exporter // hidden-source-line
-            extends DemoExporter<DialogFooter> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DialogFooter> { // hidden-source-line
     } // hidden-source-line
 }

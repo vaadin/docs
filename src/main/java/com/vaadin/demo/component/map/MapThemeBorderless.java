@@ -17,5 +17,6 @@ public class MapThemeBorderless extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<MapThemeBorderless> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapThemeBorderless> { // hidden-source-line
+    } // hidden-source-line
 }

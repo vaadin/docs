@@ -18,6 +18,8 @@ public class DateTimePickerWeekNumbers extends Div {
         // end::snippet[]
         add(dateTimePicker);
     }
-    public static class Exporter extends DemoExporter<DateTimePickerWeekNumbers> { // hidden-source-line
+
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DateTimePickerWeekNumbers> { // hidden-source-line
     } // hidden-source-line
 }

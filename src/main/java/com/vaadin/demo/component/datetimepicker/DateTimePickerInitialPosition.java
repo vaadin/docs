@@ -29,6 +29,8 @@ public class DateTimePickerInitialPosition extends Div {
         // end::snippet[]
         add(dateTimePicker);
     }
-    public static class Exporter extends DemoExporter<DateTimePickerInitialPosition> { // hidden-source-line
+
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DateTimePickerInitialPosition> { // hidden-source-line
     } // hidden-source-line
 }

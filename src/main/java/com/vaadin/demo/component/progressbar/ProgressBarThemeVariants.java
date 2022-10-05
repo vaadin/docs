@@ -50,6 +50,7 @@ public class ProgressBarThemeVariants extends VerticalLayout {
         add(progressBarErrorWrapper);
     }
 
-    public static class Exporter extends DemoExporter<ProgressBarThemeVariants> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<ProgressBarThemeVariants> { // hidden-source-line
     } // hidden-source-line
 }

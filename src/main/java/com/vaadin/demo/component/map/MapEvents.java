@@ -109,5 +109,6 @@ public class MapEvents extends VerticalLayout {
         }
     }
 
-    public static class Exporter extends DemoExporter<MapEvents> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapEvents> { // hidden-source-line
+    } // hidden-source-line
 }

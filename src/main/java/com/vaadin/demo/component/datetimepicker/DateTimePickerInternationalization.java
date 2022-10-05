@@ -31,6 +31,7 @@ public class DateTimePickerInternationalization extends Div {
         add(dateTimePicker);
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerInternationalization> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DateTimePickerInternationalization> { // hidden-source-line
     } // hidden-source-line
 }

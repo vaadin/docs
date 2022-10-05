@@ -22,6 +22,7 @@ public class BasicLayoutsVerticalLayout extends Div {
         this.add(layout);
     }
 
-    public static class Exporter extends DemoExporter<BasicLayoutsVerticalLayout> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<BasicLayoutsVerticalLayout> { // hidden-source-line
     } // hidden-source-line
 }
