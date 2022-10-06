@@ -17,7 +17,7 @@ public class TooltipHtmlElement extends Div {
                 .withPosition(Tooltip.TooltipPosition.TOP_START);
         add(heading);
         // end::snippet[]
-  }
+    }
 
     public static class Exporter extends DemoExporter<TooltipHtmlElement> { // hidden-source-line
     } // hidden-source-line
