@@ -66,7 +66,7 @@ public class MapSources extends VerticalLayout {
         sourceOptions.setUrl(
                 "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=<your-access-token>");
         // set actual URL with access token for demo // hidden-source-line
-        sourceOptions.setUrl(
+        sourceOptions.setUrl( // hidden-source-line
                 "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=pk.eyJ1Ijoic2lzc2JydWVja2VyLXZhYWRpbiIsImEiOiJja3pjcjVwaWkwMXJrMzJtdDlrOWRubHFtIn0.UEQ0LqkVtBcVNRatstiVeQ"); // hidden-source-line
         // using a map service usually requires setting
         // attributions with copyright notices
