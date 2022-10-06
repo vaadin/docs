@@ -17,12 +17,18 @@ import java.util.List;
 public class MapEvents extends VerticalLayout {
     // For Vaadin 23.1, use Coordinate.fromLonLat to create coordinates
     // from longitude and latitude
-    private static final City BERLIN = new City("Berlin", new Coordinate(13.404954, 52.520008));
-    private static final City HONG_KONG = new City("Hong Kong", new Coordinate(114.162813, 22.279328));
-    private static final City MOSCOW = new City("Moscow", new Coordinate(37.617298, 55.755825));
-    private static final City NEW_YORK = new City("New York", new Coordinate(-74.005974, 40.712776));
-    private static final City RIO = new City("Rio de Janeiro", new Coordinate(-43.2093727, -22.9110137));
-    private static final List<City> CITIES = List.of(BERLIN, HONG_KONG, MOSCOW, NEW_YORK, RIO);
+    private static final City BERLIN = new City("Berlin",
+            new Coordinate(13.404954, 52.520008));
+    private static final City HONG_KONG = new City("Hong Kong",
+            new Coordinate(114.162813, 22.279328));
+    private static final City MOSCOW = new City("Moscow",
+            new Coordinate(37.617298, 55.755825));
+    private static final City NEW_YORK = new City("New York",
+            new Coordinate(-74.005974, 40.712776));
+    private static final City RIO = new City("Rio de Janeiro",
+            new Coordinate(-43.2093727, -22.9110137));
+    private static final List<City> CITIES = List.of(BERLIN, HONG_KONG, MOSCOW,
+            NEW_YORK, RIO);
 
     public MapEvents() {
         Map map = new Map();
@@ -62,16 +68,20 @@ public class MapEvents extends VerticalLayout {
             Coordinate center = e.getCenter();
             Extent extent = e.getExtent();
             String info = "";
-            info += String.format("Center = { x: %s, y: %s }%n", center.getX(), center.getY());
+            info += String.format("Center = { x: %s, y: %s }%n", center.getX(),
+                    center.getY());
             info += String.format("Zoom   = %s%n", e.getZoom());
-            info += String.format("Extent = { left: %s, top: %s,%n", extent.getMinX(), extent.getMinY());
-            info += String.format("           right: %s, bottom: %s }", extent.getMaxX(), extent.getMaxY());
+            info += String.format("Extent = { left: %s, top: %s,%n",
+                    extent.getMinX(), extent.getMinY());
+            info += String.format("           right: %s, bottom: %s }",
+                    extent.getMaxX(), extent.getMaxY());
             viewEventInfo.setValue(info);
         });
 
         map.addClickEventListener(e -> {
             Coordinate coordinates = e.getCoordinate();
-            String info = String.format("Coordinates = { x: %s, y: %s }", coordinates.getX(), coordinates.getY());
+            String info = String.format("Coordinates = { x: %s, y: %s }",
+                    coordinates.getX(), coordinates.getY());
             mapClickInfo.setValue(info);
         });
 
@@ -83,7 +93,8 @@ public class MapEvents extends VerticalLayout {
             City city = cityLookup.get(feature);
             String info = "";
             info += String.format("City        = %s%n", city.getName());
-            info += String.format("Coordinates = { x: %s, y: %s }", coordinates.getX(), coordinates.getY());
+            info += String.format("Coordinates = { x: %s, y: %s }",
+                    coordinates.getX(), coordinates.getY());
             featureClickInfo.setValue(info);
         });
         // end::snippet[]

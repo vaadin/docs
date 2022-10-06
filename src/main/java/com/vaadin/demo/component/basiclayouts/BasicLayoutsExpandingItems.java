@@ -26,9 +26,8 @@ public class BasicLayoutsExpandingItems extends Div {
         radioButtonGroup.setLabel("Item sizing");
         radioButtonGroup.setItems(DEFAULT_SIZE_OPTION, EXPANDED_SIZE_OPTION);
         radioButtonGroup.setValue(DEFAULT_SIZE_OPTION);
-        radioButtonGroup.addValueChangeListener(e -> layout
-                .setFlexGrow(DEFAULT_SIZE_OPTION.equals(e.getValue()) ? 0 : 1,
-                        button1));
+        radioButtonGroup.addValueChangeListener(e -> layout.setFlexGrow(
+                DEFAULT_SIZE_OPTION.equals(e.getValue()) ? 0 : 1, button1));
         // end::snippet[]
 
         this.setClassName("basic-layouts-example");

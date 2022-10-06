@@ -18,7 +18,8 @@ public class TreeGridBasic extends Div {
         // tag::snippet[]
         TreeGrid<Person> treeGrid = new TreeGrid<>();
         treeGrid.setItems(managers, this::getStaff);
-        treeGrid.addHierarchyColumn(Person::getFirstName).setHeader("First name");
+        treeGrid.addHierarchyColumn(Person::getFirstName)
+                .setHeader("First name");
         treeGrid.addColumn(Person::getLastName).setHeader("Last name");
         treeGrid.addColumn(Person::getEmail).setHeader("Email");
         // end::snippet[]

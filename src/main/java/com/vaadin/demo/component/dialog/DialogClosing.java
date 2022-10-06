@@ -15,8 +15,8 @@ public class DialogClosing extends Div {
 
     public DialogClosing() {
         Dialog dialog = new Dialog();
-        dialog.getElement()
-                .setAttribute("aria-label", "System maintenance hint");
+        dialog.getElement().setAttribute("aria-label",
+                "System maintenance hint");
 
         VerticalLayout dialogLayout = createDialogLayout(dialog);
         dialog.add(dialogLayout);

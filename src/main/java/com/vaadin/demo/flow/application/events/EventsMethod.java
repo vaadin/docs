@@ -9,27 +9,29 @@ import com.vaadin.flow.router.Route;
 
 @Route("application-events-method")
 public class EventsMethod extends Div {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public EventsMethod() {
+    public EventsMethod() {
         // tag::snippet[]
         class ButtonBar extends HorizontalLayout {
             public ButtonBar() {
-              add(new Button("OK", this::ok));
-              add(new Button("Cancel", this::cancel));
+                add(new Button("OK", this::ok));
+                add(new Button("Cancel", this::cancel));
             }
+
             public void ok(ClickEvent<Button> event) {
-              event.getSource().setText("OKed!");
+                event.getSource().setText("OKed!");
             }
+
             public void cancel(ClickEvent<Button> event) {
-              event.getSource().setText("Canceled!");
+                event.getSource().setText("Canceled!");
             }
         }
 
         add(new ButtonBar());
         // end::snippet[]
-      }
+    }
 
-      public static class Exporter extends DemoExporter<EventsMethod> { // hidden-source-line
-      } // hidden-source-line
+    public static class Exporter extends DemoExporter<EventsMethod> { // hidden-source-line
+    } // hidden-source-line
 }

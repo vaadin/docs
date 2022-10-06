@@ -19,7 +19,8 @@ public class ProgressBarCompletionTime extends Div {
         progressBarLabel.setText("Generating report, please wait...");
 
         Div progressBarSubLabel = new Div();
-        progressBarSubLabel.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+        progressBarSubLabel.getStyle().set("font-size",
+                "var(--lumo-font-size-xs)");
         progressBarSubLabel.setText("Process can take upwards of 10 minutes");
 
         add(progressBarLabel, progressBar, progressBarSubLabel);

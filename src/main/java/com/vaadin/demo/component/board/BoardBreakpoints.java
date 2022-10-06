@@ -13,12 +13,8 @@ public class BoardBreakpoints extends Div {
         Board board = new Board();
 
         // styles are defined separately, check the board.css snippet
-        board.addRow(
-                createCell("Cell 1"),
-                createCell("Cell 2"),
-                createCell("Cell 3"),
-                createCell("Cell 4")
-        );
+        board.addRow(createCell("Cell 1"), createCell("Cell 2"),
+                createCell("Cell 3"), createCell("Cell 4"));
 
         SplitLayout splitLayout = new SplitLayout(board, new Div());
         // end::snippet[]

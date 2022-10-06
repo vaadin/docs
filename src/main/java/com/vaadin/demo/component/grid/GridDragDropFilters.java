@@ -29,9 +29,9 @@ public class GridDragDropFilters extends Div {
         managers = people.stream().filter(Person::isManager)
                 .collect(Collectors.toList());
         staffGroupedByMangers = people.stream()
-                .filter(person -> person.getManagerId() != null).collect(
-                        Collectors.groupingBy(Person::getManagerId,
-                                Collectors.toList()));
+                .filter(person -> person.getManagerId() != null)
+                .collect(Collectors.groupingBy(Person::getManagerId,
+                        Collectors.toList()));
 
         // tag::snippet[]
         TreeGrid<Person> treeGrid = setupTreeGrid();
@@ -54,8 +54,8 @@ public class GridDragDropFilters extends Div {
 
         treeGrid.addDropListener(e -> {
             Person newManager = e.getDropTargetItem().orElse(null);
-            boolean isSameManager = newManager != null && newManager.getId()
-                    .equals(draggedItem.getManagerId());
+            boolean isSameManager = newManager != null
+                    && newManager.getId().equals(draggedItem.getManagerId());
 
             if (newManager == null || isSameManager)
                 return;
@@ -84,8 +84,8 @@ public class GridDragDropFilters extends Div {
     }
 
     private List<Person> getStaff(Person manager) {
-        return staffGroupedByMangers
-                .getOrDefault(manager.getId(), Collections.emptyList());
+        return staffGroupedByMangers.getOrDefault(manager.getId(),
+                Collections.emptyList());
     }
 
     public static class Exporter // hidden-source-line

@@ -15,8 +15,7 @@ public class BoardNested extends Div {
 
         Row nestedRow = new Row(
                 new ExampleIndicator("Current users", "745", "+33.7"),
-                new ExampleIndicator("Conversion rate", "18%", "+3.9")
-        );
+                new ExampleIndicator("Conversion rate", "18%", "+3.9"));
         rootRow.addNestedRow(nestedRow);
 
         Board board = new Board();

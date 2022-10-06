@@ -14,7 +14,8 @@ public class DateTimePickerWeekNumbers extends Div {
         dateTimePicker.setLabel("Meeting date and time");
         // tag::snippet[]
         dateTimePicker.setWeekNumbersVisible(true);
-        dateTimePicker.setDatePickerI18n(new DatePicker.DatePickerI18n().setFirstDayOfWeek(1));
+        dateTimePicker.setDatePickerI18n(
+                new DatePicker.DatePickerI18n().setFirstDayOfWeek(1));
         // end::snippet[]
         add(dateTimePicker);
     }

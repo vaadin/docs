@@ -29,9 +29,8 @@ public class BasicLayoutsSpacingVariants extends Div {
 
         RadioButtonGroup<String> radioButtonGroup = new RadioButtonGroup<>();
         radioButtonGroup.setLabel("Spacing variant");
-        radioButtonGroup
-                .setItems(SPACING_XS_THEME, SPACING_S_THEME, SPACING_THEME,
-                        SPACING_L_THEME, SPACING_XL_THEME);
+        radioButtonGroup.setItems(SPACING_XS_THEME, SPACING_S_THEME,
+                SPACING_THEME, SPACING_L_THEME, SPACING_XL_THEME);
         radioButtonGroup.setValue(SPACING_XL_THEME);
         radioButtonGroup.addValueChangeListener(e -> {
             layout.getThemeList().remove(e.getOldValue());

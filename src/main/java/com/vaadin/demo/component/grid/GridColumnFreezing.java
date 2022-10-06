@@ -39,8 +39,7 @@ public class GridColumnFreezing extends Div {
     }
 
     private static Renderer<Person> createPersonRenderer() {
-        return LitRenderer.<Person> of(
-                "${item.fullName}")
+        return LitRenderer.<Person> of("${item.fullName}")
                 .withProperty("fullName", Person::getFullName);
     }
 

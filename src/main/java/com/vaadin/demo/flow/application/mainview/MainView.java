@@ -38,9 +38,9 @@ public class MainView extends AppLayout {
         menu = createMenu();
         addToDrawer(createDrawerContent(menu));
     }
-// end::mainview[]
+    // end::mainview[]
 
-// tag::header[]
+    // tag::header[]
     private Component createHeaderContent() {
         HorizontalLayout layout = new HorizontalLayout();
 
@@ -64,9 +64,9 @@ public class MainView extends AppLayout {
 
         return layout;
     }
-// end::header[]
+    // end::header[]
 
-// tag::drawer[]
+    // tag::drawer[]
     private Component createDrawerContent(Tabs menu) {
         VerticalLayout layout = new VerticalLayout();
 
@@ -88,9 +88,9 @@ public class MainView extends AppLayout {
         layout.add(logoLayout, menu);
         return layout;
     }
-// end::drawer[]
+    // end::drawer[]
 
-// tag::menu[]
+    // tag::menu[]
     private Tabs createMenu() {
         final Tabs tabs = new Tabs();
         tabs.setOrientation(Tabs.Orientation.VERTICAL);
@@ -101,21 +101,21 @@ public class MainView extends AppLayout {
     }
 
     private Component[] createMenuItems() {
-        return new Tab[]{
-            createTab("Hello World", HelloWorldView.class),
-            createTab("Card List", CardListView.class),
-            createTab("About", AboutView.class)};
+        return new Tab[] { createTab("Hello World", HelloWorldView.class),
+                createTab("Card List", CardListView.class),
+                createTab("About", AboutView.class) };
     }
 
-    private static Tab createTab(String text, Class<? extends Component> navigationTarget) {
+    private static Tab createTab(String text,
+            Class<? extends Component> navigationTarget) {
         final Tab tab = new Tab();
         tab.add(new RouterLink(text, navigationTarget));
         ComponentUtil.setData(tab, Class.class, navigationTarget);
         return tab;
     }
-// end::menu[]
+    // end::menu[]
 
-// tag::navigation[]
+    // tag::navigation[]
     @Override
     protected void afterNavigation() {
         super.afterNavigation();
@@ -126,18 +126,20 @@ public class MainView extends AppLayout {
         // Set the view title in the header
         viewTitle.setText(getCurrentPageTitle());
     }
-// end::navigation[]
+    // end::navigation[]
 
-// tag::selection[]
+    // tag::selection[]
     private Optional<Tab> getTabForComponent(Component component) {
-        return menu.getChildren().filter(tab -> ComponentUtil.getData(tab, Class.class).equals(component.getClass()))
+        return menu.getChildren()
+                .filter(tab -> ComponentUtil.getData(tab, Class.class)
+                        .equals(component.getClass()))
                 .findFirst().map(Tab.class::cast);
     }
-// end::selection[]
+    // end::selection[]
 
-// tag::pagetitle[]
+    // tag::pagetitle[]
     private String getCurrentPageTitle() {
         return getContent().getClass().getAnnotation(PageTitle.class).value();
     }
-// end::pagetitle[]
+    // end::pagetitle[]
 }

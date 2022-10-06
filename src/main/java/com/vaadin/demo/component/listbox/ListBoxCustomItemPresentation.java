@@ -35,8 +35,8 @@ public class ListBoxCustomItemPresentation extends Div {
             Span name = new Span(person.getFullName());
             Span profession = new Span(person.getProfession());
             profession.getStyle()
-                .set("color", "var(--lumo-secondary-text-color)")
-                .set("font-size", "var(--lumo-font-size-s)");
+                    .set("color", "var(--lumo-secondary-text-color)")
+                    .set("font-size", "var(--lumo-font-size-s)");
 
             VerticalLayout column = new VerticalLayout(name, profession);
             column.setPadding(false);

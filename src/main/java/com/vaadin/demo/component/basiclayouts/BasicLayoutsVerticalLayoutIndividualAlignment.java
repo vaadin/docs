@@ -45,25 +45,22 @@ public class BasicLayoutsVerticalLayoutIndividualAlignment extends Div {
         layout.add(new Button("Button 3"));
         // end::layout[]
 
-        List<AlignmentOption> layoutOptions = Arrays
-                .asList(new AlignmentOption("Start (default)",
-                                FlexComponent.Alignment.START),
-                        new AlignmentOption("Center",
-                                FlexComponent.Alignment.CENTER),
-                        new AlignmentOption("End", FlexComponent.Alignment.END),
-                        new AlignmentOption("Stretch",
-                                FlexComponent.Alignment.STRETCH));
+        List<AlignmentOption> layoutOptions = Arrays.asList(
+                new AlignmentOption("Start (default)",
+                        FlexComponent.Alignment.START),
+                new AlignmentOption("Center", FlexComponent.Alignment.CENTER),
+                new AlignmentOption("End", FlexComponent.Alignment.END),
+                new AlignmentOption("Stretch",
+                        FlexComponent.Alignment.STRETCH));
 
-        List<AlignmentOption> itemOptions = Arrays
-                .asList(new AlignmentOption("Auto (default)",
-                                FlexComponent.Alignment.AUTO),
-                        new AlignmentOption("Start",
-                                FlexComponent.Alignment.START),
-                        new AlignmentOption("Center",
-                                FlexComponent.Alignment.CENTER),
-                        new AlignmentOption("End", FlexComponent.Alignment.END),
-                        new AlignmentOption("Stretch",
-                                FlexComponent.Alignment.STRETCH));
+        List<AlignmentOption> itemOptions = Arrays.asList(
+                new AlignmentOption("Auto (default)",
+                        FlexComponent.Alignment.AUTO),
+                new AlignmentOption("Start", FlexComponent.Alignment.START),
+                new AlignmentOption("Center", FlexComponent.Alignment.CENTER),
+                new AlignmentOption("End", FlexComponent.Alignment.END),
+                new AlignmentOption("Stretch",
+                        FlexComponent.Alignment.STRETCH));
 
         RadioButtonGroup<AlignmentOption> layoutRadioGroup = new RadioButtonGroup<>();
         layoutRadioGroup.setLabel("Layout alignment");

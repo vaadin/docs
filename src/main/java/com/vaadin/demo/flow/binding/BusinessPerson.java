@@ -6,15 +6,31 @@ public class BusinessPerson {
     String title;
     int age;
 
-    public BusinessPerson() {}
+    public BusinessPerson() {
+    }
 
-    void setName(String name) {this.name = name;}
-    String getName() {return name;}
+    void setName(String name) {
+        this.name = name;
+    }
 
-    void setTitle(String title) {this.title = title;}
-    String getTitle() {return title;}
+    String getName() {
+        return name;
+    }
 
-    void setAge(int age) {this.age = age;}
-    int getAge() {return age;}
+    void setTitle(String title) {
+        this.title = title;
+    }
+
+    String getTitle() {
+        return title;
+    }
+
+    void setAge(int age) {
+        this.age = age;
+    }
+
+    int getAge() {
+        return age;
+    }
 }
 // end::snippet[]

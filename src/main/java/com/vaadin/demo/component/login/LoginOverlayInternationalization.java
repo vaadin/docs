@@ -27,7 +27,8 @@ public class LoginOverlayInternationalization extends Div {
 
         LoginI18n.ErrorMessage i18nErrorMessage = i18n.getErrorMessage();
         i18nErrorMessage.setTitle("Väärä käyttäjätunnus tai salasana");
-        i18nErrorMessage.setMessage("Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.");
+        i18nErrorMessage.setMessage(
+                "Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.");
         i18n.setErrorMessage(i18nErrorMessage);
 
         i18n.setAdditionalInformation("Jos tarvitset lisätietoja käyttäjälle.");
@@ -37,7 +38,8 @@ public class LoginOverlayInternationalization extends Div {
         // end::snippet[]
         add(loginOverlay);
         loginOverlay.setOpened(true);
-        // Prevent the example from stealing focus when browsing the documentation
+        // Prevent the example from stealing focus when browsing the
+        // documentation
         loginOverlay.getElement().setAttribute("no-autofocus", "");
     }
 

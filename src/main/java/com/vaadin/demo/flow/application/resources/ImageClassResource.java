@@ -13,13 +13,14 @@ public class ImageClassResource extends Div {
     public ImageClassResource() {
         // tag::snippet[]
         StreamResource imageResource = new StreamResource("myimage.png",
-            () -> getClass().getResourceAsStream("/images/myimage.png"));
+                () -> getClass().getResourceAsStream("/images/myimage.png"));
 
         Image image = new Image(imageResource, "My Streamed Image");
         add(image);
         // end::snippet[]
     }
 
-    public static class ImageClassResourceExporter extends DemoExporter<ImageClassResource> { // hidden-source-line
+    public static class ImageClassResourceExporter // hidden-source-line
+            extends DemoExporter<ImageClassResource> { // hidden-source-line
     } // hidden-source-line
 }

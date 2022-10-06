@@ -27,6 +27,7 @@ public class HazelcastBackend extends Backend {
             this.payload = payload;
         }
     }
+
     // end::id-payload[]
     // tag::event-log[]
     public static class HazelcastEventLog implements EventLog {
@@ -38,15 +39,18 @@ public class HazelcastBackend extends Backend {
         private UUID newerThan;
 
         private BiConsumer<UUID, String> eventSubscriber;
+
         // end::event-log-fields[]
         public HazelcastEventLog(IList<IdAndPayload> list) {
             this.list = list;
         }
+
         // tag::submit-event[]
         @Override
         public void submitEvent(UUID id, String payload) {
             list.add(new IdAndPayload(id, payload));
         }
+
         // end::submit-event[]
         // tag::deliver-events[]
         private synchronized void deliverEvents() {
@@ -61,6 +65,7 @@ public class HazelcastBackend extends Backend {
                 }
             }
         }
+
         // end::deliver-events[]
         // tag::handle-remove[]
         private synchronized void handleRemoveItem() {
@@ -68,6 +73,7 @@ public class HazelcastBackend extends Backend {
                 nextEventIndex--;
             }
         }
+
         // end::handle-remove[]
         // tag::subscribe[]
         @Override
@@ -113,6 +119,7 @@ public class HazelcastBackend extends Backend {
                 }
             }; // <5>
         }
+
         // end::subscribe[]
         // tag::truncate[]
         @Override
@@ -139,6 +146,7 @@ public class HazelcastBackend extends Backend {
         }
         // end::truncate[]
     }
+
     // end::event-log[]
     private final HazelcastInstance hz;
 
@@ -149,17 +157,20 @@ public class HazelcastBackend extends Backend {
         this.snapshots = hz
                 .getMap(HazelcastBackend.class.getName() + ".snapshots");
     }
+
     // tag::openEventLog[]
     @Override
     public EventLog openEventLog(String logId) {
         return new HazelcastEventLog(hz.getList(logId));
     }
+
     // end::openEventLog[]
     // tag::loadLatestSnapshot[]
     @Override
     public CompletableFuture<Snapshot> loadLatestSnapshot(String name) {
         return CompletableFuture.completedFuture(snapshots.get(name));
     }
+
     // end::loadLatestSnapshot[]
     // tag::replaceSnapshot[]
     @Override
@@ -175,12 +186,14 @@ public class HazelcastBackend extends Backend {
 
         return CompletableFuture.completedFuture(null);
     }
+
     // end::replaceSnapshot[]
     // tag::getNodeId[]
     @Override
     public UUID getNodeId() {
         return hz.getCluster().getLocalMember().getUuid();
     }
+
     // end::getNodeId[]
     // tag::addMembershipListener[]
     @Override

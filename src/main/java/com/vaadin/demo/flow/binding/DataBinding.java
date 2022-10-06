@@ -28,7 +28,8 @@ public class DataBinding extends VerticalLayout {
             try {
                 editor1.getBinder().writeBean(person);
                 editor2.getBinder().readBean(person);
-            } catch (ValidationException e) {}
+            } catch (ValidationException e) {
+            }
         });
         Button resetButton = new Button("Reset");
         resetButton.addClickListener(click -> {
@@ -43,7 +44,7 @@ public class DataBinding extends VerticalLayout {
         // Show the two editors side-by-side
         HorizontalLayout hlayout = new HorizontalLayout();
         hlayout.setDefaultVerticalComponentAlignment(
-            FlexComponent.Alignment.START);
+                FlexComponent.Alignment.START);
         hlayout.add(layout1, layout2);
         add(hlayout);
         // end::snippet[]

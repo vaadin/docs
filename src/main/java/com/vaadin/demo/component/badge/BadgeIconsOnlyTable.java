@@ -19,18 +19,16 @@ public class BadgeIconsOnlyTable extends Div {
 
         // tag::snippet1[]
         grid.addColumn(UserPermissions::getName).setHeader("Name");
-        grid.addComponentColumn(userPermissions ->
-                createPermissionIcon(userPermissions.getView()))
-                .setHeader("View");
-        grid.addComponentColumn(userPermissions ->
-                createPermissionIcon(userPermissions.getComment()))
-                .setHeader("Comment");
-        grid.addComponentColumn(userPermissions ->
-                createPermissionIcon(userPermissions.getEdit()))
-                .setHeader("Edit");
+        grid.addComponentColumn(userPermissions -> createPermissionIcon(
+                userPermissions.getView())).setHeader("View");
+        grid.addComponentColumn(userPermissions -> createPermissionIcon(
+                userPermissions.getComment())).setHeader("Comment");
+        grid.addComponentColumn(userPermissions -> createPermissionIcon(
+                userPermissions.getEdit())).setHeader("Edit");
         // end::snippet1[]
 
-        List<UserPermissions> userPermissions = DataService.getUserPermissions();
+        List<UserPermissions> userPermissions = DataService
+                .getUserPermissions();
         grid.setItems(userPermissions);
 
         add(grid);

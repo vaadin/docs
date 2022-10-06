@@ -42,14 +42,13 @@ public class BasicLayoutsVerticalLayoutHorizontalAlignment extends Div {
         layout.add(new Button("Button 3"));
         // end::layout[]
 
-        List<AlignmentOption> options = Arrays
-                .asList(new AlignmentOption("Start (default)",
-                                FlexComponent.Alignment.START),
-                        new AlignmentOption("Center",
-                                FlexComponent.Alignment.CENTER),
-                        new AlignmentOption("End", FlexComponent.Alignment.END),
-                        new AlignmentOption("Stretch",
-                                FlexComponent.Alignment.STRETCH));
+        List<AlignmentOption> options = Arrays.asList(
+                new AlignmentOption("Start (default)",
+                        FlexComponent.Alignment.START),
+                new AlignmentOption("Center", FlexComponent.Alignment.CENTER),
+                new AlignmentOption("End", FlexComponent.Alignment.END),
+                new AlignmentOption("Stretch",
+                        FlexComponent.Alignment.STRETCH));
 
         RadioButtonGroup<AlignmentOption> radioGroup = new RadioButtonGroup<>();
         radioGroup.setLabel("Horizontal alignment");

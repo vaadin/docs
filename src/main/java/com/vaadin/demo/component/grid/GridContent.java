@@ -51,10 +51,11 @@ public class GridContent extends Div {
                 .withProperty("email", Person::getEmail);
     }
 
-    private static final SerializableBiConsumer<Span, Person> statusComponentUpdater = (span, person) -> {
+    private static final SerializableBiConsumer<Span, Person> statusComponentUpdater = (
+            span, person) -> {
         boolean isAvailable = "Available".equals(person.getStatus());
-        String theme = String
-                .format("badge %s", isAvailable ? "success" : "error");
+        String theme = String.format("badge %s",
+                isAvailable ? "success" : "error");
         span.getElement().setAttribute("theme", theme);
         span.setText(person.getStatus());
     };

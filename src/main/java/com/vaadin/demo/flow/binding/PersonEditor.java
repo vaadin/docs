@@ -16,17 +16,18 @@ public class PersonEditor extends FormLayout {
         TextField nameField = new TextField();
         addFormItem(nameField, "Name");
         binder.bind(nameField, BusinessPerson::getName,
-            BusinessPerson::setName);
+                BusinessPerson::setName);
         nameField.setReadOnly(readOnly);
 
         TextField titleField = new TextField();
         addFormItem(titleField, "Title");
-        binder.forField(titleField)
-              .bind(BusinessPerson::getTitle,
-                    BusinessPerson::setTitle);
+        binder.forField(titleField).bind(BusinessPerson::getTitle,
+                BusinessPerson::setTitle);
         titleField.setReadOnly(readOnly);
     }
 
-    public Binder<BusinessPerson> getBinder() {return binder;}
+    public Binder<BusinessPerson> getBinder() {
+        return binder;
+    }
 }
 // end::snippet[]

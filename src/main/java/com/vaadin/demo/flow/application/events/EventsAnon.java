@@ -9,24 +9,25 @@ import com.vaadin.flow.router.Route;
 
 @Route("application-events-anon")
 public class EventsAnon extends Div {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public EventsAnon() {
+    public EventsAnon() {
         // tag::snippet[]
         Button button = new Button("Click me!",
-            new ComponentEventListener<ClickEvent<Button>> () {
-            int count = 0;
-            @Override
-              public void onComponentEvent(ClickEvent<Button> event) {
-                event.getSource().setText("You have clicked the button " +
-                                          (++count) + " times");
-              }
-        });
+                new ComponentEventListener<ClickEvent<Button>>() {
+                    int count = 0;
+
+                    @Override
+                    public void onComponentEvent(ClickEvent<Button> event) {
+                        event.getSource().setText("You have clicked the button "
+                                + (++count) + " times");
+                    }
+                });
 
         add(button);
         // end::snippet[]
-      }
+    }
 
-      public static class Exporter extends DemoExporter<EventsAnon> { // hidden-source-line
-      } // hidden-source-line
+    public static class Exporter extends DemoExporter<EventsAnon> { // hidden-source-line
+    } // hidden-source-line
 }

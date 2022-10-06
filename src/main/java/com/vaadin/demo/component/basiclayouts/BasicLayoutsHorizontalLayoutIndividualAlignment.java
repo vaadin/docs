@@ -44,29 +44,24 @@ public class BasicLayoutsHorizontalLayoutIndividualAlignment extends Div {
         layout.add(new TextArea("Text area 3"));
         // end::layout[]
 
-        List<AlignmentOption> layoutOptions = Arrays
-                .asList(new AlignmentOption("Stretch (default)",
-                                FlexComponent.Alignment.STRETCH),
-                        new AlignmentOption("Start",
-                                FlexComponent.Alignment.START),
-                        new AlignmentOption("Center",
-                                FlexComponent.Alignment.CENTER),
-                        new AlignmentOption("End", FlexComponent.Alignment.END),
-                        new AlignmentOption("Baseline",
-                                FlexComponent.Alignment.BASELINE));
+        List<AlignmentOption> layoutOptions = Arrays.asList(
+                new AlignmentOption("Stretch (default)",
+                        FlexComponent.Alignment.STRETCH),
+                new AlignmentOption("Start", FlexComponent.Alignment.START),
+                new AlignmentOption("Center", FlexComponent.Alignment.CENTER),
+                new AlignmentOption("End", FlexComponent.Alignment.END),
+                new AlignmentOption("Baseline",
+                        FlexComponent.Alignment.BASELINE));
 
-        List<AlignmentOption> itemOptions = Arrays
-                .asList(new AlignmentOption("Auto (default)",
-                                FlexComponent.Alignment.AUTO),
-                        new AlignmentOption("Stretch",
-                                FlexComponent.Alignment.STRETCH),
-                        new AlignmentOption("Start",
-                                FlexComponent.Alignment.START),
-                        new AlignmentOption("Center",
-                                FlexComponent.Alignment.CENTER),
-                        new AlignmentOption("End", FlexComponent.Alignment.END),
-                        new AlignmentOption("Baseline",
-                                FlexComponent.Alignment.BASELINE));
+        List<AlignmentOption> itemOptions = Arrays.asList(
+                new AlignmentOption("Auto (default)",
+                        FlexComponent.Alignment.AUTO),
+                new AlignmentOption("Stretch", FlexComponent.Alignment.STRETCH),
+                new AlignmentOption("Start", FlexComponent.Alignment.START),
+                new AlignmentOption("Center", FlexComponent.Alignment.CENTER),
+                new AlignmentOption("End", FlexComponent.Alignment.END),
+                new AlignmentOption("Baseline",
+                        FlexComponent.Alignment.BASELINE));
 
         RadioButtonGroup<AlignmentOption> layoutRadioGroup = new RadioButtonGroup<>();
         layoutRadioGroup.setLabel("Vertical alignment");

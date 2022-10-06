@@ -23,7 +23,8 @@ public class ProgressBarThemeVariants extends VerticalLayout {
 
         Div progressBarContrastLabel = new Div();
         progressBarContrastLabel.setText("Transferring files... (60/120)");
-        Div progressBarContrastWrapper = new Div(progressBarContrastLabel, progressBarContrast);
+        Div progressBarContrastWrapper = new Div(progressBarContrastLabel,
+                progressBarContrast);
         progressBarContrastWrapper.setWidthFull();
         add(progressBarContrastWrapper);
 
@@ -34,7 +35,8 @@ public class ProgressBarThemeVariants extends VerticalLayout {
 
         Div progressBarSuccessLabel = new Div();
         progressBarSuccessLabel.setText("Tasks (15/20)");
-        Div progressBarSuccessWrapper = new Div(progressBarSuccessLabel,progressBarSuccess);
+        Div progressBarSuccessWrapper = new Div(progressBarSuccessLabel,
+                progressBarSuccess);
         progressBarSuccessWrapper.setWidthFull();
         add(progressBarSuccessWrapper);
 
@@ -45,7 +47,8 @@ public class ProgressBarThemeVariants extends VerticalLayout {
 
         Div progressBarErrorLabel = new Div();
         progressBarErrorLabel.setText("Tasks (4/20)");
-        Div progressBarErrorWrapper = new Div(progressBarErrorLabel, progressBarError);
+        Div progressBarErrorWrapper = new Div(progressBarErrorLabel,
+                progressBarError);
         progressBarErrorWrapper.setWidthFull();
         add(progressBarErrorWrapper);
     }

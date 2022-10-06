@@ -21,13 +21,16 @@ public class ButtonIcons extends Div {
         closeButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         closeButton.getElement().setAttribute("aria-label", "Close");
 
-        Button arrowLeftButton = new Button("Left", new Icon(VaadinIcon.ARROW_LEFT));
+        Button arrowLeftButton = new Button("Left",
+                new Icon(VaadinIcon.ARROW_LEFT));
 
-        Button arrowRightButton = new Button("Right", new Icon(VaadinIcon.ARROW_RIGHT));
+        Button arrowRightButton = new Button("Right",
+                new Icon(VaadinIcon.ARROW_RIGHT));
         arrowRightButton.setIconAfterText(true);
         // end::snippet[]
 
-        HorizontalLayout horizontalLayout = new HorizontalLayout(plusButton, closeButton, arrowLeftButton, arrowRightButton);
+        HorizontalLayout horizontalLayout = new HorizontalLayout(plusButton,
+                closeButton, arrowLeftButton, arrowRightButton);
         add(horizontalLayout);
     }
 

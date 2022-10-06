@@ -22,8 +22,8 @@ public class MessageListWithThemeComponent extends Div {
         MessageList list = new MessageList();
         Instant yesterday = LocalDateTime.now(ZoneOffset.UTC).minusDays(1)
                 .toInstant(ZoneOffset.UTC);
-        Instant fiftyMinsAgo = LocalDateTime.now(ZoneOffset.UTC).minusMinutes(50)
-                .toInstant(ZoneOffset.UTC);
+        Instant fiftyMinsAgo = LocalDateTime.now(ZoneOffset.UTC)
+                .minusMinutes(50).toInstant(ZoneOffset.UTC);
         MessageListItem message1 = new MessageListItem(
                 "Linsey, could you check if the details with the order are okay?",
                 yesterday, "Matt Mambo");

@@ -21,9 +21,8 @@ public class UiMenu extends Div {
         tabs.setOrientation(Tabs.Orientation.VERTICAL);
 
         // Add the menu items (simplified)
-        tabs.add(new Tab("Hello World"),
-                 new Tab("Card List"),
-                 new Tab("About"));
+        tabs.add(new Tab("Hello World"), new Tab("Card List"),
+                new Tab("About"));
 
         // The selection will be displayed here
         Div content = new Div();

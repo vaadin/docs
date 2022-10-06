@@ -39,28 +39,26 @@ public class CollaborationListExample extends VerticalLayout {
                     // tag::advanced[]
                     // Insert an item at the end of the list
                     // Only succeeds if key is currently last
-                    ListOperation operation1 = ListOperation
-                            .insertLast("baz")
+                    ListOperation operation1 = ListOperation.insertLast("baz")
                             .ifLast(key);
-                    ListOperationResult<Boolean> result1 =
-                            list.apply(operation1);
+                    ListOperationResult<Boolean> result1 = list
+                            .apply(operation1);
                     ListKey key1 = result1.getKey();
 
                     // Insert an item before key1
                     // Only succeeds if key1 is currently last
                     ListOperation operation2 = ListOperation
-                            .insertBefore(key1, "qux")
-                            .ifLast(key1);
-                    ListOperationResult<Boolean> result2 =
-                            list.apply(operation2);
+                            .insertBefore(key1, "qux").ifLast(key1);
+                    ListOperationResult<Boolean> result2 = list
+                            .apply(operation2);
                     ListKey key2 = result2.getKey();
 
                     // Insert an item between two keys
                     // Only succeeds if the keys are consecutive
-                    ListOperation operation3 = ListOperation
-                            .insertBetween(key2, key1, "xyz");
-                    ListOperationResult<Boolean> result3 =
-                            list.apply(operation3);
+                    ListOperation operation3 = ListOperation.insertBetween(key2,
+                            key1, "xyz");
+                    ListOperationResult<Boolean> result3 = list
+                            .apply(operation3);
                     // end::advanced[]
 
                     // Remove an item using its key

@@ -38,16 +38,20 @@ public class MapMarkers extends Div {
         Icon.Options germanFlagIconOptions = new Icon.Options();
         germanFlagIconOptions.setSrc("images/german_flag.png");
         Icon germanFlagIcon = new Icon(germanFlagIconOptions);
-        MarkerFeature germanOffice = new MarkerFeature(germanOfficeCoordinates, germanFlagIcon);
+        MarkerFeature germanOffice = new MarkerFeature(germanOfficeCoordinates,
+                germanFlagIcon);
         map.getFeatureLayer().addFeature(germanOffice);
 
-        // Add marker for Vaadin office in the US, using image from a StreamResource
+        // Add marker for Vaadin office in the US, using image from a
+        // StreamResource
         StreamResource streamResource = new StreamResource("us-flag.png",
-                () -> getClass().getResourceAsStream("/META-INF/resources/images/us-flag.png"));
+                () -> getClass().getResourceAsStream(
+                        "/META-INF/resources/images/us-flag.png"));
         Icon.Options usFlagIconOptions = new Icon.Options();
         usFlagIconOptions.setImg(streamResource);
         Icon usFlagIcon = new Icon(usFlagIconOptions);
-        MarkerFeature usOffice = new MarkerFeature(usOfficeCoordinates, usFlagIcon);
+        MarkerFeature usOffice = new MarkerFeature(usOfficeCoordinates,
+                usFlagIcon);
         map.getFeatureLayer().addFeature(usOffice);
         // end::snippet[]
 

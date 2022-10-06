@@ -45,8 +45,8 @@ public class MyMessagePersister implements CollaborationMessagePersister {
         Message messageEntity = new Message(); // <1>
         messageEntity.setTopic(request.getTopicId());
         messageEntity.setText(message.getText());
-        messageEntity.setAuthor(userService.findById(
-            message.getUser().getId()));
+        messageEntity
+                .setAuthor(userService.findById(message.getUser().getId()));
 
         // Set the time from the message only as a fallback option if your
         // database can't automatically add an insertion timestamp:

@@ -32,10 +32,8 @@ public class UploadDropLabel extends Div {
     private static Span createDropLabel() {
         Span cloudHint = new Span(
                 "Files will be uploaded to our cloud. Please note our ");
-        Anchor policyLink = new Anchor(
-                "https://vaadin.com/privacy-policy",
-                "privacy policy", AnchorTarget.BLANK
-        );
+        Anchor policyLink = new Anchor("https://vaadin.com/privacy-policy",
+                "privacy policy", AnchorTarget.BLANK);
 
         return new Span(cloudHint, policyLink);
     }
