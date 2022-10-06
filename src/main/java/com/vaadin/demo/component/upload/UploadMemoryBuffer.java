@@ -34,7 +34,8 @@ public class UploadMemoryBuffer extends Div {
             String fileName = event.getFileName();
 
             // Get input stream specifically for the finished file
-            InputStream fileData = multiFileMemoryBuffer.getInputStream(fileName);
+            InputStream fileData = multiFileMemoryBuffer
+                    .getInputStream(fileName);
             long contentLength = event.getContentLength();
             String mimeType = event.getMIMEType();
 

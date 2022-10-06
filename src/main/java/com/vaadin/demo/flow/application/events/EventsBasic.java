@@ -15,12 +15,14 @@ public class EventsBasic extends Div {
         // tag::snippet[]
         Button button = new Button("Click me!");
 
-        class MyClickListener implements ComponentEventListener<ClickEvent<Button>> {
+        class MyClickListener
+                implements ComponentEventListener<ClickEvent<Button>> {
             int count = 0;
+
             @Override
             public void onComponentEvent(ClickEvent<Button> event) {
-                event.getSource().setText("You have clicked me " +
-                        (++count) + " times");
+                event.getSource()
+                        .setText("You have clicked me " + (++count) + " times");
             }
         }
         button.addClickListener(new MyClickListener());

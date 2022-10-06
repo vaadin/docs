@@ -27,11 +27,9 @@ public class TooltipPositioning extends AppLayout {
 
     private Tabs getTabs() {
         Tabs tabs = new Tabs();
-        tabs.add(
-            createTab(VaadinIcon.HOME, "Home"),
-            createTab(VaadinIcon.CALENDAR, "Calendar"),
-            createTab(VaadinIcon.CHART, "Reports")
-        );
+        tabs.add(createTab(VaadinIcon.HOME, "Home"),
+                createTab(VaadinIcon.CALENDAR, "Calendar"),
+                createTab(VaadinIcon.CHART, "Reports"));
         tabs.setOrientation(Tabs.Orientation.VERTICAL);
         return tabs;
     }

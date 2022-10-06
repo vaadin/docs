@@ -40,11 +40,11 @@ public class FormManagerExample {
         manager.setValue("name", "John"); // <5>
 
         manager.setPropertyChangeHandler(event -> { // <6>
-                String propertyName = event.getPropertyName();
-                Object value = event.getValue();
+            String propertyName = event.getPropertyName();
+            Object value = event.getValue();
 
-                // Executed when a property value is changed
-            });
+            // Executed when a property value is changed
+        });
         // end::snippet[]
     }
 }

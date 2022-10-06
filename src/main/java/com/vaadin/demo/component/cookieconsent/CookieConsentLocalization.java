@@ -11,7 +11,8 @@ public class CookieConsentLocalization extends Div {
     public CookieConsentLocalization() {
         // tag::snippet[]
         CookieConsent cookieConsent = new CookieConsent();
-        cookieConsent.setMessage("Tämä sivusto käyttää evästeitä parhaan kokemuksen tarjoamiseksi");
+        cookieConsent.setMessage(
+                "Tämä sivusto käyttää evästeitä parhaan kokemuksen tarjoamiseksi");
         cookieConsent.setDismissLabel("Selvä");
         cookieConsent.setLearnMoreLabel("Lue lisää");
         cookieConsent.setLearnMoreLink("https://vaadin.com/terms-of-service");

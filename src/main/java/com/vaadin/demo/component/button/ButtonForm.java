@@ -19,7 +19,8 @@ public class ButtonForm extends VerticalLayout {
         TextField lastNameField = new TextField("Last name", "Smith", "");
         EmailField emailField = new EmailField("Email address");
         emailField.setValue("john.smith@example.com");
-        FormLayout formLayout = new FormLayout(firstNameField, lastNameField, emailField);
+        FormLayout formLayout = new FormLayout(firstNameField, lastNameField,
+                emailField);
         formLayout.setResponsiveSteps(new ResponsiveStep("0", 2));
         formLayout.setColspan(emailField, 2);
 
@@ -27,7 +28,8 @@ public class ButtonForm extends VerticalLayout {
         createAccount.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button cancel = new Button("Cancel");
 
-        HorizontalLayout buttonLayout = new HorizontalLayout(createAccount, cancel);
+        HorizontalLayout buttonLayout = new HorizontalLayout(createAccount,
+                cancel);
         // end::snippet[]
 
         setPadding(false);

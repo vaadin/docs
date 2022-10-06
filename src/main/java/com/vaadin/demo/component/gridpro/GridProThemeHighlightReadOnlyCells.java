@@ -23,8 +23,7 @@ public class GridProThemeHighlightReadOnlyCells extends Div {
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getMembership).setHeader("Membership");
 
-        grid.addEditColumn(Person::getEmail)
-                .text(Person::setEmail)
+        grid.addEditColumn(Person::getEmail).text(Person::setEmail)
                 .setHeader("Email (Editable)");
 
         List<Person> people = DataService.getPeople();

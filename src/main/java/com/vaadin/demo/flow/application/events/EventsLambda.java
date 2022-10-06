@@ -7,16 +7,16 @@ import com.vaadin.flow.router.Route;
 
 @Route("application-events-lambda")
 public class EventsLambda extends Div {
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  public EventsLambda() {
+    public EventsLambda() {
         // tag::snippet[]
         Button button = new Button("Click me!",
-          event -> event.getSource().setText("Clicked!!!"));
+                event -> event.getSource().setText("Clicked!!!"));
         add(button);
         // end::snippet[]
-      }
+    }
 
-      public static class Exporter extends DemoExporter<EventsLambda> { // hidden-source-line
-      } // hidden-source-line
+    public static class Exporter extends DemoExporter<EventsLambda> { // hidden-source-line
+    } // hidden-source-line
 }

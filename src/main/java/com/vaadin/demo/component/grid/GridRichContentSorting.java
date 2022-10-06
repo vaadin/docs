@@ -53,8 +53,9 @@ public class GridRichContentSorting extends Div {
                 "<vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
                         + "  <span>${item.birthday}</span>"
                         + "  <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">Age: ${item.age}</span>"
-                        + "</vaadin-vertical-layout>").withProperty("birthday",
-                GridRichContentSorting::getFormattedPersonBirthday)
+                        + "</vaadin-vertical-layout>")
+                .withProperty("birthday",
+                        GridRichContentSorting::getFormattedPersonBirthday)
                 .withProperty("age", GridRichContentSorting::getPersonAge);
     }
 
@@ -72,8 +73,8 @@ public class GridRichContentSorting extends Div {
         LocalDate birthday = person.getBirthday().toInstant()
                 .atZone(ZoneId.systemDefault()).toLocalDate();
 
-        return LocalDate.now(ZoneId.systemDefault()).getYear() - birthday
-                .getYear();
+        return LocalDate.now(ZoneId.systemDefault()).getYear()
+                - birthday.getYear();
     }
 
     public static class Exporter // hidden-source-line

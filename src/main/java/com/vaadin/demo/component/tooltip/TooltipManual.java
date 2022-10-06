@@ -18,7 +18,8 @@ public class TooltipManual extends Div {
         textField.setPlaceholder("Search");
         textField.setPrefixComponent(new Icon("lumo", "search"));
         Button button = new Button(new Icon(VaadinIcon.INFO_CIRCLE));
-        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE,
+                ButtonVariant.LUMO_ICON);
         textField.setSuffixComponent(button);
         // tag::snippet[]
         textField.setTooltipText("Wrap in “quotes” for exact phrase");

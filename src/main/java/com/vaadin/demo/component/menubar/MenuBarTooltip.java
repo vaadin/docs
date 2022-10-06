@@ -20,14 +20,16 @@ public class MenuBarTooltip extends Div {
         createIconItem(menuBar, VaadinIcon.PENCIL, "Edit");
         createIconItem(menuBar, VaadinIcon.FOLDER, "Move");
         createIconItem(menuBar, VaadinIcon.COPY, "Duplicate");
-        MenuItem archive = createIconItem(menuBar, VaadinIcon.ARCHIVE, "Archive");
+        MenuItem archive = createIconItem(menuBar, VaadinIcon.ARCHIVE,
+                "Archive");
         archive.setEnabled(false);
         // end::snippet[]
         add(menuBar);
     }
 
     // tag::createIcon[]
-    private MenuItem createIconItem(MenuBar menu, VaadinIcon iconName, String tooltipText) {
+    private MenuItem createIconItem(MenuBar menu, VaadinIcon iconName,
+            String tooltipText) {
         Icon icon = new Icon(iconName);
         MenuItem item = menu.addItem(icon, tooltipText);
         return item;

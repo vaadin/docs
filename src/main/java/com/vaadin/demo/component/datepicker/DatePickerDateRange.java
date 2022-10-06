@@ -13,8 +13,10 @@ public class DatePickerDateRange extends Div {
         // tag::snippet[]
         DatePicker departureDate = new DatePicker("Departure date");
         DatePicker returnDate = new DatePicker("Return date");
-        departureDate.addValueChangeListener(e -> returnDate.setMin(e.getValue()));
-        returnDate.addValueChangeListener(e -> departureDate.setMax(e.getValue()));
+        departureDate
+                .addValueChangeListener(e -> returnDate.setMin(e.getValue()));
+        returnDate.addValueChangeListener(
+                e -> departureDate.setMax(e.getValue()));
         // end::snippet[]
 
         add(new HorizontalLayout(departureDate, returnDate));

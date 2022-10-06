@@ -11,7 +11,8 @@ public class CookieConsentTheming extends Div {
 
     public CookieConsentTheming() {
         // tag::snippet[]
-        UI.getCurrent().getElement().getClassList().add("cookie-consent-theming");
+        UI.getCurrent().getElement().getClassList()
+                .add("cookie-consent-theming");
 
         CookieConsent cookieConsent = new CookieConsent();
         add(cookieConsent);

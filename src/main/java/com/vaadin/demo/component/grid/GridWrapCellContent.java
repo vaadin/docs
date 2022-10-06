@@ -37,9 +37,8 @@ public class GridWrapCellContent extends Div {
     private static String formatAddress(Person person) {
         Address address = person.getAddress();
 
-        return String
-                .format("%s %s %s %s", address.getStreet(), address.getCity(),
-                        address.getZip(), address.getState());
+        return String.format("%s %s %s %s", address.getStreet(),
+                address.getCity(), address.getZip(), address.getState());
     }
 
     private static Renderer<Person> createAvatarRenderer() {

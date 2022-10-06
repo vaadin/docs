@@ -26,11 +26,11 @@ public class UploadAllFiles extends Div {
 
         // end::snippet[]
         UploadExamplesI18N i18n = new UploadExamplesI18N();
-        i18n.getAddFiles()
-                .setMany("Select Files...");
+        i18n.getAddFiles().setMany("Select Files...");
         upload.setI18n(i18n);
 
-        upload.getElement().executeJs("this.files = this.createFakeFilesUploadAllFiles()"); // hidden-source-line
+        upload.getElement() // hidden-source-line
+                .executeJs("this.files = this.createFakeFilesUploadAllFiles()"); // hidden-source-line
 
         add(upload, uploadAllButton);
     }

@@ -15,25 +15,22 @@ public class AccordionContent extends Div {
         // tag::snippet[]
         Accordion accordion = new Accordion();
 
-        accordion.add("Analytics", createContent(
-            createStyledAnchor("#", "Dashboard"),
-            createStyledAnchor("#", "Reports"),
-            createStyledAnchor("#", "Data sources")
-        ));
+        accordion.add("Analytics",
+                createContent(createStyledAnchor("#", "Dashboard"),
+                        createStyledAnchor("#", "Reports"),
+                        createStyledAnchor("#", "Data sources")));
         // end::snippet[]
 
-        accordion.add("Customers", createContent(
-            createStyledAnchor("#", "Accounts"),
-            createStyledAnchor("#", "Contacts")
-        ));
+        accordion.add("Customers",
+                createContent(createStyledAnchor("#", "Accounts"),
+                        createStyledAnchor("#", "Contacts")));
 
         AccordionPanel financesPanel = new AccordionPanel();
         financesPanel.setSummaryText("Finances");
-        financesPanel.addContent(createContent(
-            createStyledAnchor("#", "Invoices"),
-            createStyledAnchor("#", "Transactions"),
-            createStyledAnchor("#", "Statements")
-        ));
+        financesPanel
+                .addContent(createContent(createStyledAnchor("#", "Invoices"),
+                        createStyledAnchor("#", "Transactions"),
+                        createStyledAnchor("#", "Statements")));
         accordion.add(financesPanel);
 
         add(accordion);

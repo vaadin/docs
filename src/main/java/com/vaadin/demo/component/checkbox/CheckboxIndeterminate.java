@@ -26,7 +26,8 @@ public class CheckboxIndeterminate extends VerticalLayout {
 
         CheckboxGroup<Person> checkboxGroup = new CheckboxGroup<>();
         checkboxGroup.setLabel("Users to notify");
-        checkboxGroup.setItemLabelGenerator(person -> person.getFirstName() + " " + person.getLastName());
+        checkboxGroup.setItemLabelGenerator(
+                person -> person.getFirstName() + " " + person.getLastName());
         checkboxGroup.setItems(items);
         checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         checkboxGroup.addValueChangeListener(event -> {

@@ -38,11 +38,13 @@ public class AccordionSummary extends Div {
 
         FormLayout customerDetailsFormLayout = createFormLayout();
         // tag::snippet[]
-        AccordionPanel customDetailsPanel = accordion.add(CUSTOMER_DETAILS,  customerDetailsFormLayout);
+        AccordionPanel customDetailsPanel = accordion.add(CUSTOMER_DETAILS,
+                customerDetailsFormLayout);
         // end::snippet[]
 
         FormLayout billingAddressFormLayout = createFormLayout();
-        AccordionPanel billingAddressPanel = accordion.add(BILLING_ADDRESS,  billingAddressFormLayout);
+        AccordionPanel billingAddressPanel = accordion.add(BILLING_ADDRESS,
+                billingAddressFormLayout);
 
         FormLayout paymentFormLayout = createFormLayout();
         AccordionPanel paymentPanel = accordion.add(PAYMENT, paymentFormLayout);
@@ -82,15 +84,18 @@ public class AccordionSummary extends Div {
             } else if (personBinder.getBean() != null) {
                 Person personValues = personBinder.getBean();
                 customDetailsPanel.setSummary(createSummary(CUSTOMER_DETAILS,
-                    personValues.getFirstName() + " " + personValues.getLastName(),
-                    personValues.getEmail(),
-                    personValues.getAddress() != null ? personValues.getAddress().getPhone() : ""
-                ));
+                        personValues.getFirstName() + " "
+                                + personValues.getLastName(),
+                        personValues.getEmail(),
+                        personValues.getAddress() != null
+                                ? personValues.getAddress().getPhone()
+                                : ""));
             }
         });
         // end::snippet[]
 
-        Button customDetailsButton = new Button("Continue", (e) -> billingAddressPanel.setOpened(true));
+        Button customDetailsButton = new Button("Continue",
+                (e) -> billingAddressPanel.setOpened(true));
         customDetailsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         customDetailsPanel.addContent(customDetailsButton);
 
@@ -161,14 +166,14 @@ public class AccordionSummary extends Div {
             } else if (personBinder.getBean().getAddress() != null) {
                 Address addressValues = personBinder.getBean().getAddress();
                 billingAddressPanel.setSummary(createSummary(BILLING_ADDRESS,
-                    addressValues.getStreet(),
-                    addressValues.getZip() + " " + addressValues.getCity(),
-                    addressValues.getCountry()
-                ));
+                        addressValues.getStreet(),
+                        addressValues.getZip() + " " + addressValues.getCity(),
+                        addressValues.getCountry()));
             }
         });
 
-        Button billingAddressButton = new Button("Continue", (e) -> paymentPanel.setOpened(true));
+        Button billingAddressButton = new Button("Continue",
+                (e) -> paymentPanel.setOpened(true));
         billingAddressButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         billingAddressPanel.addContent(billingAddressButton);
 
@@ -190,14 +195,14 @@ public class AccordionSummary extends Div {
                 paymentPanel.setSummaryText(PAYMENT);
             } else if (cardBinder.getBean() != null) {
                 Card cardValues = cardBinder.getBean();
-                paymentPanel.setSummary(createSummary(PAYMENT,
-                    cardValues.getAccountNumber(),
-                    cardValues.getExpiryDate()
-                ));
+                paymentPanel.setSummary(
+                        createSummary(PAYMENT, cardValues.getAccountNumber(),
+                                cardValues.getExpiryDate()));
             }
         });
 
-        Button paymentButton = new Button("Finish", (e) -> paymentPanel.setOpened(false));
+        Button paymentButton = new Button("Finish",
+                (e) -> paymentPanel.setOpened(false));
         paymentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         paymentPanel.addContent(paymentButton);
 
@@ -207,9 +212,8 @@ public class AccordionSummary extends Div {
     private FormLayout createFormLayout() {
         FormLayout billingAddressFormLayout = new FormLayout();
         billingAddressFormLayout.setResponsiveSteps(
-          new FormLayout.ResponsiveStep("0", 1),
-          new FormLayout.ResponsiveStep("20em", 2)
-        );
+                new FormLayout.ResponsiveStep("0", 1),
+                new FormLayout.ResponsiveStep("20em", 2));
         return billingAddressFormLayout;
     }
 
@@ -224,9 +228,10 @@ public class AccordionSummary extends Div {
             VerticalLayout detailsLayout = new VerticalLayout();
             detailsLayout.setSpacing(false);
             detailsLayout.setPadding(false);
-            detailsLayout.getStyle().set("font-size", "var(--lumo-font-size-s)");
+            detailsLayout.getStyle().set("font-size",
+                    "var(--lumo-font-size-s)");
 
-            for (String detail: details) {
+            for (String detail : details) {
                 if (detail != null && !detail.isEmpty()) {
                     detailsLayout.add(new Span(detail));
                 }

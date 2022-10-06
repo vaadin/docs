@@ -32,7 +32,8 @@ public class BadgeColor extends VerticalLayout {
         // end::snippet2[]
 
         Span confirmedPrimary = new Span("Confirmed");
-        confirmedPrimary.getElement().getThemeList().add("badge success primary");
+        confirmedPrimary.getElement().getThemeList()
+                .add("badge success primary");
 
         Span deniedPrimary = new Span("Denied");
         deniedPrimary.getElement().getThemeList().add("badge error primary");
@@ -41,8 +42,8 @@ public class BadgeColor extends VerticalLayout {
         onHoldPrimary.getElement().getThemeList().add("badge contrast primary");
 
         add(new HorizontalLayout(pending, confirmed, denied, onHold),
-            new HorizontalLayout(pendingPrimary, confirmedPrimary, deniedPrimary, onHoldPrimary)
-        );
+                new HorizontalLayout(pendingPrimary, confirmedPrimary,
+                        deniedPrimary, onHoldPrimary));
         setPadding(false);
         setSizeUndefined();
     }

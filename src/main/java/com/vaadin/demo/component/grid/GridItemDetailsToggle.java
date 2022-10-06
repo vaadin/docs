@@ -43,8 +43,8 @@ public class GridItemDetailsToggle extends Div {
             Grid<Person> grid) {
         return LitRenderer.<Person> of(
                 "<vaadin-button theme=\"tertiary\" @click=\"${handleClick}\">Toggle details</vaadin-button>")
-                .withFunction("handleClick", person -> grid
-                        .setDetailsVisible(person,
+                .withFunction("handleClick",
+                        person -> grid.setDetailsVisible(person,
                                 !grid.isDetailsVisible(person)));
     }
     // end::snippet2[]
@@ -65,9 +65,9 @@ public class GridItemDetailsToggle extends Div {
         public PersonDetailsFormLayout() {
             Stream.of(emailField, phoneField, streetField, zipField, cityField,
                     stateField).forEach(field -> {
-                field.setReadOnly(true);
-                add(field);
-            });
+                        field.setReadOnly(true);
+                        add(field);
+                    });
 
             setResponsiveSteps(new ResponsiveStep("0", 3));
             setColspan(emailField, 3);

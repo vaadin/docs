@@ -8,15 +8,15 @@ import com.vaadin.flow.component.login.LoginForm;
 // tag::routing-basic[]
 @Route("/login")
 public class LoginScreen extends Div {
-	public LoginScreen() {
+    public LoginScreen() {
         LoginForm loginForm = new LoginForm();
         // Implementation details omitted
         add(loginForm);
-	}
-	// end::routing-basic[]
+    }
+    // end::routing-basic[]
 
-	public static class RoutingBasicExporter extends DemoExporter<LoginScreen> { // hidden-source-line
-	} // hidden-source-line
-	// tag::routing-basic[]
+    public static class RoutingBasicExporter extends DemoExporter<LoginScreen> { // hidden-source-line
+    } // hidden-source-line
+      // tag::routing-basic[]
 }
 // end::routing-basic[]

@@ -108,8 +108,8 @@ public class GridColumnFiltering extends Div {
         }
 
         private boolean matches(String value, String searchTerm) {
-            return searchTerm == null || searchTerm.isEmpty() || value
-                    .toLowerCase().contains(searchTerm.toLowerCase());
+            return searchTerm == null || searchTerm.isEmpty()
+                    || value.toLowerCase().contains(searchTerm.toLowerCase());
         }
     }
     // end::snippet2[]

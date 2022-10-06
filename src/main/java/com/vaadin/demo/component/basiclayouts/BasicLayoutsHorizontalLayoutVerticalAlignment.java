@@ -43,16 +43,14 @@ public class BasicLayoutsHorizontalLayoutVerticalAlignment extends Div {
         layout.add(new TextArea("Text area 3"));
         // end::layout[]
 
-        List<AlignmentOption> options = Arrays
-                .asList(new AlignmentOption("Stretch (default)",
-                                FlexComponent.Alignment.STRETCH),
-                        new AlignmentOption("Start",
-                                FlexComponent.Alignment.START),
-                        new AlignmentOption("Center",
-                                FlexComponent.Alignment.CENTER),
-                        new AlignmentOption("End", FlexComponent.Alignment.END),
-                        new AlignmentOption("Baseline",
-                                FlexComponent.Alignment.BASELINE));
+        List<AlignmentOption> options = Arrays.asList(
+                new AlignmentOption("Stretch (default)",
+                        FlexComponent.Alignment.STRETCH),
+                new AlignmentOption("Start", FlexComponent.Alignment.START),
+                new AlignmentOption("Center", FlexComponent.Alignment.CENTER),
+                new AlignmentOption("End", FlexComponent.Alignment.END),
+                new AlignmentOption("Baseline",
+                        FlexComponent.Alignment.BASELINE));
 
         RadioButtonGroup<AlignmentOption> radioGroup = new RadioButtonGroup<>();
         radioGroup.setLabel("Vertical alignment");

@@ -22,7 +22,8 @@ public class ButtonDisableLongAction extends Div {
         // end::snippet[]
 
         button.getStyle().set("flex", "none");
-        HorizontalLayout horizontalLayout = new HorizontalLayout(button, progressBar);
+        HorizontalLayout horizontalLayout = new HorizontalLayout(button,
+                progressBar);
         horizontalLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         add(horizontalLayout);
     }

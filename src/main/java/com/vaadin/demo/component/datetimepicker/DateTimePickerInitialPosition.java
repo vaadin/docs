@@ -14,7 +14,8 @@ import java.time.temporal.TemporalAdjusters;
 public class DateTimePickerInitialPosition extends Div {
 
     public DateTimePickerInitialPosition() {
-        DateTimePicker dateTimePicker = new DateTimePicker("Meeting date and time");
+        DateTimePicker dateTimePicker = new DateTimePicker(
+                "Meeting date and time");
         // tag::snippet[]
         // https://github.com/vaadin/vaadin-date-time-picker/issues/57
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
@@ -22,10 +23,8 @@ public class DateTimePickerInitialPosition extends Div {
                 .with(TemporalAdjusters.firstDayOfNextMonth());
         String startOfNextMonthIsoString = formatter.format(startOfNextMonth);
 
-        dateTimePicker.getElement().executeJs(
-                "this.initialPosition = $0",
-                startOfNextMonthIsoString
-        );
+        dateTimePicker.getElement().executeJs("this.initialPosition = $0",
+                startOfNextMonthIsoString);
         // end::snippet[]
         add(dateTimePicker);
     }

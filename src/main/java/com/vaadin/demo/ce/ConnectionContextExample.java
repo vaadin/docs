@@ -19,7 +19,8 @@ public class ConnectionContextExample extends VerticalLayout {
 
     private UserInfo localUser = new UserInfo("userId");
     private String topicId = "mytopic";
-    private CollaborationEngine collaborationEngine = CollaborationEngine.getInstance();
+    private CollaborationEngine collaborationEngine = CollaborationEngine
+            .getInstance();
     private MessageManager messageManager;
     private PresenceManager presenceManager;
     private TopicConnectionRegistration registration;
@@ -30,15 +31,17 @@ public class ConnectionContextExample extends VerticalLayout {
         };
     };
 
-    public void instantiateWithConnectionContext(ConnectionContext connectionContext) {
+    public void instantiateWithConnectionContext(
+            ConnectionContext connectionContext) {
         // tag::pass-a-connection-context[]
         // Use to create a message manager
-        messageManager = new MessageManager(
-            connectionContext, localUser, topicId, collaborationEngine);
+        messageManager = new MessageManager(connectionContext, localUser,
+                topicId, collaborationEngine);
 
         // Use to open a topic connection
         registration = collaborationEngine.openTopicConnection(
-            connectionContext, topicId, localUser, connectionActivationCallback);
+                connectionContext, topicId, localUser,
+                connectionActivationCallback);
         // end::pass-a-connection-context[]
     }
 
@@ -48,23 +51,23 @@ public class ConnectionContextExample extends VerticalLayout {
         // when passing a component (this) as the first argument.
         messageManager = new MessageManager(this, localUser, topicId);
         presenceManager = new PresenceManager(this, localUser, topicId);
-        registration = collaborationEngine.openTopicConnection(
-            this, topicId, localUser, connectionActivationCallback);
+        registration = collaborationEngine.openTopicConnection(this, topicId,
+                localUser, connectionActivationCallback);
         // end::component[]
     }
 
     public void instantiateWithComponentContext() {
         // tag::component-context[]
-        ComponentConnectionContext context =
-            new ComponentConnectionContext(this);
+        ComponentConnectionContext context = new ComponentConnectionContext(
+                this);
 
         // In this case the CollaborationEngine instance
         // also needs to be supplied.
-        messageManager = new MessageManager(context, localUser,
-            topicId, CollaborationEngine.getInstance());
+        messageManager = new MessageManager(context, localUser, topicId,
+                CollaborationEngine.getInstance());
 
-        registration = collaborationEngine.openTopicConnection(
-            context, topicId, localUser, connectionActivationCallback);
+        registration = collaborationEngine.openTopicConnection(context, topicId,
+                localUser, connectionActivationCallback);
         // end::component-context[]
     }
 
@@ -75,20 +78,21 @@ public class ConnectionContextExample extends VerticalLayout {
 
         ConnectionContext context = collaborationEngine.getSystemContext(); // <2>
 
-        MessageManager messageManager =
-            new MessageManager(context, systemUser, topicId, collaborationEngine); // <3>
+        MessageManager messageManager = new MessageManager(context, systemUser,
+                topicId, collaborationEngine); // <3>
 
-        messageManager
-            .submit("The system is shutting down")
-            .whenComplete((v,t) -> messageManager.close()); // <4>
+        messageManager.submit("The system is shutting down")
+                .whenComplete((v, t) -> messageManager.close()); // <4>
 
     }
     // end::async-task[]
 
-    public SystemConnectionContext getSystemConnectionContext(CollaborationEngine collaborationEngine) {
+    public SystemConnectionContext getSystemConnectionContext(
+            CollaborationEngine collaborationEngine) {
 
         // tag::system-connection-context[]
-        SystemConnectionContext context = collaborationEngine.getSystemContext();
+        SystemConnectionContext context = collaborationEngine
+                .getSystemContext();
         // end::system-connection-context[]
         return context;
     }

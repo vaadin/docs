@@ -17,12 +17,14 @@ public class DialogFooter extends Div {
     public DialogFooter() {
         Dialog dialog = new Dialog();
 
-        dialog.setHeaderTitle(String.format("Delete user \"%s\"?", user.getFullName()));
+        dialog.setHeaderTitle(
+                String.format("Delete user \"%s\"?", user.getFullName()));
         dialog.add("Are you sure you want to delete this user permanently?");
 
         // tag::snippet1[]
         Button deleteButton = new Button("Delete", (e) -> dialog.close());
-        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
+                ButtonVariant.LUMO_ERROR);
         deleteButton.getStyle().set("margin-right", "auto");
         dialog.getFooter().add(deleteButton);
 
