@@ -80,7 +80,9 @@ export class NewsletterDialog extends LitElement {
   }
 
   private async subscribe() {
-    Notification.show(await this.binder.submitTo(NewsletterEndpoint.subscribe), { theme: 'error' });
+    Notification.show(await this.binder.submitTo(NewsletterEndpoint.subscribe), {
+      theme: 'success',
+    });
     this.close();
   }
 }
