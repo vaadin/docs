@@ -2,7 +2,7 @@ import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 
 import '@vaadin/text-field';
-import { TextField } from '@vaadin/text-field';
+import type { TextField } from '@vaadin/text-field';
 
 import 'vanilla-colorful';
 
