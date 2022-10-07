@@ -34,7 +34,7 @@ public class UploadHelper extends Div {
         i18n.getAddFiles().setOne("Upload Spreadsheet...");
         i18n.getDropFiles().setOne("Drop spreadsheet here");
         i18n.getError().setIncorrectFileType(
-                "Please provide the file in one of the supported formats (.xls, .xlsx, .csv).");
+                "Provide the file in one of the supported formats (.xls, .xlsx, .csv).");
         upload.setI18n(i18n);
 
         add(title, hint, upload);

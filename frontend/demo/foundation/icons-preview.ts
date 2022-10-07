@@ -100,7 +100,7 @@ export class IconsPreview extends HTMLElement {
       const isDeprecated = name in DEPRECATED_ICONS;
 
       if (isDeprecated) {
-        title = `Since Vaadin 21, '${name}' is deprecated. Please use '${DEPRECATED_ICONS[name]}' instead.`;
+        title = `Since Vaadin 21, '${name}' is deprecated. Use '${DEPRECATED_ICONS[name]}' instead.`;
       }
 
       html += `

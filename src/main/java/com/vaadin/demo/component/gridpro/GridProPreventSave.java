@@ -29,7 +29,7 @@ public class GridProPreventSave extends Div {
             if (isValidEmail(newValue)) {
                 person.setEmail(newValue);
             } else {
-                showErrorNotification("Please enter a valid email address");
+                showErrorNotification("Enter a valid email address");
             }
         }).setHeader("Email");
 
@@ -39,7 +39,7 @@ public class GridProPreventSave extends Div {
                         person.getAddress().setPhone(newValue);
                     } else {
                         showErrorNotification(
-                                "Please enter a valid phone number");
+                                "Enter a valid phone number");
                     }
                 }).setHeader("Phone");
         // end::snippet[]

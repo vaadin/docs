@@ -16,14 +16,14 @@ public class EmailFieldBasic extends HorizontalLayout {
         validEmailField.setLabel("Email address");
         validEmailField.getElement().setAttribute("name", "email");
         validEmailField.setValue("julia.scheider@email.com");
-        validEmailField.setErrorMessage("Please enter a valid email address");
+        validEmailField.setErrorMessage("Enter a valid email address");
         validEmailField.setClearButtonVisible(true);
 
         EmailField invalidEmailField = new EmailField();
         invalidEmailField.setLabel("Email address");
         invalidEmailField.getElement().setAttribute("name", "email");
         invalidEmailField.setValue("This is not an email");
-        invalidEmailField.setErrorMessage("Please enter a valid email address");
+        invalidEmailField.setErrorMessage("Enter a valid email address");
         invalidEmailField.setClearButtonVisible(true);
         invalidEmailField.setInvalid(true);
 

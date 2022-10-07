@@ -41,7 +41,7 @@ export class Example extends LitElement {
           @opened-changed="${this.openedChanged}"
         >
           An error occurred while exporting <b>Report Q4</b>. Please try again. If the problem
-          persists, please contact <a href="mailto:support@company.com">support@company.com</a>.
+          persists, contact <a href="mailto:support@company.com">support@company.com</a>.
         </vaadin-confirm-dialog>
         <!-- end::snippet[] -->
 

@@ -35,7 +35,7 @@ export class Example extends LitElement {
     this.upload.i18n.addFiles.one = 'Upload Report...';
     this.upload.i18n.dropFiles.one = 'Drop report here';
     this.upload.i18n.error.incorrectFileType =
-      'The provided file does not have the correct format. Please provide a PDF document.';
+      'The provided file does not have the correct format (PDF document).';
     this.upload.i18n = { ...this.upload.i18n };
   }
 

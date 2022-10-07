@@ -21,7 +21,7 @@ export class Example extends LitElement {
         label="Email address"
         name="email"
         placeholder="username@example.com"
-        error-message="Please enter a valid example.com email address"
+        error-message="Enter a valid example.com email address"
         clear-button-visible
         pattern="^.+@example\\.com$"
       ></vaadin-email-field>
