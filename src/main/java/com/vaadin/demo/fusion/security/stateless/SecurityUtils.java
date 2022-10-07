@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 // tag::user-details[]
 @Component
-public class SecurityUtils  {
+public class SecurityUtils {
 
     @Autowired
     private UserDetailsService userDetailsService;
