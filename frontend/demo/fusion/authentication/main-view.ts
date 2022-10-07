@@ -13,7 +13,7 @@ export class MainView extends LitElement {
       <nav>
         ${repeat(
           this.menuRoutes,
-          (route) => html` <a href="${router.urlForPath(route.path)}">${route.title}</a>`
+          (route) => html`<a href="${router.urlForPath(route.path)}">${route.title}</a>`
         )}
         ;
       </nav>

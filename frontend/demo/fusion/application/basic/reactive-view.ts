@@ -13,10 +13,12 @@ export class ReactiveView extends LitElement {
 
   // Called whenever the data changes
   render() {
-    return html` <div>
-      <div>The button has been clicked ${this.count} times</div>
-      <vaadin-button @click="${this.increment}">Click me!</vaadin-button>
-    </div>`;
+    return html`
+      <div>
+        <div>The button has been clicked ${this.count} times</div>
+        <vaadin-button @click="${this.increment}">Click me!</vaadin-button>
+      </div>
+    `;
   }
 
   // Change the data
