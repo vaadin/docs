@@ -21,7 +21,7 @@ public class UploadLabelling extends Div {
         i18n.getAddFiles().setOne("Upload PDF...");
         i18n.getDropFiles().setOne("Drop PDF here");
         i18n.getError().setIncorrectFileType(
-                "The provided file does not have the correct format. Please provide a PDF document.");
+                "The provided file does not have the correct format (PDF document).");
         upload.setI18n(i18n);
         // end::snippet[]
 

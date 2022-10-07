@@ -16,7 +16,7 @@ public class ProgressBarCompletionTime extends Div {
         progressBar.setIndeterminate(true);
 
         Div progressBarLabel = new Div();
-        progressBarLabel.setText("Generating report, please wait...");
+        progressBarLabel.setText("Generating report...");
 
         Div progressBarSubLabel = new Div();
         progressBarSubLabel.getStyle().set("font-size",

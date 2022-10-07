@@ -13,7 +13,7 @@ public class LoginAdditionalInformation extends Div {
         // tag::snippet[]
         LoginI18n i18n = LoginI18n.createDefault();
         i18n.setAdditionalInformation(
-                "Please, contact admin@company.com if you're experiencing issues logging into your account");
+                "Contact admin@company.com if you're experiencing issues logging into your account");
 
         LoginOverlay loginOverlay = new LoginOverlay();
         loginOverlay.setI18n(i18n);

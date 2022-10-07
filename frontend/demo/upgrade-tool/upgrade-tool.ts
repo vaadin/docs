@@ -143,7 +143,7 @@ export default class UpgradeTool extends LitElement {
     if (this.isFlow || this.isFusion) {
       this.showElementsWithClassname('all');
     } else {
-      Notification.show('Please select a framework!');
+      Notification.show('Select a framework');
       return;
     }
 

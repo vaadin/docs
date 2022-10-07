@@ -21,7 +21,7 @@ export class Example extends LitElement {
 
   firstUpdated() {
     this.binder.for(this.binder.model.startDate).addValidator({
-      message: 'Please select a weekday',
+      message: 'Select a weekday',
       validate: (startDate: string) => {
         const date = new Date(startDate);
         const isWeekday = date.getDay() >= 1 && date.getDay() <= 5;

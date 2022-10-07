@@ -25,6 +25,7 @@ export class DashboardGenerator extends LitElement {
 
   @state()
   accountId = '';
+
   @state()
   json = '';
 

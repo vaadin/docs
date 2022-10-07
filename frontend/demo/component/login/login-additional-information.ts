@@ -21,7 +21,7 @@ export class Example extends LitElement {
   firstUpdated() {
     this.login.i18n = {
       ...this.login.i18n,
-      additionalInformation: `Please, contact admin@company.com if you're experiencing issues logging into your account`,
+      additionalInformation: `Contact admin@company.com if you're experiencing issues logging into your account`,
     };
   }
 

@@ -20,7 +20,7 @@ public class DatePickerCustomValidation extends Div {
             int dayOfWeek = localDate.getDayOfWeek().getValue();
             boolean validWeekDay = dayOfWeek >= 1 && dayOfWeek <= 5;
             return validWeekDay;
-        }, "Please select a weekday").bind(Appointment::getStartDate,
+        }, "Select a weekday").bind(Appointment::getStartDate,
                 Appointment::setStartDate);
         // end::snippet[]
 
