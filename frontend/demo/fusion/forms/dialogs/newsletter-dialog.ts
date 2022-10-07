@@ -4,15 +4,15 @@ import { Binder, field, ObjectModel } from '@hilla/form';
 import NewsletterSubscriptionModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/dialogs/NewsletterSubscriptionModel';
 import { NewsletterEndpoint } from 'Frontend/generated/endpoints';
 import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators';
-import { Notification } from '@vaadin/notification';
-import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-import '@vaadin/text-field';
-import '@vaadin/vertical-layout';
-import '@vaadin/dialog';
+import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/checkbox';
-import { Dialog } from '@vaadin/dialog/src/vaadin-dialog';
+import '@vaadin/dialog';
+import '@vaadin/text-field';
+import '@vaadin/vertical-layout';
+import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
+import type { Dialog, DialogOpenedChangedEvent } from '@vaadin/dialog';
+import { Notification } from '@vaadin/notification';
 
 // @ts-ignore // hidden-source-line
 NewsletterSubscriptionModel.createEmptyValue = ObjectModel.createEmptyValue; // hidden-source-line
@@ -46,14 +46,14 @@ export class NewsletterDialog extends LitElement {
       <vaadin-dialog
         header-title="Newsletter subscription"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
         ${dialogRenderer(this.renderDialog, [])}
         ${dialogFooterRenderer(this.renderFooter, [])}
       ></vaadin-dialog>
 
-      <vaadin-button @click="${() => (this.dialogOpened = true)}"
-        >Subscribe to our newsletter</vaadin-button
-      >
+      <vaadin-button @click="${() => (this.dialogOpened = true)}">
+        Subscribe to our newsletter
+      </vaadin-button>
     `;
   }
 
@@ -80,10 +80,7 @@ export class NewsletterDialog extends LitElement {
   }
 
   private async subscribe() {
-    const notification = Notification.show(
-      await this.binder.submitTo(NewsletterEndpoint.subscribe)
-    );
-    notification.setAttribute('theme', 'success');
+    Notification.show(await this.binder.submitTo(NewsletterEndpoint.subscribe), { theme: 'error' });
     this.close();
   }
 }
