@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const asyncExec = require('util').promisify(require('child_process').exec);
-const xml2js = require('xml2js');
 const fs = require('fs');
 const path = require('path');
 const { program } = require('commander');
@@ -85,7 +84,6 @@ async function commitChanges(folder, message) {
 function readConfigFile(source, target) {
   console.log(source, target)
   const {config} = require(path.resolve(cmd.config));
-  console.log(config)
   const ret = {};
   Object.keys(config).forEach(k => {
     if (config[k].target) {
