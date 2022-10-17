@@ -3,7 +3,7 @@ import type { FieldStrategy } from '@vaadin/form';
 import type { MyTextField } from './my-text-field';
 
 export class MyTextFieldStrategy implements FieldStrategy {
-  constructor(public element: MyTextField) {}
+  constructor(element: MyTextField) {}
 
   set required(required: boolean) {
     this.element.mandatory = required;
