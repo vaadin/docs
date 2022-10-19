@@ -1,0 +1,220 @@
+---
+title: Getting Started with Hilla and React
+order: 25
+page-title: Getting Started with Hilla and React
+description: Learn how to create a full-stack web application using React, Hilla, and Spring Boot
+---
+
+= Getting Started with Hilla and React
+
+Hilla is a powerful full-stack framework that allows you to create web applications taking advantage of a choice of leading technologies:
+
+- the nice-looking and battle-tested https://vaadin.com/components[Vaadin components]
+- https://lit.dev/[Lit web components]
+- Auto-generated TypeScript types to ease data exchange with the server
+- https://spring.io/projects/spring-boot[Spring Boot]
+
+Now Hilla has first-class support for React, in case you prefer it or if you don't want to learn web components. All the other advantages stay valid: the generated types and validation rules are compatible with React and you can still use Vaadin components thanks to React-compatible wrappers.
+
+[discrete]
+== What You Need
+
+- About 10 minutes
+- https://nodejs.org/[Node^] 16.14 or later
+- JDK 11 or later, for example, https://adoptium.net/[Eclipse Temurin JDK^].
+
+== Step 1: Create a Hilla React Project
+
+Use the Vaadin CLI to create a new project:
+
+[source,terminal]
+----
+npx @vaadin/cli init --preset hilla-react-quickstart-tutorial hilla-grocery-app
+----
+
+Unpack the downloaded zip into a folder on your computer, and import the project in the IDE of your choice.
+
+The pre-configured starter project includes an empty `Grocery` view that you will modify as described further below.
+
+== Step 2: Define the Data Model
+
+For the data model, define a plain old Java object (POJO) by creating a new `GroceryItem.java` file in `src/main/java/com/example/application/` with the following content:
+
+.`GroceryItem.java`
+[source,java]
+----
+package com.example.application;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+public class GroceryItem {
+
+    @NotBlank // <1>
+    private String name;
+
+    @NotNull
+    @Min(value = 1) // <2>
+    private Integer quantity;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+}
+----
+<1> Add a `@NotBlank` annotation to ensure that the item's `name` is non-null and that it contains at least one non-whitespace character.
+<2> Add `@NotNull` and `@Min` annotations to ensure that the item's `quantity` is a non-null integer that's greater than 0.
+
+== Step 3: Create a Typed Server Endpoint
+
+Hilla enables your frontend to have secure, type-safe access to the server through REST-like endpoints.
+
+Create a new `GroceryEndpoint.java` file in `src/main/java/com/example/application/` with the following content:
+
+.`GroceryEndpoint.java`
+[source,java]
+----
+package com.example.application;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import dev.hilla.Endpoint;
+import dev.hilla.Nonnull;
+
+@Endpoint // <1>
+@AnonymousAllowed // <2>
+public class GroceryEndpoint {
+
+  private final List<GroceryItem> groceryList = new ArrayList<>();
+
+  public @Nonnull List<@Nonnull GroceryItem> getGroceries() { // <3>
+    return groceryList;
+  }
+
+  public GroceryItem save(GroceryItem item) {
+    groceryList.add(item);
+    return item;
+  }
+}
+----
+<1> Annotating the class with `@Endpoint` exposes it as a service for client-side views.
+All *public* methods of an endpoint are callable from TypeScript.
+<2> By default, endpoint access requires an authenticated user. `@AnonymousAllowed` enables access for anyone. See <<../security/configuring#,Configuring Security>> for more information on endpoint security.
+<3> Using the `@Nonnull` annotation ensures that the TypeScript Generator doesn't interpret these values as possibly `undefined`.
+
+== Step 4: Create the UI using React and TypeScript
+
+Open `frontend/views/grocery/grocery-view.tsx` and replace its contents with the following:
+
+.`grocery-view.tsx`
+[source,typescript]
+----
+import cn from 'classnames';
+import type GroceryItem from 'Frontend/generated/com/example/application/GroceryItem';
+import { ReactElement, useEffect, useState } from 'react';
+import { FormikErrors, useFormik } from 'formik';
+import { Button, Grid, GridColumn, NumberField, TextField } from 'react-vaadin-components';
+import { GroceryEndpoint } from 'Frontend/generated/endpoints';
+import { EndpointValidationError } from '@hilla/frontend';
+
+export default function GroceryView(): ReactElement<unknown> | null {
+  const empty: GroceryItem = { name: '', quantity: 1 };
+  const [groceries, setGroceries] = useState(Array<GroceryItem>());
+
+  useEffect(() => {
+    (async () => {
+      setGroceries(await GroceryEndpoint.getGroceries());
+    })();
+
+    return () => { };
+  }, []);
+
+  const formik = useFormik({
+    initialValues: empty,
+    onSubmit: async (value: GroceryItem, { setSubmitting, setErrors }) => {
+      try {
+        await GroceryEndpoint.save(value);
+        setGroceries([...groceries, value]);
+        formik.resetForm();
+      } catch (e: unknown) {
+        if (e instanceof EndpointValidationError) {
+          const errors: FormikErrors<GroceryItem> = {}
+          for (const error of e.validationErrorData) {
+            if (typeof error.parameterName === 'string' && error.parameterName in empty) {
+              const key = error.parameterName as (string & keyof GroceryItem);
+              errors[key] = error.message;
+            }
+          }
+          setErrors(errors);
+        }
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  return (
+    <>
+      <section className={cn('p-m')}>
+        <div>
+          <TextField
+            name='name'
+            label="Name"
+            value={formik.values.name}
+            onChange={formik.handleChange}
+            onBlur={formik.handleChange}
+          />
+          <NumberField
+            name='quantity'
+            label="Quantity"
+            value={formik.values.quantity?.toString()}
+            onChange={formik.handleChange}
+            onBlur={formik.handleChange}
+          />
+          <Button
+            theme="primary"
+            disabled={formik.isSubmitting}
+            onClick={formik.submitForm}
+          >Add</Button>
+        </div>
+
+        <h3>Grocery List</h3>
+        <Grid items={groceries} theme="row-stripes" style={{ maxWidth: '400px' }}>
+          <GridColumn
+            path="name"
+            autoWidth
+            itemRenderer={({ item }) => <span>{item.name}</span>}
+          />
+          <GridColumn
+            path="quantity"
+            autoWidth
+            itemRenderer={({ item }) => <span>{item.quantity}</span>}
+          />
+        </Grid>
+      </section>
+    </>
+  );
+}
+----
+
+== Step 5: Run the Application
+
+To run the project in your IDE, launch `Application.java`, which is located under `src/main/java/com/example/application/`.
+
+Alternatively, you can run the project from the command line by typing `mvnw` (on Windows), or `./mvnw` (on macOS or Linux).
+
+Then, in your browser, open `http://localhost:8080/grocery[localhost:8080/grocery, rel="nofollow"]`.
