@@ -1,6 +1,8 @@
 import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 
-export default class Example extends LitElement {
+@customElement('dspublisher-header')
+class Header extends LitElement {
   createRenderRoot() {
     return this;
   }

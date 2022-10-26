@@ -16,9 +16,7 @@ async function fetchAntlersStyleSheets() {
     'https://cdn.vaadin.com/website/antlers/v2/assets/css/2-components/lists.css',
     'https://cdn.vaadin.com/website/antlers/v2/assets/css/2-components/tag.css',
     'https://cdn.vaadin.com/website/antlers/v2/assets/css/3-patterns/navigation.css',
-    'https://cdn.vaadin.com/website/antlers/v2/assets/css/5-sections/addsearch.css',
     'https://cdn.vaadin.com/website/antlers/v2/assets/css/5-sections/cookie.css',
-    'https://cdn.vaadin.com/website/antlers/v2/assets/css/3-patterns/card.css',
   ];
 
   // No try-catch, let the build fail if there is an error fetching the style sheets
