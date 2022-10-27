@@ -1,14 +1,76 @@
 
 const config = {
-  "src/main/resources/vaadin-featureflags.properties": {
-    target: "src/main/foo/bar/vaadin-featureflags.properties",
-    find: "com.vaadin.experimental(.*)",
-    replace: "foo$1"
-  }
-}
+  source: {
+    // paths in 'latest' to copy
+    // All their content are copied unless exceptions in the "ignore" section
+    // they are copied in the same path unless exceptions in "rename" section
+    "copy": [
+      "articles",
+      "src",
+      "dspublisher",
+      "frontend",
+    ],
+    // paths in 'latest' to ignore (since they shouldn't be copied to dsp)
+    "ignore": [
+      /(^|\/)\..+/, // hidden files
 
-for (const file of ["LICENSE", "README.md", "node_modules", "package-lock.json"]) {
-  config[file] = {ignore: true};
+      "articles/guide",
+      "articles/advanced",
+      "articles/configuration",
+      "articles/tutorial",
+      "articles/tools",
+      "articles/api.adoc",
+      "articles/security",
+      "articles/contributing",
+      "articles/create-ui",
+      "articles/binding-data",
+      "articles/integrations",
+      "articles/testing",
+
+      "articles/index.asciidoc",
+      "articles/overview.asciidoc",
+      "articles/contributing-docs",
+      "articles/styling",
+      "articles/upgrading",
+      "articles/application",
+      "articles/routing",
+      "articles/_vaadin-version.adoc",
+      "articles/_commercial-banner.asciidoc",
+      "articles/_terminal.asciidoc",
+      "articles/404.asciidoc",
+
+      "frontend/demo/fusion",
+      "frontend/demo/upgrade-tool",
+      "frontend/demo/tools",
+      "frontend/demo/component",
+      "frontend/demo/flow",
+
+      "src/main/java/com/vaadin/demo/flow",
+      "src/main/java/com/vaadin/demo/pwa",
+      "src/main/java/com/vaadin/demo/sso",
+      "src/main/java/com/vaadin/demo/collaboration",
+
+      "dspublisher/theme",
+    ],
+  },
+  rename: {
+    // paths in 'latest' to copy to different paths in 'dsp'
+    "articles/components": "articles/ds/components"
+  },
+  target: {
+    // paths in 'dsp' to ignore (since they shouldn't be removed, even if they don't exist in latest)
+    "keep": [
+      "articles/ds/foundation",
+      "articles/ds/_images"
+    ]
+  },
+  // callbacks for changing the content of certain files
+  callback: [
+    {
+      path: /.*\.property$/,
+      callback: (content) => content.replace(/foo/, "bar")
+    }
+  ]
 }
 
 exports.config = config;
