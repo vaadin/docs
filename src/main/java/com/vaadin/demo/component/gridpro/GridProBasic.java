@@ -11,32 +11,28 @@ import java.util.List;
 @Route("grid-pro-basic")
 public class GridProBasic extends Div {
 
-  public GridProBasic() {
-    // tag::snippet[]
-    GridPro<Person> grid = new GridPro<>();
+    public GridProBasic() {
+        // tag::snippet[]
+        GridPro<Person> grid = new GridPro<>();
 
-    grid.addEditColumn(Person::getFirstName)
-            .text(Person::setFirstName)
-            .setHeader("First name");
+        grid.addEditColumn(Person::getFirstName).text(Person::setFirstName)
+                .setHeader("First name");
 
-    grid.addEditColumn(Person::getLastName)
-            .text(Person::setLastName)
-            .setHeader("Last name");
+        grid.addEditColumn(Person::getLastName).text(Person::setLastName)
+                .setHeader("Last name");
 
-    grid.addEditColumn(Person::getEmail)
-            .text(Person::setEmail)
-            .setHeader("Email");
+        grid.addEditColumn(Person::getEmail).text(Person::setEmail)
+                .setHeader("Email");
 
-    grid.addEditColumn(Person::getProfession)
-            .text(Person::setProfession)
-            .setHeader("Profession");
-    // end::snippet[]
+        grid.addEditColumn(Person::getProfession).text(Person::setProfession)
+                .setHeader("Profession");
+        // end::snippet[]
 
-    List<Person> people = DataService.getPeople();
-    grid.setItems(people);
-    add(grid);
-  }
+        List<Person> people = DataService.getPeople();
+        grid.setItems(people);
+        add(grid);
+    }
 
-  public static class Exporter extends DemoExporter<GridProBasic> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<GridProBasic> { // hidden-source-line
+    } // hidden-source-line
 }

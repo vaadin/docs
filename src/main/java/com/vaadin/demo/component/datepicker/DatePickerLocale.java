@@ -19,7 +19,8 @@ public class DatePickerLocale extends Div {
         datePicker.setLocale(finnishLocale);
         // end::snippet[]
         datePicker.setValue(LocalDate.now(ZoneId.systemDefault()));
-        datePicker.setHelperText("Date picker configured to use Finnish date format");
+        datePicker.setHelperText(
+                "Date picker configured to use Finnish date format");
 
         add(datePicker);
     }

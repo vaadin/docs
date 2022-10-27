@@ -18,9 +18,8 @@ public class ListBoxSeparators extends Div {
     public ListBoxSeparators() {
         MultiSelectListBox<String> listBox = new MultiSelectListBox<>();
         // tag::snippet[]
-        listBox.setItems(
-            SHOW_ASSIGNEE, SHOW_DUE_DATE, SHOW_STATUS, SHOW_THUMBNAIL, SHOW_PREVIEW
-        );
+        listBox.setItems(SHOW_ASSIGNEE, SHOW_DUE_DATE, SHOW_STATUS,
+                SHOW_THUMBNAIL, SHOW_PREVIEW);
         listBox.addComponents(SHOW_STATUS, new Hr());
         // end::snippet[]
         listBox.select(SHOW_ASSIGNEE, SHOW_STATUS, SHOW_THUMBNAIL);

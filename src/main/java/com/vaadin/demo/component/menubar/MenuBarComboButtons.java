@@ -15,7 +15,8 @@ public class MenuBarComboButtons extends Div {
     public MenuBarComboButtons() {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON, MenuBarVariant.LUMO_PRIMARY);
+        menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON,
+                MenuBarVariant.LUMO_PRIMARY);
         menuBar.addItem("Save");
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
         SubMenu subItems = item.getSubMenu();
@@ -25,6 +26,7 @@ public class MenuBarComboButtons extends Div {
         // end::snippet[]
         add(menuBar);
     }
+
     public static class Exporter extends DemoExporter<MenuBarComboButtons> { // hidden-source-line
     } // hidden-source-line
 }

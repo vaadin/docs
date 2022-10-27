@@ -9,7 +9,7 @@ import com.vaadin.flow.router.Route;
 public class ProgressBarIndeterminate extends Div {
 
     public ProgressBarIndeterminate() {
-        getStyle().set("font-family", "var(--lumo-font-family)").set("color", "var(--lumo-secondary-text-color)");
+        getStyle().set("color", "var(--lumo-secondary-text-color)");
 
         // tag::snippet[]
         ProgressBar progressBar = new ProgressBar();
@@ -22,6 +22,7 @@ public class ProgressBarIndeterminate extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<ProgressBarIndeterminate> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<ProgressBarIndeterminate> { // hidden-source-line
     } // hidden-source-line
 }

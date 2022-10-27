@@ -18,11 +18,9 @@ public class NotificationPopup extends Div {
     public NotificationPopup() {
         // tag::snippet[]
         Span numberOfNotifications = new Span("4");
-        numberOfNotifications.getElement()
-                .getThemeList()
-                .addAll(Arrays.asList("badge", "error", "primary", "small", "pill"));
-        numberOfNotifications.getStyle()
-                .set("position", "absolute")
+        numberOfNotifications.getElement().getThemeList().addAll(
+                Arrays.asList("badge", "error", "primary", "small", "pill"));
+        numberOfNotifications.getStyle().set("position", "absolute")
                 .set("transform", "translate(-40%, -85%)");
 
         Button bellBtn = new Button(VaadinIcon.BELL_O.create());
@@ -40,7 +38,6 @@ public class NotificationPopup extends Div {
 
         add(bellBtn);
     }
-
 
     public static class Exporter extends DemoExporter<NotificationPopup> { // hidden-source-line
     } // hidden-source-line

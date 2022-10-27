@@ -11,7 +11,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NumberFieldStepperControls extends FormLayout {
 
     public NumberFieldStepperControls() {
-        setResponsiveSteps(new ResponsiveStep("0" , 1, LabelsPosition.ASIDE));
+        setResponsiveSteps(new ResponsiveStep("0", 1, LabelsPosition.ASIDE));
 
         // tag::snippet[]
         IntegerField adultsField = new IntegerField();
@@ -32,7 +32,8 @@ public class NumberFieldStepperControls extends FormLayout {
         children.setText("Children");
         Div childrenExplainer = new Div();
         childrenExplainer.setText("Age 2-12");
-        childrenExplainer.getStyle().set("font-size", "var(--lumo-font-size-xxs)");
+        childrenExplainer.getStyle().set("font-size",
+                "var(--lumo-font-size-xxs)");
         childrenExplainer.getStyle().set("position", "absolute");
 
         addFormItem(childrenField, new Div(children, childrenExplainer));
@@ -45,6 +46,7 @@ public class NumberFieldStepperControls extends FormLayout {
         addFormItem(infantsField, "Infants");
     }
 
-    public static class Exporter extends DemoExporter<NumberFieldStepperControls> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<NumberFieldStepperControls> { // hidden-source-line
     } // hidden-source-line
 }

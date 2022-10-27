@@ -25,7 +25,8 @@ public class UploadBasic extends Div {
         });
         // end::snippet[]
 
-        upload.getElement().executeJs("this.files = this.createFakeFilesUploadBasic()"); // hidden-source-line
+        upload.getElement() // hidden-source-line
+                .executeJs("this.files = this.createFakeFilesUploadBasic()"); // hidden-source-line
 
         add(upload);
     }

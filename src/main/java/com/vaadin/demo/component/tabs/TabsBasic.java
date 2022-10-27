@@ -9,17 +9,17 @@ import com.vaadin.flow.router.Route;
 @Route("tabs-basic")
 public class TabsBasic extends Div {
 
-	public TabsBasic() {
-		// tag::snippet[]
-		Tab details = new Tab("Details");
-		Tab payment = new Tab("Payment");
-		Tab shipping = new Tab("Shipping");
+    public TabsBasic() {
+        // tag::snippet[]
+        Tab details = new Tab("Details");
+        Tab payment = new Tab("Payment");
+        Tab shipping = new Tab("Shipping");
 
-		Tabs tabs = new Tabs(details, payment, shipping);
-		// end::snippet[]
-		add(tabs);
-	}
+        Tabs tabs = new Tabs(details, payment, shipping);
+        // end::snippet[]
+        add(tabs);
+    }
 
-	public static class Exporter extends DemoExporter<TabsBasic> { // hidden-source-line
-	} // hidden-source-line
+    public static class Exporter extends DemoExporter<TabsBasic> { // hidden-source-line
+    } // hidden-source-line
 }

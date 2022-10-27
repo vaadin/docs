@@ -15,8 +15,8 @@ public class DialogClosing extends Div {
 
     public DialogClosing() {
         Dialog dialog = new Dialog();
-        dialog.getElement()
-                .setAttribute("aria-label", "System maintenance hint");
+        dialog.getElement().setAttribute("aria-label",
+                "System maintenance hint");
 
         VerticalLayout dialogLayout = createDialogLayout(dialog);
         dialog.add(dialogLayout);
@@ -48,7 +48,6 @@ public class DialogClosing extends Div {
         return dialogLayout;
     }
 
-    public static class Exporter // hidden-source-line
-            extends DemoExporter<DialogClosing> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DialogClosing> { // hidden-source-line
     } // hidden-source-line
 }

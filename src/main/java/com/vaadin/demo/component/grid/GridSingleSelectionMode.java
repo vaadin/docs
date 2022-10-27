@@ -26,7 +26,8 @@ public class GridSingleSelectionMode extends Div {
         grid.addSelectionListener(selection -> {
             Optional<Person> optionalPerson = selection.getFirstSelectedItem();
             if (optionalPerson.isPresent()) {
-                // System.out.printf("Selected person: %s%n", optionalPerson.get().getFullName());
+                // System.out.printf("Selected person: %s%n",
+                // optionalPerson.get().getFullName());
             }
         });
         // end::snippet[]

@@ -37,11 +37,10 @@ public class TreeGridRichContent extends Div {
             Span profession = new Span(person.getProfession());
             profession.getStyle()
                     .set("color", "var(--lumo-secondary-text-color)")
-                    .set("font-size", "var(--lumo-font-size-s)");;
+                    .set("font-size", "var(--lumo-font-size-s)");
 
             VerticalLayout column = new VerticalLayout(fullName, profession);
-            column.getStyle()
-                    .set("line-height", "var(--lumo-line-height-m)");
+            column.getStyle().set("line-height", "var(--lumo-line-height-m)");
             column.setPadding(false);
             column.setSpacing(false);
 
@@ -58,9 +57,8 @@ public class TreeGridRichContent extends Div {
             Anchor emailLink = new Anchor();
             emailLink.add(emailIcon, email);
             emailLink.setHref("mailto:" + person.getEmail());
-            emailLink.getStyle()
-                    .set("align-items", "center")
-                    .set("display", "flex");
+            emailLink.getStyle().set("align-items", "center").set("display",
+                    "flex");
 
             Icon phoneIcon = createIcon(VaadinIcon.PHONE);
             Span phone = new Span(person.getAddress().getPhone());
@@ -68,13 +66,11 @@ public class TreeGridRichContent extends Div {
             Anchor phoneLink = new Anchor();
             phoneLink.add(phoneIcon, phone);
             phoneLink.setHref("tel:" + person.getAddress().getPhone());
-            phoneLink.getStyle()
-                    .set("align-items", "center")
-                    .set("display", "flex");
+            phoneLink.getStyle().set("align-items", "center").set("display",
+                    "flex");
 
             VerticalLayout column = new VerticalLayout(emailLink, phoneLink);
-            column.getStyle()
-                    .set("font-size", "var(--lumo-font-size-s)")
+            column.getStyle().set("font-size", "var(--lumo-font-size-s)")
                     .set("line-height", "var(--lumo-line-height-m)");
             column.setPadding(false);
             column.setSpacing(false);
@@ -87,8 +83,7 @@ public class TreeGridRichContent extends Div {
 
     private Icon createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
-        icon.getStyle()
-                .set("margin-inline-end", "var(--lumo-space-s)");
+        icon.getStyle().set("margin-inline-end", "var(--lumo-space-s)");
         icon.setSize("var(--lumo-icon-size-s)");
         return icon;
     }
@@ -96,5 +91,7 @@ public class TreeGridRichContent extends Div {
     public List<Person> getStaff(Person manager) {
         return DataService.getPeople(manager.getId());
     }
-    public static class Exporter extends DemoExporter<TreeGridRichContent> {} // hidden-source-line
+
+    public static class Exporter extends DemoExporter<TreeGridRichContent> { // hidden-source-line
+    } // hidden-source-line
 }

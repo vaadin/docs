@@ -17,7 +17,7 @@ public class TimePickerMinutesStep extends Div {
         TimePicker timePicker = new TimePicker();
         timePicker.setLabel("Meeting time");
         timePicker.setStep(Duration.ofMinutes(30));
-        timePicker.setValue(LocalTime.of(12,30));
+        timePicker.setValue(LocalTime.of(12, 30));
         add(timePicker);
         // end::snippet[]
     }

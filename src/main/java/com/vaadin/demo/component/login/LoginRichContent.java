@@ -17,8 +17,11 @@ public class LoginRichContent extends Div {
         loginForm.getElement().getThemeList().add("dark");
         // end::snippet[]
         add(loginForm);
-        // Prevent the example from stealing focus when browsing the documentation
+        // Prevent the example from stealing focus when browsing the
+        // documentation
         loginForm.getElement().setAttribute("no-autofocus", "");
     }
-    public static class Exporter extends DemoExporter<LoginRichContent> {} // hidden-source-line
+
+    public static class Exporter extends DemoExporter<LoginRichContent> { // hidden-source-line
+    } // hidden-source-line
 }

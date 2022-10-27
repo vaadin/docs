@@ -38,14 +38,16 @@ public class AccordionSummary extends Div {
 
         FormLayout customerDetailsFormLayout = createFormLayout();
         // tag::snippet[]
-        AccordionPanel customDetailsPanel = accordion.add(CUSTOMER_DETAILS,  customerDetailsFormLayout);
+        AccordionPanel customDetailsPanel = accordion.add(CUSTOMER_DETAILS,
+                customerDetailsFormLayout);
         // end::snippet[]
 
         FormLayout billingAddressFormLayout = createFormLayout();
-        AccordionPanel billingAddressPanel = accordion.add(BILLING_ADDRESS,  billingAddressFormLayout);
-        
+        AccordionPanel billingAddressPanel = accordion.add(BILLING_ADDRESS,
+                billingAddressFormLayout);
+
         FormLayout paymentFormLayout = createFormLayout();
-        AccordionPanel paymentPanel = accordion.add(PAYMENT,  paymentFormLayout);
+        AccordionPanel paymentPanel = accordion.add(PAYMENT, paymentFormLayout);
 
         // Customer details fields
 
@@ -60,7 +62,7 @@ public class AccordionSummary extends Div {
 
         TextField phone = new TextField("Phone number");
         personBinder.forField(phone).bind(person -> {
-            if  (person.getAddress() != null) {
+            if (person.getAddress() != null) {
                 return person.getAddress().getPhone();
             }
             return "";
@@ -77,28 +79,31 @@ public class AccordionSummary extends Div {
 
         // tag::snippet[]
         customDetailsPanel.addOpenedChangeListener(e -> {
-            if(e.isOpened()) {
+            if (e.isOpened()) {
                 customDetailsPanel.setSummaryText(CUSTOMER_DETAILS);
-            } else if(personBinder.getBean() != null) {
+            } else if (personBinder.getBean() != null) {
                 Person personValues = personBinder.getBean();
                 customDetailsPanel.setSummary(createSummary(CUSTOMER_DETAILS,
-                    personValues.getFirstName() + " " + personValues.getLastName(),
-                    personValues.getEmail(),
-                    personValues.getAddress() != null ? personValues.getAddress().getPhone() : ""
-                ));
+                        personValues.getFirstName() + " "
+                                + personValues.getLastName(),
+                        personValues.getEmail(),
+                        personValues.getAddress() != null
+                                ? personValues.getAddress().getPhone()
+                                : ""));
             }
         });
         // end::snippet[]
 
-        Button customDetailsButton = new Button("Continue", (e) -> billingAddressPanel.setOpened(true));
+        Button customDetailsButton = new Button("Continue",
+                (e) -> billingAddressPanel.setOpened(true));
         customDetailsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         customDetailsPanel.addContent(customDetailsButton);
 
         // Billing address fields
-        
+
         TextField address = new TextField("Address");
         personBinder.forField(address).bind(person -> {
-            if  (person.getAddress() != null) {
+            if (person.getAddress() != null) {
                 return person.getAddress().getStreet();
             }
             return "";
@@ -111,7 +116,7 @@ public class AccordionSummary extends Div {
 
         TextField zipCode = new TextField("ZIP code");
         personBinder.forField(zipCode).bind(person -> {
-            if  (person.getAddress() != null) {
+            if (person.getAddress() != null) {
                 return person.getAddress().getZip();
             }
             return "";
@@ -121,10 +126,10 @@ public class AccordionSummary extends Div {
             }
             person.getAddress().setZip(value);
         });
-        
+
         TextField city = new TextField("City");
         personBinder.forField(city).bind(person -> {
-            if  (person.getAddress() != null) {
+            if (person.getAddress() != null) {
                 return person.getAddress().getCity();
             }
             return "";
@@ -134,12 +139,12 @@ public class AccordionSummary extends Div {
             }
             person.getAddress().setCity(value);
         });
-        
+
         ComboBox<Country> countries = new ComboBox<>("Country");
         countries.setItems(DataService.getCountries());
         countries.setItemLabelGenerator(Country::getName);
         personBinder.forField(countries).bind(person -> {
-            if  (person.getAddress() != null) {
+            if (person.getAddress() != null) {
                 Country country = new Country();
                 country.setName(person.getAddress().getCountry());
                 return country;
@@ -156,19 +161,19 @@ public class AccordionSummary extends Div {
         billingAddressFormLayout.add(zipCode, city, countries);
 
         billingAddressPanel.addOpenedChangeListener(e -> {
-            if(e.isOpened()) {
+            if (e.isOpened()) {
                 billingAddressPanel.setSummaryText(BILLING_ADDRESS);
-            } else if(personBinder.getBean().getAddress() != null) {
+            } else if (personBinder.getBean().getAddress() != null) {
                 Address addressValues = personBinder.getBean().getAddress();
                 billingAddressPanel.setSummary(createSummary(BILLING_ADDRESS,
-                    addressValues.getStreet(),
-                    addressValues.getZip() + " " + addressValues.getCity(),
-                    addressValues.getCountry()
-                ));
+                        addressValues.getStreet(),
+                        addressValues.getZip() + " " + addressValues.getCity(),
+                        addressValues.getCountry()));
             }
         });
 
-        Button billingAddressButton = new Button("Continue", (e) -> paymentPanel.setOpened(true));
+        Button billingAddressButton = new Button("Continue",
+                (e) -> paymentPanel.setOpened(true));
         billingAddressButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         billingAddressPanel.addContent(billingAddressButton);
 
@@ -186,21 +191,20 @@ public class AccordionSummary extends Div {
         paymentFormLayout.add(expiryDate, cvv);
 
         paymentPanel.addOpenedChangeListener(e -> {
-            if(e.isOpened()) {
+            if (e.isOpened()) {
                 paymentPanel.setSummaryText(PAYMENT);
-            } else if(cardBinder.getBean() != null) {
+            } else if (cardBinder.getBean() != null) {
                 Card cardValues = cardBinder.getBean();
-                paymentPanel.setSummary(createSummary(PAYMENT,
-                    cardValues.getAccountNumber(),
-                    cardValues.getExpiryDate()
-                ));
+                paymentPanel.setSummary(
+                        createSummary(PAYMENT, cardValues.getAccountNumber(),
+                                cardValues.getExpiryDate()));
             }
         });
 
-        Button paymentButton = new Button("Finish", (e) -> paymentPanel.setOpened(false));
+        Button paymentButton = new Button("Finish",
+                (e) -> paymentPanel.setOpened(false));
         paymentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         paymentPanel.addContent(paymentButton);
-
 
         add(accordion);
     }
@@ -208,9 +212,8 @@ public class AccordionSummary extends Div {
     private FormLayout createFormLayout() {
         FormLayout billingAddressFormLayout = new FormLayout();
         billingAddressFormLayout.setResponsiveSteps(
-          new FormLayout.ResponsiveStep("0", 1),
-          new FormLayout.ResponsiveStep("20em", 2)
-        );
+                new FormLayout.ResponsiveStep("0", 1),
+                new FormLayout.ResponsiveStep("20em", 2));
         return billingAddressFormLayout;
     }
 
@@ -221,18 +224,19 @@ public class AccordionSummary extends Div {
 
         layout.add(title);
 
-        if (details.length > 0) {   
+        if (details.length > 0) {
             VerticalLayout detailsLayout = new VerticalLayout();
             detailsLayout.setSpacing(false);
             detailsLayout.setPadding(false);
-            detailsLayout.getStyle().set("font-size", "var(--lumo-font-size-s)");
-            
-            for (String detail: details) {
+            detailsLayout.getStyle().set("font-size",
+                    "var(--lumo-font-size-s)");
+
+            for (String detail : details) {
                 if (detail != null && !detail.isEmpty()) {
                     detailsLayout.add(new Span(detail));
                 }
             }
-            
+
             layout.add(detailsLayout);
         }
 

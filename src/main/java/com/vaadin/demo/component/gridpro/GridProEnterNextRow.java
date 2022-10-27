@@ -18,20 +18,16 @@ public class GridProEnterNextRow extends Div {
         grid.setEnterNextRow(true);
         // end::snippet[]
 
-        grid.addEditColumn(Person::getFirstName)
-                .text(Person::setFirstName)
+        grid.addEditColumn(Person::getFirstName).text(Person::setFirstName)
                 .setHeader("First name");
 
-        grid.addEditColumn(Person::getLastName)
-                .text(Person::setLastName)
+        grid.addEditColumn(Person::getLastName).text(Person::setLastName)
                 .setHeader("Last name");
 
-        grid.addEditColumn(Person::getEmail)
-                .text(Person::setEmail)
+        grid.addEditColumn(Person::getEmail).text(Person::setEmail)
                 .setHeader("Email");
 
-        grid.addEditColumn(Person::getProfession)
-                .text(Person::setProfession)
+        grid.addEditColumn(Person::getProfession).text(Person::setProfession)
                 .setHeader("Profession");
 
         List<Person> people = DataService.getPeople();

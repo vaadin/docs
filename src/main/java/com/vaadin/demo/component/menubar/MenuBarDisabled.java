@@ -19,8 +19,7 @@ public class MenuBarDisabled extends Div {
 
         MenuItem share = menuBar.addItem("Share");
         SubMenu shareSubMenu = share.getSubMenu();
-        shareSubMenu.addItem("By email")
-                .setEnabled(false);
+        shareSubMenu.addItem("By email").setEnabled(false);
         shareSubMenu.addItem("Get Link");
         // end::snippet[]
 
