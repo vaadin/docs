@@ -53,8 +53,8 @@ const config = {
       "frontend/demo/fusion",
       "frontend/demo/upgrade-tool",
       "frontend/demo/tools",
-      "frontend/demo/component",
       "frontend/demo/flow",
+      "frontend/demo/pwa",
 
       "src/main/java/com/vaadin/demo/flow",
       "src/main/java/com/vaadin/demo/pwa",
@@ -72,15 +72,17 @@ const config = {
     // paths in 'dsp' to keep (since they shouldn't be removed, even if they don't exist in latest)
     "keep": [
       "articles/ds/foundation",
-      "articles/ds/_images"
+      "articles/ds/_images",
+      "dspublisher/.env",
+      "dspublisher/docs-theme",
     ]
   },
   // callbacks for changing the content of certain files
   callback: [
     {
-      path: /.*\.property$/,
-      callback: (content) => content.replace(/foo/, "bar")
-    }
+      path: 'articles/ds/components/grid/flow.asciidoc',
+      callback: content => content.replace(/.*_items-identities.adoc.*/, '')
+    },
   ]
 }
 
