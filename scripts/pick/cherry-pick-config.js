@@ -20,6 +20,7 @@ const config = {
       "types.d.ts",
       "webpack.config.js",
       "webpack.dspublisher.js",
+      "package.json"
     ],
     // paths in 'latest' to ignore (since they shouldn't be copied to dsp)
     "ignore": [
@@ -44,11 +45,13 @@ const config = {
       "articles/upgrading",
       "articles/application",
       "articles/routing",
+      "articles/production",
       "articles/_images",
       "articles/_vaadin-version.adoc",
       "articles/_commercial-banner.asciidoc",
       "articles/_terminal.asciidoc",
       "articles/404.asciidoc",
+      "articles/_figma-banner.adoc",
 
       "articles/styling/_images",
       "articles/styling/_shared.adoc",
@@ -62,6 +65,8 @@ const config = {
       "articles/styling/lumo/index.adoc",
       "articles/styling/lumo/variants",
       "articles/styling/lumo/design-tokens/styling-using-design-tokens.adoc",
+      "articles/styling/lumo/design-tokens/_images",
+      "articles/styling/lumo/design-tokens/index.adoc",
 
 
       "frontend/demo/fusion",
