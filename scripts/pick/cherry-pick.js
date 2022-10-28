@@ -4,7 +4,6 @@ const asyncExec = require('util').promisify(require('child_process').exec);
 const fs = require('fs');
 const path = require('path');
 const { program } = require('commander');
-const { basename } = require('path');
 
 const cfgDefault = `${path.dirname(process.argv[1])}/${path.basename(process.argv[1], '.js')}-config.js`;
 
@@ -48,6 +47,11 @@ function isPathIncluded(path, config) {
   return false;
 }
 function isPathIgnored(path, config) {
+  for (const k of config.source.copy) {
+    if (path === k) {
+      return false;
+    }
+  }
   for (const k of config.source.ignore) {
     if (k instanceof RegExp && k.test(path) || typeof k === 'string' && path.startsWith(k)) {
       return true;
@@ -73,7 +77,7 @@ function computeCallback(path, config) {
 function copyFile(source, target, replaceCall) {
   if (!fs.existsSync(path.dirname(target))) {
     fs.mkdirSync(path.dirname(target), {recursive: true});
-  }  
+  }
   dbg(`Copy ${source} ${target}`);
   fs.copyFileSync(source, target);
   if (replaceCall) {
@@ -154,9 +158,14 @@ async function createPrBranch(folder, name) {
   await run(`git -C ${folder} checkout -b '${name}'`);
 }
 async function commitChanges(folder, message) {
-  log(`Commiting changes '${message}' in ${folder}`)
-  await run(`git -C ${folder} add -A`);
-  await run(`git -C ${folder} commit -m '${message}' -a`);
+  const a = await run(`git -C ${folder} status --porcelain`);
+  if (a.length) {
+    log(`Commiting changes '${message}' in ${folder}`);
+    await run(`git -C ${folder} add -A`);
+    await run(`git -C ${folder} commit -m '${message}' -a`);
+  } else {
+    log(`Nothing to commit in ${folder}`);
+  }
 }
 
 async function main() {

@@ -1,14 +1,25 @@
 
 const config = {
   source: {
-    // paths in 'latest' to copy
+    // paths in 'latest' to copy, they should be relative to the root folder
     // All their content are copied unless exceptions in the "ignore" section
     // they are copied in the same path unless exceptions in "rename" section
     "copy": [
+      // folders
       "articles",
       "src",
       "dspublisher",
       "frontend",
+      // files
+      "pom.xml",
+      ".eslintrc.js",
+      ".gitignore",
+      ".npmrc",
+      ".prettierrc",
+      "tsconfig.json",
+      "types.d.ts",
+      "webpack.config.js",
+      "webpack.dspublisher.js",
     ],
     // paths in 'latest' to ignore (since they shouldn't be copied to dsp)
     "ignore": [
@@ -58,7 +69,7 @@ const config = {
     "articles/components": "articles/ds/components"
   },
   target: {
-    // paths in 'dsp' to ignore (since they shouldn't be removed, even if they don't exist in latest)
+    // paths in 'dsp' to keep (since they shouldn't be removed, even if they don't exist in latest)
     "keep": [
       "articles/ds/foundation",
       "articles/ds/_images"
