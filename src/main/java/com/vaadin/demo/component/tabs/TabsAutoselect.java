@@ -11,17 +11,16 @@ import com.vaadin.flow.router.Route;
 public class TabsAutoselect extends Div {
 
     public TabsAutoselect() {
-        // tag::snippet[]
         Tab details = new Tab("Details");
         Tab payment = new Tab("Payment");
         Tab shipping = new Tab("Shipping");
-
+        // tag::snippet[]
         Tabs tabs = new Tabs();
         tabs.setAutoselect(false);
+        // end::snippet[]
         tabs.addSelectedChangeListener(event -> Notification.show("Selected "
                 + event.getSelectedTab().getLabel()));
         tabs.add(details, payment, shipping);
-        // end::snippet[]
         add(tabs);
     }
 
