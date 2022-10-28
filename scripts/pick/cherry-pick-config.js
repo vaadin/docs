@@ -45,6 +45,7 @@ const config = {
       "articles/upgrading",
       "articles/application",
       "articles/routing",
+      "articles/_images",
       "articles/_vaadin-version.adoc",
       "articles/_commercial-banner.asciidoc",
       "articles/_terminal.asciidoc",
@@ -73,6 +74,9 @@ const config = {
     "keep": [
       "articles/ds/foundation",
       "articles/ds/_images",
+      "articles/ds/404.asciidoc",
+      "articles/ds/figma.asciidoc",
+      "articles/ds/index.asciidoc",
       "dspublisher/.env",
       "dspublisher/docs-theme",
     ]
