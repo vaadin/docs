@@ -41,7 +41,6 @@ const config = {
       "articles/index.asciidoc",
       "articles/overview.asciidoc",
       "articles/contributing-docs",
-      "articles/styling",
       "articles/upgrading",
       "articles/application",
       "articles/routing",
@@ -50,6 +49,20 @@ const config = {
       "articles/_commercial-banner.asciidoc",
       "articles/_terminal.asciidoc",
       "articles/404.asciidoc",
+
+      "articles/styling/_images",
+      "articles/styling/_shared.adoc",
+      "articles/styling/advanced",
+      "articles/styling/custom-theme",
+      "articles/styling/getting-started.adoc",
+      "articles/styling/index.adoc",
+      "articles/styling/theme-annotation.adoc",
+      "articles/styling/_images/",
+      "articles/styling/lumo/_images",
+      "articles/styling/lumo/index.adoc",
+      "articles/styling/lumo/variants",
+      "articles/styling/lumo/design-tokens/styling-using-design-tokens.adoc",
+
 
       "frontend/demo/fusion",
       "frontend/demo/upgrade-tool",
@@ -67,7 +80,9 @@ const config = {
   },
   rename: {
     // paths in 'latest' to copy to different paths in 'dsp'
-    "articles/components": "articles/ds/components"
+    "articles/components": "articles/ds/components",
+    "articles/styling/lumo": "articles/ds/foundation",
+    "articles/styling/lumo/design-tokens": "articles/ds/foundation",
   },
   target: {
     // paths in 'dsp' to keep (since they shouldn't be removed, even if they don't exist in latest)
