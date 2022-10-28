@@ -1,20 +1,21 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
-import { ifDefined } from 'lit/directives/if-defined';
+import { ifDefined } from 'lit/directives/if-defined.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
+import '@vaadin/email-field';
 import '@vaadin/icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
-
+import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('dialog-header')
 export class Example extends LitElement {
@@ -41,55 +42,48 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-dialog
         header-title="User details"
-        .headerRenderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-button theme="tertiary" @click="${() => (this.dialogOpened = false)}">
-                <vaadin-icon icon="lumo:cross"></vaadin-icon>
-              </vaadin-button>
-            `,
-            root
-          );
-        })}"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
-        .renderer="${guard(this.user, () => this.dialogRenderer)}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
+        ${dialogHeaderRenderer(
+          () => html`
+            <vaadin-button theme="tertiary" @click="${() => (this.dialogOpened = false)}">
+              <vaadin-icon icon="lumo:cross"></vaadin-icon>
+            </vaadin-button>
+          `,
+          []
+        )}
+        ${dialogRenderer(this.renderDialog, this.user)}
       ></vaadin-dialog>
-      <!-- end::snippet[]  -->
+      <!-- end::snippet[] -->
       <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }
 
-  dialogRenderer = (root: HTMLElement) => {
-    render(
-      html`
-        <vaadin-vertical-layout
-          theme="spacing"
-          style="width: 300px; max-width: 100%; align-items: stretch;"
-        >
-          <vaadin-vertical-layout style="align-items: stretch;">
-            <vaadin-text-field
-              label="Name"
-              value="${`${this.user?.firstName} ${this.user?.lastName}`}"
-              readonly
-              style="padding-top: 0;"
-            ></vaadin-text-field>
-            <vaadin-text-field
-              label="Email"
-              value="${ifDefined(this.user?.email)}"
-              readonly
-            ></vaadin-text-field>
-            <vaadin-text-field
-              label="Address"
-              value="${this.addressDescription()}"
-              readonly
-            ></vaadin-text-field>
-          </vaadin-vertical-layout>
-        </vaadin-vertical-layout>
-      `,
-      root
-    );
-  };
+  private renderDialog = () => html`
+    <vaadin-vertical-layout
+      theme="spacing"
+      style="width: 300px; max-width: 100%; align-items: stretch;"
+    >
+      <vaadin-vertical-layout style="align-items: stretch;">
+        <vaadin-text-field
+          label="Name"
+          value="${`${this.user?.firstName} ${this.user?.lastName}`}"
+          readonly
+          style="padding-top: 0;"
+        ></vaadin-text-field>
+        <vaadin-email-field
+          label="Email"
+          value="${ifDefined(this.user?.email)}"
+          readonly
+        ></vaadin-email-field>
+        <vaadin-text-field
+          label="Address"
+          value="${this.addressDescription()}"
+          readonly
+        ></vaadin-text-field>
+      </vaadin-vertical-layout>
+    </vaadin-vertical-layout>
+  `;
 
   addressDescription() {
     if (!this.user) {

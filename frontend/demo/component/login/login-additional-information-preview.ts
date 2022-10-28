@@ -3,7 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import './login-overlay-mockup';
-import { LoginOverlayMockupElement } from './login-overlay-mockup';
+import type { LoginOverlayMockupElement } from './login-overlay-mockup';
 
 @customElement('login-additional-information')
 export class Example extends LitElement {
@@ -15,15 +15,13 @@ export class Example extends LitElement {
   }
 
   @query('login-overlay-mockup')
-  private login?: LoginOverlayMockupElement;
+  private login!: LoginOverlayMockupElement;
 
   firstUpdated() {
-    if (this.login && this.login.i18n) {
-      this.login.i18n = {
-        ...this.login.i18n,
-        additionalInformation: `Please, contact admin@company.com if you're experiencing issues logging into your account`,
-      };
-    }
+    this.login.i18n = {
+      ...this.login.i18n,
+      additionalInformation: `Contact admin@company.com if you're experiencing issues logging into your account`,
+    };
   }
 
   render() {

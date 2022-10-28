@@ -2,9 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
+import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import { getPeople } from '../../domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import * as companyLogo from '../../../../src/main/resources/images/company-logo.png';
 
 @customElement('avatar-image')
@@ -26,13 +27,16 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-avatar
-        .img="${this.person?.pictureUrl}"
-        .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
-      ></vaadin-avatar>
-      <vaadin-avatar .img="${companyLogo}" name="Company Inc."></vaadin-avatar>
-      <!-- end::snippet[] -->
+      <vaadin-horizontal-layout theme="spacing">
+        <!-- tag::snippet[] -->
+        <vaadin-avatar
+          .img="${this.person?.pictureUrl}"
+          .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
+        ></vaadin-avatar>
+
+        <vaadin-avatar .img="${companyLogo}" name="Company Inc."></vaadin-avatar>
+        <!-- end::snippet[] -->
+      </vaadin-horizontal-layout>
     `;
   }
 }

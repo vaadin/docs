@@ -17,7 +17,8 @@ import java.util.List;
 @Route("map-layers")
 public class MapLayers extends Div {
 
-    // NOTE: Several of the used services here require API keys, you can register for an account to get one,
+    // NOTE: Several of the used services here require API keys, you can
+    // register for an account to get one,
     // and then place it into the URLs below
 
     // Background layers
@@ -35,7 +36,8 @@ public class MapLayers extends Div {
             "Maps © <a href=\"https://www.thunderforest.com\" target=\"_blank\">Thunderforest</a>, Data © <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap contributors</a>");
 
     // Overlay layers
-    private static final LayerOption NONE_LAYER = new LayerOption("None", null, null);
+    private static final LayerOption NONE_LAYER = new LayerOption("None", null,
+            null);
     private static final LayerOption PRECIPITATION_LAYER = new LayerOption(
             "Precipitation",
             "https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=<your-api-key-here>",
@@ -48,8 +50,8 @@ public class MapLayers extends Div {
             "Wind Speed",
             "https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=<your-api-key-here>",
             "<a href=\"https://openweathermap.org/\" target=\"_blank\">OpenWeather</a>");
-    // Override URLs with actual API keys  // hidden-source-line
-    static {  // hidden-source-line
+    // Override URLs with actual API keys // hidden-source-line
+    static { // hidden-source-line
         OPEN_CYCLE_MAP_LAYER.url = "https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=187baf2db9fc454896c700ef9e87f499"; // hidden-source-line
         TRANSPORT_MAP_LAYER.url = "https://tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=187baf2db9fc454896c700ef9e87f499"; // hidden-source-line
         PRECIPITATION_LAYER.url = "https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=819f0dfe0ecf7a5dbbac07c170703aab"; // hidden-source-line
@@ -68,7 +70,8 @@ public class MapLayers extends Div {
         backgroundLayerGroup.setLabel("Background Layer");
         backgroundLayerGroup.setItemLabelGenerator(LayerOption::getName);
         backgroundLayerGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-        backgroundLayerGroup.setItems(OPEN_STREET_MAP_LAYER, OPEN_CYCLE_MAP_LAYER, TRANSPORT_MAP_LAYER);
+        backgroundLayerGroup.setItems(OPEN_STREET_MAP_LAYER,
+                OPEN_CYCLE_MAP_LAYER, TRANSPORT_MAP_LAYER);
         backgroundLayerGroup.setValue(OPEN_STREET_MAP_LAYER);
         // tag::snippet1[]
         // Replace background layer when option changes
@@ -76,7 +79,8 @@ public class MapLayers extends Div {
             LayerOption selectedOption = e.getValue();
             XYZSource.Options sourceOptions = new XYZSource.Options();
             sourceOptions.setUrl(selectedOption.getUrl());
-            sourceOptions.setAttributions(List.of(selectedOption.getAttributions()));
+            sourceOptions
+                    .setAttributions(List.of(selectedOption.getAttributions()));
             sourceOptions.setAttributionsCollapsible(false);
             XYZSource source = new XYZSource(sourceOptions);
             TileLayer layer = new TileLayer();
@@ -87,26 +91,29 @@ public class MapLayers extends Div {
 
         // tag::snippet2[]
         // Add all overlay layers at once, make them invisible initially
-        List.of(PRECIPITATION_LAYER, AIR_TEMPERATURE_LAYER, WIND_SPEED_LAYER).forEach(option -> {
-            XYZSource.Options sourceOptions = new XYZSource.Options();
-            sourceOptions.setUrl(option.getUrl());
-            sourceOptions.setAttributions(List.of(option.getAttributions()));
-            sourceOptions.setAttributionsCollapsible(false);
-            XYZSource source = new XYZSource(sourceOptions);
-            TileLayer layer = new TileLayer();
-            layer.setSource(source);
-            layer.setVisible(false);
+        List.of(PRECIPITATION_LAYER, AIR_TEMPERATURE_LAYER, WIND_SPEED_LAYER)
+                .forEach(option -> {
+                    XYZSource.Options sourceOptions = new XYZSource.Options();
+                    sourceOptions.setUrl(option.getUrl());
+                    sourceOptions
+                            .setAttributions(List.of(option.getAttributions()));
+                    sourceOptions.setAttributionsCollapsible(false);
+                    XYZSource source = new XYZSource(sourceOptions);
+                    TileLayer layer = new TileLayer();
+                    layer.setSource(source);
+                    layer.setVisible(false);
 
-            map.addLayer(layer);
-            overlayLayerMap.put(option, layer);
-        });
+                    map.addLayer(layer);
+                    overlayLayerMap.put(option, layer);
+                });
         // end::snippet2[]
 
         RadioButtonGroup<LayerOption> overlayLayerGroup = new RadioButtonGroup<>();
         overlayLayerGroup.setLabel("Overlay Layer");
         overlayLayerGroup.setItemLabelGenerator(LayerOption::getName);
         overlayLayerGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-        overlayLayerGroup.setItems(NONE_LAYER, PRECIPITATION_LAYER, AIR_TEMPERATURE_LAYER, WIND_SPEED_LAYER);
+        overlayLayerGroup.setItems(NONE_LAYER, PRECIPITATION_LAYER,
+                AIR_TEMPERATURE_LAYER, WIND_SPEED_LAYER);
         overlayLayerGroup.setValue(NONE_LAYER);
         // tag::snippet3[]
         // Toggle visibility of overlay layer when option changes
@@ -128,5 +135,6 @@ public class MapLayers extends Div {
         add(new HorizontalLayout(backgroundLayerGroup, overlayLayerGroup));
     }
 
-    public static class Exporter extends DemoExporter<MapLayers> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapLayers> { // hidden-source-line
+    } // hidden-source-line
 }

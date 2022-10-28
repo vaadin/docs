@@ -5,15 +5,15 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/combo-box';
 import '@vaadin/details';
 import '@vaadin/form-layout';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/horizontal-layout';
-import '@vaadin/icon/vaadin-icon';
+import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/text-field';
 import '@vaadin/vaadin-lumo-styles/sizing';
 import '@vaadin/vaadin-lumo-styles/color';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]

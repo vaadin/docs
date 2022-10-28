@@ -20,13 +20,15 @@ public class CheckboxCustomPresentation extends Div {
         // tag::snippet[]
         CheckboxGroup<Person> checkboxGroup = new CheckboxGroup<>();
         checkboxGroup.setLabel("Invitees");
-        checkboxGroup.setItemLabelGenerator(person -> person.getFirstName() + " " + person.getLastName());
+        checkboxGroup.setItemLabelGenerator(
+                person -> person.getFirstName() + " " + person.getLastName());
         checkboxGroup.setItems(items);
         checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         add(checkboxGroup);
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<CheckboxCustomPresentation> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<CheckboxCustomPresentation> { // hidden-source-line
     } // hidden-source-line
 }

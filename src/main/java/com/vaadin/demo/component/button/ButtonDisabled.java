@@ -23,7 +23,8 @@ public class ButtonDisabled extends Div {
         tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         // end::snippet[]
 
-        HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);
+        HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton,
+                secondaryButton, tertiaryButton);
         add(horizontalLayout);
     }
 

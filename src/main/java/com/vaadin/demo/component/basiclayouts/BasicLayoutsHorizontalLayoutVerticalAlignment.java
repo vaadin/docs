@@ -1,10 +1,11 @@
 package com.vaadin.demo.component.basiclayouts;
 
-import com.vaadin.demo.DemoExporter;  // hidden-source-line
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.Route;
 
 import java.util.Arrays;
@@ -37,21 +38,19 @@ public class BasicLayoutsHorizontalLayoutVerticalAlignment extends Div {
         // tag::layout[]
         HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
-        layout.add(new LayoutItem("Item 1"));
-        layout.add(new LayoutItem("Item 2"));
-        layout.add(new LayoutItem("Item 3"));
+        layout.add(new TextArea("Text area 1"));
+        layout.add(new TextArea("Text area 2"));
+        layout.add(new TextArea("Text area 3"));
         // end::layout[]
 
-        List<AlignmentOption> options = Arrays
-                .asList(new AlignmentOption("Stretch (default)",
-                                FlexComponent.Alignment.STRETCH),
-                        new AlignmentOption("Start",
-                                FlexComponent.Alignment.START),
-                        new AlignmentOption("Center",
-                                FlexComponent.Alignment.CENTER),
-                        new AlignmentOption("End", FlexComponent.Alignment.END),
-                        new AlignmentOption("Baseline",
-                                FlexComponent.Alignment.BASELINE));
+        List<AlignmentOption> options = Arrays.asList(
+                new AlignmentOption("Stretch (default)",
+                        FlexComponent.Alignment.STRETCH),
+                new AlignmentOption("Start", FlexComponent.Alignment.START),
+                new AlignmentOption("Center", FlexComponent.Alignment.CENTER),
+                new AlignmentOption("End", FlexComponent.Alignment.END),
+                new AlignmentOption("Baseline",
+                        FlexComponent.Alignment.BASELINE));
 
         RadioButtonGroup<AlignmentOption> radioGroup = new RadioButtonGroup<>();
         radioGroup.setLabel("Vertical alignment");

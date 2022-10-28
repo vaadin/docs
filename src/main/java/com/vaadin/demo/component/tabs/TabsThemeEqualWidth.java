@@ -10,18 +10,18 @@ import com.vaadin.flow.router.Route;
 @Route("tabs-theme-equal-width")
 public class TabsThemeEqualWidth extends Div {
 
-	public TabsThemeEqualWidth() {
-		// tag::snippet[]
-		Tab details = new Tab("Details");
-		Tab payment = new Tab("Payment");
-		Tab shipping = new Tab("Shipping");
+    public TabsThemeEqualWidth() {
+        // tag::snippet[]
+        Tab details = new Tab("Details");
+        Tab payment = new Tab("Payment");
+        Tab shipping = new Tab("Shipping");
 
-		Tabs tabs = new Tabs(details, payment, shipping);
-		tabs.addThemeVariants(TabsVariant.LUMO_EQUAL_WIDTH_TABS);
-		// end::snippet[]
-		add(tabs);
-	}
+        Tabs tabs = new Tabs(details, payment, shipping);
+        tabs.addThemeVariants(TabsVariant.LUMO_EQUAL_WIDTH_TABS);
+        // end::snippet[]
+        add(tabs);
+    }
 
-	public static class Exporter extends DemoExporter<TabsThemeEqualWidth> { // hidden-source-line
-	} // hidden-source-line
+    public static class Exporter extends DemoExporter<TabsThemeEqualWidth> { // hidden-source-line
+    } // hidden-source-line
 }

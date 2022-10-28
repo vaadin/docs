@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/date-time-picker';
-import { DateTimePicker } from '@vaadin/date-time-picker';
+import type { DateTimePicker } from '@vaadin/date-time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-week-numbers')
@@ -17,15 +17,13 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('vaadin-date-time-picker')
-  private dateTimePicker?: DateTimePicker;
+  private dateTimePicker!: DateTimePicker;
 
   firstUpdated() {
-    if (this.dateTimePicker) {
-      this.dateTimePicker.i18n = {
-        ...this.dateTimePicker.i18n,
-        firstDayOfWeek: 1,
-      };
-    }
+    this.dateTimePicker.i18n = {
+      ...this.dateTimePicker.i18n,
+      firstDayOfWeek: 1,
+    };
   }
 
   render() {

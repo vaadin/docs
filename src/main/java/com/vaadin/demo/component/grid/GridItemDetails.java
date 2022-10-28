@@ -51,9 +51,9 @@ public class GridItemDetails extends Div {
         public PersonDetailsFormLayout() {
             Stream.of(emailField, phoneField, streetField, zipField, cityField,
                     stateField).forEach(field -> {
-                field.setReadOnly(true);
-                add(field);
-            });
+                        field.setReadOnly(true);
+                        add(field);
+                    });
 
             setResponsiveSteps(new ResponsiveStep("0", 3));
             setColspan(emailField, 3);

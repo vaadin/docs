@@ -23,8 +23,7 @@ public class GridProThemeHighlightEditableCells extends Div {
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getMembership).setHeader("Membership");
 
-        grid.addEditColumn(Person::getEmail)
-                .text(Person::setEmail)
+        grid.addEditColumn(Person::getEmail).text(Person::setEmail)
                 .setHeader("Email (Editable)");
 
         List<Person> people = DataService.getPeople();
@@ -33,6 +32,7 @@ public class GridProThemeHighlightEditableCells extends Div {
         add(grid);
     }
 
-    public static class Exporter extends DemoExporter<GridProThemeHighlightEditableCells> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<GridProThemeHighlightEditableCells> { // hidden-source-line
     } // hidden-source-line
 }

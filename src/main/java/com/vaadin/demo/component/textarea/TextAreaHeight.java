@@ -9,20 +9,20 @@ import com.vaadin.demo.domain.DataService;
 @Route("text-area-height")
 public class TextAreaHeight extends Div {
 
-  public TextAreaHeight() {
-    String loremIpsum = DataService.getTemplates().getLoremIpsum();
+    public TextAreaHeight() {
+        String loremIpsum = DataService.getTemplates().getLoremIpsum();
 
-    // tag::snippet[]
-    TextArea textArea = new TextArea();
-    textArea.setWidthFull();
-    textArea.setMinHeight("100px");
-    textArea.setMaxHeight("150px");
-    textArea.setLabel("Description");
-    textArea.setValue(loremIpsum);
-    add(textArea);
-    // end::snippet[]
-  }
+        // tag::snippet[]
+        TextArea textArea = new TextArea();
+        textArea.setWidthFull();
+        textArea.setMinHeight("100px");
+        textArea.setMaxHeight("150px");
+        textArea.setLabel("Description");
+        textArea.setValue(loremIpsum);
+        add(textArea);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<TextAreaHeight> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<TextAreaHeight> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -27,6 +27,7 @@ public class MenuBarDividers extends Div {
 
         add(menuBar);
     }
+
     public static class Exporter extends DemoExporter<MenuBarDividers> { // hidden-source-line
     } // hidden-source-line
 }

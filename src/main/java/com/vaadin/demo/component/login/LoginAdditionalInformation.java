@@ -12,15 +12,20 @@ public class LoginAdditionalInformation extends Div {
     public LoginAdditionalInformation() {
         // tag::snippet[]
         LoginI18n i18n = LoginI18n.createDefault();
-        i18n.setAdditionalInformation("Please, contact admin@company.com if you're experiencing issues logging into your account");
+        i18n.setAdditionalInformation(
+                "Contact admin@company.com if you're experiencing issues logging into your account");
 
         LoginOverlay loginOverlay = new LoginOverlay();
         loginOverlay.setI18n(i18n);
         // end::snippet[]
         add(loginOverlay);
         loginOverlay.setOpened(true);
-        // Prevent the example from stealing focus when browsing the documentation
+        // Prevent the example from stealing focus when browsing the
+        // documentation
         loginOverlay.getElement().setAttribute("no-autofocus", "");
     }
-    public static class Exporter extends DemoExporter<LoginAdditionalInformation> {} // hidden-source-line
+
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<LoginAdditionalInformation> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/radio-group';
 import { getCards } from 'Frontend/demo/domain/DataService';
-import Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-presentation')

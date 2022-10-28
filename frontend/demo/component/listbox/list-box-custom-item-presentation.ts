@@ -8,8 +8,8 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/vaadin-lumo-styles/typography';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import { getPeople } from '../../domain/DataService';
-import Person from '../../../generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('list-box-custom-item-presentation')
 export class Example extends LitElement {

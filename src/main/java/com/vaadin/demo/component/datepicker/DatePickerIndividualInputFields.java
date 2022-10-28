@@ -28,10 +28,9 @@ public class DatePickerIndividualInputFields extends Div {
     public DatePickerIndividualInputFields() {
         LocalDate now = LocalDate.now(ZoneId.systemDefault());
 
-        List<Integer> selectableYears = IntStream.range(
-                now.getYear() - 99,
-                now.getYear() + 1)
-                .boxed().collect(Collectors.toList());
+        List<Integer> selectableYears = IntStream
+                .range(now.getYear() - 99, now.getYear() + 1).boxed()
+                .collect(Collectors.toList());
 
         yearPicker = new ComboBox<>("Year", selectableYears);
         yearPicker.setWidth(6, Unit.EM);
@@ -41,10 +40,8 @@ public class DatePickerIndividualInputFields extends Div {
         });
 
         monthPicker = new ComboBox<>("Month", Month.values());
-        monthPicker.setItemLabelGenerator(m -> m.getDisplayName(
-                TextStyle.FULL,
-                Locale.getDefault()
-        ));
+        monthPicker.setItemLabelGenerator(
+                m -> m.getDisplayName(TextStyle.FULL, Locale.getDefault()));
         monthPicker.setWidth(9, Unit.EM);
         monthPicker.addValueChangeListener(e -> {
             updateDayPicker();
@@ -79,19 +76,16 @@ public class DatePickerIndividualInputFields extends Div {
         dayPicker.setValue(null);
         dayPicker.setEnabled(true);
 
-        LocalDate startOfMonth = LocalDate.of(
-                yearPicker.getValue(),
-                monthPicker.getValue(),
-                1
-        );
+        LocalDate startOfMonth = LocalDate.of(yearPicker.getValue(),
+                monthPicker.getValue(), 1);
         int lengthOfMonth = startOfMonth.lengthOfMonth();
 
-        dayPicker.setItems(IntStream.range(1, lengthOfMonth + 1)
-                                   .boxed()
-                                   .collect(Collectors.toList()));
+        dayPicker.setItems(IntStream.range(1, lengthOfMonth + 1).boxed()
+                .collect(Collectors.toList()));
     }
     // end::snippet[]
 
-    public static class Exporter extends DemoExporter<DatePickerIndividualInputFields> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DatePickerIndividualInputFields> { // hidden-source-line
     } // hidden-source-line
 }

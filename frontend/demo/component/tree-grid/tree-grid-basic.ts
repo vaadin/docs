@@ -6,7 +6,7 @@ import '@vaadin/grid';
 import type { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-tree-column.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-basic')

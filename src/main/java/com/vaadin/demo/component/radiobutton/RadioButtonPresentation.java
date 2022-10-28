@@ -18,28 +18,29 @@ import com.vaadin.demo.domain.DataService;
 @Route("radio-button-custom-item-presentation")
 public class RadioButtonPresentation extends Div {
 
-  public RadioButtonPresentation() {
-    // tag::snippet[]
-    RadioButtonGroup<Card> radioGroup = new RadioButtonGroup<>();
-    radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-    radioGroup.setLabel("Payment method");
+    public RadioButtonPresentation() {
+        // tag::snippet[]
+        RadioButtonGroup<Card> radioGroup = new RadioButtonGroup<>();
+        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        radioGroup.setLabel("Payment method");
 
-    List<Card> cards = DataService.getCards();
-    radioGroup.setItems(cards);
-    radioGroup.setValue(cards.get(0));
-    radioGroup.setRenderer(new ComponentRenderer<>(card -> {
-      Image logo = new Image(card.getPictureUrl(), card.getName());
-      logo.setHeight("1em");
-      Span number = new Span(new Text(card.getAccountNumber()));
-      Text expiryDate = new Text("Expiry date:" + card.getExpiryDate());
+        List<Card> cards = DataService.getCards();
+        radioGroup.setItems(cards);
+        radioGroup.setValue(cards.get(0));
+        radioGroup.setRenderer(new ComponentRenderer<>(card -> {
+            Image logo = new Image(card.getPictureUrl(), card.getName());
+            logo.setHeight("1em");
+            Span number = new Span(new Text(card.getAccountNumber()));
+            Text expiryDate = new Text("Expiry date:" + card.getExpiryDate());
 
-      return new Div(new HorizontalLayout(logo, number), new Div(expiryDate));
-    }));
+            return new Div(new HorizontalLayout(logo, number),
+                    new Div(expiryDate));
+        }));
 
-    add(radioGroup);
-    // end::snippet[]
-  }
+        add(radioGroup);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<RadioButtonPresentation> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<RadioButtonPresentation> { // hidden-source-line
+    } // hidden-source-line
 }

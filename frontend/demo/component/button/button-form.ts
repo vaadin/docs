@@ -26,11 +26,11 @@ export class Example extends LitElement {
         <vaadin-form-layout .responsiveSteps="${[{ columns: 2 }]}">
           <vaadin-text-field label="First name" value="John"></vaadin-text-field>
           <vaadin-text-field label="Last name" value="Smith"></vaadin-text-field>
-          <vaadin-text-field
+          <vaadin-email-field
             label="Email address"
             value="john.smith@example.com"
             colspan="2"
-          ></vaadin-text-field>
+          ></vaadin-email-field>
         </vaadin-form-layout>
 
         <vaadin-horizontal-layout theme="spacing">

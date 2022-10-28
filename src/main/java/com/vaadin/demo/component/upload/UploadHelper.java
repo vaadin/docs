@@ -23,22 +23,18 @@ public class UploadHelper extends Div {
         Upload upload = new Upload(buffer);
         upload.setAcceptedFileTypes(
                 // Microsoft Excel (.xls)
-                "application/vnd.ms-excel",
-                ".xls",
+                "application/vnd.ms-excel", ".xls",
                 // Microsoft Excel (OpenXML, .xlsx)
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 ".xlsx",
                 // Comma-separated values (.csv)
-                "text/csv",
-                ".csv"
-        );
+                "text/csv", ".csv");
 
         UploadExamplesI18N i18n = new UploadExamplesI18N();
         i18n.getAddFiles().setOne("Upload Spreadsheet...");
         i18n.getDropFiles().setOne("Drop spreadsheet here");
-        i18n.getError()
-                .setIncorrectFileType(
-                        "Please provide the file in one of the supported formats (.xls, .xlsx, .csv).");
+        i18n.getError().setIncorrectFileType(
+                "Provide the file in one of the supported formats (.xls, .xlsx, .csv).");
         upload.setI18n(i18n);
 
         add(title, hint, upload);
@@ -50,11 +46,8 @@ public class UploadHelper extends Div {
         upload.addFileRejectedListener(event -> {
             String errorMessage = event.getErrorMessage();
 
-            Notification notification = Notification.show(
-                    errorMessage,
-                    5000,
-                    Notification.Position.MIDDLE
-            );
+            Notification notification = Notification.show(errorMessage, 5000,
+                    Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         });
 

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.html.Div;
@@ -22,8 +22,8 @@ public class MessageListWithThemeComponent extends Div {
         MessageList list = new MessageList();
         Instant yesterday = LocalDateTime.now(ZoneOffset.UTC).minusDays(1)
                 .toInstant(ZoneOffset.UTC);
-        Instant fiftyMinsAgo = LocalDateTime.now(ZoneOffset.UTC).minusMinutes(50)
-                .toInstant(ZoneOffset.UTC);
+        Instant fiftyMinsAgo = LocalDateTime.now(ZoneOffset.UTC)
+                .minusMinutes(50).toInstant(ZoneOffset.UTC);
         MessageListItem message1 = new MessageListItem(
                 "Linsey, could you check if the details with the order are okay?",
                 yesterday, "Matt Mambo");
@@ -37,6 +37,7 @@ public class MessageListWithThemeComponent extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<MessageListWithThemeComponent> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<MessageListWithThemeComponent> { // hidden-source-line
     } // hidden-source-line
 }

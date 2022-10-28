@@ -5,7 +5,6 @@ import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -21,7 +20,8 @@ public class AccordionDisabledPanels extends Div {
         Span email = new Span("sophia.williams@company.com");
         Span phone = new Span("(501) 555-9128");
 
-        VerticalLayout personalInformationLayout = new VerticalLayout(name, email, phone);
+        VerticalLayout personalInformationLayout = new VerticalLayout(name,
+                email, phone);
         personalInformationLayout.setSpacing(false);
         personalInformationLayout.setPadding(false);
 
@@ -37,7 +37,8 @@ public class AccordionDisabledPanels extends Div {
         billingAddressLayout.add(street, zipCode, city);
 
         // tag::snippet[]
-        AccordionPanel billingAddressPanel = accordion.add("Billing address", billingAddressLayout);
+        AccordionPanel billingAddressPanel = accordion.add("Billing address",
+                billingAddressLayout);
         billingAddressPanel.setEnabled(false);
         // end::snippet[]
 

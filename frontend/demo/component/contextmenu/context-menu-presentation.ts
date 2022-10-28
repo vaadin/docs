@@ -5,13 +5,15 @@ import '@vaadin/avatar';
 import '@vaadin/context-menu';
 import type { ContextMenuItem } from '@vaadin/context-menu';
 import '@vaadin/grid';
-import type { Grid, GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import type { Grid } from '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-presentation')
@@ -65,7 +67,7 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Applicant"
-            .renderer=${this.nameRenderer}
+            ${columnBodyRenderer(this.nameRenderer, [])}
           ></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column header="Phone number" path="address.phone"></vaadin-grid-column>
@@ -78,7 +80,9 @@ export class Example extends LitElement {
   createItemsArray(people: Person[]) {
     return people.map((person, index) => {
       const item = document.createElement('vaadin-item');
-      index == 0 && item.setAttribute('selected', '');
+      if (index === 0) {
+        item.setAttribute('selected', '');
+      }
       render(
         html`
           <vaadin-horizontal-layout
@@ -115,7 +119,9 @@ export class Example extends LitElement {
 
     icon.setAttribute('icon', iconName);
     item.appendChild(icon);
-    text && item.appendChild(document.createTextNode(text));
+    if (text) {
+      item.appendChild(document.createTextNode(text));
+    }
     return item;
   }
 
@@ -127,10 +133,7 @@ export class Example extends LitElement {
     }
   }
 
-  private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    if (model?.item) {
-      const person = model.item;
-      render(html`<span>${person.firstName} ${person.lastName}</span>`, root);
-    }
+  private nameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
+    return html`<span>${person.firstName} ${person.lastName}</span>`;
   };
 }
