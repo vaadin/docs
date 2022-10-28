@@ -1,0 +1,219 @@
+---
+title: Multi-Module Engine
+description: Using a Hilla Engine — a pluggable set of Java bytecode parser & TypeScript AST generator.
+---
+
+= [since:com.vaadin:vaadin@V1.2]#Multi-Module Engine#
+:experimental:
+
+.Experimental Feature
+[IMPORTANT]
+====
+Multi-Module Engine is an experimental feature. This means that its behavior, API, and look and feel might change.
+In order to use Multi-Module Engine, it must be explicitly enabled with a feature flag.
+See the <<Feature Flag>> section for how to do this.
+====
+
+Starting from version 1.2, Hilla ships with a new engine that takes care of parsing Java code and generating the corresponding TypeScript.
+It has some advantages compared to the one used since 1.0:
+
+- Support for multi-module projects: Now you can use standard Maven modules in your application, or even external dependencies, as there is no need for endpoints and entity classes to be in the same project as the client application;
+- Pluggability: The Engine is designed to be flexible. All parts of the Engine are pluggable, which allows you to alter the default behavior or add a new one;
+- Support for JVM languages other than Java: You can now create classes, using for example Kotlin, and have them translated to TypeScript.
+
+== Architecture
+
+Hilla Engine consists of three parts:
+
+- *Java Bytecode Parser*.
+It reads the Java bytecode and generates an OpenAPI scheme.
+- *TypeScript AST Generator*.
+It reads the OpenAPI scheme and generates TypeScript endpoints that could be used in further frontend development.
+- *Runtime Controller*.
+This provides runtime communication between the server and the client.
+
+== Usage Example
+
+To showcase the new features, let's convert a standard Hilla project to a multi-module one and then also add some Kotlin to it.
+The project we're going to create is available https://github.com/vaadin/hilla-multi-module[on GitHub].
+
+=== Create the Hilla Application
+
+Create a folder named [filename]`hilla-multi-module`. Then, inside that folder, create an application as usual:
+
+[source,terminal]
+----
+npx @vaadin/cli init --hilla application
+----
+
+Now enter the [filename]`application` folder and run the generated application, as usual.
+
+Don't enable the multi-module generator for now: we'll do that when it's necessary.
+
+=== Add a JAR Maven Module
+
+Let's now create a new JAR module that will become a dependency for the Hilla application. It will contain the endpoint used in the example.
+Just create a basic Java library module and name it [filename]`library`.
+
+The library's [filename]`pom.xml` must contain a dependency to Hilla, since we want to create some Hilla-related classes inside:
+
+[source,xml]
+----
+<dependencies>
+    <dependency>
+        <groupId>dev.hilla</groupId>
+        <artifactId>hilla</artifactId>
+        <version>1.2.3</version>
+    </dependency>
+</dependencies>
+----
+
+To allow the generator to use the correct parameter names when building TypeScript files, let's configure the Java compiler not to omit them by enabling the `parameters` option:
+
+[source,xml]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+                <encoding>UTF-8</encoding>
+                <parameters>true</parameters>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+----
+
+This is the https://github.com/vaadin/hilla-multi-module/tree/96ef912fb844edf27c20d6d2101fdb2985567598[corresponding commit] on GitHub.
+
+=== Move the Endpoint to the Library
+
+At this point, the easiest way to test a Hilla multi-module project is simply to move the example endpoint to the JAR library: Just move the [classname]`HelloWorldEndpoint` class to the other project and make the application project depend on the library, like in https://github.com/vaadin/hilla-multi-module/tree/b499cd9a22cb96567e675b7f72d3a048c9552585[this commit]:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.example.application</groupId>
+    <artifactId>library</artifactId>
+    <version>${project.version}</version>
+</dependency>
+----
+
+Now, if you try to run the Hilla application again, it will complain about the missing class, as it cannot be found in a JAR dependency.
+
+=== Enable the Multi-module Generator
+
+Follow the steps described in the <<Feature Flag>> section to enable the multi-module generator. Then run the application again and verify that it works as expected: the endpoint will be available as before, even if it's now part of a dependency.
+
+=== Advanced Plugin Configuration
+
+Engine plugins can be configured and extended.
+As a basic example, let's define a custom [classname]`NonNull` annotation and use it in our code instead of the default ones.
+
+The configuration parameters are specific to the plugin.
+In this case, the simplest way is to `<disable>` the default configuration of the [classname]`NonnullPlugin` and `<use>` a detailed custom configuration, like in this example:
+
+[source,xml]
+----
+<configuration>
+    <parser>
+        <plugins>
+            <use>
+                <plugin>
+                    <name>dev.hilla.parser.plugins.nonnull.NonnullPlugin</name>
+                    <configuration implementation="dev.hilla.parser.plugins.nonnull.NonnullPluginConfig">
+                        <use>
+                            <annotation>
+                                <name>com.example.application.annotations.NeverNull</name>
+                                <makesNullable>false</makesNullable>
+                                <score>50</score>
+                            </annotation>
+                        </use>
+                    </configuration>
+                </plugin>
+            </use>
+            <disable>
+                <plugin>
+                    <name>dev.hilla.parser.plugins.nonnull.NonnullPlugin</name>
+                </plugin>
+            </disable>
+        </plugins>
+    </parser>
+</configuration>
+----
+
+You'll need to create the custom annotation and update the endpoint to use it:
+
+[source,java]
+----
+package com.example.application.annotations;
+
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE_USE })
+public @interface NeverNull {
+}
+----
+
+[source,java]
+----
+@NeverNull
+public String sayHello(@NeverNull String name) {
+    if (name.isEmpty()) {
+        return "Hello stranger";
+    } else {
+        return "Hello " + name;
+    }
+}
+----
+
+The plugin configuration is modelled on the configuration classes defined for each plugin. For example, see the https://github.com/vaadin/hilla/blob/main/packages/java/parser-jvm-plugin-nonnull/src/main/java/dev/hilla/parser/plugins/nonnull/NonnullPluginConfig.java[Nonnull plugin configuration].
+
+=== Use Kotlin
+
+The library project POM must be modified to enable Kotlin.
+In the GitHub example application the changes have been performed by Intellij IDEA, but you can follow the https://kotlinlang.org/docs/maven.html[Kotlin documentation] if you want to do that yourself.
+Otherwise, this is the https://github.com/vaadin/hilla-multi-module/tree/119e6ce7c14abfd876fe696373f941a7d46f467a[corresponding commit].
+As we did in Java, the `javaParameters` tag has been added to preserve parameter names in compiled code.
+
+Then, convert the [classname]`HelloWorldEndpoint` to Kotlin and modify the returned message to make the change stand out when running the application:
+
+[source,kotlin]
+----
+@Endpoint
+@AnonymousAllowed
+class HelloWorldEndpoint {
+    fun sayHello(name: String): String {
+        return if (name.isEmpty()) {
+            "Hello stranger from Kotlin"
+        } else {
+            "Hello $name from Kotlin"
+        }
+    }
+}
+----
+
+The [classname]`@Nonnull` annotation has been removed. As in Kotlin, this is the default.
+
+Run the application and verify that the new message is shown when clicking on the button.
+
+== Feature Flag
+
+In order to use Multi-Module Engine, it must be explicitly enabled with a feature flag.
+There are two methods of doing this:
+
+=== Using Vaadin Developer Tools
+
+1. Click on the Vaadin Developer Tools icon button in your running application.
+2. Open the [guilabel]`Experimental Features` tab.
+3. Enable the [guilabel]`Multi-module engine in Hilla` feature.
+4. Restart the application.
+
+=== Adding a Feature Flags Properties File
+
+1. Find or create the [filename]`src/main/resources/vaadin-featureflags.properties` file in your application folder.
+2. Add the following content: `com.vaadin.experimental.hillaEngine=true`
+3. Restart the application.

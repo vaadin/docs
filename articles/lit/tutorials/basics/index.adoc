@@ -1,0 +1,729 @@
+---
+title: Basics
+page-title: "Hilla basics tutorial using Lit"
+description: "Learn the basics of Hilla application development: creating a project, defining and accessing Endpoints, building views, and deploying your application."
+page-links:
+  - https://github.com/vaadin/hilla-basics-tutorial[Complete tutorial source code]
+order: 10
+---
+
+= Hilla basics tutorial
+:sectnums:
+:sectnumlevels: 1
+
+
+
+
+== What you need
+
+- About 10–20 minutes, depending on if you decide to do every part step-by-step.
++
+include::../../getting-started/index.adoc[tag=requirements]
+
+https://code.visualstudio.com/[Visual Studio Code] is used in this tutorial.
+See the https://youtu.be/G_aJONwi0qo[setup instructions] on YouTube.
+You can use any IDE that supports Java, TypeScript, HTML, and CSS.
+
+This tutorial is intended for developers with a basic understanding of Java, JavaScript, HTML, and CSS.
+You don't need to be an expert by any means, but understanding the syntax and basic concepts makes it easier to follow along.
+
+
+
+== Create a Hilla project
+
+Use the Vaadin CLI to create a new project:
+
+[source,terminal]
+----
+npx @vaadin/cli init --preset hilla-tutorial hilla-todo
+----
+
+Unpack the downloaded zip into a folder on your computer, and import the project in the IDE of your choice.
+
+
+
+.Importing into VS Code
+[%collapsible]
+====
+Import the project by either:
+
+- navigating to the project folder and running `code .` (note the period), or
+- choosing **File > Open...** in VS Code and selecting the _project folder_.
+
+You should install the following plugins in VS Code for an optimal development experience:
+
+* https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack[Java Extension Pack]
+* https://marketplace.visualstudio.com/items?itemName=runem.lit-plugin[lit-plugin]
+* https://marketplace.visualstudio.com/items?itemName=Pivotal.vscode-spring-boot[Spring Boot Tools]
+
+VS Code should automatically suggest these for you when you open the project.
+====
+
+
+
+
+.Project architecture and structure
+[%collapsible]
+====
+Hilla projects are based on https://spring.io/projects/spring-boot[Spring Boot] and use https://maven.apache.org/[Maven] for dependency management and build configuration.
+
+[.subtle]
+image::images/basics-project-structure.png[Project Structure,width=250]
+
+The following lists the key folders and files in a Hilla application project:
+
+// TODO this list should probable be written in full in a reference article, and then include a snippet from there to here
+// See vaadin.com/docs/latest/configuration/source-control for an example in Vaadin docs
+
+`frontend`::
+The folder where your views and front-end code live.
+
+`src`::
+The folder where your Java backend code lives.
+
+`pom.xml`::
+The project configuration file, which defines dependencies.
+
+`frontend/index.html`::
+The bootstrap page.
+You don't usually need to edit this.
+
+`frontend/index.ts`::
+Your application routes are defined here.
+
+`src/main/java/com/example/application/Application.java`::
+The Java class which runs the Spring Boot application.
+====
+
+
+
+
+
+== Define the data model and service layer
+
+Begin by setting up the data model and services for accessing the database. You can do this in two steps:
+
+. Define an entity.
+. Create a repository for accessing the database.
+
+This tutorial shows how to use an in-memory H2 database and JPA for persistence.
+The starter you downloaded already includes the needed dependencies in the `pom.xml` file.
+
+=== Define an entity
+
+Define a JPA _entity_ class for the data model, by creating a new file, `Todo.java`, in `src/main/java/com/example/application` with the following content:
+
+.`Todo.java`
+[source,java]
+----
+package com.example.application;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.validation.constraints.NotBlank;
+
+@Entity // <1>
+public class Todo {
+
+  @Id
+  @GeneratedValue
+  private Integer id;
+
+  private boolean done = false;
+
+  @NotBlank // <2>
+  private String task;
+
+  public Todo() {}
+
+  public Todo(String task) {
+    this.task = task;
+  }
+
+  public Integer getId() {
+    return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
+  public boolean isDone() {
+    return done;
+  }
+
+  public void setDone(boolean done) {
+    this.done = done;
+  }
+
+  public String getTask() {
+    return task;
+  }
+
+  public void setTask(String task) {
+    this.task = task;
+  }
+}
+----
+<1> Turn the class into a JPA entity with an `@Entity` annotation.
+<2> Add a `@NotBlank` Java bean validation annotation to enforce validity both in the view and on the server.
+
+=== Create a repository
+
+Next, create a _repository_ for accessing the database.
+You only need to define an interface with type information; Spring Data takes care of the implementation.
+Create a new file, `TodoRepository.java`, in `src/main/java/com/example/application`, with the following contents:
+
+.`TodoRepository.java`
+[source,java]
+----
+package com.example.application;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TodoRepository extends JpaRepository<Todo, Integer> {
+}
+----
+
+// TODO consider if this is needed as an intermediate step in the tutorial, or left as the last step
+// You now have all the necessary backend code in place to start building a UI.
+// Run the project from the command line with the following command:
+
+// [source,terminal]
+// ----
+// ./mvnw
+// ----
+
+// **The first time you run the application, it may take up to a few minutes**, as Hilla downloads all the dependencies and builds a front-end bundle.
+// Subsequent builds don't download dependencies, so that they are much faster.
+
+// When the build has finished, you should see the application running on http://localhost:8080.
+
+// image::images/basics-running-1.png[Running project]
+
+
+
+
+== Create a typed server Endpoint
+
+One of the key features of Hilla is type-safe server access through _Endpoints_.
+When you define an `@Endpoint`, Hilla creates the needed REST-like endpoints, secures them, and generates TypeScript interfaces for all the data types and public methods used.
+Having full-stack type safety helps you stay productive through autocomplete and helps guard against breaking the UI when you change the data model on the server.
+
+Create a new `TodoEndpoint.java` file in `src/main/java/com/example/application` with the following content:
+
+.`TodoEndpoint.java`
+[source,java]
+----
+package com.example.application;
+
+import java.util.List;
+
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import dev.hilla.Endpoint;
+import dev.hilla.Nonnull;
+
+
+@Endpoint // <1>
+@AnonymousAllowed // <2>
+public class TodoEndpoint {
+  private TodoRepository repository;
+
+  public TodoEndpoint(TodoRepository repository) { // <3>
+    this.repository = repository;
+  }
+
+  public @Nonnull List<@Nonnull Todo> findAll() { // <4>
+    return repository.findAll();
+  }
+
+  public Todo save(Todo todo) {
+    return repository.save(todo);
+  }
+}
+----
+<1> Annotating a class with `@Endpoint` exposes it as a service for client-side views.
+All *public* methods of an Endpoint are callable from TypeScript.
+<2> By default, Endpoint access requires an authenticated user. `@AnonymousAllowed` enables access for anyone.
+See <<../security/configuring#,Configuring Security>> for more information on Endpoint security.
+<3> Use Spring to automatically inject the `TodoRepository` dependency for database access.
+<4> Using the `@Nonnull` annotation ensures that the TypeScript generator doesn't interpret these values as possibly `undefined`.
+
+// TODO only needed if the server is started as an intermediate step
+// Save the file and ensure the change is loaded.
+// You should see log output from the reload in the console.
+// It should end with the message, `Frontend compiled successfully`.
+
+// If you didn't have the server running, or if something failed, (re)start the server with the `mvn` command.
+
+
+
+
+
+
+== Build the Todo view
+
+Hilla uses the https://lit.dev/[Lit] library for client-side views.
+Lit is a lightweight and highly performant library for building reactive components with declarative templates.
+If needed, you can read about the <<../application/lit#, basics of Lit>>.
+
+Next, you create a view for adding and viewing to-do items. You can choose to build it step-by-step, learning some concepts along the way, or to copy the complete view implementation if you are in a hurry.
+
+
+
+
+.Build the view step-by-step
+[%collapsible]
+====
+Open the `frontend/views/todo/todo-view.ts` file and replace its contents with the following:
+
+.`todo-view.ts`
+[source,typescript]
+----
+import { html } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+// <1>
+import '@vaadin/button';
+import '@vaadin/checkbox';
+import '@vaadin/text-field';
+import { Binder, field } from '@hilla/form';
+import Todo from 'Frontend/generated/com/example/application/Todo';
+import TodoModel from 'Frontend/generated/com/example/application/TodoModel';
+import { TodoEndpoint } from 'Frontend/generated/endpoints';
+import { View } from '../view';
+
+@customElement('todo-view') // <2>
+export class TodoView extends View { // <3>
+}
+----
+<1> Import the UI components, helpers, and generated TypeScript models required for building the view.
+<2> Register the new component with the browser.
+This makes it available as `<todo-view>`.
+The routing in `index.ts` is already set up to show it when you navigate to the application.
+<3> Define the component class that extends from `View`.
+
+[discrete]
+=== Define the view state
+
+Inside the `TodoView` class, define the view state as follows:
+
+.`todo-view.ts`
+[source,typescript]
+----
+@state()
+private todos: Todo[] = []; // <1>
+private binder = new Binder(this, TodoModel); // <2>
+----
+<1> The list of `Todo` items is private and decorated with `@state()`, so Lit observes it for changes.
+<2> A Hilla `Binder` is used to handle the form state for creating new `Todo` objects.
+`TodoModel` is automatically generated by Hilla.
+This describes the data types and validations that `Binder` needs.
+Read more about forms in <<../data-binding/binder#,Binding Data to Forms>>.
+
+[discrete]
+=== Define styles
+
+Define some padding on the view.
+Web Components have a default `display` value of `inline`, which is rarely what you want.
+Set it to `block` instead.
+You can define styles in the `themes/hilla-todo/styles.css` file.
+Read more about CSS in <<../css/styling-with-css#,Styling With CSS>>.
+
+.`themes/hilla-todo/styles.css`
+[source,css]
+----
+todo-view {
+  display: block;
+  padding: var(--lumo-space-m) var(--lumo-space-l); /* <1> */
+}
+----
+<1> The `padding` property is defined using the https://vaadin.com/docs/ds/foundation/size-space#space[spacing properties] to be consistent with the rest of the app.
+
+[discrete]
+=== Define the HTML template
+
+Define a `render()` method that returns an `html` template literal inside the class.
+
+.`todo-view.ts`
+[source,typescript]
+----
+render() {
+  return html`
+
+  `;
+}
+----
+
+Add the following code within the `html` template:
+
+.`todo-view.ts`
+[source,typescript]
+----
+return html`
+  <div class="form">
+    <vaadin-text-field
+      ${field(this.binder.model.task) /* <1> */ }
+    ></vaadin-text-field>
+    <vaadin-button
+      theme="primary"
+      @click=${this.createTodo /* <2> */}
+      ?disabled=${this.binder.invalid /* <3> */}
+    >
+      Add
+    </vaadin-button>
+  </div>
+`;
+----
+<1> The Text Field component is bound to the `task` property of a `Todo` using `${field(this.binder.model.task)}`.
+You can read more about forms in <<../data-binding/binder#,Binding Data to Forms>>.
+<2> The click event of the *Add* button is bound to the `createTodo()` method.
+<3> The button is disabled if the form is invalid.
+
+Right underneath the previous `<div>`, add the following code:
+
+.`todo-view.ts`
+[source,typescript]
+----
+return html`
+  <div class="todos">
+    ${this.todos.map((todo) => /* <1> */ html`
+        <div class="todo">
+          <vaadin-checkbox
+            ?checked=${todo.done /* <2> */}
+            @checked-changed=${(e: CustomEvent) => // <3>
+              this.updateTodoState(todo, e.detail.value)}
+          ></vaadin-checkbox>
+          <span>${todo.task}</span>
+        </div>
+      `
+    )}
+  </div>
+`;
+----
+<1> The existing `todo` items are shown by mapping the `todos` array to Lit templates.
+The template for a single `Todo` contains a checkbox and the task text.
+<2> Bind the `checked` boolean attribute to the `done` property on the `todo`.
+<3> Call the `updateTodoState()` method, with the `todo` and the new value, whenever the checked value changes.
+
+[discrete]
+=== Update the view state and call the backend
+
+// TODO should probably use firstUpdated instead, like in the "quick start tutorial"
+// remember to update in github as well, if changed
+Below the `render()` method in the `TodoView` class, add a `connectedCallback()` https://lit.dev/docs/components/lifecycle/[lifecycle callback] to initialize the view when it's attached to the DOM.
+
+.`todo-view.ts`
+[source,typescript]
+----
+async connectedCallback() { // <1>
+  super.connectedCallback(); // <2>
+  this.todos = await TodoEndpoint.findAll(); // <3>
+}
+----
+<1> Use an https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function[async function] to make it easier to handle asynchronous code.
+<2> Remember to call the superclass method.
+<3> The `getTodos()` method is automatically generated by Hilla based on the method in `TodosEndpoint.java`.
+The method was imported in the head of the file.
+The `await` keyword waits for the server response without blocking the UI.
+
+Below the `connectedCallback()`, add another method to handle the creation of a new `Todo`.
+
+.`todo-view.ts`
+[source,typescript]
+----
+async createTodo() {
+  const createdTodo = await this.binder.submitTo(TodoEndpoint.save); // <1>
+  if (createdTodo) {
+    this.todos = [...this.todos, createdTodo]; // <2>
+    this.binder.clear(); // <3>
+  }
+}
+----
+<1> Use `binder` to submit the form to `TodoEndpoint`.
+The `Binder` validates the input before posting it, and the server revalidates it.
+<2> Update the state with a new array that includes the saved `Todo`.
+This re-renders the view.
+<3> Clear the form input.
+
+Finally, add a method for updating the `todo` state right below `createTodo()`:
+
+.`todo-view.ts`
+[source,typescript]
+----
+updateTodoState(todo: Todo, done: boolean) {
+  todo.done = done;
+  const updatedTodo = { ...todo }; // <1>
+  this.todos = this.todos.map((t) => (t.id === todo.id ? updatedTodo : t)); // <2>
+  TodoEndpoint.save(updatedTodo); // <3>
+}
+----
+<1> Create a new `Todo` with the updated `done` state.
+<2> Update the local `todos` array with the new state.
+The `map` operator creates a new array where the changed `todo` is swapped out.
+This re-renders the view.
+<3> Save the updated `todo` to the server.
+====
+
+
+
+
+.Get the complete view implementation
+[%collapsible]
+====
+Open the `frontend/views/todo/todo-view.ts` file and replace its contents with the following:
+
+.`todo-view.ts`
+[source,typescript]
+----
+import { html } from 'lit';
+
+import { customElement, state } from 'lit/decorators.js';
+
+import '@vaadin/button';
+import '@vaadin/checkbox';
+import '@vaadin/text-field';
+import { Binder, field } from '@hilla/form';
+import Todo from 'Frontend/generated/com/example/application/Todo';
+import TodoModel from 'Frontend/generated/com/example/application/TodoModel';
+import { TodoEndpoint } from 'Frontend/generated/endpoints';
+import { View } from '../view';
+
+@customElement('todo-view')
+export class TodoView extends View {
+  @state()
+  private todos: Todo[] = [];
+
+  private binder = new Binder(this, TodoModel);
+
+  render() {
+    return html`
+      <div class="form">
+        <vaadin-text-field ${field(this.binder.model.task)}></vaadin-text-field>
+        <vaadin-button theme="primary" @click=${this.createTodo} ?disabled=${this.binder.invalid}>
+          Add
+        </vaadin-button>
+      </div>
+      <div class="todos">
+        ${this.todos.map(
+          (todo) => html`
+            <div class="todo">
+              <vaadin-checkbox
+                ?checked=${todo.done}
+                @checked-changed=${(e: CustomEvent) => this.updateTodoState(todo, e.detail.value)}></vaadin-checkbox>
+              <span>${todo.task}</span>
+            </div>
+        `)}
+      </div>
+    `;
+  }
+
+  async connectedCallback() {
+    super.connectedCallback();
+    this.todos = await TodoEndpoint.findAll();
+  }
+
+  async createTodo() {
+    const createdTodo = await this.binder.submitTo(TodoEndpoint.save);
+    if (createdTodo) {
+      this.todos = [...this.todos, createdTodo];
+      this.binder.clear();
+    }
+  }
+
+  updateTodoState(todo: Todo, done: boolean) {
+    todo.done = done;
+    const updatedTodo = { ...todo };
+    this.todos = this.todos.map((t) => (t.id === todo.id ? updatedTodo : t));
+    TodoEndpoint.save(updatedTodo);
+  }
+}
+----
+====
+
+
+
+
+== Run the application
+
+Run the project from the command line with the following command:
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="Windows"></source-info>
+mvnw
+----
+
+[source,terminal]
+----
+<source-info group="macOS / Linux"></source-info>
+./mvnw
+----
+--
+
+[.secondary-text.small]
+The first time you run the application, it may take up to a few minutes, as Hilla downloads all the dependencies and builds a front-end bundle.
+Subsequent builds don't download dependencies, so that they are much faster.
+
+When the build has finished, you should see the application running on http://localhost:8080.
+
+You should now have a fully functional to-do application.
+Notice that when you refresh the browser, it keeps the same `todo` items, as they are persisted in the database.
+
+image::images/basics-running-2.png[The to-do application running in a web browser]
+
+
+
+
+
+
+== Deploy the Application to Heroku (Optional)
+
+The following steps are optional.
+You can follow them to deploy your application to https://www.heroku.com/[Heroku], a cloud deployment platform that offers a free tier that doesn't require a credit card.
+
+.Deploying to Heroku
+[%collapsible]
+====
+// tag::heroku-steps[]
+[discrete]
+=== Preparing the Application for Production
+It's important to build a separate production-optimized version of the application before deploying it.
+In development mode, Hilla has a live-reload widget, debug logging, and uses a quick, but unoptimized, frontend build that includes source maps for easy debugging.
+Unoptimized frontend bundles can contain several megabytes of JavaScript.
+
+The `pom.xml` build includes a `production` profile configuration that prepares an optimized build that's ready for production.
+
+[discrete]
+==== Using a PostgreSQL Database in Production
+
+During development, the application has used an in-memory H2 database.
+It's convenient and works well for a single user.
+In production, you want to use something more robust and persistent.
+Heroku's free tier supports PostgreSQL, so can configure your application to use that.
+
+First, add the PostgreSQL dependency in the production profile of `pom.xml`:
+
+.`pom.xml`
+[source,xml]
+----
+<profile>
+  <id>production</id>
+  <!-- Omitted -->
+  <dependencies>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+  </dependencies>
+</profile>
+----
+
+Next, configure how JPA should handle schema generation.
+Add the following two properties to the end of `application.properties`.
+
+.`src/main/resources/application.properties`
+[source]
+----
+spring.jpa.generate-ddl=true
+spring.jpa.hibernate.ddl-auto=create-drop
+----
+
+.Avoid data loss
+[WARNING]
+This setup recreates the database on every deployment. If you are working with real data, you should use `ddl-auto=none` and instead use a database migration tool like https://www.liquibase.org/[Liquibase] or https://flywaydb.org/[Flyway] so you can evolve the database schema without losing data.
+
+[discrete]
+==== Building a Production-Optimized JAR
+
+Build the application with the `production` profile:
+
+[source,bash]
+----
+mvn clean package -Pproduction
+----
+
+This builds a production-optimized JAR file in the `target` folder.
+
+[discrete]
+=== Creating a Heroku Account and Installing Heroku CLI
+
+Complete the following steps to create a Heroku account and install the Heroku CLI.
+
+. Go to https://signup.heroku.com/, create a new account, and verify your email.
+. Go to https://devcenter.heroku.com/articles/heroku-cli and follow the instructions for installing the CLI on your operating system.
+
+[discrete]
+=== Deploying a Hilla Application to Heroku
+
+Use the Heroku CLI to create and deploy your application.
+
+. Log in:
++
+[source,terminal]
+----
+heroku login
+----
+. Configure the correct Java version:
++
+[source,terminal]
+----
+echo "java.runtime.version=11" > system.properties
+----
+. Install the Heroku Java plugin:
++
+[source,terminal]
+----
+heroku plugins:install java
+----
+. Create a new app.
+Replace APPNAME with a name of your choice.
+APPNAME is part of the URL, like https://APPNAME.herokuapp.com, so choose a name that's unique and easy to remember.
++
+[source,terminal]
+----
+heroku create APPNAME
+----
+. Create a secret key for your application:
++
+[source,terminal]
+----
+heroku config:set APP_SECRET=$(openssl rand -base64 32)
+----
+. Enable the PostgreSQL plugin for the newly created app:
++
+[source,terminal]
+----
+heroku addons:create heroku-postgresql -a APPNAME
+----
+. Deploy the production-optimized JAR file you created in the previous section.
++
+[source,terminal]
+----
+heroku deploy:jar target/fusioncrmtutorial-1.0-SNAPSHOT.jar -a APPNAME
+----
+. Open the application in your browser.
++
+[source,terminal]
+----
+heroku open
+----
+. View the application logs and see if anything goes wrong.
++
+[source,terminal]
+----
+heroku logs --tail
+----
+// end::heroku-steps[]
+====
+
+
+
+
+
+
+// == Next steps
+
+// After completing the tutorial, you are ready to start experimenting on your own or continue to more advanced guides in the documentation.
