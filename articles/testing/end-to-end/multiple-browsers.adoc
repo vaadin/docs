@@ -17,7 +17,7 @@ The test is then executed and, after it has finished, the node reservation is re
 When running on a hub, you don't need a local WebDriver installed. The WebDriver must be installed on the node instead.
 
 [[preparing-tests]]
-== Preparing Your Tests for Running on a Test Grid
+== Preparing Your Tests for Running on a Test Grid (JUnit4)
 The tests created previously are set up only to run on a single browser, as a single `ChromeDriver` (or other `WebDriver`) instance is created in a `@Before` method.
 When running on multiple browsers in parallel, it's easier not to handle the driver instances manually but instead let TestBench handle creation and destruction when needed.
 To do this, you need to:
@@ -55,6 +55,36 @@ When running tests in parallel, you need to ensure that the tests are independen
 [NOTE]
 You can also handle creation and destruction of the WebDriver manually when running on a hub if you don't want to use `ParallelTest` for one reason or another.
 In this case, you should create a `RemoteWebdriver` with the correct hub URL and set suitable `DesiredCapabilities` on the driver.
+
+== Preparing Your Tests for Running on a Test Grid (JUnit5)
+The tests created previously are set up only to run on a single browser, as a single `ChromeDriver` (or other `WebDriver`) instance is created in a `@BeforeEach` method.
+When running on multiple browsers in parallel, it's easier not to handle the driver instances manually but instead let TestBench handle creation and destruction when needed.
+To do this, you need to:
+
+1. Define the grid hub URL using either
+a. `@RunOnHub("hub.testgrid.mydomain.com")` on the test class (or a super class) or the system property `com.vaadin.testbench.Parameters.hubHostname`
+b. Configure Sauce Labs credentials and use Sauce Connect proxy to use Sauce Labs test grid.
+See <<sauce-labs-grid>>
+2. Annotate test with `@BrowserTest`.
+
+A test method annotated with `@BrowserTest` automatically:
+
+* executes test methods on the hub defined using `@RunOnHub` or the corresponding system property;
+* creates a suitable WebDriver instance;
+* terminates the driver after the test ends;
+* supports running the test locally on only one browser for debugging, using `@RunLocally` or the corresponding system property.
+
+[NOTE]
+If your test class already creates web driver implementing `DriverSupplier` you can remove it in favor of automatic driver initialization by TestBench.
+
+[TIP]
+You can make use of automatic `WebDriver` and `Capabilities` injection simply extending `BrowserTestBase` class.
+
+[NOTE]
+Parallelization is handled by JUnit5, read more at link:https://junit.org/junit5/docs/current/user-guide/#writing-tests-parallel-execution[JUnit5 parallel execution].
+
+[TIP]
+It is possible to annotate test class with `@BrowserTestClass` but then each method must be annotated either with `@TestTemplate` or `@BrowserTest`.
 
 [role="since:com.vaadin:vaadin@V23.2"]
 [[sauce-labs-grid]]
@@ -95,8 +125,11 @@ It returns a list of `DesiredCapabilities`, typically describing what platform, 
 Typically this is defined in a superclass for the test, so that all tests are run on the same browsers.
 For example
 
+[.example]
+--
 [source,java]
 ----
+<source-info group="JUnit4"></source-info>
 @RunOnHub("hub.testgrid.mydomain.com")
 public abstract class AbstractIT extends ParallelTest {
 
@@ -114,6 +147,27 @@ public abstract class AbstractIT extends ParallelTest {
    }
 }
 ----
+[source,java]
+----
+<source-info group="JUnit5"></source-info>
+@RunOnHub("hub.testgrid.mydomain.com")
+public abstract class AbstractIT extends BrowserTestBase {
+
+   @BrowserConfiguration
+   public List<DesiredCapabilities> getBrowserConfiguration() {
+       List<DesiredCapabilities> browsers =
+           new ArrayList<DesiredCapabilities>();
+
+       // Add all the browsers you want to test
+       browsers.add(BrowserUtil.firefox());
+       browsers.add(BrowserUtil.chrome());
+       browsers.add(BrowserUtil.ie11());
+
+       return browsers;
+   }
+}
+----
+--
 
 [NOTE]
 The `BrowserUtil` helper methods create a `DesiredCapability` object which often works.
