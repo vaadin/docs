@@ -8,11 +8,11 @@ order: 10
 ---
 
 = Hilla basics tutorial
+:lit:
 :sectnums:
 :sectnumlevels: 1
 
-
-
+// tag::content[]
 
 == What you need
 
@@ -24,7 +24,11 @@ https://code.visualstudio.com/[Visual Studio Code] is used in this tutorial.
 See the https://youtu.be/G_aJONwi0qo[setup instructions] on YouTube.
 You can use any IDE that supports Java, TypeScript, HTML, and CSS.
 
-This tutorial is intended for developers with a basic understanding of Java, JavaScript, HTML, and CSS.
+This tutorial is intended for developers with a basic understanding of Java, JavaScript,
+ifdef::react[]
+React,
+endif::[]
+HTML, and CSS.
 You don't need to be an expert by any means, but understanding the syntax and basic concepts makes it easier to follow along.
 
 
@@ -33,10 +37,18 @@ You don't need to be an expert by any means, but understanding the syntax and ba
 
 Use the Vaadin CLI to create a new project:
 
+ifdef::lit[]
 [source,terminal]
 ----
 npx @vaadin/cli init --preset hilla-tutorial hilla-todo
 ----
+endif::[]
+ifdef::react[]
+[source,terminal]
+----
+npx @vaadin/cli init --preset hilla-react-tutorial hilla-todo
+----
+endif::[]
 
 Unpack the downloaded zip into a folder on your computer, and import the project in the IDE of your choice.
 
@@ -53,7 +65,9 @@ Import the project by either:
 You should install the following plugins in VS Code for an optimal development experience:
 
 * https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack[Java Extension Pack]
+ifdef::lit[]
 * https://marketplace.visualstudio.com/items?itemName=runem.lit-plugin[lit-plugin]
+endif::[]
 * https://marketplace.visualstudio.com/items?itemName=Pivotal.vscode-spring-boot[Spring Boot Tools]
 
 VS Code should automatically suggest these for you when you open the project.
@@ -67,8 +81,14 @@ VS Code should automatically suggest these for you when you open the project.
 ====
 Hilla projects are based on https://spring.io/projects/spring-boot[Spring Boot] and use https://maven.apache.org/[Maven] for dependency management and build configuration.
 
+ifdef::lit[]
 [.subtle]
 image::images/basics-project-structure.png[Project Structure,width=250]
+endif::[]
+ifdef::react[]
+[.subtle]
+image::images/basics-project-structure.png[Project Structure,width=233]
+endif::[]
 
 The following lists the key folders and files in a Hilla application project:
 
@@ -88,8 +108,14 @@ The project configuration file, which defines dependencies.
 The bootstrap page.
 You don't usually need to edit this.
 
+ifdef::lit[]
 `frontend/index.ts`::
 Your application routes are defined here.
+endif::[]
+ifdef::react[]
+`frontend/routes.tsx`::
+Your application routes are defined here.
+endif::[]
 
 `src/main/java/com/example/application/Application.java`::
 The Java class which runs the Spring Boot application.
@@ -264,11 +290,26 @@ See <<{articles}/lit/guides/security/configuring#,Configuring Security>> for mor
 
 == Build the Todo view
 
+ifdef::lit[]
 Hilla uses the https://lit.dev/[Lit] library for client-side views.
 Lit is a lightweight and highly performant library for building reactive components with declarative templates.
 If needed, you can read about the <<{articles}/lit/guides/lit#, basics of Lit>>.
+endif::[]
+ifdef::react[]
+Hilla can use React for client-side code.
+You can use your React skills and favourite libraries, and you have first-class support for Vaadin components.
+endif::[]
 
 Next, you create a view for adding and viewing to-do items. You can choose to build it step by step, learning some concepts along the way, or to copy the complete view implementation if you are in a hurry.
+
+ifdef::react[]
+In this example we'll use Formik to create our form, so we need to add it to the project:
+
+[source,terminal]
+----
+npm install formik --save
+----
+endif::[]
 
 
 
@@ -276,6 +317,7 @@ Next, you create a view for adding and viewing to-do items. You can choose to bu
 .Build the view step by step
 [%collapsible]
 ====
+ifdef::lit[]
 Open the `frontend/views/todo/todo-view.ts` file and replace its contents with the following:
 
 .`todo-view.ts`
@@ -463,6 +505,95 @@ updateTodoState(todo: Todo, done: boolean) {
 The `map` operator creates a new array where the changed `todo` is swapped out.
 This re-renders the view.
 <3> Save the updated `todo` to the server.
+endif::[]
+ifdef::react[]
+Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with the following:
+
+.`TodoViex.tsx`
+[source,typescript]
+----
+import type Todo from 'Frontend/generated/com/example/application/Todo';
+import { ReactElement, useEffect, useState } from 'react';
+import { FormikErrors, useFormik } from 'formik';
+import { Button, Checkbox, Grid, GridColumn, TextField } from 'react-vaadin-components';
+import { TodoEndpoint } from 'Frontend/generated/endpoints';
+import { EndpointValidationError } from '@hilla/frontend';
+
+export default function TodoView(): ReactElement<unknown> | null {
+  return (
+  );
+}
+----
+
+[discrete]
+=== Define the view state
+
+Inside the `TodoView` class, define the view state as follows:
+
+.`TodoViex.tsx`
+[source,typescript]
+----
+const empty: Todo = { task: '', done: false };
+const [todos, setTodos] = useState(Array<Todo>());
+----
+
+// TODO: add styles like in the Lit version
+
+[discrete]
+=== Define the HTML template
+
+Add the following code inside the `return` statement:
+
+.`TodoViex.tsx`
+[source,typescript]
+----
+<>
+  <div>
+    <TextField
+      name='task'
+      label="Task"
+      value={formik.values.task}
+      onChange={formik.handleChange}
+      onBlur={formik.handleChange}
+    />
+    <Button
+      theme="primary"
+      disabled={formik.isSubmitting}
+      onClick={formik.submitForm}
+    >Add</Button>
+  </div>
+</>
+----
+
+Right underneath the previous `<div>`, add the following code:
+
+.`TodoViex.tsx`
+[source,typescript]
+----
+<div>
+  {todos.map(todo => (
+    <div key={todo.id}>
+      <Checkbox value={"" + todo.done}>{todo.task}</Checkbox>
+    </div>
+  ))}
+</div>
+----
+
+Before the `return` method, add a React effect to load the initial values.
+
+.`TodoViex.tsx`
+[source,typescript]
+----
+useEffect(() => {
+  (async () => {
+    setTodos(await TodoEndpoint.findAll());
+  })();
+
+  return () => { };
+}, []);
+----
+
+endif::[]
 ====
 
 
@@ -471,6 +602,8 @@ This re-renders the view.
 .Get the complete view implementation
 [%collapsible]
 ====
+
+ifdef::lit[]
 Open the `frontend/views/todo/todo-view.ts` file and replace its contents with the following:
 
 .`todo-view.ts`
@@ -540,6 +673,84 @@ export class TodoView extends View {
 }
 ----
 ====
+endif::[]
+ifdef::react[]
+Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with the following:
+
+.`TodoView.tsx`
+[source,typescript]
+----
+import type Todo from 'Frontend/generated/com/example/application/Todo';
+import { ReactElement, useEffect, useState } from 'react';
+import { FormikErrors, useFormik } from 'formik';
+import { Button, Checkbox, Grid, GridColumn, TextField } from 'react-vaadin-components';
+import { TodoEndpoint } from 'Frontend/generated/endpoints';
+import { EndpointValidationError } from '@hilla/frontend';
+
+export default function TodoView(): ReactElement<unknown> | null {
+  const empty: Todo = { task: '', done: false };
+  const [todos, setTodos] = useState(Array<Todo>());
+
+  useEffect(() => {
+    (async () => {
+      setTodos(await TodoEndpoint.findAll());
+    })();
+
+    return () => { };
+  }, []);
+
+  const formik = useFormik({
+    initialValues: empty,
+    onSubmit: async (value: Todo, { setSubmitting, setErrors }) => {
+      try {
+        const saved = await TodoEndpoint.save(value) ?? value;
+        setTodos([...todos, saved]);
+        formik.resetForm();
+      } catch (e: unknown) {
+        if (e instanceof EndpointValidationError) {
+          const errors: FormikErrors<Todo> = {}
+          for (const error of e.validationErrorData) {
+            if (typeof error.parameterName === 'string' && error.parameterName in empty) {
+              const key = error.parameterName as (string & keyof Todo);
+              errors[key] = error.message;
+            }
+          }
+          setErrors(errors);
+        }
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  return (
+    <>
+      <div>
+        <TextField
+          name='task'
+          label="Task"
+          value={formik.values.task}
+          onChange={formik.handleChange}
+          onBlur={formik.handleChange}
+        />
+        <Button
+          theme="primary"
+          disabled={formik.isSubmitting}
+          onClick={formik.submitForm}
+        >Add</Button>
+      </div>
+
+      <div>
+        {todos.map(todo => (
+          <div key={todo.id}>
+            <Checkbox value={""+todo.done}>{todo.task}</Checkbox>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+endif::[]
 
 
 
@@ -553,7 +764,7 @@ Run the project from the command line with the following command:
 [source,terminal]
 ----
 <source-info group="Windows"></source-info>
-mvnw
+.\mvnw
 ----
 
 [source,terminal]
@@ -574,7 +785,7 @@ Notice that when you refresh the browser, it keeps the same `todo` items, as the
 
 image::images/basics-running-2.png[The to-do application running in a web browser]
 
-
+// end::content[]
 
 
 
