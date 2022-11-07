@@ -17,73 +17,46 @@ The test is then executed and, after it has finished, the node reservation is re
 When running on a hub, you don't need a local WebDriver installed. The WebDriver must be installed on the node instead.
 
 [[preparing-tests]]
-== Preparing Your Tests for Running on a Test Grid (JUnit4)
-The tests created previously are set up only to run on a single browser, as a single `ChromeDriver` (or other `WebDriver`) instance is created in a `@Before` method.
+== Preparing Your Tests for Running on a Test Grid
+The tests created previously are set up only to run on a single browser, as a single `ChromeDriver` (or other `WebDriver`) instance is created in a `@BeforeEach` (`@Before` for JUnit4) method.
 When running on multiple browsers in parallel, it's easier not to handle the driver instances manually but instead let TestBench handle creation and destruction when needed.
 To do this, you need to:
 
-1. Extend `ParallelTest` instead of `TestBenchTestCase`.
-The `ParallelTest` class takes care of creating and destroying driver instances as needed.
+1. Let TestBench takes care of creating and destroying driver instances as needed by annotating test with `@BrowserTest` (JUnit5) or extending `ParallelTest` instead of `TestBenchTestCase` (JUnit4).
 2. Define the grid hub URL using either
 a. `@RunOnHub("hub.testgrid.mydomain.com")` on the test class (or a super class) or the system property `com.vaadin.testbench.Parameters.hubHostname`
 b. Configure Sauce Labs credentials and use Sauce Connect proxy to use Sauce Labs test grid.
 See <<sauce-labs-grid>>
 
-A test class extending `ParallelTest` automatically:
+Tests annotated with `@BrowserTest` (JUnit5) or extending `ParallelTest` (Junit4) will automatically:
 
-* executes test methods in parallel on the hub defined using `@RunOnHub` or the corresponding system property;
+* execute test methods on the hub defined using `@RunOnHub` or the corresponding system property;
 * creates a suitable WebDriver instance;
 * terminates the driver after the test ends;
 * grabs a screenshot if the test fails;
 * supports running the test locally on only one browser for debugging, using `@RunLocally` or the corresponding system property.
+* run tests in parallel (JUnit4, in JUnit5 it depends from JUnit configuration)
 
-[NOTE]
-When changing the superclass of the test, you need to remove any calls to [methodname]`setDriver(new ChromeDriver())` or similar, and also any `@After` method which calls [methodname]`getDriver().quit()`.
-
-[TIP]
+==== Notes for JUnit4
 Usually, you want to configure something for all your grid tests so it makes sense to create a common superclass, for example `public abstract class AbstractIT extends ParallelTest`.
 Then you can add a `@RunOnHub` annotation on that class.
 
-[NOTE]
 Up to 50 test methods in any `ParallelTest` class are executed simultaneously by default.
 The limit can be set using the `com.vaadin.testbench.Parameters.testsInParallel` system property.
 If your tests don't work in parallel, set the parameter to `1`.
 
-[NOTE]
 When running tests in parallel, you need to ensure that the tests are independent and don't affect each other in any way.
 
-[NOTE]
 You can also handle creation and destruction of the WebDriver manually when running on a hub if you don't want to use `ParallelTest` for one reason or another.
 In this case, you should create a `RemoteWebdriver` with the correct hub URL and set suitable `DesiredCapabilities` on the driver.
 
-== Preparing Your Tests for Running on a Test Grid (JUnit5)
-The tests created previously are set up only to run on a single browser, as a single `ChromeDriver` (or other `WebDriver`) instance is created in a `@BeforeEach` method.
-When running on multiple browsers in parallel, it's easier not to handle the driver instances manually but instead let TestBench handle creation and destruction when needed.
-To do this, you need to:
-
-1. Define the grid hub URL using either
-a. `@RunOnHub("hub.testgrid.mydomain.com")` on the test class (or a super class) or the system property `com.vaadin.testbench.Parameters.hubHostname`
-b. Configure Sauce Labs credentials and use Sauce Connect proxy to use Sauce Labs test grid.
-See <<sauce-labs-grid>>
-2. Annotate test methods with `@BrowserTest`.
-
-A test method annotated with `@BrowserTest` automatically:
-
-* executes test methods on the hub defined using `@RunOnHub` or the corresponding system property;
-* creates a suitable WebDriver instance;
-* terminates the driver after the test ends;
-* supports running the test locally on only one browser for debugging, using `@RunLocally` or the corresponding system property.
-
-[NOTE]
+==== Notes for JUnit5
 If your test class already creates web driver implementing `DriverSupplier` you can remove it in favor of automatic driver initialization by TestBench.
 
-[TIP]
 You can make use of automatic `WebDriver` and `Capabilities` injection simply extending `BrowserTestBase` class.
 
-[NOTE]
 Parallelization is handled by JUnit5, read more at link:https://junit.org/junit5/docs/current/user-guide/#writing-tests-parallel-execution[JUnit5 parallel execution].
 
-[TIP]
 It is possible to annotate test class with `@BrowserTestClass` but then each method must be annotated either with `@TestTemplate` or `@BrowserTest`.
 
 [role="since:com.vaadin:vaadin@V23.2"]
