@@ -1,24 +1,39 @@
 ---
 title: Getting Started
-description: Step-by-step guide showing how to add Azure Kit to your application.
+description: Step-by-step guide showing how to add Azure Kit
+  to your application.
 order: 10
 ---
 
 = Getting Started with Azure Kit
 :sectnums:
 
-This guide covers the following topics:
+Azure Kit provides high availability for Vaadin applications
+ running in a Kubernetes cluster (including Azure).
 
-- Downloading Azure Kit by ...
-// compared to SSO Kit
-- Setting up TEXT;
-// What do they need to set up to get started?
-- Running a Vaadin Flow application with Azure Kit.
+This tutorial guides you through setting up and deploying
+ an application with Azure Kit in a local Kubernetes
+ cluster.
 
+== Requirements
+
+This tutorial assumes that you have the following software
+ installed on your local machine:
+
+- https://www.docker.com/products/docker-desktop/[Docker Desktop]
+- A local Kubernetes cluster such as
+ https://minikube.sigs.k8s.io/docs/start/[minikube],
+ https://kind.sigs.k8s.io/docs/user/quick-start/[kind] or
+ https://docs.docker.com/desktop/kubernetes/[Docker] itself.
+
+== Setting Up a Vaadin Project
+
+Download a new Vaadin project from https://start.vaadin.com/.
 
 == Add the Azure Kit Dependency
 
-To get started you first need to add Azure Kit as a dependency to your application, for example to your Maven project:
+To get started you first need to add Azure Kit as a
+ dependency to the application:
 
 .pom.xml
 [source,xml]
@@ -29,58 +44,434 @@ To get started you first need to add Azure Kit as a dependency to your applicati
 </dependency>
 ----
 
+Next, you need to set some properties to configure Azure
+ Kit. These properties can be added to the application
+ configuration file, where you can define the packages that
+ should be serialized.
 
-## Azure Kit Demo
-
-To run the demo you first need to have a local Kubernetes cluster up and running.
-You can find recommended tools here: https://kubernetes.io/docs/tasks/tools/
-
-You also need to setup the ingress-ngnix before:
-[source,terminal]
+.application.properties
+[source,properties]
 ----
-# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
-----
-
-To deploy the demo application into your cluster, follow these steps:
-1. Build the application JAR:
-[source,terminal]
-----
-# mvn clean package -Pproduction,redis
-----
-2. Create or update the Docker image with version tag:
-[source,terminal]
-----
-# docker build -t azure-kit-demo:1.0.0 .
-----
-Optionally, if you run a local docker registry, add the *localhost:5001* registry address prefix as well and push it to registry. Refer to the image in the configuration files with *the localhost:5001/azure-kit-demo:1.0.0* name:
-[source,terminal]
-----
-# docker build localhost:5001/azure-kit-demo:1.0.0 .
-# docker push localhost:5001/azure-kit-demo:1.0.0
-----
-3. Deploy the image, Redis service and ingress controller into the cluster:
-[source,terminal]
-----
-# kubectl apply -f deployment/redis.yaml -f deployment/app-v1.yaml -f deployment/ingress-v1.yaml
-----
-4. Open port forward for ingress controller (in other window, and keep it open):
-[source,terminal]
-----
-# kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
+vaadin.azure.hazelcast.kubernetes.service-name=hazelcast-service
+vaadin.serialization.include-packages=my-app
 ----
 
-You should now see 4 pods running, e.g.
-[source,terminal]
+== Session Replication Backend
+
+Azure Kit provides high availability in a Kubernetes cluster
+ by storing session data in a backend accessible to the
+ cluster. This tutorial will use Hazelcast for this purpose,
+ although Redis is also supported.
+
+You need to add the Hazelcast dependency to the application:
+
+.pom.xml
+[source,xml]
 ----
-# kubectl get pods
-NAME                                 READY   STATUS    RESTARTS      AGE
-azure-kit-demo-f87bfcbb4-5qjml       1/1     Running   0             22s
-azure-kit-demo-f87bfcbb4-czkzr       1/1     Running   0             22s
-azure-kit-demo-f87bfcbb4-gjqw6       1/1     Running   0             22s
-azure-kit-demo-f87bfcbb4-rxvjb       1/1     Running   0             22s
-azure-kit-redis-788d56c66-8b259      1/1     Running   0             22s
+<dependency>
+    <groupId>com.hazelcast</groupId>
+    <artifactId>hazelcast</artifactId>
+</dependency>
 ----
 
-At this point the demo should be reachable at http://localhost:8080/
+Next, you need to deploy a load balancer service to your
+ cluster. Create the following Kubernetes manifest file:
 
-NOTE: You can run the demo with Hazelcast instead of Redis by replacing `redis` with `hazelcast` in steps 2 and 4.
+.hazelcast.yaml
+[source,yaml]
+----
+apiVersion: v1
+kind: Service
+metadata:
+  name: hazelcast-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - name: hazelcast
+      port: 5701
+  type: LoadBalancer
+----
+
+Deploy the manifest to your cluster:
+
+[source,shell]
+kubectl apply -f hazelcast.yaml
+
+== Build and Deploy the Application
+
+The next step is to build a container image of the
+application and deploy it to your Kubernetes cluster.
+
+Clean and package the application for production:
+
+[source,shell]
+mvn clean package -Pproduction
+
+Create the following `Dockerfile` file and place it in the
+ main directory of the application:
+
+[source,Dockerfile]
+----
+FROM openjdk:17-jdk-slim
+COPY target/*.jar /usr/app/app.jar
+RUN useradd -m myuser
+USER myuser
+EXPOSE 8080
+CMD java -jar /usr/app/app.jar
+----
+
+Open a terminal to the main directory and use Docker to
+build a container image for the application and tag it with
+version 1.0.0 (note the required period at the end):
+
+[source,shell]
+docker build -t my-app:1.0.0 .
+
+[NOTE]
+Depending on the Kubernetes cluster you are using, you may
+need to publish the image to a local registry or push the
+image to the cluster. Otherwise, the image will not be found.
+Please refer to your cluster documentation.
+
+Now create a deployment manifest for the application:
+
+.app-v1.yaml
+[source,yaml]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-v1
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: my-app
+      version: 1.0.0
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: 1.0.0
+    spec:
+      containers:
+        - name: my-app
+          image: my-app:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APP_VERSION
+              value: 1.0.0
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: multicast
+              containerPort: 5701
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-v1
+spec:
+  selector:
+    app: my-app
+    version: 1.0.0
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+----
+
+Deploy the manifest to your cluster:
+
+[source,shell]
+kubectl apply -f app-v1.yaml
+
+You should now see 4 pods running in the cluster, for example:
+[source,shell]
+kubectl get pods
+
+----
+NAME                            READY   STATUS    RESTARTS      AGE
+my-app-v1-f87bfcbb4-5qjml       1/1     Running   0             22s
+my-app-v1-f87bfcbb4-czkzr       1/1     Running   0             22s
+my-app-v1-f87bfcbb4-gjqw6       1/1     Running   0             22s
+my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             22s
+----
+
+== Ingress Rules
+
+In order to access the application, you need to provide some
+ingress rules.
+
+If you don't already have `ingress-nginx` installed in your
+cluster, install it with the following command:
+
+[source,shell]
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
+
+Then create an ingress rule manifest file:
+
+.ingress-v1.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v1
+                port:
+                  number: 80
+----
+
+Deploy the manifest to your cluster:
+
+[source,shell]
+kubectl apply -f ingress-v1.yaml
+
+The application will now be available at http://localhost
+
+[NOTE]
+====
+In order to access the application from your local machine,
+it may be necessary to use the `port-forward` utility. In
+this case use the following command:
+
+[source,shell]
+kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
+
+The application will now be available at http://localhost:8080
+====
+
+== Scaling the Application
+
+The manifest we used to deploy the application has created 4
+ pods. You can use `kubectl` commands to increase or reduce
+ the amount of pods. For example, the following command will
+ increase the number of pods to 5:
+
+[source,shell]
+kubectl scale deployment/my-app-v1 --replicas=5
+
+You can also simulate the failure of a specific pod by deleting
+ it by name:
+
+[source,shell]
+kubectl delete pod/<pod-name>
+
+.Replace placeholder pod name
+[NOTE]
+Remember to substitute the name of your application pod.
+
+This can be useful to check that session replication is
+ performing as expected. If you open the application and
+ then delete the pod it is connected to, when you perform
+ the next action, you should not lose session data.
+
+== Rolling Out a New Version
+
+Azure Kit helps to roll out a new version of an application
+ by sending a notification to users on the previous version
+ so that they can choose when to switch. This allows them
+ to save any changes they are working on, rather than lose
+ them.
+
+First, build a new container image using Docker and tag it as
+ version 2.0.0 (note the required period at the end):
+
+[source,shell]
+docker build -t my-app:2.0.0 .
+
+Then create a new deployment manifest:
+
+.app-v2.yaml
+[source,yaml]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-v2
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: my-app
+      version: 2.0.0
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: 2.0.0
+    spec:
+      containers:
+        - name: my-app
+          image: my-app:2.0.0
+          env:
+            - name: APP_VERSION
+              value: 2.0.0
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: multicast
+              containerPort: 5701
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-v2
+spec:
+  selector:
+    app: my-app
+    version: 2.0.0
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+----
+
+Then deploy the manifest to your cluster:
+
+[source,shell]
+kubectl apply -f app-v2.yaml
+
+You should now see 4 new pods running in the cluster, for
+ example:
+[source,shell]
+kubectl get pods
+
+----
+NAME                            READY   STATUS    RESTARTS      AGE
+my-app-v1-f87bfcbb4-5qjml       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-czkzr       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-gjqw6       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             10m
+my-app-v2-5dcf4cc98c-cmb5m      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-ctrxq      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-ktpcq      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-rfth2      1/1     Running   0             22s
+----
+
+Next, create an ingress rule manifest:
+
+.ingress-v2-canary.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-canary
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "100"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: azure-kit-demo-v2
+                port:
+                  number: 80
+----
+
+And deploy the manifest to your cluster:
+
+[source,shell]
+kubectl apply -f ingress-v2-canary.yaml
+
+Once this has been done, all new sessions will be routed to
+ the new "canary" version 2.0.0 pods, but existing sessions
+ (and their users) will remain on version 1.0.0.
+
+Next, notify existing users that a new version is available.
+ Create the following ingress rules manifest:
+
+.ingress-v1-notify.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+    nginx.ingress.kubernetes.io/configuration-snippet: add_header Set-Cookie "app-update=2.0.0;path=/;HttpOnly";
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v1
+                port:
+                  number: 80
+----
+
+And deploy the manifest to your cluster:
+
+[source,shell]
+kubectl apply -f ingress-v1-notify.yaml
+
+Once this has been done, existing users will be notified of
+ the new available version with a popup and are given the
+ opportunity to switch.
+
+At some point, the previous version can be safely removed.
+ Create the following ingress rules manifest:
+
+.ingress-v2.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v2
+                port:
+                  number: 80
+----
+
+And deploy it to your cluster:
+
+[source,shell]
+kubectl apply -f ingress-v2.yaml
+
+Now you can delete version 1.0.0 and the canary ingress rules:
+
+[source,shell]
+----
+kubectl delete -f app-v1.yaml
+kubectl delete -f ingress-v2-canary.yaml
+----
