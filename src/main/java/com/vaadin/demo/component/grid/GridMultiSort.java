@@ -24,7 +24,7 @@ public class GridMultiSort extends Div {
         grid.addColumn(Person::getEmail).setHeader("Email").setSortable(true);
         grid.addColumn(Person::getProfession).setHeader("Profession")
                 .setSortable(true);
-        grid.addColumn(new LocalDateRenderer<>(GridSorting::getPersonBirthday,
+        grid.addColumn(new LocalDateRenderer<>(GridMultiSort::getPersonBirthday,
                 "yyyy-MM-dd")).setHeader("Birthday").setSortable(true)
                 .setComparator(Person::getBirthday);
         grid.setMultiSort(true, MultiSortPriority.APPEND);
