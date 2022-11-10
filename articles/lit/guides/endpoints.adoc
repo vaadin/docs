@@ -34,7 +34,7 @@ For each request to access a public method in a Hilla endpoint, a permission che
 
 Refer to the <<../security#, Security>> article for details of configuring endpoint access.
 
-== TypeScript Modules
+== TypeScript modules
 
 In JavaScript and TypeScript, modules are files that follow the module syntax.
 This syntax has the following properties:
@@ -109,10 +109,10 @@ You can change the folder by providing the path for the generator in the `genera
 Hilla takes care of type conversion between Java and TypeScript types.
 For more information about supported types, see <<{articles}/lit/reference/type-conversion#, Type Conversion>>.
 
-== Example TypeScript Module Contents
+== Example TypeScript module contents
 
 For example, the generated TypeScript module for the Java endpoint defined in
-<<creating,CounterEndpoint.java>> would look as follows:
+<<creating,`CounterEndpoint.java`>> would look as follows:
 
 .`CounterEndpoint.ts`
 [source,typescript]
@@ -165,18 +165,10 @@ include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/Count
 include::{root}/frontend/generated/CountryEndpoint.ts[]
 ----
 
-=== Nullable and Non-Nullable Types
+=== Nullable and non-nullable types
 
 Please refer to <<{articles}/lit/reference/endpoints-generator#type-nullability, Type Nullability>> for more information about how the nullability algorithm works and how to make types non-nullable.
 
-== Code Completion in IDEs
-
-As you can see in the previous [filename]`CounterEndpoint.ts` example, the Javadoc for the `@Endpoint` class is copied to the generated TypeScript file, and the type definitions are maintained.
-This helps code completion to work, at least in Visual Studio Code and IntelliJ IDEA Ultimate Edition.
-
-.Code Completion in Visual Studio Code
-[.subtle]
-image::images/codecompletion.gif[Code-completion]
 
 
 
@@ -184,13 +176,13 @@ image::images/codecompletion.gif[Code-completion]
 
 
 
-
-== [since:com.vaadin:vaadin@v1.2]#Cancelling Endpoint Requests#
+[[cancelling-requests]]
+== [since:com.vaadin:vaadin@v1.2]#Cancelling endpoint requests#
 
 Sometimes it can be useful to programmatically cancel some requests, for example when they are taking too long or are waiting in a queue despite no longer being needed.
 Hilla allows developers to cancel these requests using standard https://developer.mozilla.org/en-US/docs/Web/API/AbortController[AbortController]s.
 
-All endpoint requests support an optional parameter that can be used to pass an `AbortSignal` which will allow them to be cancelled.
+All endpoint requests support an optional parameter that can be used to pass an `AbortSignal` which allows them to be cancelled.
 
 It's worth remembering that a single `AbortController` can be used to cancel multiple requests by passing its `signal` to all of them.
 
@@ -250,15 +242,15 @@ Any public method in any Hilla endpoint can be accessed with the following URL:
 
 where:
 
-* `${base_url}` &ndash; The base URL of the application, depending on the framework
+* `${base_url}` &ndash; The base URL of the application, depending on the framework
 used.
 For instance, for the Spring framework, the default URL if the application is
 started locally is `http://localhost:8080`.
 If the application is started with a context, it should be added to the end; for instance, `\http://localhost:8080/my-app`.
-* `${prefix}` &ndash; The URL common part that every exposed endpoint has.
+* `${prefix}` &ndash; The URL common part that every exposed endpoint has.
 By default, `connect` is used, but this can be configured in the application properties.
-* `${endpoint_name}` &ndash; By default, this is the corresponding Java class name which exposes methods, although this can be changed in the `@Endpoint` annotation value.
-* `${method_name}` &ndash; The public method name from the Java class.
+* `${endpoint_name}` &ndash; By default, this is the corresponding Java class name which exposes methods, although this can be changed in the `@Endpoint` annotation value.
+* `${method_name}` &ndash; The public method name from the Java class.
 
 
 For an application started locally with the [classname]`CounterEndpoint` endpoint defined as shown, the endpoint URL will be:
@@ -289,7 +281,7 @@ To change it to some other value, provide an [filename]`application.properties` 
 
 * `${endpoint_name}` &ndash; By default, the simple name of the Java class is taken.
 It's possible to specify a value in the `@Endpoint` annotation to override default one (`@Endpoint("customName")`).
-In this case, the `customName` value will be used as a `${endpoint_name}` to accept incoming requests; it's also case-insensitive.
+In this case, the `customName` value is used as a `${endpoint_name}` to accept incoming requests; it's also case-insensitive.
 
 
 
@@ -297,7 +289,7 @@ In this case, the `customName` value will be used as a `${endpoint_name}` to acc
 
 
 
-== Endpoint Method Validation
+== Endpoint method validation
 
 The parameters of an endpoint method are automatically validated and, if validation fails, a corresponding response is sent back to the browser.
 
@@ -368,3 +360,104 @@ No other types are validated, even if they have constraint annotations on them.
 
 If any validation errors occur, a non-`200` response is sent back, which is interpreted in TypeScript as a reason to throw an [classname]`EndpointValidationError`.
 A similar effect is achieved if an [classname]`EndpointValidationException` is thrown by any of the Java endpoint methods.
+
+
+
+
+
+
+
+[[error-handling]]
+== Error handling
+
+A robust client implementation should be able to deal with invalid endpoint calls, errors on the server side, and network outages.
+
+Hilla determines the success of an endpoint call by inspecting the HTTP status code.
+The server returns the https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200[200 OK] code when it's able to process the request successfully, deserialize the method body, find and execute the particular method in the endpoint, and serialize its return value into a response.
+
+If the status code of the response isn't `200 OK`, Hilla throws an error on the client side.
+The available parameters in the error and the specific class of the thrown error depend on the failure mode.
+The most common ones are described below.
+
+=== Missing endpoint
+
+If the request addresses an endpoint or a method name not present on the backend, the server responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404[404 Not Found] and Hilla raises an error of type `EndpointError`.
+
+=== Parameter validation error
+
+If the method called in the request exists on the backend, but the parameter count and types don't match the endpoint method (see <<{articles}/lit/reference/type-conversion#,Type conversion between JavaScript and Java>> for more details about the type conversion rules), the server responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400[400 Bad Request] and Hilla raises an error of type [classname]`EndpointValidationException`.
+The error instance contains a field `validationErrorData` holding validation error information for each invalid parameter.
+
+For example, given the following endpoint expecting a `java.time.LocalDate` parameter:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/errorhandling/DateEndpoint.java[]
+----
+
+A call with an illegal data parameter raises an [classname]`EndpointValidationException` with information about which parameters failed validation:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/errorhandling/catch-invalid-args.ts[]
+----
+
+Note that when using <<forms/binder-validation#,server-side form validation>>, validation exceptions from the server are handled automatically by the form binder.
+
+=== Server-side errors
+
+If the endpoint exists and its parameters could be passed, but its execution raises a Java runtime exception, the server responds with
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500[500 Internal Server Error] and Hilla raises an error of type [classname]`EndpointError`.
+As a special case, if the server-side exception is an instance of [classname]`dev.hilla.exception.EndpointException` or a subclass, the server instead responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400[400 Bad Request] and the exception type and message passed to the [classname]`EndpointException` in Java are available in the [classname]`EndpointError` instance via the `type` and `message` attributes.
+For example, given the following endpoint implementation:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/pwa/offline/DataEndpoint.java[]
+----
+
+The following client-side call to the endpoint method logs the error message and exception type:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/errorhandling/catch-error.ts[]
+----
+
+=== Network errors
+
+When the server isn't reachable due to outage or network disruption, an endpoint call results in a low-level network error, different from [classname]`EndpointError`.
+Applications that support offline mode can wrap endpoint calls with exception-handling code returning a fallback value, by distinguishing between the error classes as follows:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/pwa/offline/ts-view-with-endpoint.ts[]
+----
+
+Also, see documentation about <<{articles}/lit/guides/client-caching#,caching endpoint data in local storage>> using a generic wrapper.
+
+=== Unexpected response contents
+
+If the server replies with a response other than `200 OK`, and the string contained in the response isn't valid JSON, an [classname]`EndpointResponseError` is raised.
+The exception contains the response text as message and the https://developer.mozilla.org/en-US/docs/Web/API/Response[Response] object in the `response` field.
+
+[role="since:com.vaadin:vaadin@v1.2"]
+=== Cancelled requests
+
+When a request is cancelled programmatically, the endpoint call promise resolves with an `AbortError`.
+This happens only when you explicitly cancel a request, as explained in <<cancelling-requests>>.
+
+
+
+
+
+
+
+
+== Code completion in IDEs
+
+As you can see in the earlier [filename]`CounterEndpoint.ts` example, the Javadoc for the `@Endpoint` class is copied to the generated TypeScript file, and the type definitions are maintained.
+This helps code completion to work, at least in Visual Studio Code and IntelliJ IDEA Ultimate Edition.
+
+.Code completion in Visual Studio Code
+[.subtle]
+image::images/codecompletion.gif[Code-completion]
