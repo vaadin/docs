@@ -1,39 +1,218 @@
 ---
-title: Update Version
-description: How to update an application using Azure Kit.
-order: 10
+title: New Version Roll Out
+description: How to roll out a new application version using Azure Kit.
+order: 30
 ---
 
-= Update Application to a New Version
+= Roll Out a New Version of an Application
+:sectnums:
 
-1. Build a new application version:
+Azure Kit helps to roll out a new version of an application
+by sending a notification to users on the previous version
+so that they can choose when to switch. This allows them
+to save any changes they are working on, rather than lose
+them.
+
+== Build a new application version
+
+Build a new container image using Docker and tag it with the
+new version number. For example:
+
+[source,terminal]
+docker build -t my-app:2.0.0 .
+
+[NOTE]
+Depending on the Kubernetes cluster you are using, you may
+need to publish the image to a local registry or push the
+image to the cluster. Otherwise, the image cannot not be
+found. Please refer to your cluster documentation.
+
+== Deploy the new version
+
+Create a new deployment manifest:
+
+.app-v2.yaml
+[source,yaml]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-v2
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: my-app
+      version: 2.0.0
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: 2.0.0
+    spec:
+      containers:
+        - name: my-app
+          image: my-app:2.0.0
+          env:
+            - name: APP_VERSION
+              value: 2.0.0
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: multicast
+              containerPort: 5701
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-v2
+spec:
+  selector:
+    app: my-app
+    version: 2.0.0
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+----
+
+And deploy it to the cluster:
+
+[source,terminal]
+kubectl apply -f app-v2.yaml
+
+You should now see 4 new pods running in the cluster, for
+example:
+[source,terminal]
+kubectl get pods
+
 [source,terminal]
 ----
-docker build -t azure-kit-demo:2.0.0 .
+NAME                            READY   STATUS    RESTARTS      AGE
+my-app-v1-f87bfcbb4-5qjml       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-czkzr       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-gjqw6       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             10m
+my-app-v2-5dcf4cc98c-cmb5m      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-ctrxq      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-ktpcq      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-rfth2      1/1     Running   0             22s
 ----
-Optionally, if you run a local docker registry, add the *localhost:5001* registry address prefix as well and push it to registry. Refer to the image in the configuration files with *the localhost:5001/azure-kit-demo:1.0.0* name:
+
+== Deploy canary ingress rules
+
+Before switching to the new version permanently, you can
+test access by deploying "canary" ingress rules. This
+routes new sessions to the new version, while keeping
+existing sessions on the previous version.
+
+Create the ingress rule manifest:
+
+.ingress-v2-canary.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-canary
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "100"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v2
+                port:
+                  number: 80
+----
+
+And deploy it to your cluster:
+
+[source,terminal]
+kubectl apply -f ingress-v2-canary.yaml
+
+== Notify Existing Users (Optional)
+
+Create the ingress rule manifest:
+
+.ingress-v1-notify.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+    nginx.ingress.kubernetes.io/configuration-snippet: add_header Set-Cookie "app-update=2.0.0;path=/;HttpOnly";
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v1
+                port:
+                  number: 80
+----
+
+And deploy it to your cluster:
+
+[source,terminal]
+kubectl apply -f ingress-v1-notify.yaml
+
+== Remove Previous Version
+
+Once you are confident in the new version deployment, you
+can remove the previous version and make the ingress rules
+point to the new version permanently.
+
+Create the ingress rule manifest:
+
+.ingress-v2.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v2
+                port:
+                  number: 80
+----
+
+And deploy it to your cluster:
+
+[source,terminal]
+kubectl apply -f ingress-v2.yaml
+
+Now delete the previous version and the canary ingress rules.
+
 [source,terminal]
 ----
-# docker build localhost:5001/azure-kit-demo:1.0.0 .
-# docker push localhost:5001/azure-kit-demo:1.0.0
-----
-2. Deploy the new version: and a canary ingress controller for it:
-[source,terminal]
-----
-# kubectl apply -f deployment/app-v2.yaml
-----
-3. Deploy the canary ingress controller for it:
-[source,terminal]
-----
-# kubectl apply -f deployment/ingress-v2-canary.yaml
-----
-4. Make the new version as a default:
-[source,terminal]
-----
-# kubectl apply -f deployment/ingress-v2.yaml
-----
-5. Delete the old version:
-[source,terminal]
-----
-# kubectl delete -f deployment/app-v1.yaml
+kubectl delete -f app-v1.yaml
+kubectl delete -f ingress-v2-canary.yaml
 ----

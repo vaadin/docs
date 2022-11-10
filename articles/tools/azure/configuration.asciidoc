@@ -6,35 +6,75 @@ order: 20
 
 = Configuring Azure Kit
 
-// Need a few configuration possibilities or scenarios,
-// maybe in separate documents that link from this page.
+== Include and exclude packages to be inspected during serialization
 
-// The text below comes from Tamas' README file on the demo.
-// With some minor changes, it should be usable for this configuration document.
+When the session is serialized, Azure Kit will inspect
+classes for transient fields that can be injected during
+deserialization (see <<{articles}/tools/azure/session-replication,session replication>>).
 
-## Scale a Deployment
+Azure Kit provides two properties to limit the packages
+that will be inspected. The `include-package` property
+defines all the packages that should be inspected. If this
+is undefined, all packages will be assessed. For this
+reason, it is recommended that you specify the top-level
+package for your application in the `include-packages`
+property.
 
-At http://localhost:8080/counter you find a counter which value is held in the UI.
-Pushing the "Increment" button increments the counter and keeps a log of the operation, tracking the hostname and address of the node currently serving the request.
+The `exclude-package` property lists packages that should
+not be assessed.
 
-You can simulate the unavailability of the pod handling the requests like this (assume it's the `azure-kit-demo-f87bfcbb4-5qjml` pod):
+--
+.application.properties
+[source,properties]
+vaadin.serialization.include-packages=com.example.application
+vaadin.serialization.exclude-packages=com.example.application.service
 
-[source,terminal]
+.application.yaml
+[source,properties]
 ----
-# kubectl delete pod azure-kit-demo-f87bfcbb4-5qjml
+vaadin:
+  serialization:
+    include-packages: com.example.application
+    exclude-packages: com.example.application.service
 ----
+--
 
-And wait until the pod is terminated and there's a new one running:
+== Use Hazelcast for session replication
 
-[source,terminal]
+This property defines the name of the Hazelcast service
+deployment within the cluster.
+
+--
+.application.properties
+[source,properties]
+vaadin.azure.hazelcast.kubernetes.service-name=hazelcast-service
+
+.application.yaml
+[source,yaml]
 ----
-# kubectl get pods
-NAME                                 READY   STATUS    RESTARTS      AGE
-azure-kit-demo-f87bfcbb4-jj5c4       1/1     Running   0             12s
-azure-kit-demo-f87bfcbb4-czkzr       1/1     Running   0             51s
-azure-kit-demo-f87bfcbb4-gjqw6       1/1     Running   0             51s
-azure-kit-demo-f87bfcbb4-rxvjb       1/1     Running   0             51s
-azure-kit-redis-788d56c66-8b259      1/1     Running   0             51s
+vaadin:
+  azure:
+    hazelcast:
+      kubernetes:
+        service-name: hazelcast-service
 ----
+--
 
-If you try to increment the counter again, your request is redirected to another pod but the session should be restored and the counter keeps incrementing.
+== Use Redis for session replication
+
+This property defines the name of the Redis service
+deployment within the cluster.
+
+--
+.application.properties
+[source,properties]
+spring.redis.host: redis-service
+
+.application.yaml
+[source,yaml]
+----
+spring:
+  redis:
+    host: redis-service
+----
+--
