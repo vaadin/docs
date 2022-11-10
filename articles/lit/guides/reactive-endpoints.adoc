@@ -1,16 +1,15 @@
 ---
 title: Reactive endpoints
-description: Reactive endpoints
+description: Reactive endpoints allow you to stream data to the client without the traditional HTTP request-response pattern.
 order: 90
 ---
 
 = [since:com.vaadin:vaadin@v1.2]#Reactive endpoints#
-:experimental:
 
-.Experimental Feature
+.Experimental feature
 [IMPORTANT]
-Reactive endpoints are an experimental feature, which means that its behavior, API, and look and feel might still change.
-You need to enable the <<feature-flag>> to use them.
+Reactive endpoints are an experimental feature, which means that the behavior, API, and look and feel might still change.
+You need to enable the <<feature-flag>> to use reactive endpoints.
 
 Although traditional server calls work fine in most cases, sometimes you need different tools for your job.
 https://projectreactor.io/[Reactor] is one of these.
@@ -18,17 +17,17 @@ It can help you in streaming data to clients and fits well into a non-blocking a
 Whenever the simple request-response pattern doesn't suit your needs, you might want to consider Reactor.
 Multi-user applications, infinite data streaming, and retries, are all good examples of what you can do with it.
 
-If you want to pick up on Reactor, they have a curated https://projectreactor.io/learn[learn] page.
+If you want to pick up on Reactor, they have a curated https://projectreactor.io/learn[learn page].
 
 Although getting comfortable with creation of streaming, non-blocking applications requires some effort, Hilla allows you to take advantage of Reactor in minutes.
 You can read the excellent https://hilla.dev/blog/interactive-applications-with-server-push/[blog article on reactive endpoints] to get the basics.
 
-== A Working Example
+== A working example
 
-Before describing the API details, let us try to write a basic application that can stream server time to the client.
-The purpose of this simple example will be to send the server time to all subscribed clients, with an interval of one second between each message.
+Before looking at the API details, you can get to know the basics of reactive endpoints by writing a basic application that can stream the current time of the server to the client.
+The purpose of this example is to send the server time to all subscribed clients, with an interval of one second between each message.
 
-Create a Hilla application as usual:
+Start by creating a Hilla application as usual:
 
 [source,terminal]
 ----
@@ -46,16 +45,16 @@ cd flux-clock
 ./mvnw
 ----
 
-Then, when the application shows in the browser, click on the [guilabel]`Dev Tools` icon in the bottom-right corner and then on [guilabel]`Experimental features`.
-Double-check that [guilabel]`Push support in Hilla` is enabled, or enable it if necessary.
+Then, when the application opens in the browser, click on the [guilabel]*Dev Tools* icon in the bottom-right corner and then on [guilabel]*Experimental features*.
+Double-check that [guilabel]*Push support in Hilla* is enabled, or enable it if necessary.
 
-=== Add Some Server Code...
+=== Create a server-side endpoint
 
 Open your application in your favorite IDE or editor.
 
-First of all, create a new endpoint and name it `ReactiveEndpoint`.
+First, create a new endpoint and name it `ReactiveEndpoint`.
 You can put it inside [filename]`HelloWorldEndpoint.java` or in a package of your choice.
-This new endpoint will contain these two methods:
+This new endpoint contains these two methods:
 
 [source,java]
 ----
@@ -66,16 +65,16 @@ You can click on the expand icon above the code snippet to get the whole file.
 
 The first method, [methodname]`getClock()`, creates a https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html[Flux] that streams the server time each second.
 It uses https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#onBackpressureDrop--[onBackpressureDrop()] to avoid saturation in case some messages cannot be sent to the client in real time.
-In this use case, it's perfectly fine to lose some messages.
+In this use case, it's okay to lose some messages.
 
-The second method, [methodname]`getClockCancellable()`, will return the same [classname]`Flux`, but wrapped in an [classname]`EndpointSubscription`, a Hilla-specific [classname]`Flux` wrapper which allows you to execute something on the server side if the subscription is cancelled by the client.
+The second method, [methodname]`getClockCancellable()`, returns the same [classname]`Flux`, but wrapped in an [classname]`EndpointSubscription`, a Hilla-specific [classname]`Flux` wrapper which allows you to execute something on the server side if the subscription is cancelled by the client.
 In this example, a log message is produced.
 
-=== ... and Some Client Code
+=== Create a view to shows the messages
 
-Let us use these methods in our client application.
+Now you get to use these methods in our client views.
 Create the [filename]`frontend/views/reactive/reactive-view.ts` file to add a new view.
-This will look like the default "Hello world" example, customized with the code that follows.
+This looks like the default "Hello world" example, customized with the code that follows.
 Again, you can expand it if you prefer to get the whole file.
 You might have to fix some imports.
 
@@ -103,37 +102,53 @@ and declaring it with:
   },
 ----
 
-just below the `hello` path.
+right after the `hello` path.
 
-You new view should now be available in the application page.
+You new view should now be available in the application.
 When the `Toggle server clock` button is clicked, the time will appear in the text field and will update each second.
 You can stop it by clicking again.
 
-== A Quick Look at the API
+
+
+
+== API overview
 
 The generated TypeScript endpoint methods return a [classname]`Subscription<T>` object, which offers these methods:
 
-- [methodname]`cancel()` to cancel the subscription;
-- [methodname]`onNext()` to get the next message in the Flux;
-- [methodname]`onError()` to get errors that can happen in the Flux;
-- [methodname]`onComplete()` to be informed when the Flux has no more messages to send;
-- [methodname]`context()` to bind to the context, which allows the application to automatically close it when the view is detached.
+[methodname]`cancel()`::
+Cancel the subscription.
+
+[methodname]`onNext()`::
+Get the next message in the Flux.
+
+[methodname]`onError()`::
+Get errors that can happen in the Flux.
+
+[methodname]`onComplete()`::
+Be informed when the Flux has no more messages to send.
+
+[methodname]`context()`::
+Bind to the context, which allows the application to automatically close it when the view is detached.
+
+
+
+
 
 [[feature-flag]]
-== Feature Flag
+== Feature flag
 
 To use reactive endpoints, you need to enable a feature flag.
 You can do it in two ways:
 
 === Using Vaadin Developer Tools
 
-1. Click on the Vaadin Developer Tools icon button in your running application
-2. Open the [guilabel]`Experimental Features` tab
-3. Enable the [guilabel]`Push support in Hilla` feature
-4. Restart the application.
+. Click on the Vaadin Developer Tools icon button in your running application
+. Open the [guilabel]*Experimental Features* tab
+. Enable the [guilabel]*Push support in Hilla* feature
+. Restart the application.
 
-=== Using the Feature Flags Properties File
+=== Using the feature flags properties file
 
-1. Create a [filename]`src/main/resources/vaadin-featureflags.properties` file in your application folder
-2. Add the following content: `com.vaadin.experimental.hillaPush=true`
-3. Restart the application.
+. Create a [filename]`src/main/resources/vaadin-featureflags.properties` file in your application folder
+. Add the following line: `com.vaadin.experimental.hillaPush=true`
+. Restart the application.
