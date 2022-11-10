@@ -60,7 +60,7 @@ export function createFakeFilesUploadErrorMessagesA() {
 // Used by `upload-error-messages.ts`
 export function createFakeFilesUploadErrorMessagesB() {
   return createFakeUploadFiles([
-    { name: 'Financials.xlsx', error: "File couldn't be uploaded, please try again later" },
+    { name: 'Financials.xlsx', error: "File couldn't be uploaded, try again later" },
   ]);
 }
 

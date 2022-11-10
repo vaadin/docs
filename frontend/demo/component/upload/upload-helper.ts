@@ -36,7 +36,7 @@ export class Example extends LitElement {
     this.upload.i18n.addFiles.one = 'Upload Spreadsheet...';
     this.upload.i18n.dropFiles.one = 'Drop spreadsheet here';
     this.upload.i18n.error.incorrectFileType =
-      'Please provide the file in one of the supported formats (.xls, .xlsx, .csv).';
+      'Provide the file in one of the supported formats (.xls, .xlsx, .csv).';
     this.upload.i18n = { ...this.upload.i18n };
   }
 

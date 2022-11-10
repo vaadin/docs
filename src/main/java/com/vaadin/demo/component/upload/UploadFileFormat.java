@@ -32,7 +32,7 @@ public class UploadFileFormat extends Div {
         i18n.getAddFiles().setOne("Upload Report...");
         i18n.getDropFiles().setOne("Drop report here");
         i18n.getError().setIncorrectFileType(
-                "The provided file does not have the correct format. Please provide a PDF document.");
+                "The provided file does not have the correct format (PDF document).");
         upload.setI18n(i18n);
 
         H4 title = new H4("Upload report");

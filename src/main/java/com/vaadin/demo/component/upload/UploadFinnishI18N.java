@@ -6,9 +6,8 @@ import java.util.Arrays;
 
 /**
  * At the moment the Upload component requires a fully configured I18N instance,
- * even for use-cases where you only want to change individual texts. Please
- * make sure that you have set all translations when writing a custom I18N
- * config.
+ * even for use-cases where you only want to change individual texts. Make sure
+ * that you have set all translations when writing a custom I18N config.
  */
 public class UploadFinnishI18N extends UploadI18N {
     public UploadFinnishI18N() {
@@ -16,7 +15,6 @@ public class UploadFinnishI18N extends UploadI18N {
                 .setMany("Raahaa tiedostot tähän"));
         setAddFiles(new AddFiles().setOne("Valitse tiedosto...")
                 .setMany("Valitse tiedostot..."));
-        setCancel("Peruuta");
         setError(new Error().setTooManyFiles("Liian monta tiedostoa.")
                 .setFileIsTooBig("Tiedosto on liian suuri.")
                 .setIncorrectFileType("Väärä tiedostomuoto."));

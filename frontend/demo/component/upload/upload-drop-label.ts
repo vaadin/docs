@@ -22,7 +22,7 @@ export class Example extends LitElement {
       <vaadin-upload>
         <vaadin-icon slot="drop-label-icon" icon="vaadin:cloud-upload-o"></vaadin-icon>
         <span slot="drop-label">
-          Files will be uploaded to our cloud. Please note our
+          Files will be uploaded to our cloud. See our
           <a href="https://vaadin.com/privacy-policy" target="_blank">privacy policy</a>
         </span>
       </vaadin-upload>
