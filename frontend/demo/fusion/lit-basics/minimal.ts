@@ -1,11 +1,12 @@
 import { html, LitElement, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-@customElement('minimal-view')
-class MinimalView extends LitElement {
+@customElement('my-component') // <1>
+class MyComponent extends LitElement {
   render(): TemplateResult {
-    return html`<h1>My View</h1>`;
+    // <2>
+    return html`<h1>My component</h1>`;
   }
 }
 
-export default MinimalView;
+export default MyComponent;

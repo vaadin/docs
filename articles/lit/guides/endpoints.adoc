@@ -1,0 +1,370 @@
+---
+title: Endpoints
+description: A server-side Java endpoint is a back-end method that's exposed for calling from client-side TypeScript code.
+order: 30
+---
+
+= Accessing the Java back end using endpoints
+
+An _endpoint_ in Hilla is a class that defines one or more public methods, and is annotated with the `@Endpoint` annotation.
+
+Hilla bridges Java back end endpoints and a TypeScript front end.
+It generates TypeScript clients to call the Java back end in a type-checkable way.
+
+.Hilla endpoints depend on Spring Boot auto-configuration
+[IMPORTANT]
+They don't work if auto-configuration is disabled, for example when you use `@EnableWebMvc`.
+As a workaround, remove the `@EnableWebMvc` annotation, as described in link:https://docs.spring.io/spring-boot/docs/2.3.4.RELEASE/reference/html/spring-boot-features.html#boot-features-spring-mvc-auto-configuration[Spring Boot documentation].
+If you have an idea for how to make it more useful for you, please share it on link:https://github.com/vaadin/flow/issues/new/[GitHub].
+
+
+[[creating]]
+== Creating an endpoint
+
+An endpoint is a Java class annotated with `@Endpoint`:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CounterEndpoint.java[tags=snippet]
+----
+
+When the application starts, Hilla scans the classpath for `@Endpoint`-annotated classes.
+For each request to access a public method in a Hilla endpoint, a permission check is carried out.
+`@AnonymousAllowed` means that Hilla permits anyone to call the method from the client side.
+
+Refer to the <<../security#, Security>> article for details of configuring endpoint access.
+
+== TypeScript Modules
+
+In JavaScript and TypeScript, modules are files that follow the module syntax.
+This syntax has the following properties:
+
+- Top-level declarations (variables, functions, classes, etc.) are scoped inside the module, meaning that, by default, they aren't available outside it.
+
+- A module supports top-level `export` statements, which make declarations available to other modules.
+
+- A module supports top-level `import` statements, which load and execute other modules, and can bring exported declarations.
+
+The following example demonstrates the [filename]`city.ts` module:
+
+.`city.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-info/city.d.ts[]
+----
+
+.`index.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-info/index.ts[]
+----
+
+In Hilla applications, the [filename]`index.ts` (or, optionally, [filename]`index.js`) file is also a module.
+
+== Modules Generated From Hilla Endpoints
+
+Hilla generates a TypeScript module for every Hilla endpoint on the backend.
+Each such module exports all the methods in the endpoint.
+
+You can import an entire module from the https://basarat.gitbook.io/typescript/main-1/barrel[barrel] file, import all methods as a module from the endpoint file, or select individual endpoint methods.
+For example, the [filename]`CounterEndpoint.ts` could be used, as in the following snippets:
+
+.`index.ts` (import the whole endpoint module object from the barrel file)
+[[index.ts]]
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/barrel.ts[]
+----
+
+[NOTE]
+The barrel file exports all the endpoints at once, so you can import multiple endpoints using a single import.
+
+.`index.ts` (import all imports as an endpoint object)
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/asterisk.ts[]
+----
+
+.`index.ts` (import a single endpoint method)
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/method.ts[]
+----
+
+.The “Frontend” directory alias
+[NOTE]
+====
+The `'Frontend/'` path prefix is an alias for the `{project.basedir}/frontend` directory in your application project.
+
+Hilla has this path alias in <<../basics#Configuring TypeScript Compiler,the default TypeScript compiler configuration>> ([filename]`tsconfig.json`); the webpack configuration file ([filename]`webpack.generated.js`) respects the `tsconfig` aliases by default.
+
+Using this path alias is recommended, as it allows for absolute import paths, rather than traversing the directory hierarchy in relative imports.
+====
+
+Hilla generates the TypeScript modules automatically when you compile the application, as well as when the application is running in development mode.
+
+By default, the generated files are located under `{project.basedir}/frontend/generated`.
+You can change the folder by providing the path for the generator in the `generatedFrontendDirectory` property for the Hilla Maven plugin.
+
+Hilla takes care of type conversion between Java and TypeScript types.
+For more information about supported types, see <<{articles}/lit/reference/type-conversion#, Type Conversion>>.
+
+== Example TypeScript Module Contents
+
+For example, the generated TypeScript module for the Java endpoint defined in
+<<creating,CounterEndpoint.java>> would look as follows:
+
+.`CounterEndpoint.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/CounterEndpoint.ts[]
+----
+
+== Entities
+
+An endpoint method can return or receive a parameter as an entity (non-primitive type).
+In this case, the generator also creates a TypeScript interface for the entity.
+
+An entity can be defined in the following ways:
+
+- In a separate class that belongs to the project.
+
+- In a class that belongs to the project dependency.
+
+- In an inner class (of an endpoint or any other class).
+
+.`City.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/City.java[]
+----
+
+.`CountryEndpoint.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CountryEndpoint.java[]
+----
+
+The TypeScript output is the following:
+
+.`City.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/City.ts[]
+----
+
+.`Query.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/CountryEndpoint/Query.ts[]
+----
+
+.`CountryEndpoint.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/CountryEndpoint.ts[]
+----
+
+=== Nullable and Non-Nullable Types
+
+Please refer to <<{articles}/lit/reference/endpoints-generator#type-nullability, Type Nullability>> for more information about how the nullability algorithm works and how to make types non-nullable.
+
+== Code Completion in IDEs
+
+As you can see in the previous [filename]`CounterEndpoint.ts` example, the Javadoc for the `@Endpoint` class is copied to the generated TypeScript file, and the type definitions are maintained.
+This helps code completion to work, at least in Visual Studio Code and IntelliJ IDEA Ultimate Edition.
+
+.Code Completion in Visual Studio Code
+[.subtle]
+image::images/codecompletion.gif[Code-completion]
+
+
+
+
+
+
+
+
+== [since:com.vaadin:vaadin@v1.2]#Cancelling Endpoint Requests#
+
+Sometimes it can be useful to programmatically cancel some requests, for example when they are taking too long or are waiting in a queue despite no longer being needed.
+Hilla allows developers to cancel these requests using standard https://developer.mozilla.org/en-US/docs/Web/API/AbortController[AbortController]s.
+
+All endpoint requests support an optional parameter that can be used to pass an `AbortSignal` which will allow them to be cancelled.
+
+It's worth remembering that a single `AbortController` can be used to cancel multiple requests by passing its `signal` to all of them.
+
+The following example creates two buttons: one that makes requests to a slow endpoint method, and another that triggers the cancellation of previously created requests.
+
+If a request is subject to cancellation, errors must be handled, as the endpoint method will throw `AbortError`.
+
+[source,typescript]
+----
+private abortController = new AbortController();
+
+render() {
+  return html`
+    <div>
+      <vaadin-button @click=${this.makeRequest}>Make a request</vaadin-button>
+      <vaadin-button @click=${this.cancelRequest}>Cancel pending requests</vaadin-button>
+    </div>
+  `;
+}
+
+async makeRequest() {
+  console.log("Making request");
+
+  try {
+    const serverResponse = await HelloWorldEndpoint.slow({ signal: this.abortController.signal });
+    Notification.show(serverResponse);
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      Notification.show("Request aborted");
+    } else {
+      throw error;
+    }
+  }
+}
+
+cancelRequest() {
+  console.log("Cancelling request(s)");
+  this.abortController.abort();
+  this.abortController = new AbortController();
+}
+----
+
+
+
+
+
+
+
+
+== Endpoint URLs
+
+Hilla automatically generates endpoint URLs and wraps them in the generated TypeScript API, so the developer doesn't need to worry about them.
+
+Any public method in any Hilla endpoint can be accessed with the following URL:
+
+`\http://${base_url}/${prefix}/${endpoint_name}/${method_name}`
+
+where:
+
+* `${base_url}` &ndash; The base URL of the application, depending on the framework
+used.
+For instance, for the Spring framework, the default URL if the application is
+started locally is `http://localhost:8080`.
+If the application is started with a context, it should be added to the end; for instance, `\http://localhost:8080/my-app`.
+* `${prefix}` &ndash; The URL common part that every exposed endpoint has.
+By default, `connect` is used, but this can be configured in the application properties.
+* `${endpoint_name}` &ndash; By default, this is the corresponding Java class name which exposes methods, although this can be changed in the `@Endpoint` annotation value.
+* `${method_name}` &ndash; The public method name from the Java class.
+
+
+For an application started locally with the [classname]`CounterEndpoint` endpoint defined as shown, the endpoint URL will be:
+`\http://localhost:8080/connect/counterendpoint/addone`
+
+[source,java]
+----
+@Endpoint
+public class CounterEndpoint {
+
+    public int addOne(int number) {
+        return number + 1;
+    }
+}
+----
+
+[NOTE]
+====
+The endpoint name and the method name aren't case-sensitive in Hilla, so the URL shown is the same as `\http://localhost:8080/connect/CounterEndpoint/addOne` or `\http://localhost:8080/connect/COUNTERENDPOINT/ADDONE`, or any other case combination for the endpoint and method name.
+====
+
+=== Configuring parts of<a endpoint URLs
+
+Hilla allows you to configure the following parts of the URL:
+
+* `${prefix}` &ndash; The default value is `connect`.
+To change it to some other value, provide an [filename]`application.properties` file in the project resources ([filename]`src/main/resources/application.properties`) and set the `vaadin.endpoint.prefix` property to the new value.
+
+* `${endpoint_name}` &ndash; By default, the simple name of the Java class is taken.
+It's possible to specify a value in the `@Endpoint` annotation to override default one (`@Endpoint("customName")`).
+In this case, the `customName` value will be used as a `${endpoint_name}` to accept incoming requests; it's also case-insensitive.
+
+
+
+
+
+
+
+== Endpoint Method Validation
+
+The parameters of an endpoint method are automatically validated and, if validation fails, a corresponding response is sent back to the browser.
+
+Whenever an endpoint method is invoked, its parameters are automatically validated using the https://beanvalidation.org/2.0/[JSR 380] Bean validation specification after they are deserialized from the endpoint request body.
+
+This is useful in eliminating the boilerplate needed for the initial request validation.
+The framework automatically checks the constraints placed on beans and sends the response back to the client side if the validation fails.
+The browser raises an [classname]`EndpointValidationError` when it receives the corresponding response from the server.
+
+=== Built-in validation constraints
+
+The built-in validation constraints are the set of annotations provided by the `javax.validation.validation-api` dependency.
+They are intended to be placed on Java beans on the server side.
+
+You can find a full list of the constraints at https://beanvalidation.org/2.0/spec/#builtinconstraints
+
+To use these annotations, add them to the class field or method parameter. For example:
+
+[source,java]
+----
+public class Account {
+
+  @Positive
+  private Long id;
+
+  @NotEmpty(message = "Each account must have a non-empty username")
+  private String username;
+
+  private void sendAccountData(@NotNull String destination) {
+    // ...
+  }
+}
+----
+
+=== Custom validation constraints
+
+It's possible to create custom constraints.
+To do this, you need to create a custom annotation and a custom validator.
+
+See the https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/#validator-customconstraints[official documentation] for more details.
+
+=== Manual validation
+
+Since all the dependencies needed for validating beans and methods are present, you can reuse them in any part of your project, not only in the endpoint methods. For example:
+
+[source,java]
+----
+// A validator for validating beans
+Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+// non-empty set if there are any constraint validation errors
+Set<ConstraintViolation<Object>> violations = validator.validate(bean);
+
+// A validator for validating methods and constructors (return values, parameters)
+ExecutableValidator executableValidator = validator.forExecutables();
+// non-empty set if there are any constraint validation errors
+Set<ConstraintViolation<Object>> violations = executableValidator.validateReturnValue(object, method, returnValue);
+----
+
+If required, you can throw an [classname]`EndpointValidationException` from an endpoint method.
+This exception will be caught by TypeScript and the corresponding [classname]`EndpointValidationError` will be raised.
+
+See the official documentation for more details on https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/#section-validating-bean-constraints[validating bean constraints] and https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/#section-validating-executable-constraints[validating method constraints].
+
+=== Hilla validation implementation details
+
+Hilla validates only the beans and method parameters that are used in the endpoint classes (i.e. classes with the `@Endpoint` annotation).
+No other types are validated, even if they have constraint annotations on them.
+
+If any validation errors occur, a non-`200` response is sent back, which is interpreted in TypeScript as a reason to throw an [classname]`EndpointValidationError`.
+A similar effect is achieved if an [classname]`EndpointValidationException` is thrown by any of the Java endpoint methods.
