@@ -10,7 +10,7 @@ For a Vaadin application to reach the goals of High Availability and Down Scalin
 
 If the server processing user requests becomes unavailable, it should be transparently replaced by another one, in a way that the user should be able to continue using the application without any disruption.
 
-The user may notice a temporarily offline notification or the loading indicator spawn, but the browser page is not reloaded and work can continue without losing any data.
+An offline notification or the loading indicator may appear for an instant, but the browser page is not reloaded and work can continue without losing any data.
 
 This means that attributes must be constantly stored in a shared/distributed storage, so that newly created HTTP sessions may filled with the most recent user data.
 
@@ -35,6 +35,9 @@ For performance reason and to avoid potential issues with reflection access chec
 
 Restrictions can be imposed by configuring `vaadin.serialization.include-packages` and `vaadin.serialization.exclude-packages` properties, to limit the inspection to classes whose packages matches the configured rules.
 
+[NOTE]
+You may want to exclude packages not involved in the session.
+
 .Setting transient inspection restrictions
 [source,text]
 ----
@@ -44,7 +47,7 @@ vaadin.serialization.exclude-packages=com.example.app.ui.utils
 
 == Vaadin and HTTP Session
 
-A Vaadin application is comprised of UI objects that act as root nodes of graphs of components that represent the web page the user interacts with in through the browser.
+A Vaadin application consists of UI objects that act as root nodes of graphs of components that represent the web page the user interacts with in through the browser.
 UIs are collected into a [classname]`VaadinSession` that is stored in the HTTP session, to preserve the server-side state across requests.
 For this reason, application code should be carefully written to be serializable for session replication to succeed.
 
@@ -63,7 +66,7 @@ When writing a component make sure that all its non-transient members implement 
 
 All Vaadin UI components and listeners are already marked as serializable, so if a class extends or implements one of them, it is not necessary to explicitly add the `Serializable` implementation statement.
 
-However, it is mandatory to do that on non UI components that may be referenced in the UI graph.
+However, it is mandatory to do so on non UI components that may be referenced in the UI graph.
 
 For example, if a view is holding a reference to a data transfer object or a configuration object, it must be marked as serializable, and all its members must be serializable.
 
@@ -158,17 +161,17 @@ Vaadin offers a serializable-ready version of the most used Java functional inte
 
 Take care also when writing utility classes that uses functional interfaces as input parameters or return types.
 
-Following class breaks serialization if methods are used 
+Following class breaks serialization if methods are used
 
 [source,java]
 ----
 public class DataProviderUtil {
-  
+
     // (1)
 	public static <S, T> T convertIfNotNull(S source, Function<S, T> converter, Supplier<T> nullValueSupplier) {
  		return source != null ? converter.apply(source) : nullValueSupplier.get();
  	}
- 
+
     // (2)
 	public static <T> ItemLabelGenerator<T> createItemLabelGenerator(Function<T, String> converter) {
  		return item -> convertIfNotNull(item, converter, () -> ""); // (3)
@@ -198,11 +201,11 @@ The above utility class must be refactored to use serializable functional interf
 [source,java]
 ----
 public class DataProviderUtil {
-  
+
 	public static <S, T> T convertIfNotNull(S source, SerializableFunction<S, T> converter, SerializableSupplier<T> nullValueSupplier) {
  		return source != null ? converter.apply(source) : nullValueSupplier.get();
  	}
- 
+
 	public static <T> ItemLabelGenerator<T> createItemLabelGenerator(SerializableFunction<T, String> converter) {
  		return item -> convertIfNotNull(item, /* (3) */ converter, () -> "");
  	}
@@ -222,9 +225,9 @@ For example, the following code fails during serialization because [classname]`O
 class OrderEditor {
 
     private ComboBox<OrderState> status;
-    
+
     OrderEditor(OrderService service) {
-        status.setItemLabelGenerator(item -> 
+        status.setItemLabelGenerator(item ->
             service.humanReadableState(item)
         );
     }
@@ -241,10 +244,10 @@ class OrderEditor {
 
     private transient OrderService service;
     private ComboBox<OrderState> status;
-    
+
     OrderEditor(OrderService service) {
         this.service = service;
-        status.setItemLabelGenerator(item -> 
+        status.setItemLabelGenerator(item ->
             getOrderService().humanReadableState(item)
         );
     }
@@ -262,18 +265,18 @@ Another way, to avoid adding the transient field to the main class, is to refere
 class OrderEditor {
 
     private ComboBox<OrderState> status;
-    
+
     OrderEditor(OrderService service) {
         this.service = service;
         OrderStateLabelGeneratorProxy proxy = new OrderStateLabelGeneratorProxy(service);
-        status.setItemLabelGenerator(item -> 
+        status.setItemLabelGenerator(item ->
             proxy.humanReadableState(item)
         );
     }
 
     private static class OrderStateLabelGeneratorProxy
         implements Serializable {
-        
+
         private final transient OrderService service;
 
         OrderStateLabelGeneratorProxy(OrderService service) {
@@ -319,8 +322,25 @@ Once the lambda expression has been identified, replacing it with an anonymous c
 
 To help making HTTP session fully serializable and deserializable, Kubernetes Kit offers a tool whose aim is to discover main issues during development.
 
-The debug tool is composed by a HTTP session replication tester, engaged by a Vaadin [classname]`RequestHandler`, that tries to serialize and deserialize the HTTP session for every user action on the browser that triggers a server request.
-It works only on `development mode` and only if session serialization is enabled setting the configuration property `vaadin.devmode.sessionSerialization.enabled` to `true`.
+The debug tool is composed by a HTTP session replication tester, engaged by a Vaadin [classname]`RequestHandler`, that tries to serialize and deserialize the HTTP session for every user action on the browser that triggers a server request. It works only on `development mode` and only if session serialization is enabled by setting the following configuration property:
+
+[.example]
+--
+.application.properties
+[source,properties]
+----
+vaadin.devmode.sessionSerialization.enabled=true
+----
+
+.application.yaml
+[souce,yaml]
+----
+vaadin:
+  devmode:
+    sessionSerialization:
+      enabled: true
+----
+--
 
 Outcomes from the test are printed on the server logs, and includes following details:
 
@@ -329,7 +349,7 @@ Outcomes from the test are printed on the server logs, and includes following de
  * Object class graph in case of deserialization errors
  * Potential causes of [classname]`SerializedLambda` [classname]`ClassCastException`
 
-The debug tool can be installed by configuring the provided [classname]`VaadinInitListener`, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using Vaadin Spring add-on.
+The debug tool is automatically installed on Spring Boot projects. Otherwise, it can be manually installed by configuring the provided [classname]`VaadinInitListener`, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using Vaadin Spring add-on.
 
 .Install with Service Loader entry in META-INF/services/VaadinServiceInitListener
 [source,text]
