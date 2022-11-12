@@ -515,15 +515,17 @@ Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with t
 import type Todo from 'Frontend/generated/com/example/application/Todo';
 import { ReactElement, useEffect, useState } from 'react';
 import { FormikErrors, useFormik } from 'formik';
-import { Button, Checkbox, Grid, GridColumn, TextField } from 'react-vaadin-components';
+import { Button, Checkbox, TextField } from '@hilla/react-components'; // <1>
 import { TodoEndpoint } from 'Frontend/generated/endpoints';
 import { EndpointValidationError } from '@hilla/frontend';
 
-export default function TodoView(): ReactElement<unknown> | null {
+export default function TodoView(): ReactElement<unknown> | null { // <2>
   return (
   );
 }
 ----
+<1> Import the UI components, helpers, and generated TypeScript models required for building the view.
+<2> Define the component.
 
 [discrete]
 === Define the view state
@@ -534,10 +536,41 @@ Inside the `TodoView` class, define the view state as follows:
 [source,typescript]
 ----
 const empty: Todo = { task: '', done: false };
-const [todos, setTodos] = useState(Array<Todo>());
+const [todos, setTodos] = useState(Array<Todo>()); <1>
 ----
+<1> The list of `Todo` items is stored using a React Hook.
 
 // TODO: add styles like in the Lit version
+
+[discrete]
+=== Create the form handler
+
+[source,typescript]
+----
+const formik = useFormik({
+  initialValues: empty,
+  onSubmit: async (value: Todo, { setSubmitting, setErrors }) => {
+    try {
+      const saved = await TodoEndpoint.save(value) ?? value;
+      setTodos([...todos, saved]);
+      formik.resetForm();
+    } catch (e: unknown) {
+      if (e instanceof EndpointValidationError) {
+        const errors: FormikErrors<Todo> = {}
+        for (const error of e.validationErrorData) {
+          if (typeof error.parameterName === 'string' && error.parameterName in empty) {
+            const key = error.parameterName as (string & keyof Todo);
+            errors[key] = error.message;
+          }
+        }
+        setErrors(errors);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  },
+});
+----
 
 [discrete]
 === Define the HTML template
@@ -565,7 +598,7 @@ Add the following code inside the `return` statement:
 </>
 ----
 
-Right underneath the previous `<div>`, add the following code:
+Right below the previous `<div>`, add the following code:
 
 .`TodoViex.tsx`
 [source,typescript]
@@ -683,7 +716,7 @@ Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with t
 import type Todo from 'Frontend/generated/com/example/application/Todo';
 import { ReactElement, useEffect, useState } from 'react';
 import { FormikErrors, useFormik } from 'formik';
-import { Button, Checkbox, Grid, GridColumn, TextField } from 'react-vaadin-components';
+import { Button, Checkbox, TextField } from '@hilla/react-components';
 import { TodoEndpoint } from 'Frontend/generated/endpoints';
 import { EndpointValidationError } from '@hilla/frontend';
 
@@ -750,6 +783,7 @@ export default function TodoView(): ReactElement<unknown> | null {
     </>
   );
 }
+----
 endif::[]
 
 
