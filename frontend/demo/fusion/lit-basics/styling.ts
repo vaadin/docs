@@ -1,11 +1,11 @@
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import styles from './my-view.css';
+import myComponentStyles from './my-component.css';
 
-@customElement('my-view')
-class MyView extends LitElement {
+@customElement('my-component')
+class MyComponent extends LitElement {
   static styles = [
-    styles,
+    myComponentStyles,
     css`
       h1 {
         color: red;
@@ -14,8 +14,8 @@ class MyView extends LitElement {
   ];
 
   render() {
-    return html`<h1>My View</h1>`;
+    return html`<h1>My Component</h1>`;
   }
 }
 
-export default MyView;
+export default MyComponent;

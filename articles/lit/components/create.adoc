@@ -1,0 +1,266 @@
+---
+title: Creating components
+description: Learn how to create reactive web components with Lit.
+order: 30
+---
+
+= Creating components
+:toclevels: 2
+
+To build views in Hilla, you use web components, a native technology that allows you to create custom HTML elements.
+Web components are almost like a framework built into the browser, and it's faster and smaller than many component authoring libraries or frameworks, while still sharing their advantages.
+
+The https://lit.dev/[Lit] library is a convenient way of authoring web components, and it's recommended over the low-level native browser APIs.
+
+Lit provides a base class named [classname]`LitElement`, and a set of tools to create reactive web components.
+Under the hood, it uses link:https://github.com/lit/lit/tree/main/packages/lit-html[lit-html], a tiny library to render and re-render HTML templates in an efficient and declarative way.
+
+== Minimal Lit component
+
+To create a minimal working component, you must do two things: extend the [classname]`LitElement` class and implement a [methodname]`render()` method.
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/lit-basics/minimal.ts[]
+----
+<1> A web component class must be added to the browser's custom element registry and assigned a unique element name.
+The `@customElement` decorator is a convenient way of doing this with [classname]`LitElement`.
+It receives an HTML element name that should contain at least one dash `-` (as required by the link:https://html.spec.whatwg.org/#valid-custom-element-name[HTML specification]).
+For example, `my-view`, `some-fancy-button` or `vaadin-checkbox`.
+<2> The [methodname]`render()` method defines the component's HTML template.
+It should return a [classname]`TemplateResult` instance produced by the https://lit.dev/docs/templates/overview/[`html` tagged template literal].
+The string tagged with the `html``` tag is displayed in the browser as the component's content.
+
+
+== Data binding
+
+A web component produces a view based on the data it receives from outside or preserves within.
+That data is bound to the component template declaratively, and each time the data is changed, the template is updated.
+This section describes approaches to receiving and storing the data, and to binding the data to the template.
+
+
+=== Fields, methods, and accessors
+
+Since a web component is a simple JavaScript class, you can define any number of fields, methods, and accessors you need and call them as you are used to doing.
+TypeScript, as a superset of JavaScript, also allows you to define private and protected methods.
+
+You don't need to follow any specific requirements when naming class members, but you may want to follow the convention that any non-public class members should have an underscore `_` at the beginning of their names.
+
+=== Properties
+
+Components can have properties that receive data from the outside (from HTML or an HTML templating system) or preserve the internal state.
+Changing these properties triggers an asynchronous re-rendering of the component to fill the template with the new data.
+
+Lit provides two decorators that can transform a regular class field into a component data property.
+
+==== The `@property` decorator
+
+Makes a field a data property that's allowed to receive data from the outside.
+This means that you can send the data to the component in the following ways:
+
+- Using the `html` tag from Lit:
++
+[source,typescript]
+----
+html`<my-component .myProperty=${this.myValue}></my-component>`;
+----
+
+- As an attribute or property of an instance of the component:
++
+[source,typescript]
+----
+document.querySelector('my-component').setAttribute('myProperty', this.myValue);
+document.querySelector('my-component').myProperty = this.myValue;
+----
+
+
+==== The `@state` decorator
+
+Makes a field a data property that contains an internal state of the component.
+These properties must not be used from outside.
+For example, you can use it if you need to trigger re-rendering on some events fired by children.
+
+Read more about data properties in the link:https://lit.dev/docs/components/properties/[Lit documentation].
+
+=== Template bindings
+
+The `html` function is designed to bind JavaScript values to HTML elements in an obvious and easy way.
+Lit provides four ways to do this.
+
+==== Binding to an attribute
+Attribute bindings accept only simple types as their value, including `String`, `Number` and `Boolean`.
+The value is converted to a string (`Boolean` values are corrected directly to their string representations) and also reflected in the HTML code.
+To bind to an attribute, you can use the standard HTML attribute syntax.
+
+[source,typescript]
+----
+html`<my-component attribute="${this.myValue}"></my-component>`;
+----
+
+==== Binding to a boolean attribute
+The only difference between binding to an regular attribute and a boolean attribute is that instead of the attribute value being set directly, the attribute is added (with an empty value) or removed depending on the value you set for the attribute (`true` or `false` accordingly).
+To bind a boolean attribute, add a question mark `?` before the attribute name.
+One common use case for this is to conditionally hide certain elements.
+
+[source,typescript]
+----
+html`<my-component ?hidden="${this.isHidden}"></my-component>`;
+----
+
+
+==== Binding to a property
+Property bindings accept any types as their value, including arrays and objects.
+The property value isn't reflected in the HTML code, unless the property is configured to "reflect to attribute" by the component developer.
+It's recommended to use this approach over binding to an attribute, because it's more performant (no conversion from a string value is needed).
+To bind to a property, insert a dot `.` before the property name.
+
+[source,typescript]
+----
+html`<my-component .property=${this.myValue}></my-component>`;
+----
+
+==== Binding an event listener
+Event listener bindings accept only functions as their value.
+When the element fires an event, the function bound for that event name is called with the event object as an argument.
+To bind an event listener, add an "at" sign, `@`, before the event name.
+For example, to listen to click events on a component:
+
+[source,typescript]
+----
+html`<my-component @click=${this.onClick}></my-component>`;
+----
+
+.Correct `this` reference in event listeners
+[NOTE]
+You don't need to bind `this` to the event listener method.
+It refers to the component class in [classname]`LitElement` listeners automatically.
+
+==== Example
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/lit-basics/data-binding.ts[]
+----
+
+Learn more about writing templates from the link:https://lit.dev/docs/templates/overview/[Lit documentation].
+
+== Lifecycle
+
+Each component has lifecycle methods that you can override to execute code at a specific time.
+[classname]`LitElement` adds its own methods to handle the asynchronous [methodname]`render()` calls to the standard web component lifecycle.
+
+
+`constructor()`::
++
+*Specificity*: JavaScript class
++
+The constructor is invoked when a class is instantiated.
+For a component, it happens when [methodname]`document.createElement('my-view')` is called.
++
+In most cases, you don't need a `constructor()`, because [classname]`LitElement` handles everything important.
+However, if you do create one, try to avoid performing any heavy work; the element might be discarded after invoking the constructor.
++
+.The element needs to be connected to run the [methodname]`render()` callback.
+[NOTE]
+When the element is created, no render happens.
+
+`connectedCallback()`::
++
+*Specificity*: Web Components
++
+This callback is invoked each time the element is connected to the DOM.
++
+In most cases, the [methodname]`connectedCallback()` is used to set up component-level event listeners, etc.
++
+.Use the <<first-updated,`firstUpdated()`>> callback to execute the code after the first render
+[NOTE]
+Since [methodname]`render()` is asynchronous, it's not over when the [methodname]`connectedCallback()` finishes.
++
+.Remember to call the [methodname]`super.connectedCallback()`.
+[NOTE]
+You must call [methodname]`super.connectedCallback()` in your callback method.
+Otherwise, you may lose the default [classname]`LitElement` lifecycle.
+
+`disconnectedCallback()`::
++
+*Specificity*: Web Components
++
+This callback is invoked each time the element is disconnected from the DOM.
++
+The default role of the [methodname]`disconnectedCallback()` is to remove or close everything that's set up during the [methodname]`connectedCallback()`.
++
+.No DOM access
+[NOTE]
+This callback is invoked _after_ the element is disconnected from the DOM.
++
+.Remember to call the [methodname]`super.disconnectedCallback()`.
+[NOTE]
+You must call [methodname]`super.disconnectedCallback()` in your callback method.
+Otherwise, you may lose the default [classname]`LitElement` lifecycle.
+
+[[first-updated]]`firstUpdated()`::
++
+*Specificity*: Lit
++
+This callback is invoked right after the first render is over and before the first [methodname]`updated()` callback.
+It receives an object that contains all changed properties.
+
+`updated()`::
++
+*Specificity*: Lit
++
+This callback is invoked after each render; for the first render, it's invoked right after the [methodname]`firstUpdated()` callback.
+Just like [methodname]`firstUpdated()`, it receives an object that contains all properties changed after the previous render.
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/lit-basics/lifecycle.ts[]
+----
+
+Read more about the Lit-specific lifecycle methods in the link:https://lit.dev/docs/components/lifecycle/[Lit documentation].
+
+== Styling
+
+For styling, [classname]`LitElement` provides a static property `styles`.
+You can use either a style sheet imported from a [filename]`.css` file or define an inline style sheet using the `css` tagged function.
+
+The `styles` property also accepts an array of style sheets.
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/lit-basics/styling.ts[]
+----
+
+== Shadow and light DOM
+
+You can use two main approaches for web components.
+You can find more information in the https://vaadin.com/docs/styling/custom-theme/style-scopes[Style Scopes] article in the Vaadin documentation.
+
+=== Shadow DOM
+A web component can create a shadow tree within.
+It's a separate document fragment, almost inaccessible from the regular DOM, existing as a part of the component and displayed in the browser as a regular element tree.
+With this, you can create elements with styles independent of the global CSS and HTML content not added to children nodes.
+
+Shadow DOM is enabled by default when using the [classname]`LitElement` class.
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/lit-basics/shadow-dom.ts[]
+----
+
+=== Light DOM
+
+If you don't want to use shadow DOM, you can still use light DOM, another part of the DOM controlled by the component's class.
+It lacks some of the advantages of shadow DOM, such as scoped CSS or slotted content, but it's less complex, making development partly easier and performance better.
+
+To enable light DOM for a [classname]`LitElement` component, add a [methodname]`createRenderRoot()` method to your component which returns `this`.
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/lit-basics/light-dom.ts[]
+----
+
+=== Best practices
+
+Shadow DOM is recommended only for "leaf" components (checkboxes, text fields, combo boxes, etc.) and light DOM for other components such as views or their parts.
+Deeply nested shadow trees can negatively impact performance.
