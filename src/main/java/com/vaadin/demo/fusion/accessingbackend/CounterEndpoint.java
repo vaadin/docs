@@ -5,7 +5,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 // tag::snippet[]
 /**
- * A Vaadin endpoint that counts numbers.
+ * An endpoint that counts numbers.
  */
 @Endpoint
 @AnonymousAllowed
