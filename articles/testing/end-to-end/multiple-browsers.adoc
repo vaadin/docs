@@ -1,9 +1,9 @@
 ---
-title: Running Tests on Multiple Browsers in a Grid
+title: Running Tests on Multiple Browsers
 order: 130
 ---
 
-= Running Tests on Multiple Browsers in a Grid
+= Running Tests on Multiple Browsers
 
 A distributed test environment ("Test grid") consists of a hub and many test nodes.
 The hub acts as an orchestrator, tracking what browsers are available in the nodes and making sure that a node is only used by one test at a time.
@@ -30,34 +30,12 @@ See <<sauce-labs-grid>>
 
 Tests annotated with `@BrowserTest` (JUnit 5) or extending `ParallelTest` (Junit4)  automatically:
 
-* execute test methods on the hub defined using `@RunOnHub` or the corresponding system property;
-* creates a suitable WebDriver instance;
-* terminates the driver after the test ends;
-* grabs a screenshot if the test fails;
-* supports running the test locally on only one browser for debugging, using `@RunLocally` or the corresponding system property.
-* run tests in parallel (JUnit 4, in JUnit 5 it depends from JUnit configuration)
-
-==== Notes for JUnit 4
-Usually, you want to configure something for all your grid tests so it makes sense to create a common superclass, for example `public abstract class AbstractIT extends ParallelTest`.
-Then you can add a `@RunOnHub` annotation on that class.
-
-Up to 50 test methods in any `ParallelTest` class are executed simultaneously by default.
-The limit can be set using the `com.vaadin.testbench.Parameters.testsInParallel` system property.
-If your tests don't work in parallel, set the parameter to `1`.
-
-When running tests in parallel, you need to ensure that the tests are independent and don't affect each other in any way.
-
-You can also handle creation and destruction of the WebDriver manually when running on a hub if you don't want to use `ParallelTest` for one reason or another.
-In this case, you should create a `RemoteWebdriver` with the correct hub URL and set suitable `DesiredCapabilities` on the driver.
-
-==== Notes for JUnit 5
-If your test class already creates `WebDriver` implementing `DriverSupplier` you can remove it in favor of automatic driver initialization by TestBench.
-
-You can make use of automatic `WebDriver` and browser information injection by extending `BrowserTestBase` class.
-
-Parallel tests execution is handled by JUnit 5, read more at link:https://junit.org/junit5/docs/current/user-guide/#writing-tests-parallel-execution[JUnit 5 parallel execution].
-
-It is possible to annotate test class with `@BrowserTestClass` but then each method must be annotated either with `@TestTemplate` or `@BrowserTest`.
+* execute test methods on the hub defined using `@RunOnHub` or the corresponding system property
+* creates a suitable WebDriver instance
+* terminates the driver after the test ends
+* grabs a screenshot if the test fails
+* supports running the test locally on only one browser for debugging, using `@RunLocally` or the corresponding system property
+* run tests in parallel (see <<page-objects#,Advanced Testing Concepts>> for more information)
 
 [role="since:com.vaadin:vaadin@V23.2"]
 [[sauce-labs-grid]]
@@ -146,9 +124,54 @@ public abstract class AbstractIT extends BrowserTestBase {
 The `BrowserUtil` helper methods create a `DesiredCapability` object which often works.
 To customize the versions and other values, annotate your test class using `@BrowserFactory(MyBrowserFactory.class)` and implement `MyBrowserFactory` by extending `DefaultBrowserFactory`.
 
-[TIP]
+== Local Multi-Browser Tests
+
 To run a multi-browser test locally, you can use the `com.vaadin.testbench.Parameters.runLocally` system property (or a `@RunLocally` annotation on the test class) to override what browser to run on.
 The value of the property or annotation should be the browser to run on, for example `chrome` or `@RunLocally(Browser.CHROME)`. When `RunLocally` is used, any hub configuration is also ignored and a local WebDriver is used.
+
+Please remember that different browsers may require additional preparation before running tests. It is always good to run initial browser configuration in `@BeforeClass` / `@BeforeAll` phase.
+
+Examples of drivers preparation:
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Chrome"></source-info>
+@RunLocally(Browser.CHROME)
+public abstract class AbstractIT {
+
+   @BeforeAll
+   public static void prepareDriver() {
+       WebDriverManager.chromedriver().setup();
+   }
+}
+----
+[source,java]
+----
+<source-info group="Safari"></source-info>
+@RunLocally(Browser.SAFARI)
+public abstract class AbstractIT {
+
+   @BeforeAll
+   public static void prepareDriver() {
+       WebDriverManager.safaridriver().setup();
+   }
+}
+----
+[source,java]
+----
+<source-info group="Firefox"></source-info>
+@RunLocally(Browser.FIREFOX)
+public abstract class AbstractIT {
+
+   @BeforeAll
+   public static void prepareDriver() {
+       WebDriverManager.firefoxdriver().setup();
+   }
+}
+----
+--
 
 
 [discussion-id]`1562D591-B570-45C4-8813-A278ADA35A7C`
