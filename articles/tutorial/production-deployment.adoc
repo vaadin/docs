@@ -13,22 +13,110 @@ This chapter covers:
 
 * Vaadin production builds.
 * Packaging Vaadin app as a Docker image.
-* Deploying Docker packaged web app using Azure App Service.
+* Deploying Docker packaged web app using Azure Container App.
 * Tips for production deployment.
-
 
 .Vaadin can be deployed on any cloud provider
 [TIP]
-From Cloud providers point of view, Vaadin is standard Java Web application. You can deploy your application onto pretty much any cloud platform.
+From Cloud providers point of view, Vaadin is standard Java Web application. You can deploy your application onto pretty much any cloud platform, in many different ways.
 Read the <<{articles}/production/cloud-providers#, Cloud Deployment tutorials>> for more options.
 
-include::_heroku-steps.adoc[]
+== Preparing the Application for Production
 
+It's important to build a separate production-optimized version of the application before deploying it.
+In development mode, Vaadin has a live-reload widget, debug logging, and uses a quick, but unoptimized, frontend build that includes source maps for easy debugging, that is maintained using npm and Vite.
+Unoptimized frontend bundles can contain several megabytes of JavaScript and dependecies, that are not needed during production deployment.
+
+The [filename]`pom.xml` file includes a `production` profile configuration that prepares an optimized build which is ready for production.
+
+== Package the application as Docker image
+
+TIP: a prebuilt Docker image of this example is available in Docker Hub if you want to try hosting the app without installing Docker on your workstation
+
+Docker image is a basic building block used by many modern hosting solutions to run your application, including Azure Container App that we are using in this example.
+
+The example project contains a simple ready made Dockerfile that describes how the application should be run. 
+
+Docker images are then shared with your cloud service using a registry. 
+Docker Hub is one option, but for your internal needs it might be a better choice to use your company internal registry or for example a one hosted using https://azure.microsoft.com/en-us/products/container-registry/#overview[Azure Container Registry].
+
+To package, run and publish Docker images, you'll need to install Docker. You can install command line Docker via common package managers or get it together with a handy GUI by installing Docker Desktop.
+
+To build a production jar file and and the docker container execute following commands:
+
+[source,bash]
+----
+mvn clean package -Pproduction
+docker build -t my-app:latest . 
+----
+
+TIP: If you are developing on an ARM based workstation like recent Macs, explicitly define the platform using `--platform linux/amd64 ` argument in docker build. Azure don't currently support hosting ARM based images.
+
+The my-app:latest is the name of your Docker image in your local computer. 
+
+Make sure you are logged into Docker Hub or to another registry you are using. Then tag your docker image to fully qualified name and push it to your registry using:
+
+[source,bash]
+----
+docker image tag my-app:latest registry-host:5000/myproject/my-app:latest
+docker image push registry-host:5000/myproject/my-app:latest
+----
+
+== Deploying to Azure Container Apps
+
+In this step we will configure Azure Container App to take a pre-built docker image, run the container and expose it using the built-in front proxy. We will use the image from Docker Hub in the commands, but you probably want to use your custom built version from your own registry.
+
+The deployment to Azure Container Apps can be done either using the browser based UI or with https://learn.microsoft.com/en-us/cli/azure/[Azure CLI] (commands shown below). 
+Azure CLI can be also used using browser via Azure Cloud Shell, if you don't want to install it locally.
+
+To get started, ensure you have an Azure account and a suitable Resource Group.
+In the following examples our resource group name is `flowcrmspringapp`.
+
+First, ensure you have logged in:
+
+[source,bash]
+----
+az login
+----
+
+Next, create a Container App environement:
+
+[source,bash]
+----
+az containerapp env create \
+  --name crm-app-env \
+  --resource-group flowcrmspringapp \
+  --location eastus2
+___
+
+If it is the first time you are using Azure Container Apps, the command line tool will ask permission to install some required extensions.
+
+Next, create the actual application. The example command below uses a pre-built Docker image from the public Docker Hub, but you might want to replace that with your own.
+
+[source,bash]
+----
+az containerapp create \
+  --name flow-crm-tutorial \
+  --resource-group flowcrmspringapp \
+  --environment crm-app-env \
+  --image docker.io/mstahv/flow-crm-tutorial:latest \
+  --target-port 8080 \
+  --ingress 'external' \
+  --query properties.configuration.ingress.fqdn
+---
+
+It will take a moment for Azure to provision the resources and start the application. Once all done, the command will print out the address to your application.
+
+.Avoid data loss
+[WARNING]
+====
+This application uses in-memory H2 database, which is handy for development. The database is re-created on each deployment and is embedded for each node. For an actual usage, you should switch to your preferred database (at least in the production profile), use `ddl-auto=none` and start to use a database migration tool like https://www.liquibase.org/[Liquibase] or https://flywaydb.org/[Flyway], so you can evolve the database schema without losing data. Check Spring & Azure docs for more.
+====
 
 == Conclusion and Next Steps
 
 Congratulations.
-You have now built a full-stack PWA and deployed it to Azure.
+You have now built a full-stack web app in pure Java and deployed it to Azure.
 
 Did you like the tutorial?
 Did you find anything that did not seem right?
