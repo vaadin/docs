@@ -1,18 +1,17 @@
 ---
-title: Offline Support for Authentication
+title: Offline authentication
 description: Storing the authentication data in the browser for offline applications.
 order: 110
-layout: page
 ---
 
-= Offline Support for Authentication
+= Offline authentication
 
 When building a Hilla application with offline support, take care when storing authentication in the browser to enable offline access-checking on the client side.
 
 The `localStorage` API is an easy way to store data in the browser that also works offline.
 This article describes how to use it to store authentication.
 
-== Storing Authentication for Offline
+== Storing authentication for offline
 
 It's good practice to expire authentication after a time limit.
 However, the data in `localStorage` doesn't expire automatically; you need to have a timestamp in the authentication data object itself.
@@ -74,3 +73,39 @@ The following code example contains the complete client-side authentication impl
 ----
 include::{root}/frontend/demo/fusion/authentication/auth.ts[tags=impl;basic;login;logout;isLoggedIn;offline;!userinfo]
 ----
+
+
+
+
+== Security Considerations
+
+=== Authenticity
+Do you need to protect the local user's data from any other person who may have access to the same device?
+If so, you need to add a `passcode` in addition to the regular online log-in (or use fingerprint/face ID authentication through the WebAuthn API on devices that support these).
+This is what many mobile bank apps do, in order to encrypt any user data that's cached locally for offline use.
+If you do go down that route, most likely you will end up having a helper library that you can call to check whether or not the user is logged in.
+
+Arguably, not many applications would need to securely verify user authenticity offline, and most can check if an online log-in happened in the not-so-distant past.
+
+ - For this, the simplest approach would be setting a local storage flag after a user has successfully logged in online (and clear it when the user logs out).
+During offline navigation, the user authentication would then be checked from the local storage.
+The <<../security/authentication-offline#, Offline Support for Authentication>> article describes how to do this.
+It's worth classifying this as a UX improvement, not as a security feature, because it's easy to bypass through the browser developer tools.
+
+- And if you need to add a more reliable expiration mechanism, you could use signed tokens (for example, JWT), so that the client can strongly verify the timestamp of the last log-in.
+Nevertheless, this is still not bulletproof, because the user can change the date on the device.
+
+=== Authorization
+Authorization (checking roles) is really only feasible on the backend.
+The reason is simple: the backend is the only place that can reliably guard the data the user isn't authorized to view/edit.
+Once some data has reached the client, you have to assume it may be tampered with.
+When it comes to, for example, checking whether a user has an appropriate role to access a certain view, the client-side implementation is mostly about the UX.
+You would need a way to check whether the user has the permissions to navigate to a view, but it doesn't need to be a secure way.
+If the user tampers with the permission on their device, they may end up navigating to that view anyway, but they cannot see any sensitive data, because this would be securely guarded by the backend.
+
+What you may end up doing if you want to keep more than a plain `isLoggedIn` flag is keeping a list of user roles in plain text in the local storage, and checking against that list in offline navigation.
+If the user changed their roles through the developer tools, they could see views they aren't allowed to see (if the view templates are stored in the browser cache), but they couldn't see any data there.
+
+Using secure tokens, such as JWT, makes the list of roles secure.
+It's cryptographically signed and the client application can verify that it hasn't been tampered with.
+Although such tokens are useful when accessing the backend, because they allow the backend to be stateless, there are no particular benefits for client-side offline authentication.
