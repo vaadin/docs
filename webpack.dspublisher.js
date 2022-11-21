@@ -1,6 +1,10 @@
 const path = require('path');
 const fs = require('fs');
 
+const settings = require('./target/vaadin-dev-server-settings.json');
+
+const jarResourcesFolder = path.resolve(__dirname, settings.jarResourcesFolder);
+
 const buildDirectory = path.resolve(__dirname, 'target');
 const {
   ApplicationThemePlugin,
@@ -95,6 +99,8 @@ module.exports = function (config) {
   const frontendFolder = path.resolve(__dirname, 'frontend');
   config.resolve.alias['Frontend'] = frontendFolder;
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
+
+  config.resolve.alias['@vaadin/flow-frontend'] = jarResourcesFolder;
 
   // If there are pre-existing rules that affect CSS files,
   // make them exclude files that match the themeCssRegex pattern...
