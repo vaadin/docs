@@ -12,6 +12,7 @@ import '@vaadin/flow-frontend/dndConnector-es6.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 
 // Flow component specific modules
+import '@vaadin/flow-frontend/confirmDialogConnector.js';
 import '@vaadin/flow-frontend/dialogConnector.js';
 import '@vaadin/flow-frontend/comboBoxConnector.js';
 import '@vaadin/flow-frontend/contextMenuConnector.js';
