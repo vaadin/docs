@@ -82,13 +82,6 @@ module.exports = function (config) {
     config.resolve.alias[`themes/${parentThemeName}`] = parentThemePath;
   });
 
-  // This is a temporary override for V23.3.0-alpha1
-  config.resolve.alias['@vaadin/flow-frontend/tooltip.ts'] = path.resolve(
-    __dirname,
-    'dspublisher',
-    'tooltip.ts'
-  );
-
   config.resolve.alias['Frontend/generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
   const frontendFolder = path.resolve(__dirname, 'frontend');
