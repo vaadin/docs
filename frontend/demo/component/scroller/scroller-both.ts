@@ -6,7 +6,7 @@ import '@vaadin/scroller';
 import * as img from '../../../../src/main/resources/images/reindeer.jpg';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('scroller-both')
+@customElement('scroller-basic')
 export class Example extends LitElement {
   protected createRenderRoot() {
     const root = super.createRenderRoot();

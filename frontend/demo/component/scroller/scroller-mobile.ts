@@ -9,7 +9,7 @@ import '@vaadin/icons';
 import '@vaadin/scroller';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('scroller-mobile')
+@customElement('scroller-basic')
 export class Example extends LitElement {
   protected createRenderRoot() {
     const root = super.createRenderRoot();

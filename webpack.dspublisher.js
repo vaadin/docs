@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const settings = require('./target/vaadin-dev-server-settings.json');
 
 const buildDirectory = path.resolve(__dirname, 'target');
 const {
@@ -9,36 +8,38 @@ const {
   findParentThemes,
 } = require(buildDirectory + '/plugins/application-theme-plugin');
 
-const frontendFolder = path.resolve(__dirname, settings.frontendFolder);
-
 // Folders in the project which can contain static assets.
 const projectStaticAssetsFolders = [
   path.resolve(__dirname, 'src', 'main', 'resources', 'META-INF', 'resources'),
   path.resolve(__dirname, 'src', 'main', 'resources', 'static'),
-  frontendFolder,
+  path.resolve(__dirname, 'frontend')
 ];
 
-const projectStaticAssetsOutputFolder = path.resolve(__dirname, settings.staticOutput);
+const projectStaticAssetsOutputFolder = path.resolve(
+  __dirname,
+  'target/classes/META-INF/VAADIN/webapp/VAADIN/static'
+);
 
 // Folders in the project which can contain application themes
 const themeProjectFolders = projectStaticAssetsFolders.map(folder =>
-  path.resolve(folder, settings.themeFolder)
+  path.resolve(folder, 'themes')
 );
 
-const frontendGeneratedFolder = path.resolve(frontendFolder, settings.generatedFolder);
+const frontendGeneratedFolder = path.resolve(__dirname, 'frontend/generated');
 
-const jarResourcesFolder = path.resolve(__dirname, settings.jarResourcesFolder);
+// Target flow-fronted auto generated to be the actual target folder
+const flowFrontendFolder = path.resolve(__dirname, 'target/flow-frontend');
 
-const themeResourceFolder = path.resolve(__dirname, settings.themeResourceFolder, settings.themeFolder);
+const flowFrontendThemesFolder = path.resolve(flowFrontendFolder, 'themes');
 
 const themeOptions = {
   devMode: false,
   // The following matches folder 'target/flow-frontend/themes/'
   // (not 'frontend/themes') for theme in JAR that is copied there
-  themeResourceFolder,
+  themeResourceFolder: flowFrontendThemesFolder,
   themeProjectFolders,
   projectStaticAssetsOutputFolder,
-  frontendGeneratedFolder,
+  frontendGeneratedFolder
 };
 
 // this matches css files in the theme
@@ -82,13 +83,18 @@ module.exports = function (config) {
     config.resolve.alias[`themes/${parentThemeName}`] = parentThemePath;
   });
 
+  // This is a temporary override for V23.3.0-alpha1
+  config.resolve.alias['@vaadin/flow-frontend/tooltip.ts'] = path.resolve(
+    __dirname,
+    'dspublisher',
+    'tooltip.ts'
+  );
+
   config.resolve.alias['Frontend/generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
   const frontendFolder = path.resolve(__dirname, 'frontend');
   config.resolve.alias['Frontend'] = frontendFolder;
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
-
-  config.resolve.alias['@vaadin/flow-frontend'] = jarResourcesFolder;
 
   // If there are pre-existing rules that affect CSS files,
   // make them exclude files that match the themeCssRegex pattern...

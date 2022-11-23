@@ -12,7 +12,6 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// TODO: Make sure that this filter is still required.
 @WebFilter("/*")
 public class ResourcesFilter implements Filter {
     private FilterConfig filterConfig;
@@ -27,8 +26,7 @@ public class ResourcesFilter implements Filter {
 
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
-        if (!request.getRequestURI().contains("connect")
-                && !request.getRequestURI().contains("/VAADIN/")) {
+        if (!request.getRequestURI().contains("connect")) {
             String uri = request.getRequestURI();
             if (uri.endsWith("/")) {
                 uri = uri + "index.html";
