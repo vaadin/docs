@@ -6,11 +6,11 @@ order: 110
 
 = Kubernetes Kit Session Replication Debug Tool
 
-To help making HTTP session fully serializable and deserializable, Kubernetes Kit offers a tool whose aim is to discover main issues during development.
+To help make HTTP sessions fully serializable and deserializable, Kubernetes Kit offers a tool with the purpose of discovering main issues during development.
 
 include::extendedDebugInfo-tip.adoc[]
 
-The debug tool is composed by a HTTP session replication tester, engaged by a Vaadin [classname]`RequestHandler`, that tries to serialize and deserialize the HTTP session for every user action on the browser that triggers a server request. It works only on `development mode` and only if session serialization is enabled by setting the following configuration property:
+The debug tool is composed by an HTTP session replication tester, engaged by a Vaadin [classname]`RequestHandler`, which tries to serialize and deserialize the HTTP session for every user action on the browser that triggers a server request. It works only on `development mode` and only if session serialization is enabled by setting the following configuration property:
 
 [.example]
 --
@@ -30,14 +30,14 @@ vaadin:
 ----
 --
 
-Outcomes from the test are printed on the server logs, and includes following details:
+The results from the test are saved in the server logs, and include the following details:
 
- * Test process outcomes (for example SERIALIZATION_FAILED, DESERIALIZATION_FAILED, SUCCESS, ...)
- * List of unserializable classes
- * Object class graph in case of deserialization errors
+ * Test process outcomes (for example SERIALIZATION_FAILED, DESERIALIZATION_FAILED, SUCCESS, ...);
+ * List of unserializable classes;
+ * Object class graph in case of deserialization errors; and
  * Potential causes of [classname]`SerializedLambda` [classname]`ClassCastException`
 
-The debug tool is automatically installed on Spring Boot projects. Otherwise, it can be manually installed by configuring the provided [classname]`VaadinInitListener`, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using Vaadin Spring add-on.
+The debug tool is installed automatically on Spring Boot projects. Otherwise, it can be installed manually by configuring the provided [classname]`VaadinInitListener`, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using Vaadin Spring add-on.
 
 .Install with Service Loader entry in META-INF/services/VaadinServiceInitListener
 [source,text]
@@ -59,15 +59,13 @@ class AppConfig {
 ----
 
 [TIP]
-For information about Service Init Listener consult the <<{articles}/advanced/service-init-listener#,specific documentation>>.
+For information about Service Init Listener, consult the <<{articles}/advanced/service-init-listener#,specific documentation>>.
 
 == Debug Tool Hints Examples
 
-Suppose you have an application that is not coded from the beginning to support session replication.
-With Kubernetes session replication debug tool in action, issues like the following can be spot during development mode, checking server logs.
+Suppose you have an application that is not coded from the beginning to support session replication. With Kubernetes session replication debug tool in action, issues like the following can be spotted during development mode, by checking server logs.
 
-For views directly or indirectly referencing unserializable objects, the classes causing issues are reported.
-Double check those classes, make them [classname]`Serializable` and then navigate to view again to see if the issues is solved or if other problems arise.
+For views directly or indirectly referencing unserializable objects, the classes causing issues are reported. Double check those classes, make them [classname]`Serializable` and then navigate to the view again to see if the issues are solved or if other problems have arisen.
 
 [source,text]
 ----
@@ -86,7 +84,7 @@ com.vaadin.starter.bakery.backend.service.OrderService$$EnhancerBySpringCGLIB$$7
 com.vaadin.starter.bakery.ui.views.storefront.OrderPresenter$$Lambda$2106/0x0000000800df6440
 ----
 
-To solve [classname]`SerializedLambda` class cast exceptions during deserialization, analyze the class graph from the bottom to the top and search for know classes and check the `BEST CANDIDATES` sections to identify the failing lambda expression.
+To solve [classname]`SerializedLambda` class cast exceptions during deserialization, analyze the class graph from the bottom to the top and search for known classes. Check the `BEST CANDIDATES` sections to identify the failing lambda expression.
 
 [source,text]
 ----
@@ -178,7 +176,7 @@ SERIALIZED LAMBDA CLASS CAST EXCEPTION ALL DETECTED TARGETS:
 ----
 
 
-For example, on the above snippet got navigating to the application [classname]`DashboardView`, the process failed to deserialize a lambda expression into [classname]`com.vaadin.flow.component.ComponentEventListener`.
+For example, on the above snippet when navigating to the application [classname]`DashboardView`, the process failed to deserialize a lambda expression into [classname]`com.vaadin.flow.component.ComponentEventListener`.
 
 [source,text]
 ----
@@ -199,14 +197,15 @@ class com.vaadin.flow.component.charts.Chart [changeListener (interface com.vaad
 
 Checking the `BEST CANDIDATES` section, it is possible to see that there is an entry whose `implementation` attribute mentions a lambda expression defined in [classname]`DashboardView` that captures a [classname]`ChartLoadEvent`.
 Furthermore, the method defining the lambda expression can be detected from the `implementation` attribute.
-In the example the value is
+
+In the example, the value is as follows:
 
 [source,text]
 ----
 implementation=com/vaadin/starter/bakery/ui/views/dashboard/DashboardView.lambda$measurePageLoadPerformance$387549c5$1:(Ljava/util/concurrent/atomic/AtomicInteger;Lcom/vaadin/flow/component/charts/events/ChartLoadEvent;)V, instantiatedMethodType=(Lcom/vaadin/flow/component/charts/events/ChartLoadEvent;)V`
 ----
 
-and it tells that the method is [methodname]`measurePageLoadPerformance` in [classname]`DashboardView`.
+It indicates that the method is [methodname]`measurePageLoadPerformance` in [classname]`DashboardView`.
 
 [source,text]
 ----
@@ -217,7 +216,7 @@ SERIALIZED LAMBDA CLASS CAST EXCEPTION BEST CANDIDATES:
     [ .... omitted .... ]
 ----
 
-The mentioned method presents the following code, and it can be deducted that the issue is that the lambda expression is capturing `this` and providing it to other components that probably stores a reference to it.
+The mentioned method presents the following code, and it can be deduced that the problem is that the lambda expression is capturing `this` and providing it to other components that probably store a reference to it.
 
 [source,java]
 ----
@@ -243,7 +242,7 @@ The mentioned method presents the following code, and it can be deducted that th
 2. Lambda expression is used as [classname]`ChartLoadListener`
 
 
-To fix the issue, replace the lambda expression with an anonymous class.
+To fix this issue, replace the lambda expression with an anonymous class.
 
 [source,java]
 ----

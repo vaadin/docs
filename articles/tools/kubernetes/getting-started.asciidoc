@@ -10,19 +10,16 @@ order: 10
 
 Kubernetes Kit enables scalability, high availability, and non-disruptive rolling updates for Vaadin applications running in a Kubernetes cluster.
 
-This tutorial guides you through setting up and deploying
- an application with Kubernetes Kit in a local Kubernetes
- cluster.
+This tutorial will guide you through setting up and deploying an application with Kubernetes Kit in a local Kubernetes cluster.
 
 == Requirements
 
-This tutorial assumes that you have the following software
- installed on your local machine:
+This tutorial assumes that you have the following software installed on your local machine:
 
 - https://www.docker.com/products/docker-desktop/[Docker Desktop^]
 - A local Kubernetes cluster such as
  https://minikube.sigs.k8s.io/docs/start/[minikube^],
- https://kind.sigs.k8s.io/docs/user/quick-start/[kind^] or
+ https://kind.sigs.k8s.io/docs/user/quick-start/[kind^], or
  https://docs.docker.com/desktop/kubernetes/[Docker^] itself.
 
 == Setting Up a Vaadin Project
@@ -31,8 +28,7 @@ Download a new Vaadin project from https://start.vaadin.com/[^].
 
 == Add the Kubernetes Kit Dependency
 
-To get started you first need to add Kubernetes Kit as a
- dependency to the application:
+To get started, you first need to add Kubernetes Kit as a dependency to the application:
 
 .pom.xml
 [source,xml]
@@ -66,7 +62,7 @@ Kubernetes Kit enables high availability and the possibility to scale applicatio
 
 This tutorial uses Hazelcast for this purpose. However, Redis is also supported.
 
-You need to add the Hazelcast dependency to the application:
+You will need to add the Hazelcast dependency to the application:
 
 .pom.xml
 [source,xml]
@@ -77,8 +73,7 @@ You need to add the Hazelcast dependency to the application:
 </dependency>
 ----
 
-Next, you need to add the following to the application
-configuration file:
+Next, you need to add the following to the application configuration file:
 
 .application.properties
 [source,properties]
@@ -86,23 +81,20 @@ configuration file:
 vaadin.kubernetes.hazelcast.service-name=hazelcast-service
 ----
 
-Deploy the Hazelcast role to the cluster:
+Now, deploy the Hazelcast role to the cluster:
 
 [source,terminal]
 kubectl apply -f https://raw.githubusercontent.com/hazelcast/hazelcast/master/kubernetes-rbac.yaml
 
 [NOTE]
 ====
-If you want to deploy this to another namespace than `default`,
-you need to download the yaml file https://raw.githubusercontent.com/hazelcast/hazelcast/master/kubernetes-rbac.yaml[here^]
-and edit the hard-coded namespace. Then deploy to your cluster:
+If you want to deploy this to another namespace than `default`, you need to download the yaml file https://raw.githubusercontent.com/hazelcast/hazelcast/master/kubernetes-rbac.yaml[here^] and edit the hard-coded namespace. Then deploy to your cluster like so:
 
 [source,terminal]
 kubectl apply -f kubernetes-rbac.yaml
 ====
 
-Then you need to deploy a load balancer service to your
- cluster. Create the following Kubernetes manifest file:
+Then you need to deploy a load balancer service to your cluster. Create the following Kubernetes manifest file:
 
 .hazelcast.yaml
 [source,yaml]
@@ -120,12 +112,13 @@ spec:
   type: LoadBalancer
 ----
 
-And deploy the manifest to your cluster:
+You will also need to deploy the manifest to your cluster:
 
 [source,terminal]
 kubectl apply -f hazelcast.yaml
 
 You should now see the load balancer service:
+
 [source,terminal]
 kubectl get svc hazelcast-service
 
@@ -137,16 +130,14 @@ hazelcast-service   LoadBalancer   10.96.178.190   <pending>     5701:31516/TCP 
 
 == Build and Deploy the Application
 
-The next step is to build a container image of the
-application and deploy it to your Kubernetes cluster.
+The next step is to build a container image of the application and deploy it to your Kubernetes cluster.
 
-Clean and package the application for production:
+You'll first need to clean and package the application for production:
 
 [source,terminal]
 mvn clean package -Pproduction
 
-Create the following `Dockerfile` file and place it in the
- main directory of the application:
+Then create the following `Dockerfile` file and place it in the main directory of the application:
 
 [source,Dockerfile]
 ----
@@ -158,21 +149,16 @@ EXPOSE 8080
 CMD java -jar /usr/app/app.jar
 ----
 
-Open a terminal to the main directory and use Docker to
-build a container image for the application and tag it with
-version 1.0.0 (note the required period at the end):
+Now, open a terminal to the main directory and use Docker to build a container image for the application and tag it with version 1.0.0. Note, the required period at the end in the line here:
 
 [source,terminal]
 docker build -t my-app:1.0.0 .
 
 [NOTE]
 ====
-Depending on the Kubernetes cluster you are using, you may
-need to publish the image to a local registry or push the
-image to the cluster. Otherwise, the image cannot not be
-found. Please refer to your cluster documentation.
+Depending on the Kubernetes cluster you are using, you may need to publish the image to a local registry or push the image to the cluster. Otherwise, the image will not be found. Please refer to your cluster documentation for more information on this.
 
-If you are using kind on a local machine, you need to load the image to the cluster like this:
+If you're using "kind" on a local machine, you need to load the image to the cluster like this:
 
 [source,terminal]
 kind load docker-image my-app:1.0.0
@@ -227,15 +213,15 @@ spec:
 ----
 
 [NOTE]
-The multicast port (5701) is only used for session
-replication using Hazelcast.
+The multicast port (5701) is only used for session replication using Hazelcast.
 
 Deploy the manifest to your cluster:
 
 [source,terminal]
 kubectl apply -f app-v1.yaml
 
-You should now see 4 pods running in the cluster, for example:
+You should now see 4 pods running in the cluster. Below is an example of how this might look:
+
 [source,terminal]
 kubectl get pods
 
@@ -250,16 +236,14 @@ my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             22s
 
 == Ingress Rules
 
-In order to access the application, you need to provide some
-ingress rules.
+In order to access the application, you need to provide some ingress rules.
 
-If you don't already have `ingress-nginx` installed in your
-cluster, install it with the following command:
+If you don't already have `ingress-nginx` installed in your cluster, install it with the following command:
 
 [source,terminal]
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
 
-Then create an ingress rule manifest file:
+Then create an ingress rule manifest file like so:
 
 .ingress-v1.yaml
 [source,yaml]
@@ -285,7 +269,7 @@ spec:
                   number: 80
 ----
 
-Deploy the manifest to your cluster:
+You may deploy the manifest to your cluster like this:
 
 [source,terminal]
 kubectl apply -f ingress-v1.yaml
@@ -294,9 +278,7 @@ The application should now be available at http://localhost[^]
 
 [NOTE]
 ====
-In order to access the application from your local machine,
-it may be necessary to use the `port-forward` utility. In
-this case use the following command:
+In order to access the application from your local machine, it may be necessary to use the `port-forward` utility. In this case use the following command:
 
 [source,terminal]
 kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
@@ -306,32 +288,25 @@ The application should now be available at http://localhost:8080[^]
 
 == Scaling the Application
 
-You can use `kubectl` commands to increase or reduce
-the amount of pods used by the deployment. For example, the
-following command increases the number of pods to 5:
+You can use `kubectl` commands to increase or reduce the amount of pods used by the deployment. For example, the following command increases the number of pods to 5:
 
 [source,terminal]
 kubectl scale deployment/my-app-v1 --replicas=5
 
-You can also simulate the failure of a specific pod by deleting
- it by name:
+You can also simulate the failure of a specific pod by deleting it by name like so:
 
 [source,terminal]
 kubectl delete pod/<pod-name>
 
 .Replace placeholder pod name
+
 [NOTE]
 Remember to substitute the name of your application pod.
 
-If you have enabled session replication, this can be used
-to check that it is performing as expected. If you open the
-application and then delete the pod it is connected to,
-when you perform the next action, you should not lose
-session data.
+If you have enabled session replication, this can be used to check that it is performing as expected. If you open the application and then delete the pod to which it's connected, when you perform the next action you should not lose session data.
 
 == Next Steps
 
-The Kubernetes Kit can also help you roll out a new version of
-your application in a Kubernetes cluster.
+The Kubernetes Kit can also help you roll out a new version of your application in a Kubernetes cluster.
 
 xref:update-version#[New Version Roll Out, role="button secondary water"]
