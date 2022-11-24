@@ -27,6 +27,8 @@ const themeProjectFolders = projectStaticAssetsFolders.map(folder =>
 
 const frontendGeneratedFolder = path.resolve(__dirname, 'frontend/generated');
 
+const jarResourcesFolder = path.resolve(__dirname, 'frontend/generated/jar-resources');
+
 // Target flow-fronted auto generated to be the actual target folder
 const flowFrontendFolder = path.resolve(__dirname, 'target/flow-frontend');
 
@@ -83,18 +85,13 @@ module.exports = function (config) {
     config.resolve.alias[`themes/${parentThemeName}`] = parentThemePath;
   });
 
-  // This is a temporary override for V23.3.0-alpha1
-  config.resolve.alias['@vaadin/flow-frontend/tooltip.ts'] = path.resolve(
-    __dirname,
-    'dspublisher',
-    'tooltip.ts'
-  );
-
   config.resolve.alias['Frontend/generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
   const frontendFolder = path.resolve(__dirname, 'frontend');
   config.resolve.alias['Frontend'] = frontendFolder;
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
+
+  config.resolve.alias['@vaadin/flow-frontend'] = jarResourcesFolder;
 
   // If there are pre-existing rules that affect CSS files,
   // make them exclude files that match the themeCssRegex pattern...
