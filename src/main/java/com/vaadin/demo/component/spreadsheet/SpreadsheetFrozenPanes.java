@@ -12,7 +12,7 @@ public class SpreadsheetFrozenPanes extends Div {
         Spreadsheet spreadsheet = new Spreadsheet();
         spreadsheet.setHeight("400px");
         // tag::snippet[]
-        spreadsheet.createFreezePane(1, 3);
+        spreadsheet.createFreezePane(2, 1);
         // end::snippet[]
         add(spreadsheet);
     }
