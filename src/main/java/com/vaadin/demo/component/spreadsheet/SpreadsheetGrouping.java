@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.spreadsheet;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -14,10 +14,10 @@ public class SpreadsheetGrouping extends Div {
 
     public SpreadsheetGrouping() throws IOException, URISyntaxException {
         // tag::snippet[]
-        File file = new File(
-                getClass().getResource("/testsheets/grouping.xlsx").toURI());
+        InputStream stream = getClass()
+                .getResourceAsStream("/testsheets/grouping.xlsx");
 
-        Spreadsheet spreadsheet = new Spreadsheet(file);
+        Spreadsheet spreadsheet = new Spreadsheet(stream);
         // end::snippet[]
         spreadsheet.setHeight("400px");
         add(spreadsheet);

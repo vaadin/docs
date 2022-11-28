@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.spreadsheet;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -13,10 +13,10 @@ import com.vaadin.flow.component.spreadsheet.Spreadsheet;
 public class SpreadsheetReportMode extends Div {
 
     public SpreadsheetReportMode() throws IOException, URISyntaxException {
-        File file = new File(getClass()
-                .getResource("/testsheets/simple-invoice.xlsx").toURI());
+        InputStream stream = getClass()
+                .getResourceAsStream("/testsheets/simple-invoice.xlsx");
 
-        Spreadsheet spreadsheet = new Spreadsheet(file);
+        Spreadsheet spreadsheet = new Spreadsheet(stream);
         // tag::snippet[]
         spreadsheet.setReportStyle(true);
         spreadsheet.setActiveSheetProtected("");

@@ -15,7 +15,7 @@ import com.vaadin.flow.component.spreadsheet.Spreadsheet;
 public class SpreadsheetFonts extends Div {
 
     public SpreadsheetFonts() {
-        
+
         Spreadsheet spreadsheet = new Spreadsheet();
         spreadsheet.setHeight("400px");
 
