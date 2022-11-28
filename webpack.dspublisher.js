@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const settings = require('./target/vaadin-dev-server-settings.json');
 
 const buildDirectory = path.resolve(__dirname, 'target');
 const {
@@ -8,40 +9,36 @@ const {
   findParentThemes,
 } = require(buildDirectory + '/plugins/application-theme-plugin');
 
+const frontendFolder = path.resolve(__dirname, settings.frontendFolder);
+
 // Folders in the project which can contain static assets.
 const projectStaticAssetsFolders = [
   path.resolve(__dirname, 'src', 'main', 'resources', 'META-INF', 'resources'),
   path.resolve(__dirname, 'src', 'main', 'resources', 'static'),
-  path.resolve(__dirname, 'frontend')
+  frontendFolder,
 ];
 
-const projectStaticAssetsOutputFolder = path.resolve(
-  __dirname,
-  'target/classes/META-INF/VAADIN/webapp/VAADIN/static'
-);
+const projectStaticAssetsOutputFolder = path.resolve(__dirname, settings.staticOutput);
 
 // Folders in the project which can contain application themes
 const themeProjectFolders = projectStaticAssetsFolders.map(folder =>
-  path.resolve(folder, 'themes')
+  path.resolve(folder, settings.themeFolder)
 );
 
-const frontendGeneratedFolder = path.resolve(__dirname, 'frontend/generated');
+const frontendGeneratedFolder = path.resolve(frontendFolder, settings.generatedFolder);
 
-const jarResourcesFolder = path.resolve(__dirname, 'frontend/generated/jar-resources');
+const jarResourcesFolder = path.resolve(__dirname, settings.jarResourcesFolder);
 
-// Target flow-fronted auto generated to be the actual target folder
-const flowFrontendFolder = path.resolve(__dirname, 'target/flow-frontend');
-
-const flowFrontendThemesFolder = path.resolve(flowFrontendFolder, 'themes');
+const themeResourceFolder = path.resolve(__dirname, settings.themeResourceFolder, settings.themeFolder);
 
 const themeOptions = {
   devMode: false,
   // The following matches folder 'target/flow-frontend/themes/'
   // (not 'frontend/themes') for theme in JAR that is copied there
-  themeResourceFolder: flowFrontendThemesFolder,
+  themeResourceFolder,
   themeProjectFolders,
   projectStaticAssetsOutputFolder,
-  frontendGeneratedFolder
+  frontendGeneratedFolder,
 };
 
 // this matches css files in the theme
