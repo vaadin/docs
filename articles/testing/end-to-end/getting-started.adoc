@@ -12,14 +12,28 @@ The tests are automatically executed on your local Chrome when you run `mvn veri
 == Setting Up Your Project
 To start using TestBench in an existing project, you need to add the TestBench dependency (`com.vaadin`/`vaadin-testbench`) with a `test` scope.
 Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, all you need to do is add:
+
+[.example]
+--
 [source,xml]
 ----
+<source-info group="JUnit 4"></source-info>
 <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>vaadin-testbench</artifactId>
     <scope>test</scope>
 </dependency>
 ----
+[source,xml]
+----
+<source-info group="JUnit 5"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-testbench-junit5</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+--
 The `test` scope and version number are predefined by the Vaadin BOM.
 
 To be able to run tests locally, you might need to install a WebDriver for your browser.
@@ -29,7 +43,7 @@ See <<installing-webdrivers#,Installing WebDrivers>> for more details.
 
 The fundamental parts of any TestBench test are:
 
-1. Create an instance of the browser driver for the browser you want to use
+1. Create an instance of the browser driver for the browser you want to use (by default, TestBench uses Chrome browser driver)
 2. Open the URL containing the application you want to test
 3. Perform test logic and assert that the result was the expected one
 4. Close the driver instance to close the browser
@@ -39,8 +53,11 @@ If you are adding this test to your own custom application, it fails unless you 
 
 In the Maven world, all test classes live in the `src/test/java` directory. Create a new class called `SimpleIT` in that directory (`IT` stands for *integration test* and Maven automatically runs all `*IT` classes):
 
+[.example]
+--
 [source,java]
 ----
+<source-info group="JUnit 4"></source-info>
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -76,6 +93,41 @@ public class SimpleIT extends TestBenchTestCase {
 
 }
 ----
+[source,java]
+----
+<source-info group="JUnit 5"></source-info>
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+
+import com.vaadin.testbench.BrowserTest;
+import com.vaadin.testbench.BrowserTestBase;
+
+public class SimpleIT extends BrowserTestBase {
+
+    @BeforeEach
+    public void setup() throws Exception {
+        // Open the application
+        getDriver().get("http://localhost:8080/");
+    }
+
+    // Please note that since TestBench 9 test methods
+    // must be annotated with helper @BrowserTest annotation.
+    @BrowserTest
+    public void clickButton() {
+        // Find the first button (<vaadin-button>) on the page
+        ButtonElement button = $(ButtonElement.class).first();
+
+        // Click it
+        button.click();
+
+        // Check that text of the button is "Clicked"
+        Assertions.assertEquals("Clicked", button.getText());
+    }
+
+}
+----
+--
 
 This is all you need to verify that the text of the button is "Clicked" after clicking on it.
 

@@ -1,9 +1,9 @@
 ---
-title: Running Tests on Multiple Browsers in a Grid
+title: Running Tests on Multiple Browsers
 order: 130
 ---
 
-= Running Tests on Multiple Browsers in a Grid
+= Running Tests on Multiple Browsers
 
 A distributed test environment ("Test grid") consists of a hub and many test nodes.
 The hub acts as an orchestrator, tracking what browsers are available in the nodes and making sure that a node is only used by one test at a time.
@@ -18,43 +18,24 @@ When running on a hub, you don't need a local WebDriver installed. The WebDriver
 
 [[preparing-tests]]
 == Preparing Your Tests for Running on a Test Grid
-The tests created previously are set up only to run on a single browser, as a single `ChromeDriver` (or other `WebDriver`) instance is created in a `@Before` method.
+The tests created previously are set up only to run on a single browser, as a single `ChromeDriver` (or other `WebDriver`) instance is created in a `@BeforeEach` (`@Before` for JUnit 4) method.
 When running on multiple browsers in parallel, it's easier not to handle the driver instances manually but instead let TestBench handle creation and destruction when needed.
 To do this, you need to:
 
-1. Extend `ParallelTest` instead of `TestBenchTestCase`.
-The `ParallelTest` class takes care of creating and destroying driver instances as needed.
+1. Let TestBench take care of creating and destroying driver instances as needed by annotating test with `@BrowserTest` (JUnit 5) or extending `ParallelTest` instead of `TestBenchTestCase` (JUnit 4).
 2. Define the grid hub URL using either
 a. `@RunOnHub("hub.testgrid.mydomain.com")` on the test class (or a super class) or the system property `com.vaadin.testbench.Parameters.hubHostname`
 b. Configure Sauce Labs credentials and use Sauce Connect proxy to use Sauce Labs test grid.
 See <<sauce-labs-grid>>
 
-A test class extending `ParallelTest` automatically:
+A test class annotated with `@BrowserTest` (JUnit 5) or extending `ParallelTest` (Junit4)  automatically:
 
-* executes test methods in parallel on the hub defined using `@RunOnHub` or the corresponding system property;
-* creates a suitable WebDriver instance;
-* terminates the driver after the test ends;
-* grabs a screenshot if the test fails;
-* supports running the test locally on only one browser for debugging, using `@RunLocally` or the corresponding system property.
-
-[NOTE]
-When changing the superclass of the test, you need to remove any calls to [methodname]`setDriver(new ChromeDriver())` or similar, and also any `@After` method which calls [methodname]`getDriver().quit()`.
-
-[TIP]
-Usually, you want to configure something for all your grid tests so it makes sense to create a common superclass, for example `public abstract class AbstractIT extends ParallelTest`.
-Then you can add a `@RunOnHub` annotation on that class.
-
-[NOTE]
-Up to 50 test methods in any `ParallelTest` class are executed simultaneously by default.
-The limit can be set using the `com.vaadin.testbench.Parameters.testsInParallel` system property.
-If your tests don't work in parallel, set the parameter to `1`.
-
-[NOTE]
-When running tests in parallel, you need to ensure that the tests are independent and don't affect each other in any way.
-
-[NOTE]
-You can also handle creation and destruction of the WebDriver manually when running on a hub if you don't want to use `ParallelTest` for one reason or another.
-In this case, you should create a `RemoteWebdriver` with the correct hub URL and set suitable `DesiredCapabilities` on the driver.
+* executes test methods on the hub defined using `@RunOnHub` or the corresponding system property
+* creates a suitable WebDriver instance
+* terminates the driver after the test ends
+* grabs a screenshot if the test fails
+* supports running the test locally on only one browser for debugging, using `@RunLocally` or the corresponding system property
+* runs tests in parallel (see <<page-objects#,Advanced Testing Concepts>> for more information)
 
 [role="since:com.vaadin:vaadin@V23.2"]
 [[sauce-labs-grid]]
@@ -95,8 +76,11 @@ It returns a list of `DesiredCapabilities`, typically describing what platform, 
 Typically this is defined in a superclass for the test, so that all tests are run on the same browsers.
 For example
 
+[.example]
+--
 [source,java]
 ----
+<source-info group="JUnit 4"></source-info>
 @RunOnHub("hub.testgrid.mydomain.com")
 public abstract class AbstractIT extends ParallelTest {
 
@@ -114,14 +98,80 @@ public abstract class AbstractIT extends ParallelTest {
    }
 }
 ----
+[source,java]
+----
+<source-info group="JUnit 5"></source-info>
+@RunOnHub("hub.testgrid.mydomain.com")
+public abstract class AbstractIT extends BrowserTestBase {
+
+   @BrowserConfiguration
+   public List<DesiredCapabilities> getBrowserConfiguration() {
+       List<DesiredCapabilities> browsers =
+           new ArrayList<DesiredCapabilities>();
+
+       // Add all the browsers you want to test
+       browsers.add(BrowserUtil.firefox());
+       browsers.add(BrowserUtil.chrome());
+       browsers.add(BrowserUtil.ie11());
+
+       return browsers;
+   }
+}
+----
+--
 
 [NOTE]
 The `BrowserUtil` helper methods create a `DesiredCapability` object which often works.
 To customize the versions and other values, annotate your test class using `@BrowserFactory(MyBrowserFactory.class)` and implement `MyBrowserFactory` by extending `DefaultBrowserFactory`.
 
-[TIP]
+== Local Multi-Browser Tests
+
 To run a multi-browser test locally, you can use the `com.vaadin.testbench.Parameters.runLocally` system property (or a `@RunLocally` annotation on the test class) to override what browser to run on.
 The value of the property or annotation should be the browser to run on, for example `chrome` or `@RunLocally(Browser.CHROME)`. When `RunLocally` is used, any hub configuration is also ignored and a local WebDriver is used.
+
+Please remember that different browsers may require additional preparation before running tests. It is always good to run initial browser configuration in `@BeforeClass` / `@BeforeAll` phase.
+
+Examples of drivers preparation:
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Chrome"></source-info>
+@RunLocally(Browser.CHROME)
+public abstract class AbstractIT {
+
+   @BeforeAll
+   public static void prepareDriver() {
+       WebDriverManager.chromedriver().setup();
+   }
+}
+----
+[source,java]
+----
+<source-info group="Safari"></source-info>
+@RunLocally(Browser.SAFARI)
+public abstract class AbstractIT {
+
+   @BeforeAll
+   public static void prepareDriver() {
+       WebDriverManager.safaridriver().setup();
+   }
+}
+----
+[source,java]
+----
+<source-info group="Firefox"></source-info>
+@RunLocally(Browser.FIREFOX)
+public abstract class AbstractIT {
+
+   @BeforeAll
+   public static void prepareDriver() {
+       WebDriverManager.firefoxdriver().setup();
+   }
+}
+----
+--
 
 
 [discussion-id]`1562D591-B570-45C4-8813-A278ADA35A7C`
