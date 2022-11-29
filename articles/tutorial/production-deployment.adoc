@@ -7,31 +7,29 @@ description: Learn how to prepare a Vaadin application for production and to dep
 
 = Deploying a Vaadin Flow Application on Azure
 
-In this final chapter in the series, you learn how to deploy a Spring Boot application on https://azure.microsoft.com[Azure].
-In the tutorial we will use Azure Container Apps for its simplicity. 
+In this final chapter in the series, you'll learn how to deploy a Spring Boot application on https://azure.microsoft.com[Azure].
+In the tutorial we will use Azure Container Apps for its simplicity.
 For a larger scale deployment and best possible end user experience, consider using Azure Kubernetes Service together with https://vaadin.com/clustering[Vaadin Kubernets Kit].
 
 This chapter covers:
 
-* Vaadin production builds.
-* Packaging Vaadin app as a Docker image.
-* Deploying Docker packaged web app using Azure Container Apps.
+* Vaadin production builds;
+* Packaging Vaadin applications as a Docker image;
+* Deploying Docker packaged web application using Azure Container Apps; and
 * Tips for production deployment.
 
 .Vaadin can be deployed on any cloud provider
 [TIP]
-From Cloud providers point of view, Vaadin is standard Java Web application. You can deploy your application onto pretty much any cloud platform, in many different ways.
-Read the <<{articles}/production/cloud-providers#, Cloud Deployment tutorials>> for more options.
+From the Cloud provider's point of view, Vaadin is a standard Java Web application. You can deploy your application onto almost any cloud platform, in many different ways. Read the <<{articles}/production/cloud-providers#, Cloud Deployment tutorials>> for more options.
 
 == Preparing the Application for Production
 
 It's important to build a separate production-optimized version of the application before deploying it.
-In development mode, Vaadin has a live-reload widget, debug logging, and uses a quick, but unoptimized, frontend build that includes source maps for easy debugging, that is maintained using npm and Vite.
-Unoptimized frontend bundles can contain several megabytes of JavaScript and dependecies, that are not needed during production deployment.
+In development mode, Vaadin has a live-reload widget, debug logging, and uses a quick but unoptimized front-end build that includes source maps for easy debugging, that's maintained using npm and Vite.
+Unoptimized front-end bundles can contain several megabytes of JavaScript and dependencies that aren't needed during production deployment.
 
 The [filename]`pom.xml` file includes a `production` profile configuration that prepares an optimized build which is ready for production.
-Use following command in the project directory to build a production ready jar file:
-
+Enter the following at the command-line in the project directory to build a production ready jar file:
 
 [source,bash]
 ----
@@ -40,13 +38,13 @@ mvn install -Pproduction
 
 == Deployment using Azure Container Apps
 
-To use Azure Container Apps, you'll need to:
+To use Azure Container Apps, you'll need to do the following:
 
-  1. Install and run Docker (for example using https://www.docker.com/products/docker-desktop/[Docker Desktop])
+  1. Install and run Docker (e.g., using https://www.docker.com/products/docker-desktop/[Docker Desktop]).
   2. Install https://learn.microsoft.com/cli/azure/install-azure-cli[Azure CLI] or make sure you have it up-to-date with `az upgrade`.
-  3. Log into https://azure.microsoft.com[Azure] using a browser and make sure you have an active Azure subscription (use Start Free Trial, if you don't have an existing one).
+  3. Log into https://azure.microsoft.com[Azure] using a browser and make sure you have an active Azure subscription. Use Start Free Trial, if you don't have an existing one.
 
-In your command commmand line, login using Azure CLI:
+From the commmand-line, login using Azure CLI like so:
 
 [source,bash]
 ----
@@ -54,12 +52,12 @@ az login
 ----
 
 [TIP]
-If you don't live in North America, you will get a better experience with Azure by choosing a region close by. For example Europe based developer can do this with `az config set defaults.location=westeurope` or pick the location per application. Pick a location that already https://azure.microsoft.com/explore/global-infrastructure/products-by-region/?products=container-apps&regions=all[supports Container Apps].
+If you're not located in North America, you will get a better experience with Azure by choosing a region close by. For example, a Europe based developer can do this with `az config set defaults.location=westeurope` or pick the location per application. Pick a location that already https://azure.microsoft.com/explore/global-infrastructure/products-by-region/?products=container-apps&regions=all[supports Container Apps].
 
-Docker image is a basic building block used by many modern hosting solutions to run your application. 
-The example project contains a simple ready made `Dockerfile` that essentially describes how the jar file build in previous step should be run.
+Docker image is a basic building block used by many modern hosting solutions to run applications.
+The example project contains a simple ready made `Dockerfile` that essentially describes how the jar file build in the previous step should be run.
 
-Azure Container Apps contains handy `up` command, that does lot of convention based setup for Docker based deployments. 
+Azure Container Apps contains a handy `up` command, that does much of convention based setups for Docker based deployments.
 With a single command, Azure tooling builds a Docker image, pushes it to a custom project specific Docker registry and creates a single node deployment based on it.
 
 [source,bash]
@@ -67,35 +65,30 @@ With a single command, Azure tooling builds a Docker image, pushes it to a custo
 az containerapp up -n my-crm-app --source .
 ----
 
-The `my-crm-app` is the name for your application in Azure, you can pick anything you want for that. 
+The `my-crm-app` should be changed to the name for your application in Azure.
 The last `.` is relevant in the command as it asks Azure to pick the sources from this directory.
 If this is your first time using Azure Container Apps, the CLI will ask to install some new components.
 
-The first deployment can easily take several minutes, depending on the speed of your computer and network. 
+The first deployment can take several minutes, depending on the speed of your computer and network.
 Once the deployment is finished, you should see the URL to your newly deployed Vaadin application at the end of the command output.
 
 .Avoid data loss
 [WARNING]
 ====
-This application uses in-memory H2 database by defaul, which is handy for development. The database is re-created on each deployment and is embedded for each node. For an actual usage, you should switch to your preferred database (at least in the production profile), use `ddl-auto=none` and start to use a database migration tool like https://www.liquibase.org/[Liquibase] or https://flywaydb.org/[Flyway], so you can evolve the database schema without losing data. Check Spring & Azure docs for more.
+This application uses in-memory H2 database by default, which is useful for development. The database is re-created on each deployment and is embedded for each node. For actual usage, you should switch to your preferred database -- at least in the production profile -- to use `ddl-auto=none` and start to use a database migration tool like https://www.liquibase.org/[Liquibase] or https://flywaydb.org/[Flyway], so you can evolve the database schema without losing data. Check Spring and Azure documention for more details.
 ====
 
-Refer to https://learn.microsoft.com/azure/container-apps/[Azure Container Apps documentation] for more details how to configure your deployment. 
-Note, that the horizontal scaling don't yet work with Vaadin apps (session affinity for Container Apps ingress is currently in development), but you can configure the node a larger one to scale up your app. 
-For large scale deployments, you should look into https://vaadin.com/clustering[Kubernetes based clustering solutions].
+Refer to https://learn.microsoft.com/azure/container-apps/[Azure Container Apps documentation] for more details how to configure your deployment.
+Note that the horizontal scaling doesn't work yet with Vaadin applications -- session affinity for Container Apps ingress is currently in development. However, you can configure the node to be a larger one to scale up your application.
+For large scale deployments, you should see https://vaadin.com/clustering[Kubernetes based clustering solutions].
 
 == Conclusion and Next Steps
 
-Congratulations.
-You have now built a full-stack web app in pure Java and deployed it to Azure.
+If all went correctly, you have now built a full-stack web application in pure Java and deployed it to Azure.
 
-Did you like the tutorial?
-Did you find anything that did not seem right?
-Reach out to Vaadin on Twitter https://twitter.com/vaadin[@vaadin] or https://discord.gg/vaadin[Vaadin's Discord chat] server.
+If you had any problems or were confused by any part, please write to us at Vaadin on Twitter https://twitter.com/vaadin[@vaadin] or https://discord.gg/vaadin[Vaadin's Discord chat] server.
 
-Now that you have a running application, you can use it to experiment further or as a foundation for your next idea.
-
-Happy hacking, and ping https://twitter.com/vaadin[@vaadin] on Twitter to show off the cool stuff you have built.
+Now that you have a running application, you can use it to experiment further or as a foundation for your next project.
 
 === Helpful Links
 
