@@ -1,0 +1,432 @@
+---
+title: Routing and navigation
+description: Learn all about defining routes and navigating between views.
+order: 20
+page-links:
+  - https://vaadin.github.io/router/vaadin-router/#/classes/Router[Router API docs]
+---
+
+= Routing and navigation
+
+
+[[routes]]
+== Defining routes
+
+Routes for views or sub-views are defined in the `frontend/routes.ts` file.
+
+.`frontend/routes.ts`
+[source,typescript]
+----
+import { Route } from '@vaadin/router';
+import './views/helloworld/hello-world-view'; // <1>
+import './views/main-layout';
+
+
+export const views: Route[] = [
+  {
+    path: '',
+    component: 'hello-world-view', // <2>
+    title: '',
+  },
+  {
+    path: 'hello',
+    component: 'hello-world-view',
+    title: 'Hello World',
+  },
+  {
+    path: 'about',
+    component: 'about-view',
+    title: 'About',
+    action: async () => await import('./views/about/about-view'), // <3>
+  },
+];
+
+export const routes: Route[] = [
+  {
+    path: '',
+    component: 'main-layout',
+    children: [...views], // <4>
+  },
+];
+----
+<1> Import views in `routes.ts` to include them in the main bundle.
+You should only include those views that are needed on startup to keep the JavaScript bundle size as small as possible.
+<2> Map view tag names to paths in the route definition object.
+<3> Use dynamic imports to import other views.
+This way, the views and their dependencies will only get downloaded if the user navigates to the view.
+<4> Optional: define a main layout for things like header, footer, and navigation.
+Include the views as children.
+
+=== Initializing the router
+
+The router is initialized in `frontend/index.ts` using the routes defined in `frontend/routes.ts`.
+
+.`frontend/index.ts`
+[source,typescript]
+----
+import { Router } from '@vaadin/router';
+import { routes } from './routes';
+
+export const router = new Router(document.querySelector('#outlet')); // <1>
+
+router.setRoutes(routes); // <2>
+----
+<1> Create a new `Router` instance that outputs its content into the element that has the id `outlet` in `index.html`.
+<2> Register the routes defined in `routes.ts` with the Router.
+
+
+
+
+
+
+[[lifecycle]]
+== Navigation lifecycle
+
+The router executes callbacks on each view to check whether the navigation should continue, be postponed or be redirected.
+
+// TODO the note about "server side" confuses me - do we need this paragraph at all?
+// You need to implement navigation controllers differently, depending on whether the view is on the client or server side.
+
+You can choose to implement any of the following lifecycle interfaces and their corresponding callback methods in your view components. *All lifecycle callbacks are asynchronous*.
+
+
+[interfacename]`BeforeEnterObserver`::
+The [methodname]`onBeforeEnter(location, commands, router)` callback is executed before the outlet container is updated with the new element.
++
+At this point, the user can cancel the navigation.
+
+[interfacename]`AfterEnterObserver`::
+The [methodname]`onAfterEnter(location, commands, router)` callback is executed after the new element has been attached to the outlet.
++
+The difference between this method and [methodname]`onBeforeEnter()` is that, when this method is executed, there is no way to cancel the navigation.
+
+[interfacename]`BeforeLeaveObserver`::
+The [methodname]`onBeforeLeave(location, commands, router)` callback is executed before the previous element is detached.
++
+Navigation can be cancelled at this point.
+
+[interfacename]`AfterLeaveObserver`::
+The [methodname]`onAfterLeave(location, commands, router)` callback is executed before the element is removed from the DOM.
++
+When this method is executed, there is no way to cancel the navigation.
++
+During the execution of the [methodname]`onBeforeEnter()` and [methodname]`onBeforeLeave()` callbacks, the user can postpone the navigation by returning [methodname]`commands.prevent()`.
+Uniquely in [methodname]`onBeforeEnter()`, navigation can be redirected by returning [methodname]`commands.redirect(path)`.
+
+The following example show how to cancel navigation in a view component:
+
+.`my-view.ts`
+[source,typescript]
+----
+import { LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import {
+  BeforeEnterObserver,
+  PreventAndRedirectCommands,
+  Router,
+  RouterLocation
+} from '@vaadin/router';
+
+@customElement('my-view')
+class MyView extends LitElement implements BeforeEnterObserver {
+  onBeforeEnter(
+      location: RouterLocation,
+      commands: PreventAndRedirectCommands,
+      router: Router) {
+    if (location.pathname === '/cancel') {
+      return commands.prevent();
+    }
+  }
+}
+----
+
+// .index.ts
+// [source,typescript]
+// ----
+// import { Router } from '@vaadin/router';
+
+// ...
+
+// export const router = new Router(document.querySelector('#outlet'));
+// router.setRoutes([
+//   {
+//     path: 'view1',
+//     component: 'my-view',
+//     action: async () => { await import('./views/my-view'); }
+//   }
+// ]);
+// ----
+
+// For more information, visit the Hilla [classname]`Router` link:https://vaadin.github.io/router/vaadin-router/#/classes/WebComponentInterface[API documentation^].
+
+
+
+// TODO this is basically just a simplified version of "Nested routes and views"
+// == Child routes
+
+// Hilla [classname]`Router` allows you to group related routes together under a common parent by using the `children` property during the router configuration:
+
+// [source,typescript]
+// ----
+// router.setRoutes([
+//   {
+//     path: '',
+//     component: 'app-layout',
+//     action: async () => { await import('./views/app-layout-view'); },
+//     children: [
+//       {
+//         path: 'help',
+//         component: 'app-help',
+//         action: async () => { await import('./views/app-help-view'); }
+//       },
+//       {
+//         path: 'categories',
+//         component: 'app-categories',
+//         action: async () => { await import('./views/app-categories-view'); }
+//       }
+//     ]
+//   }
+// ]);
+// ----
+
+// A child view is rendered within its parent component in the DOM element hierarchy. For example, when the `app-help` view is active, you would see the following DOM structure in the application:
+
+// [source,html]
+// ----
+// <app-layout>
+//   <app-help></app-help>
+// </app-layout>
+// ----
+
+// And when you navigate to the `app-categories` view, the structure would change to this:
+
+// [source,html]
+// ----
+// <app-layout>
+//   <app-categories></app-categories>
+// </app-layout>
+// ----
+
+
+
+
+
+
+[[nested-routes]]
+== Nested routes and views
+
+In many typical applications, you have a main view that displays a menu allowing the user to choose a child view to display.
+When the user selects an item from the menu, a specific child view is shown in a content area inside the main view.
+
+[.subtle]
+image::images/nested-routes.svg["An illustration showing a wireframe of an application with a menu, where navigating to one of the views defined in the menu causes the content area of the application to show that view",opts=inline,width="100%"]
+
+You can define such a main view on either the server side or the client side.
+However, if you intend to display any client-side child views, the main view must be a client-side view.
+
+A main view typically:
+
+- imports Lumo theme global styles,
+- establishes the nested view structure with `<vaadin-app-layout>`,
+- creates a navigation menu bar,
+- generates menu links using the `router` instance,
+- has a binding for the selected tab.
+
+You can have multiple such main views.
+
+=== Route configuration
+
+In a nested view configuration, you have a route to the main view, and child routes to the sub-views.
+The route to the main view is usually the root route.
+You can configure the child views either with explicit full paths, such as `/main-view/users`, or hierarchically with child routes, as follows.
+
+The following configuration in [filename]`routes.ts` sets up a main view with two child views:
+
+[source,typescript]
+----
+const routes = [
+{
+	path: '',
+	component: 'main-view',
+	children: [
+		{
+			path: '',
+			component: 'hello-world-view',
+		},
+		{
+			path: 'about',
+			component: 'about-view',
+			action: async () => { await import ('./views/about/about-view'); }
+		}
+	]
+},
+];
+----
+
+=== Establish an application layout
+
+The most prominent feature of the main layout is that it defines the layout for the application.
+You can use the https://vaadin.com/docs/components/app-layout[App Layout] component:
+
+.main-layout.ts
+[source,typescript]
+----
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { Layout } from './view';
+import '@vaadin/app-layout';
+
+@customElement('main-layout')
+export class MainLayout extends Layout {
+  render() {
+    return html`
+      <vaadin-app-layout>
+        <slot></slot>
+      </vaadin-app-layout>
+    `;
+  }
+}
+----
+
+[NOTE]
+Keep the `<slot>` in the main layout template returned from the [methodname]`render()` method.
+Hilla [classname]`Router` adds views as children in the main layout.
+
+=== Create the navigation menu
+
+The main layout usually contains a navigation bar with the menu.
+Here, we create the navigation bar with menu using plain anchor tags:
+
+.main-layout.ts
+[source,typescript]
+----
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { Layout } from './view';
+import '@vaadin/app-layout';
+
+@customElement('main-layout')
+export class MainLayout extends Layout {
+  render() {
+    return html`
+      <vaadin-app-layout id="layout">
+        <div slot="drawer">
+          <a href="/">Hello world</a>
+          <a href="/about">About</a>
+        </div>
+        <slot></slot>
+      </vaadin-app-layout>
+    `;
+  }
+}
+----
+
+=== Create the header
+
+You can The App Layout component supports a header by adding content to the `navbar` slot.
+
+.main-layout.ts
+[source, typescript]
+----
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { Layout } from './view';
+import '@vaadin/app-layout';
+import '@vaadin/app-layout/vaadin-drawer-toggle.js';
+
+@customElement('main-layout')
+export class MainLayout extends Layout {
+  render() {
+    return html`
+      <vaadin-app-layout id="layout">
+        <header slot="navbar">
+          <vaadin-drawer-toggle aria-label="Menu toggle">
+          </vaadin-drawer-toggle><!--1-->
+          <h1>App Title</h1>
+        </header>
+        <div slot="drawer">
+          <a href="/">Hello world</a>
+          <a href="/about">About</a>
+        </div>
+        <slot></slot>
+      </vaadin-app-layout>
+    `;
+  }
+}
+----
+<1> The `<vaadin-drawer-toggle>` element is a button for hiding and showing the navigation drawer.
+
+
+
+
+
+[[parameters]]
+== Route parameters
+
+Route parameters are useful when the same Web Component needs to be rendered for multiple paths, where part of the path is static, and another part contains a parameter value.
+
+For example, the paths `/user/1` and `/user/42` can both have the same route to render the content.
+The `/user/` part is static, and `1` and `42` are the parameter values.
+
+Route parameters are defined using an `express.js`-like syntax.
+The implementation is based on the `path-to-regexp` library, which is commonly used in modern front-end libraries and frameworks.
+
+The following features are supported:
+
+Named parameters:: `/profile/:user`
+Optional parameters:: `/:size/:color?`
+Zero-or-more segments:: `/kb/:path*`
+One-or-more segments:: `/kb/:path+`
+Custom parameter patterns:: `/image-:size(\d+)px`
+Unnamed parameters:: `/(user[s]?)/:id`
+
+Routes for these features can be defined as follows:
+
+[source,typescript]
+----
+const router = new Router(document.getElementById('outlet'));
+router.setRoutes([
+  {path: '/', component: 'home-view'},
+  {path: '/profile/:user', component: 'user-profile'},
+  {path: '/image/:size/:color?', component: 'image-view'},
+  {path: '/kb/:path*', component: 'knowledge-base'},
+  {path: '/image-:size(\\d+)px', component: 'image-view'},
+  {path: '/(user[s]?)/:id', component: 'profile-view'},
+]);
+----
+
+=== Accessing route parameters
+
+Route parameters can be accessed in the `location.params` property of the route component.
+The `location` property is defined by the router.
+
+Named parameters are accessible by a string key, such as `location.params.id` or `location.params['id']`.
+
+Unnamed parameters are accessible by a numeric index, such as `location.params[0]`.
+
+.example-view.ts
+[source,typescript]
+----
+import { BeforeEnterObserver, Router, RouterLocation } from '@vaadin/router';
+import { View } from '../../views/view';
+
+@customElement('user-view')
+export class CreateOrUpdatePetView extends View
+  implements BeforeEnterObserver { // <1>
+
+  @state() id?;
+
+  onBeforeEnter(location: RouterLocation) { // <2>
+    this.id = parseInt(location.params.id as string);
+  }
+
+  render(){
+    return html`
+      <h1>Viewing user with id ${this.id}</h1>
+    `;
+  }
+}
+----
+<1> Implement `BeforeEnterObserver` in your view.
+See <<lifecycle,Navigation lifecycle>> for a list of different lifecycle callbacks for views.
+<2> Implement the `onBeforeEnter()` callback to read the parameter value.

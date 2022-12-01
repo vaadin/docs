@@ -1,10 +1,10 @@
 import { html, LitElement, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-@customElement('my-view')
-class MyView extends LitElement {
+@customElement('my-component')
+class MyComponent extends LitElement {
   render(): TemplateResult {
-    return html`<h1>My View</h1>`;
+    return html`<h1>My Component</h1>`;
   }
 
   protected createRenderRoot(): Element | ShadowRoot {
@@ -12,4 +12,4 @@ class MyView extends LitElement {
   }
 }
 
-export default MyView;
+export default MyComponent;

@@ -1,0 +1,137 @@
+---
+title: Type nullability
+---
+// tag::content[]
+
+= Type nullability
+
+Types are either _nullable_ (optional) or _non-nullable_ (required).
+By default, types are mapped and generated using the Java rules:
+
+- Any primitive type, such as `int`, is non-nullable.
+- Any reference type, such as `String` or `Integer`, is nullable.
+- A collection accepts `null`, unless the collection item type is primitive.
+- A map accepts `null`, unless the collection item type is primitive.
+
+Any of these nullable types can be made non-nullable by applying a `@Nonnull` annotation.
+You can use any annotation that has the name `nonnull` (case-insensitive).
+For example:
+
+* `javax.annotation.Nonnull`;
+* `edu.umd.cs.findbugs.annotations.NonNull`;
+* `lombok.NonNull`;
+* `android.support.annotation.NonNull`;
+* `org.eclipse.jdt.annotation.NonNull`;
+* any other annotation (including custom) that has the name `nonnull` (case-insensitive).
+
+== Endpoint functions
+
+For an endpoint function, nullable elements are:
+
+* **Function parameter type**.
+Arguments cannot be omitted, even when the parameter types are nullable.
+To receive a `null` parameter value in Java, send an `undefined` argument in the endpoint function call.
+* **Function return type**.
+
+.Original Java endpoint class
+[source,java]
+----
+@Endpoint
+class PersonEndpoint {
+    // Person must have at least the first and the last name
+    public void setFullName(@Nonnull String firstName, @Nonnull String lastName, String middleName) {
+        // omitted code
+    }
+
+    // Full name must exist
+    @Nonnull
+    public String getFullName() {
+        // omitted code
+    }
+
+    // Person can have no connections with other people. But if they have,
+    // the connection cannot be null.
+    public Map<String, @Nonnull String> getConnections() {
+        // omitted code
+    }
+}
+----
+
+.Generated TypeScript endpoint functions
+[source,typescript]
+----
+export async function setName(
+  firstName: string,
+  lastName: string,
+  middleName: string | undefined
+) {
+  return client.call('PersonEndpoint', 'setFullName', {firstName, lastName, middleName});
+}
+
+export async function getFullName(): Promise<string> {
+  return client.call('PersonEndpoint', 'getFullName');
+}
+
+export async function getConnections(): Promise<Record<string, string> | undefined> {
+  return client.call('PersonEndpoint', 'getConnections');
+}
+----
+
+== Data class properties
+
+Properties of data classes are nullable.
+Unlike the function parameters, all nullable properties can be omitted.
+
+.Original properties in Java data class
+[source,java]
+----
+public class MyBean {
+    private long id;
+    @Nonnull
+    private String value;
+    private String description;
+    private Map<String, String> map;
+    @Nonnull
+    private List<String> list;
+}
+----
+
+.Generated properties in TypeScript data interface
+[source,typescript]
+----
+export default interface MyBean {
+  id: number;
+  value: string;
+  description?: string;
+  map?: Record<string, string | undefined>;
+  list: Array<string | undefined>;
+}
+----
+
+== Collection item types
+
+The collection item type is nullable.
+
+.Original properties in Java data class
+[source,java]
+----
+public class MyBean {
+    private List<String> list;
+    private List<@Nonnull String> nonNullableList;
+    private Map<String, String> map;
+    private Map<String, @Nonnull String> nonNullableMap;
+}
+----
+
+.Generated properties in TypeScript data interface
+[source,typescript]
+----
+export default interface MyBean {
+  list?: Array<string | undefined>;
+  nonNullableList?: Array<string>;
+  map?: Record<string, string | undefined>;
+  nonNullableMap?: Record<string, string>;
+}
+----
+
+// end::content[]

@@ -1,0 +1,376 @@
+---
+title: Endpoint generator
+description: The endpoint generator produces TypeScript files based on the information from an OpenAPI document that's generated from Java (or other JVM language) files.
+---
+// tag::content[]
+
+= Endpoint generator
+:toclevels: 2
+
+
+== Features
+
+The generator has the following noteworthy features:
+
+- [since:dev.hilla:hilla@v1.2]*Support for multi-module projects*: you can use standard Maven modules in your application, or even external dependencies, as there is no need for endpoints and entity classes to be in the same project as the Hilla application;
+
+- [since:dev.hilla:hilla@v1.2]*Support for JVM languages other than Java*: you can create classes with Kotlin, for example, and have them translated to TypeScript;
+
+- *Designed to be flexible*: all parts of the generator are pluggable, which allows you to alter the default behavior or add a new one.
+
+.Enable the Java compiler "parameters" option
+[IMPORTANT]
+You need to use the `javac -parameters` option to enable support for multi-module projects and all JVM languages. See <<configuration#java-compiler-options,Configuration>> for details.
+
+
+== Generator architecture
+
+The generator consists of three parts:
+
+*Java bytecode parser*::
+The parser reads the Java bytecode and generates an OpenAPI scheme.
+
+*TypeScript Abstract Syntax Tree (AST) generator*::
+The AST generator reads the OpenAPI scheme and generates TypeScript endpoints that could be used in further front-end development.
+
+*Runtime controller*::
+The runtime controller provides runtime communication between the server and the client.
+
+Hilla uses the https://github.com/OAI/OpenAPI-Specification[OpenAPI Specification] as a middle layer between endpoints and TypeScript endpoint clients.
+The implementation is based on OpenAPI specification 3.0.
+For details, see <<appendix, the appendix at the end of this page>>.
+
+
+== Examples
+
+=== Generated TypeScript endpoint
+
+[.example]
+--
+The `UserEndpoint.ts` class is generated from the `UserEndpoint.java` class.
+
+[[user-endpoint-ts]]
+.`UserEndpoint.ts`
+[source,typescript]
+----
+/**
+ * User endpoint.
+ *
+ * This module has been generated from UserEndpoint.java
+ * @module UserEndpoint
+ */
+import client from './connect-client.default'; // <1>
+
+/**
+ * Check if a user is admin or not.
+ *
+ * @param id User id to be checked
+ * Return Return true if the given user is an admin, otherwise false.
+ */
+export async function isAdmin( // <2>
+  id?: number
+) {
+  return await client.call('UserEndpoint', 'isAdmin', {id});
+}
+----
+
+.`UserEndpoint.java`
+[source,java]
+----
+/**
+ * User endpoint.
+ */
+@Endpoint
+public class UserEndpoint {
+    /**
+     * Check if a user is admin or not.
+     *
+     * @param id
+     *            User id to be checked
+     * @return Return true if the given user is an admin, otherwise false.
+     */
+    public boolean isAdmin(long id) {
+        return id == 0;
+    }
+}
+----
+--
+<1> This line is a static part of any generated TypeScript class. [filename]`connect-client.default.ts` is another generated file, which includes default configurations for the [classname]`ConnectClient` and exports its instance as `client`.
+<2> Each method in the generated TypeScript class corresponds to a Java method in the `@Endpoint`-annotated class.
+
+For more information about type mapping between Java and TypeScript, see <<type-conversion#, Type conversion>>. You may also want to learn about <<type-nullability#, Type nullability>>.
+
+
+
+
+=== Adding a custom generator plugin
+
+Generator plugins can be configured and extended.
+This example defines a custom [classname]`NonNull` annotation and uses it instead of the default one.
+
+The configuration parameters are specific to the plugin.
+In this case, the simplest way is to `<disable>` the default configuration of the [classname]`NonnullPlugin` and `<use>` a detailed custom configuration, like in this example:
+
+[source,xml]
+----
+<configuration>
+    <parser>
+        <plugins>
+            <use>
+                <plugin>
+                    <name>dev.hilla.parser.plugins.nonnull.NonnullPlugin</name>
+                    <configuration implementation="dev.hilla.parser.plugins.nonnull.NonnullPluginConfig">
+                        <use>
+                            <annotation>
+                                <name>com.example.application.annotations.NeverNull</name>
+                                <makesNullable>false</makesNullable>
+                                <score>50</score>
+                            </annotation>
+                        </use>
+                    </configuration>
+                </plugin>
+            </use>
+            <disable>
+                <plugin>
+                    <name>dev.hilla.parser.plugins.nonnull.NonnullPlugin</name>
+                </plugin>
+            </disable>
+        </plugins>
+    </parser>
+</configuration>
+----
+
+You need to create the custom annotation and update the endpoint to use it:
+
+.`NeverNull.java`
+[source,java]
+----
+package com.example.application.annotations;
+
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE_USE })
+public @interface NeverNull {
+}
+----
+
+.`MyEndpoint.java`
+[source,java]
+----
+@Endpoint
+public class MyEndpoint {
+
+  @NeverNull
+  public String sayHello(@NeverNull String name) {
+      if (name.isEmpty()) {
+          return "Hello stranger";
+      } else {
+          return "Hello " + name;
+      }
+  }
+}
+----
+
+The plugin configuration is modelled on the configuration classes defined for each plugin. For example, see the https://github.com/vaadin/hilla/blob/main/packages/java/parser-jvm-plugin-nonnull/src/main/java/dev/hilla/parser/plugins/nonnull/NonnullPluginConfig.java[Nonnull plugin configuration].
+
+
+
+
+
+
+[[appendix]]
+== Appendix: How a TypeScript class is generated from the OpenAPI specification
+
+=== Modules / classes
+
+The generator collects all the `tags` fields of all operations in the OpenAPI document.
+Each tag generates a corresponding TypeScript file.
+The tag name is used for TypeScript module/class name, as well as the file name.
+The TsDoc of the class is fetched from the `description` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] that has the same name as the class.
+
+=== Methods
+
+Each exported method in a module corresponds to a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[POST operation] of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathItemObject[path item] in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathsObject[paths object].
+
+[NOTE]
+The generator only supports the `POST` operation.
+If a path item contains operations other than `POST`, the generator stops processing.
+
+The path *must* start with `/`, as described in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#patterned-fields[Patterned Fields].
+It's parsed as `/<endpoint name>/<method name>`, which is used as a parameter to call to Java endpoints in the backend.
+The method name from the path is also reused as the method name in the generated TypeScript file.
+
+==== Method parameters
+
+The parameters of the method are taken from the `application/json` content of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#requestBodyObject[request body object].
+To get the result as <<user-endpoint-ts>>, the request body content should be:
+
+[[request-body]]
+.Request body
+[source,json]
+----
+{
+ "content": {
+    "application/json": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "User id to be checked"
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+The type and description of each property are used for the TsDoc that describes the parameter in more detail.
+
+[NOTE]
+====
+All the other content types of the request body object are ignored by the Hilla generator.
+This means that a method that doesn't have the `application/json` content type is considered to be one with no parameters.
+====
+
+==== Method return type
+
+The return type and its description are taken from the `200` https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responseObject[response object].
+As with the request body object, the generator is only interested in the `application/json` content type.
+The schema type indicates the return type and the description describes the result.
+Here is an example of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responsesObject[response object]:
+
+[[response-object]]
+.Response object
+[source,json]
+----
+{
+  "200": {
+    "description": "Return true if the given user is an admin, otherwise false.",
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
+----
+
+[NOTE]
+====
+Currently, the generator only recognizes `200` response objects.
+Other response objects are ignored.
+====
+
+==== Method TsDoc
+
+The TsDoc of the generated method is stored as the `description` value of the `POST` operation in the path item.
+A valid _POST` operation combined with <<request-body>> and <<response-object>> would look like this:
+
+.Post Operation
+[source,json]
+----
+{
+  "tags": ["UserEndpoint"], // <1>
+  "description": "Check if a user is admin or not.",
+  "requestBody": {
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "description": "User id to be checked"
+            }
+          }
+        }
+      }
+    }
+  },
+  "responses": {
+    "200": {
+      "description": "Return true if the given user is an admin, otherwise false.",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+<1> As mentioned in the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[operation object] specification, in the Hilla generator, `tags` are used to classify operations into TypeScript files.
+This means that each tag has a corresponding generated TypeScript file.
+Operations that contain more than one tag appear in all the generated files.
+Operations with empty tags are placed in the [filename]`Default.ts` file.
+
+[NOTE]
+Although multiple tags don't break the generator, it might be confusing at development time if there are two identical methods in different TypeScript files.
+It's recommended to have only one tag per operation.
+
+Here is an example OpenAPI document that could generate previous [filename]`UserEndpoint.ts`.
+
+.User endpoint OpenApi document
+[source,json]
+----
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "My example application",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "https://myhost.com/myendpoint",
+    "description" : "Hilla backend server"
+  } ],
+  "tags" : [ {
+    "name" : "UserEndpoint",
+    "description" : "User endpoint class."
+  } ],
+  "paths" : {
+    "/UserEndpoint/isAdmin" : {
+      "post": {
+        "tags": ["UserEndpoint"],
+        "description": "Check if a user is admin or not.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [ "id" ],
+                "properties": {
+                  "id": {
+                    "type": "number",
+                    "description": "User id to be checked"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return true if the given user is an admin, otherwise false.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+// end::content[]
