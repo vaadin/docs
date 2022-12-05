@@ -5,58 +5,56 @@ order: 120
 
 = Running Tests on a CI Server
 
-Your tests can be run on a CI server as part of the build in the same way as you would run other tests.
-However, there are a few things to consider:
+Tests can be run on a CI server as part of a build in the same way as you would run other tests. However, there are a few things to consider:
 
-1. The application must be deployed to a server and the server started
-2. The URL used in the test must match the URL of the deployed application
-3. The browsers you want to run on must be available
-4. If run in parallel, tests should be truly independent of each other
-5. You need to install a license file on the CI server
+* The application must be deployed to a server and the server started.
+* The URL used in the test must match the URL of the deployed application.
+* The browsers you want to run on must be available.
+* If run in parallel, tests should be truly independent of each other.
+* You need to install a license file on the CI server.
 
 == Deploying the Application
-Deployment of the application can be done in several different ways, depending on the setup and your preferences.
-The important thing is that the application should be deployed and ready to accept requests before the tests are started.
 
-For applications without external dependencies, it's often handy to start a test as part of the build.
-If you are building with Maven, see <<maven#,Running Tests with Maven>> for information on how you can start and stop the server as part of the build.
+Deployment of the application can be done in several ways, depending on the setup and your preferences. The important thing is that the application is deployed and ready to accept requests before the tests are started.
 
-If you have an external server that you deploy the application to, you typically copy the result of the build to that server in one build step, then wait for the deployment to finish by querying the server or polling the URL where the application should be.
-The following build step then executes the TestBench tests using the predefined URL.
+For applications without external dependencies, it's often handy to start a test as part of the build. If you're building with Maven, see <<maven#,Running Tests with Maven>> for information on how you can start and stop the server as part of the build.
+
+If you have an external server on which you deploy the application, you would typically copy the result of the build to that server in one build step. You would then wait for the deployment to finish by querying the server or polling the URL where the application should be. The following build step then executes the TestBench tests using the predefined URL.
 
 == Using the Correct URL
-In tests, you typically use a URL like `http://localhost:8080/` when running on your local machine.
-On a build server, this is usually OK if you are running the server and the tests all on the same build agent.
 
-If only the server is running on the build agent and the browsers are running on a separate machine or on a cloud-based browser provider, you might need to define and use a public IP of the build agent.
-You either need to pass the IP address to the build in some way and use it in your test, or you can use the provided [methodname]`IPAddress.findSiteLocalAddress()` helper in your test.
-For example:
+In tests, you typically use a URL like `http://localhost:8080/` when running on a local machine. On a build server, this is usually fine if you're running the server and tests on the same build agent.
+
+If only the server is running on the build agent, and the browsers are running on a separate machine or on a cloud-based browser provider, you might need to define and use a public IP of the build agent. You either need to pass the IP address to the build in some way and use it in your test, or you have to use the provided [methodname]`IPAddress.findSiteLocalAddress()` helper in your test.
+
+Below is an example of how you might use the helper:
 
 [source,java]
 ----
 getDriver().get("http://" + IPAddress.findSiteLocalAddress() + ":8080/");
 ----
 
-If you are deploying on another host name, you need to pass that information to the tests in a suitable way, for example as a system property or environment variable you read in the test code.
+If you're deploying on another host name, you need to pass that information to the tests in a suitable way. For example, you might do this as a system property or environment variable that's read in the test code.
 
 [NOTE]
-If you aren't using site local addresses (10.x.y.z, 172.16.x.y or 192.168.x.y), you can use [methodname]`IPAddress.findIPAddress(..)` instead.
+If you're not using site local addresses (i.e., 10.x.y.z, 172.16.x.y or 192.168.x.y), you can use instead [methodname]`IPAddress.findIPAddress(..)`.
 
 
 == Making Sure the Browsers Are Available
-When running the tests on your local machine, you need to have a suitable browser installed.
-If the test creates a `ChromeDriver` instance, you need to have Chrome installed, and so on.
-The same goes for the CI server (the build agent) if you are running tests directly on a local browser (as opposed to a test cluster, described in <<multiple-browsers#,Running Tests on Multiple Browsers in a Grid>>).
 
-In addition to installing the browsers on the build agent, you must consider the fact that browsers typically require a GUI to be run.
-This isn't available directly on your typical build system.
+When running the tests on your local machine, you need to have a suitable browser installed. For instance, if the test creates a `ChromeDriver` instance, you need to have Chrome installed, and so on.
+
+The same goes for the CI server, the build agent, if you're running tests directly on a local browser -- as opposed to a test cluster, described in <<multiple-browsers#,Running Tests on Multiple Browsers>>.
+
+In addition to installing the browsers on the build agent, you must consider the fact that browsers typically require a GUI to be run. This isn't available directly on your typical build system.
+
 The options for running on such a system are:
 
-1. Run Chrome or Firefox in headless mode; then no GUI is needed.
-2. If it's a Linux-based system, start `xvfb`, which provides a GUI environment for the browser without actually showing the GUI environment anywhere.
+* Run Chrome or Firefox in headless mode; then no GUI is needed.
+* If it's a Linux-based system, start `xvfb`, which provides a GUI environment for the browser without actually showing the GUI environment anywhere.
 
-To run Chrome in headless mode, you need to pass the `--headless` (and `--disable-gpu` on Windows) parameter to the `ChromeDriver` when starting the browser.
-The parameters can be defined using `ChromeOptions`:
+To run Chrome in headless mode, you need to pass the `--headless` parameter -- and `--disable-gpu` on Windows -- to the `ChromeDriver` when starting the browser. The parameters can be defined using `ChromeOptions` like so:
+
 [source,java]
 ----
 ChromeOptions options = new ChromeOptions();
@@ -64,7 +62,8 @@ options.addArguments("--headless", "--disable-gpu");
 setDriver(new ChromeDriver(options));
 ----
 
-Similarly, to run Firefox in headless mode, you need to pass the `-headless` parameter to the `FirefoxDriver`:
+Similarly, to run Firefox in headless mode, you need to pass the `--headless` parameter to the `FirefoxDriver`:
+
 [source,java]
 ----
 FirefoxOptions options = new FirefoxOptions();
@@ -73,25 +72,20 @@ setDriver(new FirefoxDriver(options));
 ----
 
 [NOTE]
-The `--disable-gpu` flag is only needed on Windows and until http://crbug.com/737678 is resolved but it shouldn't hurt on other platforms.
+The `--disable-gpu` flag is only needed on Windows and until http://crbug.com/737678 is resolved. However, it shouldn't cause problems on other platforms.
 
 [NOTE]
-Previously, PhantomJS was recommended as a good way to do headless testing.
-You should no longer use PhantomJS, as it has fallen far behind the latest browser versions and likely doesn't work with Vaadin.
+Previously, PhantomJS was recommended as a good way to do headless testing. You should no longer use PhantomJS, as it has fallen far behind the latest browser versions and likely won't work with Vaadin.
 
 == Truly Independent Tests
-The easiest way to ensure that tests don't interfere with each other is to have a separate test database initialized from the ground up for each test.
-How you do this is typically connected to what stack you are using.
-If you are using, for example, Spring Boot, you can use the `SpringRunner` and set your test to rollback any transaction at the end of the test.
-Other environments might have different options for this.
 
-If you aren't resetting the database for each test, you should typically not run the tests in parallel, as it's very hard to understand where something went wrong when a lot of tests suddenly fail.
-Even though it isn't good practice, when running tests in sequence, you can consider the way in which the previous test modified the data set.
-A better approach is typically to try not to alter the global state in the test, or at least set up the data needed by the test in the test itself.
-An example would be that when you test a CRUD view, you should start by creating an entity instead of selecting an existing entity at random.
-You can then delete your test entity at the end of the test.
-However, both of these approaches cause a lot of tests to fail if one test fails at the beginning of the set.
-You always need to hunt down the initial problem and then rerun the whole set to find any additional errors.
+The easiest way to ensure that tests don't interfere with each other is to have a separate test database initialized for each test. How you do this is typically dependent on the stack you're using. If you're using, for example, Spring Boot, you can use the `SpringRunner` and set your test to rollback any transaction at the end of the test. Other environments might have different options for this.
+
+If you aren't resetting the database for each test, you should typically not run the tests in parallel, as it's difficult to understand where something went wrong when several tests fail suddenly. Even though it's not good practice, when running tests in sequence, you can consider the way in which the previous test modified the data set.
+
+A better approach typically is to try not to alter the global state in the test -- or at least include the data needed by the test in the test itself. An example would be that when you test a CRUD view, you should start by creating an entity instead of selecting an existing entity at random. You can then delete your test entity at the end of the test.
+
+Both of these approaches, however, cause several tests to fail if one test fails at the beginning of the set. You always need to search for the initial problem and then rerun the whole set to find any additional errors.
 
 == Installing the License
 
