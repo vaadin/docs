@@ -2,7 +2,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
 @customElement('dspublisher-header')
-class Header extends LitElement {
+export class Header extends LitElement {
   createRenderRoot() {
     return this;
   }
