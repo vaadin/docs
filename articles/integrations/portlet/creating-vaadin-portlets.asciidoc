@@ -1,7 +1,7 @@
 ---
 title: Creating Vaadin Portlets
 order: 2
-description: Describes how to build your own Vaadin Portlets and run them
+description: Describes how to build your own Vaadin Portlets and run them.
 ---
 
 = Creating Vaadin Portlets
@@ -17,7 +17,7 @@ To become familiar with setting up a Vaadin Portlet project manually, you start 
 
 === Setting Up Portlet Project
 
-First, download the https://github.com/vaadin/skeleton-starter-flow/tree/v14/[Vaadin base starter]
+First, download the https://github.com/vaadin/skeleton-starter-flow/tree/v23/[Vaadin base starter]
 
 Next, update your [filename]`pom.xml`:
 
@@ -201,6 +201,22 @@ If your portlet runs in *Liferay Portal*, add the following resource file [filen
 }
 ----
 
+
+[role="since:com.vaadin:vaadin@V23.2"]
+=== Enable webpack for Front-End Builds
+
+Starting with Vaadin 23.2, Vite is the default tool for front-end builds.
+However, Vaadin Portlet requires webpack to be used.
+To use webpack, you must enable it with the `webpackForFrontendBuild` feature flag.
+
+.[filename]`src/main/resources/vaadin-featureflags.properties`
+[source,properties]
+----
+com.vaadin.experimental.webpackForFrontendBuild=true
+----
+
+See <<{articles}/configuration/feature-flags#,Feature Flags>> for more information.
+
 == Deploying Your Vaadin Portlet
 
 === Building Vaadin Portlet
@@ -242,14 +258,25 @@ Add the following plugin configuration to the [filename]`pom.xml`:
                 <webResources>
                     <resource>
                         <!-- this is relative to the pom.xml directory -->
-                        <directory>target/classes/META-INF/webapp/</directory>
+                        <directory>target/classes/META-INF/VAADIN/webapp/</directory>
                         <!-- Include all files and folders below <directory> -->
                         <includes>
                             <include>**</include>
                         </includes>
-                        <!-- don't include configuration files -->
+                    </resource>
+                    <resource>
+                        <!-- this is relative to the pom.xml directory -->
+                        <directory>target/classes/META-INF/</directory>
+                        <!--
+                            Include all config files to root except flow-build-info
+                            that is not needed at runtime when running fronted builds
+                        -->
+                        <includes>
+                            <include>VAADIN/config/**</include>
+                        </includes>
+                        <!-- do not include  file as it contains portlet configuration -->
                         <excludes>
-                            <exclude>VAADIN/config/**</exclude>
+                            <exclude>VAADIN/config/flow-build-info.json</exclude>
                         </excludes>
                     </resource>
                 </webResources>
@@ -263,14 +290,27 @@ Add the following plugin configuration to the [filename]`pom.xml`:
             </goals>
             <configuration>
                 <primaryArtifact>true</primaryArtifact>
-                <packagingExcludes>WEB-INF/classes/META-INF/VAADIN/build/**,VAADIN/</packagingExcludes>
+                <packagingExcludes>WEB-INF/classes/META-INF/webapp/VAADIN/build/**,VAADIN/</packagingExcludes>
+                <webResources>
+                    <resource>
+                        <directory>${project.basedir}/src/main/resources/</directory>
+                        <!--
+                        Include original flow-build-info.json, not the one produced by vaadin plugin
+                        and included in the static portlet
+                        -->
+                        <includes>
+                            <include>META-INF/VAADIN/config/flow-build-info.json</include>
+                        </includes>
+                        <targetPath>WEB-INF/classes/</targetPath>
+                    </resource>
+                </webResources>
             </configuration>
         </execution>
     </executions>
 </plugin>
 ----
 
-Here you build two `WAR` files: one for the application (all portlets in this project), and one for the static files needed by the portlets (which contains the frontend bundle and client engine).
+Here you build two `WAR` files: one for the application (all portlets in this project), and one for the static files needed by the portlets (which contains the front-end bundle and client engine).
 
 The static `WAR` is built as a portal window that can load only a single Vaadin bundle and client engine at a time.
 This provides a simple way for all the portlets on the page to use the same static bundle.
