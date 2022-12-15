@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/date-picker';
-import { DatePicker, DatePickerDate, DatePickerValueChangedEvent } from '@vaadin/date-picker';
+import type { DatePicker, DatePickerDate, DatePickerChangeEvent } from '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
@@ -18,7 +18,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-date-picker')
-  private datePicker?: DatePicker;
+  private datePicker!: DatePicker;
 
   @state()
   private selectedDateValue: string = dateFnsFormat(new Date(), 'yyyy-MM-dd');
@@ -38,13 +38,11 @@ export class Example extends LitElement {
       return { year: date.getFullYear(), month: date.getMonth(), day: date.getDate() };
     };
 
-    if (this.datePicker) {
-      this.datePicker.i18n = {
-        ...this.datePicker.i18n,
-        formatDate: formatDateIso8601,
-        parseDate: parseDateIso8601,
-      };
-    }
+    this.datePicker.i18n = {
+      ...this.datePicker.i18n,
+      formatDate: formatDateIso8601,
+      parseDate: parseDateIso8601,
+    };
   }
 
   // end::snippet[]
@@ -55,7 +53,7 @@ export class Example extends LitElement {
         label="Select a date:"
         value="${this.selectedDateValue}"
         helper-text="Date picker configured to use ISO 8601 format"
-        @change="${(e: DatePickerValueChangedEvent) => (this.selectedDateValue = e.detail.value)}"
+        @change="${(e: DatePickerChangeEvent) => (this.selectedDateValue = e.target.value)}"
       ></vaadin-date-picker>
     `;
   }

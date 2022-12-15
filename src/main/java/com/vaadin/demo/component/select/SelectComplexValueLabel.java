@@ -12,20 +12,20 @@ import java.util.List;
 @Route("select-complex-value-label")
 public class SelectComplexValueLabel extends Div {
 
-  public SelectComplexValueLabel() {
-    // tag::snippet[]
-    Select<Person> select = new Select<>();
-    select.setLabel("Assignee");
-    // Display full name of the person as item text and selected value label
-    select.setItemLabelGenerator(Person::getFullName);
+    public SelectComplexValueLabel() {
+        // tag::snippet[]
+        Select<Person> select = new Select<>();
+        select.setLabel("Assignee");
+        // Display full name of the person as item text and selected value label
+        select.setItemLabelGenerator(Person::getFullName);
 
-    List<Person> people = DataService.getPeople(5);
-    select.setItems(people);
-    // end::snippet[]
+        List<Person> people = DataService.getPeople(5);
+        select.setItems(people);
+        // end::snippet[]
 
-    add(select);
-  }
+        add(select);
+    }
 
-  public static class Exporter extends DemoExporter<SelectComplexValueLabel> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<SelectComplexValueLabel> { // hidden-source-line
+    } // hidden-source-line
 }

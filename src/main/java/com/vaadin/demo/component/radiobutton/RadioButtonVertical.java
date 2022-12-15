@@ -9,17 +9,17 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("radio-button-vertical")
 public class RadioButtonVertical extends Div {
 
-  public RadioButtonVertical() {
-    // tag::snippet[]
-    RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>();
-    radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-    radioGroup.setLabel("Status");
-    radioGroup.setItems("Pending", "Submitted", "Confirmed");
-    radioGroup.setValue("Pending");
-    add(radioGroup);
-    // end::snippet[]
-  }
+    public RadioButtonVertical() {
+        // tag::snippet[]
+        RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>();
+        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        radioGroup.setLabel("Status");
+        radioGroup.setItems("Pending", "Submitted", "Confirmed");
+        radioGroup.setValue("Pending");
+        add(radioGroup);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<RadioButtonVertical> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<RadioButtonVertical> { // hidden-source-line
+    } // hidden-source-line
 }

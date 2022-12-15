@@ -1,12 +1,14 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/grid';
-import type { GridDragStartEvent, GridDropEvent, GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import type { GridDragStartEvent, GridDropEvent } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
@@ -35,7 +37,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-grid
         .items="${this.items}"
-        ?rows-draggable="${true}"
+        rows-draggable
         drop-mode="between"
         @grid-dragstart="${(event: GridDragStartEvent<Person>) => {
           this.draggedItem = event.detail.draggedItems[0];
@@ -45,25 +47,25 @@ export class Example extends LitElement {
         }}"
         @grid-drop="${(event: GridDropEvent<Person>) => {
           const { dropTargetItem, dropLocation } = event.detail;
-          // only act when dropping on another item
+          // Only act when dropping on another item
           if (this.draggedItem && dropTargetItem !== this.draggedItem) {
-            // remove the item from its previous position
+            // Remove the item from its previous position
             const draggedItemIndex = this.items.indexOf(this.draggedItem);
             this.items.splice(draggedItemIndex, 1);
-            // re-insert the item at its new position
+            // Re-insert the item at its new position
             const dropIndex =
               this.items.indexOf(dropTargetItem) + (dropLocation === 'below' ? 1 : 0);
             this.items.splice(dropIndex, 0, this.draggedItem);
-            // re-assign the array to refresh the grid
+            // Re-assign the array to refresh the grid
             this.items = [...this.items];
           }
         }}"
       >
         <vaadin-grid-column
           header="Image"
-          .renderer="${this.avatarRenderer}"
           flex-grow="0"
           auto-width
+          ${columnBodyRenderer(this.avatarRenderer, [])}
         ></vaadin-grid-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
@@ -73,17 +75,12 @@ export class Example extends LitElement {
     `;
   }
 
-  private avatarRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    render(
-      html`
-        <vaadin-avatar
-          img="${model.item.pictureUrl}"
-          name="${model.item.firstName} ${model.item.lastName}"
-          alt="User avatar"
-        ></vaadin-avatar>
-      `,
-      root
-    );
-  };
+  private avatarRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
+    <vaadin-avatar
+      img="${person.pictureUrl}"
+      name="${person.firstName} ${person.lastName}"
+      alt="User avatar"
+    ></vaadin-avatar>
+  `;
 }
 // end::snippet[]

@@ -49,8 +49,8 @@ public class GridColumnAlignment extends Div {
             .getCurrencyInstance(new Locale("en", "US"));
 
     private static String generateRandomAmountText(Person person) {
-        double randomValue = ThreadLocalRandom.current()
-                .nextDouble(10000, 1000000);
+        double randomValue = ThreadLocalRandom.current().nextDouble(10000,
+                1000000);
 
         return currencyFormatter.format(randomValue);
     }

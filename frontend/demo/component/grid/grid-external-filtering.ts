@@ -1,18 +1,19 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/grid';
-import type { GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import { TextFieldValueChangedEvent } from '@vaadin/text-field';
+import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 type PersonEnhanced = Person & { displayName: string };
@@ -67,9 +68,9 @@ export class Example extends LitElement {
         <vaadin-grid .items="${this.filteredItems}">
           <vaadin-grid-column
             header="Name"
-            .renderer="${this.nameRenderer}"
             flex-grow="0"
             width="230px"
+            ${columnBodyRenderer(this.nameRenderer, [])}
           ></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
@@ -79,20 +80,12 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  private nameRenderer = (
-    root: HTMLElement,
-    _: HTMLElement,
-    model: GridItemModel<Person & { displayName: string }>
-  ) => {
-    const person = model.item;
-    render(
-      html`
-        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-          <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
-          <span> ${person.displayName} </span>
-        </vaadin-horizontal-layout>
-      `,
-      root
-    );
+  private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => {
+    return html`
+      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+        <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
+        <span> ${person.displayName} </span>
+      </vaadin-horizontal-layout>
+    `;
   };
 }

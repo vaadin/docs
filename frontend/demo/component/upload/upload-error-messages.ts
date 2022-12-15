@@ -5,7 +5,7 @@ import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/form-layout';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/upload';
-import { Upload } from '@vaadin/upload';
+import type { Upload } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
@@ -37,7 +37,7 @@ export class Example extends LitElement {
     this.uploadCaution.i18n = { ...this.uploadCaution.i18n };
     // tag::snippet[]
     this.uploadRecommended.i18n.uploading.error.unexpectedServerError =
-      "File couldn't be uploaded, please try again later";
+      "File couldn't be uploaded, try again later";
     this.uploadRecommended.i18n = { ...this.uploadRecommended.i18n };
   }
 

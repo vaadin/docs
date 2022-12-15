@@ -12,8 +12,8 @@ import org.springframework.context.annotation.FilterType;
  */
 @SpringBootApplication
 @ServletComponentScan
-@ComponentScan(excludeFilters = {@ComponentScan.Filter(type =
-        FilterType.ANNOTATION, value = ExcludeDemoSpringComponent.class)})
+@ComponentScan(excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, value = ExcludeDemoSpringComponent.class) })
 public class Application extends SpringBootServletInitializer {
 
     public static void main(String[] args) {

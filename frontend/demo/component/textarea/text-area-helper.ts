@@ -3,6 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/text-area';
+import type { TextAreaValueChangedEvent } from '@vaadin/text-area';
 import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -35,7 +36,7 @@ export class Example extends LitElement {
         label="Description"
         .maxlength="${this.charLimit}"
         .value="${this.text}"
-        @value-changed="${(e: CustomEvent) => (this.text = e.detail.value)}"
+        @value-changed="${(e: TextAreaValueChangedEvent) => (this.text = e.detail.value)}"
         .helperText="${`${this.text.length}/${this.charLimit}`}"
       ></vaadin-text-area>
     `;

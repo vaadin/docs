@@ -17,10 +17,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-vertical-layout
-        theme="spacing"
-        style="font-family: var(--lumo-font-family); color: var(--lumo-secondary-text-color);"
-      >
+      <vaadin-vertical-layout theme="spacing" style="color: var(--lumo-secondary-text-color);">
         <!-- tag::snippet[] -->
         <div style="width: 100%;">
           <div>Transferring files... (60/120)</div>

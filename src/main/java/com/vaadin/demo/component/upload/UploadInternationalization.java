@@ -14,7 +14,7 @@ public class UploadInternationalization extends Div {
         // tag::snippet[]
         Upload upload = new Upload(buffer);
 
-        // Please see the separate UploadFinnishI18N class / file
+        // See the separate UploadFinnishI18N class / file
         // in this example for the I18N configuration
         UploadFinnishI18N i18N = new UploadFinnishI18N();
         upload.setI18n(i18N);

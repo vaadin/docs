@@ -59,18 +59,20 @@ public class MapSources extends VerticalLayout {
 
     private void setupXyzSource() {
         XYZSource.Options sourceOptions = new XYZSource.Options();
-        // set the URL pattern for the map service containing x, y, and z parameters
+        // set the URL pattern for the map service containing x, y, and z
+        // parameters
         // mapbox requires an access token, register on
         // mapbox.com to get one, and place it in the line below
-        sourceOptions.setUrl("https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=<your-access-token>");
+        sourceOptions.setUrl(
+                "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=<your-access-token>");
         // set actual URL with access token for demo // hidden-source-line
-        sourceOptions.setUrl("https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=pk.eyJ1Ijoic2lzc2JydWVja2VyLXZhYWRpbiIsImEiOiJja3pjcjVwaWkwMXJrMzJtdDlrOWRubHFtIn0.UEQ0LqkVtBcVNRatstiVeQ"); // hidden-source-line
+        sourceOptions.setUrl( // hidden-source-line
+                "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=pk.eyJ1Ijoic2lzc2JydWVja2VyLXZhYWRpbiIsImEiOiJja3pjcjVwaWkwMXJrMzJtdDlrOWRubHFtIn0.UEQ0LqkVtBcVNRatstiVeQ"); // hidden-source-line
         // using a map service usually requires setting
         // attributions with copyright notices
         sourceOptions.setAttributions(List.of(
-            "<a href=\"https://www.mapbox.com/about/maps/\">© Mapbox</a>",
-            "<a href=\"https://www.openstreetmap.org/about/\">© OpenStreetMap</a>"
-        ));
+                "<a href=\"https://www.mapbox.com/about/maps/\">© Mapbox</a>",
+                "<a href=\"https://www.openstreetmap.org/about/\">© OpenStreetMap</a>"));
         sourceOptions.setAttributionsCollapsible(false);
         XYZSource source = new XYZSource(sourceOptions);
         TileLayer tileLayer = new TileLayer();
@@ -91,7 +93,8 @@ public class MapSources extends VerticalLayout {
         sourceOptions.setParams(params);
         // using a map service usually requires setting
         // attributions with copyright notices
-        sourceOptions.setAttributions(List.of("Contains modified SRTM data (2014)/NASA, processed by <a href=\"https://www.mundialis.de\">mundialis<a/>"));
+        sourceOptions.setAttributions(List.of(
+                "Contains modified SRTM data (2014)/NASA, processed by <a href=\"https://www.mundialis.de\">mundialis<a/>"));
         sourceOptions.setAttributionsCollapsible(false);
         TileWMSSource source = new TileWMSSource(sourceOptions);
         TileLayer layer = new TileLayer();
@@ -100,5 +103,6 @@ public class MapSources extends VerticalLayout {
     }
     // end::snippet[]
 
-    public static class Exporter extends DemoExporter<MapSources> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapSources> { // hidden-source-line
+    } // hidden-source-line
 }

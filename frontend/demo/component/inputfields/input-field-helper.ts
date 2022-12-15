@@ -7,6 +7,8 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/password-field';
 import '@vaadin/text-field';
+import type { PasswordFieldValueChangedEvent } from '@vaadin/password-field';
+import { applyTheme } from 'Frontend/generated/theme';
 
 enum StrengthText {
   weak = 'weak',
@@ -19,7 +21,6 @@ enum StrengthColor {
   moderate = '#e7c200',
   strong = 'var(--lumo-success-color)',
 }
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('input-field-helper')
 export class Example extends LitElement {
@@ -32,6 +33,7 @@ export class Example extends LitElement {
 
   @state()
   private strengthText: StrengthText = StrengthText.weak;
+
   @state()
   private strengthColor: StrengthColor = StrengthColor.weak;
 
@@ -66,7 +68,7 @@ export class Example extends LitElement {
     `;
   }
 
-  private onPasswordChanged(e: CustomEvent) {
+  private onPasswordChanged(e: PasswordFieldValueChangedEvent) {
     let strength: StrengthText = StrengthText.weak;
     if (e.detail.value) {
       if (e.detail.value.length > 9) {

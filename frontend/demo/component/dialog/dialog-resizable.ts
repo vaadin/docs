@@ -1,17 +1,18 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { guard } from 'lit/directives/guard.js';
 
 import '@vaadin/button';
 import '@vaadin/dialog';
 import '@vaadin/grid';
 import '@vaadin/vertical-layout';
+import { dialogRenderer } from '@vaadin/dialog/lit.js';
 
 import { applyTheme } from 'Frontend/generated/theme';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 
 @customElement('dialog-resizable')
 export class Example extends LitElement {
@@ -41,28 +42,26 @@ export class Example extends LitElement {
         resizable
         draggable
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: CustomEvent) => (this.dialogOpened = e.detail.value)}"
-        .renderer="${guard([], () => (root: HTMLElement) => {
-          render(
-            html`
-              <vaadin-vertical-layout
-                theme="spacing"
-                style="max-width: 100%; min-width: 300px; height: 100%; align-items: stretch;"
-              >
-                <vaadin-grid .items="${this.people}">
-                  <vaadin-grid-column path="firstName" title="First name"></vaadin-grid-column>
-                  <vaadin-grid-column path="lastName" title="Last name"></vaadin-grid-column>
-                  <vaadin-grid-column path="email" title="Email"></vaadin-grid-column>
-                  <vaadin-grid-column path="profession" title="Profession"></vaadin-grid-column>
-                  <vaadin-grid-column path="membership" title="Membership"></vaadin-grid-column>
-                </vaadin-grid>
-              </vaadin-vertical-layout>
-            `,
-            root
-          );
-        })}"
+        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
+        ${dialogRenderer(
+          () => html`
+            <vaadin-vertical-layout
+              theme="spacing"
+              style="max-width: 100%; min-width: 300px; height: 100%; align-items: stretch;"
+            >
+              <vaadin-grid .items="${this.people}">
+                <vaadin-grid-column path="firstName" title="First name"></vaadin-grid-column>
+                <vaadin-grid-column path="lastName" title="Last name"></vaadin-grid-column>
+                <vaadin-grid-column path="email" title="Email"></vaadin-grid-column>
+                <vaadin-grid-column path="profession" title="Profession"></vaadin-grid-column>
+                <vaadin-grid-column path="membership" title="Membership"></vaadin-grid-column>
+              </vaadin-grid>
+            </vaadin-vertical-layout>
+          `,
+          this.people
+        )}
       ></vaadin-dialog>
-      <!-- end::snippet[]  -->
+      <!-- end::snippet[] -->
       <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
     `;
   }

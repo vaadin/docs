@@ -20,7 +20,8 @@ public class ButtonSizes extends Div {
         smallButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
         // end::snippet[]
 
-        HorizontalLayout horizontalLayout = new HorizontalLayout(largeButton, normalButton, smallButton);
+        HorizontalLayout horizontalLayout = new HorizontalLayout(largeButton,
+                normalButton, smallButton);
         add(horizontalLayout);
     }
 

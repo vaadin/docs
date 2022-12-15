@@ -27,12 +27,15 @@ public class TimePickerCustomValidation extends Div {
         Binder<Appointment> binder = new Binder<>(Appointment.class);
         binder.forField(timePicker).withValidator(startTime -> {
             return !(LocalTime.of(8, 0).isAfter(startTime)
-                    || (LocalTime.of(12, 0).isBefore(startTime) && LocalTime.of(13, 0).isAfter(startTime))
+                    || (LocalTime.of(12, 0).isBefore(startTime)
+                            && LocalTime.of(13, 0).isAfter(startTime))
                     || LocalTime.of(16, 0).isBefore(startTime));
-        }, "The selected time is not available").bind(Appointment::getStartTime, Appointment::setStartTime);
+        }, "The selected time is not available").bind(Appointment::getStartTime,
+                Appointment::setStartTime);
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<TimePickerCustomValidation> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<TimePickerCustomValidation> { // hidden-source-line
     } // hidden-source-line
 }

@@ -10,18 +10,18 @@ import com.vaadin.flow.router.Route;
 @Route("tabs-theme-centered")
 public class TabsThemeCentered extends Div {
 
-	public TabsThemeCentered() {
-		// tag::snippet[]
-		Tab details = new Tab("Details");
-		Tab payment = new Tab("Payment");
-		Tab shipping = new Tab("Shipping");
+    public TabsThemeCentered() {
+        // tag::snippet[]
+        Tab details = new Tab("Details");
+        Tab payment = new Tab("Payment");
+        Tab shipping = new Tab("Shipping");
 
-		Tabs tabs = new Tabs(details, payment, shipping);
-		tabs.addThemeVariants(TabsVariant.LUMO_CENTERED);
-		// end::snippet[]
-		add(tabs);
-	}
+        Tabs tabs = new Tabs(details, payment, shipping);
+        tabs.addThemeVariants(TabsVariant.LUMO_CENTERED);
+        // end::snippet[]
+        add(tabs);
+    }
 
-	public static class Exporter extends DemoExporter<TabsThemeCentered> { // hidden-source-line
-	} // hidden-source-line
+    public static class Exporter extends DemoExporter<TabsThemeCentered> { // hidden-source-line
+    } // hidden-source-line
 }

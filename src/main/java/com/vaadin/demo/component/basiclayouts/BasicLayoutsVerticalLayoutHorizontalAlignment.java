@@ -2,6 +2,7 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -36,19 +37,18 @@ public class BasicLayoutsVerticalLayoutHorizontalAlignment extends Div {
     public BasicLayoutsVerticalLayoutHorizontalAlignment() {
         // tag::layout[]
         VerticalLayout layout = new VerticalLayout();
-        layout.add(new LayoutItem("Item 1"));
-        layout.add(new LayoutItem("Item 2"));
-        layout.add(new LayoutItem("Item 3"));
+        layout.add(new Button("Button 1"));
+        layout.add(new Button("Button 2"));
+        layout.add(new Button("Button 3"));
         // end::layout[]
 
-        List<AlignmentOption> options = Arrays
-                .asList(new AlignmentOption("Start (default)",
-                                FlexComponent.Alignment.START),
-                        new AlignmentOption("Center",
-                                FlexComponent.Alignment.CENTER),
-                        new AlignmentOption("End", FlexComponent.Alignment.END),
-                        new AlignmentOption("Stretch",
-                                FlexComponent.Alignment.STRETCH));
+        List<AlignmentOption> options = Arrays.asList(
+                new AlignmentOption("Start (default)",
+                        FlexComponent.Alignment.START),
+                new AlignmentOption("Center", FlexComponent.Alignment.CENTER),
+                new AlignmentOption("End", FlexComponent.Alignment.END),
+                new AlignmentOption("Stretch",
+                        FlexComponent.Alignment.STRETCH));
 
         RadioButtonGroup<AlignmentOption> radioGroup = new RadioButtonGroup<>();
         radioGroup.setLabel("Horizontal alignment");

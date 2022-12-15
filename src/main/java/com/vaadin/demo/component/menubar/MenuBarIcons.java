@@ -18,7 +18,8 @@ public class MenuBarIcons extends Div {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
         menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON);
-        MenuItem share = createIconItem(menuBar, VaadinIcon.SHARE, "Share", null);
+        MenuItem share = createIconItem(menuBar, VaadinIcon.SHARE, "Share",
+                null);
         SubMenu shareSubMenu = share.getSubMenu();
         createIconItem(shareSubMenu, VaadinIcon.SHARE, "By Email", null, true);
         createIconItem(shareSubMenu, VaadinIcon.LINK, "Get link", null, true);
@@ -28,10 +29,13 @@ public class MenuBarIcons extends Div {
     }
 
     // tag::createIcon[]
-    private MenuItem createIconItem(HasMenuItems menu, VaadinIcon iconName, String label, String ariaLabel) {
+    private MenuItem createIconItem(HasMenuItems menu, VaadinIcon iconName,
+            String label, String ariaLabel) {
         return createIconItem(menu, iconName, label, ariaLabel, false);
     }
-    private MenuItem createIconItem(HasMenuItems menu, VaadinIcon iconName, String label, String ariaLabel, boolean isChild) {
+
+    private MenuItem createIconItem(HasMenuItems menu, VaadinIcon iconName,
+            String label, String ariaLabel, boolean isChild) {
         Icon icon = new Icon(iconName);
 
         if (isChild) {

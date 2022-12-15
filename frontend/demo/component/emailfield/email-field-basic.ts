@@ -23,7 +23,7 @@ export class Example extends LitElement {
           label="Email address"
           name="email"
           value="julia.scheider@email.com"
-          error-message="Please enter a valid email address"
+          error-message="Enter a valid email address"
           clear-button-visible
         ></vaadin-email-field>
 
@@ -31,7 +31,7 @@ export class Example extends LitElement {
           label="Email address"
           name="email"
           value="This is not an email"
-          error-message="Please enter a valid email address"
+          error-message="Enter a valid email address"
           clear-button-visible
           invalid
         ></vaadin-email-field>

@@ -9,8 +9,9 @@ import '@vaadin/email-field';
 import '@vaadin/form-layout';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
-import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import { Binder, field } from '@hilla/form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
@@ -34,10 +35,12 @@ export class Example extends LitElement {
   private cardBinder = new Binder(this, CardModel);
 
   @state()
-  private openedPanelIndex = 0;
+  private openedPanelIndex: number | null = 0;
+
   async firstUpdated() {
     this.countries = await getCountries();
   }
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
@@ -50,7 +53,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-accordion
         .opened="${this.openedPanelIndex}"
-        @opened-changed="${(e: CustomEvent) => (this.openedPanelIndex = e.detail.value)}"
+        @opened-changed="${(e: AccordionOpenedChangedEvent) =>
+          (this.openedPanelIndex = e.detail.value)}"
       >
         <vaadin-accordion-panel>
           <div slot="summary">
@@ -99,17 +103,16 @@ export class Example extends LitElement {
               style="font-size: var(--lumo-font-size-s)"
             >
               <span>${this.personBinder.value.address?.street}</span>
-              <span
-                >${this.personBinder.value.address?.zip}
-                ${this.personBinder.value.address?.city}</span
-              >
+              <span>
+                ${this.personBinder.value.address?.zip} ${this.personBinder.value.address?.city}
+              </span>
 
-              <span
-                >${
+              <span>
+                ${
                   // @ts-ignore Workaround a Binder issue
                   this.personBinder.value.address?.country?.name
-                }</span
-              >
+                }
+              </span>
             </vaadin-vertical-layout>
           </div>
 

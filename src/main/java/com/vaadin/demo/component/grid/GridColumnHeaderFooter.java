@@ -42,10 +42,10 @@ public class GridColumnHeaderFooter extends Div {
     private static Component createSubscriberHeader() {
         Span span = new Span("Subscriber");
         Icon icon = VaadinIcon.INFO_CIRCLE.create();
-        icon.getElement()
-                .setAttribute("title", "Subscribers are paying customers");
-        icon.getStyle().set("height", "var(--lumo-font-size-m)")
-                .set("color", "var(--lumo-contrast-70pct)");
+        icon.getElement().setAttribute("title",
+                "Subscribers are paying customers");
+        icon.getStyle().set("height", "var(--lumo-font-size-m)").set("color",
+                "var(--lumo-contrast-70pct)");
 
         HorizontalLayout layout = new HorizontalLayout(span, icon);
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -66,8 +66,8 @@ public class GridColumnHeaderFooter extends Div {
         Icon icon = VaadinIcon.INFO_CIRCLE.create();
         icon.getElement().setAttribute("title",
                 "Membership levels determines which features a client has access to");
-        icon.getStyle().set("height", "var(--lumo-font-size-m)")
-                .set("color", "var(--lumo-contrast-70pct)");
+        icon.getStyle().set("height", "var(--lumo-font-size-m)").set("color",
+                "var(--lumo-contrast-70pct)");
 
         HorizontalLayout layout = new HorizontalLayout(span, icon);
         layout.setAlignItems(FlexComponent.Alignment.CENTER);

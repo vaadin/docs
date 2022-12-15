@@ -1,7 +1,7 @@
-import { Iconset } from '@vaadin/icon/vaadin-iconset.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
+import { Iconset } from '@vaadin/icon/vaadin-iconset.js';
 
 const DEPRECATED_ICONS: Record<string, string> = {
   'vaadin:buss': 'vaadin:bus',
@@ -11,20 +11,20 @@ const DEPRECATED_ICONS: Record<string, string> = {
   'vaadin:trendind-down': 'vaadin:trending-down',
 };
 
+type VaadinIconset = Iconset & { _icons: string[] };
+
 export class IconsPreview extends HTMLElement {
   connectedCallback() {
-    const lumoIconset = Iconset.getIconset('lumo');
-    const vaadinIconset = Iconset.getIconset('vaadin');
+    const lumoIconset = Iconset.getIconset('lumo') as VaadinIconset;
+    const vaadinIconset = Iconset.getIconset('vaadin') as VaadinIconset;
 
     // A hack to get the `_icons` property computed.
     // https://github.com/vaadin/web-components/blob/447e95e0e08d396167af9a42f68b04529b412ebd/packages/vaadin-icon/src/vaadin-iconset.js#L90
     lumoIconset.applyIcon('');
     vaadinIconset.applyIcon('');
 
-    // @ts-ignore
-    let iconNames = Object.keys(lumoIconset._icons).map((name) => 'lumo:' + name);
-    // @ts-ignore
-    iconNames = iconNames.concat(Object.keys(vaadinIconset._icons).map((name) => 'vaadin:' + name));
+    let iconNames = Object.keys(lumoIconset._icons).map((name) => `lumo:${name}`);
+    iconNames = iconNames.concat(Object.keys(vaadinIconset._icons).map((name) => `vaadin:${name}`));
 
     this.classList.add('icons-preview');
     let html = `
@@ -100,7 +100,7 @@ export class IconsPreview extends HTMLElement {
       const isDeprecated = name in DEPRECATED_ICONS;
 
       if (isDeprecated) {
-        title = `Since Vaadin 21, '${name}' is deprecated. Please use '${DEPRECATED_ICONS[name]}' instead.`;
+        title = `Since Vaadin 21, '${name}' is deprecated. Use '${DEPRECATED_ICONS[name]}' instead.`;
       }
 
       html += `

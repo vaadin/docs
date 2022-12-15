@@ -16,17 +16,18 @@ public class DatePickerCustomValidation extends Div {
         datePicker.setHelperText("Mondays – Fridays only");
 
         Binder<Appointment> binder = new Binder<>(Appointment.class);
-        binder.forField(datePicker)
-                .withValidator(localDate -> {
-                    int dayOfWeek = localDate.getDayOfWeek().getValue();
-                    boolean validWeekDay = dayOfWeek >= 1 && dayOfWeek <= 5;
-                    return validWeekDay;
-                }, "Please select a weekday")
-                .bind(Appointment::getStartDate, Appointment::setStartDate);
+        binder.forField(datePicker).withValidator(localDate -> {
+            int dayOfWeek = localDate.getDayOfWeek().getValue();
+            boolean validWeekDay = dayOfWeek >= 1 && dayOfWeek <= 5;
+            return validWeekDay;
+        }, "Select a weekday").bind(Appointment::getStartDate,
+                Appointment::setStartDate);
         // end::snippet[]
 
         add(datePicker);
     }
-    public static class Exporter extends DemoExporter<DatePickerCustomValidation> { // hidden-source-line
+
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DatePickerCustomValidation> { // hidden-source-line
     } // hidden-source-line
 }

@@ -17,8 +17,8 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <div style="font-family: var(--lumo-font-family); color: var(--lumo-secondary-text-color);">
-        <div>Generating report, please wait...</div>
+      <div style="color: var(--lumo-secondary-text-color);">
+        <div>Generating report...</div>
         <vaadin-progress-bar indeterminate></vaadin-progress-bar>
         <div style="font-size: var(--lumo-font-size-xs)">
           Process can take upwards of 10 minutes

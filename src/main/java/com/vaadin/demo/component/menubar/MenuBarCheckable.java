@@ -9,7 +9,6 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-
 @Route("menu-bar-checkable")
 public class MenuBarCheckable extends Div {
     public MenuBarCheckable() {

@@ -2,9 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
+import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-sizes')
 export class Example extends LitElement {
@@ -25,16 +26,29 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}" theme="xlarge">
-      </vaadin-avatar>
-      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}" theme="large">
-      </vaadin-avatar>
-      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}" theme="small">
-      </vaadin-avatar>
-      <vaadin-avatar .name="${`${this.person?.firstName} ${this.person?.lastName}`}" theme="xsmall">
-      </vaadin-avatar>
-      <!-- end::snippet[] -->
+      <vaadin-horizontal-layout theme="spacing">
+        <!-- tag::snippet[] -->
+        <vaadin-avatar
+          .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
+          theme="xlarge"
+        ></vaadin-avatar>
+
+        <vaadin-avatar
+          .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
+          theme="large"
+        ></vaadin-avatar>
+
+        <vaadin-avatar
+          .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
+          theme="small"
+        ></vaadin-avatar>
+
+        <vaadin-avatar
+          .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
+          theme="xsmall"
+        ></vaadin-avatar>
+        <!-- end::snippet[] -->
+      </vaadin-horizontal-layout>
     `;
   }
 }

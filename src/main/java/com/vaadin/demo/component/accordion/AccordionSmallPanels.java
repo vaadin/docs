@@ -6,7 +6,6 @@ import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -20,11 +19,13 @@ public class AccordionSmallPanels extends Div {
         Span email = new Span("sophia.williams@company.com");
         Span phone = new Span("(501) 555-9128");
 
-        VerticalLayout personalInformationLayout = new VerticalLayout(name, email, phone);
+        VerticalLayout personalInformationLayout = new VerticalLayout(name,
+                email, phone);
         personalInformationLayout.setSpacing(false);
         personalInformationLayout.setPadding(false);
 
-        AccordionPanel personalInfoPanel = accordion.add("Personal information", personalInformationLayout);
+        AccordionPanel personalInfoPanel = accordion.add("Personal information",
+                personalInformationLayout);
         personalInfoPanel.addThemeVariants(DetailsVariant.SMALL);
 
         Span street = new Span("4027 Amber Lake Canyon");
@@ -36,7 +37,8 @@ public class AccordionSmallPanels extends Div {
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
 
-        AccordionPanel billingAddressPanel = accordion.add("Billing address", billingAddressLayout);
+        AccordionPanel billingAddressPanel = accordion.add("Billing address",
+                billingAddressLayout);
         billingAddressPanel.addThemeVariants(DetailsVariant.SMALL);
 
         Span cardBrand = new Span("Mastercard");

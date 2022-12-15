@@ -5,7 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/integer-field';
 import '@vaadin/form-layout';
 import '@vaadin/form-layout/vaadin-form-item.js';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import { applyTheme } from 'Frontend/generated/theme';
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   {
@@ -14,7 +15,6 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
     labelsPosition: 'aside',
   },
 ];
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('number-field-stepper-controls')
 export class Example extends LitElement {

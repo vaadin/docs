@@ -31,8 +31,9 @@ export class Example extends LitElement {
             theme="badge contrast pill small"
             aria-label="12 unread messages"
             title="12 unread messages"
-            >12</span
           >
+            12
+          </span>
         </vaadin-tab>
         <vaadin-tab>
           <span>Important</span>
@@ -40,8 +41,9 @@ export class Example extends LitElement {
             theme="badge contrast pill small"
             aria-label="3 unread messages"
             title="3 unread messages"
-            >3</span
           >
+            3
+          </span>
         </vaadin-tab>
         <vaadin-tab>
           <span>Spam</span>

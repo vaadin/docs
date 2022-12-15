@@ -22,19 +22,15 @@ public class UploadFileCount extends Div {
         upload.addFileRejectedListener(event -> {
             String errorMessage = event.getErrorMessage();
 
-            Notification notification = Notification.show(
-                    errorMessage,
-                    5000,
-                    Notification.Position.MIDDLE
-            );
+            Notification notification = Notification.show(errorMessage, 5000,
+                    Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         });
         // end::snippet[]
 
         UploadExamplesI18N i18n = new UploadExamplesI18N();
-        i18n.getError()
-                .setTooManyFiles(
-                        "You may only upload a maximum of three files at once.");
+        i18n.getError().setTooManyFiles(
+                "You may only upload a maximum of three files at once.");
         upload.setI18n(i18n);
 
         H4 title = new H4("Upload files");
