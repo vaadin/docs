@@ -23,7 +23,7 @@ export class Example extends LitElement {
         min="0"
         max="10"
         value="2"
-        has-controls
+        step-buttons-visible
       ></vaadin-integer-field>
       <!-- end::snippet[] -->
     `;
