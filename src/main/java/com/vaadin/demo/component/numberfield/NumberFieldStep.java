@@ -14,7 +14,7 @@ public class NumberFieldStep extends Div {
         numberField.setLabel("Duration (hours)");
         numberField.setStep(0.5);
         numberField.setValue(12.5);
-        numberField.setHasControls(true);
+        numberField.setStepButtonsVisible(true);
         add(numberField);
         // end::snippet[]
     }
