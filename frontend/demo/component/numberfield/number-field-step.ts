@@ -21,7 +21,7 @@ export class Example extends LitElement {
         label="Duration (hours)"
         step="0.5"
         value="12.5"
-        has-controls
+        step-buttons-visible
       ></vaadin-number-field>
       <!-- end::snippet[] -->
     `;

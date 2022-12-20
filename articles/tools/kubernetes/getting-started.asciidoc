@@ -1,36 +1,34 @@
 ---
 title: Getting Started
-description: Step-by-step guide showing how to add Kubernetes Kit
-  to your application.
+description: Step-by-step guide showing how to enable scalability, high availability, and non-disruptive rolling updates for your application using Kubernetes Kit.
 order: 10
 ---
 
 = Getting Started with Kubernetes Kit
 :sectnums:
+:hide-uri-scheme:
 
-Kubernetes Kit enables scalability, high availability, and non-disruptive rolling updates for Vaadin applications running in a Kubernetes cluster.
-
-This tutorial will guide you through setting up and deploying an application with Kubernetes Kit in a local Kubernetes cluster.
+This tutorial guides you through setting up and deploying an application with Kubernetes Kit in a local Kubernetes cluster.
 
 == Requirements
 
 This tutorial assumes that you have the following software installed on your local machine:
 
-- https://www.docker.com/products/docker-desktop/[Docker Desktop^]
+- https://www.docker.com/products/docker-desktop/[Docker Desktop]
 - A local Kubernetes cluster such as
- https://minikube.sigs.k8s.io/docs/start/[minikube^],
- https://kind.sigs.k8s.io/docs/user/quick-start/[kind^], or
- https://docs.docker.com/desktop/kubernetes/[Docker^] itself.
+ https://minikube.sigs.k8s.io/docs/start/[minikube],
+ https://kind.sigs.k8s.io/docs/user/quick-start/[kind], or
+ https://docs.docker.com/desktop/kubernetes/[Docker] itself.
 
-== Setting Up a Vaadin Project
+== Set Up a Vaadin Project
 
-Download a new Vaadin project from https://start.vaadin.com/[^].
+Download a new Vaadin project from https://start.vaadin.com.
 
 == Add the Kubernetes Kit Dependency
 
-To get started, you first need to add Kubernetes Kit as a dependency to the application:
-
-.pom.xml
+. To get started, add Kubernetes Kit as a dependency to the project:
++
+.`pom.xml`
 [source,xml]
 ----
 <dependency>
@@ -39,32 +37,28 @@ To get started, you first need to add Kubernetes Kit as a dependency to the appl
 </dependency>
 ----
 
-Add the following to the application configuration file:
-
-.application.properties
+. Add the following to the application configuration file:
++
+.`application.properties`
 [source,properties]
 ----
+# <1>
 vaadin.devmode.sessionSerialization.enabled=true
+# <2>
 vaadin.serialization.transients.include-packages=com.example.application
 ----
+<1> This property enables the session serialization debug tool during development.
+<2> This property defines the classes which should be inspected for transient fields during session serialization. In this case, inspection is limited to classes within the starter project. For more information, see <<session-replication#,Session Replication>>.
 
-[NOTE]
-====
-The `include-packages` property is used by the session serialization to limit the classes inspected for transient fields. In this case, it is being limited to classes within the starter project. For more information, see <<{articles}/tools/kubernetes/session-replication#kubernetes-kit-session-replication,session replication>>.
+== Session Replication Back End
 
-The second property enables session serialization debug tool while in development.
+_You don't need to enable session replication if you only need <<update-version#,rolling updates>>._
 
-====
+High availability and the possibility to scale applications up and down in a cluster are enabled by storing session data in a back end that is accessible to the cluster. This tutorial uses Hazelcast for this purpose. However, Redis is also supported.
 
-== Session Replication Backend
-
-Kubernetes Kit enables high availability and the possibility to scale applications up and down in a Kubernetes cluster by storing session data in a backend that is accessible to the cluster. Note that you don't need to enable session replication if you are only interested in using the <<{articles}/tools/kubernetes/update-version#,rolling update feature>> of the Kit.
-
-This tutorial uses Hazelcast for this purpose. However, Redis is also supported.
-
-You will need to add the Hazelcast dependency to the application:
-
-.pom.xml
+. Add the Hazelcast dependency to the project:
++
+.`pom.xml`
 [source,xml]
 ----
 <dependency>
@@ -73,30 +67,33 @@ You will need to add the Hazelcast dependency to the application:
 </dependency>
 ----
 
-Next, you need to add the following to the application configuration file:
-
+. Add the following property to the application configuration file:
++
 .application.properties
 [source,properties]
 ----
 vaadin.kubernetes.hazelcast.service-name=hazelcast-service
 ----
 
-Now, deploy the Hazelcast role to the cluster:
-
+. Deploy the Hazelcast service to the cluster by running the following command:
++
 [source,terminal]
+----
 kubectl apply -f https://raw.githubusercontent.com/hazelcast/hazelcast/master/kubernetes-rbac.yaml
-
+----
++
+.Deploying to Another Namespace
 [NOTE]
 ====
-If you want to deploy this to another namespace than `default`, you need to download the yaml file https://raw.githubusercontent.com/hazelcast/hazelcast/master/kubernetes-rbac.yaml[here^] and edit the hard-coded namespace. Then deploy to your cluster like so:
+If you want to deploy to another namespace than `default`, you need to download the https://raw.githubusercontent.com/hazelcast/hazelcast/master/kubernetes-rbac.yaml[kubernetes-rbac.yaml] file and edit the hard-coded namespace. Then deploy to your cluster like so:
 
 [source,terminal]
-kubectl apply -f kubernetes-rbac.yaml
+kubectl apply -f path/to/custom/kubernetes-rbac.yaml
 ====
 
-Then you need to deploy a load balancer service to your cluster. Create the following Kubernetes manifest file:
-
-.hazelcast.yaml
+. Deploy a load balancer service to your cluster. Create the following Kubernetes manifest file:
++
+.`hazelcast.yaml`
 [source,yaml]
 ----
 apiVersion: v1
@@ -111,18 +108,19 @@ spec:
       port: 5701
   type: LoadBalancer
 ----
-
-You will also need to deploy the manifest to your cluster:
-
++
+Then deploy the manifest to your cluster:
++
 [source,terminal]
 kubectl apply -f hazelcast.yaml
 
-You should now see the load balancer service:
-
+. Run the following command to see that the load balancer service is running:
++
 [source,terminal]
 kubectl get svc hazelcast-service
-
-[source,terminal]
++
+You should see the following output (the IP number can be different):
++
 ----
 NAME                TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
 hazelcast-service   LoadBalancer   10.96.178.190   <pending>     5701:31516/TCP   18h
@@ -132,13 +130,13 @@ hazelcast-service   LoadBalancer   10.96.178.190   <pending>     5701:31516/TCP 
 
 The next step is to build a container image of the application and deploy it to your Kubernetes cluster.
 
-You'll first need to clean and package the application for production:
-
+. Clean the project and create a production build of the application:
++
 [source,terminal]
 mvn clean package -Pproduction
 
-Then create the following `Dockerfile` file and place it in the main directory of the application:
-
+. Create the following `Dockerfile` file in the project directory:
++
 [source,Dockerfile]
 ----
 FROM openjdk:17-jdk-slim
@@ -149,24 +147,16 @@ EXPOSE 8080
 CMD java -jar /usr/app/app.jar
 ----
 
-Now, open a terminal to the main directory and use Docker to build a container image for the application and tag it with version 1.0.0. Note, the required period at the end in the line here:
-
+. Open a terminal to the project directory and use Docker to build a container image for the application. Tag it with version 1.0.0. Note the required period `.` at the end in the line:
++
 [source,terminal]
 docker build -t my-app:1.0.0 .
++
+include::_shared.adoc[tag=publish-local-image]
 
-[NOTE]
-====
-Depending on the Kubernetes cluster you are using, you may need to publish the image to a local registry or push the image to the cluster. Otherwise, the image will not be found. Please refer to your cluster documentation for more information on this.
-
-If you're using "kind" on a local machine, you need to load the image to the cluster like this:
-
-[source,terminal]
-kind load docker-image my-app:1.0.0
-====
-
-Now create a deployment manifest for the application:
-
-.app-v1.yaml
+. Create a deployment manifest for the application:
++
+.`app-v1.yaml`
 [source,yaml]
 ----
 apiVersion: apps/v1
@@ -197,7 +187,7 @@ spec:
             - name: http
               containerPort: 8080
             - name: multicast
-              containerPort: 5701
+              containerPort: 5701 # <1>
 ---
 apiVersion: v1
 kind: Service
@@ -212,21 +202,20 @@ spec:
       port: 80
       targetPort: http
 ----
-
-[NOTE]
-The multicast port (5701) is only used for session replication using Hazelcast.
-
+<1> The multicast port `5701` is only used for session replication using Hazelcast.
++
 Deploy the manifest to your cluster:
-
++
 [source,terminal]
 kubectl apply -f app-v1.yaml
 
-You should now see 4 pods running in the cluster. Below is an example of how this might look:
-
+. Run the following command to verify that you have 4 pods running:
++
 [source,terminal]
 kubectl get pods
-
-[source,terminal]
++
+You should see output similar to the following:
++
 ----
 NAME                            READY   STATUS    RESTARTS      AGE
 my-app-v1-f87bfcbb4-5qjml       1/1     Running   0             22s
@@ -237,16 +226,16 @@ my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             22s
 
 == Ingress Rules
 
-In order to access the application, you need to provide some ingress rules.
+To access the application, you need to provide some ingress rules.
 
-If you don't already have `ingress-nginx` installed in your cluster, install it with the following command:
-
+. If you don't already have `ingress-nginx` installed in your cluster, install it with the following command:
++
 [source,terminal]
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
 
-Then create an ingress rule manifest file like so:
-
-.ingress-v1.yaml
+. Create an ingress rule manifest file like so:
++
+.`ingress-v1.yaml`
 [source,yaml]
 ----
 apiVersion: networking.k8s.io/v1
@@ -275,22 +264,23 @@ spec:
                 port:
                   number: 80
 ----
-
-You may deploy the manifest to your cluster like this:
-
++
+Deploy the manifest to your cluster with the following command:
++
 [source,terminal]
 kubectl apply -f ingress-v1.yaml
 
-The application should now be available at http://localhost[^]
-
+. The application should now be available at http://localhost.
++
+.Accessing the application from your local machine
 [NOTE]
 ====
-In order to access the application from your local machine, it may be necessary to use the `port-forward` utility. In this case use the following command:
+To access the application from your local machine, it may be necessary to use the `port-forward` utility. In this case use the following command:
 
 [source,terminal]
 kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
 
-The application should now be available at http://localhost:8080[^]
+The application should now be available at http://localhost:8080.
 ====
 
 == Scaling the Application
@@ -305,15 +295,16 @@ You can also simulate the failure of a specific pod by deleting it by name like 
 [source,terminal]
 kubectl delete pod/<pod-name>
 
-.Replace placeholder pod name
+Remember to substitute the name of your application pod. You can see the names of all the pods with the `kubectl get pods` command.
 
-[NOTE]
-Remember to substitute the name of your application pod.
+If you have enabled session replication, this can be used to check that it's performing as expected. If you open the application and then delete the pod to which it's connected, you shouldn't lose session data after the next user interaction.
 
-If you have enabled session replication, this can be used to check that it is performing as expected. If you open the application and then delete the pod to which it's connected, when you perform the next action you should not lose session data.
 
-== Next Steps
 
-The Kubernetes Kit can also help you roll out a new version of your application in a Kubernetes cluster.
-
-xref:update-version#[New Version Roll Out, role="button secondary water"]
+++++
+<style>
+main :is(ol, ul) {
+  --docs-code-example-margin: var(--docs-space-m) 0 var(--docs-space-xl) 0;
+}
+</style>
+++++

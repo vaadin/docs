@@ -16,7 +16,7 @@ public class NumberFieldMinMax extends Div {
         integerField.setMin(0);
         integerField.setMax(10);
         integerField.setValue(2);
-        integerField.setHasControls(true);
+        integerField.setStepButtonsVisible(true);
         add(integerField);
         // end::snippet[]
     }

@@ -16,7 +16,7 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
   },
 ];
 
-@customElement('number-field-stepper-controls')
+@customElement('number-field-step-buttons')
 export class Example extends LitElement {
   protected createRenderRoot() {
     const root = super.createRenderRoot();
@@ -31,7 +31,12 @@ export class Example extends LitElement {
         <vaadin-form-item>
           <label slot="label">Adults</label>
           <!-- tag::snippet[] -->
-          <vaadin-integer-field value="2" has-controls min="0" max="9"></vaadin-integer-field>
+          <vaadin-integer-field
+            value="2"
+            step-buttons-visible
+            min="0"
+            max="9"
+          ></vaadin-integer-field>
           <!-- end::snippet[] -->
         </vaadin-form-item>
 
@@ -40,12 +45,22 @@ export class Example extends LitElement {
             <div>Children</div>
             <div style="font-size: var(--lumo-font-size-xxs); position: absolute;">Age 2-12</div>
           </label>
-          <vaadin-integer-field value="2" has-controls min="0" max="9"></vaadin-integer-field>
+          <vaadin-integer-field
+            value="2"
+            step-buttons-visible
+            min="0"
+            max="9"
+          ></vaadin-integer-field>
         </vaadin-form-item>
 
         <vaadin-form-item>
           <label slot="label">Infants</label>
-          <vaadin-integer-field value="1" has-controls min="0" max="9"></vaadin-integer-field>
+          <vaadin-integer-field
+            value="1"
+            step-buttons-visible
+            min="0"
+            max="9"
+          ></vaadin-integer-field>
         </vaadin-form-item>
       </vaadin-form-layout>
     `;
