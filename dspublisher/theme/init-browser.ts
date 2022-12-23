@@ -1,16 +1,5 @@
-import { html, LitElement, nothing } from 'lit';
-import { state } from 'lit/decorators.js';
+import { html, LitElement, state } from 'lit-element';
 import { iframeResizer } from 'iframe-resizer';
-
-// Import all Lumo CSS custom properties into the global style scope
-import '@vaadin/vaadin-lumo-styles/color.js';
-import '@vaadin/vaadin-lumo-styles/typography.js';
-import '@vaadin/vaadin-lumo-styles/sizing.js';
-import '@vaadin/vaadin-lumo-styles/spacing.js';
-import '@vaadin/vaadin-lumo-styles/style.js';
-// Import all Material CSS custom properties into the global style scope
-import '@vaadin/vaadin-material-styles/color';
-import '@vaadin/vaadin-material-styles/typography';
 
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
@@ -105,7 +94,7 @@ class Footer extends LitElement {
 
     // Don't render discussions in development builds and if no discussion ID is set
     if (process.env.NODE_ENV === 'development' || !id) {
-      return nothing;
+      return html``;
     }
 
     const url = encodeURI(document.location.pathname);
