@@ -23,7 +23,7 @@ const VAADIN_VERSIONS: Record<string, string> = {
   20: '20.0.8',
   21: '21.0.9',
   22: '22.0.26',
-  23: '23.3.1',
+  23: '23.2.12',
 };
 
 const SIMPLE_VERSIONS = Object.keys(VAADIN_VERSIONS);
