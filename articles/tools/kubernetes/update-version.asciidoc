@@ -1,0 +1,222 @@
+---
+title: Rolling Updates
+description: Kubernetes Kit helps to roll out a new version of an application by sending a notification to users on the previous version so that they can choose when to switch. This allows them to save any changes to their work, rather than risk losing them.
+order: 20
+---
+
+= Rolling Out a New Version of an Application
+:sectnums:
+
+
+== Build a New Application Version
+
+Build a new container image using Docker and tag it with the new version number. Below is an example of this:
+
+[source,terminal]
+docker build -t my-app:2.0.0 .
+
+:image-version: 2.0.0
+include::_shared.adoc[tag=publish-local-image]
+
+
+== Deploy the New Version
+
+Create a new deployment manifest:
+
+.app-v2.yaml
+[source,yaml]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-v2
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: my-app
+      version: 2.0.0
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: 2.0.0
+    spec:
+      containers:
+        - name: my-app
+          image: my-app:2.0.0
+          # Sets the APP_VERSION environment variable for the container which is
+          # used during the version update to compare with the new version
+          env:
+            - name: APP_VERSION
+              value: 2.0.0
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: multicast
+              containerPort: 5701
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-v2
+spec:
+  selector:
+    app: my-app
+    version: 2.0.0
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+----
+
+Deploy it to the cluster like so:
+
+[source,terminal]
+kubectl apply -f app-v2.yaml
+
+You should now see 4 new pods running in the cluster. Below is an example of this:
+[source,terminal]
+kubectl get pods
+
+----
+NAME                            READY   STATUS    RESTARTS      AGE
+my-app-v2-5dcf4cc98c-cmb5m      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-ctrxq      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-ktpcq      1/1     Running   0             22s
+my-app-v2-5dcf4cc98c-rfth2      1/1     Running   0             22s
+my-app-v1-f87bfcbb4-5qjml       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-czkzr       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-gjqw6       1/1     Running   0             10m
+my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             10m
+----
+
+== Deploy Canary Ingress Rules
+
+Before switching permanently to the new version, you can test access by deploying "canary" ingress rules. This routes new sessions to the new version, while keeping existing sessions on the previous version.
+
+Create the ingress rule manifest like so:
+
+.ingress-v2-canary.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-canary
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    # --- Optional ---
+    # If server Push is enabled in the application and uses Websocket for transport,
+    # these settings replace the default Websocket connection timeouts in Ngnix.
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    # ---
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    # Redirects all the requests to the new version of the application
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "100"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v2
+                port:
+                  number: 80
+----
+
+Then deploy it to your cluster:
+
+[source,terminal]
+kubectl apply -f ingress-v2-canary.yaml
+
+== Notify Existing Users (Optional)
+
+First, create the ingress rule manifest:
+
+.ingress-v1-notify.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    # --- Optional ---
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    # ---
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+    # Adds the X-AppUpdate new version header to the requests for the current
+    # application which is used to trigger the version update notification popup
+    nginx.ingress.kubernetes.io/configuration-snippet: proxy_set_header X-AppUpdate "2.0.0";
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v1
+                port:
+                  number: 80
+----
+
+Next, deploy it to your cluster:
+
+[source,terminal]
+kubectl apply -f ingress-v1-notify.yaml
+
+== Remove Previous Version
+
+Once you're sure of the new version deployment, you can remove the previous version and make the ingress rules point permanently to the new version.
+
+First, create the ingress rule manifest like this:
+
+.ingress-v2.yaml
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    # --- Optional ---
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    # ---
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v2
+                port:
+                  number: 80
+----
+
+Then deploy it to your cluster like so:
+
+[source,terminal]
+kubectl apply -f ingress-v2.yaml
+
+Now delete the previous version and the canary ingress rules.
+
+[source,terminal]
+----
+kubectl delete -f app-v1.yaml
+kubectl delete -f ingress-v2-canary.yaml
+----

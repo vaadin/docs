@@ -61,13 +61,13 @@ public class GridColumnVisibility extends Div {
         add(headerLayout, grid);
     }
 
+    // tag::snippet2[]
     private static class ColumnToggleContextMenu extends ContextMenu {
         public ColumnToggleContextMenu(Component target) {
             super(target);
             setOpenOnClick(true);
         }
 
-        // tag::snippet2[]
         void addColumnToggleItem(String label, Grid.Column<Person> column) {
             MenuItem menuItem = this.addItem(label, e -> {
                 column.setVisible(e.getSource().isChecked());
@@ -75,8 +75,8 @@ public class GridColumnVisibility extends Div {
             menuItem.setCheckable(true);
             menuItem.setChecked(column.isVisible());
         }
-        // end::snippet2[]
     }
+    // end::snippet2[]
 
     public static class Exporter // hidden-source-line
             extends DemoExporter<GridColumnVisibility> { // hidden-source-line

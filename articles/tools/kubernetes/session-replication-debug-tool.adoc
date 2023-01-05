@@ -1,0 +1,401 @@
+---
+title: Session Replication Debug Tool
+description: To help make HTTP sessions fully serializable and deserializable, Kubernetes Kit offers a tool for discovering serialization issues during development.
+order: 110
+---
+
+= Kubernetes Kit Session Replication Debug Tool
+
+The debug tool is composed by three components working together:
+
+* an HTTP session replication tester which tries to serialize and deserialize the HTTP session;
+* a Vaadin [classname]`RequestHandler` that evaluates if the HTTP request produces UI changes and prepares the tester execution and the result notification on the UI notification, if server push is enabled;
+* an HTTP filter that runs the tester after the HTTP request has been processed.
+
+== Enabling the Debug Tool
+
+The debug tool doesn't work in production builds. During development, it works only if the following preconditions match:
+
+* `vaadin.devmode.sessionSerialization.enabled` application configuration property is `true`. Set it either in a properties file or in a YAML file.
++
+[.example]
+--
+.`application.properties`
+[source,properties]
+----
+vaadin.devmode.sessionSerialization.enabled=true
+----
+
+.`application.yaml`
+[source,yaml]
+----
+vaadin:
+  devmode:
+    sessionSerialization:
+      enabled: true
+----
+--
+
+* The `sun.io.serialization.extendedDebugInfo` system property is `true` and the JVM is started with the `--add-opens java.base/java.io=ALL-UNNAMED` flag. The way you provide these depends on if you run your application with the Spring Boot Maven Plugin or by directly executing the application JAR.
++
+[.example]
+--
+You can define the configuration in the `pom.xml` file or as environment variables when you run the application from the command line.
+
+.`pom.xml`
+[source,xml]
+----
+<source-info group="Spring Boot Maven Plugin"></source-info>
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <configuration>
+        <jvmArguments>
+        --add-opens java.base/java.io=ALL-UNNAMED
+        -Dsun.io.serialization.extendedDebugInfo=true
+        </jvmArguments>
+    </configuration>
+</plugin>
+----
+
+.Terminal
+[source,bash]
+----
+<source-info group="Spring Boot Maven Plugin"></source-info>
+mvn \
+	-Dspring-boot.run.jvmArguments="-Dsun.io.serialization.extendedDebugInfo=true --add-opens java.base/java.io=ALL-UNNAMED" \
+	spring-boot:run
+----
+
+.Terminal
+[source,bash]
+----
+<source-info group="JAR execution"></source-info>
+java \
+	-Dsun.io.serialization.extendedDebugInfo=true \
+	--add-opens java.base/java.io=ALL-UNNAMED \
+	-jar target/myapp.jar
+----
+--
+
+include::_shared.adoc[tag=extended-debug-info]
+
+The debug tool is installed automatically on Spring Boot projects. Otherwise, you can install it manually. Configure the provided <<{articles}/advanced/service-init-listener#,Service Init Listener>>, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using the Vaadin Spring add-on.
+In addition, the HTTP filter must be registered, either as a Spring bean or with a [classname]`ServletContextListener`.
+
+[.example]
+--
+.`AppConfig.java`
+[source,java]
+----
+<source-info group="Spring add-on"></source-info>
+@Configuration
+class AppConfig {
+
+    @Bean
+    VaadinServiceInitListener serializationDebugInitListener() {
+        return new SerializationDebugRequestHandler.InitListener();
+    }
+
+    @Bean
+    @Order(Integer.MIN_VALUE)
+    FilterRegistrationBean<SerializationDebugRequestHandler.Filter> sessionSerializationDebugToolFilter() {
+        return new FilterRegistrationBean<>(
+                new SerializationDebugRequestHandler.Filter());
+    }
+}
+----
+
+.`src/main/resources/META-INF/services/VaadinServiceInitListener`
+[source,text]
+----
+<source-info group="Plain Java"></source-info>
+com.vaadin.kubernetes.starter.sessiontracker.serialization.SerializationDebugRequestHandler$InitListener
+----
+
+.Filter registration
+[source,java]
+----
+<source-info group="Plain Java"></source-info>
+@WebListener
+private static class SerializationDebugToolFilterRegistration implements ServletContextListener {
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        sce.getServletContext()
+          .addFilter(SerializationDebugRequestHandler.Filter.class.getName(), SerializationDebugRequestHandler.Filter.class)
+          .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
+    }
+}
+----
+--
+
+== Serialization Test Results
+
+The results from the test are saved in the server logs, and include the following details:
+
+ * Test process outcomes, for example `SERIALIZATION_FAILED`, `DESERIALIZATION_FAILED`, `SUCCESS`, etc.;
+ * A list of unserializable classes;
+ * An object class graph in case of deserialization errors; and
+ * Potential causes of [classname]`SerializedLambda` [classname]`ClassCastException`.
+
+
+=== Examples
+
+Suppose you have an application that is not coded from the beginning to support session replication. With the Kubernetes Kit session replication debug tool in action, issues like the following can be spotted during development mode, by checking server logs.
+
+For views directly or indirectly referencing unserializable objects, the classes causing issues are reported. Double check those classes, make them [classname]`Serializable` and then navigate to the view again to see if the issues are solved or if other problems have arisen.
+
+[.limit-height]
+----
+Session serialization attempt completed in 382 ms with outcomes: [SERIALIZATION_FAILED, NOT_SERIALIZABLE_CLASSES]
+
+NOT SERIALIZABLE CLASSES FOUND:
+===============================
+
+com.vaadin.starter.bakery.ui.views.storefront.OrderPresenter
+	Start Track ID: 266, Stack depth: 33. Reference stack;
+		- element of array (index: 0)
+		- array (class "[Ljava.lang.Object;", size: 1)
+		- field (class "java.lang.invoke.SerializedLambda", name: "capturedArgs", type: "class [Ljava.lang.Object;")
+		- object (class "java.lang.invoke.SerializedLambda", SerializedLambda[capturingClass=class com.vaadin.starter.bakery.ui.views.storefront.StorefrontView, functionalInterfaceMethod=com/vaadin/flow/function/ValueProvider.apply:(Ljava/lang/Object;)Ljava/lang/Object;, implementation=invokeStatic com/vaadin/starter/bakery/ui/views/storefront/StorefrontView.lambda$new$497a7bcf$1:(Lcom/vaadin/starter/bakery/ui/views/storefront/OrderPresenter;Lcom/vaadin/starter/bakery/backend/data/entity/Order;)Ljava/lang/Object;, instantiatedMethodType=(Lcom/vaadin/starter/bakery/backend/data/entity/Order;)Ljava/lang/Object;, numCaptured=1])
+		[.... omitted .... ]
+	End Track ID: 216
+
+com.vaadin.starter.bakery.ui.utils.converters.LocalTimeConverter
+	Start Track ID: 4383, Stack depth: 70. Reference stack:
+		- element of array (index: 0)
+		- array (class "[Ljava.lang.Object;", size: 1)
+		- field (class "java.lang.invoke.SerializedLambda", name: "capturedArgs", type: "class [Ljava.lang.Object;")
+		- object (class "java.lang.invoke.SerializedLambda", SerializedLambda[capturingClass=class com.vaadin.starter.bakery.ui.views.orderedit.OrderEditor, functionalInterfaceMethod=com/vaadin/flow/component/ItemLabelGenerator.apply:(Ljava/lang/Object;)Ljava/lang/String;, implementation=invokeVirtual com/vaadin/starter/bakery/ui/utils/converters/LocalTimeConverter.encode:(Ljava/time/LocalTime;)Ljava/lang/String;, instantiatedMethodType=(Ljava/time/LocalTime;)Ljava/lang/String;, numCaptured=1])
+		- field (class "com.vaadin.flow.component.combobox.ComboBoxBase", name: "itemLabelGenerator", type: "interface com.vaadin.flow.component.ItemLabelGenerator")
+		- object (class "com.vaadin.flow.component.combobox.ComboBox", com.vaadin.flow.component.combobox.ComboBox@6a256d7f)
+		[.... omitted .... ]
+	End Track ID: 3268
+
+com.vaadin.starter.bakery.backend.service.PickupLocationService
+	Start Track ID: 3348, Stack depth: 78. Reference stack:
+		- field (class "com.vaadin.starter.bakery.ui.crud.CrudEntityDataProvider", name: "crudService", type: "interface com.vaadin.starter.bakery.backend.service.FilterableCrudService")
+		- object (class "com.vaadin.starter.bakery.ui.crud.CrudEntityDataProvider", com.vaadin.starter.bakery.ui.crud.CrudEntityDataProvider@42830bd9)
+		- field (class "com.vaadin.flow.data.provider.DataCommunicator", name: "dataProvider", type: "interface com.vaadin.flow.data.provider.DataProvider")
+		- object (class "com.vaadin.flow.component.combobox.ComboBoxDataCommunicator", com.vaadin.flow.component.combobox.ComboBoxDataCommunicator@1ae5194d)
+		- field (class "com.vaadin.flow.component.combobox.ComboBoxDataController", name: "dataCommunicator", type: "class com.vaadin.flow.component.combobox.ComboBoxDataCommunicator")
+		- object (class "com.vaadin.flow.component.combobox.ComboBoxDataController", com.vaadin.flow.component.combobox.ComboBoxDataController@351fed32)
+		[.... omitted .... ]
+	End Track ID: 3348
+
+com.vaadin.starter.bakery.ui.views.orderedit.OrderEditor$$Lambda$2071/0x0000000800c7a840
+	[ SAM interface: java.util.function.Function.compose(java.util.function.Function) ]
+	Start Track ID: 3525, Stack depth: 69. Reference stack:
+		- element of array (index: 0)
+		- array (class "[Ljava.lang.Object;", size: 1)
+		- field (class "java.lang.invoke.SerializedLambda", name: "capturedArgs", type: "class [Ljava.lang.Object;")
+		- object (class "java.lang.invoke.SerializedLambda", SerializedLambda[capturingClass=class com.vaadin.starter.bakery.ui.dataproviders.DataProviderUtil, functionalInterfaceMethod=com/vaadin/flow/component/ItemLabelGenerator.apply:(Ljava/lang/Object;)Ljava/lang/String;, implementation=invokeStatic com/vaadin/starter/bakery/ui/dataproviders/DataProviderUtil.lambda$createItemLabelGenerator$bbbabe6b$1:(Ljava/util/function/Function;Ljava/lang/Object;)Ljava/lang/String;, instantiatedMethodType=(Ljava/lang/Object;)Ljava/lang/String;, numCaptured=1])
+		[.... omitted .... ]
+	End Track ID: 3525
+
+com.vaadin.starter.bakery.backend.service.ProductService
+	Start Track ID: 3947, Stack depth: 68. Reference stack:
+		- field (class "com.vaadin.starter.bakery.ui.crud.CrudEntityDataProvider", name: "crudService", type: "interface com.vaadin.starter.bakery.backend.service.FilterableCrudService")
+		- object (class "com.vaadin.starter.bakery.ui.crud.CrudEntityDataProvider", com.vaadin.starter.bakery.ui.crud.CrudEntityDataProvider@7392f310)
+		- field (class "com.vaadin.starter.bakery.ui.views.orderedit.OrderItemsEditor", name: "productDataProvider", type: "interface com.vaadin.flow.data.provider.DataProvider")
+		- object (class "com.vaadin.starter.bakery.ui.views.orderedit.OrderItemsEditor", com.vaadin.starter.bakery.ui.views.orderedit.OrderItemsEditor@2a64d7d9)
+		[.... omitted .... ]
+	End Track ID: 3947
+
+com.vaadin.starter.bakery.ui.views.orderedit.OrderEditor$$Lambda$2032/0x0000000800c74c40
+	[ SAM interface: java.util.function.Function.compose(java.util.function.Function) ]
+	Start Track ID: 4182, Stack depth: 49. Reference stack:
+		- element of array (index: 0)
+		- array (class "[Ljava.lang.Object;", size: 1)
+		- field (class "java.lang.invoke.SerializedLambda", name: "capturedArgs", type: "class [Ljava.lang.Object;")
+		- object (class "java.lang.invoke.SerializedLambda", SerializedLambda[capturingClass=class com.vaadin.starter.bakery.ui.dataproviders.DataProviderUtil, functionalInterfaceMethod=com/vaadin/flow/component/ItemLabelGenerator.apply:(Ljava/lang/Object;)Ljava/lang/String;, implementation=invokeStatic com/vaadin/starter/bakery/ui/dataproviders/DataProviderUtil.lambda$createItemLabelGenerator$bbbabe6b$1:(Ljava/util/function/Function;Ljava/lang/Object;)Ljava/lang/String;, instantiatedMethodType=(Ljava/lang/Object;)Ljava/lang/String;, numCaptured=1])
+		- field (class "com.vaadin.flow.component.combobox.ComboBoxBase", name: "itemLabelGenerator", type: "interface com.vaadin.flow.component.ItemLabelGenerator")
+		- object (class "com.vaadin.flow.component.combobox.ComboBox", com.vaadin.flow.component.combobox.ComboBox@7a86589e)
+		[.... omitted .... ]
+	End Track ID: 4182
+
+com.vaadin.starter.bakery.backend.service.OrderService$$EnhancerBySpringCGLIB$$212d0636
+	Start Track ID: 4757, Stack depth: 10. Reference stack:
+		- field (class "com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider", name: "orderService", type: "class com.vaadin.starter.bakery.backend.service.OrderService")
+		- object (class "com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider", com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider@39940b23)
+		[.... omitted .... ]
+	End Track ID: 4757
+
+com.vaadin.starter.bakery.ui.views.storefront.OrderPresenter$$Lambda$1943/0x0000000800c4d040
+	[ SAM interface: java.util.function.Consumer.andThen(java.util.function.Consumer) ]
+	Start Track ID: 4758, Stack depth: 10. Reference stack:
+		- field (class "com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider", name: "pageObserver", type: "interface java.util.function.Consumer")
+		- object (class "com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider", com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider@39940b23)
+		- custom writeObject data (class "java.util.HashMap")
+		- object (class "java.util.HashMap", {ordersGridDataProvider=com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider@39940b23})
+		- field (class "com.vaadin.flow.spring.scopes.BeanStore", name: "objects", type: "interface java.util.Map")
+		- object (class "com.vaadin.flow.spring.scopes.BeanStore", com.vaadin.flow.spring.scopes.BeanStore@55b88ad)
+		- custom writeObject data (class "java.util.HashMap")
+		- object (class "java.util.HashMap", {1=com.vaadin.flow.spring.scopes.BeanStore@55b88ad})
+		- field (class "com.vaadin.flow.spring.scopes.VaadinUIScope$UIStoreWrapper", name: "uiStores", type: "interface java.util.Map")
+		- object (class "com.vaadin.flow.spring.scopes.VaadinUIScope$UIStoreWrapper", com.vaadin.flow.spring.scopes.VaadinUIScope$UIStoreWrapper@53b93285)
+		[.... omitted .... ]
+	End Track ID: 4758
+----
+
+To solve [classname]`SerializedLambda` class cast exceptions during deserialization, analyze the class graph from the bottom to the top and search for known classes. Check the `BEST CANDIDATES` sections to identify the failing lambda expression.
+
+
+[.limit-height]
+----
+Session serialization attempt completed in 1375 ms with outcomes: [SERIALIZATION_FAILED, NOT_SERIALIZABLE_CLASSES, DESERIALIZATION_FAILED]
+
+ERRORS DURING SERIALIZATION/DESERIALIZATION PROCESS:
+====================================================
+DESERIALIZATION_FAILED: cannot assign instance of java.lang.invoke.SerializedLambda to field com.vaadin.flow.component.ComponentEventBus$ListenerWrapper.listener of type com.vaadin.flow.component.ComponentEventListener in instance of com.vaadin.flow.component.ComponentEventBus$ListenerWrapper
+
+SERIALIZED LAMBDA CLASS CAST EXCEPTION BEST CANDIDATES:
+=======================================================
+	SerializedLambda[capturingClass=class com.vaadin.starter.bakery.ui.views.dashboard.DashboardView, functionalInterfaceMethod=com/vaadin/flow/component/ComponentEventListener.onComponentEvent:(Lcom/vaadin/flow/component/ComponentEvent;)V, implementation=invokeSpecial com/vaadin/starter/bakery/ui/views/dashboard/DashboardView.lambda$measurePageLoadPerformance$387549c5$1:(Ljava/util/concurrent/atomic/AtomicInteger;Lcom/vaadin/flow/component/charts/events/ChartLoadEvent;)V, instantiatedMethodType=(Lcom/vaadin/flow/component/charts/events/ChartLoadEvent;)V, numCaptured=2]
+	- field (class "com.vaadin.flow.component.ComponentEventBus$ListenerWrapper", name: "listener", type: "interface com.vaadin.flow.component.ComponentEventListener")
+	- object (class "com.vaadin.flow.component.ComponentEventBus$ListenerWrapper", com.vaadin.flow.component.ComponentEventBus$ListenerWrapper@3cfd4b4e)
+	- custom writeObject data (class "java.util.ArrayList")
+	- object (class "java.util.ArrayList", [com.vaadin.flow.component.ComponentEventBus$ListenerWrapper@3cfd4b4e])
+	- custom writeObject data (class "java.util.HashMap")
+	- object (class "java.util.HashMap", {class com.vaadin.flow.component.charts.events.ChartLoadEvent=[com.vaadin.flow.component.ComponentEventBus$ListenerWrapper@3cfd4b4e]})
+	- field (class "com.vaadin.flow.component.ComponentEventBus", name: "componentEventData", type: "class java.util.HashMap")
+	- object (class "com.vaadin.flow.component.ComponentEventBus", com.vaadin.flow.component.ComponentEventBus@1f42a3e)
+	- field (class "com.vaadin.flow.component.Component", name: "eventBus", type: "class com.vaadin.flow.component.ComponentEventBus")
+	- object (class "com.vaadin.flow.component.charts.Chart", com.vaadin.flow.component.charts.Chart@1d873f81)
+	- field (class "com.vaadin.flow.internal.nodefeature.ComponentMapping", name: "component", type: "class com.vaadin.flow.component.Component")
+	- object (class "com.vaadin.flow.internal.nodefeature.ComponentMapping", com.vaadin.flow.internal.nodefeature.ComponentMapping@103098d)
+	- element of array (index: 3)
+	- array (class "[Lcom.vaadin.flow.internal.nodefeature.NodeFeature;", size: 8)
+	- field (class "com.vaadin.flow.internal.StateNode", name: "features", type: "interface java.io.Serializable")
+	- object (class "com.vaadin.flow.internal.StateNode", com.vaadin.flow.internal.StateNode@5753faff)
+	- custom writeObject data (class "java.util.HashSet")
+	- object (class "java.util.LinkedHashSet", [com.vaadin.flow.internal.StateNode@5753faff, com.vaadin.flow.internal.StateNode@715baa6, com.vaadin.flow.internal.StateNode@2002fea9, com.vaadin.flow.internal.StateNode@52b50419, com.vaadin.flow.internal.StateNode@253f0346, com.vaadin.flow.internal.StateNode@32fba91, com.vaadin.flow.internal.StateNode@598ff72d, com.vaadin.flow.internal.StateNode@105e75d3, com.vaadin.flow.internal.StateNode@52acc625, com.vaadin.flow.internal.StateNode@25be0e23, com.vaadin.flow.internal.StateNode@102dfa9, com.vaadin.flow.internal.StateNode@18580649, com.vaadin.flow.internal.StateNode@1e1751e3, com.vaadin.flow.internal.StateNode@4fa4edf8, com.vaadin.flow.internal.StateNode@4d41533b, com.vaadin.flow.internal.StateNode@2e470fb9, com.vaadin.flow.internal.StateNode@26527a8d, com.vaadin.flow.internal.StateNode@13fd3186, com.vaadin.flow.internal.StateNode@acffdd6, com.vaadin.flow.internal.StateNode@3a5f4c8b, com.vaadin.flow.internal.StateNode@e1d32e9])
+	- field (class "com.vaadin.flow.internal.StateTree", name: "dirtyNodes", type: "interface java.util.Set")
+	- object (class "com.vaadin.flow.internal.StateTree", com.vaadin.flow.internal.StateTree@5199da78)
+	- field (class "com.vaadin.flow.internal.StateNode", name: "owner", type: "interface com.vaadin.flow.internal.NodeOwner")
+	- object (class "com.vaadin.flow.internal.StateNode", com.vaadin.flow.internal.StateNode@5a9ad499)
+	- custom writeObject data (class "java.util.ArrayList")
+	- object (class "java.util.ArrayList", [com.vaadin.flow.internal.StateNode@5a9ad499])
+	- field (class "com.vaadin.flow.internal.nodefeature.NodeList", name: "values", type: "interface java.util.List")
+	- object (class "com.vaadin.flow.internal.nodefeature.ElementChildrenList", com.vaadin.flow.internal.nodefeature.ElementChildrenList@1794b4cc)
+	- element of array (index: 1)
+	- array (class "[Lcom.vaadin.flow.internal.nodefeature.NodeFeature;", size: 13)
+	- field (class "com.vaadin.flow.internal.StateNode", name: "features", type: "interface java.io.Serializable")
+	- object (class "com.vaadin.flow.internal.StateNode", com.vaadin.flow.internal.StateNode@3989de96)
+	- field (class "com.vaadin.flow.dom.Node", name: "node", type: "class com.vaadin.flow.internal.StateNode")
+	- object (class "com.vaadin.flow.dom.Element", <vaadin-grid suppress-template-warning multi-sort-priority="prepend" theme="orders dashboard" id="ordersGrid">
+ <vaadin-grid-column suppress-template-warning></vaadin-grid-column>
+</vaadin-grid>)
+	- field (class "com.vaadin.flow.component.grid.GridArrayUpdater$UpdateQueueData", name: "element", type: "class com.vaadin.flow.dom.Element")
+	- object (class "com.vaadin.flow.component.grid.GridArrayUpdater$UpdateQueueData", com.vaadin.flow.component.grid.GridArrayUpdater$UpdateQueueData@36801ef0)
+	- field (class "com.vaadin.flow.component.grid.Grid$GridArrayUpdaterImpl", name: "data", type: "class com.vaadin.flow.component.grid.GridArrayUpdater$UpdateQueueData")
+	- object (class "com.vaadin.flow.component.grid.Grid$GridArrayUpdaterImpl", com.vaadin.flow.component.grid.Grid$GridArrayUpdaterImpl@349c650f)
+	- field (class "com.vaadin.flow.data.provider.DataCommunicator", name: "arrayUpdater", type: "interface com.vaadin.flow.data.provider.ArrayUpdater")
+	- object (class "com.vaadin.flow.data.provider.DataCommunicator", com.vaadin.flow.data.provider.DataCommunicator@563c6dd6)
+	- element of array (index: 0)
+	- array (class "[Ljava.lang.Object;", size: 1)
+	- field (class "java.lang.invoke.SerializedLambda", name: "capturedArgs", type: "class [Ljava.lang.Object;")
+	- object (class "java.lang.invoke.SerializedLambda", SerializedLambda[capturingClass=class com.vaadin.flow.data.provider.DataCommunicator, functionalInterfaceMethod=com/vaadin/flow/data/provider/DataProviderListener.onDataChange:(Lcom/vaadin/flow/data/provider/DataChangeEvent;)V, implementation=invokeSpecial com/vaadin/flow/data/provider/DataCommunicator.lambda$handleAttach$425c8a01$1:(Lcom/vaadin/flow/data/provider/DataChangeEvent;)V, instantiatedMethodType=(Lcom/vaadin/flow/data/provider/DataChangeEvent;)V, numCaptured=1])
+	- field (class "com.vaadin.flow.data.provider.AbstractDataProvider$1", name: "val$listener", type: "interface com.vaadin.flow.data.provider.DataProviderListener")
+	- object (class "com.vaadin.flow.data.provider.AbstractDataProvider$1", com.vaadin.flow.data.provider.AbstractDataProvider$1@36139299)
+	- field (class "com.vaadin.flow.data.provider.AbstractDataProvider$DataListenerWrapper", name: "listener", type: "interface com.vaadin.flow.function.SerializableConsumer")
+	- object (class "com.vaadin.flow.data.provider.AbstractDataProvider$DataListenerWrapper", com.vaadin.flow.data.provider.AbstractDataProvider$DataListenerWrapper@772e98a2)
+	- custom writeObject data (class "java.util.ArrayList")
+	- object (class "java.util.ArrayList", [com.vaadin.flow.data.provider.AbstractDataProvider$DataListenerWrapper@772e98a2, com.vaadin.flow.data.provider.AbstractDataProvider$DataListenerWrapper@7311029f])
+	- custom writeObject data (class "java.util.HashMap")
+	- object (class "java.util.HashMap", {class com.vaadin.flow.data.provider.DataChangeEvent=[com.vaadin.flow.data.provider.AbstractDataProvider$DataListenerWrapper@772e98a2, com.vaadin.flow.data.provider.AbstractDataProvider$DataListenerWrapper@7311029f]})
+	- field (class "com.vaadin.flow.data.provider.AbstractDataProvider", name: "listeners", type: "class java.util.HashMap")
+	- object (class "com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider", com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider@39940b23)
+	- custom writeObject data (class "java.util.HashMap")
+	- object (class "java.util.HashMap", {ordersGridDataProvider=com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider@39940b23})
+	- field (class "com.vaadin.flow.spring.scopes.BeanStore", name: "objects", type: "interface java.util.Map")
+	- object (class "com.vaadin.flow.spring.scopes.BeanStore", com.vaadin.flow.spring.scopes.BeanStore@55b88ad)
+	- custom writeObject data (class "java.util.HashMap")
+	- object (class "java.util.HashMap", {1=com.vaadin.flow.spring.scopes.BeanStore@55b88ad})
+	- field (class "com.vaadin.flow.spring.scopes.VaadinUIScope$UIStoreWrapper", name: "uiStores", type: "interface java.util.Map")
+	- object (class "com.vaadin.flow.spring.scopes.VaadinUIScope$UIStoreWrapper", com.vaadin.flow.spring.scopes.VaadinUIScope$UIStoreWrapper@53b93285)
+	- custom writeObject data (class "java.util.HashMap")
+	- object (class "java.util.HashMap", {com.vaadin.flow.spring.scopes.VaadinUIScope$UIStoreWrapper=com.vaadin.flow.spring.scopes.VaadinUIScope$UIStoreWrapper@53b93285, com.vaadin.flow.server.SessionRouteRegistry=com.vaadin.flow.server.SessionRouteRegistry@4f248e99, clientRoutingMode=false})
+	- field (class "com.vaadin.flow.server.Attributes", name: "attributes", type: "class java.util.HashMap")
+	- object (class "com.vaadin.flow.server.Attributes", com.vaadin.flow.server.Attributes@46ee4d44)
+	- field (class "com.vaadin.flow.server.VaadinSession", name: "attributes", type: "class com.vaadin.flow.server.Attributes")
+	- custom writeObject data (class "com.vaadin.flow.server.VaadinSession")
+	- object (class "com.vaadin.flow.spring.SpringVaadinSession", com.vaadin.flow.spring.SpringVaadinSession@5544baac)
+	- custom writeObject data (class "java.util.HashMap")
+	- root object (class "java.util.HashMap", {com.vaadin.flow.server.VaadinSession.springServlet=com.vaadin.flow.spring.SpringVaadinSession@5544baac, springServlet.lock=java.util.concurrent.locks.ReentrantLock@46e4aae6[Unlocked], org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository.CSRF_TOKEN=org.springframework.security.web.csrf.DefaultCsrfToken@5786acad, clusterKey=ba60b62d-ae4c-46ee-9259-45b03ec9623d_SOURCE:DAD56D60A91A82D69729F102FED0D322, SPRING_SECURITY_CONTEXT=SecurityContextImpl [Authentication=UsernamePasswordAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=admin@vaadin.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, credentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_admin]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=9EEA113887DE836010569B45CD9744B3], Granted Authorities=[ROLE_admin]]]})
+
+----
+
+
+For example, on the above snippet when navigating to the application [classname]`DashboardView`, the process failed to deserialize a lambda expression into [classname]`com.vaadin.flow.component.ComponentEventListener`.
+
+----
+DESERIALIZATION_FAILED:
+cannot assign instance of java.lang.invoke.SerializedLambda
+to field com.vaadin.flow.component.ComponentEventBus$ListenerWrapper.listener
+of type com.vaadin.flow.component.ComponentEventListener
+in instance of com.vaadin.flow.component.ComponentEventBus$ListenerWrapper
+----
+
+Checking the `BEST CANDIDATES` section, it is possible to see that there is an entry whose `capturingClass` is [classname]`DashboardView`. The lambda captures a [classname]`ChartLoadEvent`.
+The method defining the lambda expression can be detected from the `implementation` attribute, that is [methodname]`measurePageLoadPerformance` in [classname]`DashboardView`.
+
+----
+SERIALIZED LAMBDA CLASS CAST EXCEPTION BEST CANDIDATES:
+=======================================================
+	SerializedLambda[
+		capturingClass=class com.vaadin.starter.bakery.ui.views.dashboard.DashboardView,
+		functionalInterfaceMethod=com/vaadin/flow/component/ComponentEventListener.onComponentEvent:(Lcom/vaadin/flow/component/ComponentEvent;)V,
+		implementation=invokeSpecial com/vaadin/starter/bakery/ui/views/dashboard/DashboardView.lambda$measurePageLoadPerformance$387549c5$1:(Ljava/util/concurrent/atomic/AtomicInteger;Lcom/vaadin/flow/component/charts/events/ChartLoadEvent;)V,
+		instantiatedMethodType=(Lcom/vaadin/flow/component/charts/events/ChartLoadEvent;)V,
+		numCaptured=2]
+----
+
+The mentioned method presents the following code, and it can be deduced that the problem is that the lambda expression is capturing `this` and providing it to other components that probably store a reference to it.
+
+[source,java]
+----
+	private void measurePageLoadPerformance() {
+		final int nTotal = 5; // the total number of charts on the page
+		AtomicInteger nLoaded = new AtomicInteger();
+		ComponentEventListener<ChartLoadEvent> chartLoadListener = (event) -> {
+			nLoaded.addAndGet(1);
+			if (nLoaded.get() == nTotal) {
+				UI.getCurrent().getPage().executeJs("$0._chartsLoadedResolve()", this); // <1>
+			}
+		};
+
+		todayCountChart.addChartLoadListener(chartLoadListener); // <2>
+		deliveriesThisMonthChart.addChartLoadListener(chartLoadListener);
+		deliveriesThisYearChart.addChartLoadListener(chartLoadListener);
+		yearlySalesGraph.addChartLoadListener(chartLoadListener);
+		monthlyProductSplit.addChartLoadListener(chartLoadListener);
+	}
+----
+<1> Lambda expression captures `this` instance
+<2> Lambda expression is used as [classname]`ChartLoadListener`
+
+
+To fix this issue, replace the lambda expression with an anonymous class.
+
+[source,java]
+----
+ComponentEventListener<ChartLoadEvent> chartLoadListener = new ComponentEventListener<>() {
+    @Override
+    public void onComponentEvent(ChartLoadEvent event) {
+        nLoaded.addAndGet(1);
+        if (nLoaded.get() == nTotal) {
+            UI.getCurrent().getPage().executeJs("$0._chartsLoadedResolve()", DashboardView.this);
+        }
+    }
+};
+----
+
+
+++++
+<style>
+.limit-height .sourcecode {
+	max-height: 25em;
+}
+</style>
+++++

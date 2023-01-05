@@ -255,7 +255,7 @@ export class IconsetGenerator extends LitElement {
         enumName = 'Icons';
       }
 
-      const jsName = enumName.replaceAll(/([a-z])([A-Z]+)/g, '$1-$2').toLowerCase();
+      const jsName = enumName.replace(/([a-z])([A-Z]+)/g, '$1-$2').toLowerCase();
 
       // Generate <vaadin-iconset> JS import and Java enum class
       const iconsetStrings = await generateVaadinIconset(set, jsName, enumName);
@@ -414,7 +414,7 @@ async function fileListToText(fileList: File[]): Promise<Array<{ name: string; t
 const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
 
 const convertToEnumName = (s: string) => {
-  let name = s.toUpperCase().replaceAll('-', '_');
+  let name = s.toUpperCase().replace(/-/g, '_');
   // Java enums can't start with a number. Prefix with underscore
   if (name.match(/^\d/)) {
     name = `_${name}`;

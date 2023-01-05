@@ -12,6 +12,11 @@ import '@vaadin/flow-frontend/dndConnector-es6.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 
 // Flow component specific modules
+import '@vaadin/flow-frontend/confirmDialogConnector.js';
+import '@vaadin/flow-frontend/dialogConnector.js';
+import '@vaadin/flow-frontend/cookieConsentConnector.js';
+import '@vaadin/flow-frontend/loginOverlayConnector.js';
+import '@vaadin/flow-frontend/notificationConnector.js';
 import '@vaadin/flow-frontend/comboBoxConnector.js';
 import '@vaadin/flow-frontend/contextMenuConnector.js';
 import '@vaadin/flow-frontend/contextMenuTargetConnector.js';
@@ -25,6 +30,7 @@ import '@vaadin/flow-frontend/messageListConnector.js';
 import '@vaadin/flow-frontend/selectConnector.js';
 import '@vaadin/flow-frontend/vaadin-time-picker/timepickerConnector.js';
 import '@vaadin/flow-frontend/virtualListConnector.js';
+import '@vaadin/flow-frontend/tooltip.ts';
 
 // Lit renderer
 import '@vaadin/flow-frontend/lit-renderer.ts';

@@ -5,29 +5,25 @@ order: 110
 
 = Running Tests with Maven
 
-A Maven build is divided into different lifecycle phases, of which the relevant ones are:
+A Maven build is divided into different lifecycle phases. Below are the relevant ones:
 
-* `compile` Compiles the code
-* `test` Runs unit tests which don't require a packaged project
-* `pre-integration-test` Makes preparations for integration tests
-* `integration-test` Executes integration tests
-* `post-integration-test` Cleans up after integration tests
+* `compile` Compiles the code;
+* `test` Runs unit tests which don't require a packaged project;
+* `pre-integration-test` Makes preparations for integration tests;
+* `integration-test` Executes integration tests; and
+* `post-integration-test` Cleans up after integration tests.
 
-TestBench tests fit into the `integration-test` phase.
-The `pre-integration-test` phase is the place to start a server and deploy the package.
-The `post-integration-test` phase is where you would stop the server.
+TestBench tests fit into the `integration-test` phase. The `pre-integration-test` phase is the place to start a server and deploy the package. The `post-integration-test` phase is where you would stop the server.
 
 [TIP]
-If you name your tests `*Test`, they are run automatically in the `test` phase.
-If, instead, you name your TestBench tests `*IT`, they are run automatically in the `integration-test` phase.
+If you name your tests `*Test`, they are run automatically in the `test` phase. If you instead name your TestBench tests `*IT`, they're run automatically in the `integration-test` phase.
 
 [NOTE]
-Never execute TestBench tests in the `test` phase, because they can't be run without a packaged or deployed project.
+Never execute TestBench tests in the `test` phase. They can't be run without a packaged or deployed project.
 
 == Starting the Server Automatically
 
-For applications without external dependencies, it's often handy to start a test as part of the build.
-As an example, if you are using Jetty to run the project, you can use the `jetty-maven-plugin` to start the server in the `pre-integration-test` and stop it in the `post-integration-test` phase, as follows:
+For applications without external dependencies, it's often handy to start a test as part of the build. As an example, if you're using Jetty to run the project, you can use the `jetty-maven-plugin` to start the server in the `pre-integration-test` and stop it in the `post-integration-test` phase, as follows:
 [source,xml]
 ----
 <plugin>
@@ -57,22 +53,21 @@ As an example, if you are using Jetty to run the project, you can use the `jetty
 </plugin>
 ----
 
-The `stopPort` and `stopKey` are Jetty specific parameters which must be given so that Jetty is able to stop the correct server instance.
-A fully working example of running Jetty as part of the build can be found in https://github.com/vaadin/testbench-demo/blob/master/pom.xml.
+The `stopPort` and `stopKey` are Jetty specific parameters which must be given so that Jetty is able to stop the correct server instance. A fully working example of running Jetty as part of the build can be found in https://github.com/vaadin/testbench-demo/blob/master/pom.xml.
 
-If you are using Spring Boot, you can use the `spring-boot-maven-plugin` to achieve the same thing.
-See the Bakery starter for Spring for an example.
+If you're using Spring Boot, you can use the `spring-boot-maven-plugin` to achieve the same thing. See the Bakery starter for Spring for an example.
 
-If you are using JavaEE, you can start TomEE, WildFly or a Liberty server in a similar way.
-See the Bakery starter for JavaEE (at the time of writing only available for Vaadin 8) for an example.
+If you're using JavaEE, you can start TomEE, WildFly or a Liberty server in a similar way. See the Bakery starter for JavaEE for an example -- this is available at this time only for Vaadin 8.
 
 
 == Executing Tests in the Integration Test Phase
 
-In Maven, unit tests are executed by the `maven-surefire-plugin`, automatically included in all projects.
-Integration tests are executed by the `maven-failsafe-plugin` instead, which needs to be included manually in the project as
+In Maven, unit tests are executed by the `maven-surefire-plugin`, automatically included in all projects. Integration tests are executed by the `maven-failsafe-plugin` instead, which needs to be included manually in the project as the following:
+[.example]
+--
 [source,xml]
 ----
+<source-info group="JUnit 4"></source-info>
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-failsafe-plugin</artifactId>
@@ -90,13 +85,36 @@ Integration tests are executed by the `maven-failsafe-plugin` instead, which nee
     </configuration>
 </plugin>
 ----
+[source,xml]
+----
+<source-info group="JUnit 5"></source-info>
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-failsafe-plugin</artifactId>
+    <version>3.0.0-M7</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <trimStackTrace>false</trimStackTrace>
+        <rerunFailingTestsCount>3</rerunFailingTestsCount>
+    </configuration>
+</plugin>
+----
+--
 
-The `<executions>` part is needed to actually execute the plugin during the `integration-test` phase.
-The `<configuration>` part is optional but, by including it, you get the full stack trace when an error occurs, which typically makes it easier to figure out what went wrong in a test.
+The `<executions>` part is needed to execute the plugin during the `integration-test` phase. The `<configuration>` part is optional, but by including it you get the full stack trace when an error occurs. This typically makes it easier to determine what went wrong in a test. Running failed tests multiple times is also possible using the `rerunFailingTestsCount` property.
 
 == Downloading WebDrivers Automatically
+
 The `driver-binary-downloader-maven-plugin` plugin downloads WebDrivers for a given browser and platform and makes them available for the TestBench tests.
 By downloading these as part of the build, you don't need to do any setup on the machine where you are running the tests.
+
 The plugin can be enabled as follows:
 [source,xml]
 ----
@@ -119,16 +137,12 @@ The plugin can be enabled as follows:
 </plugin>
 ----
 
-This downloads the WebDrivers defined in [filename]`webdrivers.xml` (called a repository map) in the project root during the `test-compile` phase, that is, before the integration tests start.
-The downloaded WebDrivers are placed in the `webdriver/zips` folder in the project and unpacked to the `webdriver` folder.
-The file [filename]`webdrivers.xml` defines which version of the various WebDrivers to download.
-An example can be found at https://github.com/vaadin/testbench-demo/blob/master/webdrivers.xml.
+This downloads the WebDrivers defined in [filename]`webdrivers.xml` (i.e., a repository map) in the project root during the `test-compile` phase, before the integration tests start. The downloaded WebDrivers are placed in the `webdriver/zips` folder in the project and unpacked to the `webdriver` folder. The file [filename]`webdrivers.xml` defines which version of the various WebDrivers to download. An example can be found at https://github.com/vaadin/testbench-demo/blob/master/webdrivers.xml.
 
 [TIP]
-The https://github.com/Ardesco/selenium-standalone-server-plugin repository map is kept quite up to date.
+The https://github.com/Ardesco/selenium-standalone-server-plugin repository map is kept quite up-to-date.
 
-In addition to downloading the WebDrivers, the location of the unpacked drivers must be passed to the `maven-failsafe-plugin`, so that the TestBench tests can find them during execution.
-This can be done by defining system properties in the `<configuration>` section of the `maven-failsafe-plugin`:
+In addition to downloading the WebDrivers, the location of the unpacked drivers must be passed to the `maven-failsafe-plugin` so that the TestBench tests can find them during execution. This can be done by defining system properties in the `<configuration>` section of the `maven-failsafe-plugin` like so:
 
 ----
 <configuration>

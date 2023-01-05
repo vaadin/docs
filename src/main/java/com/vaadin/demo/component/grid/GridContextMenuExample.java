@@ -25,7 +25,7 @@ public class GridContextMenuExample extends Div {
 
         PersonContextMenu contextMenu = new PersonContextMenu(grid);
 
-        add(grid, contextMenu);
+        add(grid);
         // end::snippet1[]
 
         List<Person> people = DataService.getPeople();

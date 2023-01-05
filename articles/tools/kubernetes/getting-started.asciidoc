@@ -1,0 +1,310 @@
+---
+title: Getting Started
+description: Step-by-step guide showing how to enable scalability, high availability, and non-disruptive rolling updates for your application using Kubernetes Kit.
+order: 10
+---
+
+= Getting Started with Kubernetes Kit
+:sectnums:
+:hide-uri-scheme:
+
+This tutorial guides you through setting up and deploying an application with Kubernetes Kit in a local Kubernetes cluster.
+
+== Requirements
+
+This tutorial assumes that you have the following software installed on your local machine:
+
+- https://www.docker.com/products/docker-desktop/[Docker Desktop]
+- A local Kubernetes cluster such as
+ https://minikube.sigs.k8s.io/docs/start/[minikube],
+ https://kind.sigs.k8s.io/docs/user/quick-start/[kind], or
+ https://docs.docker.com/desktop/kubernetes/[Docker] itself.
+
+== Set Up a Vaadin Project
+
+Download a new Vaadin project from https://start.vaadin.com.
+
+== Add the Kubernetes Kit Dependency
+
+. To get started, add Kubernetes Kit as a dependency to the project:
++
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+  <groupId>com.vaadin</groupId>
+  <artifactId>kubernetes-kit-starter</artifactId>
+</dependency>
+----
+
+. Add the following to the application configuration file:
++
+.`application.properties`
+[source,properties]
+----
+# <1>
+vaadin.devmode.sessionSerialization.enabled=true
+# <2>
+vaadin.serialization.transients.include-packages=com.example.application
+----
+<1> This property enables the session serialization debug tool during development.
+<2> This property defines the classes which should be inspected for transient fields during session serialization. In this case, inspection is limited to classes within the starter project. For more information, see <<session-replication#,Session Replication>>.
+
+== Session Replication Back End
+
+_You don't need to enable session replication if you only need <<update-version#,rolling updates>>._
+
+High availability and the possibility to scale applications up and down in a cluster are enabled by storing session data in a back end that is accessible to the cluster. This tutorial uses Hazelcast for this purpose. However, Redis is also supported.
+
+. Add the Hazelcast dependency to the project:
++
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>com.hazelcast</groupId>
+    <artifactId>hazelcast</artifactId>
+</dependency>
+----
+
+. Add the following property to the application configuration file:
++
+.application.properties
+[source,properties]
+----
+vaadin.kubernetes.hazelcast.service-name=hazelcast-service
+----
+
+. Deploy the Hazelcast service to the cluster by running the following command:
++
+[source,terminal]
+----
+kubectl apply -f https://raw.githubusercontent.com/hazelcast/hazelcast/master/kubernetes-rbac.yaml
+----
++
+.Deploying to Another Namespace
+[NOTE]
+====
+If you want to deploy to another namespace than `default`, you need to download the https://raw.githubusercontent.com/hazelcast/hazelcast/master/kubernetes-rbac.yaml[kubernetes-rbac.yaml] file and edit the hard-coded namespace. Then deploy to your cluster like so:
+
+[source,terminal]
+kubectl apply -f path/to/custom/kubernetes-rbac.yaml
+====
+
+. Deploy a load balancer service to your cluster. Create the following Kubernetes manifest file:
++
+.`hazelcast.yaml`
+[source,yaml]
+----
+apiVersion: v1
+kind: Service
+metadata:
+  name: hazelcast-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - name: hazelcast
+      port: 5701
+  type: LoadBalancer
+----
++
+Then deploy the manifest to your cluster:
++
+[source,terminal]
+kubectl apply -f hazelcast.yaml
+
+. Run the following command to see that the load balancer service is running:
++
+[source,terminal]
+kubectl get svc hazelcast-service
++
+You should see the following output (the IP number can be different):
++
+----
+NAME                TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+hazelcast-service   LoadBalancer   10.96.178.190   <pending>     5701:31516/TCP   18h
+----
+
+== Build and Deploy the Application
+
+The next step is to build a container image of the application and deploy it to your Kubernetes cluster.
+
+. Clean the project and create a production build of the application:
++
+[source,terminal]
+mvn clean package -Pproduction
+
+. Create the following `Dockerfile` file in the project directory:
++
+[source,Dockerfile]
+----
+FROM openjdk:17-jdk-slim
+COPY target/*.jar /usr/app/app.jar
+RUN useradd -m myuser
+USER myuser
+EXPOSE 8080
+CMD java -jar /usr/app/app.jar
+----
+
+. Open a terminal to the project directory and use Docker to build a container image for the application. Tag it with version 1.0.0. Note the required period `.` at the end in the line:
++
+[source,terminal]
+docker build -t my-app:1.0.0 .
++
+include::_shared.adoc[tag=publish-local-image]
+
+. Create a deployment manifest for the application:
++
+.`app-v1.yaml`
+[source,yaml]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-v1
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: my-app
+      version: 1.0.0
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: 1.0.0
+    spec:
+      containers:
+        - name: my-app
+          image: my-app:1.0.0
+          # Sets the APP_VERSION environment variable for the container which is
+          # used during the version update to compare with the new version
+          env:
+            - name: APP_VERSION
+              value: 1.0.0
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: multicast
+              containerPort: 5701 # <1>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-v1
+spec:
+  selector:
+    app: my-app
+    version: 1.0.0
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+----
+<1> The multicast port `5701` is only used for session replication using Hazelcast.
++
+Deploy the manifest to your cluster:
++
+[source,terminal]
+kubectl apply -f app-v1.yaml
+
+. Run the following command to verify that you have 4 pods running:
++
+[source,terminal]
+kubectl get pods
++
+You should see output similar to the following:
++
+----
+NAME                            READY   STATUS    RESTARTS      AGE
+my-app-v1-f87bfcbb4-5qjml       1/1     Running   0             22s
+my-app-v1-f87bfcbb4-czkzr       1/1     Running   0             22s
+my-app-v1-f87bfcbb4-gjqw6       1/1     Running   0             22s
+my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             22s
+----
+
+== Ingress Rules
+
+To access the application, you need to provide some ingress rules.
+
+. If you don't already have `ingress-nginx` installed in your cluster, install it with the following command:
++
+[source,terminal]
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
+
+. Create an ingress rule manifest file like so:
++
+.`ingress-v1.yaml`
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    # --- Optional ---
+    # If server Push is enabled in the application and uses Websocket for transport,
+    # these settings replace the default Websocket connection timeouts in Ngnix.
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    # ---
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-v1
+                port:
+                  number: 80
+----
++
+Deploy the manifest to your cluster with the following command:
++
+[source,terminal]
+kubectl apply -f ingress-v1.yaml
+
+. The application should now be available at http://localhost.
++
+.Accessing the application from your local machine
+[NOTE]
+====
+To access the application from your local machine, it may be necessary to use the `port-forward` utility. In this case use the following command:
+
+[source,terminal]
+kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
+
+The application should now be available at http://localhost:8080.
+====
+
+== Scaling the Application
+
+You can use `kubectl` commands to increase or reduce the amount of pods used by the deployment. For example, the following command increases the number of pods to 5:
+
+[source,terminal]
+kubectl scale deployment/my-app-v1 --replicas=5
+
+You can also simulate the failure of a specific pod by deleting it by name like so:
+
+[source,terminal]
+kubectl delete pod/<pod-name>
+
+Remember to substitute the name of your application pod. You can see the names of all the pods with the `kubectl get pods` command.
+
+If you have enabled session replication, this can be used to check that it's performing as expected. If you open the application and then delete the pod to which it's connected, you shouldn't lose session data after the next user interaction.
+
+
+
+++++
+<style>
+main :is(ol, ul) {
+  --docs-code-example-margin: var(--docs-space-m) 0 var(--docs-space-xl) 0;
+}
+</style>
+++++

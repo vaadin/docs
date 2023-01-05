@@ -5,40 +5,32 @@ order: 40
 
 = Creating Tests
 
-The test logic in TestBench tests typically consists of two things:
+The test logic in TestBench tests consist typically of two things:
 
-1. Find an element (component) to interact with
-2. Interact with an element (component)
+* Find an element or component with which to interact; and
+* Interact with an element or component.
 
 For this, TestBench offers the `Element` and `ElementQuery` API.
 
-An `Element` class is a representation of an element on the web page / in the web application.
-The represented element can be a built-in HTML element such as `<div>` or `<span>`, or it can be a custom element such as `<vaadin-button>` or `<vaadin-grid>`.
-An `Element` class offers methods to interact with the element in the same way that a user of the application could interact with the element.
-A `<vaadin-button>` element can for instance be clicked, and you can check what the text on the button says.
-A `<vaadin-grid>` element has more complex methods for scrolling, checking the visible contents, headers etc.
+An `Element` class is a representation of an element on the web page or in the web application. The represented element can be a built-in HTML element such as `<div>` or `<span>`, or it can be a custom element such as `<vaadin-button>` or `<vaadin-grid>`.
+
+An `Element` class offers methods to interact with the element in the same way that a user of the application could interact with the element. A `<vaadin-button>` element can, for instance, be clicked and you can check what the text on the button says. A `<vaadin-grid>` element has more complex methods for scrolling, checking the visible contents, headers, etc.
+
 Low-level methods applicable to all elements, such as [methodname]`sendKeys()` and [methodname]`getSize()`, are also available when needed.
 
 [TIP]
-`Element` classes are provided for all Vaadin components. If an element class isn't available or some functionality is missing, you can create your own version from the beginning or by extending an existing one. See <<page-objects#extending,Extending a Page Object>>.
+`Element` classes are provided for all Vaadin components. If an element class isn't available or some functionality is missing, you can create your own version from the beginning or by extending an existing one (see <<page-objects#extending,Extending a Page Object>>). An element class is in practice the same as a __page object__ (see <<page-objects#creating,Creating a Page Object>> for more details).
 
-[TIP]
-An element class is in practice the same as a __page object__, see <<page-objects#creating,Creating a Page Object>> for more details.
+An `ElementQuery` is what's used to find a given `Element` (component) on the page so that you can interact with it. The high-level `ElementQuery` API allows querying Vaadin components in the browser according to their component class type, hierarchy, caption, and other properties. An `ElementQuery` is constructed using a builder-like pattern and returns a single element or a list of matching elements.
 
-An `ElementQuery` is what's used to find a given `Element` (component) on the page so that you can interact with it.
-The high-level `ElementQuery` API allows querying Vaadin components in the browser according to their component class type, hierarchy, caption, and other properties.
-An `ElementQuery` is constructed using a builder-like pattern and, in the end, returns a single element or a list of matching elements.
-Further queries can be performed on the returned elements to find the desired element.
-
-Consider the following query:
+Further queries can be performed on the returned elements to find the desired element. Related to this, consider the following query:
 
 [source,java]
 ----
 List<ButtonElement> buttons = $(ButtonElement.class).all();
 ----
 
-The query returns a list of HTML elements of all the `Button` components in the UI.
-The buttons found by the query could be controlled, for example, by clicking them as:
+The query returns a list of HTML elements containing all of the `Button` components in the UI. The buttons found by the query could be controlled, for example, by clicking them like so:
 
 [source,java]
 ----
@@ -48,8 +40,7 @@ for (ButtonElement button : buttons)
 
 == Element Query Methods
 
-The [methodname]`$()` method creates an `ElementQuery` that looks for the given element class.
-The method is available both for `TestBenchTestCase` (searches the whole current page) and in `TestBenchElement` (searches inside the given element).
+The [methodname]`$()` method creates an `ElementQuery` that looks for the given element class. This method is available both for `TestBenchTestCase` (i.e., searches the whole current page) and in `TestBenchElement` (i.e., searches inside the given element).
 
 [source,java]
 ----
@@ -69,22 +60,26 @@ If there is no suitable element class available, you can also use the [methodnam
 
 You can use the `ElementQuery` instance returned by [methodname]`$()` to refine the search query using one of the available methods:
 
-* [methodname]`id("some-id")` Returns the element with the given id
-* [methodname]`attribute("attributeName", "attributeValue")` Adds a filter to only include elements with the given attribute set to the given value
-* [methodname]`onPage()` Redefines the search context to cover the whole page
-* [methodname]`first()` Returns the first matching element
-* [methodname]`waitForFirst()` Returns the first matching element. If no matches are found, keeps waiting until there is a matching element.
-* [methodname]`last()` Returns the last matching element
-* [methodname]`get(N)` Returns the Nth matching element
-* [methodname]`exists()` Returns `true` if the query matches at least one element
-* [methodname]`all()` Returns a list of all matching elements
+* [methodname]`id("some-id")` Returns the element with the given id;
+* [methodname]`attribute("attributeName", "attributeValue")` Adds a filter to include only elements with the given attribute set to the given value;
+* [methodname]`onPage()` Redefines the search context to cover the whole page;
+* [methodname]`first()` Returns the first matching element;
+* [methodname]`waitForFirst()` Returns the first matching element -- if no matches are found, it keeps waiting until there is a matching element;
+* [methodname]`last()` Returns the last matching element;
+* [methodname]`get(N)` Returns the Nth matching element;
+* [methodname]`exists()` Returns `true` if the query matches at least one element; and
+* [methodname]`all()` Returns a list of all matching elements.
+
 
 == Writing Tests
 
-Using Element Queries and Elements you can now compose test methods like:
+Using Element Queries and Elements you can now compose test methods like so:
 
+[.example]
+--
 [source,java]
 ----
+<source-info group="JUnit 4"></source-info>
 @Test
 public void fillForm() {
     $(TextFieldElement.class).id("firstName").setValue("John");
@@ -93,9 +88,21 @@ public void fillForm() {
     Assert.assertEquals("Thank you for submitting the form", $(DivElement.class).id("result"))
 }
 ----
+[source,java]
+----
+<source-info group="JUnit 5"></source-info>
+@BrowserTest
+public void fillForm() {
+    $(TextFieldElement.class).id("firstName").setValue("John");
+    $(TextFieldElement.class).id("lastName").setValue("Doe");
+    $(ButtonElement.class).id("ok").click();
+    Assertions.assertEquals("Thank you for submitting the form", $(DivElement.class).id("result"))
+}
+----
+--
 
-Do be aware that if you write tests in this manner, you can have a hard time maintaining the tests.
-A good way to structure tests is to have only the high-level logic in the test itself (your manager should be able to read and understand the test method) and extract the `ElementQuery` parts to a separate *Page Object* class.
+Be aware that if you write tests in this manner, you can have difficulty maintaining the tests. A good way to structure tests is to have only the high-level logic in the test itself -- your manager should be able to read and understand the test method -- and extract the `ElementQuery` parts to a separate *Page Object* class.
+
 See <<page-objects#,Creating Maintainable Tests using Page Objects>> for more information.
 
 
