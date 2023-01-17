@@ -19,6 +19,8 @@ export class Example extends LitElement {
 
   @state()
   private htmlValue = '';
+  @state()
+  private deltaValue = '';
 
   @query('vaadin-rich-text-editor')
   private richTextEditor!: RichTextEditor;
@@ -28,17 +30,29 @@ export class Example extends LitElement {
       <!-- tag::htmlsnippet[] -->
       <vaadin-rich-text-editor
         style="height: 400px;"
+        .value="${this.deltaValue}"
         @change="${(event: RichTextEditorChangeEvent) => {
           this.htmlValue = event.target.htmlValue ?? '';
+          this.deltaValue = event.target.value ?? '';
         }}"
       ></vaadin-rich-text-editor>
 
       <vaadin-text-area
-        label="Html Value"
-        @change="${(e: TextAreaChangeEvent) => this.setHtmlValue(e.target.value)}"
-        placeholder="Type html string here to set it as value to the Rich Text Editor above..."
+        label="HTML Value"
+        placeholder="Enter something in the Rich Text Editor to see its HTML value here."
         style="width: 100%;"
         .value="${this.htmlValue}"
+        @change="${(e: TextAreaChangeEvent) => this.setHtmlValue(e.target.value)}"
+      ></vaadin-text-area>
+
+      <vaadin-text-area
+        label="Delta Value"
+        placeholder="Enter something in the Rich Text Editor to see its Delta value here."
+        style="width: 100%;"
+        .value="${this.deltaValue}"
+        @change="${(e: TextAreaChangeEvent) => {
+          this.deltaValue = e.target.value;
+        }}"
       ></vaadin-text-area>
       <!-- end::htmlsnippet[] -->
     `;
@@ -46,7 +60,9 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   setHtmlValue(htmlValue: string) {
+    this.htmlValue = htmlValue;
     this.richTextEditor.dangerouslySetHtmlValue(htmlValue);
   }
+
   // end::snippet[]
 }
