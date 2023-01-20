@@ -6,7 +6,7 @@ import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import * as companyLogo from '../../../../src/main/resources/images/company-logo.png';
+import companyLogo from '../../../../src/main/resources/images/company-logo.png';
 
 @customElement('avatar-image')
 export class Example extends LitElement {

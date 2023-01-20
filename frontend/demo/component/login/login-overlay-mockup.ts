@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/login/vaadin-login-form.js';
 import type { LoginI18n } from '@vaadin/login';
-import * as img from '../../../../src/main/resources/images/starry-sky.png';
+import img from '../../../../src/main/resources/images/starry-sky.png';
 
 @customElement('login-overlay-mockup')
 export class LoginOverlayMockupElement extends LitElement {
