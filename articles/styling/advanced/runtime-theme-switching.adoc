@@ -1,0 +1,82 @@
+---
+title: Run-time Theme Switching
+order: 80
+---
+
+= Run-time Theme Switching Approaches
+
+Although the #application theme# cannot strictly speaking be switched at run-time, it is possible to implement multiple distinct sets of styles (or _variants_) within a single theme, and to #load styles, dynamically#.
+
+
+== Multiple Style Sets Within a Theme (a.k.a., Custom Theme Variants)
+
+Similar to how the #light and dark variants# are implemented in the default Lumo theme, you can bake multiple distinct sets of styles into a single application theme by scoping them with CSS class names that you apply dynamically through application logic.
+
+The most convenient way to approach this is to utilize #Lumo style properties#, or, if needed, define your own #custom style properties#. However, you can scope any CSS to a particular set/variant by prefixing its selector with the appropriate class name. In the example below, two style sets or variants are implemented in the same application theme, distinguished by the class names `forest-theme` and `fire-theme`.
+
+.styles.css
+[source,css]
+----
+.forest-theme {
+  --lumo-primary-color: green;
+  --lumo-primary-text-color: darkgreen;
+  --brand-color: forestgreen;
+}
+
+.fire-theme {
+  --lumo-primary-color: orange;
+  --lumo-primary-text-color: darkorange;
+  --brand-color: orangered;
+}
+
+.app-header {
+  background-color: var(--brand-color);
+}
+
+.fire-theme .app-header {
+  Background-image: url('flames.png');
+}
+----
+
+Switching between these is done by applying and removing CSS class names from the UI element:
+
+[source,java]
+----
+private String currentTheme = "";
+
+private void switchTheme(String newTheme) {
+
+  // Remove the currently applied theme (if any):
+  UI.getCurrent().getElement().getClassList().remove(currentTheme);
+
+  // Apply the new theme:
+  UI.getCurrent().getElement().getClassList().add(newTheme);
+  currentTheme = newTheme;
+
+}
+----
+
+The theme switching method above could be executed for example based on the user’s domain in a multi-tenant application, user preferences stored in a database, or by an event listener on a component that allows the user to choose a theme, manually.
+
+
+== Loading Dark/Light Colors Based on OS/Browser Settings
+
+Themes with custom dark and light variants can automatically apply them based on the user’s OS or browser settings, so that users with dark or light mode applied in their system get the corresponding variant without having to manually switch to it in the application. This is done through a CSS media query:
+
+[source,css]
+----
+// Light scheme applied by default:
+html {
+  --UI-background: white;
+  --text-color: black;
+}
+
+@media(prefers-color-scheme:dark) {
+  html {
+    --UI-background: black;
+    --text-color: white;
+  }
+}
+----
+
+There is also a way to #apply the built-in Lumo dark theme automatically# based on the same OS/browser setting.

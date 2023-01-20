@@ -1,0 +1,212 @@
+---
+title: Application Theme
+order: 20
+---
+
+The recommended way to load CSS stylesheets for styling Vaadin components and other UI elements is to place them in an application theme folder. Themes created this way are always loaded _on top of_ the default #Lumo theme#.
+
+.@CssImport supported but not recommended
+[NOTE]
+====
+In older versions of Vaadin, stylesheets were loaded using @CssImport and @Stylesheet annotations (and in very old versions using the @HtmlImport annotation). While @CssImport and @Stylesheet still work, they are no longer recommended as the primary way to load stylesheets.
+====
+
+For use in a single application, the theme folder is placed inside the `frontend/themes` folder, with a name of your choosing. Vaadin application projects generated with #Vaadin Start# come with a predefined theme folder with the same name as the project itself.
+
+.Example of theme folder called my-theme
+[source]
+----
+frontend
+└── themes
+    └── my-theme        (1)
+        ├── styles.css  (2)
+        └── theme.json  (3)
+----
+
+The theme folder (1) must contain a #master stylesheet# called `styles.css (2)`. A #theme configuration# file called `theme.json` (3) is optional.
+
+Themes built this way can be #packaged as JAR files# to be shared by multiple applications.
+
+
+== Applying a Theme
+
+The theme contained in the folder is applied to the UI using the `@Theme `annotation, with the name of the theme folder as parameter. The `@Theme` annotation must be placed on the class that implements the #`AppShellConfigurator`# interface, which is used for configuring various application features. In projects generated with Vaadin Start, that is the `Application` class.
+
+[source,java]
+----
+@Theme("my-theme")
+public class Application implements AppShellConfigurator {
+  ...
+}
+----
+
+To apply a custom theme on top of the Dark variant of Lumo, the variant is provided as an additional parameter the annotation:
+
+[source,java]
+----
+@Theme(value="my-theme", variant=Lumo.DARK)
+public class Application implements AppShellConfigurator {
+  ...
+}
+----
+
+.Themes Cannot Be Switched Run-Time
+[NOTE]
+====
+Although the project may contain multiple theme folders, only one can be applied to the UI, and there is no way to dynamically switch theme folders run-time. However, there are ways to #switch between variants# of the same theme, #load additional styles dynamically# on top of the theme, and create #base-themes inherited by sub-themes#.
+====
+
+
+== Master Stylesheet
+
+The master stylesheet, `styles.css`, is automatically loaded into the UI. All CSS, including Lumo style property values and custom component styles, can be added there.
+
+To apply Lumo style property modifications globally (in the whole application), they should be placed in a style block targeting the `html` root element selector like so:
+
+.styles.css
+[source,css]
+----
+html {
+  --lumo-primary-color: green;
+  --lumo-font-family: Times;
+}
+----
+
+The master stylesheet is also a good place to define #your own global style properties#.
+
+
+== Additional Stylesheets
+
+It can be useful to split CSS into multiple stylesheets, to avoid creating a mess in the master stylesheet. Additional stylesheets are loaded through @import directives at the top of the master stylesheet. They can be placed in sub-folders if desired.
+
+.styles.css
+[source,css]
+----
+@import 'colors.css';
+@import 'views/admin-view.css';
+@import 'input-fields/textfield.css';
+
+html, :host() {
+  …
+}
+----
+
+It’s also possible to load stylesheets via #URLs#, and from #JAR dependencies# and #npm packages#.
+
+
+=== External Stylesheets
+
+Stylesheets can be loaded from outside the application by URL using the same `@import` directive. This can be used, for example, to load font-face declarations or color palettes from outside the application.
+
+.styles.css
+[source,css]
+----
+@import url('https://example.com/some-external-styles.css');
+
+html, :host() {
+  …
+}
+----
+
+
+=== Components Sub-Folder (Legacy Feature)
+
+Stylesheets placed in a sub-folder called `components` in the application theme will be loaded by default into the Shadow DOM of Vaadin components – if their file names match the root element name of a component.
+
+This is a legacy feature from earlier versions of Vaadin, in which Vaadin components were primarily styled though #Shadow DOM CSS injection#. Although this approach to component styling is no longer recommended, the injection mechanism is still supported and enabled by default. This is to ease migration from earlier versions.
+
+This legacy feature, though, may cause issues in application themes based on the #current recommended approach to component styling#, if a sub-folder called `components` is used. The feature can, however, be disabled by setting the `autoInjectComponents` flag in the theme configuration file to `false`:
+
+.theme.json
+[source,json]
+----
+{
+  "lumoImports" : [ "typography", "color", "spacing", "badge", "utility" ],
+  "autoInjectComponents" : "false"
+}
+----
+
+
+== Images and Fonts
+
+Font files and images can be included in the theme folder. Font files need to be loaded using the #@font-face# CSS rule.
+
+.styles.css
+[source,css]
+----
+@font-face {
+  font-family: "My Font";
+  src: url('./my-font.woff') format("woff");
+}
+
+.application-logo {
+  background-image: url('./img/logo.png');
+}
+----
+
+It’s also possible to load images and fonts via #URLs#, and from #npm packages#.
+
+.Embedded components (e.g. usage with Design System Publisher)
+[NOTE]
+====
+If the theme is to be used with #embedded Flow applications or embedded Flow components#, such as for use with #Design System Publisher#, `@font-face` declarations must be placed in a special stylesheet called `document.css` to ensure that they are loaded to the page root rather than into a shadow root.
+====
+
+Images stored in the theme folder can also be used with Flow’s #Image# class using the path `themes/[theme-name]/filename.png`:
+
+.Loading an image file from a theme folder called my-theme
+[source,java]
+----
+Image logo = new Image("themes/my-theme/logo.png", "Logo");
+----
+
+
+== Example Theme Folder Structure
+
+Below is an example of how a theme folder with images, fonts and multiple stylesheets and sub-folders can look like.
+
+.Example of theme folder called my-theme
+[source]
+----
+frontend
+└── themes
+    └── my-theme
+        ├── component-styles
+        │   ├── input-fields.css
+        │   └── buttons.css
+        ├── fonts
+        │   └── roboto.woff
+        ├── images
+        │   ├── logo.png
+        │   └── login-background.png
+        ├── colors.css
+        ├── fonts.css
+        ├── styles.css
+        └── theme.json
+----
+
+
+== Theme Configuration
+
+The theme configuration file, `theme.json`, can be used to configure various theme-related features. The most common of these is the `lumoImports` property, used to define which modules of the built-in Lumo theme are to be loaded.
+
+[source,json]
+----
+{
+  "lumoImports" : [ "typography", "color", "spacing", "badge", "utility" ]
+}
+----
+
+The most common usage of this property is to enable #Badge# styles and the #Lumo Utility Classes#. If not defined, the following modules will be loaded by default:
+
+* `typography`
+* `color`
+* `sizing`
+* `spacing`
+
+Other theme configuration features are covered in the #Advanced Styling Topics# section.
+
+* #Loading stylesheets from npm packages#
+* #Loading other theme assets from npm packages#
+* #Loading a parent theme as a basis for the current theme#
+* #Disabling Shadow DOM style injection through the `components` folder#
