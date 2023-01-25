@@ -16,7 +16,7 @@ SSO Kit builds upon https://spring.io/projects/spring-boot[Spring Boot] and http
 Create a Hilla application using this command:
 
 ----
-npx @hilla/cli init --next <your-project-name>
+npx @hilla/cli init <your-project-name>
 ----
 
 // tag::serverside
@@ -29,7 +29,8 @@ Add the `sso-kit-starter` module and the other required dependencies to the [fil
 ----
 <dependency>
     <groupId>dev.hilla</groupId>
-    <artifactId>sso-kit-hilla-starter</artifactId>
+    <artifactId>sso-kit-starter</artifactId>
+    <version>2.0.0-beta1</version>
 </dependency>
 
 <dependency>
@@ -65,6 +66,7 @@ spring.security.oauth2.client.provider.keycloak.issuer-uri=https://my-keycloak.i
 spring.security.oauth2.client.registration.keycloak.client-id= my-client
 spring.security.oauth2.client.registration.keycloak.client-secret=very-secret-value
 spring.security.oauth2.client.registration.keycloak.scope=profile,openid,email,roles
+vaadin.sso.login-route=/oauth2/authorization/keycloak
 ----
 .application.yaml
 [source,yaml]
@@ -85,6 +87,9 @@ spring:
             - openid
             - email
             - roles
+vaadin:
+  sso:
+    login-route: /oauth2/authorization/keycloak
 ----
 --
 
@@ -118,11 +123,13 @@ Hilla allows fine-grained authorization on Endpoints and Endpoint methods. You c
 
 To try this feature, replace the `@AnonymousAllowed` annotation in [filename]`HelloWorldEndpoint.java` with `@PermitAll`, so that unauthenticated users will be unable to access the whole Endpoint. You could also apply the same annotation at method level.
 
+Start the application using the `./mvnw` command (`.\mvnw` on Windows), so that Hilla generates TypeScript files.
+
+Try the application in the browser, it should work correctly, except that when you click on the `Say hello` button, nothing happens, because the Endpoint is not accessible.
+
 // end::serverside
 
-=== Use the Endpoint
-
-Start the application using the `./mvnw` command (`.\mvnw` on Windows), so that Hilla generates TypeScript files.
+=== Implement authentication state
 
 Inside the `AppStore` class in [filename]`app-store.ts` add this code:
 
@@ -167,8 +174,6 @@ appStore.fetchAuthInfo().finally(() => {
 
 === Add access control to the existing routes
 
-As the `HelloWorldEndpoint` is now only accessible to registered users, it makes sense to also protect the view that uses it.
-
 Open the [filename]`frontend/routes.ts` file and enrich the `ViewRoute` type:
 
 [source,typescript]
@@ -202,18 +207,23 @@ export const hasAccess = (route: Route) => {
 };
 ----
 
-Modify the `hello` path so that it requires login and redirects to the SSO Login page if needed:
+Modify the `about` path so that it requires login and redirects to the SSO Login page if needed:
 
 [source,typescript]
 ----
 {
-  path: 'hello',
-  requiresLogin: true,
-  icon: 'la la-globe',
-  title: 'Hello World',
+  path: 'about',
+  icon: 'la la-file',
+  title: 'About',
   action: async (_context, _command) => {
-    return hasAccess(_context.route) ? _command.component('hello-world-view') : _command.redirect('login');
+    if (hasAccess(_context.route)) {
+      await import('./views/about/about-view');
+      return;
+    } else {  
+      return _command.redirect('login');
+    }
   },
+  requiresLogin: true,
 },
 ----
 
@@ -226,35 +236,10 @@ Add a `login` route to the exported routes:
   icon: '',
   title: 'Login',
   action: async (_context, _command) => {
-    location.href = appStore.loginUrl!;
+    _command.redirect(appStore.loginUrl!);
   },
 },
 ----
-
-== Single Sign-On
-
-SSO Kit provides the [classname]`SingleSignOnConfiguration` configuration class to setup Hilla and Spring to allow single sign-on with external identity providers.
-
-The following configuration enables login for the identity providers defined in the application configuration.
-It instructs the application to accept requests for the login route. It can be configured by setting the `vaadin.sso.login-route` property, which defaults to `/login`.
-If there is no view defined for this route, Spring auto-generates a page with links to each of the configured providers login forms.
-If you want to redirect automatically the users to the provider login form, you can set this property to `/oauth2/authorization/{provider-key}` where `{provider-key}` is the key used to configure the provider in `application.properties` file.
-
-[.example]
---
-.application.properties
-[source,properties]
-----
-vaadin.sso.login-route=/oauth2/authorization/keycloak
-----
-.application.yaml
-[source,yaml]
-----
-vaadin:
-  sso:
-    login-route: /oauth2/authorization/keycloak
-----
---
 
 === Add login and logout to the interface
 
@@ -270,7 +255,7 @@ Open [filename]`frontend/views/main-layout.ts` and add a login/logout button in 
         </div>
         <vaadin-button @click="${this.logout}">Sign out</vaadin-button>
       `
-    : html`<a router-ignore href="${appStore.loginUrl}">Sign in</a>`
+    : html`<a router-ignore href="${appStore.loginUrl!}">Sign in</a>`
   }
 </footer>
 ----
@@ -292,7 +277,7 @@ Filter out protected views from the menu by modifying the `getMenuRoutes` functi
 [source,typescript]
 ----
 private getMenuRoutes(): RouteInfo[] {
-  return views.filter((route) => route.title).filter((route) => hasAccess(route)) as RouteInfo[];
+  return views.filter((route) => route.title).filter(hasAccess) as RouteInfo[];
 }
 ----
 
