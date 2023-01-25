@@ -123,7 +123,7 @@ Add some interface items in the footer to allow users to log in and out of the a
       <Button onClick={logout}>Sign out</Button>
     </>
   ) : (
-    <a href={'/oauth2/authorization/' + state.registeredProviders[0]}>Sign in</a>
+    <a href={state.loginUrl}>Sign in</a>
   )}
 </footer>
 ----
@@ -156,5 +156,160 @@ const { state } = useContext(AuthContext);
 ----
 
 All those changes should be picked up automatically and you can try logging in, navigating, and logging out.
+
+include::{root}/articles/lit/guides/tools/sso-kit/getting-started.adoc[tag=singlesignoff]
+
+==== Modify the client application
+
+The [filename]`useAuth.tsx` created before needs more functionalities to support back-channel logout, as there is a chance that the user doesn't want to leave the application abruptly when a logout notification arrives, for example to avoid losing ongoing work. That's why more state management is needed.
+
+Replace that file with this version:
+
+[source,typescript]
+----
+import { Subscription } from "@hilla/frontend";
+import { createContext, Dispatch, SetStateAction, useState } from "react";
+import User from "./generated/dev/hilla/sso/endpoint/User";
+import Message from "./generated/dev/hilla/sso/starter/BackChannelLogoutSubscription/Message";
+import type SingleSignOnData from "./generated/dev/hilla/sso/starter/SingleSignOnData";
+import { BackChannelLogoutEndpoint, SingleSignOnEndpoint, UserEndpoint } from "./generated/endpoints";
+
+export type AuthState = Readonly<SingleSignOnData & {
+    user?: User,
+    backChannelLogout?: Subscription<Message>,
+    backChannelLogoutHappened: boolean,
+}>;
+
+type AccessCheck = ({ handle }: { handle: AccessProps }) => boolean;
+
+export type Authentication = Readonly<{
+    state: AuthState;
+    clearUserInfo: () => void;
+    onBackChannelLogout: () => void;
+    hasAccess: AccessCheck;
+}>;
+
+export const initialState = await (async () => {
+    const authInfo = await SingleSignOnEndpoint.getData();
+    const backChannelLogout = authInfo.backChannelLogoutEnabled
+        ? BackChannelLogoutEndpoint.subscribe() : undefined;
+
+    return {
+        user: await UserEndpoint.getAuthenticatedUser(),
+        backChannelLogout,
+        backChannelLogoutHappened: false,
+        ...authInfo,
+    };
+})();
+
+export type AccessProps = Readonly<{
+    requiresLogin?: boolean;
+    rolesAllowed?: readonly string[];
+}>;
+
+const hasAccess = (state: AuthState): AccessCheck => {
+    return ({ handle }: { handle: AccessProps }) => {
+        const requiresAuth = handle.requiresLogin || handle.rolesAllowed;
+        if (!requiresAuth) {
+            return true;
+        }
+
+        if (!state.authenticated) {
+            return false;
+        }
+
+        if (handle.rolesAllowed) {
+            return handle.rolesAllowed.some((allowedRole) => state.roles.includes(allowedRole));
+        }
+
+        return true;
+    }
+}
+
+export const AuthContext = createContext<Authentication>({
+    state: initialState,
+    clearUserInfo: () => { },
+    onBackChannelLogout: () => { },
+    hasAccess: hasAccess(initialState),
+});
+
+export const useAuth = (state: AuthState, setState: Dispatch<SetStateAction<AuthState>>): Authentication => {
+    return {
+        state,
+        clearUserInfo: () => {
+            setState({
+                ...state,
+                user: undefined,
+                logoutUrl: undefined,
+                authenticated: false,
+                roles: [],
+                backChannelLogout: undefined,
+                backChannelLogoutHappened: false,
+                backChannelLogoutEnabled: false,
+            });
+        },
+        onBackChannelLogout: () => {
+            setState({
+                ...state,
+                backChannelLogoutHappened: true,
+            });
+        },
+        hasAccess: hasAccess(state),
+    };
+}
+----
+
+The state can be put in [filename]`App.tsx`:
+
+[source,jsx]
+----
+export default function App() {
+  const [state, setState] = useState<AuthState>(initialState);
+
+  return <AuthContext.Provider value={useAuth(state, setState)}>
+    <RouterProvider router={router} />
+  </AuthContext.Provider >;
+}
+----
+
+Finally, modify [filename]`MainLayout.tsx` again to act on logout notifications coming from the server:
+
+[source,typescript]
+----
+const { state, hasAccess, onBackChannelLogout, clearUserInfo } = useContext(AuthContext);
+
+useEffect(() => {
+  if (state.backChannelLogout) {
+    state.backChannelLogout.onNext(() => {
+      onBackChannelLogout();
+    });
+  }
+}, []);
+----
+
+Add a dialog to ask the user if he wants to log in again:
+
+[source,jsx]
+----
+<ConfirmDialog header='Logged out' cancel opened={!!state.backChannelLogoutHappened}
+  onConfirm={loginAgain} onCancel={stayOnPage}>
+  <p>You have been logged out. Do you want to log in again?</p>
+</ConfirmDialog>
+----
+
+Implement the two functions used by the dialog:
+
+[source,typescript]
+----
+async function loginAgain() { 
+  await _logout();
+  location.href = state.loginUrl;
+}
+
+async function stayOnPage() { 
+  await _logout();
+  clearUserInfo();
+}
+----
 
 // end::content[]
