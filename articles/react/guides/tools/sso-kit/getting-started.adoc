@@ -1,0 +1,160 @@
+---
+title: Getting Started
+description: Step-by-step guide showing how to use SSO Kit in your application.
+order: 100
+---
+:react:
+// tag::content[]
+
+== Getting Started with SSO Kit
+:sectnums:
+
+SSO Kit builds upon https://spring.io/projects/spring-boot[Spring Boot] and https://spring.io/projects/spring-security[Spring Security]. It comes with a starter module that configures the security settings needed to authenticate with your identity provider.
+
+== Create a Hilla application without authentication
+
+Create a Hilla application using this command:
+
+----
+npx @hilla/cli init --react <your-project-name>
+----
+
+include::{root}/articles/lit/guides/tools/sso-kit/getting-started.adoc[tag=serverside]
+
+=== Use the Endpoint
+
+Start the application using the `./mvnw` command (`.\mvnw` on Windows), so that Hilla generates TypeScript files.
+
+Then, start adding authentication to the front-end.
+
+The first step is to add some state using a `Context`. In the [filename]`frontend` folder, add a file named [filename]`useAuth.tsx` with this content:
+
+[source,typescript]
+----
+import { createContext } from "react";
+import User from "./generated/dev/hilla/sso/endpoint/User";
+import type SingleSignOnData from "./generated/dev/hilla/sso/starter/SingleSignOnData";
+import { SingleSignOnEndpoint, UserEndpoint } from "./generated/endpoints";
+
+type AuthState = Readonly<{ user?: User } & SingleSignOnData>;
+
+const initialState: AuthState = {
+    user: await UserEndpoint.getAuthenticatedUser(),
+    ...(await SingleSignOnEndpoint.getData()),
+};
+
+export type AccessProps = Readonly<{
+    requiresLogin?: boolean;
+    rolesAllowed?: readonly string[];
+}>;
+
+type AccessCheck = ({ handle }: { handle: AccessProps }) => boolean;
+
+export type Authentication = Readonly<{
+    state: AuthState;
+    hasAccess: AccessCheck;
+}>;
+
+const hasAccess = (state: AuthState): AccessCheck => {
+    return ({ handle }: { handle: AccessProps }) => {
+        const requiresAuth = handle.requiresLogin || handle.rolesAllowed;
+        if (!requiresAuth) {
+            return true;
+        }
+
+        if (!state.user) {
+            return false;
+        }
+
+        if (handle.rolesAllowed) {
+            return handle.rolesAllowed.some((allowedRole) => state.user!.roles.includes(allowedRole));
+        }
+
+        return true;
+    }
+}
+
+export const AuthContext = createContext<Authentication>({
+    state: initialState,
+    hasAccess: hasAccess(initialState),
+});
+----
+
+
+
+Open the [filename]`frontend/routes.tsx` file and add the newly created `AccessProps` type to `ViewMeta`:
+
+[source,typescript]
+----
+export type ViewMeta = Readonly<{ handle?: MenuProps & AccessProps }>;
+----
+
+Then protect the `about` view by adding `requiresLogin: true` to it.
+
+[source,typescript]
+----
+{ path: '/about', element: <AboutView />, handle: { icon: 'la la-file', title: 'About', requiresLogin: true  } },
+----
+
+Most of the code changes go into the [filename]`frontend/views/MainLayout.tsx` file. First of all, use the `Context` created before:
+
+[source,typescript]
+----
+const { state, hasAccess } = useContext(AuthContext);
+----
+
+Then filter the menu items so that the `about` view disappears when not authenticated:
+
+[source,typescript]
+----
+{menuRoutes.filter(hasAccess).map(({ path, handle: { icon, title } }) => (
+----
+
+Add some interface items in the footer to allow users to log in and out of the application:
+
+[source,jsx]
+----
+<footer slot="drawer">
+  {state.user ? (
+    <>
+      <div className="flex items-center gap-m">
+        {state.user.fullName}
+      </div>
+      <Button onClick={logout}>Sign out</Button>
+    </>
+  ) : (
+    <a href={'/oauth2/authorization/' + state.registeredProviders[0]}>Sign in</a>
+  )}
+</footer>
+----
+
+Implement the `logout` function called on click:
+
+[source,typescript]
+----
+import { logout as _logout } from '@hilla/frontend';
+
+async function logout() {
+  await _logout(); // perform logout on the application server
+  location.href = state.logoutUrl!;
+}
+----
+
+As the `about` view is now reserved to authenticated users, you can add some user information to it:
+
+[source,typescript]
+----
+const { state } = useContext(AuthContext);
+----
+
+[source,jsx]
+----
+<p>Username: {state.user!.preferredUsername}</p>
+<p>Full name: {state.user!.fullName}</p>
+<p>Email: {state.user!.email}</p>
+<p>Roles: {state.user!.roles?.join(', ')}</p>
+----
+
+All those changes should be picked up automatically and you can try logging in, navigating, and logging out.
+
+// end::content[]
