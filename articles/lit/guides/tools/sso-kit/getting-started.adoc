@@ -126,15 +126,17 @@ Start the application using the `./mvnw` command (`.\mvnw` on Windows), so that 
 
 Inside the `AppStore` class in [filename]`app-store.ts` add this code:
 
-[source,javascript]
+[source,typescript]
 ----
 user: User | undefined = undefined;
+loginUrl: string | undefined = undefined;
 logoutUrl: string | undefined = undefined;
 
 async fetchAuthInfo() {
-  const authInfo = await AuthEndpoint.getAuthInfo();
-  this.user = authInfo.user;
+  const authInfo = await SingleSignOnEndpoint.getData();
+  this.loginUrl = authInfo.loginUrl;
   this.logoutUrl = authInfo.logoutUrl;
+  this.user = await UserEndpoint.getAuthenticatedUser();
 }
 
 clearUserInfo() {
@@ -155,7 +157,7 @@ You should be able to add the missing imports automatically.
 
 Open the [filename]`frontend/index.ts` file and delay the router setup until the login information has been fetched by wrapping the `setRoutes` call as follows:
 
-[source,javascript]
+[source,typescript]
 ----
 appStore.fetchAuthInfo().finally(() => {
   // Ensure router access checks are not done before we know if we are logged in
@@ -169,7 +171,7 @@ As the `HelloWorldEndpoint` is now only accessible to registered users, it makes
 
 Open the [filename]`frontend/routes.ts` file and enrich the `ViewRoute` type:
 
-[source,javascript]
+[source,typescript]
 ----
 export type ViewRoute = Route & {
   title?: string;
@@ -181,11 +183,11 @@ export type ViewRoute = Route & {
 };
 ----
 
-The `rolesAllowed` property is not used in this example, but it is good to have it, as you can protect views according to user roles, e.g. `rolesAllowed: ['admin', 'manager']`. Those roles must be configured in the SSO provider.
+The `rolesAllowed` property is not used in this example, but it is good to have it, as you can protect views according to user roles, for example `rolesAllowed: ['admin', 'manager']`. Those roles must be configured in the SSO provider.
 
-Then add a function to determine is the user has access to the requested view:
+Then add a function to find whether the user has access to the requested view:
 
-[source,javascript]
+[source,typescript]
 ----
 export const hasAccess = (route: Route) => {
   const viewRoute = route as ViewRoute;
@@ -202,7 +204,7 @@ export const hasAccess = (route: Route) => {
 
 Modify the `hello` path so that it requires login and redirects to the SSO Login page if needed:
 
-[source,javascript]
+[source,typescript]
 ----
 {
   path: 'hello',
@@ -217,14 +219,14 @@ Modify the `hello` path so that it requires login and redirects to the SSO Login
 
 Add a `login` route to the exported routes:
 
-[source,javascript]
+[source,typescript]
 ----
 {
   path: 'login',
   icon: '',
   title: 'Login',
   action: async (_context, _command) => {
-    location.href = '/oauth2/authorization/keycloak';
+    location.href = appStore.loginUrl!;
   },
 },
 ----
@@ -263,56 +265,31 @@ Open [filename]`frontend/views/main-layout.ts` and add a login/logout button in 
 <footer slot="drawer">
   ${appStore.user
     ? html`
-        <vaadin-menu-bar
-          theme="tertiary-inline contrast"
-          .items="${this.getUserMenuItems(appStore.user)}"
-          @item-selected="${this.userMenuItemSelected}"
-        ></vaadin-menu-bar>
+        <div className="flex items-center gap-m">
+          ${appStore.user.fullName}
+        </div>
+        <vaadin-button @click="${this.logout}">Sign out</vaadin-button>
       `
-    : html`<a router-ignore href="/oauth2/authorization/keycloak">Sign in</a>`
+    : html`<a router-ignore href="${appStore.loginUrl}">Sign in</a>`
   }
 </footer>
 ----
 
 Add the needed functions:
 
-[source,javascript]
+[source,typescript]
 ----
-private getUserMenuItems(user: User): MenuBarItem[] {
-  return [
-    {
-      component: this.createUserMenuItem(user),
-      children: [{ text: 'Sign out' }],
-    },
-  ];
-}
+import { logout as _logout } from '@hilla/frontend';
 
-private createUserMenuItem(user: User) {
-  const item = document.createElement('div');
-  item.style.display = 'flex';
-  item.style.alignItems = 'center';
-  item.style.gap = 'var(--lumo-space-s)';
-  render( // Note: import the one from `lit`
-    html`
-      <span>${user.fullName}</span>
-      <vaadin-icon icon="lumo:dropdown"></vaadin-icon>
-    `,
-    item
-  );
-  return item;
-}
-
-private async userMenuItemSelected(e: MenuBarItemSelectedEvent) {
-  if (e.detail.value.text === 'Sign out') {
-    await logout(); // Logout on the server
-    appStore.logoutUrl && (location.href = appStore.logoutUrl); // Logout on the provider
-  }
+private async logout() {
+  await _logout(); // Logout on the server
+  location.href = appStore.logoutUrl!; // Logout on the provider
 }
 ----
 
 Filter out protected views from the menu by modifying the `getMenuRoutes` function:
 
-[source,javascript]
+[source,typescript]
 ----
 private getMenuRoutes(): RouteInfo[] {
   return views.filter((route) => route.title).filter((route) => hasAccess(route)) as RouteInfo[];
@@ -360,7 +337,7 @@ Back-Channel Logout is a feature that enables the provider to close user session
 
 ==== Enable the feature in the application
 
-To enable the feature, you need to set the `vaadin.sso.back-channel` property to `true`:
+To enable the feature, you need to set the `vaadin.sso.back-channel-logout` property to `true`:
 
 [.example]
 --
@@ -394,27 +371,29 @@ Restart your application to enable Push support.
 
 Open [filename]`app-store.ts` again and add the following properties:
 
-[source,javascript]
+[source,typescript]
 ----
 backChannelLogoutEnabled = false;
 backChannelLogoutHappened = false;
-private logoutSubscription: Subscription<string> | undefined;
+private logoutSubscription: Subscription<Message> | undefined;
 ----
 
 Add more code to the `fetchAuthInfo` and `clearUserInfo` functions to store values and subscribe to notifications:
 
-[source,javascript]
+[source,typescript]
 ----
 async fetchAuthInfo() {
-  const authInfo = await AuthEndpoint.getAuthInfo();
-  this.user = authInfo.user;
+  const authInfo = await SingleSignOnEndpoint.getData();
+  this.loginUrl = authInfo.loginUrl;
   this.logoutUrl = authInfo.logoutUrl;
   this.backChannelLogoutEnabled = authInfo.backChannelLogoutEnabled;
 
-  if (this.user && this.backChannelLogoutEnabled) {
-    this.logoutSubscription = await AuthEndpoint.backChannelLogout();
+  this.user = await UserEndpoint.getAuthenticatedUser();
 
-    this.logoutSubscription.onNext(async () => {
+  if (this.user && this.backChannelLogoutEnabled) {
+    this.logoutSubscription = BackChannelLogoutEndpoint.subscribe();
+
+    this.logoutSubscription.onNext(() => {
       this.backChannelLogoutHappened = true;
     });
   }
@@ -434,36 +413,33 @@ clearUserInfo() {
 
 Now, go to [filename]`main-layout.ts` and add a Confirm Dialog to notify the user, just above the empty `slot`:
 
-[source,javascript]
+[source,typescript]
 ----
 import '@vaadin/confirm-dialog';
-----
 
-[source,javascript]
-----
 <vaadin-confirm-dialog
   header="Logged out"
   cancel-button-visible
-  @confirm="${() => this.afterLogout(true)}"
-  @cancel="${() => this.afterLogout(false)}"
+  @confirm="${this.loginAgain}"
+  @cancel="${this.stayOnPage}"
   .opened="${appStore.backChannelLogoutHappened}"
 >
   <p>You have been logged out. Do you want to log in again?</p>
-  <p>If you click on "Cancel", the application will not work correctly until you log in again.</p>
 </vaadin-confirm-dialog>
 ----
 
-And add the related `afterLogout` function:
+And add the related functions:
 
-[source,javascript]
+[source,typescript]
 ----
-private async afterLogout(loginAgain: boolean) {
-  if (loginAgain) {
-    location.href = '/oauth2/authorization/keycloak';
-  } else {
-    await logout(); // Logout on the server
-    appStore.clearUserInfo(); // Logout on the client
-  }
+private async stayOnPage() {
+  await logout(); // Logout on the server
+  appStore.clearUserInfo(); // Logout on the client
+}
+
+private async loginAgain() {
+  await logout(); // Logout on the server
+  location.href = appStore.loginUrl!;
 }
 ----
 
