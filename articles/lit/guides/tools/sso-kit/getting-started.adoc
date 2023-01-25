@@ -1,30 +1,16 @@
 ---
-title: SSO Kit
-description: Integrate your Hilla application with 3rd-party identity providers, and allow your users to benefit from single sign-on capabilities.
-order: 160
+title: Getting Started
+description: Step-by-step guide showing how to use SSO Kit in your application.
+order: 100
 ---
 // tag::content[]
 
-= SSO Kit
-
-SSO Kit provides all of the configuration needed to add single sign-on capabilities to your Hilla applications, based on https://openid.net/connect/[OpenID Connect].
-
-The following identity providers are supported:
-
-- https://www.okta.com/[Okta]
-- https://www.keycloak.org/[Keycloak]
-- https://azure.microsoft.com/en-us/products/active-directory/[Azure Active Directory]
-
-SSO Kit needs at least one OpenID Connect client configured on an instance of these providers.
-
-SSO Kit is compatible with Hilla starting from version https://github.com/vaadin/hilla/releases/tag/1.3.2[1.3.2].
-
-:sectnums:
 == Getting Started with SSO Kit
+:sectnums:
 
 SSO Kit builds upon https://spring.io/projects/spring-boot[Spring Boot] and https://spring.io/projects/spring-security[Spring Security]. It comes with a starter module that configures the security settings needed to authenticate with your identity provider.
 
-=== Create a Hilla application without authentication
+== Create a Hilla application without authentication
 
 Create a Hilla application using this command:
 
@@ -32,7 +18,7 @@ Create a Hilla application using this command:
 npx @hilla/cli init --next <your-project-name>
 ----
 
-=== Add the SSO Kit Dependency
+== Add the SSO Kit Dependency
 
 Add the `sso-kit-starter` module and the other required dependencies to the [filename]`pom.xml` of your Vaadin application:
 
@@ -58,7 +44,7 @@ Add the `sso-kit-starter` module and the other required dependencies to the [fil
 </dependency>
 ----
 
-=== Configure the SSO provider in Spring
+== Configure the SSO provider in Spring
 
 Next, you need to set some configuration properties to connect SSO Kit to your OpenID Connect provider.
 These properties can be added to your [filename]`application.properties` file where you define the provider URL and the client registration details, such as credentials and scope.
@@ -99,6 +85,8 @@ spring:
             - roles
 ----
 --
+
+== Securing Views
 
 === Add a Hilla Endpoint
 
@@ -237,6 +225,31 @@ Add a `login` route to the exported routes:
 },
 ----
 
+== Single Sign-On
+
+SSO Kit provides the [classname]`SingleSignOnConfiguration` configuration class to setup Hilla and Spring to allow single sign-on with external identity providers.
+
+The following configuration enables login for the identity providers defined in the application configuration.
+It instructs the application to accept requests for the login route. It can be configured by setting the `vaadin.sso.login-route` property, which defaults to `/login`.
+If there is no view defined for this route, Spring auto-generates a page with links to each of the configured providers login forms.
+If you want to redirect automatically the users to the provider login form, you can set this property to `/oauth2/authorization/{provider-key}` where `{provider-key}` is the key used to configure the provider in `application.properties` file.
+
+[.example]
+--
+.application.properties
+[source,properties]
+----
+vaadin.sso.login-route=/oauth2/authorization/keycloak
+----
+.application.yaml
+[source,yaml]
+----
+vaadin:
+  sso:
+    login-route: /oauth2/authorization/keycloak
+----
+--
+
 === Add login and logout to the interface
 
 Open [filename]`frontend/views/main-layout.ts` and add a login/logout button in the `footer`:
@@ -305,6 +318,37 @@ private getMenuRoutes(): RouteInfo[] {
 Try to customize your views further, for example to change the root view to not use `hello-world`, which is protected, or to add a new view.
 
 Now test the application: log in, log out, and try to use the Endpoint by clicking on the "Say hello" button in both cases.
+
+== Single Sign-Off
+
+SSO Kit provides two methods for logging out the user, defined by the OpenID Connect specification:
+
+- https://openid.net/specs/openid-connect-rpinitiated-1_0.html[RP-Initiated Logout]
+- https://openid.net/specs/openid-connect-backchannel-1_0.html[Back-Channel Logout]
+
+=== RP-Initiated Logout
+
+RP-Initiated Logout (i.e., Relaying Party, the application) enables the user to logout from the application itself, ensuring the connected provider session is terminated.
+
+After a successful logout, the user is redirected to the configured logout redirect route. That can be set with the `vaadin.sso.logout-redirect-route` property:
+
+[.example]
+--
+.application.properties
+[source,properties]
+----
+vaadin.sso.logout-redirect-route=/logout-successful
+----
+.application.yaml
+[source,yaml]
+----
+vaadin:
+  sso:
+    logout-redirect-route: /logout-successful
+----
+--
+
+The default value of this property is the application root.
 
 === Back-Channel Logout
 
