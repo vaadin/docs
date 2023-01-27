@@ -20,9 +20,9 @@ Follow the getting started guide. Nothing changes here.
 [source,typescript]
 ----
 import SingleSignOnData from 'Frontend/generated/dev/hilla/sso/starter/SingleSignOnData';
-import { Buffer } from "buffer";
 
-authInfo = (window as any).Hilla.BootstrapSSO(Buffer) as SingleSignOnData;
+// All the data we need is already loaded in the Hilla global variable
+authInfo = (window as any).Hilla.SSO as SingleSignOnData;
 ----
 
 ==== Login and logout buttons
@@ -30,16 +30,25 @@ authInfo = (window as any).Hilla.BootstrapSSO(Buffer) as SingleSignOnData;
 As an example, add two buttons to the drawer footer, one to log in and another to log out. When logging out, it is important to invoke the `logout` function provided by Hilla to perform logout on the server. Then, load the SSO provider logout page.
 
 .frontend/views/main-layout.ts
-[source,jsx]
+[source,typescript]
 ----
 import { logout } from '@hilla/frontend';
 
 <footer slot="drawer">
   ${appStore.authInfo.authenticated
-    ? html`<vaadin-button @click="${async () => { await logout(); location.href = appStore.authInfo.logoutUrl! }}">Sign out</vaadin-button>`
-    : html`<vaadin-button @click="${() => { location.href = appStore.authInfo.loginUrl }}">Sign in</vaadin-button>`
+    ? html`<vaadin-button @click="${this.signOut}">Sign out</vaadin-button>`
+    : html`<vaadin-button @click="${this.signIn}">Sign in</vaadin-button>`
   }
 </footer>
+
+private signOut = async () => {
+  await logout(); // logout on the server
+  location.href = appStore.authInfo.logoutUrl!;
+};
+
+private signIn = () => {
+  location.href = appStore.authInfo.loginUrl;
+};
 ----
 
 ==== Protect routes
@@ -66,7 +75,7 @@ import { appStore } from './stores/app-store';
 Add a condition to the view filter in the layout:
 
 .frontend/views/main-layout.ts
-[source,jsx]
+[source,typescript]
 ----
 return views.filter((route) => route.title && (route.component || appStore.authInfo.authenticated)) as RouteInfo[];
 ----
@@ -76,7 +85,7 @@ return views.filter((route) => route.title && (route.component || appStore.authI
 Add the user name in the `Hello` page. Use the Endpoint that provides user information or create your own to customize the returned data.
 
 .frontend/views/helloworld/hello-world-view.ts
-[source,jsx]
+[source,typescript]
 ----
 import User from 'Frontend/generated/dev/hilla/sso/endpoint/User';
 import { UserEndpoint } from 'Frontend/generated/endpoints';
@@ -119,7 +128,7 @@ clearAuthInfo() {
 In the application layout, subscribe to back-channel logout events and show a dialog when received:
 
 .frontend/views/main-layout.ts
-[source,jsx]
+[source,typescript]
 ----
 import '@vaadin/confirm-dialog';
 import { BackChannelLogoutEndpoint } from 'Frontend/generated/endpoints';
@@ -135,15 +144,30 @@ connectedCallback() {
   }
 }
 
-// add a dialog to the rendered html
-<vaadin-confirm-dialog
-  header="Logged out"
-  cancel-button-visible
-  @confirm="${async () => { await logout(); location.href = appStore.authInfo.loginUrl }}"
-  @cancel="${async () => { await logout(); appStore.clearAuthInfo() }}"
-  .opened="${this.loggedOut}"
->
-  <p>You have been logged out. Do you want to log in again?</p>
-</vaadin-confirm-dialog>
-----
+// add a dialog to the existing render function
+render() {
+  return html`
+    ...
+    <vaadin-confirm-dialog
+      header="Logged out"
+      cancel-button-visible
+      @confirm="${this.loginAgain}"
+      @cancel="${this.stayOnPage}"
+      .opened="${this.loggedOut}"
+    >
+      <p>You have been logged out. Do you want to log in again?</p>
+    </vaadin-confirm-dialog>
+    ...
+  `;
+}
 
+private loginAgain = async () => {
+  await logout(); // logout on the server
+  location.href = appStore.authInfo.loginUrl; // redirect to login page
+};
+
+private stayOnPage = async () => {
+  await logout(); // logout on the server
+  appStore.clearAuthInfo(); // clear authentication information on the client
+};
+----
