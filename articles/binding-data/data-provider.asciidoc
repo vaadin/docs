@@ -189,11 +189,11 @@ grid.setItems(query -> {
 [[data-binding.data-provider.lazy-sorting]]
 === Sorting with Lazy Data Binding
 
-For efficient lazy data binding, sorting needs to have already been done at the backend.
-By default, `Grid` makes all columns appear sortable in the UI.
-You need to manually declare which columns are actually sortable.
+For efficient lazy data binding, sorting needs to happen in the backend.
+By default, `Grid` makes all columns appear sortable in the UI if you pass the class as a constructor parameter.
+You can manually declare which columns should be sortable.
 Otherwise, the UI may show that some columns are sortable, but nothing happens if you try to sort them.
-With lazy data binding, you need to pass the hints that `Grid` provides in the [classname]`Query` object to your back-end logic.
+To make sorting work in a lazy data binding, you need to pass the hints that `Grid` provides in the [classname]`Query` object to your back-end logic.
 
 For example, to enable sortable lazy data binding to a Spring Data repository:
 
@@ -203,18 +203,39 @@ public void bindWithSorting() {
     Grid<Person> grid = new Grid<>(Person.class);
     grid.setSortableColumns("name", "email"); // <1>
     grid.addColumn(person -> person.getTitle())
-        .setHeader("Title")
-        	.setKey("title").setSortable(true); // <2>
-    grid.setItems(VaadinSpringDataHelpers.fromPagingRepository(repo)); // <3>
+            .setHeader("Title")
+            .setKey("title").setSortable(true); // <2>
+    grid.setItems(query -> { // <3>
+        var vaadinSortOrders = query.getSortOrders();
+        var springSortOrders = new ArrayList<Sort.Order>();
+        for (QuerySortOrder so : vaadinSortOrders) {
+            String colKey = so.getSorted();
+            if(so.getDirection() == SortDirection.ASCENDING) {
+                springSortOrders.add(Sort.Order.asc(colKey));
+            }
+        }
+        return repository.findAll(
+            PageRequest.of(
+                    query.getPage(),
+                    query.getPageSize(),
+                    Sort.by(springSortOrders)
+            )
+        ).stream();
+    });
 }
 ----
 <1> If you are using property-name-based column definition, `Grid` columns can be made sortable by their property names.
 The [methodname]`setSortableColumns()` method makes columns with given identifiers sortable and all others non-sortable.
 <2> Alternatively, define a key to your columns, which is passed to the callback, and define the column to be sortable.
 <3> In the callback, you need to convert the Vaadin-specific sort information to whatever your backend understands.
-This example uses Spring Data and a Vaadin Spring Data utility method to convert the values.
-This utility method also passes the sort information to the back-end call and returns the constructed callback.
-If you are using Data Transfer Objects (DTO) or otherwise want to customize binding to a Spring Data-based back nd, the [classname]`VaadinSpringDataHelpers` class also contains [methodname]`toSpringPageRequest()` and [methodname]`toSpringDataSort()` methods to convert Vaadin query hints to their corresponding Spring Data relatives.
+This example uses Spring Data based backend, so we convert Vaadin's QuerySortOrder hints to Spring's Sort.Order objects and finally pass the sort (and paging) details to the backend.
+
+.Helpers for Spring Data based backends
+[NOTE]
+The examples above are written against Spring Data based examples, but in a verbose way to keep them relevant for any kind of Java backend service. 
+If you are using Spring Data based backends, the above code examples can be written with one-liners using the helper methods in [classname]`VaadinSpringDataHelpers` class. 
+It contains [methodname]`toSpringPageRequest()` and [methodname]`toSpringDataSort()` methods to automatically convert Vaadin specific query hints to their Spring Data relatives. 
+Using the [methodname]`fromPagingRepository()` method, you can create a lazy sortable data binding directly to your repository.
 
 === Filtering with Lazy Data Binding
 
