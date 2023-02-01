@@ -2,6 +2,8 @@
 
 Official documentation and code examples for Hilla.
 
+This repository does not generate the [hilla.dev/docs](https://https://hilla.dev/docs) website. It only contains the content for it. The build is done using [Vaadin Design System Publisher](https://vaadin.com/design-system-publisher).
+
 ### `articles`
 
 A hierarchy of AsciiDoc (either `.asciidoc` or `.adoc`) files, documenting the use of all Hilla features. The file path defines the resulting URL on the documentation site.
