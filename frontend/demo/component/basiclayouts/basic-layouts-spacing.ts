@@ -39,7 +39,9 @@ export class Example extends LitElement {
       <vaadin-radio-group
         label="Spacing"
         .value="${this.theme}"
-        @value-changed="${(e: RadioGroupValueChangedEvent) => (this.theme = e.detail.value)}"
+        @value-changed="${(event: RadioGroupValueChangedEvent) => {
+          this.theme = event.detail.value;
+        }}"
       >
         <vaadin-radio-button value="spacing" label="Enabled"></vaadin-radio-button>
         <vaadin-radio-button value="" label="Disabled"></vaadin-radio-button>

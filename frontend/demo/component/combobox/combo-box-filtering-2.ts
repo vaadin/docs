@@ -25,7 +25,9 @@ export class Example extends LitElement {
   private filteredItems: Country[] = [];
 
   async firstUpdated() {
-    this.allItems = this.filteredItems = await getCountries();
+    const countries = await getCountries();
+    this.allItems = countries;
+    this.filteredItems = countries;
   }
 
   render() {
@@ -40,11 +42,11 @@ export class Example extends LitElement {
     `;
   }
 
-  private filterChanged(e: ComboBoxFilterChangedEvent) {
-    const filter = e.detail.value;
-    this.filteredItems = this.allItems.filter((country) => {
-      return country.name.toLowerCase().startsWith(filter.toLowerCase());
-    });
+  private filterChanged(event: ComboBoxFilterChangedEvent) {
+    const filter = event.detail.value;
+    this.filteredItems = this.allItems.filter(({ name }) =>
+      name.toLowerCase().startsWith(filter.toLowerCase())
+    );
   }
 }
 // end::snippet[]

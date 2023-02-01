@@ -44,13 +44,15 @@ export class Example extends LitElement {
 
         <vaadin-grid
           .items="${this.items}"
-          @selected-items-changed="${(ev: GridSelectedItemsChangedEvent<Person>) =>
-            (this.selectedItems = ev.target ? [...ev.detail.value] : this.selectedItems)}"
+          @selected-items-changed="${(event: GridSelectedItemsChangedEvent<Person>) => {
+            this.selectedItems = event.target ? [...event.detail.value] : this.selectedItems;
+          }}"
         >
           <vaadin-grid-selection-column
             auto-select
-            @select-all-changed="${(ev: GridSelectionColumnSelectAllChangedEvent) =>
-              (this.selectedItems = ev.detail.value ? this.items : this.selectedItems)}"
+            @select-all-changed="${(event: GridSelectionColumnSelectAllChangedEvent) => {
+              this.selectedItems = event.detail.value ? this.items : this.selectedItems;
+            }}"
           ></vaadin-grid-selection-column>
           <vaadin-grid-column path="firstName"></vaadin-grid-column>
           <vaadin-grid-column path="lastName"></vaadin-grid-column>

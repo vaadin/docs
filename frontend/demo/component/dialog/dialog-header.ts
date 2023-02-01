@@ -43,10 +43,12 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="User details"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(event: DialogOpenedChangedEvent) => {
+          this.dialogOpened = event.detail.value;
+        }}"
         ${dialogHeaderRenderer(
           () => html`
-            <vaadin-button theme="tertiary" @click="${() => (this.dialogOpened = false)}">
+            <vaadin-button theme="tertiary" @click="${this.close}">
               <vaadin-icon icon="lumo:cross"></vaadin-icon>
             </vaadin-button>
           `,
@@ -55,7 +57,7 @@ export class Example extends LitElement {
         ${dialogRenderer(this.renderDialog, this.user)}
       ></vaadin-dialog>
       <!-- end::snippet[] -->
-      <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
+      <vaadin-button @click="${this.open}">Show dialog</vaadin-button>
     `;
   }
 
@@ -91,5 +93,13 @@ export class Example extends LitElement {
     }
     const { address } = this.user;
     return `${address.street}, ${address.city}, ${address.country}`;
+  }
+
+  private open() {
+    this.dialogOpened = true;
+  }
+
+  private close() {
+    this.dialogOpened = false;
   }
 }

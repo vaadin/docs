@@ -26,12 +26,14 @@ export class Example extends LitElement {
   private filteredItems: Person[] = [];
 
   async firstUpdated() {
-    this.allItems = this.filteredItems = (await getPeople()).people.map((person) => {
-      return {
-        ...person,
-        displayName: `${person.firstName} ${person.lastName}`,
-      };
-    });
+    const { people } = await getPeople();
+    const items = people.map((person) => ({
+      ...person,
+      displayName: `${person.firstName} ${person.lastName}`,
+    }));
+
+    this.allItems = items;
+    this.filteredItems = items;
   }
 
   render() {
@@ -51,9 +53,9 @@ export class Example extends LitElement {
 
   private filterChanged(e: ComboBoxFilterChangedEvent) {
     const filter = e.detail.value;
-    this.filteredItems = this.allItems.filter(({ firstName, lastName, profession }) => {
-      return `${firstName} ${lastName} ${profession}`.toLowerCase().includes(filter.toLowerCase());
-    });
+    this.filteredItems = this.allItems.filter(({ firstName, lastName, profession }) =>
+      `${firstName} ${lastName} ${profession}`.toLowerCase().includes(filter.toLowerCase())
+    );
   }
 
   // tag::renderer[]

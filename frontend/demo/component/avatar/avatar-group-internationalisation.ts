@@ -64,11 +64,9 @@ export class Example extends LitElement {
     return html`
       <vaadin-avatar-group
         .i18n="${this.i18n}"
-        .items="${this.items.map((person) => {
-          return {
-            name: `${person.firstName} ${person.lastName}`,
-          };
-        })}"
+        .items="${this.items.map((person) => ({
+          name: `${person.firstName} ${person.lastName}`,
+        }))}"
       ></vaadin-avatar-group>
     `;
   }

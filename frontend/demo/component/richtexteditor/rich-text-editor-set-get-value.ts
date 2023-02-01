@@ -28,7 +28,9 @@ export class Example extends LitElement {
       <!-- tag::htmlsnippet[] -->
       <vaadin-rich-text-editor
         style="height: 400px;"
-        @change="${(e: RichTextEditorChangeEvent) => (this.htmlValue = e.target.htmlValue || '')}"
+        @change="${(event: RichTextEditorChangeEvent) => {
+          this.htmlValue = event.target.htmlValue ?? '';
+        }}"
       ></vaadin-rich-text-editor>
 
       <vaadin-text-area

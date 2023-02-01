@@ -43,8 +43,9 @@ export class Example extends LitElement {
           item-id-path="id"
           .items="${this.items}"
           .selectedItems="${this.selectedCountries}"
-          @selected-items-changed="${(e: MultiSelectComboBoxSelectedItemsChangedEvent<Country>) =>
-            (this.selectedCountries = e.detail.value)}"
+          @selected-items-changed="${(e: MultiSelectComboBoxSelectedItemsChangedEvent<Country>) => {
+            this.selectedCountries = e.detail.value;
+          }}"
         ></vaadin-multi-select-combo-box>
         <vaadin-text-area
           label="Selected Countries"

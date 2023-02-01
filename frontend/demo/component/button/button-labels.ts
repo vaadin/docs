@@ -41,12 +41,15 @@ export class Example extends LitElement {
             id="primary-email"
             label="Primary email address"
             .value="${this.primaryEmail}"
-            @value-changed="${(e: EmailFieldValueChangedEvent) =>
-              (this.primaryEmail = e.detail.value)}"
+            @value-changed="${(event: EmailFieldValueChangedEvent) => {
+              this.primaryEmail = event.detail.value;
+            }}"
           ></vaadin-email-field>
           <vaadin-button
             arial-label="Remove primary email address"
-            @click="${() => (this.primaryEmail = '')}"
+            @click="${() => {
+              this.primaryEmail = '';
+            }}"
           >
             Remove
           </vaadin-button>
@@ -57,12 +60,15 @@ export class Example extends LitElement {
             id="secondary-email"
             label="Secondary email address"
             .value="${this.secondaryEmail}"
-            @value-changed="${(e: EmailFieldValueChangedEvent) =>
-              (this.secondaryEmail = e.detail.value)}"
+            @value-changed="${(event: EmailFieldValueChangedEvent) => {
+              this.secondaryEmail = event.detail.value;
+            }}"
           ></vaadin-email-field>
           <vaadin-button
             arial-label="Remove secondary email address"
-            @click="${() => (this.secondaryEmail = '')}"
+            @click="${() => {
+              this.secondaryEmail = '';
+            }}"
           >
             Remove
           </vaadin-button>

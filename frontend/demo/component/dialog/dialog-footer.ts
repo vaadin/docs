@@ -37,7 +37,9 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="${`Delete user "${this.user?.firstName} ${this.user?.lastName}"?`}"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(event: DialogOpenedChangedEvent) => {
+          this.dialogOpened = event.detail.value;
+        }}"
         ${dialogRenderer(() => html`Are you sure you want to delete this user permanently?`, [])}
         ${dialogFooterRenderer(
           () => html`
@@ -50,8 +52,12 @@ export class Example extends LitElement {
         )}
       ></vaadin-dialog>
       <!-- end::snippet[] -->
-      <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
+      <vaadin-button @click="${this.open}">Show dialog</vaadin-button>
     `;
+  }
+
+  private open() {
+    this.dialogOpened = true;
   }
 
   private close() {

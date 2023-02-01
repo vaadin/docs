@@ -39,8 +39,9 @@ export class Example extends LitElement {
         max-files="1"
         accept="application/pdf,.pdf"
         @file-reject="${this.fileRejectHandler}"
-        @max-files-reached-changed="${(e: UploadMaxFilesReachedChangedEvent) =>
-          (this.maxFilesReached = e.detail.value)}"
+        @max-files-reached-changed="${(event: UploadMaxFilesReachedChangedEvent) => {
+          this.maxFilesReached = event.detail.value;
+        }}"
       >
         <vaadin-button slot="add-button" theme="primary" ?disabled="${this.maxFilesReached}">
           Upload PDF...

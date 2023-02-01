@@ -35,7 +35,9 @@ export class Example extends LitElement {
         <vaadin-button
           slot="suffix"
           theme="tertiary-inline icon"
-          @click="${() => (this.tooltipOpened = !this.tooltipOpened)}"
+          @click="${() => {
+            this.tooltipOpened = !this.tooltipOpened;
+          }}"
         >
           <vaadin-icon icon="vaadin:info-circle"></vaadin-icon>
         </vaadin-button>
