@@ -124,6 +124,16 @@ const SCRIPTS = {
     name: `dsp@${DSP_VERSION}:start`,
     commands: [
       LICENSE_CHECK,
+      {
+        shell: 'mvn clean compile vaadin:prepare-frontend vaadin:build-frontend',
+        phases: [
+          {
+            text: `Preparing compiled sources`,
+            readySignal: 'BUILD SUCCESS',
+            weight: 10,
+          },
+        ],
+      },
       // Starts docs-app and docs server (concurrently)
       {
         shell: [
