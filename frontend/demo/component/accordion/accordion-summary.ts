@@ -29,10 +29,10 @@ export class Example extends LitElement {
   private countries: Country[] = [];
 
   @state()
-  private personBinder = new Binder(this, PersonModel);
+  private readonly personBinder = new Binder(this, PersonModel);
 
   @state()
-  private cardBinder = new Binder(this, CardModel);
+  private readonly cardBinder = new Binder(this, CardModel);
 
   @state()
   private openedPanelIndex: number | null = 0;
@@ -53,8 +53,9 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-accordion
         .opened="${this.openedPanelIndex}"
-        @opened-changed="${(e: AccordionOpenedChangedEvent) =>
-          (this.openedPanelIndex = e.detail.value)}"
+        @opened-changed="${(event: AccordionOpenedChangedEvent) => {
+          this.openedPanelIndex = event.detail.value;
+        }}"
       >
         <vaadin-accordion-panel>
           <div slot="summary">
@@ -73,24 +74,29 @@ export class Example extends LitElement {
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
               label="First name"
-              ...="${field(this.personBinder.model.firstName)}"
+              ${field(this.personBinder.model.firstName)}
             ></vaadin-text-field>
             <vaadin-text-field
               label="Last name"
-              ...="${field(this.personBinder.model.lastName)}"
+              ${field(this.personBinder.model.lastName)}
             ></vaadin-text-field>
             <vaadin-email-field
               label="Email address"
-              ...="${field(this.personBinder.model.email)}"
+              ${field(this.personBinder.model.email)}
               colspan="2"
             ></vaadin-email-field>
             <vaadin-text-field
               label="Phone number"
-              ...="${field(this.personBinder.model.address.phone)}"
+              ${field(this.personBinder.model.address.phone)}
               colspan="2"
             ></vaadin-text-field>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click="${() => (this.openedPanelIndex = 1)}">
+          <vaadin-button
+            theme="primary"
+            @click="${() => {
+              this.openedPanelIndex = 1;
+            }}"
+          >
             Continue
           </vaadin-button>
         </vaadin-accordion-panel>
@@ -109,7 +115,7 @@ export class Example extends LitElement {
 
               <span>
                 ${
-                  // @ts-ignore Workaround a Binder issue
+                  // @ts-expect-error Workaround a Binder issue
                   this.personBinder.value.address?.country?.name
                 }
               </span>
@@ -119,26 +125,31 @@ export class Example extends LitElement {
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
               label="Address"
-              ...="${field(this.personBinder.model.address.street)}"
+              ${field(this.personBinder.model.address.street)}
               colspan="2"
             ></vaadin-text-field>
             <vaadin-text-field
               label="ZIP code"
-              ...="${field(this.personBinder.model.address.zip)}"
+              ${field(this.personBinder.model.address.zip)}
             ></vaadin-text-field>
             <vaadin-text-field
               label="City"
-              ...="${field(this.personBinder.model.address.city)}"
+              ${field(this.personBinder.model.address.city)}
             ></vaadin-text-field>
             <vaadin-combo-box
               label="Country"
-              ...="${field(this.personBinder.model.address.country)}"
+              ${field(this.personBinder.model.address.country)}
               item-label-path="name"
               item-value-path="id"
               .items="${this.countries}"
             ></vaadin-combo-box>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click="${() => (this.openedPanelIndex = 2)}">
+          <vaadin-button
+            theme="primary"
+            @click="${() => {
+              this.openedPanelIndex = 2;
+            }}"
+          >
             Continue
           </vaadin-button>
         </vaadin-accordion-panel>
@@ -158,19 +169,21 @@ export class Example extends LitElement {
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
               label="Card number"
-              ...="${field(this.cardBinder.model.accountNumber)}"
+              ${field(this.cardBinder.model.accountNumber)}
               colspan="2"
             ></vaadin-text-field>
             <vaadin-text-field
               label="Expiry date"
-              ...="${field(this.cardBinder.model.expiryDate)}"
+              ${field(this.cardBinder.model.expiryDate)}
             ></vaadin-text-field>
-            <vaadin-text-field
-              label="CVV"
-              ...="${field(this.cardBinder.model.cvv)}"
-            ></vaadin-text-field>
+            <vaadin-text-field label="CVV" ${field(this.cardBinder.model.cvv)}></vaadin-text-field>
           </vaadin-form-layout>
-          <vaadin-button theme="primary" @click="${() => (this.openedPanelIndex = -1)}">
+          <vaadin-button
+            theme="primary"
+            @click="${() => {
+              this.openedPanelIndex = -1;
+            }}"
+          >
             Finish
           </vaadin-button>
           <!-- tag::snippet[] -->

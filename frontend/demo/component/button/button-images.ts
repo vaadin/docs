@@ -4,7 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import { applyTheme } from 'Frontend/generated/theme';
-import * as img from '../../../../src/main/resources/images/vaadin-logo-dark.png';
+import img from '../../../../src/main/resources/images/vaadin-logo-dark.png';
 
 @customElement('button-images')
 export class Example extends LitElement {
