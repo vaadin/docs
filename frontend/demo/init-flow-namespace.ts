@@ -1,5 +1,4 @@
 // The connectors require window.Vaadin.Flow namespace to exists
-// @ts-ignore
 window.Vaadin = window.Vaadin || {};
-// @ts-ignore
+// @ts-expect-error Used by the connectors
 window.Vaadin.Flow = window.Vaadin.Flow || {};
