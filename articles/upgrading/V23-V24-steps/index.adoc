@@ -401,7 +401,32 @@ As an example, `nexus-staging-maven-plugin` requires a minimal version 1.6.13. G
 Vaadin 24 and Spring-boot 3.0 use SLF4J library version 2.0, which has breaking changes compared to previous versions. Check https://www.slf4j.org/news.html[SLF4J release notes] for more information.
 
 
-== Removed Flow Component APIs
+== Breaking Changes in Vaadin Components
+
+* Badges no longer shrink by default; this can be overridden globally with CSS `[theme~="badge"] { flex-shrink:1; }`, or for specific instances with `badge.getStyle().set("flex-shrink", "1");` or `layout.setFlexShrink(badge, 1)`;
+* Buttons no longer shrink by default; this can be overridden globally with CSS `vaadin-button { flex-shrink:1; }`, or for specific instances with `btn.getStyle().set("flex-shrink", "1");` or `layout.setFlexShrink(btn, 1)`;
+* `CheckboxGroup::setItemLabelGenerator` no longer clears the current selection; `CheckboxGroup.clear()` can be used to clear value separately
+* `BlurNotifier<CustomField>` type signature was corrected to `BlurNotifier<CustomField<T>>`
+* Date Picker now uses the ISO 8601 date format (`yyyy-mm-dd`) as fallback for unsupported locales, instead of `mm-dd-yyyy`
+* Number Field's default width now matches that of other text input components; the old default can be brought back with CSS `vaadin-number-field { width:8em; }`
+* Time Picker no longer automatically adjusts values to fit min/max constraints
+* `RichTextEditor::setvalue` and `getValue` now use HTML format by default, instead of Delta
+** Applications using the Delta format must be refactored to use the `RichTextEditor.asDelta()` API (e.g. `rte.asDelta().getValue()` and `binder.forField(rte.asDelta())`)
+** To help avoid using the wrong setter, `RichTextEditor.setValue(String)` now throws an exception if the value looks like Delta format (starts with `[` or `{`) 
+** To set an HTML value starting with the above characters, either wrap the value in an HTML tag, or use the `RichTextEditor.asHtml()` API that doesn't check for them
+* The default top and bottom margins of the `H1`...`H6` HTML elements have been removed; this change can be reverted by applying the following CSS:
++
+.styles.css
+[source,css]
+----
+h1,h2,h3,h4,h5,h6 { margin-top: 1.25em; }
+h1 { margin-bottom: 0.75em; }
+h2, h3, h4 { margin-bottom: 0.5em; }
+h5 { margin-bottom: 0.25em; }
+----
+
+
+=== Removed Flow Component APIs
 
 The following Vaadin component APIs have been removed or renamed in Flow:
 
@@ -419,6 +444,14 @@ The generic type parameters in these events (introduced in V23.3 for backward co
 * `Button.setDisabled()` removed in favor of `setEnabled(false)`
 * Charts `HTMLLabels` and `HTMLLabelItem` APIs removed (as broken) in favor of `Configuration.addLabel` or `Configuration.setLabels` (with `AnnotationItemLabel` objects instead of ``HTMLLabel``s; Coordinate information for the label can be provided using `AnnotationItemLabel.setPoint`)
 * `Checkbox::setLabelAsHtml` removed in favor of renderers (`setRenderer`)
+* `CheckboxGroup` and `RadioButtonGroup` no longer implement the `HasComponents` and `HasItemComponents` interfaces, and the following methods have been removed:
+** `add(Component...)`, `add(Collection)` and `add(String)`
+** `remove(Component...)`, `remove(Collection)` and `removeAll()`
+** `addComponentAtIndex(int, Component)`
+** `addComponentAsFirst(Component)`
+** `addComponents(T, Component...)`
+** `prependComponents(T, Component...)`
+** `getItemPosition(T)`
 * `ContextMenu` `clickListener` API removed (wasn't working); apply clickListeners to the menu's target component instead if needed
 * `CustomFieldI81n::parseValue` and `CustomFieldI18n::formatValue` moved to `CustomField::parseValue` and `CustomField::formatValue`
 * `DatePickerI18n` setters and getters for `clear`, `.calendar` and `.week` removed as unused
@@ -452,7 +485,25 @@ The generic type parameters in these events (introduced in V23.3 for backward co
 * Upload `SelectedChangeEvent(Tabs source, boolean fromClient)` overload removed in favor of `SelectedChangeEvent(Tabs source, Tab previousTab, boolean fromClient)`
 * `UploadI18n::setCancel`/`getCancel` removed as unused
 
-== Update Your CSS
+=== Web Component APIs
+.Click and read if you're using Vaadin components without Flow
+[%collapsible]
+====
+The following changes only affect the client-side APIs of Vaadin components:
+
+* The label on `vaadin-checkbox` and `vaadin-radio-button` must be set using the `label` property, as the default slot has been removed
+* `vaadin-confirm-dialog.cancel` and `.reject` properties renamed `.cancelButtonVisible` and `.rejectButtonVisible`
+* `vaadin-number-field` property `has-controls` renamed `step-buttons-visible`
+* Deprecated `@vaadin/vaadin-**` (e.g. `@vaadin/vaadin-grid`) npm packages have been removed; use the new `@vaadin/**` instead (e.g. `@vaadin/grid`)
+* Deprecated `**Element` legacy class aliases (e.g. `GridElement`) have been removed; use the plain component classes instead (e.g. `Grid`)
+* Deprecated misspelled `vaadin-icons` removed: `buss`, `funcion`, `megafone`, `palete`, `trendind-down`
+* `notifyResize` and `updateStyles` methods removed from various components as obsolete
+* `preventInvalidInput` in text input fields removed in favor of `setAllowedCharPattern`
+* The read-only `theme` _property_ was removed; use the `theme` _attribute_ instead
+
+====
+
+=== Update Your Component Styling
 .Click and read if you have styled Vaadin components.
 [%collapsible]
 ====
