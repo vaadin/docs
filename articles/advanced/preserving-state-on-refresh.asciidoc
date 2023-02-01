@@ -7,17 +7,13 @@ layout: page
 
 = Preserving the State on Refresh
 
-When a URL is entered in the browser, Vaadin's routing subsystem resolves it into a view component by <<../routing#,inspecting @Route class annotations>>.
-By default, a new instance is created when a matching class is found.
-This also happens when the user refreshes the page in the same browser tab.
+When a URL is entered into a browser, Vaadin's routing subsystem resolves it into a view component by <<../routing#,inspecting @Route class annotations>>.
+By default, a new instance is created when a matching class is found. This also happens when the user refreshes the page in the same browser tab. However, in certain situations you may want to keep the state of the view when it's refreshed.
 
-Occasionally, you may want to keep the state of the view when it's refreshed.
-One such situation might be if the view contains many data entry components, and the user is likely to refresh the page (intentionally or unintentionally) before the data is saved in the back end.
-By preserving the view, you ensure that the entries aren't lost and so provide a better UX.
-Another use case is supporting browser tab-specific "sessions" as an alternative to the standard cookie-based session.
+One such situation might be if the view contains many data entry components, and the user is likely to refresh the page -- intentionally or unintentionally -- before the data is saved on the backend. By preserving the view, you ensure that the data entries aren't lost and therefore provide a better user experience.
 
-The `@PreserveOnRefresh` annotation instructs Vaadin to reuse the view component of a route whenever the route is reloaded in the same browser tab.
-The routed component instance is then the same server-side object that was created in the first request, with all its state preserved (member fields, subcomponent hierarchy, and so on).
+Another use case is supporting browser, tab-specific "sessions" as an alternative to the standard cookie-based session. The `@PreserveOnRefresh` annotation instructs Vaadin to reuse the view component of a route whenever the route is reloaded in the same browser tab. The routed component instance is then the same server-side object that was created in the first request, with all its state preserved -- such as member fields, subcomponent hierarchy, and so on.
+
 
 == Preserving the State of a Component
 
@@ -38,8 +34,7 @@ public class PreservedView extends VerticalLayout {
 }
 ----
 
-If the view component has a <<../routing/layout#,router layout>> (via the `layout` parameter of the `@Route` annotation), the router layout is also preserved on refresh.
-As an alternative, you can add the `@PreserveOnRefresh` annotation to a class that implements [interfacename]`RouterLayout`.
+If the view component has a <<../routing/layout#,router layout>> via the `layout` parameter of the `@Route` annotation, the router layout is also preserved on refresh. As an alternative, you can add the `@PreserveOnRefresh` annotation to a class that implements [interfacename]`RouterLayout`.
 
 *Example*: Adding the `@PreserveOnRefresh` annotation to an implementation of [interfacename]`RouterLayout`.
 
@@ -56,27 +51,28 @@ public class PreservedLayout extends FlexLayout
 ----
 * The [classname]`PreservedLayout` instance itself, as well as any view laid out inside it, is preserved on refresh.
 
-Any elements that aren't direct children of the view component, such as notifications and dialogs, are also preserved.
-This means that if your `@PreserveOnRefresh` annotated view class opens a dialog in which the user makes edits and then refreshes, the dialog remains visible in its edited state.
+Any elements that aren't direct children of the view component, such as notifications and dialogs, are also preserved. This means that if your `@PreserveOnRefresh` annotated view class opens a dialog in which the user makes edits and then refreshes, the dialog remains visible in its edited state.
+
 
 == Preconditions and Limitations
 
-Using the `@PreserveOnRefresh` annotation has the following conditions and limitations:
+Using the `@PreserveOnRefresh` annotation has some conditions and limitations. They are as follows:
 
-* The annotation must be placed in a component class that's a route target (typically annotated with `@Route`) or on a component that implements [interfacename]`RouterLayout`.
+* The annotation must be placed in a component class that's a route target -- typically annotated with `@Route` -- or on a component that implements [interfacename]`RouterLayout`.
 
 * The annotation doesn't support partial preserving.
-You can't preserve only some components on the route chain.
-If the annotation is present on any component in the chain, the entire chain is preserved.
+You can't preserve only some components on the route chain. If the annotation is present on any component in the chain, the entire chain is preserved.
 
-* The component is made to persist only when reloaded in the same browser tab (the `window.name` client-side property is used to identify the tab), and only if the URL stays the same.
+* The component is made to persist only when reloaded in the same browser tab -- the `window.name` client-side property is used to identify the tab -- and only if the URL stays the same.
 Visiting another route or changing a URL parameter discards the component state permanently.
 
 * Vaadin 10 and later don't preserve the [classname]`UI` instance between refreshes.
-The view is detached from its previous [classname]`UI` and then attached to a fresh [classname]`UI` instance on refresh.
+The view is detached from its previous [classname]`UI` and then attached to a freshed [classname]`UI` instance on refresh.
 
 * The [classname]`AttachEvent` and [classname]`DetachEvent` events are also generated when a preserved component is moved to a new [classname]`UI`.
-As a consequence, during the lifetime of your view component, it should expect multiple calls to [methodname]`onAttach()` and listeners registered through [methodname]`addAttachListener()`.
+As a consequence, during the lifetime of a view component, it should expect multiple calls to [methodname]`onAttach()` and listeners registered through [methodname]`addAttachListener()`.
 
+* Navigation lifecycle events [classname]`BeforeEnterEvent` and [classname]`AfterNavigationEvent` are generated on refresh.
+The method [methodname]`isRefreshEvent` can be used to distinguish a refresh of the view so that any data updates can be skipped.
 
 [discussion-id]`DABDBD3E-00C4-475C-A425-50B1AC48283E`

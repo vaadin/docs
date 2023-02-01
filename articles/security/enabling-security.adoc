@@ -160,6 +160,53 @@ public class SecurityService {
 }
 ----
 
+[role="since:com.vaadin:vaadin@V23.3"]
+== Security Utilities
+
+To access authenticated user details and to simplify logout handling, Vaadin provides an [classname]`AuthenticationContext` component,
+strictly integrated with Spring Security, that can be injected into views and services.
+The [classname]`AuthenticationContext` by design does not implement [classname]`java.io.Serializable`, so Vaadin view fields referencing this object must be defined `transient`.
+The class exposes following utility methods:
+
+* [methodname]`isAuthenticated()`: checks if a user is currently logged in. Spring `Anonymous` user is considered not authenticated.
+* [methodname]`getAuthenticatedUser(Class<U> userType)`: gets user details. If `userType` does not match the actual user implementation, the methods throws a [classname]`ClassCastException`.
+* [methodname]`logout`: initiates the Spring Security logout process and redirects the user to the configured logout URL.
+
+Here is an example implementation of a log-out button shown on the header of the main layout that uses the [classname]`AuthenticationContext` component:
+
+
+.[filename]`MainLayout.java`
+[source,java]
+----
+public class MainLayout extends AppLayout {
+
+    private final transient AuthenticationContext authContext;
+
+    public MainLayout(AuthenticationContext authContext) {
+        this.authContext = authContext;
+
+        H1 logo = new H1("Vaadin CRM");
+        logo.addClassName("logo");
+        HorizontalLayout header;
+        if (authContext.isAuthenticated()) {
+            Button logout = new Button("Logout", click ->
+                    this.authContext.logout());
+            Span loggedUser = new Span("Welcome " + 
+                authContext.getAuthenticatedUser(UserDetails.class).getUsername());
+            header = new HorizontalLayout(logo, loggedUser, logout);
+        } else {
+            header = new HorizontalLayout(logo);
+        }
+
+        // Other page components omitted.
+
+        addToNavbar(header);
+    }
+}
+----
+
+
+
 == Security Configuration Class
 
 The next step is to have a Spring Security class that extends [classname]`VaadinWebSecurity`.

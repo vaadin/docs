@@ -1,38 +1,32 @@
 ---
 title: Session Replication Debug Tool
-description: How to debug HTTP session serialization issues
+description: To help make HTTP sessions fully serializable and deserializable, Kubernetes Kit offers a tool for discovering serialization issues during development.
 order: 110
 ---
 
 = Kubernetes Kit Session Replication Debug Tool
 
-To help make HTTP sessions fully serializable and deserializable, Kubernetes Kit offers a tool with the purpose of discovering main issues during development.
-
-include::extendedDebugInfo-tip.adoc[]
-
 The debug tool is composed by three components working together:
 
-* an HTTP session replication tester which tries to serialize and deserialize the HTTP session
-* a Vaadin [classname]`RequestHandler` that evaluates if the HTTP request produces UI changes and prepares the tester execution and the result notification on the UI notification, if PUSH feature is enabled
-* an HTTP filter that runs the tester after the HTTP request has been processed
+* an HTTP session replication tester which tries to serialize and deserialize the HTTP session;
+* a Vaadin [classname]`RequestHandler` that evaluates if the HTTP request produces UI changes and prepares the tester execution and the result notification on the UI notification, if server push is enabled;
+* an HTTP filter that runs the tester after the HTTP request has been processed.
 
-The debug tool works only in `development mode` and only if the following preconditions matches:
+== Enabling the Debug Tool
 
-* `vaadin.devmode.sessionSerialization.enabled` application configuration property is set to true
-* `sun.io.serialization.extendedDebugInfo` system property is set to true
-* JVM is started with `--add-opens java.base/java.io=ALL-UNNAMED` flag
+The debug tool doesn't work in production builds. During development, it works only if the following preconditions match:
 
-The `extendedDebugInfo` system property and the `--add-opens` instruction are required to offer as much detailed information as possible.
-
+* `vaadin.devmode.sessionSerialization.enabled` application configuration property is `true`. Set it either in a properties file or in a YAML file.
++
 [.example]
 --
-.application.properties
+.`application.properties`
 [source,properties]
 ----
 vaadin.devmode.sessionSerialization.enabled=true
 ----
 
-.application.yaml
+.`application.yaml`
 [source,yaml]
 ----
 vaadin:
@@ -42,12 +36,16 @@ vaadin:
 ----
 --
 
-
+* The `sun.io.serialization.extendedDebugInfo` system property is `true` and the JVM is started with the `--add-opens java.base/java.io=ALL-UNNAMED` flag. The way you provide these depends on if you run your application with the Spring Boot Maven Plugin or by directly executing the application JAR.
++
 [.example]
 --
-.Spring Boot Maven Plugin configuration
+You can define the configuration in the `pom.xml` file or as environment variables when you run the application from the command line.
+
+.`pom.xml`
 [source,xml]
 ----
+<source-info group="Spring Boot Maven Plugin"></source-info>
 <plugin>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-maven-plugin</artifactId>
@@ -60,32 +58,37 @@ vaadin:
 </plugin>
 ----
 
-.Spring Boot Maven Plugin CLI
-[source,terminal]
+.Terminal
+[source,bash]
 ----
-mvn -Dspring-boot.run.jvmArguments="-Dsun.io.serialization.extendedDebugInfo=true --add-opens java.base/java.io=ALL-UNNAMED" spring-boot:run
+<source-info group="Spring Boot Maven Plugin"></source-info>
+mvn \
+	-Dspring-boot.run.jvmArguments="-Dsun.io.serialization.extendedDebugInfo=true --add-opens java.base/java.io=ALL-UNNAMED" \
+	spring-boot:run
 ----
 
-.JAR execution
-[source,terminal]
+.Terminal
+[source,bash]
 ----
-java -Dsun.io.serialization.extendedDebugInfo=true --add-opens java.base/java.io=ALL-UNNAMED -jar target/myapp.jar
+<source-info group="JAR execution"></source-info>
+java \
+	-Dsun.io.serialization.extendedDebugInfo=true \
+	--add-opens java.base/java.io=ALL-UNNAMED \
+	-jar target/myapp.jar
 ----
 --
 
-The results from the test are saved in the server logs, and include the following details:
+include::_shared.adoc[tag=extended-debug-info]
 
- * Test process outcomes (for example SERIALIZATION_FAILED, DESERIALIZATION_FAILED, SUCCESS, ...);
- * List of unserializable classes;
- * Object class graph in case of deserialization errors; and
- * Potential causes of [classname]`SerializedLambda` [classname]`ClassCastException`
+The debug tool is installed automatically on Spring Boot projects. Otherwise, you can install it manually. Configure the provided <<{articles}/advanced/service-init-listener#,Service Init Listener>>, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using the Vaadin Spring add-on.
+In addition, the HTTP filter must be registered, either as a Spring bean or with a [classname]`ServletContextListener`.
 
-The debug tool is installed automatically on Spring Boot projects. Otherwise, it can be installed manually by configuring the provided [classname]`VaadinInitListener`, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using Vaadin Spring add-on.
-In addition, also the HTTP filter must be registered, either as a Spring bean or with a [classname]`ServletContextListener`.
-
-.Install exposing Spring Bean
+[.example]
+--
+.`AppConfig.java`
 [source,java]
 ----
+<source-info group="Spring add-on"></source-info>
 @Configuration
 class AppConfig {
 
@@ -93,6 +96,7 @@ class AppConfig {
     VaadinServiceInitListener serializationDebugInitListener() {
         return new SerializationDebugRequestHandler.InitListener();
     }
+
     @Bean
     @Order(Integer.MIN_VALUE)
     FilterRegistrationBean<SerializationDebugRequestHandler.Filter> sessionSerializationDebugToolFilter() {
@@ -102,17 +106,17 @@ class AppConfig {
 }
 ----
 
-.Install on plain Java web project
---
-.Service Loader entry in META-INF/services/VaadinServiceInitListener
+.`src/main/resources/META-INF/services/VaadinServiceInitListener`
 [source,text]
 ----
+<source-info group="Plain Java"></source-info>
 com.vaadin.kubernetes.starter.sessiontracker.serialization.SerializationDebugRequestHandler$InitListener
 ----
 
 .Filter registration
 [source,java]
 ----
+<source-info group="Plain Java"></source-info>
 @WebListener
 private static class SerializationDebugToolFilterRegistration implements ServletContextListener {
     @Override
@@ -125,16 +129,23 @@ private static class SerializationDebugToolFilterRegistration implements Servlet
 ----
 --
 
-[TIP]
-For information about Service Init Listener, consult the <<{articles}/advanced/service-init-listener#,specific documentation>>.
+== Serialization Test Results
 
-== Debug Tool Hints Examples
+The results from the test are saved in the server logs, and include the following details:
 
-Suppose you have an application that is not coded from the beginning to support session replication. With Kubernetes session replication debug tool in action, issues like the following can be spotted during development mode, by checking server logs.
+ * Test process outcomes, for example `SERIALIZATION_FAILED`, `DESERIALIZATION_FAILED`, `SUCCESS`, etc.;
+ * A list of unserializable classes;
+ * An object class graph in case of deserialization errors; and
+ * Potential causes of [classname]`SerializedLambda` [classname]`ClassCastException`.
+
+
+=== Examples
+
+Suppose you have an application that is not coded from the beginning to support session replication. With the Kubernetes Kit session replication debug tool in action, issues like the following can be spotted during development mode, by checking server logs.
 
 For views directly or indirectly referencing unserializable objects, the classes causing issues are reported. Double check those classes, make them [classname]`Serializable` and then navigate to the view again to see if the issues are solved or if other problems have arisen.
 
-[source,text]
+[.limit-height]
 ----
 Session serialization attempt completed in 382 ms with outcomes: [SERIALIZATION_FAILED, NOT_SERIALIZABLE_CLASSES]
 
@@ -230,7 +241,7 @@ com.vaadin.starter.bakery.ui.views.storefront.OrderPresenter$$Lambda$1943/0x0000
 To solve [classname]`SerializedLambda` class cast exceptions during deserialization, analyze the class graph from the bottom to the top and search for known classes. Check the `BEST CANDIDATES` sections to identify the failing lambda expression.
 
 
-[source,text]
+[.limit-height]
 ----
 Session serialization attempt completed in 1375 ms with outcomes: [SERIALIZATION_FAILED, NOT_SERIALIZABLE_CLASSES, DESERIALIZATION_FAILED]
 
@@ -350,20 +361,19 @@ The mentioned method presents the following code, and it can be deduced that the
 		ComponentEventListener<ChartLoadEvent> chartLoadListener = (event) -> {
 			nLoaded.addAndGet(1);
 			if (nLoaded.get() == nTotal) {
-				UI.getCurrent().getPage().executeJs("$0._chartsLoadedResolve()", this); // (1)
+				UI.getCurrent().getPage().executeJs("$0._chartsLoadedResolve()", this); // <1>
 			}
 		};
 
-		todayCountChart.addChartLoadListener(chartLoadListener); // (2)
+		todayCountChart.addChartLoadListener(chartLoadListener); // <2>
 		deliveriesThisMonthChart.addChartLoadListener(chartLoadListener);
 		deliveriesThisYearChart.addChartLoadListener(chartLoadListener);
 		yearlySalesGraph.addChartLoadListener(chartLoadListener);
 		monthlyProductSplit.addChartLoadListener(chartLoadListener);
 	}
 ----
-
-1. Lambda expression captures `this` instance
-2. Lambda expression is used as [classname]`ChartLoadListener`
+<1> Lambda expression captures `this` instance
+<2> Lambda expression is used as [classname]`ChartLoadListener`
 
 
 To fix this issue, replace the lambda expression with an anonymous class.
@@ -380,3 +390,12 @@ ComponentEventListener<ChartLoadEvent> chartLoadListener = new ComponentEventLis
     }
 };
 ----
+
+
+++++
+<style>
+.limit-height .sourcecode {
+	max-height: 25em;
+}
+</style>
+++++
