@@ -34,7 +34,10 @@ export class Example extends LitElement {
       <vaadin-grid-pro .items="${this.items}" enter-next-row>
         <vaadin-grid-column
           header="Name (read-only)"
-          ${columnBodyRenderer(this.nameRenderer, [])}
+          ${columnBodyRenderer<Person>(
+            (person) => html`${person.firstName} ${person.lastName}`,
+            []
+          )}
         ></vaadin-grid-column>
         <vaadin-grid-pro-edit-column
           header="Profession (editable)"
@@ -44,8 +47,4 @@ export class Example extends LitElement {
       <!-- end::snippet[] -->
     `;
   }
-
-  private nameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`${person.firstName} ${person.lastName}`;
-  };
 }
