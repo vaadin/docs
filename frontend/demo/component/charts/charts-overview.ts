@@ -1,8 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, css, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/charts';
+import type { Options, PointOptionsObject } from 'highcharts';
 
 @customElement('charts-overview')
 export class Example extends LitElement {
@@ -42,8 +43,68 @@ export class Example extends LitElement {
     }
   `;
 
+  @state()
+  private areaOptions: Options = {
+    yAxis: { title: { text: '' } },
+    xAxis: { visible: false },
+    plotOptions: {
+      series: {
+        marker: {
+          enabled: false,
+        },
+      },
+    },
+  };
+
+  @state()
+  private columnOptions: Options = { yAxis: { title: { text: '' } } };
+
+  @state()
+  private pieOptions: Options = {
+    tooltip: {
+      pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>',
+    },
+    plotOptions: {
+      pie: {
+        allowPointSelect: true,
+        cursor: 'pointer',
+        innerSize: '60%',
+      },
+    },
+  };
+
+  @state()
+  private pieValues: PointOptionsObject[] = [
+    { name: 'Chrome', y: 38 },
+    { name: 'Firefox', y: 24 },
+    { name: 'Edge', y: 15, sliced: true, selected: true },
+    { name: 'Internet Explorer', y: 8 },
+  ];
+
+  @state()
+  private polarOptions: Options = {
+    xAxis: {
+      tickInterval: 45,
+      min: 0,
+      max: 360,
+      labels: {},
+      visible: false,
+    },
+    yAxis: { min: 0 },
+    plotOptions: {
+      series: {
+        pointStart: 0,
+        pointInterval: 45,
+      },
+      column: {
+        pointPadding: 0,
+        groupPadding: 0,
+      },
+    },
+  };
+
   changeTheme(e: InputEvent) {
-    [...this.shadowRoot!.querySelectorAll('vaadin-chart')].forEach((chart) => {
+    [...this.renderRoot.querySelectorAll('vaadin-chart')].forEach((chart) => {
       chart.setAttribute('theme', (e.target as HTMLSelectElement).value);
     });
   }
@@ -52,10 +113,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-chart
-        id="vaadin-chart-1"
         type="column"
         categories='["Jan", "Feb", "Mar"]'
-        additional-options='{ "yAxis": { "title": { "text": "" } } }'
+        .additionalOptions="${this.columnOptions}"
       >
         <vaadin-chart-series title="Tokyo" values="[49.9, 71.5, 106.4]"></vaadin-chart-series>
         <vaadin-chart-series title="New York" values="[83.6, 78.8, 98.5]"></vaadin-chart-series>
@@ -68,23 +128,7 @@ export class Example extends LitElement {
         categories='["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]'
         tooltip
         no-legend
-        additional-options='{
-          "yAxis": {
-            "title": {
-              "text": ""
-            }
-          },
-           "xAxis": {
-            "visible":false
-          },
-          "plotOptions": {
-            "series": {
-              "marker": {
-                "enabled": false
-              }
-            }
-          }
-        }'
+        .additionalOptions="${this.areaOptions}"
       >
         <vaadin-chart-series
           title="United States dollar"
@@ -104,72 +148,11 @@ export class Example extends LitElement {
         ></vaadin-chart-series>
       </vaadin-chart>
 
-      <vaadin-chart
-        type="pie"
-        tooltip
-        additional-options='{
-          "tooltip": {
-            "pointFormat": "{series.name}: <b>{point.percentage:.1f}%</b>"
-          },
-          "plotOptions": {
-            "pie": {
-              "allowPointSelect":true,
-              "cursor": "pointer",
-              "innerSize": "60%"
-            }
-          }
-        }'
-      >
-        <vaadin-chart-series
-          title="Brands"
-          values='[
-            {
-              "name": "Chrome",
-              "y": 38
-            },
-            {
-              "name": "Firefox",
-              "y": 24
-            },
-            {
-              "name": "Edge",
-              "y": 15,
-              "sliced": true,
-              "selected": true
-            },
-            {
-              "name": "Internet Explorer",
-              "y": 8
-            }
-        ]'
-        ></vaadin-chart-series>
+      <vaadin-chart type="pie" tooltip .additionalOptions="${this.pieOptions}">
+        <vaadin-chart-series title="Brands" .values="${this.pieValues}"></vaadin-chart-series>
       </vaadin-chart>
 
-      <vaadin-chart
-        polar
-        additional-options='{
-          "xAxis": {
-            "tickInterval": 45,
-            "min": 0,
-            "max": 360,
-            "labels": {},
-            "visible":false
-          },
-          "yAxis": {
-            "min":0
-          },
-          "plotOptions": {
-            "series": {
-              "pointStart": 0,
-              "pointInterval":45
-            },
-            "column": {
-              "pointPadding": 0,
-              "groupPadding": 0
-            }
-          }
-        }'
-      >
+      <vaadin-chart polar .additionalOptions="${this.polarOptions}">
         <vaadin-chart-series
           type="column"
           title="Column"
