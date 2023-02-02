@@ -20,12 +20,19 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button @click="${() => (this.loginOpened = true)}" theme="primary">
+      <vaadin-button
+        theme="primary"
+        @click="${() => {
+          this.loginOpened = true;
+        }}"
+      >
         Log in
       </vaadin-button>
       <vaadin-login-overlay
         .opened="${this.loginOpened}"
-        @login="${() => (this.loginOpened = false)}"
+        @login="${() => {
+          this.loginOpened = false;
+        }}"
       ></vaadin-login-overlay>
       <!-- end::snippet[] -->
     `;

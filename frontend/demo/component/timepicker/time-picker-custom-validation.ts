@@ -22,12 +22,9 @@ export class Example extends LitElement {
   firstUpdated() {
     this.binder.for(this.binder.model.startTime).addValidator({
       message: 'The selected time is not available',
-      validate: (startTime: string) => {
-        return (
-          (startTime >= '08:00' && startTime <= '12:00') ||
-          (startTime >= '13:00' && startTime <= '16:00')
-        );
-      },
+      validate: (startTime: string) =>
+        (startTime >= '08:00' && startTime <= '12:00') ||
+        (startTime >= '13:00' && startTime <= '16:00'),
     });
   }
 

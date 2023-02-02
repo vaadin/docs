@@ -32,35 +32,38 @@ export class Example extends LitElement {
   }
 
   render() {
+    const { items, selectedIds } = this;
+
     return html`
       <vaadin-vertical-layout theme="spacing">
         <!-- tag::snippet[] -->
         <vaadin-checkbox
-          .checked="${this.selectedIds.length === this.items.length}"
-          .indeterminate="${this.selectedIds.length > 0 &&
-          this.selectedIds.length < this.items.length}"
-          @change="${(e: Event) =>
-            (this.selectedIds = (e.target as HTMLInputElement).checked
-              ? this.items.map((person) => String(person.id))
-              : [])}"
           label="Notify users"
+          .checked="${selectedIds.length === items.length}"
+          .indeterminate="${selectedIds.length > 0 && selectedIds.length < items.length}"
+          @change="${(e: Event) => {
+            this.selectedIds = (e.target as HTMLInputElement).checked
+              ? this.items.map((person) => String(person.id))
+              : [];
+          }}"
         ></vaadin-checkbox>
 
         <vaadin-checkbox-group
           label="Users to notify"
           theme="vertical"
           .value="${this.selectedIds}"
-          @value-changed="${(e: CheckboxGroupValueChangedEvent) =>
-            (this.selectedIds = e.detail.value)}"
+          @value-changed="${(event: CheckboxGroupValueChangedEvent) => {
+            this.selectedIds = event.detail.value;
+          }}"
         >
-          ${this.items.map((person) => {
-            return html`
+          ${items.map(
+            (person) => html`
               <vaadin-checkbox
                 .value="${String(person.id)}"
                 label="${person.firstName} ${person.lastName}"
               ></vaadin-checkbox>
-            `;
-          })}
+            `
+          )}
         </vaadin-checkbox-group>
         <!-- end::snippet[] -->
       </vaadin-vertical-layout>

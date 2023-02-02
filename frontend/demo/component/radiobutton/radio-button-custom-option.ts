@@ -39,7 +39,9 @@ export class Example extends LitElement {
           label="Payment method"
           theme="vertical"
           .value="${this.value}"
-          @value-changed="${(e: RadioGroupValueChangedEvent) => (this.value = e.detail.value)}"
+          @value-changed="${(event: RadioGroupValueChangedEvent) => {
+            this.value = event.detail.value;
+          }}"
         >
           ${this.items.map(
             (card) => html`

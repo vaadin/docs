@@ -29,12 +29,20 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="New employee"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(event: DialogOpenedChangedEvent) => {
+          this.dialogOpened = event.detail.value;
+        }}"
         ${dialogRenderer(this.renderDialog, [])}
         ${dialogFooterRenderer(this.renderFooter, [])}
       ></vaadin-dialog>
 
-      <vaadin-button @click="${() => (this.dialogOpened = true)}">Show dialog</vaadin-button>
+      <vaadin-button
+        @click="${() => {
+          this.dialogOpened = true;
+        }}"
+      >
+        Show dialog
+      </vaadin-button>
       <!-- end::snippet[] -->
     `;
   }

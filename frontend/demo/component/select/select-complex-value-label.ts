@@ -22,12 +22,10 @@ export class Example extends LitElement {
   async firstUpdated() {
     const people = (await getPeople({ count: 5 })).people;
     // tag::snippet[]
-    this.items = people.map((person) => {
-      return {
-        label: `${person.firstName} ${person.lastName}`,
-        value: `${person.id}`,
-      };
-    });
+    this.items = people.map((person) => ({
+      label: `${person.firstName} ${person.lastName}`,
+      value: `${person.id}`,
+    }));
     // end::snippet[]
   }
 

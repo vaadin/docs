@@ -20,12 +20,11 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   async firstUpdated() {
-    this.items = (await getPeople()).people.map((person) => {
-      return {
-        ...person,
-        displayName: `${person.profession} - ${person.firstName} ${person.lastName}`,
-      };
-    });
+    const { people } = await getPeople();
+    this.items = people.map((person) => ({
+      ...person,
+      displayName: `${person.profession} - ${person.firstName} ${person.lastName}`,
+    }));
   }
 
   render() {

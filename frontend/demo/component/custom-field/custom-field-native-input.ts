@@ -24,7 +24,9 @@ export class Example extends LitElement {
       <vaadin-custom-field
         label="Payment information"
         theme="whitespace"
-        @change="${(e: CustomFieldChangeEvent) => (this.customFieldValue = e.target.value || '')}"
+        @change="${(event: CustomFieldChangeEvent) => {
+          this.customFieldValue = event.target.value ?? '';
+        }}"
       >
         <vaadin-horizontal-layout theme="spacing-s">
           <input

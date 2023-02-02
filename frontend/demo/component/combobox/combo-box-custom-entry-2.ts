@@ -23,11 +23,12 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-combo-box
         allow-custom-value
-        @custom-value-set="${(e: ComboBoxCustomValueSetEvent) =>
-          (this.items = [...this.items, e.detail])}"
         label="Browser"
         helper-text="Select or type a browser"
         .items="${this.items}"
+        @custom-value-set="${(event: ComboBoxCustomValueSetEvent) => {
+          this.items = [...this.items, event.detail];
+        }}"
       ></vaadin-combo-box>
       <!-- end::snippet[] -->
     `;

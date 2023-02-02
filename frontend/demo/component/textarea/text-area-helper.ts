@@ -36,8 +36,10 @@ export class Example extends LitElement {
         label="Description"
         .maxlength="${this.charLimit}"
         .value="${this.text}"
-        @value-changed="${(e: TextAreaValueChangedEvent) => (this.text = e.detail.value)}"
         .helperText="${`${this.text.length}/${this.charLimit}`}"
+        @value-changed="${(event: TextAreaValueChangedEvent) => {
+          this.text = event.detail.value;
+        }}"
       ></vaadin-text-area>
     `;
   }

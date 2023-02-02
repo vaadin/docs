@@ -28,14 +28,17 @@ export class Example extends LitElement {
       <vaadin-horizontal-layout theme="spacing">
         <vaadin-date-picker
           label="Departure date"
-          @value-changed="${(e: DatePickerValueChangedEvent) =>
-            (this.departureDate = e.detail.value)}"
           .max="${this.returnDate}"
+          @value-changed="${(event: DatePickerValueChangedEvent) => {
+            this.departureDate = event.detail.value;
+          }}"
         ></vaadin-date-picker>
         <vaadin-date-picker
           label="Return date"
-          @value-changed="${(e: DatePickerValueChangedEvent) => (this.returnDate = e.detail.value)}"
           .min="${this.departureDate}"
+          @value-changed="${(event: DatePickerValueChangedEvent) => {
+            this.returnDate = event.detail.value;
+          }}"
         ></vaadin-date-picker>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->

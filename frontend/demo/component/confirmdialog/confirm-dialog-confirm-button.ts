@@ -28,17 +28,17 @@ export class Example extends LitElement {
         style="align-items: center; justify-content: center;"
         theme="spacing"
       >
-        <vaadin-button @click="${() => (this.dialogOpened = true)}">
-          Open confirm dialog
-        </vaadin-button>
+        <vaadin-button @click="${this.open}">Open confirm dialog</vaadin-button>
 
         <!-- tag::snippet[] -->
         <vaadin-confirm-dialog
           header="Export failed"
           confirm-text="OK"
-          @confirm="${() => (this.status = 'Acknowledged')}"
           .opened="${this.dialogOpened}"
           @opened-changed="${this.openedChanged}"
+          @confirm="${() => {
+            this.status = 'Acknowledged';
+          }}"
         >
           An error occurred while exporting <b>Report Q4</b>. Please try again. If the problem
           persists, contact <a href="mailto:support@company.com">support@company.com</a>.
@@ -55,5 +55,9 @@ export class Example extends LitElement {
     if (this.dialogOpened) {
       this.status = '';
     }
+  }
+
+  private open() {
+    this.dialogOpened = true;
   }
 }

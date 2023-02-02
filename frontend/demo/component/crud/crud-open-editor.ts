@@ -34,8 +34,9 @@ export class Example extends LitElement {
         include="firstName, lastName, email, profession"
         .items="${this.items}"
         .editedItem="${this.editedItem as any}"
-        @edited-item-changed="${(e: CrudEditedItemChangedEvent<Person>) =>
-          (this.editedItem = e.detail.value)}"
+        @edited-item-changed="${(event: CrudEditedItemChangedEvent<Person>) => {
+          this.editedItem = event.detail.value;
+        }}"
       >
         <vaadin-grid slot="grid" @dblclick="${this.onDblClick}">
           <vaadin-grid-column path="firstName" header="First name"></vaadin-grid-column>
