@@ -29,8 +29,8 @@ export class Example extends LitElement {
   render() {
     return html`
       <vaadin-checkbox-group label="Invitees" theme="vertical">
-        ${this.items.map((person) => {
-          return html`
+        ${this.items.map(
+          (person) => html`
             <vaadin-checkbox .value="${String(person.id)}">
               <label slot="label">
                 <div style="display: flex;">
@@ -42,8 +42,8 @@ export class Example extends LitElement {
                 </div>
               </label>
             </vaadin-checkbox>
-          `;
-        })}
+          `
+        )}
       </vaadin-checkbox-group>
     `;
   }

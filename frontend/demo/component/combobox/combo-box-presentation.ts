@@ -64,22 +64,20 @@ export class Example extends LitElement {
   // We recommend placing CSS in a separate style sheet and
   // encapsulating the styling in a new component.
 
-  private renderer: ComboBoxLitRenderer<Person> = (person) => {
-    return html`
-      <div style="display: flex;">
-        <img
-          style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
-          src="${person.pictureUrl}"
-          alt="Portrait of ${person.firstName} ${person.lastName}"
-        />
-        <div>
-          ${person.firstName} ${person.lastName}
-          <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
-            ${person.profession}
-          </div>
+  private renderer: ComboBoxLitRenderer<Person> = (person) => html`
+    <div style="display: flex;">
+      <img
+        style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
+        src="${person.pictureUrl}"
+        alt="Portrait of ${person.firstName} ${person.lastName}"
+      />
+      <div>
+        ${person.firstName} ${person.lastName}
+        <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
+          ${person.profession}
         </div>
       </div>
-    `;
-  };
+    </div>
+  `;
   // end::renderer[]
 }

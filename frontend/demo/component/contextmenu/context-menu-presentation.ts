@@ -6,7 +6,6 @@ import '@vaadin/context-menu';
 import type { ContextMenuItem } from '@vaadin/context-menu';
 import '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import type { Grid } from '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
@@ -67,7 +66,10 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Applicant"
-            ${columnBodyRenderer(this.nameRenderer, [])}
+            ${columnBodyRenderer<Person>(
+              (person) => html`<span>${person.firstName} ${person.lastName}</span>`,
+              []
+            )}
           ></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column header="Phone number" path="address.phone"></vaadin-grid-column>
@@ -132,8 +134,4 @@ export class Example extends LitElement {
       e.stopPropagation();
     }
   }
-
-  private nameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`<span>${person.firstName} ${person.lastName}</span>`;
-  };
 }
