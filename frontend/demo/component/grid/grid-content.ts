@@ -52,30 +52,24 @@ export class Example extends LitElement {
     `;
   }
 
-  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`
-      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-        <vaadin-avatar
-          img="${person.pictureUrl}"
-          name="${person.firstName} ${person.lastName}"
-          alt="User avatar"
-        ></vaadin-avatar>
-        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-          <span>${person.firstName} ${person.lastName}</span>
-          <span
-            style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-          >
-            ${person.email}
-          </span>
-        </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>
-    `;
-  };
+  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
+    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <vaadin-avatar
+        img="${person.pictureUrl}"
+        name="${person.firstName} ${person.lastName}"
+        alt="User avatar"
+      ></vaadin-avatar>
+      <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+        <span>${person.firstName} ${person.lastName}</span>
+        <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
+          ${person.email}
+        </span>
+      </vaadin-vertical-layout>
+    </vaadin-horizontal-layout>
+  `;
 
-  private statusRenderer: GridColumnBodyLitRenderer<Person> = ({ status }) => {
-    return html`
-      <span theme="badge ${status === 'Available' ? 'success' : 'error'}">${status}</span>
-    `;
-  };
+  private statusRenderer: GridColumnBodyLitRenderer<Person> = ({ status }) => html`
+    <span theme="badge ${status === 'Available' ? 'success' : 'error'}">${status}</span>
+  `;
   // end::snippet[]
 }

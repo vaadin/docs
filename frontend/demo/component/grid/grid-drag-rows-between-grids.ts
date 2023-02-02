@@ -71,7 +71,7 @@ export class Example extends LitElement {
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
           @grid-drop="${() => {
-            const draggedPerson = this.draggedItem as Person;
+            const draggedPerson = this.draggedItem!;
             const draggedItemIndex = this.grid2Items.indexOf(draggedPerson);
             if (draggedItemIndex >= 0) {
               // Remove the item from its previous position
@@ -97,7 +97,7 @@ export class Example extends LitElement {
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
           @grid-drop="${() => {
-            const draggedPerson = this.draggedItem as Person;
+            const draggedPerson = this.draggedItem!;
             const draggedItemIndex = this.grid1Items.indexOf(draggedPerson);
             if (draggedItemIndex >= 0) {
               // Remove the item from its previous position
@@ -111,7 +111,10 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Full name"
-            ${columnBodyRenderer(this.fullNameRenderer, [])}
+            ${columnBodyRenderer<Person>(
+              (person) => html`${person.firstName} ${person.lastName}`,
+              []
+            )}
           ></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
         </vaadin-grid>
@@ -119,8 +122,4 @@ export class Example extends LitElement {
     `;
   }
   // end::snippet[]
-
-  private fullNameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`${person.firstName} ${person.lastName}`;
-  };
 }
