@@ -6,22 +6,22 @@ import type ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/Servic
 import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 import type ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
 
-const datasetCache: { [key: string]: any[] } = {};
+const datasetCache: Record<string, any> = {};
 
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
   if (!datasetCache[fileName]) {
     datasetCache[fileName] = (await import(`../../../src/main/resources/data/${fileName}`)).default;
   }
-  return datasetCache[fileName].slice(0, count).map((item) => {
-    // Create deep clones to avoid sharing the same item instances between examples
-    return { ...item };
-  });
+
+  // Create deep clones to avoid sharing the same item instances between examples
+  return datasetCache[fileName].slice(0, count).map((item: T) => ({ ...item }));
 }
 
-export const getCountries = (count?: number): Promise<Country[]> =>
+export const getCountries = async (count?: number): Promise<Country[]> =>
   getDataset<Country>('countries.json', count);
 
-export const getCards = (count?: number): Promise<Card[]> => getDataset<Card>('cards.json', count);
+export const getCards = async (count?: number): Promise<Card[]> =>
+  getDataset<Card>('cards.json', count);
 
 let peopleImages: string[];
 
@@ -49,24 +49,22 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   }
 
   const hierarchyLevelSize = people.length;
-  const startIndex = options?.startIndex || 0;
+  const startIndex = options?.startIndex ?? 0;
   const count = options?.count ? startIndex + options.count : undefined;
 
   people = people.slice(startIndex, count);
-  people = people.map((person, index) => {
-    return {
-      ...person,
-      pictureUrl: peopleImages[index % peopleImages.length],
-      manager: allPeople.some((p) => p.managerId === person.id),
-    };
-  });
+  people = people.map((person, index) => ({
+    ...person,
+    pictureUrl: peopleImages[index % peopleImages.length],
+    manager: allPeople.some((p) => p.managerId === person.id),
+  }));
   return {
     people,
     hierarchyLevelSize,
   };
 }
 
-export const getUserPermissions = (): Promise<readonly UserPermissions[]> =>
+export const getUserPermissions = async (): Promise<readonly UserPermissions[]> =>
   getDataset<UserPermissions>('permissions.json');
 
 export enum ReportStatus {
@@ -81,9 +79,11 @@ export type Report = Omit<RawReport, 'status'> &
     status: ReportStatus;
   }>;
 
-export const getReports = (): Promise<readonly Report[]> => getDataset<Report>('reports.json');
+export const getReports = async (): Promise<readonly Report[]> =>
+  getDataset<Report>('reports.json');
 
-export const getServiceHealth = (): Promise<ServiceHealth[]> =>
+export const getServiceHealth = async (): Promise<ServiceHealth[]> =>
   getDataset<ServiceHealth>('serviceHealth.json');
 
-export const getViewEvents = (): Promise<ViewEvent[]> => getDataset<ViewEvent>('viewEvents.json');
+export const getViewEvents = async (): Promise<ViewEvent[]> =>
+  getDataset<ViewEvent>('viewEvents.json');
