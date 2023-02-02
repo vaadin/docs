@@ -21,7 +21,9 @@ npx @hilla/cli init <your-project-name>
 
 // tag::serverside[]
 
-== Add the SSO Kit Dependency
+== Backend
+
+=== Add the SSO Kit Dependency
 
 Add the `sso-kit-starter` module and other required dependencies to the [filename]`pom.xml` of your Vaadin application like so:
 
@@ -31,7 +33,7 @@ Add the `sso-kit-starter` module and other required dependencies to the [filenam
 <dependency>
     <groupId>dev.hilla</groupId>
     <artifactId>sso-kit-starter</artifactId>
-    <version>2.0.0.alpha2</version>
+    <version>2.0.0.beta1</version>
 </dependency>
 
 <dependency>
@@ -48,7 +50,7 @@ Add the `sso-kit-starter` module and other required dependencies to the [filenam
 </dependency>
 ----
 
-== Configure the SSO Provider in Spring
+=== Configure the SSO Provider in Spring
 
 Next, you need to set some configuration properties to connect SSO Kit to your OpenID Connect provider. These properties can be added to your [filename]`application.properties` file where you define the provider URL and the client registration details, such as credentials and scope.
 
@@ -61,7 +63,7 @@ The scope is a list of keywords to request the provider for a specific set of in
 .[filename]`application.properties`
 [source,properties]
 ----
-vaadin.sso.login-route=/oauth2/authorization/keycloak
+hilla.sso.login-route=/oauth2/authorization/keycloak
 spring.security.oauth2.client.registration.keycloak.scope=profile,openid,email,roles
 # Customize the values of the following properties according to your Keycloak configuration
 spring.security.oauth2.client.provider.keycloak.issuer-uri=https://my-keycloak.io/realms/my-realm
@@ -87,25 +89,11 @@ spring:
             - openid
             - email
             - roles
-vaadin:
+hilla:
   sso:
     login-route: /oauth2/authorization/keycloak
 ----
 --
-
-== Securing Views
-
-=== Add a Hilla Endpoint
-
-A [classname]`SingleSignOnEndpoint` is already included in the kit. To use it, you must enable the new Hilla <<{articles}lit/reference/configuration#java-compiler-options, multi-module engine>>. The easiest way to enable it is to create or modify the [filename]`vaadin-featureflags.properties` file and add this line:
-
-.src/main/resources/vaadin-featureflags.properties
-[source,properties]
-----
-com.vaadin.experimental.hillaEngine=true
-----
-
-Optionally, if you want to get user information or to have a message about the back-channel logout, you can use the [classname]`UserEndpoint` and the [classname]`BackChannelLogoutEndpoint` too.
 
 By default, the package name in generated Hilla projects is `com.example.application`. Unless you use the same package name as for your application, you have to whitelist your package in Spring Boot for Hilla to be able to find the Endpoint. Open your [filename]`Application.java` and add the package to the annotation like this:
 
@@ -119,170 +107,125 @@ By default, the package name in generated Hilla projects is `com.example.applica
 public class Application // ...
 ----
 
-=== Protect the Endpoint
+=== Secure the application
+
+A Hilla application includes front-end code and back-end endpoints. Both of them can (and should) benefit from authentication protection.
+
+=== Protect the example endpoint
 
 Hilla allows fine-grained authorization on Endpoints and Endpoint methods. You can use annotations like `@PermitAll` or `@RolesAllowed(...)` to declare who can access what.
 
-To try this feature, replace the `@AnonymousAllowed` annotation in [filename]`HelloWorldEndpoint.java` with `@PermitAll`, so that unauthenticated users will be unable to access the whole Endpoint. You could also apply the same annotation at the method level.
+To try this feature, replace the `@AnonymousAllowed` annotation in [filename]`HelloWorldEndpoint.java` with `@PermitAll`, so that unauthenticated users will be unable to access all endpoint methods. You could also apply the same annotation at the method level for more fine-grained control.
 
-Start the application using the `./mvnw` command (`.\mvnw` on Windows), so that Hilla generates TypeScript files.
-
-Try the application in the browser. It should work correctly, except that when you click on the `Say hello` button, nothing happens. This is because the Endpoint is no longer accessible without authentication.
+Start the application using the `./mvnw` command (`.\mvnw` on Windows) and try the application in the browser. It should work correctly, except that when you click on the `Say hello` button, nothing happens. This is because the Endpoint is no longer accessible without authentication.
 
 // end::serverside[]
 
-=== Implement Authentication State
+== Frontend
 
-To implement authentication state, inside the `AppStore` class in [filename]`app-store.ts`, add this code:
+=== Implement authentication state
 
+All the essential authentication state is already available in a global variable and can be added to the application state, which is inside the `AppStore` class in [filename]`app-store.ts`:
+
+.frontend/stores/app-store.ts
 [source,typescript]
 ----
-user: User | undefined = undefined;
-loginUrl: string | undefined = undefined;
-logoutUrl: string | undefined = undefined;
-
-async fetchAuthInfo() {
-  const authInfo = await SingleSignOnEndpoint.getData();
-  this.loginUrl = authInfo.loginUrl;
-  this.logoutUrl = authInfo.logoutUrl;
-  this.user = await UserEndpoint.getAuthenticatedUser();
-}
-
-clearUserInfo() {
-  this.user = undefined;
-  this.logoutUrl = undefined;
-}
-
-get loggedIn() {
-  return !!this.user;
-}
-
-isUserInRole(role: string) {
-  return this.user?.roles?.includes(role);
-}
+// All the data we need is already loaded in the Hilla global variable
+authInfo = (window as any).Hilla.SSO as {
+    authenticated: boolean;
+    backChannelLogoutEnabled: boolean;
+    loginLink: string;
+    logoutLink?: string;
+    registeredProviders: string[];
+    roles: string[];
+};
 ----
 
-You should be able to add the missing imports, automatically.
+=== Add log-in and log-out buttons
 
-Open the [filename]`frontend/index.ts` file and delay the router setup until the login information has been fetched by wrapping the `setRoutes` call as follows:
+As an example, add two buttons to the drawer footer, one to sign in and another to sign out. When signing out, it is important to invoke the `logout` function provided by Hilla to perform logout on the server. Then, load the SSO provider logout page.
 
+.frontend/views/main-layout.ts
 [source,typescript]
 ----
-appStore.fetchAuthInfo().finally(() => {
-  // Ensure router access checks are not done before we know if we are logged in
-  router.setRoutes(routes);
-});
+import { logout } from '@hilla/frontend';
+
+// Replace the `footer` in the rendered `html`
+<footer slot="drawer">
+  ${appStore.authInfo.authenticated
+    ? html`<vaadin-button @click="${this.signOut}">Sign out</vaadin-button>`
+    : html`<vaadin-button @click="${this.signIn}">Sign in</vaadin-button>`
+  }
+</footer>
+
+// Add the needed functions inside the class
+private signOut = async () => {
+  await logout(); // logout on the server
+  location.href = appStore.authInfo.logoutLink!;
+};
+
+private signIn = () => {
+  location.href = appStore.authInfo.loginLink;
+};
 ----
 
 === Add Access Control
 
-To add access control to the existing routes, open the [filename]`frontend/routes.ts` file and enrich the `ViewRoute` type:
+You can protect your views one by one by verifying that authentication has happened before loading the view. To do that, open the [filename]`frontend/index.ts` file and replace the `component` property with a conditional action as follows:
 
+.frontend/routes.ts
 [source,typescript]
 ----
-export type ViewRoute = Route & {
-  title?: string;
-  icon?: string;
-  children?: ViewRoute[];
-  // add the following two properties
-  requiresLogin?: boolean;
-  rolesAllowed?: string[];
-};
-----
+import { appStore } from './stores/app-store';
 
-The `rolesAllowed` property is not used in this example. However, it's good to have it since it can protect views according to user roles. For example, `rolesAllowed: ['admin', 'manager']` must be configured in the SSO provider.
-
-Next add a function to find whether the user has access to the requested view:
-
-[source,typescript]
-----
-export const hasAccess = (route: Route) => {
-  const viewRoute = route as ViewRoute;
-  if (viewRoute.requiresLogin && !appStore.loggedIn) {
-    return false;
-  }
-
-  if (viewRoute.rolesAllowed) {
-    return viewRoute.rolesAllowed.some((role) => appStore.isUserInRole(role));
-  }
-  return true;
-};
-----
-
-Now modify the `about` path so that it requires login and redirects to the SSO Login page if needed like this:
-
-[source,typescript]
-----
 {
-  path: 'about',
-  icon: 'la la-file',
-  title: 'About',
-  action: async (_context, _command) => {
-    return hasAccess(_context.route) ? _command.component('about-view') : _command.redirect('login');
-  },
-  requiresLogin: true,
-},
-----
-
-Then add a `login` route to the exported `routes` (not `views`) like so:
-
-[source,typescript]
-----
-{
-  path: 'login',
-  icon: '',
-  title: 'Login',
-  action: async (_context, _command) => {
-    _command.redirect(appStore.loginUrl!);
+  path: 'hello',
+  icon: 'la la-globe',
+  title: 'Hello World',
+  // replace the `component` property with an `action`:
+  action: async (_context, command) => {
+    return appStore.authInfo.authenticated ? command.component('hello-world-view') : null;
   },
 },
 ----
 
-=== Add Login and Logout
+In a real-world application, you should extract the authentication check into a function and also check for `authInfo.roles`, to implement role-based view access. But this action is enough for the example and allows to filter the menu excluding unauthorized views by amending the view filter in [filename]`main-layout.ts`:
 
-To add login and logout to the interface, open [filename]`frontend/views/main-layout.ts` and add a login/logout button in the `footer`:
-
-[source,html]
-----
-<footer slot="drawer">
-  ${appStore.user
-    ? html`
-        <div className="flex items-center gap-m">
-          ${appStore.user.fullName}
-        </div>
-        <vaadin-button @click="${this.logout}">Sign out</vaadin-button>
-      `
-    : html`<a router-ignore href="${appStore.loginUrl!}">Sign in</a>`
-  }
-</footer>
-----
-
-Next, add the needed functions like this:
-
+.frontend/views/main-layout.ts
 [source,typescript]
 ----
-import { logout as _logout } from '@hilla/frontend';
-
-private async logout() {
-  await _logout(); // Logout on the server
-  location.href = appStore.logoutUrl!; // Logout on the provider
-}
+// add a new condition that checks for authentication
+return views.filter((route) => route.title && (route.component || appStore.authInfo.authenticated)) as RouteInfo[];
 ----
 
-Filter out protected views from the menu by modifying the `getMenuRoutes` function as shown here:
+Now the `Hello World` item in the menu only appears when authenticated.
 
+=== Show user information
+
+The SSO Kit provides a default endpoint to get information about the authenticated user. You can implement your one if you want to customize the returned object and its fields.
+
+As the Hello World page is now protected, that's a perfect place to show some information about the current user:
+
+.frontend/views/helloworld/hello-world-view.ts
 [source,typescript]
 ----
-private getMenuRoutes(): RouteInfo[] {
-  return views.filter((route) => route.title).filter(hasAccess) as RouteInfo[];
+import User from 'Frontend/generated/dev/hilla/sso/starter/endpoint/User';
+import { UserEndpoint } from 'Frontend/generated/endpoints';
+import { property } from 'lit/decorators.js';
+
+// add a property for the user
+@property()
+user: User | undefined;
+
+// add the `async` keyword and then load the user
+async connectedCallback() {
+  // ...
+  this.user = await UserEndpoint.getAuthenticatedUser();
 }
+
+// show something in the rendered html by adding this line inside
+${this.user && html`Connected user: ${this.user.fullName}`}
 ----
-
-Try to customize your views further, for example to change the root view to not use `hello-world`, which is protected, or to add a new view.
-
-Next, test the application: log in, log out, and try to use the Endpoint by clicking on the "Say hello" button in both cases.
-
-// tag::singlesignoff[]
 
 == Single Sign-Off
 
@@ -295,45 +238,25 @@ SSO Kit provides two methods for logging out the user. It's defined by the OpenI
 
 RP-Initiated Logout (i.e., Relaying Party, the application) enables the user to logout from the application itself, ensuring the connected provider session is terminated.
 
-After a successful logout, the user is redirected to the configured logout redirect route. That can be set with the `vaadin.sso.logout-redirect-route` property:
-
-[.example]
---
-.application.properties
-[source,properties]
-----
-vaadin.sso.logout-redirect-route=/logout-successful
-----
-.application.yaml
-[source,yaml]
-----
-vaadin:
-  sso:
-    logout-redirect-route: /logout-successful
-----
---
-
-The default value of this property is the application root.
-
 === Back-Channel Logout
 
 Back-Channel Logout is a feature that enables the provider to close user sessions from outside the application. For example, it can be done from the provider's user dashboard or from another application.
 
 ==== Enable the Feature
 
-To enable the feature in the application, you need to set the `vaadin.sso.back-channel-logout` property to `true`. You would do this like you see here:
+To enable the feature in the application, you need to set the `hilla.sso.back-channel-logout` property to `true`. You would do this like you see here:
 
 [.example]
 --
 .[filename]`application.properties`
 [source,properties]
 ----
-vaadin.sso.back-channel-logout=true
+hilla.sso.back-channel-logout=true
 ----
 .[filename]`application.yaml`
 [source,yaml]
 ----
-vaadin:
+hilla:
   sso:
     back-channel-logout: true
 ----
@@ -341,68 +264,49 @@ vaadin:
 
 The client should then be configured on the provider's dashboard to send logout requests to a specific application URL: `/logout/back-channel/{registration-key}`, where `{registration-key}` is the provider key.
 
-==== Enable Push Support
+==== Modify the frontend
 
-To be able to get logout notifications from the server in real time, add this line to [filename]`vaadin-featureflags.properties`:
+State about back-channel logout can be added to [filename]`app-store.ts`:
 
-----
-com.vaadin.experimental.hillaPush=true
-----
-
-Now restart your application to enable Push support.
-
-// end::singlesignoff[]
-
-==== Modify the Client Application
-
-Open [filename]`app-store.ts` again and add the following properties:
-
+.frontend/stores/app-store.ts
 [source,typescript]
 ----
-backChannelLogoutEnabled = false;
+import { BackChannelLogoutEndpoint } from 'Frontend/generated/endpoints';
+
+// Will become true when back-channel logout happens
 backChannelLogoutHappened = false;
-private logoutSubscription: Subscription<Message> | undefined;
-----
 
-Add more code to the `fetchAuthInfo` and `clearUserInfo` functions to store values and subscribe to notifications:
+constructor() {
+  makeAutoObservable(this);
 
-[source,typescript]
-----
-async fetchAuthInfo() {
-  const authInfo = await SingleSignOnEndpoint.getData();
-  this.loginUrl = authInfo.loginUrl;
-  this.logoutUrl = authInfo.logoutUrl;
-  this.backChannelLogoutEnabled = authInfo.backChannelLogoutEnabled;
-
-  this.user = await UserEndpoint.getAuthenticatedUser();
-
-  if (this.user && this.backChannelLogoutEnabled) {
-    this.logoutSubscription = BackChannelLogoutEndpoint.subscribe();
-
-    this.logoutSubscription.onNext(() => {
+  // Add this to the constructor to subscribe to back-channel logout events
+  if (this.authInfo.backChannelLogoutEnabled) {
+    BackChannelLogoutEndpoint.subscribe().onNext(() => {
       this.backChannelLogoutHappened = true;
-    });
+    })
   }
 }
 
-clearUserInfo() {
-  this.user = undefined;
-  this.logoutUrl = undefined;
-  this.backChannelLogoutHappened = false;
-
-  if (this.logoutSubscription) {
-    this.logoutSubscription.cancel();
-    this.logoutSubscription = undefined;
-  }
+// Clears authInfo without reloading the page
+clearAuthInfo() {
+  this.authInfo = {
+      ... this.authInfo,
+      authenticated: false,
+      backChannelLogoutEnabled: false,
+      logoutLink: undefined,
+      roles: [],
+  };
 }
 ----
 
-Now, go to [filename]`main-layout.ts` and add a Confirm Dialog to notify the user, just above the empty `slot`:
+Then, a dialog can be added to the application layout to notify the user:
 
+.frontend/views/main-layout.ts
 [source,typescript]
 ----
 import '@vaadin/confirm-dialog';
 
+// Add the dialog to the rendered html
 <vaadin-confirm-dialog
   header="Logged out"
   cancel-button-visible
@@ -412,23 +316,17 @@ import '@vaadin/confirm-dialog';
 >
   <p>You have been logged out. Do you want to log in again?</p>
 </vaadin-confirm-dialog>
-----
 
-Next, add the related functions like so:
-
-[source,typescript]
-----
+// Then add the event handlers
 private async stayOnPage() {
-  await _logout(); // Logout on the server
-  appStore.clearUserInfo(); // Logout on the client
+  await logout(); // Logout on the server
+  appStore.clearAuthInfo(); // Logout on the client
 }
 
 private async loginAgain() {
-  await _logout(); // Logout on the server
-  location.href = appStore.loginUrl!;
+  await logout(); // Logout on the server
+  location.href = appStore.authInfo.loginLink!;
 }
 ----
 
-To test this functionality, you need to log into the application, then close your session externally. For example, you might do this from the Keycloak administration console.
-
-// end::content[]
+You can trigger a logout externally using the provider tools. For Keycloak, you can sign out a session from the admin console or visit the page `https://my-keycloak.io/realms/my-realm/protocol/openid-connect/logout`.
