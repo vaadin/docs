@@ -6,7 +6,6 @@ import '@vaadin/button';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/split-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -45,16 +44,12 @@ export class Example extends LitElement {
             width="6em"
             flex-grow="0"
             header="Has Sub"
-            ${columnBodyRenderer(this.subscriptionRenderer, [])}
+            ${columnBodyRenderer<Person>((item) => html`${item.subscriber ? 'Yes' : 'No'}`, [])}
           ></vaadin-grid-column>
         </vaadin-grid>
         <div></div>
       </vaadin-split-layout>
     `;
   }
-
-  private subscriptionRenderer: GridColumnBodyLitRenderer<Person> = (item) => {
-    return html`${item.subscriber ? 'Yes' : 'No'}`;
-  };
 }
 // end::snippet[]

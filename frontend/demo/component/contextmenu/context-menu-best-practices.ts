@@ -33,11 +33,6 @@ export class Example extends LitElement {
     { name: 'Financials.xlsx', size: '42 MB' },
   ];
 
-  private menuBarRenderer = () => {
-    const items = [{ component: this.makeIcon(), children: this.items }];
-    return html`<vaadin-menu-bar .items=${items} theme="tertiary"></vaadin-menu-bar>`;
-  };
-
   render() {
     return html`
       <!-- tag::snippethtml[] -->
@@ -52,7 +47,15 @@ export class Example extends LitElement {
           <vaadin-grid-column
             width="70px"
             flex-grow="0"
-            ${columnBodyRenderer(this.menuBarRenderer, [])}
+            ${columnBodyRenderer(
+              () => html`
+                <vaadin-menu-bar
+                  .items=${[{ component: this.makeIcon(), children: this.items }]}
+                  theme="tertiary"
+                ></vaadin-menu-bar>
+              `,
+              []
+            )}
           ></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
