@@ -4,7 +4,6 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import type { GridDragStartEvent } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -85,7 +84,10 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Full name"
-            ${columnBodyRenderer(this.fullNameRenderer, [])}
+            ${columnBodyRenderer<Person>(
+              (person) => html`${person.firstName} ${person.lastName}`,
+              []
+            )}
           ></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
         </vaadin-grid>
