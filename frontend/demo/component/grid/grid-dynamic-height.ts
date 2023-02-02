@@ -86,29 +86,25 @@ export class Example extends LitElement {
     </vaadin-button>
   `;
 
-  private renderNoInvitationAlert = () => {
-    return html`
-      <div
-        style="padding: var(--lumo-size-l);text-align: center;font-style: italic; color: var(--lumo-contrast-70pct);"
-      >
-        No invitation has been sent
-      </div>
-    `;
-  };
+  private renderNoInvitationAlert = () => html`
+    <div
+      style="padding: var(--lumo-size-l);text-align: center;font-style: italic; color: var(--lumo-contrast-70pct);"
+    >
+      No invitation has been sent
+    </div>
+  `;
 
-  private renderInvitedPeopleTable = () => {
-    return html`
-      <!-- tag::snippet[] -->
-      <vaadin-grid .items="${this.invitedPeople}" all-rows-visible>
-        <vaadin-grid-column header="Name" path="displayName" auto-width></vaadin-grid-column>
-        <vaadin-grid-column path="email"></vaadin-grid-column>
-        <vaadin-grid-column path="address.phone"></vaadin-grid-column>
-        <vaadin-grid-column
-          header="Manage"
-          ${columnBodyRenderer(this.manageRenderer, [])}
-        ></vaadin-grid-column>
-      </vaadin-grid>
-      <!-- end::snippet[] -->
-    `;
-  };
+  private renderInvitedPeopleTable = () => html`
+    <!-- tag::snippet[] -->
+    <vaadin-grid .items="${this.invitedPeople}" all-rows-visible>
+      <vaadin-grid-column header="Name" path="displayName" auto-width></vaadin-grid-column>
+      <vaadin-grid-column path="email"></vaadin-grid-column>
+      <vaadin-grid-column path="address.phone"></vaadin-grid-column>
+      <vaadin-grid-column
+        header="Manage"
+        ${columnBodyRenderer(this.manageRenderer, [])}
+      ></vaadin-grid-column>
+    </vaadin-grid>
+    <!-- end::snippet[] -->
+  `;
 }

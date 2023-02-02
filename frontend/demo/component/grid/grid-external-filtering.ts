@@ -38,7 +38,8 @@ export class Example extends LitElement {
       ...person,
       displayName: `${person.firstName} ${person.lastName}`,
     }));
-    this.items = this.filteredItems = people;
+    this.items = people;
+    this.filteredItems = people;
   }
 
   render() {
@@ -48,19 +49,17 @@ export class Example extends LitElement {
           placeholder="Search"
           style="width: 50%;"
           @value-changed="${(e: TextFieldValueChangedEvent) => {
-            const searchTerm = ((e.detail.value as string) || '').trim();
-            const matchesTerm = (value: string) => {
-              return value.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0;
-            };
+            const searchTerm = (e.detail.value || '').trim();
+            const matchesTerm = (value: string) =>
+              value.toLowerCase().includes(searchTerm.toLowerCase());
 
-            this.filteredItems = this.items.filter(({ displayName, email, profession }) => {
-              return (
+            this.filteredItems = this.items.filter(
+              ({ displayName, email, profession }) =>
                 !searchTerm ||
                 matchesTerm(displayName) ||
                 matchesTerm(email) ||
                 matchesTerm(profession)
-              );
-            });
+            );
           }}"
         >
           <vaadin-icon slot="prefix" icon="vaadin:search"></vaadin-icon>
@@ -80,12 +79,10 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => {
-    return html`
-      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-        <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
-        <span> ${person.displayName} </span>
-      </vaadin-horizontal-layout>
-    `;
-  };
+  private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => html`
+    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
+      <span> ${person.displayName} </span>
+    </vaadin-horizontal-layout>
+  `;
 }
