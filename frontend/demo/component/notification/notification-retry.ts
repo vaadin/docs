@@ -25,10 +25,7 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <vaadin-button
-        @click="${() => (this.notificationOpened = true)}"
-        .disabled="${this.notificationOpened}"
-      >
+      <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">
         Try it
       </vaadin-button>
 
@@ -49,24 +46,26 @@ export class Example extends LitElement {
   }
 
   // tag::renderer[]
-  renderer: NotificationLitRenderer = () => {
-    return html`
-      <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
-        <div>Failed to generate report</div>
-        <vaadin-button
-          theme="tertiary-inline"
-          style="margin-left: var(--lumo-space-xl);"
-          @click="${this.close}"
-        >
-          Retry
-        </vaadin-button>
-        <vaadin-button theme="tertiary-inline icon" @click="${this.close}" aria-label="Close">
-          <vaadin-icon icon="lumo:cross"></vaadin-icon>
-        </vaadin-button>
-      </vaadin-horizontal-layout>
-    `;
-  };
+  renderer: NotificationLitRenderer = () => html`
+    <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+      <div>Failed to generate report</div>
+      <vaadin-button
+        theme="tertiary-inline"
+        style="margin-left: var(--lumo-space-xl);"
+        @click="${this.close}"
+      >
+        Retry
+      </vaadin-button>
+      <vaadin-button theme="tertiary-inline icon" @click="${this.close}" aria-label="Close">
+        <vaadin-icon icon="lumo:cross"></vaadin-icon>
+      </vaadin-button>
+    </vaadin-horizontal-layout>
+  `;
   // end::renderer[]
+
+  private open() {
+    this.notificationOpened = true;
+  }
 
   private close() {
     this.notificationOpened = false;

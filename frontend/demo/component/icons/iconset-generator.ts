@@ -1,6 +1,9 @@
 import { css, html, LitElement, render } from 'lit';
 import type { TemplateResult } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
+import { convertToEnumName, generateVaadinIconset } from './iconset-helpers';
+
+const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
 
 @customElement('iconset-generator')
 export class IconsetGenerator extends LitElement {
@@ -218,8 +221,8 @@ export class IconsetGenerator extends LitElement {
     let folderName = '';
 
     // Categorize into sets based on folder path
-    const files = dropzone.files || [];
-    Array.from(files).forEach((f) => {
+    const files = dropzone.files ?? [];
+    [...files].forEach((f) => {
       if (f.webkitRelativePath) {
         const parts = f.webkitRelativePath.split(/\/|\\/);
         folderName = parts[parts.length - 2].toLowerCase();
@@ -235,36 +238,33 @@ export class IconsetGenerator extends LitElement {
       set.push(f);
     });
 
-    const outputHtml: TemplateResult[] = [];
-    for (const iconsetName in iconsets) {
-      const set = iconsets[iconsetName];
+    const promises = Object.entries(iconsets).map(
+      async ([iconsetName, set]): Promise<TemplateResult> => {
+        // Sort alphabetically
+        set.sort((a, b) => {
+          if (a.name < b.name) {
+            return -1;
+          }
+          if (a.name > b.name) {
+            return 1;
+          }
+          return 0;
+        });
 
-      // Sort alphabetically
-      set.sort((a, b) => {
-        if (a.name < b.name) {
-          return -1;
+        let enumName = name + capitalize(iconsetName);
+        if (!enumName) {
+          enumName = 'Icons';
         }
-        if (a.name > b.name) {
-          return 1;
-        }
-        return 0;
-      });
 
-      let enumName = name + capitalize(iconsetName);
-      if (!enumName) {
-        enumName = 'Icons';
-      }
+        const jsName = enumName.replace(/([a-z])([A-Z]+)/g, '$1-$2').toLowerCase();
 
-      const jsName = enumName.replace(/([a-z])([A-Z]+)/g, '$1-$2').toLowerCase();
+        // Generate <vaadin-iconset> JS import and Java enum class
+        const iconsetStrings = await generateVaadinIconset(set, jsName, enumName);
 
-      // Generate <vaadin-iconset> JS import and Java enum class
-      const iconsetStrings = await generateVaadinIconset(set, jsName, enumName);
+        const jsBlob = new Blob([iconsetStrings.js], { type: 'text/plain' });
+        const javaBlob = new Blob([iconsetStrings.java], { type: 'text/plain' });
 
-      const jsBlob = new Blob([iconsetStrings.js], { type: 'text/plain' });
-      const javaBlob = new Blob([iconsetStrings.java], { type: 'text/plain' });
-
-      outputHtml.push(
-        html`
+        return html`
           <li>
             <a download="${jsName}.js" .href=${URL.createObjectURL(jsBlob)}>${jsName}.js</a>
             <details>
@@ -293,9 +293,11 @@ export class IconsetGenerator extends LitElement {
               <textarea readonly id="javaOutput">${iconsetStrings.java}</textarea>
             </details>
           </li>
-        `
-      );
-    }
+        `;
+      }
+    );
+
+    const outputHtml = await Promise.all(promises);
 
     const plural = Object.keys(iconsets).length > 1;
 
@@ -322,102 +324,3 @@ export class IconsetGenerator extends LitElement {
     dropzone.value = '';
   }
 }
-
-async function generateVaadinIconset(
-  set: File[],
-  jsName: string,
-  enumName: string
-): Promise<{ js: string; java: string }> {
-  const files = await fileListToText(set);
-  let size: number | string | undefined;
-  const svgs = files.map((f) => {
-    // Get the viewbox size
-    if (!size && f.txt.match(/viewbox/i)) {
-      const viewbox = /viewbox=["']0 0 (.*?) (.*?)["']/i.exec(f.txt);
-      if (!viewbox) {
-        console.warn('Unusual viewBox definition. Ignoring icon', f.name, f.txt);
-      } else if (viewbox[1] !== viewbox[2]) {
-        size = Math.max(parseInt(viewbox[1]), parseInt(viewbox[2]));
-        console.warn('Icons are not square. Using the largest value.', size);
-      }
-    }
-
-    return `<g id="${jsName}:${f.name}">${f.txt}</g>`;
-  });
-
-  if (!size) {
-    size = '24'; // Default if not defined by any icon
-  }
-
-  const enums = files.map((f) => convertToEnumName(f.name));
-
-  const output = { js: '', java: '' };
-
-  output.js = `import '@vaadin/icon/vaadin-iconset.js';
-
-const template = document.createElement('template');
-
-template.innerHTML = \`<vaadin-iconset name="${jsName}" size="${size}">
-  <svg><defs>
-    ${svgs.join('\n    ')}
-  </defs></svg>
-</vaadin-iconset>\`;
-
-document.head.appendChild(template.content);
-`;
-
-  output.java = `import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.icon.IconFactory;
-import java.util.Locale;
-
-@JsModule("./icons/${jsName}.js")
-public enum ${enumName} implements IconFactory {
-    ${enums.join(', ')};
-
-    public Icon create() {
-        return new Icon(this.name().toLowerCase(Locale.ENGLISH).replace('_', '-').replaceAll("^-", ""));
-    }
-
-    public static final class Icon extends com.vaadin.flow.component.icon.Icon {
-        Icon(String icon) {
-            super("${jsName}", icon);
-        }
-    }
-}`;
-
-  return output;
-}
-
-async function fileListToText(fileList: File[]): Promise<Array<{ name: string; txt: string }>> {
-  function getText(file: File): Promise<string> {
-    const reader = new FileReader();
-    return new Promise((resolve) => {
-      reader.onload = (e) => {
-        const target = e.target as FileReader;
-        resolve(target.result as string);
-      };
-      reader.readAsText(file);
-    });
-  }
-
-  const list = [];
-
-  for (let i = 0; i < fileList.length; i++) {
-    const txt = await getText(fileList[i]);
-    const name = fileList[i].name.split('.')[0];
-    list.push({ name, txt });
-  }
-
-  return list;
-}
-
-const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
-
-const convertToEnumName = (s: string) => {
-  let name = s.toUpperCase().replace(/-/g, '_');
-  // Java enums can't start with a number. Prefix with underscore
-  if (name.match(/^\d/)) {
-    name = `_${name}`;
-  }
-  return name;
-};
