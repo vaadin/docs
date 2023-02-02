@@ -1,0 +1,177 @@
+---
+title: Styleable Parts and States
+order: 10
+---
+
+= Styleable Component Parts and States
+
+Various types of CSS selectors are used when applying custom CSS to Vaadin components. These can be roughly divided into the parts that make up the component, and the states that the component, and in some cases its parts, can be in.
+
+
+== Styleable Parts of Components
+
+The various HTML elements that make up Vaadin components are listed on the Styling tab of each <<{articles}/components#,component documentation>> page. There are four primary types of parts, each of which is associated with a different type of CSS selector.
+
+
+=== Root Elements
+
+Each Vaadin component has a root HTML element whose name starts with the `vaadin-` prefix, such as `vaadin-button` or `vaadin-combo-box`.
+
+[source,css]
+----
+vaadin-button {
+  background: orange;
+}
+----
+
+
+=== Shadow Parts
+
+Shadow parts are elements inside the component's shadow DOM and are styled using the `::part()` selector. As an example, the input surface of a Text Field is styled using the `input-field` shadow part name:
+
+[source,css]
+----
+vaadin-text-field::part(input-field) {
+  background: white;
+  border: 1px solid gray;
+}
+----
+
+Some Vaadin components like <<{articles}/components/grid#,Grid>> provide APIs that allow developers to apply their own part names to shadow parts like table cells based on custom logic.
+
+
+=== Normal Child Elements
+
+Normal HTML child elements are styled using the `>` selector. As an example, the Checkbox component's label is a `label` element:
+
+[source,css]
+----
+vaadin-checkbox > label {
+  font-weight: bold;
+}
+----
+
+
+=== Pseudo-Elements
+
+The pseudo-elements `::before` and `::after` are elements generated with CSS. They are commonly used for font-based icons and highlight effects for states like hover and focus, often on one of the shadow parts rather than the root element. As an example, the Date Picker’s icon is a pseudo-element in the `toggle-button` shadow part, and its hover highlight is a pseudo-element on the `input-field` shadow part:
+
+[source,css]
+----
+vaadin-date-picker::part(toggle-button)::before {
+  color: blue;
+}
+
+vaadin-date-picker::part(input-field)::after {
+  background-color: green;
+}
+----
+
+
+=== Sub-Components
+
+In addition to the above, many components utilize “sub-components” with their own root HTML elements. In many cases, these have their own shadow parts, child elements and pseudo-elements. As an example, the Date Picker’s overlay is a separate component with the root element `vaadin-date-picker-overlay`. Each month calendar in it is a `vaadin-month-calendar` component. They both contain various shadow parts.
+
+[source,css]
+----
+vaadin-month-calendar::part(date) {
+  font-weight: bold;
+}
+----
+
+
+== Component States
+
+The various states of a Vaadin component are listed on the Styling tab of each <<{articles}/components#,component documentation>> page. There are three types of CSS selectors used for states: state attributes; state part-names; and pseudo classes. They’re each described below, as well as how to negate state selectors.
+
+
+=== State Attributes
+
+Most states of component root elements and their various parts are exposed through state attributes and styled using attribute selectors of the form `component-name[state]`. As an example, disabled Buttons are identified by the `[disabled]` selector:
+
+[source,css]
+----
+vaadin-button[disabled] {
+  background: lightgray;
+  color: darkgray;
+}
+----
+
+State attributes can be combined with part selectors by placing the attribute selector before the part, child or pseudo-element selector:
+
+[source,css]
+----
+vaadin-text-field[disabled]::part(input-field) {
+  border-color: lightgray;
+}
+
+vaadin-checkbox[disabled] > label {
+  color: gray;
+}
+
+vaadin-date-picker[disabled]::part(toggle-button)::before {
+  visibility: hidden;
+}
+----
+
+
+=== State Part-Names
+
+Some shadow parts have their own states exposed as additional part names. As an example, a disabled date in the Date Picker’s calendar is styled using the part names `date` and `disabled`, combined into the same `::part()` selector:
+
+[source,css]
+----
+vaadin-month-calendar::part(date disabled) {
+  color: red;
+}
+----
+
+
+=== Pseudo-Classes
+
+Pseudo-classes are CSS features used for certain native HTML states like hover. They can be combined with any other selector:
+
+[source,css]
+----
+vaadin-button:hover {
+  border-color: blue;
+}
+
+vaadin-text-field[disabled]:hover::part(input-field) {
+  border-color: red;
+}
+----
+
+In the example above, the first style block applies a border color to Buttons on hover, and the second applies a red border color to the input surface of disabled Text Fields on hover.
+
+
+=== Negating or Excluding States
+
+To target the opposite of a state exposed as an attribute or a pseudo-class, the state selector can be wrapped in a `:not()` selector. This is often needed to exclude a particular state from a style block.
+
+[source,css]
+----
+vaadin-button:not([disabled]) {
+  border-color: blue;
+}
+----
+
+
+== Component Style Variants
+
+Many Vaadin components come with built-in *style variants*, listed on the documentation page for each component, that can be used to change the color, size or other visual aspects of individual component instances through the `addThemeVariants` Java API.
+
+image::../_images/button-variants.png[Built-in style variants of the Button component, 400]
+
+These variants are applied with `theme` attributes on the root elements of components, and can be targeted with CSS attribute selectors, and excluded by wrapping the attribute selector in a `:not()` selector.
+
+[source,css]
+----
+vaadin-button[theme~="primary"] {
+  background-color: orange;
+}
+
+vaadin-button:not([theme~="primary"]) {
+  color: orange;
+}
+----
