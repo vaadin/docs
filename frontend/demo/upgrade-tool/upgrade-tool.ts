@@ -187,7 +187,7 @@ export default class UpgradeTool extends LitElement {
 
     document
       .querySelectorAll("[class*='all'], [class*='spring']")
-      .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
+      .forEach((elem) => this.setElementVisible(elem as HTMLElement, false));
   }
 
   private is14To23Upgrade() {
@@ -224,7 +224,7 @@ export default class UpgradeTool extends LitElement {
   }
 
   private getElementsByClassname(classname: string) {
-    return <HTMLElement[]>[...document.querySelectorAll(`.${classname}`)];
+    return [...document.querySelectorAll(`.${classname}`)] as HTMLElement[];
   }
 
   private hideOldInstructions() {
@@ -232,7 +232,7 @@ export default class UpgradeTool extends LitElement {
       .querySelectorAll(
         "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='styling'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
       )
-      .forEach((elem) => this.setElementVisible(<HTMLElement>elem, false));
+      .forEach((elem) => this.setElementVisible(elem as HTMLElement, false));
 
     this.isInstructionsDisplayed = false;
   }
@@ -326,7 +326,7 @@ export default class UpgradeTool extends LitElement {
         if (!this.extraSettingsValue.includes(v)) {
           this.extraSettingsValue.push(v);
         }
-        const checkbox = <Checkbox>document.getElementById(`${v}-checkbox`);
+        const checkbox = document.getElementById(`${v}-checkbox`) as Checkbox;
         checkbox.checked = true;
       });
     } else {
@@ -420,8 +420,8 @@ export default class UpgradeTool extends LitElement {
     const fromParam = urlParams.get('from');
     const toParam = urlParams.get('to');
 
-    this.fromVersion = fromParam || DEFAULT_FROM;
-    this.toVersion = toParam || DEFAULT_TO;
+    this.fromVersion = fromParam ?? DEFAULT_FROM;
+    this.toVersion = toParam ?? DEFAULT_TO;
 
     const isFlowParam = this.getParamVal(urlParams, 'isFlow');
     const isFusionParam = this.getParamVal(urlParams, 'isFusion');

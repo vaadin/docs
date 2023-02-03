@@ -35,7 +35,7 @@ export class Example extends LitElement {
       <vaadin-date-picker
         label="Meeting date"
         helper-text="Mondays – Fridays only"
-        ...="${field(this.binder.model.startDate)}"
+        ${field(this.binder.model.startDate)}
       ></vaadin-date-picker>
     `;
   }

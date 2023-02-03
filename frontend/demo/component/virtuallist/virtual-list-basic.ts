@@ -36,47 +36,45 @@ export class Example extends LitElement {
   @state()
   private people?: Person[];
 
-  private expandedPeople: Set<Person> = new Set();
+  private expandedPeople = new Set<Person>();
 
   async firstUpdated() {
     const { people } = await getPeople();
     this.people = people;
   }
 
-  private personCardRenderer: VirtualListLitRenderer<Person> = (person) => {
-    return html`
-      <vaadin-horizontal-layout theme="spacing margin">
-        <vaadin-avatar
-          .img="${person.pictureUrl}"
-          .name="${`${person.firstName} ${person.lastName}`}"
-        ></vaadin-avatar>
+  private personCardRenderer: VirtualListLitRenderer<Person> = (person) => html`
+    <vaadin-horizontal-layout theme="spacing margin">
+      <vaadin-avatar
+        .img="${person.pictureUrl}"
+        .name="${`${person.firstName} ${person.lastName}`}"
+      ></vaadin-avatar>
 
-        <vaadin-vertical-layout>
-          <b>${person.firstName} ${person.lastName}</b>
-          <span>${person.profession}</span>
+      <vaadin-vertical-layout>
+        <b>${person.firstName} ${person.lastName}</b>
+        <span>${person.profession}</span>
 
-          <vaadin-details
-            .opened="${live(this.expandedPeople.has(person))}"
-            @click="${(e: Event) => {
-              const details = e.currentTarget as Details;
-              if (details.opened) {
-                this.expandedPeople.add(person);
-              } else {
-                this.expandedPeople.delete(person);
-              }
-            }}"
-          >
-            <div slot="summary">Contact information</div>
+        <vaadin-details
+          .opened="${live(this.expandedPeople.has(person))}"
+          @click="${(e: Event) => {
+            const details = e.currentTarget as Details;
+            if (details.opened) {
+              this.expandedPeople.add(person);
+            } else {
+              this.expandedPeople.delete(person);
+            }
+          }}"
+        >
+          <div slot="summary">Contact information</div>
 
-            <vaadin-vertical-layout>
-              <span>${person.email}</span>
-              <span>${person.address.phone}</span>
-            </vaadin-vertical-layout>
-          </vaadin-details>
-        </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>
-    `;
-  };
+          <vaadin-vertical-layout>
+            <span>${person.email}</span>
+            <span>${person.address.phone}</span>
+          </vaadin-vertical-layout>
+        </vaadin-details>
+      </vaadin-vertical-layout>
+    </vaadin-horizontal-layout>
+  `;
 
   render() {
     return html`
