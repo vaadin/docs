@@ -4,13 +4,11 @@ import '@vaadin/progress-bar';
 
 @customElement('fake-progress-bar')
 export class FakeProgressBar extends LitElement {
-  static get styles() {
-    return css`
-      :host {
-        width: 100%;
-      }
-    `;
-  }
+  static styles = css`
+    :host {
+      width: 100%;
+    }
+  `;
 
   @property({ type: Number })
   progress = 0;

@@ -8,19 +8,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('crud-editor-bottom')
 export class Example extends LitElement {
+  static styles = css`
+    vaadin-crud {
+      --vaadin-crud-editor-max-height: 60%;
+    }
+  `;
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      vaadin-crud {
-        --vaadin-crud-editor-max-height: 60%;
-      }
-    `;
   }
 
   @state()

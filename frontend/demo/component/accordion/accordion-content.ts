@@ -9,14 +9,12 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('accordion-content')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      a {
-        text-decoration: none;
-        color: var(--lumo-primary-text-color);
-      }
-    `;
-  }
+  static styles = css`
+    a {
+      text-decoration: none;
+      color: var(--lumo-primary-text-color);
+    }
+  `;
 
   protected createRenderRoot() {
     const root = super.createRenderRoot();

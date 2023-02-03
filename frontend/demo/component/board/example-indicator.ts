@@ -7,49 +7,47 @@ import '@vaadin/vertical-layout';
 
 @customElement('example-indicator')
 export class ExampleIndicator extends LitElement {
-  static get styles() {
-    return css`
+  static styles = css`
+    .title {
+      margin: 0;
+      font-size: var(--lumo-font-size-xxs);
+      font-weight: 700;
+      color: var(--lumo-contrast-50pct);
+    }
+
+    .current {
+      font-size: var(--lumo-font-size-m);
+      font-weight: 700;
+    }
+
+    .icon {
+      font-size: var(--lumo-font-size-xxs);
+    }
+
+    .icon vaadin-icon {
+      --vaadin-icon-width: var(--lumo-font-size-xxs);
+      --vaadin-icon-height: var(--lumo-font-size-xxs);
+    }
+
+    @media (min-width: 1024px) {
       .title {
-        margin: 0;
         font-size: var(--lumo-font-size-xxs);
-        font-weight: 700;
-        color: var(--lumo-contrast-50pct);
       }
 
       .current {
-        font-size: var(--lumo-font-size-m);
-        font-weight: 700;
+        font-size: var(--lumo-font-size-xl);
       }
 
       .icon {
-        font-size: var(--lumo-font-size-xxs);
+        font-size: var(--lumo-font-size-m);
       }
 
       .icon vaadin-icon {
-        --vaadin-icon-width: var(--lumo-font-size-xxs);
-        --vaadin-icon-height: var(--lumo-font-size-xxs);
+        --vaadin-icon-width: var(--lumo-font-size-xs);
+        --vaadin-icon-height: var(--lumo-font-size-xs);
       }
-
-      @media (min-width: 1024px) {
-        .title {
-          font-size: var(--lumo-font-size-xxs);
-        }
-
-        .current {
-          font-size: var(--lumo-font-size-xl);
-        }
-
-        .icon {
-          font-size: var(--lumo-font-size-m);
-        }
-
-        .icon vaadin-icon {
-          --vaadin-icon-width: var(--lumo-font-size-xs);
-          --vaadin-icon-height: var(--lumo-font-size-xs);
-        }
-      }
-    `;
-  }
+    }
+  `;
 
   @property()
   title = 'Unknown';

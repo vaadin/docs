@@ -11,29 +11,27 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-drag-rows-between-grids')
 export class Example extends LitElement {
+  static styles = css`
+    .grids-container {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    vaadin-grid {
+      width: 300px;
+      height: 300px;
+      margin-left: 0.5rem;
+      margin-top: 0.5rem;
+      align-self: unset;
+    }
+  `;
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      .grids-container {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-
-      vaadin-grid {
-        width: 300px;
-        height: 300px;
-        margin-left: 0.5rem;
-        margin-top: 0.5rem;
-        align-self: unset;
-      }
-    `;
   }
 
   // tag::snippet[]

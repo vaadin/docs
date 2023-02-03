@@ -9,6 +9,12 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-helper-2')
 export class Example extends LitElement {
+  static styles = css`
+    vaadin-text-area {
+      width: 100%;
+    }
+  `;
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
@@ -21,14 +27,6 @@ export class Example extends LitElement {
 
   @state()
   private text = loremIpsum;
-
-  static get styles() {
-    return css`
-      vaadin-text-area {
-        width: 100%;
-      }
-    `;
-  }
 
   render() {
     return html`

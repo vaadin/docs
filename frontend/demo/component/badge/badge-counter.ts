@@ -6,13 +6,11 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-counter')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      span[theme~='badge'] {
-        margin-inline-start: var(--lumo-space-s);
-      }
-    `;
-  }
+  static styles = css`
+    span[theme~='badge'] {
+      margin-inline-start: var(--lumo-space-s);
+    }
+  `;
 
   protected createRenderRoot() {
     const root = super.createRenderRoot();

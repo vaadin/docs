@@ -17,20 +17,18 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('virtual-list-basic')
 export class Example extends LitElement {
+  static styles = css`
+    vaadin-avatar {
+      height: 64px;
+      width: 64px;
+    }
+  `;
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      vaadin-avatar {
-        height: 64px;
-        width: 64px;
-      }
-    `;
   }
 
   @state()

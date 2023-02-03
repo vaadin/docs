@@ -27,15 +27,13 @@ const chartOptions = {
 
 @customElement('example-chart')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      .title {
-        font-size: var(--lumo-font-size-l);
-        font-weight: 700;
-        margin-block-end: var(--lumo-space-m);
-      }
-    `;
-  }
+  static styles = css`
+    .title {
+      font-size: var(--lumo-font-size-l);
+      font-weight: 700;
+      margin-block-end: var(--lumo-space-m);
+    }
+  `;
 
   @state()
   private events: ViewEvent[] = [];
