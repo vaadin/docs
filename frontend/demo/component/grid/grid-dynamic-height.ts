@@ -34,13 +34,11 @@ export class Example extends LitElement {
   private selectedValue = '';
 
   async firstUpdated() {
-    const people = (await getPeople()).people.map((person) => {
-      return {
-        ...person,
-        displayName: `${person.firstName} ${person.lastName}`,
-      };
-    });
-    this.items = people;
+    const { people } = await getPeople();
+    this.items = people.map((person) => ({
+      ...person,
+      displayName: `${person.firstName} ${person.lastName}`,
+    }));
   }
 
   render() {
@@ -49,10 +47,12 @@ export class Example extends LitElement {
         <vaadin-combo-box
           .items="${this.items}"
           .value="${this.selectedValue}"
-          @value-changed=${(e: ComboBoxValueChangedEvent) => (this.selectedValue = e.detail.value)}
           item-label-path="displayName"
           item-value-path="id"
           style="flex: 1;"
+          @value-changed="${(event: ComboBoxValueChangedEvent) => {
+            this.selectedValue = event.detail.value;
+          }}"
         ></vaadin-combo-box>
         <vaadin-button
           theme="primary"

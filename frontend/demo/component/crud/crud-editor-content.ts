@@ -30,8 +30,9 @@ export class Example extends LitElement {
   private responsiveSteps: FormLayoutResponsiveStep[] = [];
 
   async firstUpdated() {
-    this.items = (await getPeople()).people;
-    this.professions = [...new Set(this.items.map((i) => i.profession))];
+    const { people } = await getPeople();
+    this.items = people;
+    this.professions = [...new Set(people.map((i) => i.profession))];
     this.responsiveSteps = [
       { minWidth: 0, columns: 1 },
       { minWidth: '30em', columns: 2 },
