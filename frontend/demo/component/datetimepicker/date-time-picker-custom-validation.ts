@@ -45,7 +45,7 @@ export class Example extends LitElement {
         label="Appointment date and time"
         helper-text="Open Mondays-Fridays, 8:00-12:00, 13:00-16:00"
         .step="${60 * 30}"
-        ...="${field(this.binder.model.startDateTime)}"
+        ${field(this.binder.model.startDateTime)}
       ></vaadin-date-time-picker>
     `;
   }

@@ -9,7 +9,7 @@ import '@vaadin/text-field';
 import '@vaadin/text-area';
 import { applyTheme } from 'Frontend/generated/theme';
 import template from './dashboard-template.json';
-import { TextFieldValueChangedEvent } from '@vaadin/text-field';
+import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import { Notification } from '@vaadin/notification';
 
 @customElement('new-relic-dashboard-generator')
@@ -59,8 +59,9 @@ export class DashboardGenerator extends LitElement {
       <vaadin-text-field
         label="Account ID"
         .value="${this.accountId}"
-        @value-changed="${(event: TextFieldValueChangedEvent) =>
-          (this.accountId = event.detail.value)}"
+        @value-changed="${(event: TextFieldValueChangedEvent) => {
+          this.accountId = event.detail.value;
+        }}"
       >
         <vaadin-icon slot="prefix" icon="vaadin:user"></vaadin-icon>
       </vaadin-text-field>

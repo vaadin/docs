@@ -36,7 +36,7 @@ export class Example extends LitElement {
         min="08:00"
         max="16:00"
         .step="${60 * 30}"
-        ...="${field(this.binder.model.startTime)}"
+        ${field(this.binder.model.startTime)}
       ></vaadin-time-picker>
     `;
   }
