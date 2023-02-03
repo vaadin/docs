@@ -8,17 +8,13 @@ import '@vaadin/password-field';
 import type { PasswordFieldValueChangedEvent } from '@vaadin/password-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
-enum StrengthText {
-  weak = 'weak',
-  moderate = 'moderate',
-  strong = 'strong',
-}
+type PasswordStrength = 'moderate' | 'strong' | 'weak';
 
-enum StrengthColor {
-  weak = 'var(--lumo-error-color)',
-  moderate = '#e7c200',
-  strong = 'var(--lumo-success-color)',
-}
+const StrengthColor: Record<PasswordStrength, string> = {
+  weak: 'var(--lumo-error-color)',
+  moderate: '#e7c200',
+  strong: 'var(--lumo-success-color)',
+};
 
 @customElement('password-field-advanced-helper')
 export class Example extends LitElement {
@@ -30,10 +26,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private strengthText: StrengthText = StrengthText.weak;
+  private strengthText: PasswordStrength = 'weak';
 
   @state()
-  private strengthColor: StrengthColor = StrengthColor.weak;
+  private strengthColor = StrengthColor.weak;
 
   private pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$';
 
@@ -49,8 +45,8 @@ export class Example extends LitElement {
         <vaadin-icon
           icon="vaadin:check"
           slot="suffix"
-          style="color: var(--lumo-success-color)"
-          ?hidden="${this.strengthText !== StrengthText.strong}"
+          style="color:${StrengthColor.strong}"
+          ?hidden="${this.strengthText !== 'strong'}"
         ></vaadin-icon>
         <div slot="helper">
           Password strength:
@@ -61,14 +57,14 @@ export class Example extends LitElement {
     `;
   }
 
-  private onPasswordChanged(e: PasswordFieldValueChangedEvent) {
-    const value = e.detail.value;
-    let strength: StrengthText = StrengthText.weak;
-    if (value && new RegExp(this.pattern).exec(value)) {
+  private onPasswordChanged(event: PasswordFieldValueChangedEvent) {
+    let strength: PasswordStrength = 'weak';
+    const { value } = event.detail;
+    if (value) {
       if (value.length > 9) {
-        strength = StrengthText.strong;
+        strength = 'strong';
       } else if (value.length > 5) {
-        strength = StrengthText.moderate;
+        strength = 'moderate';
       }
     }
     this.strengthText = strength;
