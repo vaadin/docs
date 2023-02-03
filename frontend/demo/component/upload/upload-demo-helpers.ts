@@ -322,7 +322,7 @@ export class MockHttpRequest {
         docElement?.nodeName === 'parsererror' ||
         (docElement?.nodeName === 'html' &&
           docElement?.firstChild?.nodeName === 'body' &&
-          docElement?.firstChild?.firstChild.nodeName === 'parsererror')
+          docElement?.firstChild?.firstChild?.nodeName === 'parsererror')
       ) {
         xmlDoc = null;
       }
