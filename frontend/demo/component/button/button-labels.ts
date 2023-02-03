@@ -11,19 +11,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-labels')
 export class Example extends LitElement {
+  static styles = css`
+    vaadin-horizontal-layout {
+      align-items: baseline;
+    }
+  `;
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      vaadin-horizontal-layout {
-        align-items: baseline;
-      }
-    `;
   }
 
   @state()

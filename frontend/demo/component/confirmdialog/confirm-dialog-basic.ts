@@ -10,6 +10,20 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
+  static styles = css`
+    /* Center the button within the example */
+    :host {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+  `;
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
@@ -65,20 +79,6 @@ export class Example extends LitElement {
       this.status = '';
     }
   }
-
-  static styles = css`
-    /* Center the button within the example */
-    :host {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-    }
-  `;
 
   private open() {
     this.dialogOpened = true;

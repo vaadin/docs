@@ -9,17 +9,15 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-count')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      h4 {
-        margin-top: 0;
-      }
+  static styles = css`
+    h4 {
+      margin-top: 0;
+    }
 
-      p {
-        color: var(--lumo-secondary-text-color);
-      }
-    `;
-  }
+    p {
+      color: var(--lumo-secondary-text-color);
+    }
+  `;
 
   protected createRenderRoot() {
     const root = super.createRenderRoot();

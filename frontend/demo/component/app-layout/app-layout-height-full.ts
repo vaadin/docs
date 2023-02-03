@@ -9,24 +9,22 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-height-full')
 export class Example extends LitElement {
+  static styles = css`
+    :host {
+      height: 100vh;
+    }
+
+    h1 {
+      font-size: var(--lumo-font-size-l);
+      margin: var(--lumo-space-m);
+    }
+  `;
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      :host {
-        height: 100vh;
-      }
-
-      h1 {
-        font-size: var(--lumo-font-size-l);
-        margin: var(--lumo-space-m);
-      }
-    `;
   }
 
   @state()

@@ -10,13 +10,11 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('multi-select-combo-box-basic')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      vaadin-multi-select-combo-box {
-        width: 300px;
-      }
-    `;
-  }
+  static styles = css`
+    vaadin-multi-select-combo-box {
+      width: 300px;
+    }
+  `;
 
   protected createRenderRoot() {
     const root = super.createRenderRoot();

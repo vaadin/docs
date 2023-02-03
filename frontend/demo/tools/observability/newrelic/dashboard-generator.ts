@@ -14,14 +14,12 @@ import { Notification } from '@vaadin/notification';
 
 @customElement('new-relic-dashboard-generator')
 export class DashboardGenerator extends LitElement {
-  static get styles() {
-    return css`
-      .json-result {
-        width: 100%;
-        height: 200px;
-      }
-    `;
-  }
+  static styles = css`
+    .json-result {
+      width: 100%;
+      height: 200px;
+    }
+  `;
 
   @state()
   accountId = '';

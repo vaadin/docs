@@ -11,19 +11,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-cell-focus')
 export class Example extends LitElement {
+  static styles = css`
+    vaadin-text-area {
+      width: 100%;
+    }
+  `;
+
   protected createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      vaadin-text-area {
-        width: 100%;
-      }
-    `;
   }
 
   @query('vaadin-grid')
