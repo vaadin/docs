@@ -23,7 +23,8 @@ export class Example extends LitElement {
   private crud!: Crud<Person>;
 
   async firstUpdated() {
-    this.items = (await getPeople()).people;
+    const { people } = await getPeople();
+    this.items = people;
     // tag::snippet[]
     this.crud.i18n = {
       newItem: 'Luo uusi',
