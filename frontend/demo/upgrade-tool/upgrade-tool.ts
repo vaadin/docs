@@ -180,14 +180,20 @@ export default class UpgradeTool extends LitElement {
     this.updateUrlParameters();
   }
 
+  private hideMatchingElements(types: string[]) {
+    const selector = types.map((type) => `[class*="${type}"]`).join(', ');
+
+    document.querySelectorAll<HTMLElement>(selector).forEach((elem) => {
+      this.setElementVisible(elem, false);
+    });
+  }
+
   private perform14To23CleanupIfNecessary() {
     if (!this.is14To23Upgrade()) {
       return;
     }
 
-    document
-      .querySelectorAll("[class*='all'], [class*='spring']")
-      .forEach((elem) => this.setElementVisible(elem as HTMLElement, false));
+    this.hideMatchingElements(['all', 'spring']);
   }
 
   private is14To23Upgrade() {
@@ -224,15 +230,22 @@ export default class UpgradeTool extends LitElement {
   }
 
   private getElementsByClassname(classname: string) {
-    return [...document.querySelectorAll(`.${classname}`)] as HTMLElement[];
+    return [...document.querySelectorAll<HTMLElement>(`.${classname}`)];
   }
 
   private hideOldInstructions() {
-    document
-      .querySelectorAll(
-        "[class*='all'], [class*='flow'], [class*='fusion'], [class*='spring'], [class*='ts'], [class*='styling'], [class*='v1'], [class*='v2'], [class*='v3'], [class*='v4']"
-      )
-      .forEach((elem) => this.setElementVisible(elem as HTMLElement, false));
+    this.hideMatchingElements([
+      'all',
+      'flow',
+      'fusion',
+      'spring',
+      'ts',
+      'styling',
+      'v1',
+      'v2',
+      'v3',
+      'v4',
+    ]);
 
     this.isInstructionsDisplayed = false;
   }
