@@ -7,7 +7,7 @@ import img from '../../../../src/main/resources/images/starry-sky.png';
 
 @customElement('login-overlay-mockup')
 export class LoginOverlayMockupElement extends LitElement {
-  static styles = css`
+  static override styles = css`
     [part='backdrop'] {
       background: var(--lumo-base-color)
         linear-gradient(var(--lumo-shade-5pct), var(--lumo-shade-5pct));

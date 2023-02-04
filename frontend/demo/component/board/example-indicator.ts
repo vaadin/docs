@@ -7,7 +7,7 @@ import '@vaadin/vertical-layout';
 
 @customElement('example-indicator')
 export class ExampleIndicator extends LitElement {
-  static styles = css`
+  static override styles = css`
     .title {
       margin: 0;
       font-size: var(--lumo-font-size-xxs);

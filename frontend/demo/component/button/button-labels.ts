@@ -11,7 +11,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-labels')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-horizontal-layout {
       align-items: baseline;
     }

@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-helper-2')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-text-area {
       width: 100%;
     }

@@ -10,7 +10,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-drawer')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     h1 {
       font-size: var(--lumo-font-size-l);
       margin: 0;

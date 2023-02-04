@@ -11,7 +11,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-cell-focus')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-text-area {
       width: 100%;
     }

@@ -12,7 +12,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-secondary-navigation')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     h1 {
       font-size: var(--lumo-font-size-l);
       line-height: var(--lumo-size-l);

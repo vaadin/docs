@@ -7,7 +7,7 @@ const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
 
 @customElement('iconset-generator')
 export class IconsetGenerator extends LitElement {
-  static styles = css`
+  static override styles = css`
     :host {
       margin: var(--docs-space-xl) 0;
       background-color: var(--docs-surface-color-2);

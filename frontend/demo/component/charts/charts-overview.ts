@@ -14,7 +14,7 @@ export class Example extends LitElement {
     return root;
   }
 
-  static styles = css`
+  static override styles = css`
     :host {
       display: grid !important;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

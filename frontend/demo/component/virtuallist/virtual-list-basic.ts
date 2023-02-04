@@ -17,7 +17,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('virtual-list-basic')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-avatar {
       height: 64px;
       width: 64px;

@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-auto-height')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-text-area {
       width: 100%;
     }

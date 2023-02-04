@@ -6,7 +6,7 @@ import { repeat } from 'lit/directives/repeat.js';
 
 @customElement('example-statistics')
 export class ExampleStatistics extends LitElement {
-  static styles = css`
+  static override styles = css`
     :host {
       display: flex;
       flex-direction: column;

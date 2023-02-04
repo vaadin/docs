@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-count')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     h4 {
       margin-top: 0;
     }

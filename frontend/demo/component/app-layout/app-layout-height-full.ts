@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-height-full')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     :host {
       height: 100vh;
     }

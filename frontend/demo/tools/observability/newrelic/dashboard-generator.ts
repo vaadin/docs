@@ -14,7 +14,7 @@ import { Notification } from '@vaadin/notification';
 
 @customElement('new-relic-dashboard-generator')
 export class DashboardGenerator extends LitElement {
-  static styles = css`
+  static override styles = css`
     .json-result {
       width: 100%;
       height: 200px;

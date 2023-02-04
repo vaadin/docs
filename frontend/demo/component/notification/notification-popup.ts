@@ -12,7 +12,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-popup')
 export class Example2 extends LitElement {
-  static styles = [
+  static override styles = [
     badge,
     css`
       vaadin-context-menu {

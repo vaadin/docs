@@ -7,7 +7,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-internationalization')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     :host {
       background-color: var(--lumo-contrast-5pct);
       display: flex !important;

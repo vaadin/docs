@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('scroller-basic')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     #container {
       align-items: stretch;
       border: 1px solid var(--lumo-contrast-20pct);

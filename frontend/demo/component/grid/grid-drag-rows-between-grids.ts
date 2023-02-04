@@ -11,7 +11,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-drag-rows-between-grids')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     .grids-container {
       display: flex;
       flex-direction: row;

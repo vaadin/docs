@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('details-content')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     a {
       text-decoration: none;
       color: var(--lumo-primary-text-color);

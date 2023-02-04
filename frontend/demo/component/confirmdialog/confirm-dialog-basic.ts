@@ -10,7 +10,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     /* Center the button within the example */
     :host {
       position: fixed;

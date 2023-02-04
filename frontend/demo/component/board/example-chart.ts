@@ -27,7 +27,7 @@ const chartOptions = {
 
 @customElement('example-chart')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     .title {
       font-size: var(--lumo-font-size-l);
       font-weight: 700;

@@ -6,7 +6,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-counter')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     span[theme~='badge'] {
       margin-inline-start: var(--lumo-space-s);
     }

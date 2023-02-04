@@ -7,7 +7,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-styles')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-menu-bar {
       display: inline-block;
     }

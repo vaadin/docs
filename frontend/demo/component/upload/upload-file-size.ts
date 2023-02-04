@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-size')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     h4 {
       margin-top: 0;
     }

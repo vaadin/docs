@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('crud-editor-bottom')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-crud {
       --vaadin-crud-editor-max-height: 60%;
     }

@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('multi-select-combo-box-selection')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-multi-select-combo-box {
       width: 300px;
     }
