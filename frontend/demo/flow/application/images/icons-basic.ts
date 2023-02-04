@@ -8,7 +8,7 @@ import '@vaadin/vertical-layout';
 
 @customElement('fusion-application-icons-basic')
 export class IconsBasic extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout>

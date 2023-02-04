@@ -14,7 +14,7 @@ import { Notification } from '@vaadin/notification';
 
 @customElement('new-relic-dashboard-generator')
 export class DashboardGenerator extends LitElement {
-  static styles = css`
+  static override styles = css`
     .json-result {
       width: 100%;
       height: 200px;
@@ -27,7 +27,7 @@ export class DashboardGenerator extends LitElement {
   @state()
   json = '';
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -52,7 +52,7 @@ export class DashboardGenerator extends LitElement {
     });
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-text-field
         label="Account ID"

@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('crud-localization')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -22,7 +22,7 @@ export class Example extends LitElement {
   @query('vaadin-crud')
   private crud!: Crud<Person>;
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
     // tag::snippet[]
@@ -55,7 +55,7 @@ export class Example extends LitElement {
     // end::snippet[]
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippethtml[] -->
 

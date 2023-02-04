@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-week-numbers')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,14 +19,14 @@ export class Example extends LitElement {
   @query('vaadin-date-time-picker')
   private dateTimePicker!: DateTimePicker;
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.dateTimePicker.i18n = {
       ...this.dateTimePicker.i18n,
       firstDayOfWeek: 1,
     };
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-date-time-picker
         label="Meeting date and time"

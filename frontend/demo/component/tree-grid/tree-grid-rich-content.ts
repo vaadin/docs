@@ -20,7 +20,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-rich-content')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -95,7 +95,7 @@ export class Example extends LitElement {
     </vaadin-vertical-layout>
   `;
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid .dataProvider="${this.dataProvider}" .expandedItems="${this.expandedItems}">
         <vaadin-grid-column

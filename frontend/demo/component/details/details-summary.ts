@@ -19,7 +19,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('details-summary')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -35,11 +35,11 @@ export class Example extends LitElement {
     { minWidth: '20em', columns: 2 },
   ];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.items = await getCountries();
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-details opened>
         <vaadin-horizontal-layout

@@ -4,7 +4,7 @@ import '@vaadin/progress-bar';
 
 @customElement('fake-progress-bar')
 export class FakeProgressBar extends LitElement {
-  static styles = css`
+  static override styles = css`
     :host {
       width: 100%;
     }
@@ -25,7 +25,7 @@ export class FakeProgressBar extends LitElement {
     }, 25);
   }
 
-  render() {
+  protected override render() {
     return html`<vaadin-progress-bar .value="${this.progress}"></vaadin-progress-bar>`;
   }
 }

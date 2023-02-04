@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('form-layout-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -24,7 +24,7 @@ export class Example extends LitElement {
     { minWidth: '500px', columns: 2 },
   ];
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
         <vaadin-text-field label="First name"></vaadin-text-field>

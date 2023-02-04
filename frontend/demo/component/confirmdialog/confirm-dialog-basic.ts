@@ -10,7 +10,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     /* Center the button within the example */
     :host {
       position: fixed;
@@ -24,7 +24,7 @@ export class Example extends LitElement {
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -37,7 +37,7 @@ export class Example extends LitElement {
   @state()
   private status = '';
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout
         style="align-items: center; justify-content: center;"

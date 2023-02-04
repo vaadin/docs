@@ -6,7 +6,7 @@ import { repeat } from 'lit/directives/repeat.js';
 
 @customElement('example-statistics')
 export class ExampleStatistics extends LitElement {
-  static styles = css`
+  static override styles = css`
     :host {
       display: flex;
       flex-direction: column;
@@ -80,11 +80,11 @@ export class ExampleStatistics extends LitElement {
   @state()
   private serviceHealth: ServiceHealth[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.serviceHealth = await getServiceHealth();
   }
 
-  render() {
+  protected override render() {
     return html`
       <header class="title">Service health</header>
       <section class="legend">

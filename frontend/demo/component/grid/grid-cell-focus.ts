@@ -11,13 +11,13 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-cell-focus')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-text-area {
       width: 100%;
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -33,13 +33,13 @@ export class Example extends LitElement {
   @state()
   private eventSummary = '';
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid
         theme="force-focus-outline"

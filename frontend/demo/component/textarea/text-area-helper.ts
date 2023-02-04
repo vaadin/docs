@@ -9,13 +9,13 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-helper-2')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-text-area {
       width: 100%;
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -28,7 +28,7 @@ export class Example extends LitElement {
   @state()
   private text = loremIpsum;
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-text-area
         label="Description"

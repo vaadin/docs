@@ -8,7 +8,7 @@ import '@vaadin/tabs';
 
 @customElement('tabs-icons-vertical')
 export class Example extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs orientation="vertical">

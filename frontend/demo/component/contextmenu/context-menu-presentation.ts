@@ -17,7 +17,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-presentation')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -31,7 +31,7 @@ export class Example extends LitElement {
   private items?: ContextMenuItem[];
 
   // tag::snippet[]
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 10 });
 
     this.gridItems = people.slice(0, 5);
@@ -55,7 +55,7 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>

@@ -7,14 +7,14 @@ import type { Options, PointOptionsObject } from 'highcharts';
 
 @customElement('charts-overview')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static styles = css`
+  static override styles = css`
     :host {
       display: grid !important;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -126,7 +126,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`
       <vaadin-chart
         type="column"

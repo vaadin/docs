@@ -37,18 +37,18 @@ export class Example extends LitElement {
   @state()
   private openedPanelIndex: number | null = 0;
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.countries = await getCountries();
   }
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-accordion

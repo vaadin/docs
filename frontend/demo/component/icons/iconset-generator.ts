@@ -7,7 +7,7 @@ const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
 
 @customElement('iconset-generator')
 export class IconsetGenerator extends LitElement {
-  static styles = css`
+  static override styles = css`
     :host {
       margin: var(--docs-space-xl) 0;
       background-color: var(--docs-surface-color-2);
@@ -180,7 +180,7 @@ export class IconsetGenerator extends LitElement {
   @query('.name')
   private nameInput!: HTMLInputElement;
 
-  render() {
+  protected override render() {
     return html`
       <label for="iconsetname">Icon set name</label><br />
       <small>Use CamelCase naming. Leave empty to use folder name(s) only.</small><br />

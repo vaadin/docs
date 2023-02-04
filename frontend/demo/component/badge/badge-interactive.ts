@@ -24,19 +24,19 @@ export class Example extends LitElement {
   @state()
   private selectedProfessions: readonly Profession[] = [];
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = [...new Set(people.map(({ profession }) => profession))];
   }
 
-  render() {
+  protected override render() {
     // tag::snippet[]
     return html`
       <vaadin-vertical-layout theme="spacing">

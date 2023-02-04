@@ -18,7 +18,7 @@ const StrengthColor: Record<PasswordStrength, string> = {
 
 @customElement('password-field-advanced-helper')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -33,7 +33,7 @@ export class Example extends LitElement {
 
   private pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$';
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-password-field

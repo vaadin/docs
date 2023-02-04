@@ -11,7 +11,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-drag-rows-between-grids')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     .grids-container {
       display: flex;
       flex-direction: row;
@@ -27,7 +27,7 @@ export class Example extends LitElement {
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -44,7 +44,7 @@ export class Example extends LitElement {
   @state()
   private grid2Items: Person[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 10 });
     this.grid1Items = people.slice(0, 5);
     this.grid2Items = people.slice(5);
@@ -58,7 +58,7 @@ export class Example extends LitElement {
     delete this.draggedItem;
   };
 
-  render() {
+  protected override render() {
     return html`
       <div class="grids-container">
         <vaadin-grid

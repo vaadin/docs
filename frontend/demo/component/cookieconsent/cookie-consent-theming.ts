@@ -15,7 +15,7 @@ export class Example extends LitElement {
   // end::snippet[]
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`<vaadin-cookie-consent></vaadin-cookie-consent>`;
   }
   // end::snippet[]

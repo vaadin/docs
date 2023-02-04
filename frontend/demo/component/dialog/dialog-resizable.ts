@@ -16,7 +16,7 @@ import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 
 @customElement('dialog-resizable')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -29,12 +29,12 @@ export class Example extends LitElement {
   @state()
   private people?: Person[];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 50 });
     this.people = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog

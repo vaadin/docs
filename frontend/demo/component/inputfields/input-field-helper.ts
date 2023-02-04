@@ -20,7 +20,7 @@ const StrengthColor: Record<PasswordStrength, string> = {
 
 @customElement('input-field-helper')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -33,7 +33,7 @@ export class Example extends LitElement {
   @state()
   private strengthColor = StrengthColor.weak;
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->

@@ -7,7 +7,7 @@ import img from '../../../../src/main/resources/images/starry-sky.png';
 
 @customElement('login-overlay-mockup')
 export class LoginOverlayMockupElement extends LitElement {
-  static styles = css`
+  static override styles = css`
     [part='backdrop'] {
       background: var(--lumo-base-color)
         linear-gradient(var(--lumo-shade-5pct), var(--lumo-shade-5pct));
@@ -68,7 +68,7 @@ export class LoginOverlayMockupElement extends LitElement {
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -99,7 +99,7 @@ export class LoginOverlayMockupElement extends LitElement {
     },
   };
 
-  render() {
+  protected override render() {
     return html`
       <div part="backdrop">
         <section part="card">

@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('scroller-basic')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     #container {
       align-items: stretch;
       border: 1px solid var(--lumo-contrast-20pct);
@@ -51,14 +51,14 @@ export class Example extends LitElement {
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-vertical-layout id="container">
         <header>

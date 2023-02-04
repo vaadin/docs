@@ -8,20 +8,20 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-auto-height')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-text-area {
       width: 100%;
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-text-area label="Description" value="${loremIpsum}"></vaadin-text-area>

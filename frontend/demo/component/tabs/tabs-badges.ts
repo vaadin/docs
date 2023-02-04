@@ -7,7 +7,7 @@ import { badge } from '@vaadin/vaadin-lumo-styles/badge.js';
 
 @customElement('tabs-badges')
 export class Example extends LitElement {
-  static styles = [
+  static override styles = [
     badge,
     css`
       span[theme~='badge'] {
@@ -16,7 +16,7 @@ export class Example extends LitElement {
     `,
   ];
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <!--

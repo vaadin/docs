@@ -11,13 +11,13 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-labels')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-horizontal-layout {
       align-items: baseline;
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -30,7 +30,7 @@ export class Example extends LitElement {
   @state()
   private secondaryEmail = 'bar@example.com';
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout>

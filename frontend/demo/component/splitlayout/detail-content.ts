@@ -3,7 +3,7 @@ import { customElement } from 'lit/decorators.js';
 
 @customElement('detail-content')
 export class DetailContent extends LitElement {
-  static styles = css`
+  static override styles = css`
     :host {
       overflow: hidden !important;
       color: var(--lumo-contrast-20pct);
@@ -39,7 +39,7 @@ export class DetailContent extends LitElement {
     }
   `;
 
-  render() {
+  protected override render() {
     return html`
       <div class="form">
         <div class="field"><label></label><input type="text" /></div>

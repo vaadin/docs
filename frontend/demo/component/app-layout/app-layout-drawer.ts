@@ -10,7 +10,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-drawer')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     h1 {
       font-size: var(--lumo-font-size-l);
       margin: 0;
@@ -23,14 +23,14 @@ export class Example extends LitElement {
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-app-layout primary-section="drawer">

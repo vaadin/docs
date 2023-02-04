@@ -6,7 +6,7 @@ import '@vaadin/tabs';
 
 @customElement('fusion-application-ui-menu')
 export class UiMenu extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout>

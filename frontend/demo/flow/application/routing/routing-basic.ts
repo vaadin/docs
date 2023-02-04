@@ -8,7 +8,7 @@ import '@vaadin/vertical-layout';
 
 @customElement('routing-login')
 export class LoginView extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <vaadin-vertical-layout style="width: 15em">
         <vaadin-form-layout>

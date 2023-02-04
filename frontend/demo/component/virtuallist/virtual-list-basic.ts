@@ -17,14 +17,14 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('virtual-list-basic')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     vaadin-avatar {
       height: 64px;
       width: 64px;
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -36,7 +36,7 @@ export class Example extends LitElement {
 
   private expandedPeople = new Set<Person>();
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.people = people;
   }
@@ -74,7 +74,7 @@ export class Example extends LitElement {
     </vaadin-horizontal-layout>
   `;
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-virtual-list

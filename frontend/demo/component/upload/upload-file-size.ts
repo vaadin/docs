@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-size')
 export class Example extends LitElement {
-  static styles = css`
+  static override styles = css`
     h4 {
       margin-top: 0;
     }
@@ -19,7 +19,7 @@ export class Example extends LitElement {
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -29,13 +29,13 @@ export class Example extends LitElement {
   @query('vaadin-upload')
   private upload!: Upload;
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.upload.i18n.error.fileIsTooBig = 'The file exceeds the maximum allowed size of 10MB.';
     this.upload.i18n = { ...this.upload.i18n };
   }
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     const maxFileSizeInMB = 10;
     const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
     return html`

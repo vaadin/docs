@@ -58,7 +58,7 @@ export default class UpgradeTool extends LitElement {
   private isInstructionsDisplayed = false;
   private isFirstUpdated = false;
 
-  render() {
+  protected override render() {
     return html`
       <div>
         <h2>Select your Vaadin versions:</h2>
@@ -428,7 +428,7 @@ export default class UpgradeTool extends LitElement {
     });
   }
 
-  firstUpdated() {
+  protected override firstUpdated() {
     const urlParams = new URLSearchParams(window.location.search);
     const fromParam = urlParams.get('from');
     const toParam = urlParams.get('to');
