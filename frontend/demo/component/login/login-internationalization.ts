@@ -16,7 +16,7 @@ export class Example extends LitElement {
     }
   `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -38,7 +38,7 @@ export class Example extends LitElement {
     },
   };
 
-  render() {
+  protected override render() {
     return html`
       <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
       <vaadin-login-form .i18n="${this.i18n}" no-autofocus></vaadin-login-form>

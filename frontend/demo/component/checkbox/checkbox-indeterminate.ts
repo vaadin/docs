@@ -12,7 +12,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-indeterminate')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -25,13 +25,13 @@ export class Example extends LitElement {
   @state()
   private selectedIds: string[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 3 });
     this.items = people;
     this.selectedIds = [String(this.items[0].id), String(this.items[2].id)];
   }
 
-  render() {
+  protected override render() {
     const { items, selectedIds } = this;
 
     return html`

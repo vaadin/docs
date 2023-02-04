@@ -25,7 +25,7 @@ export class FakeProgressBar extends LitElement {
     }, 25);
   }
 
-  render() {
+  protected override render() {
     return html`<vaadin-progress-bar .value="${this.progress}"></vaadin-progress-bar>`;
   }
 }

@@ -20,18 +20,18 @@ export class Example extends LitElement {
   @state()
   private items: readonly Report[] = [];
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.items = await getReports();
   }
 
-  render() {
+  protected override render() {
     // tag::snippet[]
     return html`
       <vaadin-grid .items="${this.items}">

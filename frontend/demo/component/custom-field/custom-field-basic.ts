@@ -10,7 +10,7 @@ import { differenceInDays, parseISO, isAfter } from 'date-fns';
 
 @customElement('custom-field-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -25,7 +25,7 @@ export class Example extends LitElement {
 
   private binder = new Binder(this, AppointmentModel);
 
-  firstUpdated() {
+  protected override firstUpdated() {
     // Set `aria-label` for screen readers
     this.start.setAttribute('aria-label', 'Start date');
     this.start.removeAttribute('aria-labelledby');
@@ -59,7 +59,7 @@ export class Example extends LitElement {
     });
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-custom-field

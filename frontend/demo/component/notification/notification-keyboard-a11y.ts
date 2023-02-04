@@ -17,7 +17,7 @@ export class Example extends LitElement {
   @state()
   private isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -25,7 +25,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`
       <!-- end::snippet[] -->
       <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">

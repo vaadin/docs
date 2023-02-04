@@ -13,7 +13,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-column')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -43,7 +43,7 @@ export class Example extends LitElement {
   @state()
   private expandedItems: unknown[] = [];
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout
         style="align-items: center; height: var(--lumo-size-xl);"

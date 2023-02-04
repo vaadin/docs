@@ -14,7 +14,7 @@ export class Example extends LitElement {
     this.classList.add('basic-layouts-example');
   }
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -25,7 +25,7 @@ export class Example extends LitElement {
   @state()
   private alignItems = 'stretch';
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout
         theme="spacing padding"

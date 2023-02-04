@@ -15,7 +15,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('button-grid')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -28,12 +28,12 @@ export class Example extends LitElement {
   @state()
   private selectedItems: Person[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout theme="spacing" style="align-items: stretch;">

@@ -34,7 +34,7 @@ export class MasterContent extends LitElement {
     }
   `;
 
-  render() {
+  protected override render() {
     return html`
       <table>
         <thead>

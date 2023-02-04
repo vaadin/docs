@@ -58,14 +58,14 @@ export class ExampleIndicator extends LitElement {
   @property({ type: Number })
   change = 0;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     let theme;
     let icon;
     let sign;

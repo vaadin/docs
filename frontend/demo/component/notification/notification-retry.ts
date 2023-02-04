@@ -16,14 +16,14 @@ export class Example extends LitElement {
   @state()
   private notificationOpened = false;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">
         Try it

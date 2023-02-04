@@ -11,7 +11,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-menu-bar')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -24,7 +24,7 @@ export class Example extends LitElement {
   @state()
   private person?: Person;
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
     this.person = people[0];
 
@@ -53,7 +53,7 @@ export class Example extends LitElement {
     ];
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-menu-bar .items="${this.menuBarItems}" theme="tertiary-inline"></vaadin-menu-bar>

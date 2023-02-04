@@ -180,7 +180,7 @@ export class IconsetGenerator extends LitElement {
   @query('.name')
   private nameInput!: HTMLInputElement;
 
-  render() {
+  protected override render() {
     return html`
       <label for="iconsetname">Icon set name</label><br />
       <small>Use CamelCase naming. Leave empty to use folder name(s) only.</small><br />

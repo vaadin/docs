@@ -39,7 +39,7 @@ export class DetailContent extends LitElement {
     }
   `;
 
-  render() {
+  protected override render() {
     return html`
       <div class="form">
         <div class="field"><label></label><input type="text" /></div>

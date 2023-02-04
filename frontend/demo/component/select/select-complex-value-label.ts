@@ -9,7 +9,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 
 @customElement('select-complex-value-label')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,7 +19,7 @@ export class Example extends LitElement {
   @state()
   private items: SelectItem[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const people = (await getPeople({ count: 5 })).people;
     // tag::snippet[]
     this.items = people.map((person) => ({
@@ -29,7 +29,7 @@ export class Example extends LitElement {
     // end::snippet[]
   }
 
-  render() {
+  protected override render() {
     return html`<vaadin-select label="Assignee" .items="${this.items}"></vaadin-select>`;
   }
 }

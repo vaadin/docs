@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('custom-field-size-variants')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -33,7 +33,7 @@ export class Example extends LitElement {
     { label: 'USD', value: 'usd' },
   ];
 
-  firstUpdated() {
+  protected override firstUpdated() {
     // Set `aria-label` for screen readers
     this.amount.setAttribute('aria-label', 'Amount');
     this.amount.removeAttribute('aria-labelledby');
@@ -42,7 +42,7 @@ export class Example extends LitElement {
     this.currency.removeAttribute('aria-labelledby');
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-custom-field label="Price" theme="small">

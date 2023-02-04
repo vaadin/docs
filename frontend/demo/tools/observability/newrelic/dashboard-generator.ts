@@ -27,7 +27,7 @@ export class DashboardGenerator extends LitElement {
   @state()
   json = '';
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -52,7 +52,7 @@ export class DashboardGenerator extends LitElement {
     });
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-text-field
         label="Account ID"

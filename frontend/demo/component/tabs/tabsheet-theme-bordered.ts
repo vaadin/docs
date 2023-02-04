@@ -7,7 +7,7 @@ import '@vaadin/tabsheet';
 
 @customElement('tabsheet-theme-bordered')
 export class Example extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabsheet theme="bordered">
