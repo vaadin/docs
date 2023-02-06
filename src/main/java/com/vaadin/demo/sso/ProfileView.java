@@ -1,6 +1,6 @@
 package com.vaadin.demo.sso;
 
-import javax.annotation.security.PermitAll;
+import jakarta.annotation.security.PermitAll;
 
 import com.vaadin.demo.flow.routing.Route;
 import com.vaadin.flow.component.avatar.Avatar;
