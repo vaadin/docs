@@ -134,4 +134,77 @@ export default interface MyBean {
 }
 ----
 
+== @NonNullApi
+
+Along with `@Nonnull` annotations you could also use package-level `@NonNullApi` annotations. It makes all the nullable types in package non-nullable by default. All nested types: `List` and `Map` items, etc, - are also affected.
+
+By default, the following annotations are supported:
+
+* `org.springframework.lang.NonNullApi`.
+
+To make any type nullable, you must put `@Nullable` annotation to it.
+
+.package-info.java
+[source,java]
+----
+@NonNullApi
+package com.example.application;
+----
+
+.MyBean.java
+[source,java]
+----
+public class MyBean {
+    public List<String> list;
+    public Map<String, Integer> map;
+}
+----
+
+.MyBean.ts
+[source,typescript]
+----
+export default interface MyBean {
+  list: Array<string>;
+  map: Record<string, number>;
+}
+----
+
+== Nullability collision
+
+There could be a case where several annotations are applied to the same type. To resolve this collision, each annotation has its priority; among all applied annotations the one with the highest priority is selected.
+
+* `@NonNullApi` annotation has priority of `10` which makes it the weakest. This annotation applies only to types without any nullability annotation.
+* `@Nullable` annotation has priority of `20`. It makes any type that affected by `@NonNullApi` annotation nullable.
+* `@Nonnull` annotation has priority of `30` which makes it the strongest. It makes any type non-nullable again.
+
+.package-info.java
+[source,java]
+----
+@NonNullApi
+package com.example.application;
+----
+
+.MyBean.java
+[source,java]
+----
+public class MyBean {
+    public List<String> list;
+    @Nullable
+    public Map<String, @Nullable Integer> nullableMap;
+    @Nonnull
+    @Nullable
+    public Short forcedNonNullNumber;
+}
+----
+
+.MyBean.ts
+[source,typescript]
+----
+export default interface MyBean {
+  list: Array<string>;
+  map: Record<string, number | undefined>;
+  forcedNonNullNumber: number;
+}
+----
+
 // end::content[]
