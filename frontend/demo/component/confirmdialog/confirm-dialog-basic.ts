@@ -10,7 +10,21 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    /* Center the button within the example */
+    :host {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -23,28 +37,32 @@ export class Example extends LitElement {
   @state()
   private status = '';
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout
         style="align-items: center; justify-content: center;"
         theme="spacing"
       >
-        <vaadin-button @click="${() => (this.dialogOpened = true)}">
-          Open confirm dialog
-        </vaadin-button>
+        <vaadin-button @click="${this.open}">Open confirm dialog</vaadin-button>
 
         <!-- tag::snippet[] -->
         <vaadin-confirm-dialog
           header="Unsaved changes"
           cancel
-          @cancel="${() => (this.status = 'Canceled')}"
           reject
           reject-text="Discard"
-          @reject="${() => (this.status = 'Discarded')}"
           confirm-text="Save"
-          @confirm="${() => (this.status = 'Saved')}"
           .opened="${this.dialogOpened}"
           @opened-changed="${this.openedChanged}"
+          @confirm="${() => {
+            this.status = 'Saved';
+          }}"
+          @cancel="${() => {
+            this.status = 'Canceled';
+          }}"
+          @reject="${() => {
+            this.status = 'Discarded';
+          }}"
         >
           There are unsaved changes. Do you want to discard or save them?
         </vaadin-confirm-dialog>
@@ -62,17 +80,7 @@ export class Example extends LitElement {
     }
   }
 
-  static styles = css`
-    /* Center the button within the example */
-    :host {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-    }
-  `;
+  private open() {
+    this.dialogOpened = true;
+  }
 }

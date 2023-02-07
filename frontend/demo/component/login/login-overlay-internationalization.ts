@@ -7,7 +7,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-overlay-internationalization')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -34,7 +34,7 @@ export class Example extends LitElement {
     additionalInformation: 'Jos tarvitset lisätietoja käyttäjälle.',
   };
 
-  render() {
+  protected override render() {
     return html`
       <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
       <vaadin-login-overlay .i18n="${this.i18n}" opened no-autofocus></vaadin-login-overlay>

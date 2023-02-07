@@ -6,22 +6,20 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-counter')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      span[theme~='badge'] {
-        margin-inline-start: var(--lumo-space-s);
-      }
-    `;
-  }
+  static override styles = css`
+    span[theme~='badge'] {
+      margin-inline-start: var(--lumo-space-s);
+    }
+  `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs>

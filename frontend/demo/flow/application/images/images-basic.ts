@@ -6,7 +6,7 @@ import { customElement } from 'lit/decorators.js';
 
 @customElement('fusion-application-images-basic')
 export class ImagesBasic extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <img src="foobar.png" alt="Alt Text"></img>

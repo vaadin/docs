@@ -9,35 +9,33 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-height-full')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    :host {
+      height: 100vh;
+    }
+
+    h1 {
+      font-size: var(--lumo-font-size-l);
+      margin: var(--lumo-space-m);
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static get styles() {
-    return css`
-      :host {
-        height: 100vh;
-      }
-
-      h1 {
-        font-size: var(--lumo-font-size-l);
-        margin: var(--lumo-space-m);
-      }
-    `;
-  }
-
   @state()
   private items: Person[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-app-layout style="height: 100%;">

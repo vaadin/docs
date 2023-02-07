@@ -16,7 +16,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-content')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -27,12 +27,12 @@ export class Example extends LitElement {
   @state()
   private items?: Person[];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-selection-column></vaadin-grid-selection-column>
@@ -52,30 +52,24 @@ export class Example extends LitElement {
     `;
   }
 
-  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`
-      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-        <vaadin-avatar
-          img="${person.pictureUrl}"
-          name="${person.firstName} ${person.lastName}"
-          alt="User avatar"
-        ></vaadin-avatar>
-        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-          <span>${person.firstName} ${person.lastName}</span>
-          <span
-            style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-          >
-            ${person.email}
-          </span>
-        </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>
-    `;
-  };
+  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
+    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <vaadin-avatar
+        img="${person.pictureUrl}"
+        name="${person.firstName} ${person.lastName}"
+        alt="User avatar"
+      ></vaadin-avatar>
+      <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+        <span>${person.firstName} ${person.lastName}</span>
+        <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
+          ${person.email}
+        </span>
+      </vaadin-vertical-layout>
+    </vaadin-horizontal-layout>
+  `;
 
-  private statusRenderer: GridColumnBodyLitRenderer<Person> = ({ status }) => {
-    return html`
-      <span theme="badge ${status === 'Available' ? 'success' : 'error'}">${status}</span>
-    `;
-  };
+  private statusRenderer: GridColumnBodyLitRenderer<Person> = ({ status }) => html`
+    <span theme="badge ${status === 'Available' ? 'success' : 'error'}">${status}</span>
+  `;
   // end::snippet[]
 }

@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-labelling')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -20,7 +20,7 @@ export class Example extends LitElement {
   private upload!: Upload;
 
   // tag::snippet[]
-  firstUpdated() {
+  protected override firstUpdated() {
     this.upload.i18n.addFiles.one = 'Upload PDF...';
     this.upload.i18n.dropFiles.one = 'Drop PDF here';
     this.upload.i18n.error.incorrectFileType =
@@ -28,7 +28,7 @@ export class Example extends LitElement {
     this.upload.i18n = { ...this.upload.i18n };
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-upload
         max-files="1"

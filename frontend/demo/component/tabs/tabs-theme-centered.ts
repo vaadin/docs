@@ -6,7 +6,7 @@ import '@vaadin/tabs';
 
 @customElement('tabs-theme-centered')
 export class Example extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs theme="centered">

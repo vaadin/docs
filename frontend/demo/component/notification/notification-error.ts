@@ -16,19 +16,16 @@ export class Example extends LitElement {
   @state()
   private notificationOpened = false;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
-      <vaadin-button
-        @click="${() => (this.notificationOpened = true)}"
-        .disabled="${this.notificationOpened}"
-      >
+      <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">
         Try it
       </vaadin-button>
 
@@ -49,17 +46,19 @@ export class Example extends LitElement {
   }
 
   // tag::renderer[]
-  renderer: NotificationLitRenderer = () => {
-    return html`
-      <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
-        <div>Failed to generate report</div>
-        <vaadin-button theme="tertiary-inline" @click="${this.close}" aria-label="Close">
-          <vaadin-icon icon="lumo:cross"></vaadin-icon>
-        </vaadin-button>
-      </vaadin-horizontal-layout>
-    `;
-  };
+  renderer: NotificationLitRenderer = () => html`
+    <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+      <div>Failed to generate report</div>
+      <vaadin-button theme="tertiary-inline" @click="${this.close}" aria-label="Close">
+        <vaadin-icon icon="lumo:cross"></vaadin-icon>
+      </vaadin-button>
+    </vaadin-horizontal-layout>
+  `;
   // end::renderer[]
+
+  private open() {
+    this.notificationOpened = true;
+  }
 
   private close() {
     this.notificationOpened = false;

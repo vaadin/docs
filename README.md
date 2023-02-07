@@ -2,7 +2,9 @@
 
 Official documentation and code examples for Vaadin.
 
-This repository does not generate the vaadin.com/docs website. It only contains the content for it. The build is done using [Vaadin Design System Publisher](https://vaadin.com/design-system-publisher).
+This repository does not generate the [vaadin.com/docs](https://vaadin.com/docs) or [hilla.dev/docs](https://hilla.dev/docs) websites. It only contains the content for them. The builds are done using [Vaadin Design System Publisher](https://vaadin.com/design-system-publisher).
+
+The `latest` branch is for Vaadin documentation and selected by default. Select the `hilla` branch if you wish to contribute to Hilla documentation.
 
 ## Contents
 

@@ -12,32 +12,30 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-popup')
 export class Example2 extends LitElement {
-  protected createRenderRoot() {
+  static override styles = [
+    badge,
+    css`
+      vaadin-context-menu {
+        /* Wrap the click target around the button */
+        display: inline-block;
+      }
+
+      span[theme~='badge'] {
+        position: absolute;
+        transform: translate(-40%, -30%);
+      }
+    `,
+  ];
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static get styles() {
-    return [
-      badge,
-      css`
-        vaadin-context-menu {
-          /* Wrap the click target around the button */
-          display: inline-block;
-        }
-
-        span[theme~='badge'] {
-          position: absolute;
-          transform: translate(-40%, -30%);
-        }
-      `,
-    ];
-  }
-
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`
       <vaadin-context-menu
         open-on="click"

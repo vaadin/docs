@@ -4,7 +4,7 @@ import '@vaadin/button';
 
 @customElement('routing-registration')
 export class RegistrationView extends LitElement {
-  render() {
+  protected override render() {
     return html`<vaadin-button @click="${this.onClick}">Read More</vaadin-button>`;
   }
 

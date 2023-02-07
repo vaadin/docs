@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('grid-item-details')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -27,22 +27,23 @@ export class Example extends LitElement {
   @state()
   private detailsOpenedItem: Person[] = [];
 
-  async firstUpdated() {
-    const people = (await getPeople()).people.map((person) => ({
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people.map((person) => ({
       ...person,
       displayName: `${person.firstName} ${person.lastName}`,
     }));
-    this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid
         theme="row-stripes"
         .items="${this.items}"
         .detailsOpenedItems="${this.detailsOpenedItem}"
-        @active-item-changed="${(e: GridActiveItemChangedEvent<Person>) =>
-          (this.detailsOpenedItem = [e.detail.value])}"
+        @active-item-changed="${(e: GridActiveItemChangedEvent<Person>) => {
+          this.detailsOpenedItem = [e.detail.value];
+        }}"
         ${gridRowDetailsRenderer<Person>(
           (person) => html`
             <vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">

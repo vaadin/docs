@@ -14,7 +14,7 @@ export class Example extends LitElement {
     this.classList.add('basic-layouts-example');
   }
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -25,7 +25,7 @@ export class Example extends LitElement {
   @state()
   private theme = 'spacing';
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-vertical-layout
         theme="${this.theme} padding"
@@ -39,7 +39,9 @@ export class Example extends LitElement {
       <vaadin-radio-group
         label="Spacing"
         .value="${this.theme}"
-        @value-changed="${(e: RadioGroupValueChangedEvent) => (this.theme = e.detail.value)}"
+        @value-changed="${(event: RadioGroupValueChangedEvent) => {
+          this.theme = event.detail.value;
+        }}"
       >
         <vaadin-radio-button value="spacing" label="Enabled"></vaadin-radio-button>
         <vaadin-radio-button value="" label="Disabled"></vaadin-radio-button>

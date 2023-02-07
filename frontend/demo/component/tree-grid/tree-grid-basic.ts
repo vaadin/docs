@@ -11,7 +11,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -34,7 +34,7 @@ export class Example extends LitElement {
     callback(people, hierarchyLevelSize);
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid .dataProvider="${this.dataProvider}">
         <vaadin-grid-tree-column

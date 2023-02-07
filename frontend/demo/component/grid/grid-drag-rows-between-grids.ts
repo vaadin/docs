@@ -4,7 +4,6 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import type { GridDragStartEvent } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -12,29 +11,27 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-drag-rows-between-grids')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    .grids-container {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    vaadin-grid {
+      width: 300px;
+      height: 300px;
+      margin-left: 0.5rem;
+      margin-top: 0.5rem;
+      align-self: unset;
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      .grids-container {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-
-      vaadin-grid {
-        width: 300px;
-        height: 300px;
-        margin-left: 0.5rem;
-        margin-top: 0.5rem;
-        align-self: unset;
-      }
-    `;
   }
 
   // tag::snippet[]
@@ -47,7 +44,7 @@ export class Example extends LitElement {
   @state()
   private grid2Items: Person[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 10 });
     this.grid1Items = people.slice(0, 5);
     this.grid2Items = people.slice(5);
@@ -61,7 +58,7 @@ export class Example extends LitElement {
     delete this.draggedItem;
   };
 
-  render() {
+  protected override render() {
     return html`
       <div class="grids-container">
         <vaadin-grid
@@ -71,7 +68,7 @@ export class Example extends LitElement {
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
           @grid-drop="${() => {
-            const draggedPerson = this.draggedItem as Person;
+            const draggedPerson = this.draggedItem!;
             const draggedItemIndex = this.grid2Items.indexOf(draggedPerson);
             if (draggedItemIndex >= 0) {
               // Remove the item from its previous position
@@ -85,7 +82,10 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Full name"
-            ${columnBodyRenderer(this.fullNameRenderer, [])}
+            ${columnBodyRenderer<Person>(
+              (person) => html`${person.firstName} ${person.lastName}`,
+              []
+            )}
           ></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
         </vaadin-grid>
@@ -97,7 +97,7 @@ export class Example extends LitElement {
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
           @grid-drop="${() => {
-            const draggedPerson = this.draggedItem as Person;
+            const draggedPerson = this.draggedItem!;
             const draggedItemIndex = this.grid1Items.indexOf(draggedPerson);
             if (draggedItemIndex >= 0) {
               // Remove the item from its previous position
@@ -111,7 +111,10 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Full name"
-            ${columnBodyRenderer(this.fullNameRenderer, [])}
+            ${columnBodyRenderer<Person>(
+              (person) => html`${person.firstName} ${person.lastName}`,
+              []
+            )}
           ></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
         </vaadin-grid>
@@ -119,8 +122,4 @@ export class Example extends LitElement {
     `;
   }
   // end::snippet[]
-
-  private fullNameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`${person.firstName} ${person.lastName}`;
-  };
 }
