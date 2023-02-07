@@ -41,8 +41,10 @@ export class Example extends LitElement {
         theme="row-stripes"
         .items="${this.items}"
         .detailsOpenedItems="${this.detailsOpenedItem}"
-        @active-item-changed="${(e: GridActiveItemChangedEvent<Person>) =>
-          (this.detailsOpenedItem = [e.detail.value])}"
+        @active-item-changed="${(event: GridActiveItemChangedEvent<Person>) => {
+          const person = event.detail.value;
+          this.detailsOpenedItem = person ? [person] : [];
+        }}"
         ${gridRowDetailsRenderer<Person>(
           (person) => html`
             <vaadin-form-layout .responsiveSteps="${[{ minWidth: '0', columns: 3 }]}">
