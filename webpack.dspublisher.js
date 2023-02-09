@@ -62,8 +62,13 @@ const themesPath = usesProjectTheme ? projectThemePath : reusableThemesPath;
 const applyThemePath = path.resolve(frontendGeneratedFolder, 'theme.js');
 
 module.exports = async function (config) {
+  // const { ApplicationThemePlugin, extractThemeName, findParentThemes } = await import(
+  //   buildDirectory + '/plugins/application-theme-plugin/application-theme-plugin.js'
+  // );
+
+  // TODO: Remove this temporary workaround (and the referenced files) once the above import works (Vaadin 24.0.0.beta2)
   const { ApplicationThemePlugin, extractThemeName, findParentThemes } = await import(
-    buildDirectory + '/plugins/application-theme-plugin/application-theme-plugin.js'
+    __dirname + '/dspublisher/application-theme-plugin/application-theme-plugin.js'
   );
 
   const allFlowImportsPath = path.resolve(__dirname, 'target/frontend/generated-flow-imports.js');
