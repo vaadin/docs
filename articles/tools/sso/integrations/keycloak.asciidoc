@@ -1,0 +1,213 @@
+---
+title: Keycloak
+description: Keycloak is an open source identity and access management solutions. Learn how to use Keycloak together with SSO Kit.
+page-links:
+  - https://www.keycloak.org[Website]
+---
+
+= SSO Kit & Keycloak demo application
+
+== Introduction
+
+This demo application showcases a minimal setup of SSO Kit & Keycloak. It consists of two views:
+
+. “Public view” that is accessible to every user.
+. “Private view” that is protected by the https://vaadin.com/docs/latest/security/enabling-security/#introduction[`@PermitAll`] security annotation and therefore only accessible to authenticated users.
+
+=== Prerequisites
+
+* https://vaadin.com/docs/next/tools/sso[Get access to SSO Kit or a trial license]
+* https://github.com/bwajtr/vaadin-sso-kit-keycloak-demo[Clone the demo application from GitHub]
+* https://docs.docker.com/get-docker/[Install Docker]
+
+== Running Keycloak and creating an administrator account
+
+You can start the Keycloak server in a Docker container from your command line. You can also use the command line to create an initial Keycloak administrator account with “admin” as the username and password. To install Keycloak and to create an administrator account:
+
+. Run the: `docker run --name keycloak-ssokit -p 8280:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:20.0.3 start-dev` command.
+
+. Open the Keycloak UI in your browser at: http://localhost:8280
+
+[NOTE]
+Generic passwords are only for demo applications. Don’t use generic passwords for production applications (or anywhere else).
+
+== Creating new realms
+
+In Keycloak terminology, https://www.keycloak.org/docs/latest/server_admin/#configuring-realms[a realm] is where you can manage users, applications, roles, and groups in a Keycloak deployment. Every user of your application belongs to and logs into a realm. You can create multiple realms in the same Keycloak deployment for as long as there is available storage space in your database.
+
+TIP: You can learn more about Keycloak and related terminology in the https://www.keycloak.org/docs/latest/server_admin/[official documentation].
+
+. To create a new realm, select [guilabel]*Administration Console* and sign in using your administrator account credentials:
++
+----
+Username or email: admin
+Password: admin
+----
+
+. Select [guilabel]*Create Realm* from the dropdown menu at the top left-hand corner.
+
++
+.Create Realm button location
+image::/images/keycloak-create-realm-button.png[The Create Realm button location showed in the drop down menu,50%,50%]
+
+. Provide `ssokitrealm` as the [guilabel]*Realm name* and select [guilabel]*Create*.
+
+== Creating new users
+
+Now that you have a realm, you can occupy it with its first user. 
+
+. Create a new user by selecting [guilabel]*Users* from the side menu and selecting [guilabel]*Add user*.
+
+. Provide “user” as the [guilabel]*Username*.
+
+. Select [guilabel]*Create* to create `user`.
+
+You are then redirected to the User details page.
+
+=== Creating new passwords
+
+Every user requires a password. To assign a password to `user`:
+
+. Select `user` in the [guilabel]*Users* menu and then select the [guilabel]*Credentials* tab to create a new password.
+
+. Select [guilabel]*Set password* and provide “user” as the password for `user`.
+
+. Toggle the [guilabel]*Temporary password* switch *Off* and select [guilabel]*Save* to confirm. You can view the credentials afterwards in the Credentials tab.
+
+NOTE: Generic passwords are only for demo applications. Don’t use generic passwords for production applications (or anywhere else).
+
+== Creating new clients
+
+A client is the application or service which you want to secure with Keycloak. In this example, the Vaadin demo application that you cloned from GitHub acts as the client.
+
+. Navigate to [guilabel]*Clients* in the side menu and then select [guilabel]*Create client* to invoke the client creation wizard.
+
+. Fill in the following values and select [guilabel]*Next*:
++
+----
+Client type: OpenID Connect
+Client ID: sso-kit-sample
+Name: sso-kit-sample
+----
+
+. Toggle the following options:
++
+----
+Client authentication: On
+Authorization: On
+Authentication flow: Standard flow
+----
++
+
+[NOTE]
+The *Service account role* box is already prechecked and grayed out: You only need to check the  *Standard flow* option in addition to it.
+
+. Select [guilabel]*Save* to save and create your client. You are then redirected to the [guilabel]*Client details* page.
+
+== Configuring access and logout settings
+
+. Scroll down on the [guilabel]*Client details* page to the [guilabel]*Access settings* section and fill in the following values:
++
+----
+Root URL: http://localhost:8080
+Home URL: /
+Valid redirect URIs: http://localhost:8080/login/oauth2/code/keycloak
+Valid post logout redirect URIs: http://localhost:8080
+Web origins: +
+----
+
+. Scroll further down on the Client details page to the Logout settings section and fill in the following values (replace “192.168.2.158” with your public IP address):
++
+----
+Front channel logout: Off
+Backchannel logout URL:	http://192.168.2.158:8080/logout/back-channel/keycloak.
+Backchannel logout session required: On
+Backchannel logout revoke offline sessions: Off
+----
+
+. Select [guilabel]*Save* to save your access and logout settings.
+
+NOTE: The [guilabel]*Front channel logout* option is left off due the backchannel logout option where administrators can sign out users via the administration console. You can learn more about backchannel logout in the Keycloak documentation.
+
+TIP: You can look up your local IP address with the `ipconfig getifaddr en0` command on MacOS and with the `ipconfig /all` command on Windows.
+
+== Connecting Keycloak to the Vaadin application
+
+. Navigate to the [guilabel]*Credentials tab* in [guilabel]*Client details* and copy the [guilabel]*Client secret* to your clipboard.
+
+. Add the client secret to the Vaadin application by pasting it into the [filename]`application.properties` file at `vaadin-sso-kit-keycloak-demo/src/main/resources/application.properties`:
+
+[source,properties]
+----
+spring.security.oauth2.client.registration.keycloak.client-secret=[paste the client secret here]
+spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8280/realms/ssokitrealm
+spring.security.oauth2.client.registration.keycloak.client-id=sso-kit-sample
+spring.security.oauth2.client.registration.keycloak.scope=profile,openid,email,roles
+vaadin.sso.login-route=/oauth2/authorization/keycloak
+vaadin.sso.back-channel-logout=true
+----
+
+The Keycloak instance is now ready to be used with the Vaadin client application.
+
+== Running the demo application
+
+The demo application is a standard Maven project.
+
+. Open a terminal window at the `vaadin-sso-kit-keycloak-demo` folder.
+
+. Run the application with the `mvn` command.
+
+. Open the application in your browser at: http://localhost:8080
+
+TIP: You can also import and run the project from your IDE.
+
+== Testing user authentication
+
+. When your application is running, open http://localhost:8080 in your browser.
+
+. Select [guilabel]*Sign in* from the bottom left-hand corner.
+
+. Sign in with the user credentials:
++
+----
+Username or email: user
+Password: user
+----
+
+You are now authenticated as `user` and can view the secured [guilabel]*Private view* at http://localhost:8080/private
+
+. Sign out by selecting [guilabel]*Sign out* from the bottom left-hand corner. You are no longer authenticated and cannot view [guilabel]*Private view*.
+
+. Sign in again to test backchannel logout next.
+
+=== Testing backchannel logout
+
+. Open the Keycloak UI in your browser at: http://localhost:8280
+
+. Sign in using your administrator account credentials:
++
+----
+Username or email: admin
+Password: admin
+----
+
+. Select the `ssokitrealm` realm from the drop-down menu.
+
+. Select [guilabel]*Clients* from the side menu and select the `sso-kit-sample` client.
+
+. Select the [guilabel]*Sessions* tab.
+
+. You can view the `user` session in the list. Select [guilabel]*Sign out* behind the three vertical dots to sign out the user:
++
+.Backchannel logout button location
+image::/images/keycloak-backchannel-logout-button.png[The backchannel logout button location showed behind three vertical dots]
+
+This causes the Keycloak server to call the running demo server and perform a backchannel logout on `user`. To verify that `user` is signed out:
+
+. Navigate to http://localhost:8080/private
+
+. Verify that you are prompted to sign in.
+
+You may have noticed that the page reloaded: Performing a backchannel logout expires the `user` session and creates a new, unauthorized session. The session is authorized again when `user` signs in and regains access to [guilabel]*Private view*.
+
+You can find the source code for this demo application on https://github.com/bwajtr/vaadin-sso-kit-keycloak-demo[GitHub].
