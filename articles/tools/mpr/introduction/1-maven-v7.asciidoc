@@ -76,6 +76,113 @@ You also need to remove the dependency on the `vaadin-client-compiled`, since a 
 When using MPR you can't use a Content Delivery Network (CDN) for the widget set. This means that the configuration
 `<vaadin.widgetset.mode>cdn</vaadin.widgetset.mode>` or `<vaadin.widgetset.mode>fetch</vaadin.widgetset.mode>` should be removed.
 
+=== Exclude Incompatible Framework 7 Dependency
+
+The project may depend on artifacts that transitively brings in the legacy `vaadin-server` library.
+This artifact conflicts with `vaadin-server-mpr-jakarta`, and its presence may provoke unexpected errors at runtime.
+Thus, for each of these dependencies, an exclusion of `vaadin-server` must be configured.
+
+Maven `dependency:tree` goal can be used to detect the presence of dependency that transitively imports `vaadin-server`.
+Using the latest version of the plugin is recommended to get better results.
+
+[source,terminal]
+----
+mvn dependency:tree -Dincludes=com.vaadin:vaadin-server -Dverbose=true
+----
+
+To simplify the operation the following profile can be added to the POM file
+
+[source,xml]
+----
+<profile>
+    <id>check-vaadin-server-deps</id>
+    <build>
+        <defaultGoal>dependency:tree</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <includes>com.vaadin:vaadin-server</includes>
+                    <verbose>true</verbose>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
+----
+
+With the above profile configure, simply run `mvn -Pcheck-vaadin-server-deps` to get the list of dependency to fix.
+For every dependency found, add an exclusion for `vaadin-server` artifact, as in the example below.
+
+.Exclusion of `vaadin-server` transitive dependency
+[source,xml]
+----
+<dependency>
+        <groupId>org.vaadin</groupId>
+        <artifactId>an-addon</artifactId>
+        <version>1.2.3</version>
+    <exclusions>
+        <exclusion>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-server</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+----
+
+=== Check For Incompatible Framework 7 Dependency At Build Time
+
+To ensure that `vaadin-server` is not transitively imported by any dependency, you can configure the Maven enforcer plugin to stop the build with a failure if a reference to the artifact is detected.
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-enforcer-plugin</artifactId>
+    <version>3.1.0</version>
+    <executions>
+        <execution>
+            <id>ensure-vaadin-server-not-present</id>
+            <goals>
+                <goal>enforce</goal>
+            </goals>
+            <configuration>
+                <rules>
+                    <bannedDependencies>
+                        <excludes>
+                            <exclude>com.vaadin:vaadin-server</exclude>
+                        </excludes>
+                        <message><![CDATA[
+'com.vaadin:vaadin-server' is not compatible with Jakarta Servlet 5+ and must be excluded from dependencies
+run 'mvn -Pcheck-vaadin-server-deps' to locate the sources of the banned dependencies
+and add an exclusion to the dependency declaration
+
+<dependency>
+<groupId>org.vaadin</groupId>
+<artifactId>an-addon</artifactId>
+<version>1.2.3</version>
+<exclusions>
+    <exclusion>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-server</artifactId>
+    </exclusion>
+</exclusions>
+</dependency>
+                        ]]></message>
+                    </bannedDependencies>
+                </rules>
+                <fail>true</fail>
+                <failFast>true</failFast>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+
+
 === Maven Plugins
 
 If not already added in your build section, you need to add the `vaadin-maven-plugin` for it to manage the custom legacy widget set.
