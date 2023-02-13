@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-cancel-button')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -22,26 +22,28 @@ export class Example extends LitElement {
   @state()
   private status = '';
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout
         style="align-items: center; justify-content: center;"
         theme="spacing"
       >
-        <vaadin-button @click="${() => (this.dialogOpened = true)}">
-          Open confirm dialog
-        </vaadin-button>
+        <vaadin-button @click="${this.open}">Open confirm dialog</vaadin-button>
 
         <!-- tag::snippet[] -->
         <vaadin-confirm-dialog
           header='Delete "Report Q4"?'
           cancel
-          @cancel="${() => (this.status = 'Canceled')}"
           confirm-text="Delete"
           confirm-theme="error primary"
-          @confirm="${() => (this.status = 'Deleted')}"
           .opened="${this.dialogOpened}"
           @opened-changed="${this.openedChanged}"
+          @cancel="${() => {
+            this.status = 'Canceled';
+          }}"
+          @confirm="${() => {
+            this.status = 'Deleted';
+          }}"
         >
           Are you sure you want to permanently delete this item?
         </vaadin-confirm-dialog>
@@ -57,5 +59,9 @@ export class Example extends LitElement {
     if (this.dialogOpened) {
       this.status = '';
     }
+  }
+
+  private open() {
+    this.dialogOpened = true;
   }
 }

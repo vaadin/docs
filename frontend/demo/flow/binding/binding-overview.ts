@@ -13,7 +13,7 @@ import '@vaadin/vertical-layout';
 
 @customElement('binding-overview')
 export class DataBindingExample extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout>

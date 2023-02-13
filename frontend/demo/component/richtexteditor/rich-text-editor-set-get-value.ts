@@ -10,7 +10,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('rich-text-editor-set-get-value')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -23,12 +23,14 @@ export class Example extends LitElement {
   @query('vaadin-rich-text-editor')
   private richTextEditor!: RichTextEditor;
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::htmlsnippet[] -->
       <vaadin-rich-text-editor
         style="height: 400px;"
-        @change="${(e: RichTextEditorChangeEvent) => (this.htmlValue = e.target.htmlValue || '')}"
+        @change="${(event: RichTextEditorChangeEvent) => {
+          this.htmlValue = event.target.htmlValue ?? '';
+        }}"
       ></vaadin-rich-text-editor>
 
       <vaadin-text-area

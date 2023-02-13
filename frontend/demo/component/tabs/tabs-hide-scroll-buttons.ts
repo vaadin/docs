@@ -6,7 +6,7 @@ import '@vaadin/tabs';
 
 @customElement('tabs-hide-scroll-buttons')
 export class Example extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs theme="hide-scroll-buttons">

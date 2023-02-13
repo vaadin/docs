@@ -10,15 +10,13 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('multi-select-combo-box-basic')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      vaadin-multi-select-combo-box {
-        width: 300px;
-      }
-    `;
-  }
+  static override styles = css`
+    vaadin-multi-select-combo-box {
+      width: 300px;
+    }
+  `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -28,7 +26,7 @@ export class Example extends LitElement {
   @state()
   private items: Country[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.items = await getCountries();
   }
 
@@ -41,7 +39,7 @@ export class Example extends LitElement {
     total: '{count} Einträge ausgewählt',
   };
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-multi-select-combo-box
         label="Länder"

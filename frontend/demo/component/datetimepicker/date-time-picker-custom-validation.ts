@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-custom-validation')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,7 +19,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   private binder = new Binder(this, AppointmentModel);
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.binder.for(this.binder.model.startDateTime).addValidator({
       message: 'The selected day of week is not available',
       validate: (startDateTime: string) => {
@@ -39,13 +39,13 @@ export class Example extends LitElement {
     });
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-date-time-picker
         label="Appointment date and time"
         helper-text="Open Mondays-Fridays, 8:00-12:00, 13:00-16:00"
         .step="${60 * 30}"
-        ...="${field(this.binder.model.startDateTime)}"
+        ${field(this.binder.model.startDateTime)}
       ></vaadin-date-time-picker>
     `;
   }

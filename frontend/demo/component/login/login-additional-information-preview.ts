@@ -7,7 +7,7 @@ import type { LoginOverlayMockupElement } from './login-overlay-mockup';
 
 @customElement('login-additional-information')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -17,14 +17,14 @@ export class Example extends LitElement {
   @query('login-overlay-mockup')
   private login!: LoginOverlayMockupElement;
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.login.i18n = {
       ...this.login.i18n,
       additionalInformation: `Contact admin@company.com if you're experiencing issues logging into your account`,
     };
   }
 
-  render() {
+  protected override render() {
     return html`<login-overlay-mockup></login-overlay-mockup>`;
   }
 }

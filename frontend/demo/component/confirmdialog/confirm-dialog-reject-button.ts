@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-reject-button')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -22,28 +22,32 @@ export class Example extends LitElement {
   @state()
   private status = '';
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout
         style="align-items: center; justify-content: center;"
         theme="spacing"
       >
-        <vaadin-button @click="${() => (this.dialogOpened = true)}">
-          Open confirm dialog
-        </vaadin-button>
+        <vaadin-button @click="${this.open}">Open confirm dialog</vaadin-button>
 
         <!-- tag::snippet[] -->
         <vaadin-confirm-dialog
           header="Unsaved changes"
           cancel
-          @cancel="${() => (this.status = 'Canceled')}"
           reject
           reject-text="Discard"
-          @reject="${() => (this.status = 'Discarded')}"
           confirm-text="Save"
-          @confirm="${() => (this.status = 'Saved')}"
           .opened="${this.dialogOpened}"
           @opened-changed="${this.openedChanged}"
+          @confirm="${() => {
+            this.status = 'Saved';
+          }}"
+          @cancel="${() => {
+            this.status = 'Canceled';
+          }}"
+          @reject="${() => {
+            this.status = 'Discarded';
+          }}"
         >
           Do you want to discard or save your changes before navigating away?
         </vaadin-confirm-dialog>
@@ -59,5 +63,9 @@ export class Example extends LitElement {
     if (this.dialogOpened) {
       this.status = '';
     }
+  }
+
+  private open() {
+    this.dialogOpened = true;
   }
 }

@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-draggable')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -24,7 +24,7 @@ export class Example extends LitElement {
   @state()
   private dialogOpened = false;
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog
@@ -32,7 +32,9 @@ export class Example extends LitElement {
         draggable
         modeless
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(event: DialogOpenedChangedEvent) => {
+          this.dialogOpened = event.detail.value;
+        }}"
         ${dialogHeaderRenderer(
           () => html`
             <h2
@@ -68,8 +70,12 @@ export class Example extends LitElement {
         )}
       ></vaadin-dialog>
       <!-- end::snippet[] -->
-      <vaadin-button @click="${() => (this.dialogOpened = true)}"> Show dialog </vaadin-button>
+      <vaadin-button @click="${this.open}">Show dialog</vaadin-button>
     `;
+  }
+
+  private open() {
+    this.dialogOpened = true;
   }
 
   private close() {

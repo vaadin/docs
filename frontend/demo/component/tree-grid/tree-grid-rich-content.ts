@@ -20,7 +20,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-rich-content')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -44,62 +44,58 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person, model) => {
-    return html`
-      <vaadin-grid-tree-toggle
-        .leaf="${!person.manager}"
-        .level="${model.level || 0}"
-        @expanded-changed="${(e: GridTreeToggleExpandedChangedEvent) => {
-          if (e.detail.value) {
-            this.expandedItems = [...this.expandedItems, person];
-          } else {
-            this.expandedItems = this.expandedItems.filter((p) => p.id !== person.id);
-          }
-        }}"
-        .expanded="${!!model.expanded}"
-      >
-        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-          <vaadin-avatar
-            img="${person.pictureUrl}"
-            name="${`${person.firstName} ${person.lastName}`}"
-          ></vaadin-avatar>
-          <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-            <span>${person.firstName} ${person.lastName}</span>
-            <span
-              style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-            >
-              ${person.profession}
-            </span>
-          </vaadin-vertical-layout>
-        </vaadin-horizontal-layout>
-      </vaadin-grid-tree-toggle>
-    `;
-  };
+  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person, model) => html`
+    <vaadin-grid-tree-toggle
+      .leaf="${!person.manager}"
+      .level="${model.level ?? 0}"
+      @expanded-changed="${(e: GridTreeToggleExpandedChangedEvent) => {
+        if (e.detail.value) {
+          this.expandedItems = [...this.expandedItems, person];
+        } else {
+          this.expandedItems = this.expandedItems.filter((p) => p.id !== person.id);
+        }
+      }}"
+      .expanded="${!!model.expanded}"
+    >
+      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+        <vaadin-avatar
+          img="${person.pictureUrl}"
+          name="${`${person.firstName} ${person.lastName}`}"
+        ></vaadin-avatar>
+        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+          <span>${person.firstName} ${person.lastName}</span>
+          <span
+            style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
+          >
+            ${person.profession}
+          </span>
+        </vaadin-vertical-layout>
+      </vaadin-horizontal-layout>
+    </vaadin-grid-tree-toggle>
+  `;
 
-  private contactRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`
-      <vaadin-vertical-layout
-        style="font-size: var(--lumo-font-size-s); line-height: var(--lumo-line-height-m);"
-      >
-        <a href="mailto:${person.email}" style="align-items: center; display: flex;">
-          <vaadin-icon
-            icon="vaadin:envelope"
-            style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
-          ></vaadin-icon>
-          <span>${person.email}</span>
-        </a>
-        <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
-          <vaadin-icon
-            icon="vaadin:phone"
-            style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
-          ></vaadin-icon>
-          <span>${person.address.phone}</span>
-        </a>
-      </vaadin-vertical-layout>
-    `;
-  };
+  private contactRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
+    <vaadin-vertical-layout
+      style="font-size: var(--lumo-font-size-s); line-height: var(--lumo-line-height-m);"
+    >
+      <a href="mailto:${person.email}" style="align-items: center; display: flex;">
+        <vaadin-icon
+          icon="vaadin:envelope"
+          style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+        ></vaadin-icon>
+        <span>${person.email}</span>
+      </a>
+      <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
+        <vaadin-icon
+          icon="vaadin:phone"
+          style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+        ></vaadin-icon>
+        <span>${person.address.phone}</span>
+      </a>
+    </vaadin-vertical-layout>
+  `;
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid .dataProvider="${this.dataProvider}" .expandedItems="${this.expandedItems}">
         <vaadin-grid-column

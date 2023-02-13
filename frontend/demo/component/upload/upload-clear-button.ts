@@ -18,14 +18,14 @@ function createFakeFiles() {
 
 @customElement('upload-clear-button')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`<vaadin-upload .files="${createFakeFiles()}"></vaadin-upload>`;
   }
 }

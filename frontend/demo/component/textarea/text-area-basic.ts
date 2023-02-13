@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -20,15 +20,17 @@ export class Example extends LitElement {
   @state()
   private text = 'Great job. This is excellent!';
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-text-area
         label="Comment"
         .maxlength="${this.charLimit}"
         .value="${this.text}"
-        @value-changed="${(e: TextAreaValueChangedEvent) => (this.text = e.detail.value)}"
         .helperText="${`${this.text.length}/${this.charLimit}`}"
+        @value-changed="${(event: TextAreaValueChangedEvent) => {
+          this.text = event.detail.value;
+        }}"
       ></vaadin-text-area>
       <!-- end::snippet[] -->
     `;

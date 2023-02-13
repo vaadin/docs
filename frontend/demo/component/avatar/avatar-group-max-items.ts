@@ -8,7 +8,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('avatar-group-max-items')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -18,21 +18,19 @@ export class Example extends LitElement {
   @state()
   private items: Person[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 6 });
     this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-avatar-group
         .maxItemsVisible="${3}"
-        .items="${this.items.map((person) => {
-          return {
-            name: `${person.firstName} ${person.lastName}`,
-          };
-        })}"
+        .items="${this.items.map((person) => ({
+          name: `${person.firstName} ${person.lastName}`,
+        }))}"
       ></vaadin-avatar-group>
       <!-- end::snippet[] -->
     `;

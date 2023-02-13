@@ -13,7 +13,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('crud-editor-content')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -29,16 +29,17 @@ export class Example extends LitElement {
   @state()
   private responsiveSteps: FormLayoutResponsiveStep[] = [];
 
-  async firstUpdated() {
-    this.items = (await getPeople()).people;
-    this.professions = [...new Set(this.items.map((i) => i.profession))];
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people;
+    this.professions = [...new Set(people.map((i) => i.profession))];
     this.responsiveSteps = [
       { minWidth: 0, columns: 1 },
       { minWidth: '30em', columns: 2 },
     ];
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-crud include="firstName, lastName, email, profession" .items=${this.items}>

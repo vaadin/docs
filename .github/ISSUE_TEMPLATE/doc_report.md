@@ -9,7 +9,7 @@ assignees: ''
 
 <!-- Please keep this note for the community -->
 
-**Vote to prioritize:** add a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to help the community and maintainers prioritize it.
+**Vote to prioritize:** add a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to help the community and maintainers prioritize this issue.
 
 <!-- Thank you for keeping this note for the community -->
 

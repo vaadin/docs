@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-internationalization')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,7 +19,7 @@ export class Example extends LitElement {
   @query('vaadin-date-picker')
   private datePicker!: DatePicker;
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.datePicker.i18n = {
       ...this.datePicker.i18n,
       monthNames: [
@@ -43,7 +43,7 @@ export class Example extends LitElement {
     };
   }
 
-  render() {
+  protected override render() {
     return html`<vaadin-date-picker label="Sitzungsdatum"></vaadin-date-picker>`;
   }
   // end::snippet[]
