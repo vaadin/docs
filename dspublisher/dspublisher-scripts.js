@@ -7,6 +7,8 @@ const http = require('http');
 
 const DSP_VERSION = '2.1.0-alpha.4';
 
+const MVN = './dspublisher/mvnw';
+
 async function checkPreConditions() {
   try {
     // Verify the necessary ports are available on localhost
@@ -29,7 +31,7 @@ async function checkPreConditions() {
 
     // Verify Maven is installed
     await new Promise((resolve, reject) => {
-      const ps = spawn('mvn', ['--version'], {
+      const ps = spawn(MVN, ['--version'], {
         stdio: 'ignore',
         shell: true,
       });
@@ -81,7 +83,7 @@ const hasLicenseChecker = (() => {
 
 const LICENSE_CHECK = hasLicenseChecker
   ? {
-      shell: 'mvn -C -P dspublisher-license-check',
+      shell: MVN + ' -C -P dspublisher-license-check',
       phases: [
         {
           text: `Checking license${firstLaunchMessage}`,
@@ -108,7 +110,7 @@ const SCRIPTS = {
         ],
       },
       {
-        shell: 'mvn -C clean',
+        shell: MVN + ' -C clean',
         phases: [
           {
             text: `Cleaning up project${firstLaunchMessage}`,
@@ -176,7 +178,7 @@ const SCRIPTS = {
         ],
       },
       {
-        shell: 'mvn -C clean package -DskipTests -Pproduction',
+        shell: MVN + ' -C clean package -DskipTests -Pproduction',
         phases: [
           {
             text: 'Building a deployable jar',
