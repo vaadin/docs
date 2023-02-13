@@ -69,15 +69,15 @@ This listener allows you, among other things, to add a [interfacename]`RequestHa
 A user session begins when a user first makes a request to a Vaadin servlet by opening the URL of a particular [classname]`UI`.
 All server requests belonging to a particular UI class are processed by the [classname]`VaadinServlet` class.
 When a new client connects, it creates a new user session, represented by an instance of [classname]`VaadinSession`.
-Sessions are tracked using cookies stored in the browser.
+User sessions stored in the HTTP session and are tracked using cookies stored in the browser.
 
 You can get the [classname]`VaadinSession` of a [classname]`UI` with [methodname]`getSession()`, or globally with [methodname]`VaadinSession.getCurrent()`.
 It also provides access to the lower-level session object [interfacename]`HttpSession`, through a [classname]`WrappedSession`.
 You can also access the deployment configuration through [classname]`VaadinSession`.
 
-A session ends after the last [classname]`UI` instance expires or is closed, as described later.
+A user session ends after the last [classname]`UI` instance expires or is closed, as described later.
 
-See <<{articles}/advanced/session-and-ui-init-listener#, Session and UI Listeners>> to learn how to listen for session initialization and destruction events.
+See <<{articles}/advanced/session-and-ui-init-listener#, Session and UI Listeners>> to learn how to listen for user session initialization and destruction events.
 
 [[application.lifecycle.ui]]
 == Loading a UI
@@ -96,7 +96,7 @@ The method gets the request as a [classname]`VaadinRequest`.
 
 The HTML content of the loader page is generated as an HTML `DOM` object, which can be customized by implementing an [interfacename]`IndexHtmlRequestListener` that modifies the `DOM` object.
 To do this, you need to extend the [classname]`VaadinServlet` and add a [interfacename]`SessionInitListener` to the service object, as outlined in <<application.lifecycle.session>>.
-You can then add the bootstrap listener to a session with
+You can then add the bootstrap listener to a user session with
 [methodname]`addIndexHtmlRequestListener()` when the session is initialized.
 
 Loading the widget set is handled in the loader page with functions defined in a separate [filename]`BootstrapHandler.js` script, whose content is included inline in the page.
@@ -142,36 +142,46 @@ You can make it happen more quickly by increasing the UI heartbeat frequency, or
 
 
 [[application.lifecycle.session-expiration]]
-== Session Expiration
+== User Session Expiration
 
 ((("session", "expiration")))
-A session is kept alive by server requests caused by user interaction with the application, as well as by the heartbeat-monitoring mechanism of the UIs.
-When all UIs have expired, the session still remains.
-It's cleaned up from the server when the session timeout configured in the web application elapses.
+An user session is kept alive by server requests caused by user interaction with the application, as well as by the heartbeat-monitoring mechanism of the UIs.
+When all UIs have expired, the user session still remains.
+It's cleaned up from the server when the HTTP session timeout configured in the web application elapses, and the whole HTTP session is invalidated.
 
 ((("closeIdleSessions")))
-If there are active UIs in an application, their heartbeat keeps the session alive indefinitely.
-You may want to have the sessions time out if the user is inactive for a certain time.
+If there are active UIs in an application, their heartbeat keeps the user session and underlying HTTP session alive indefinitely.
+However, you may want to have the user sessions time out if the user is inactive for a certain time.
 This is the original purpose of the session timeout setting.
 
 ((("session",
 "timeout")))
 ((("closeIdleSessions")))
 If the [parameter]#closeIdleSessions# deployment configuration parameter of the servlet is set to `true`, the closure mechanism works as follows.
-The session and all its UIs are closed when the timeout specified by the [parameter]#session-timeout# parameter of the servlet elapses after the last non-heartbeat request.
-After the session is gone, the browser shows an `Out of sync` error on the next server request.
 
-See <<{articles}/configuration/properties#,Configuration Properties>> for information on setting configuration parameters.
+The user session and all its UIs are closed when the timeout specified by the [parameter]#session-timeout# parameter of the servlet elapses after the last non-heartbeat request.
+After the user session is gone, a `Session expired` notification is sent to the browser on the next server request, and the client-engine handles it based on to the [classname]`SystemMessages` settings.
+By default, it reloads the current page, effectively creating a new user session, but it can be configured to also shows a notification to the user before reloading the page.
+Furthermore, it is possible to customize the notification messages and set a URL to redirect the browser to, instead of reloading the current page.
+For example, setting a URL that points to a static page is useful to prevent the creation of a new user session.
 
-You can handle session expiration on the server side with a [interfacename]`SessionDestroyListener`, as described in <<application.lifecycle.session>>.
+See <<customize-system-messages#,Customize System Messages>> to configure user session expiration, and <<{articles}/configuration/properties#,Configuration Properties>> for information on setting configuration parameters.
+
+You can handle user session expiration on the server side with a [interfacename]`SessionDestroyListener`, as described in <<application.lifecycle.session>>.
+
+[NOTE]
+====
+User sessions expiration does not imply the underlying HTTP session being invalidated.
+HTTP session invalidation can be performed by invoking [methodname]`invalidate` on the [classname]`WrappedSession` accessible through [classname]`VaadinSession`.
+====
 
 
 [[application.lifecycle.session-closing]]
-== Closing a Session
+== Closing a User Session
 
-You can close a session by calling [methodname]`close()` on the [classname]`VaadinSession`.
-This is typically used when logging a user out, as the session and all the UIs belonging to the session should be closed.
-The session is closed immediately and any objects related to it are unavailable after calling the method.
+You can close a user session by calling [methodname]`close()` on the [classname]`VaadinSession`.
+This is typically used when logging a user out, as the User session and all the UIs belonging to the User session should be closed.
+The user session is closed immediately and any objects related to it are unavailable after calling the method.
 
 ((("logout")))
 
@@ -198,8 +208,8 @@ public class MainLayout extends Div {
 }
 ----
 
-When a session is closed from one UI, any other UIs attached to it are left hanging.
-When the client-side engine notices that a UI and the session are gone on the server side, it displays a `Session Expired` message and, by default, reloads the UI when the message is clicked.
+When a user session is closed from one UI, any other UIs attached to it are left hanging.
+When the client-side engine notices that a UI and the user session are gone on the server side, it reloads the UI or displays a `Session Expired` message and reloads the UI when the message is clicked, accordingly to the System Messages configuration.
 
 
 [discussion-id]`9405AA6C-4F19-4CB6-AF79-C8DCBD0E0C3A`
