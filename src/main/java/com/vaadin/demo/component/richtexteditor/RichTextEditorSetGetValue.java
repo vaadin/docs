@@ -3,6 +3,7 @@ package com.vaadin.demo.component.richtexteditor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -13,6 +14,7 @@ public class RichTextEditorSetGetValue extends Div {
         // tag::snippet[]
         RichTextEditor rte = new RichTextEditor();
         rte.getStyle().set("max-height", "400px");
+        rte.setValueChangeMode(ValueChangeMode.TIMEOUT);
 
         // HTML value
         TextArea htmlTextArea = new TextArea("HTML Value",
@@ -36,7 +38,7 @@ public class RichTextEditorSetGetValue extends Div {
             }
         });
 
-        add(rte, htmlTextArea);
+        add(rte, htmlTextArea, deltaTextArea);
         // end::snippet[]
     }
 

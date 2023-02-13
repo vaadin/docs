@@ -3,7 +3,11 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/rich-text-editor';
-import type { RichTextEditor, RichTextEditorChangeEvent } from '@vaadin/rich-text-editor';
+import type {
+  RichTextEditor,
+  RichTextEditorHtmlValueChangedEvent,
+  RichTextEditorValueChangedEvent,
+} from '@vaadin/rich-text-editor';
 import '@vaadin/text-area';
 import type { TextAreaChangeEvent } from '@vaadin/text-area';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -19,6 +23,7 @@ export class Example extends LitElement {
 
   @state()
   private htmlValue = '';
+
   @state()
   private deltaValue = '';
 
@@ -31,9 +36,11 @@ export class Example extends LitElement {
       <vaadin-rich-text-editor
         style="height: 400px;"
         .value="${this.deltaValue}"
-        @change="${(event: RichTextEditorChangeEvent) => {
-          this.htmlValue = event.target.htmlValue ?? '';
-          this.deltaValue = event.target.value ?? '';
+        @value-changed="${(event: RichTextEditorValueChangedEvent) => {
+          this.deltaValue = event.detail.value;
+        }}"
+        @html-value-changed="${(event: RichTextEditorHtmlValueChangedEvent) => {
+          this.htmlValue = event.detail.value;
         }}"
       ></vaadin-rich-text-editor>
 
