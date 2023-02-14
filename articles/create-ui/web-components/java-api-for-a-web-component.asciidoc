@@ -13,42 +13,42 @@ While there are many ways to interact with a Web Component, the most typical are
 * Call functions on the element to perform specific tasks, for example to open a popup.
 * Add sub-elements to define child content.
 
-The component class included with the https://github.com/vaadin/addon-starter-flow/archive/master.zip[Vaadin Add-on Starter], for example [classname]`PaperSlider.java`, is only a stub that handles the imports (see <<index#,Integrating a Web Component>> for more).
+The component class included with the https://github.com/vaadin/addon-template[Vaadin Add-on Starter], for example [classname]`MwcSlider.java`, is only a stub that handles the imports (see <<index#,Integrating a Web Component>> for more).
 This section demonstrates how to add functionality to the included stub class to transform it into a functioning Java API.
 
 == Setting and Reading Properties
 
 You can typically find the properties that an element supports in its JavaScript documentation on npm.
-See the https://www.npmjs.com/package/@polymer/paper-slider[`<paper-slider>`] documentation, for example.
-The `paper-slider` has a boolean property named `pin` that defines whether a numeric-value label displays when the slider thumb is pressed.
+See the https://github.com/material-components/material-web/tree/mwc/packages/slider[`<mwc-slider>`] documentation, for example.
+The `mwc-slider` has a boolean property named `discrete` that defines whether a numeric-value label displays when the slider thumb is pressed.
 
 You can add getters and setters to match any property to create a corresponding Java setter-getter API for the property.
 
-*Example*: Adding a setter and getter for the `pin` property in the [classname]`PaperSlider` class.
+*Example*: Adding a setter and getter for the `discrete` property in the [classname]`MwcSlider` class.
 
 [source,java]
 ----
-public void setPin(boolean pin) {
-    getElement().setProperty("pin", pin);
+public void setDiscrete(boolean discrete) {
+    getElement().setProperty("discrete", discrete);
 }
-public boolean isPin() {
-    return getElement().getProperty("pin", false);
+public boolean isDiscrete() {
+    return getElement().getProperty("discrete", false);
 }
 ----
 * The setter sets the given property to the requested value.
 * The getter returns the property value, or `false` as the default value, if the property hasn't been set.
 The default value should match the default of the Web Component property.
 
-When you set the pin to `true` (by updating the setter in the [classname]`DemoView` class), the pin appears when the slider thumb is pressed.
+When you set the `discrete` to `true` (by updating the setter in the [classname]`AddonView` class), the pin appears when the slider thumb is pressed.
 
-*Example*: Calling [methodname]`setPin(true)` in the [classname]`DemoView` class.
+*Example*: Calling [methodname]`setDiscrete(true)` in the [classname]`AddonView` class.
 
 [source,java]
 ----
-public DemoView() {
-    PaperSlider paperSlider = new PaperSlider();
-    paperSlider.setPin(true);
-    add(paperSlider);
+public AddonView() {
+    MwcSlider slider = new MwcSlider();
+    slider.setDiscrete(true);
+    add(slider);
 }
 ----
 
@@ -56,32 +56,33 @@ One disadvantage of writing the [methodname]`getElement()` methods directly is t
 You can avoid this by using the [classname]`PropertyDescriptor` helper.
 This helper, and the factory methods in [classname]`PropertyDescriptors`, allow you to define the property as a single static field in the component and reference it from the getter and the setter.
 
-*Example*: Using the [classname]`PropertyDescriptor` helper and [methodname]`propertyWithDefault()` factory method on the `pin` property.
+*Example*: Using the [classname]`PropertyDescriptor` helper and [methodname]`propertyWithDefault()` factory method on the `discrete` property.
 
 [source,java]
 ----
-public class PaperSlider extends AbstractSinglePropertyField<PaperSlider, Integer> {
+public class MwcSlider extends Component {
 
-    private static final PropertyDescriptor<Boolean, Boolean> pinProperty = PropertyDescriptors.propertyWithDefault("pin", false);
+    private static final PropertyDescriptor<Boolean, Boolean> discreteProperty =
+            PropertyDescriptors.propertyWithDefault("discrete", false);
 
-    public void setPin(boolean pin) {
-        pinProperty.set(this, pin);
+    public void setDiscrete(boolean discrete) {
+        discreteProperty.set(this, discrete);
+    }
+    public boolean isDiscrete() {
+        return discreteProperty.get(this);
     }
 
-    public boolean isPin() {
-        return pinProperty.get(this);
-    }
 }
 ----
-* The `pinProperty` descriptor defines:
-** a property with the name `pin` and a default value of `false` (matches the Web Component);
+* The `discreteProperty` descriptor defines:
+** a property with the name `discrete` and a default value of `false` (matches the Web Component);
 ** both a setter and getter of type `Boolean` through generics (`<Boolean, Boolean>`).
 * The setter and getter code only invokes the descriptor with the component instance.
 
 
 == Synchronizing the Value
 
-The `paper-slider` component allows the user to input a single value.
+The `mwc-slider` component allows the user to input a single value.
 To make it work automatically as a field, this kind of component should implement the [interfacename]`HasValue` interface.
 See <<../../binding-data/components-binder#,Binding Data to Forms>> for more.
 
@@ -90,19 +91,19 @@ In addition, a value-change event should be fired on the server whenever the val
 
 In the common use case in which the [methodname]`getValue()` method is based on a single-element property, the [classname]`AbstractSinglePropertyField` base class takes care of everything related to the value.
 
-*Example*: Extending the [classname]`AbstractSinglePropertyField` base class in the [classname]`PaperSlider` class.
+*Example*: Extending the [classname]`AbstractSinglePropertyField` base class in the [classname]`MwcSlider` class.
 
 [source,java]
 ----
-public class PaperSlider extends AbstractSinglePropertyField<PaperSlider, Integer> {
+public class MwcSlider extends AbstractSinglePropertyField<MwcSlider, Integer> {
 
-    public PaperSlider() {
+    public MwcSlider() {
         super("value", 0, false);
     }
 
 }
 ----
-* The type parameters define the component type (`PaperSlider`) returned by the [methodname]`getSource()` method in value change events, and the value type (`Integer`).
+* The type parameters define the component type (`MwcSlider`) returned by the [methodname]`getSource()` method in value change events, and the value type (`Integer`).
 * The constructor parameters define:
 ** the name of the element property that contains the value (`"value"`);
 ** the default value to use if the property isn't set (`0`);
@@ -111,26 +112,26 @@ public class PaperSlider extends AbstractSinglePropertyField<PaperSlider, Intege
 
 For more advanced cases that are still based on a one-element property, there is an alternative constructor that defines callbacks that convert between the low-level element property type and the high-level [methodname]`getValue()` type.
 In cases where the value can't be derived based on a single-element property, you can use the more generic [classname]`AbstractField` base class.
-You can test this in the [classname]`DemoView` class.
+You can test this in the [classname]`AddonView` class.
 
-*Example*: Testing the use of the alternative constructor in the [classname]`DemoView` class.
+*Example*: Testing the use of the alternative constructor in the [classname]`AddonView` class.
 
 [source,java]
 ----
-public DemoView() {
-    PaperSlider paperSlider = new PaperSlider();
-    paperSlider.setPin(true);
-    paperSlider.addValueChangeListener(e -> {
+public AddonView() {
+    MwcSlider slider = new MwcSlider();
+    slider.setDiscrete(true);
+    slider.addValueChangeListener(e -> {
         String message = "The value is now " + e.getValue();
         if (e.isFromClient()) {
             message += " (set by the user)";
         }
-        Notification.show(message, 3000, Position.MIDDLE);
+        Notification.show(message, 3000, Notification.Position.MIDDLE);
     });
-    add(paperSlider);
+    add(slider);
 
     Button incrementButton = new Button("Increment using setValue", e -> {
-        paperSlider.setValue(paperSlider.getValue() + 5);
+        slider.setValue(slider.getValue() + 5);
     });
     add(incrementButton);
 }
@@ -152,11 +153,11 @@ To allow the user of your component to listen to the `click` event, you can exte
 [source,java]
 ----
 @DomEvent("click")
-public class ClickEvent extends ComponentEvent<PaperSlider> {
+public static class ClickEvent extends ComponentEvent<MwcSlider> {
 
     private int x, y;
 
-    public ClickEvent(PaperSlider source,
+    public ClickEvent(MwcSlider source,
                       boolean fromClient,
                       @EventData("event.offsetX") int x,
                       @EventData("event.offsetY") int y) {
@@ -183,10 +184,10 @@ It accesses DOM event properties using the `event.` prefix (for example `event.o
 
 .Constructor parameter requirements
 [NOTE]
-The two first parameters of a [classname]`ComponentEvent` constructor must be `PaperSlider source, boolean fromClient` and these are filled automatically.
+The two first parameters of a [classname]`ComponentEvent` constructor must be `MwcSlider source, boolean fromClient` and these are filled automatically.
 All parameters following these two initial parameters must be annotated with `@EventData`.
 
-You can now use the [classname]`ClickEvent` class as an argument when invoking the [methodname]`addListener()` method on your [classname]`PaperSlider` component.
+You can now use the [classname]`ClickEvent` class as an argument when invoking the [methodname]`addListener()` method on your [classname]`MwcSlider` component.
 
 *Example*: Using the [classname]`ClickEvent` class in the [methodname]`addListener()` method.
 
@@ -198,14 +199,14 @@ public Registration addClickListener(ComponentEventListener<ClickEvent> listener
 ----
 * The [methodname]`addListener()` method in the superclass sets up everything related to the event, based on the annotations in the [classname]`ClickEvent` class.
 
-You can test the integration in the [classname]`DemoView` class.
+You can test the integration in the [classname]`AddonView` class.
 
-*Example*: Testing the event integration in the [classname]`DemoView` class.
+*Example*: Testing the event integration in the [classname]`AddonView` class.
 
 [source,java]
 ----
-paperSlider.addClickListener(e -> {
-    Notification.show("Clicked at " + e.getX() + "," + e.getY(), 1000, Position.BOTTOM_START);
+slider.addClickListener(e -> {
+    Notification.show("Clicked at " + e.getX() + "," + e.getY(), 1000, Notification.Position.BOTTOM_START);
 });
 ----
 
@@ -226,35 +227,28 @@ In addition to properties and events, many elements offer methods that can be in
 For example `vaadin-board` has a [methodname]`refresh()` method that's called whenever a change is made that the Web Component itself isn't able to detect automatically.
 To call a function on an element, you can use the [methodname]`callJsFunction()` method in [classname]`Element` as a way of providing an API.
 
-*Example*: Using the [methodname]`callJsFunction()` method in the [classname]`PaperSlider` class to call the `increment` function on the `paper-slider` element.
+*Example*: Using the [methodname]`callJsFunction()` method in the [classname]`MwcSlider` class to call the `layout` function on the `mwc-slider` element.
 
 [source,java]
 ----
-public void increment() {
-    getElement().callJsFunction("increment");
+public void layout(boolean skipUpdateUI) {
+    getElement().callJsFunction("layout", skipUpdateUI);
 }
 ----
 
-You can test this in the `DemoView` class.
+You can test this in the `AddonView` class.
 
-*Example*: Using `incrementJSButton` in the [classname]`DemoView` class.
+*Example*: Using `layoutJSButton` in the [classname]`AddonView` class.
 
 [source,java]
 ----
-Button incrementJSButton = new Button("Increment using JS", e -> {
-    paperSlider.increment();
+Button layoutJSButton = new Button("Layout component using JS", e -> {
+    slider.layout(false);
 });
-add(incrementJSButton);
+add(layoutJSButton);
 ----
 
-If you do this, and also add the <<listening-to-events,value-change listener>> (described above), you get a notification with the new value after clicking the button.
-The notification also tells that the user changed the value.
-This is because [methodname]`isFromClient()` checks that the change originates from the browser (rather than the server), but doesn't differentiate between a user changing the value and a change resulting from a JavaScript call.
-
-.increment() is typically called directly or from server-side logic
-[NOTE]
-The example above is for demonstration purposes only and is somewhat artificial, in that it shows a server visit from a button click to call a JavaScript method on another element on client side.
-In practice, you would either call [methodname]`increment()` directly from the client side, or from some other server-side business logic.
+Above method recomputes the dimensions and re-lays out the component. This should be called if the dimensions of the slider itself or any of its parent elements change programmatically. To check the results manually set width of `<mwc-slider>` to fixed value and then click the button.
 
 .callJsFunction() parameters and return value
 [TIP]
@@ -263,64 +257,15 @@ Current supported types are `String`, `Boolean`, `Integer`, `Double`, and the co
 It also returns a server-side promise for the JavaScript function's return value.
 See the available methods in the Javadoc for more.
 
-== Paper-Slider Integration Result
+== Mwc-Slider Integration Result
 
-After you have completed the steps previously described, your [classname]`PaperSlider` class should be similar to the example below.
+After you have completed the steps previously described, your [classname]`MwcSlider` class should be similar to the example below.
 
-*Example*: Java API provided by the [classname]`PaperSlider` class.
+*Example*: Java API provided by the [classname]`MwcSlider` class.
 
 [source,java]
 ----
-@Tag("paper-slider")
-@NpmPackage(value = "@polymer/paper-slider", version = "3.0.1")
-@JsModule("@polymer/paper-slider/paper-slider.js")
-public class PaperSlider extends AbstractSinglePropertyField<PaperSlider, Integer> {
-
-    private static final PropertyDescriptor<Boolean, Boolean> pinProperty = PropertyDescriptors.propertyWithDefault("pin", false);
-
-    public PaperSlider() {
-        super("value", 0, false);
-    }
-
-    public void setPin(boolean pin) {
-        pinProperty.set(this, pin);
-    }
-
-    public boolean isPin() {
-        return pinProperty.get(this);
-    }
-
-    public Registration addClickListener(ComponentEventListener<ClickEvent> listener) {
-        return addListener(ClickEvent.class, listener);
-    }
-
-    public void increment() {
-        getElement().callJsFunction("increment");
-    }
-    @DomEvent("click")
-    public static class ClickEvent extends ComponentEvent<PaperSlider> {
-
-        private int x, y;
-
-        public ClickEvent(PaperSlider source,
-                          boolean fromClient,
-                          @EventData("event.offsetX") int x,
-                          @EventData("event.offsetY") int y) {
-            super(source, fromClient);
-            this.x = x;
-            this.y = y;
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/ui/webcomponents/MwcSlider.java[tags=class,indent=0,group=Java]
 ----
 
 You can extend this class further to support additional configuration properties, for example `min` and `max`.
@@ -429,9 +374,9 @@ When using the second approach, you must also ensure that the [filename]`vaadin-
 public class IconButton extends Component {
 ----
 
-You can test either approach in the [classname]`DemoView` class.
+You can test either approach in the [classname]`AddonView` class.
 
-*Example*: Testing the icon button sub-element in the [classname]`DemoView` class.
+*Example*: Testing the icon button sub-element in the [classname]`AddonView` class.
 
 [source,java]
 ----
