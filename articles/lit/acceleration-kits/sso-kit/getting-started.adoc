@@ -156,9 +156,15 @@ All the essential authentication state is already available in a global variable
 import { createContext, Dispatch, SetStateAction } from "react";
 import SingleSignOnData from "./generated/dev/hilla/sso/starter/SingleSignOnData";
 
+// Used for access control
+export type AccessProps = Readonly<{
+    requiresLogin?: boolean;
+}>;
+
 // The context type
 export type Authentication = Readonly<{
     state: SingleSignOnData;
+    hasAccess: (route: AccessProps) => boolean;
     clearAuthInfo: () => void;
 }>;
 
@@ -168,6 +174,7 @@ export const initialState = (window as any).Hilla.SSO as SingleSignOnData;
 // The context itself
 export const AuthContext = createContext<Authentication>({
     state: initialState,
+    hasAccess: () => false,
     clearAuthInfo: () => { },
 });
 
@@ -178,6 +185,9 @@ export const useAuth = (
 ): Authentication => {
     return {
         state,
+        hasAccess: (route: AccessProps) => {
+            return !route.requiresLogin || state.authenticated;
+        },
         clearAuthInfo: () => {
             setState({
                 ...state,
@@ -191,7 +201,7 @@ export const useAuth = (
 };
 ----
 
-Then add the state and the to `App.tsx` and wrap the `RouterProvider`:
+Then add the state and the context to `App.tsx` and wrap the `RouterProvider`:
 
 .frontend/App.tsx
 [source,typescript]
@@ -275,55 +285,74 @@ endif::[]
 
 === Add Access Control
 
+You can protect your views one by one by verifying that authentication has happened before loading the view.
+
 ifdef::lit[]
-You can protect your views one by one by verifying that authentication has happened before loading the view. To do that, open the [filename]`frontend/routes.ts` file and replace the `component` property with a conditional action as follows:
+
+In [filename]`app-store.ts`, add a new type definition and a function to check access rights using that type:
+
+.frontend/app-store.ts
+[source,typescript]
+----
+export type AccessProps = {
+  requiresLogin?: boolean;
+};
+
+// put this function inside the AppStore class
+hasAccess = (route: AccessProps) => {
+  return !route.requiresLogin || this.authInfo.authenticated;
+};
+----
+
+In the [filename]`frontend/routes.ts` file, use the `AccessProps` type and protect the About view:
 
 .frontend/routes.ts
 [source,typescript]
 ----
-import { appStore } from './stores/app-store';
+import { AccessProps } from './stores/app-store';
 
+// Add AccessProps to the ViewRoute type
+export type ViewRoute = Route & AccessProps & {
+  // ...
+}
+
+// Add the requiresLogin attribute to the About view
 {
-  path: 'hello',
-  icon: 'la la-globe',
-  title: 'Hello World',
-  // Replace the `component` property with an `action`:
-  action: async (_context, command) => {
-    return appStore.authInfo.authenticated ? command.component('hello-world-view') : null;
-  },
+  path: 'about',
+  // ...
+  requiresLogin: true,
 },
 ----
 
-In this example we assume that views without a `component` property are protected. In a real-world application, you should add explicit properties to handle access according to authentication and user roles. See <<{articles}/lit/guides/security/role-based-access# Role-based access control>> for an example.
-
-With the assumption just made, it is enough to filter the menu excluding unauthorized views by amending the view filter in [filename]`main-layout.ts`:
+Then, filter the menu excluding unauthorized views by amending the view filter in [filename]`main-layout.ts`:
 
 .frontend/views/main-layout.ts
 [source,typescript]
 ----
 // Add a new condition in the getMenuRoutes that checks for authentication
-return views.filter((route) => route.title && (route.component || appStore.authInfo.authenticated)) as RouteInfo[];
+private getMenuRoutes(): RouteInfo[] {
+  return views.filter((route) => route.title).filter(appStore.hasAccess) as RouteInfo[];
+}
 ----
-
-Now the `Hello World` item in the menu only appears when authenticated.
 endif::[]
 
 ifdef::react[]
-You can protect your views one by one by verifying that authentication has happened before loading the view. To do that, open the [filename]`frontend/routes.tsx` and add the `requiredLogin` parameter to a view:
+Open the [filename]`frontend/routes.tsx` and add the `requiredLogin` parameter to a view:
 
 .frontend/routes.tsx
 [source,typescript]
 ----
 import { AccessProps } from './useAuth';
 
-// Enrich the ViewMeta with AccessProps
-export type ViewMeta = Readonly<{ handle?: MenuProps & AccessProps }>;
+// Enrich the ViewRouteObject type with AccessProps
+export type ViewRouteObject = (IndexViewRouteObject | NonIndexViewRouteObject) & AccessProps;
 
 // Add requiresLogin to the About View
 {
   path: '/about',
   element: <AboutView />,
-  handle: { icon: 'la la-file', title: 'About', requiresLogin: true }
+  handle: { icon: 'la la-file', title: 'About' },
+  requiresLogin: true,
 },
 ----
 
@@ -341,14 +370,17 @@ const { state, hasAccess } = useContext(AuthContext);
 ----
 endif::[]
 
+Now the `About` item in the menu only appears when authenticated.
+
 === Show user information
 
 The SSO Kit provides a default endpoint to get information about the authenticated user. You can implement your one if you want to customize the returned object and its fields.
 
-ifdef::lit[]
-As the Hello World page is now protected, that's a perfect place to show some information about the current user:
+As the About page is now protected, that's a perfect place to show some information about the current user:
 
-.frontend/views/helloworld/hello-world-view.ts
+ifdef::lit[]
+
+.frontend/views/helloworld/about-view.ts
 [source,typescript]
 ----
 import User from 'Frontend/generated/dev/hilla/sso/starter/endpoint/User';
@@ -359,19 +391,20 @@ import { property } from 'lit/decorators.js';
 @property()
 user: User | undefined;
 
-// Add the `async` keyword and then load the user
+// Add the `async` keyword to connectedCallback and then load the user inside the function
 async connectedCallback() {
   // ...
   this.user = await UserEndpoint.getAuthenticatedUser();
 }
 
-// Show something in the rendered html by adding this line inside
-${this.user && html`Connected user: ${this.user.fullName}`}
+// Add some output
+<p>Username: ${this.user?.preferredUsername}</p>
+<p>Full name: ${this.user?.fullName}</p>
+<p>Email: ${this.user?.email}</p>
 ----
 endif::[]
 
 ifdef::react[]
-As the About page is now protected, that's a perfect place to show some information about the current user:
 
 .frontend/views/about/AboutView.tsx
 [source,typescript]
@@ -392,7 +425,6 @@ useEffect(() => {
 <p>Username: {user?.preferredUsername}</p>
 <p>Full name: {user?.fullName}</p>
 <p>Email: {user?.email}</p>
-<p>Roles: {user?.roles?.join(', ')}</p>
 ----
 endif::[]
 
