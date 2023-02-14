@@ -21,12 +21,17 @@ Vaadin uses the link:https://github.com/Atmosphere/atmosphere[Atmosphere framewo
 To enable server push, you need to define the push mode either in the deployment
 descriptor or with the [annotationname]`@Push` annotation on your application shell class.
 
-For example, you can use the following [classname]`SpringBootServletInitializer` class, which implements the [interfacename]`AppShellConfigurator` interface, to enable Push in your application by adding the [annotationname]`@Push` annotation to it.
+Application shell class is a plain Java class implementing the [interfacename]`AppShellConfigurator` interface.
+The class is detected and instantiated by the framework during bootstrap.
+Only one application shell class is allowed.
+If more than one class implementing [interfacename]`AppShellConfigurator` is detected, an exception is thrown.
+
+For example, you can use the following [classname]`Application` class, which implements the [interfacename]`AppShellConfigurator` interface, to enable Push in your application by adding the [annotationname]`@Push` annotation to it.
 
 [source,java]
 ----
 @Push
-public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+public class Application implements AppShellConfigurator {
   ...
 }
 ----
@@ -49,13 +54,13 @@ pass:[<!-- vale Vaadin.Abbr = YES -->]
 [[push.configuration.annotation]]
 === The @Push Annotation
 
-You can enable server push for the application with the `@Push` annotation, as follows.
+You can enable server push for the application annotating the application shell class with the `@Push` annotation, as follows.
 It defaults to automatic mode (`PushMode.AUTOMATIC`).
 
 [source,java]
 ----
 @Push
-public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+public class Application implements AppShellConfigurator {
   ...
 }
 ----
@@ -66,7 +71,7 @@ To enable manual mode, you need to pass the `PushMode.MANUAL` parameter, as foll
 [source,java]
 ----
 @Push(PushMode.MANUAL)
-public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+public class Application implements AppShellConfigurator {
   ...
 }
 ----
@@ -76,7 +81,7 @@ To use the long polling transport, you need to set the transport parameter as `T
 [source,java]
 ----
 @Push(transport = Transport.LONG_POLLING)
-public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+public class Application implements AppShellConfigurator {
   ...
 }
 ----
@@ -88,8 +93,8 @@ If you are configuring your servlet manually, be sure to set the `async-supporte
 
 You can enable server push and define the push mode for an entire application in the servlet configuration with the `pushMode` parameter for the servlet in the [filename]`web.xml` deployment descriptor or a corresponding `@WebServlet` annotation.
 
-On the server side the push endpoint is mapped to the `VAADIN/push` path. This mapping is added either under context root, context path, or the first URL mapping of the Vaadin servlet, depending on application deployment configuration.
-
+On the server side the push endpoint is mapped to the `VAADIN/push` path. This mapping is added either under context root, context path, or the first URL mapping (sorted by natural order) of the Vaadin servlet , depending on application deployment configuration.
+In case of multiple servlet mappings, it is possible to set the URL mapping to use for server push by configuring the `pushServletMapping` parameter to match the desired mapping.
 
 
 [[push.access]]
@@ -133,7 +138,6 @@ The following is a complete example of making UI changes from another thread.
 
 [source,java]
 ----
-
 @Route("push")
 public class PushyView extends VerticalLayout {
     private FeederThread thread;
@@ -274,6 +278,7 @@ To send broadcasts with a broadcaster singleton, such as the one described previ
 
 [source,java]
 ----
+@Route("broadcaster")
 public BroadcasterView() {
     TextField message = new TextField();
     Button send = new Button("Send", e -> {
