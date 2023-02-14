@@ -27,7 +27,7 @@ export class Example extends LitElement {
     }
 
     /* hidden-source-line: the bottom navbar is forced on in the example */
-    vaadin-app-layout[overlay] /* hidden-source-line */ {
+    vaadin-app-layout /* hidden-source-line */ {
       --vaadin-app-layout-touch-optimized: true; /* hidden-source-line */
     } /* hidden-source-line */
   `;
@@ -42,7 +42,8 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-app-layout>
+      <!-- --vaadin-app-layout-touch-optimized is only enforced as part of this example -->
+      <vaadin-app-layout style="--vaadin-app-layout-touch-optimized: true">
         <h1 slot="navbar">MyApp</h1>
         <vaadin-tabs slot="navbar touch-optimized" theme="minimal equal-width-tabs">
           <vaadin-tab>
