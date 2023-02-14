@@ -4,43 +4,70 @@ tab-title: HotswapAgent
 order: 30
 ---
 
-= Live Reload with HotswapAgent
+= Live Reload with JetBrains Runtime and HotswapAgent
 
-Live reload works seamlessly in development mode using HotswapAgent for runtime class and resource redefinition.
-You should run your Vaadin project with https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases[TravaOpenJDK Dynamic Code Evolution Virtual Machine] (DCEVM), version 11.0.7+2 or later, which includes HotswapAgent with full live reload support.
-Setup is usually as easy as downloading the JDK and configuring your IDE to use it.
+JetBrains Runtime offers hot deployment of any type of Java changes into a running JVM through the debug connection typically established by the IDE to the running JVM. With other JDKs you have very limited support for some types of Java changes but the JetBrains Runtime offers full support for hotswapping any kind of changes.
+
+In addition to getting the Java changes into the running JVM, most frameworks have some global data that needs to be updated when a class changes or some kind of caches that need to be cleared for the new class to take full effect. For this there is HotswapAgent which is basically a collection of plugins for various frameworks and offer this kind of global updates and cache clearing when needed.
+
+Setting up hotswapping consists of three steps:
+1. Install JetBrains Runtime
+2. Download HotswapAgent and install it into the JetBrains runtime
+3. Run the application using JetBrains Runtime with additional parameters
+
+== JetBrains Runtime
+
+You can find the latest version to download at https://github.com/JetBrains/JetBrainsRuntime/releases[the JetBrains GitHub release page], be sure to pick the correct architecture. You need to use JetBrains Runtime to execute your application, not necessarily your IDE.
+
+== HotswapAgent
+
+HotSwapAgent can be downloaded from https://github.com/HotswapProjects/HotswapAgent/releases[the HotswapAgent GitHub release page]. For Vaadin 23 or 24, you need at least version 1.4.2 (using 1.4.2-SNAPSHOT is fine). For earlier Vaadin versions (10-22) you should use HotswapAgent 1.4.1.
+Download the jar file and place it inside the JetBrains Runtime installation directory as `lib/hotswap/hotswap-agent.jar`. You need to use that exact name for the JetBrains Runtime to pick it up and you need to create the `hotswap` folder yourself.
+
 If you want to know more about the features of HotswapAgent, the documentation in the http://hotswapagent.org/[HotswapAgent webpage] is a good resource.
 
-== Step-by-Step Guide
+== Running the application
 
-. Download and unpack the latest version of https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases[DCEVM JDK], add the JDK to your IDE, and set your project / run configuration to use it.
-  Alternatively, set `JAVA_HOME` to its location.
-. In DCEVM 11.0.9 and later, HotswapAgent is disabled by default and needs the JVM parameter `-XX:HotswapAgent=fatjar` to work with Vaadin.
-  Depending on your project technology stack, you may also want to apply <<configuration, additional configuration>>.
-. Using your IDE's debug command, start the Vaadin application in development mode.
-. Navigate to a view in your application, edit any Java file in the project, recompile, and the browser automatically reloads the page with the changes.
+For hotswapping to be enabled, you need to pass `-XX:+AllowEnhancedClassRedefinition -XX:HotswapAgent=fatjar` as JVM arguments (not program arguments) when launching the application.
 
-== Additional Configuration [[configuration]]
+If you have a Spring Boot application you launch the application by running the `main` method of your application class. After you have launched the application once, you will have a run configuration that you can edit in your IDE so that you can select the proper JDK and give the necessary parameters.
 
-* HotswapAgent swaps in code changes automatically only when the JVM is running in debug mode.
-  By default, the `spring-boot-maven-plugin` goal `spring-boot:run` forks a separate JVM without debugger attached, meaning that HotswapAgent doesn't work.
-  You can disable forked mode by adding `<fork>false</fork>` to the plugin's `<configuration>` section.
-* To hot-swap code when the JVM isn't in debug mode, you can add the line `autoHotswap=true` to [filename]`hotswap-agent.properties` (in Spring Boot projects), or add the JVM parameter `-javaagent:__<JAVA_HOME>__/lib/hotswap-agent.jar=autoHotswap=true`, where `JAVA_HOME` is the Java home of the TravaOpenJDK installation.
-  Explicitly enabling automatic hotswapping may also be required with some older IDEs (such as NetBeans).
-* When using the Jetty Maven plugin together with HotswapAgent, ensure that automatic restart is disabled (omit or set `<scanIntervalSeconds>` to a value of `0` or less).
-* The live reload quiet time (milliseconds since last Java change before refreshing the browser) can be adjusted with the parameter `vaadin.liveReloadQuietTime` in [filename]`hotswap-agent.properties`.
-  The default is 1,000 ms.
-  Increase this value if you notice the browser refreshing before modified Java files have been fully compiled.
-* IntelliJ IDEA: avoid using the `Build project automatically` and `compiler.automake.allow.when.app.running` options simultaneously, since this may trigger automatic reload before classes are hotswapped.
+In IntelliJ IDEA it is  `Run` -> `Edit configurations...`. With your application run configuration selected, you can select the JDK to use in the first dropdown. If JetBrains Runtime is not shown, you find it through "Select alternative JRE...".
+In the same dialog you need to click `Modify options` -> `Add VM options` to be able to see the field where you can define the JVM arguments. Then you can add `-XX:+AllowEnhancedClassRedefinition -XX:HotswapAgent=fatjar`
 
-== Limitations
+If you have another type of application, you need to pass the JVM options in an appropriate way.
 
-* Since the server doesn't restart, modifications to startup listeners and code that connects front-end and back-end components, such as adding a new [classname]`LitTemplate` class, aren't reflected.
-However, modifications to routes are picked up.
-* With <<{articles}/advanced/preserving-state-on-refresh#,`@PreserveOnRefresh`>>, view instances are reused when reloaded in the browser; hence, hotpatched changes to the view constructor aren't reflected until the view is opened in another browser window or tab.
-* The Vaadin plugin included in the bundled HotswapAgent (1.4.1) doesn't work with servers that use application class loaders, for instance WildFly, TomEE or Payara.
-This bug is fixed in a https://github.com/HotswapProjects/HotswapAgent/releases/tag/1.4.2-SNAPSHOT[pre-release version of HotswapAgent].
-To use it, download the `JAR` and pass the JVM parameter `-XX:+DisableHotswapAgent -javaagent:__<path/to/hotswap-agent.jar>__` to replace the bundled HotswapAgent with the fixed version.
+== Verifying it works
 
+With the settings in place, when you start the application in debug mode, you will see a text like
+```
+HOTSWAP AGENT: 10:19:01.802 INFO (org.hotswap.agent.HotswapAgent) - Loading Hotswap agent {1.4.2-SNAPSHOT} - unlimited runtime class redefinition.
+HOTSWAP AGENT: 10:19:02.065 INFO (org.hotswap.agent.config.PluginRegistry) - Discovered plugins: [JdkPlugin, ClassInitPlugin, AnonymousClassPatch, WatchResources, Hotswapper, Hibernate, Hibernate3JPA, Hibernate3, Spring, Jersey1, Jersey2, Jetty, Tomcat, ZK, Logback, Log4j2, MyFaces, Mojarra, Omnifaces, ELResolver, WildFlyELResolver, OsgiEquinox, Owb, OwbJakarta, Proxy, WebObjects, Weld, WeldJakarta, JBossModules, ResteasyRegistry, Deltaspike, GlassFish, Weblogic, Vaadin, Wicket, CxfJAXRS, FreeMarker, Undertow, MyBatis, IBatis, JacksonPlugin, Idea]
+```
+
+This indicates HotswapAgent is properly loaded. Now when you navigate to a view in your application, open the corresponding Java file in your project and make some changes (remember to compile and not only save the class if using IntelliJ), your view will be reloaded in the browser and the changes shown.
+
+[NOTE] 
+Do not start the application in "run" mode. The debug connection to the JVM running the application is needed for hotswapping to work.
+
+[NOTE]
+Do not launch the Maven `spring-boot:run` target as it will fork another JVM. The debug connection will then only be established to the Maven process and not the actual application, and hotswapping will not work.
+
+== Working efficiently
+
+By default any change done in the Java code causes the application to reload in the browser. This is very handy when you make changes to the initial layout, constructors, post construct methods or similar. However if you are changing the logic inside a listener there is no need to do a page reload for the change to have effect. You can then turn it off in the Vaadin developer tools window on the `Info` tab. Especially when you edit code related to a dialog or some other part of the UI which is not directly mapped to a URL, it can be more efficient to disable live reload and manually reload only when that is needed.
+
+IntelliJ by default does not compile a Java file when you save it. If you are used to pressing the compile shortcut then hotswapping will work fine. Otherwise you might want to make IntelliJ automatically build the project when you save. This is done through `Settings`/`Preferences` -> `Build, Execution, Deployment` -> `Compiler`-> `Build project automatically`. You additionally need to ensure that the build also takes place when the application is running in debug mode, through `Advanced Settings` -> `Allow auto-make to start even if developed application is currently running`.
+
+
+== Additional Considerations
+
+Disable other reloading or hot swapping solutions, e.g. disable the automatic restart in the Jetty Maven plugin if you are using that (omit or set `<scanIntervalSeconds>` to a value of `0` or less).
+
+The live reload quiet time (milliseconds since last Java change before refreshing the browser) can be adjusted with the parameter `vaadin.liveReloadQuietTime` in [filename]`hotswap-agent.properties`. Increase this value if you notice the browser refreshing before modified Java files have been fully compiled.  The default is 1,000 ms.
+
+Some changes such as changes to application startup listeners do not have any effect until the server is restarted and the startup listeners are run again. For these you need to restart the server manually.
+
+If you are using <<{articles}/advanced/preserving-state-on-refresh#,`@PreserveOnRefresh`>>, then the same view instance is reused when reload the page in the browser so the changes are not necessarily visible until the view is opened in another browser tab.
 
 [discussion-id]`403FEA6B-12A3-465C-9D6D-41DA902D9884`

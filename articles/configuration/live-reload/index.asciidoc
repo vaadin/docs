@@ -1,39 +1,42 @@
 ---
-title: Live Reload
-description: Learn how to put live reload into use. Live reload automatically applies source code changes, instead of having manually to restart the server and refresh the browser.
+title: Hot Deploy and Live Reload
+description: Live reload and hot deploy together takes care of automatically applying source code changes, instead of having manually to restart the server and refresh the browser.
 tab-title: Overview
 layout: tabbed-page
 order: 40
 ---
 
-= Live Reload
+= Hot Deploy and Live Reload
 
-In Vaadin projects, live reload is supported out of the box for front-end code changes, and for Java changes in Spring Boot projects.
-For the latter, it also integrates with popular third-party Java hotpatching tools.
+From a deployment and reloading point of view, there are two types of files in a Vaadin project: Java classes+resources and frontend files. Both have a slightly different solution for updating the browser whenever a files changes. The frontend reloading is mostly setup automatically out of the box while Java updates can be handled in three different ways, described below.
+
+Note that hot deploy and live reload is only used when running in development mode.
 
 == Front-End Changes
 
-As of Vaadin 23.2, the front-end build and live-reload features are handled by https://vitejs.dev[Vite] by default. However, webpack is still supported by enabling its associated feature flag.
-See the <<webpack Feature Flag>> section for how to do this.
-Support for webpack ends with the next major release -- with Vaadin 24.
+Starting from Vaadin 24, a prebuilt frontend bundle is used by default. The only frontend part you can change with fast live reload support is the theme files inside `frontend/themes/<themename>`. Changes to these will automatically be picked up and the browser reloaded. Changes to any other files inside `frontend` will cause a new frontend bundle to be built - a process which might take up to minutes.
 
-Code in the application's `frontend` folder (JS/TS/CSS files) is monitored by `vite-dev-server` when running the application in development mode.
-Adding, modifying, or removing a file in this folder triggers recompilation of the front-end bundle and a browser reload.
+When you actively develop frontend files you enable the hotdeploy mode for frontend files, see <<{articles}/configuration/properties#,Configuration Properties>>. In this mode all files (JS/TS/CSS) inside the `frontend` folder are handled by https://vitejs.dev[Vite] (in Vaadin 23.2 and earlier webpack was used for the same and 23.2+ can also optionally use webpack, see the <<webpack Feature Flag>> section for more information). Vite runs its own development server (used through the Vaadin development server) , which monitors the `frontend` folder for changes. Adding, modifying, or removing a file in this folder triggers a rebuild of the front-end resource and then performs a browser reload.
 
 == Java Changes
 
-On the Java side, live reload means first compiling the modified code, then updating the running server -- either by restarting it or by hotpatching the runtime -- and then refreshing the browser.
-Live reload can use Spring Boot Developer Tools' automatic server restart feature. This is enabled by default in Spring Boot-based Vaadin applications.
-It can also use two hotpatching tools: JRebel and HotswapAgent. JRebel is a commercial product that may be used for all Vaadin applications. HotswapAgent is open source, and also may be used for all Vaadin applications.
+On the Java side, live reload handles classes and resources that are on the classpath.
+
+If you have a standard `war` project and have resources in `src/main/webapp` then these files are typically updated and deployed automatically by your IDE when you change them (they are copied to a folder inside `target`). No automatic live reload takes places for these.
+
+For changes to a Java class to be updated, they need to be saved and compiled, typically by your IDE. After the IDE compiles the class and puts it inside the `target` folder, the Java live reload kicks in. Live reload for Java can use Spring Boot Developer Tools (used by default in starter projects) which restarts the server on classpath changes, or JRebel or HotswapAgent which replaces the class on the fly without restarting. JRebel is a commercial product with while HotswapAgent is an open source solution.
+
 See the following sections for details on setting up the chosen technology:
 
 ** <<spring-boot#, Spring Boot Developer Tools>>
 ** <<jrebel#, JRebel>>
 ** <<hotswap-agent#, HotswapAgent>>
 
-To avoid interference, only one of these technologies should be configured in a project at a time.
-In general, hotpatching is faster than automatic restarts. It works best for small, incremental changes.
-For larger changes, such as class level modifications or changes to code that affect the whole application lifecycle (e.g., startup, shutdown, mapping between front-end and back-end components), they require a server restart in any case.
+Only one of these technologies should be configured in a project at a time or you might experience slow, no or multiple reloads. Spring Developer Tools though will automatically become disabled if JRebel or HotswapAgent is detected.
+
+In general, JRebel and HotswapAgent are faster as they only patch on class in memory but there are some changes which do not work when hotswapped. This can be caused by e.g. global state which is created only on application startup and not updated when updating a single class. For most cases inside Vaadin where global state is handled, there are plugins to both JRebel and HotswapAgent so that hotswapping still works. There can however be cases which are not handled: either in Vaadin or in your application. For instance associating frontend resources to classes using `@JsModule` requires a server restart.
+
+There is also a difference regarding session handling: as JRebel and HotswapAgent do not restart the server, the session is preserved. With Spring Developer Tools, you lose the session unless you ensure all parts are serializable and you turn on session serialization for development mode, see <<{articles}/configuration/properties#,Configuration Properties>>.
 
 == Automatic Server Restart
 
@@ -42,9 +45,3 @@ These don't require installing third-party tools, but server restarts are slower
 
 ** <<jetty#, Automatic Restart with Jetty Maven Plugin>>
 ** <<cdi#, Automatic Restart with TomEE Maven Plugin>>
-
-== webpack Feature Flag
-
-To use webpack for front-end builds, you must enable it with the `webpackForFrontendBuild` feature flag.
-
-See <<{articles}/configuration/feature-flags#,Feature Flags>> for more information.
