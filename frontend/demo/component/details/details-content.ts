@@ -9,23 +9,21 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('details-content')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    a {
+      text-decoration: none;
+      color: var(--lumo-primary-text-color);
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static get styles() {
-    return css`
-      a {
-        text-decoration: none;
-        color: var(--lumo-primary-text-color);
-      }
-    `;
-  }
-
-  render() {
+  protected override render() {
     return html`
       <vaadin-details opened>
         <div slot="summary">Analytics</div>

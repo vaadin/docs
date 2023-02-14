@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-all-files')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -21,13 +21,13 @@ export class Example extends LitElement {
   private upload!: Upload;
 
   // end::snippet[]
-  firstUpdated() {
+  protected override firstUpdated() {
     this.upload.i18n.addFiles.many = 'Select Files...';
     this.upload.i18n = { ...this.upload.i18n };
   }
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`
       <vaadin-upload
         no-auto

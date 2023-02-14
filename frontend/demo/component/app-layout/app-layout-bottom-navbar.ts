@@ -10,38 +10,36 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-bottom-navbar')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    h1 {
+      font-size: var(--lumo-font-size-l);
+      margin: var(--lumo-space-m) var(--lumo-space-l);
+    }
+
+    vaadin-icon {
+      height: var(--lumo-icon-size-s);
+      margin: auto;
+      width: var(--lumo-icon-size-s);
+    }
+
+    vaadin-tabs {
+      width: 100%;
+    }
+
+    /* hidden-source-line: the bottom navbar is forced on in the example */
+    vaadin-app-layout[overlay] /* hidden-source-line */ {
+      --vaadin-app-layout-touch-optimized: true; /* hidden-source-line */
+    } /* hidden-source-line */
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static get styles() {
-    return css`
-      h1 {
-        font-size: var(--lumo-font-size-l);
-        margin: var(--lumo-space-m) var(--lumo-space-l);
-      }
-
-      vaadin-icon {
-        height: var(--lumo-icon-size-s);
-        margin: auto;
-        width: var(--lumo-icon-size-s);
-      }
-
-      vaadin-tabs {
-        width: 100%;
-      }
-
-      /* hidden-source-line: the bottom navbar is forced on in the example */
-      vaadin-app-layout[overlay] /* hidden-source-line */ {
-        --vaadin-app-layout-touch-optimized: true; /* hidden-source-line */
-      } /* hidden-source-line */
-    `;
-  }
-
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-app-layout>

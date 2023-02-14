@@ -3,6 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
+import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/notification';
@@ -13,14 +14,14 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-rich')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-notification
@@ -128,22 +129,23 @@ export class Example extends LitElement {
       ></vaadin-notification>
       <!-- end::snippet[] -->
       <vaadin-horizontal-layout theme="spacing" style="justify-content: center">
-        <vaadin-button @click="${this.open.bind(this, 1)}" theme="success primary">
+        <vaadin-button @click="${this.open}" data-which="1" theme="success primary">
           Try it
         </vaadin-button>
-        <vaadin-button @click="${this.open.bind(this, 2)}" theme="error primary">
+        <vaadin-button @click="${this.open}" data-which="2" theme="error primary">
           Try it
         </vaadin-button>
-        <vaadin-button @click="${this.open.bind(this, 3)}" theme="contrast">Try it</vaadin-button>
-        <vaadin-button @click="${this.open.bind(this, 4)}" theme="success">Try it</vaadin-button>
+        <vaadin-button @click="${this.open}" data-which="3" theme="contrast">Try it</vaadin-button>
+        <vaadin-button @click="${this.open}" data-which="4" theme="success">Try it</vaadin-button>
       </vaadin-horizontal-layout>
     `;
   }
 
-  open(which: number) {
-    const notification = this.shadowRoot?.querySelector(
-      `vaadin-notification:nth-child(${which})`
-    ) as Notification;
+  open(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const notification = this.renderRoot.querySelector<Notification>(
+      `vaadin-notification:nth-child(${target.dataset.which})`
+    );
     notification?.open();
   }
 }

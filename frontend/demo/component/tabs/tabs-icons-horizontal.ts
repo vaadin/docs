@@ -8,7 +8,7 @@ import '@vaadin/tabs';
 
 @customElement('tabs-icons-horizontal')
 export class Example extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs>

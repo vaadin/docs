@@ -14,7 +14,7 @@ export class Example extends LitElement {
     this.classList.add('basic-layouts-example');
   }
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -25,7 +25,7 @@ export class Example extends LitElement {
   @state()
   justifyContent = 'flex-start';
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-vertical-layout
         theme="spacing padding"
@@ -39,8 +39,9 @@ export class Example extends LitElement {
       <vaadin-radio-group
         label="Vertical alignment"
         .value="${this.justifyContent}"
-        @value-changed="${(e: RadioGroupValueChangedEvent) =>
-          (this.justifyContent = e.detail.value)}"
+        @value-changed="${(event: RadioGroupValueChangedEvent) => {
+          this.justifyContent = event.detail.value;
+        }}"
       >
         <vaadin-radio-button value="flex-start" label="Start (default)"></vaadin-radio-button>
         <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>

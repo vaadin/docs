@@ -13,7 +13,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-custom-option')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -26,12 +26,12 @@ export class Example extends LitElement {
   @state()
   private items: Card[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.items = await getCards();
     this.value = String(this.items[0].id);
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout>
@@ -39,7 +39,9 @@ export class Example extends LitElement {
           label="Payment method"
           theme="vertical"
           .value="${this.value}"
-          @value-changed="${(e: RadioGroupValueChangedEvent) => (this.value = e.detail.value)}"
+          @value-changed="${(event: RadioGroupValueChangedEvent) => {
+            this.value = event.detail.value;
+          }}"
         >
           ${this.items.map(
             (card) => html`

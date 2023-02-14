@@ -9,19 +9,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-format')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      h4 {
-        margin-top: 0;
-      }
+  static override styles = css`
+    h4 {
+      margin-top: 0;
+    }
 
-      p {
-        color: var(--lumo-secondary-text-color);
-      }
-    `;
-  }
+    p {
+      color: var(--lumo-secondary-text-color);
+    }
+  `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -31,7 +29,7 @@ export class Example extends LitElement {
   @query('vaadin-upload')
   private upload!: Upload;
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.upload.i18n.addFiles.one = 'Upload Report...';
     this.upload.i18n.dropFiles.one = 'Drop report here';
     this.upload.i18n.error.incorrectFileType =
@@ -39,7 +37,7 @@ export class Example extends LitElement {
     this.upload.i18n = { ...this.upload.i18n };
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <h4>Upload report</h4>

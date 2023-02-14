@@ -17,7 +17,7 @@ interface PersonWithRating extends Person {
 
 @customElement('grid-styling')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -32,12 +32,12 @@ export class Example extends LitElement {
     maximumFractionDigits: 2,
   });
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people.map((person) => ({ ...person, customerRating: Math.random() * 10 }));
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid .items="${this.items}" .cellClassNameGenerator="${this.cellClassNameGenerator}">
         <vaadin-grid-column path="firstName"></vaadin-grid-column>

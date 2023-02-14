@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-date-range')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -22,20 +22,23 @@ export class Example extends LitElement {
   @state()
   private returnDate = '';
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing">
         <vaadin-date-picker
           label="Departure date"
-          @value-changed="${(e: DatePickerValueChangedEvent) =>
-            (this.departureDate = e.detail.value)}"
           .max="${this.returnDate}"
+          @value-changed="${(event: DatePickerValueChangedEvent) => {
+            this.departureDate = event.detail.value;
+          }}"
         ></vaadin-date-picker>
         <vaadin-date-picker
           label="Return date"
-          @value-changed="${(e: DatePickerValueChangedEvent) => (this.returnDate = e.detail.value)}"
           .min="${this.departureDate}"
+          @value-changed="${(event: DatePickerValueChangedEvent) => {
+            this.returnDate = event.detail.value;
+          }}"
         ></vaadin-date-picker>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->

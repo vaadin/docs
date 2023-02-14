@@ -11,7 +11,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-pro-prevent-save')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -26,12 +26,12 @@ export class Example extends LitElement {
     notification.setAttribute('theme', 'error');
   }
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid-pro .items="${this.items}" @item-property-changed="${this.itemPropertyListener}">

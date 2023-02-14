@@ -1,7 +1,7 @@
 export default class FusionRedirect extends HTMLElement {
   connectedCallback() {
     const params = new URLSearchParams(window.location.search);
-    let path = params.get('path') || '';
+    let path = params.get('path') ?? '';
 
     if (path.includes('overview')) {
       path = path.replace('overview', '');
@@ -11,7 +11,7 @@ export default class FusionRedirect extends HTMLElement {
       path = path.replace('forms', 'data-binding');
     }
 
-    const link = document.querySelector('.hilla-docs-link') as HTMLAnchorElement;
+    const link = document.querySelector<HTMLAnchorElement>('.hilla-docs-link');
     if (link) {
       link.href += path;
     }

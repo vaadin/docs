@@ -16,7 +16,7 @@ public class GridCellFocus extends Div {
 
     public GridCellFocus() {
         Grid<Person> grid = new Grid<>(Person.class, false);
-        grid.setThemeName("force-focus-outline");
+        grid.setClassName("force-focus-outline");
         grid.addColumn(Person::getFirstName).setKey("firstName")
                 .setHeader("First name");
         grid.addColumn(Person::getLastName).setKey("lastName")

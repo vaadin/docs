@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error Suppress the error
 import { withPrefix } from 'gatsby';
 
 function testHeartbeat() {

@@ -3,6 +3,7 @@ package com.vaadin.demo.component.richtexteditor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -11,21 +12,33 @@ public class RichTextEditorSetGetValue extends Div {
 
     public RichTextEditorSetGetValue() {
         // tag::snippet[]
-        TextArea textArea = new TextArea("Html Value",
-                "Type html string here to set it as value to the Rich Text Editor above...");
-        textArea.setWidthFull();
-
         RichTextEditor rte = new RichTextEditor();
         rte.getStyle().set("max-height", "400px");
+        rte.setValueChangeMode(ValueChangeMode.TIMEOUT);
 
-        rte.asHtml()
-                .addValueChangeListener(e -> textArea.setValue(e.getValue()));
-        textArea.addValueChangeListener(e -> {
-            if (!rte.asHtml().getValue().equals(e.getValue())) {
-                rte.asHtml().setValue(e.getValue());
+        // HTML value
+        TextArea htmlTextArea = new TextArea("HTML Value",
+                "Enter something in the Rich Text Editor to see its HTML value here.");
+        htmlTextArea.setWidthFull();
+        rte.addValueChangeListener(e -> htmlTextArea.setValue(e.getValue()));
+        htmlTextArea.addValueChangeListener(e -> {
+            if (!rte.getValue().equals(e.getValue())) {
+                rte.setValue(e.getValue());
             }
         });
-        add(rte, textArea);
+
+        // Delta value
+        TextArea deltaTextArea = new TextArea("Delta Value",
+                "Enter something in the Rich Text Editor to see its Delta value here.");
+        deltaTextArea.setWidthFull();
+        rte.asDelta().addValueChangeListener(e -> deltaTextArea.setValue(e.getValue()));
+        deltaTextArea.addValueChangeListener(e -> {
+            if (!rte.asDelta().getValue().equals(e.getValue())) {
+                rte.asDelta().setValue(e.getValue());
+            }
+        });
+
+        add(rte, htmlTextArea, deltaTextArea);
         // end::snippet[]
     }
 

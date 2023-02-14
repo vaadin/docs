@@ -6,7 +6,7 @@ import '@vaadin/cookie-consent';
 
 @customElement('cookie-consent-basic')
 export class Example extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-cookie-consent></vaadin-cookie-consent>

@@ -6,7 +6,7 @@ import '@vaadin/tabs';
 
 @customElement('tabs-theme-minimal')
 export class Example extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs theme="minimal">

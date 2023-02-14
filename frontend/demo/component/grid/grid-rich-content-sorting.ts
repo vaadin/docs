@@ -16,7 +16,7 @@ import { differenceInYears, format, parseISO } from 'date-fns';
 
 @customElement('grid-rich-content-sorting')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -27,12 +27,12 @@ export class Example extends LitElement {
   @state()
   private items: Person[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid .items="${this.items}">
         <vaadin-grid-sort-column
@@ -48,29 +48,25 @@ export class Example extends LitElement {
     `;
   }
 
-  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`
-      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-        <vaadin-avatar
-          img="${person.pictureUrl}"
-          name="${person.firstName} ${person.lastName}"
-          alt="User avatar"
-        ></vaadin-avatar>
-        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-          <span>${person.firstName} ${person.lastName}</span>
-          <span
-            style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-          >
-            ${person.email}
-          </span>
-        </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>
-    `;
-  };
+  private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
+    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <vaadin-avatar
+        img="${person.pictureUrl}"
+        name="${person.firstName} ${person.lastName}"
+        alt="User avatar"
+      ></vaadin-avatar>
+      <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+        <span>${person.firstName} ${person.lastName}</span>
+        <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
+          ${person.email}
+        </span>
+      </vaadin-vertical-layout>
+    </vaadin-horizontal-layout>
+  `;
 
-  private birthdayHeaderRenderer = () => {
-    return html`<vaadin-grid-sorter path="birthday">Birthdate</vaadin-grid-sorter>`;
-  };
+  private birthdayHeaderRenderer = () => html`
+    <vaadin-grid-sorter path="birthday">Birthdate</vaadin-grid-sorter>
+  `;
 
   private birthdayRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
     const birthday = parseISO(person.birthday);

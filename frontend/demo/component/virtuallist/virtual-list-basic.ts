@@ -17,68 +17,64 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('virtual-list-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    vaadin-avatar {
+      height: 64px;
+      width: 64px;
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static get styles() {
-    return css`
-      vaadin-avatar {
-        height: 64px;
-        width: 64px;
-      }
-    `;
-  }
-
   @state()
   private people?: Person[];
 
-  private expandedPeople: Set<Person> = new Set();
+  private expandedPeople = new Set<Person>();
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.people = people;
   }
 
-  private personCardRenderer: VirtualListLitRenderer<Person> = (person) => {
-    return html`
-      <vaadin-horizontal-layout theme="spacing margin">
-        <vaadin-avatar
-          .img="${person.pictureUrl}"
-          .name="${`${person.firstName} ${person.lastName}`}"
-        ></vaadin-avatar>
+  private personCardRenderer: VirtualListLitRenderer<Person> = (person) => html`
+    <vaadin-horizontal-layout theme="spacing margin">
+      <vaadin-avatar
+        .img="${person.pictureUrl}"
+        .name="${`${person.firstName} ${person.lastName}`}"
+      ></vaadin-avatar>
 
-        <vaadin-vertical-layout>
-          <b>${person.firstName} ${person.lastName}</b>
-          <span>${person.profession}</span>
+      <vaadin-vertical-layout>
+        <b>${person.firstName} ${person.lastName}</b>
+        <span>${person.profession}</span>
 
-          <vaadin-details
-            .opened="${live(this.expandedPeople.has(person))}"
-            @click="${(e: Event) => {
-              const details = e.currentTarget as Details;
-              if (details.opened) {
-                this.expandedPeople.add(person);
-              } else {
-                this.expandedPeople.delete(person);
-              }
-            }}"
-          >
-            <div slot="summary">Contact information</div>
+        <vaadin-details
+          .opened="${live(this.expandedPeople.has(person))}"
+          @click="${(e: Event) => {
+            const details = e.currentTarget as Details;
+            if (details.opened) {
+              this.expandedPeople.add(person);
+            } else {
+              this.expandedPeople.delete(person);
+            }
+          }}"
+        >
+          <div slot="summary">Contact information</div>
 
-            <vaadin-vertical-layout>
-              <span>${person.email}</span>
-              <span>${person.address.phone}</span>
-            </vaadin-vertical-layout>
-          </vaadin-details>
-        </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>
-    `;
-  };
+          <vaadin-vertical-layout>
+            <span>${person.email}</span>
+            <span>${person.address.phone}</span>
+          </vaadin-vertical-layout>
+        </vaadin-details>
+      </vaadin-vertical-layout>
+    </vaadin-horizontal-layout>
+  `;
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-virtual-list
