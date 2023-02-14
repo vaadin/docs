@@ -1,16 +1,19 @@
 package com.vaadin.demo.fusion.security.authentication;
 
-import com.vaadin.flow.spring.security.VaadinWebSecurityConfigurerAdapter;
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
 
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.UserDetailsManager;
 
 /**
  * An example code for demoing the Spring Security configuration, shouldn't affect
  * the doc application itself.
  */
-public class SecurityConfigDemo extends VaadinWebSecurityConfigurerAdapter {
+public class SecurityConfigDemo extends VaadinWebSecurity {
 
   // tag::login[]
   @Override
@@ -20,10 +23,12 @@ public class SecurityConfigDemo extends VaadinWebSecurityConfigurerAdapter {
   }
   // end::login[]
 
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+  @Bean
+  public UserDetailsManager userDetailsService() {
     // Configure users and roles in memory
-    auth.inMemoryAuthentication().withUser("user").password("{noop}password").roles("USER");
+    return new InMemoryUserDetailsManager(
+      User.withUsername("user").password("{noop}password").roles("USER").build()
+    );
   }
 
   // tag::public-resources[]
