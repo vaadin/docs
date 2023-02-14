@@ -59,6 +59,84 @@ Custom Field is optimized for wrapping the following components:
 
 It can also be used to provide a label, helper, and the other field features, for components that don't have them built-in, such as <<../list-box#,List Box>>.
 
+== Value Type and Format
+
+Custom Field handles the value type and format differently in Java and TypeScript.
+
+=== Java
+
+Custom Field is a generic class that requires a value type. The value type can be anything: String, a bean, etc.
+
+In addition to that, you must provide the `generateModelValue` and `setPresentationValue` methods which specify how to build Custom Field's value from the child component values and how to propagate Custom Field's value to the child components respectively.
+
+The following example shows how to set up the value propagation:
+
+[.example]
+--
+
+[source,java]
+----
+class ExpirationField extends CustomField<String> {
+  private final Select month = new Select();
+  private final Select year = new Select();
+
+  public ExpirationField() {
+    add(month, year);
+  }
+
+  ...
+
+  @Override
+  protected String generateModelValue() {
+    if (month.getValue() == month.getEmptyValue() ||
+        year.getValue() == year.getEmptyValue()) {
+      return null;
+    }
+
+    return String.join(
+        month.getValue().getString(),
+        year.getValue().getString());
+  }
+
+  @Override
+  protected void setPresentationValue(String value) {
+    String[] valueParts = value.split("/");
+    month.setValue(valueParts[0]);
+    year.setValue(valueParts[1]);
+  }
+}
+----
+--
+
+=== TypeScript
+
+Custom Field only supports string values. The default value format is a string concatenation of the child component values, separated by the `\t` character.
+
+You can customize the value format by providing a custom value formatter and parser, as shown in the following example:
+
+[.example]
+--
+
+[source,typescript]
+----
+render() {
+  return html`
+    <vaadin-custom-field
+      .parseValue="${(value: string) => {
+        return value ? value.split('/') : ['', ''];
+      }}"
+      .formatValue="${(values: unknown[]) => {
+        return values[0] && values[1] ? values.join('/') : '';
+      }}"
+    >
+      <vaadin-select title="Month">...</vaadin-select>
+      <vaadin-select title="Year">...</vaadin-select>
+    </vaadin-custom-field>
+  `
+}
+----
+--
+
 == Native Input Fields
 
 Custom Field works with native HTML elements.
