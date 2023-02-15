@@ -58,7 +58,7 @@ export class Example extends LitElement {
         }}"
       >
         <vaadin-accordion-panel>
-          <div slot="summary">
+          <vaadin-accordion-heading slot="summary">
             Customer details
             <vaadin-vertical-layout
               .hidden="${this.openedPanelIndex === 0}"
@@ -68,7 +68,7 @@ export class Example extends LitElement {
               <span>${this.personBinder.value.email}</span>
               <span>${this.personBinder.value.address?.phone}</span>
             </vaadin-vertical-layout>
-          </div>
+          </vaadin-accordion-heading>
           <!-- end::snippet[] -->
 
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
@@ -102,7 +102,7 @@ export class Example extends LitElement {
         </vaadin-accordion-panel>
 
         <vaadin-accordion-panel>
-          <div slot="summary">
+          <vaadin-accordion-heading slot="summary">
             Billing address
             <vaadin-vertical-layout
               .hidden="${this.openedPanelIndex === 1}"
@@ -120,7 +120,7 @@ export class Example extends LitElement {
                 }
               </span>
             </vaadin-vertical-layout>
-          </div>
+          </vaadin-accordion-heading>
 
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
@@ -155,7 +155,7 @@ export class Example extends LitElement {
         </vaadin-accordion-panel>
 
         <vaadin-accordion-panel>
-          <div slot="summary">
+          <vaadin-accordion-heading slot="summary">
             Payment
             <vaadin-vertical-layout
               .hidden="${this.openedPanelIndex === 2}"
@@ -164,7 +164,7 @@ export class Example extends LitElement {
               <span>${this.cardBinder.value.accountNumber}</span>
               <span>${this.cardBinder.value.expiryDate}</span>
             </vaadin-vertical-layout>
-          </div>
+          </vaadin-accordion-heading>
 
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
             <vaadin-text-field
