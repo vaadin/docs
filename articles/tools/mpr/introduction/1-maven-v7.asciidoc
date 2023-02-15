@@ -43,14 +43,14 @@ MPR is part of Vaadin, so the supported version of the project is set for you wh
 
 === Framework 7 dependency
 
-When using MPR the minimum requirement for Vaadin 7 version is 7.7.14 or newer.
+When using MPR the minimum requirement for Vaadin 7 version is 7.7.36 or newer.
 
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <dependency>
     <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-server</artifactId>
-    <version>7.7.17</version>
+    <artifactId>vaadin-server-mpr-jakarta</artifactId>
+    <version>{vaadin-seven-version}</version>
     <exclusions>
         <exclusion>
             <groupId>org.jsoup</groupId>
@@ -65,7 +65,7 @@ When using MPR the minimum requirement for Vaadin 7 version is 7.7.14 or newer.
 <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>vaadin-themes</artifactId>
-    <version>7.7.17</version>
+    <version>{vaadin-seven-version}</version>
 </dependency>
 ----
 
@@ -76,19 +76,126 @@ You also need to remove the dependency on the `vaadin-client-compiled`, since a 
 When using MPR you can't use a Content Delivery Network (CDN) for the widget set. This means that the configuration
 `<vaadin.widgetset.mode>cdn</vaadin.widgetset.mode>` or `<vaadin.widgetset.mode>fetch</vaadin.widgetset.mode>` should be removed.
 
+=== Exclude Incompatible Framework 7 Dependency
+
+The project may depend on artifacts that transitively brings in the legacy `vaadin-server` library.
+This artifact conflicts with `vaadin-server-mpr-jakarta`, and its presence may provoke unexpected errors at runtime.
+Thus, for each of these dependencies, an exclusion of `vaadin-server` must be configured.
+
+Maven `dependency:tree` goal can be used to detect the presence of dependency that transitively imports `vaadin-server`.
+Using the latest version of the plugin is recommended to get better results.
+
+[source,terminal]
+----
+mvn dependency:tree -Dincludes=com.vaadin:vaadin-server -Dverbose=true
+----
+
+To simplify the operation the following profile can be added to the [filename]`pom.xml` file
+
+[source,xml]
+----
+<profile>
+    <id>check-vaadin-server-deps</id>
+    <build>
+        <defaultGoal>dependency:tree</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <includes>com.vaadin:vaadin-server</includes>
+                    <verbose>true</verbose>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
+----
+
+With the above profile configure, run `mvn -Pcheck-vaadin-server-deps` to get the list of dependency to fix.
+For every dependency found, add an exclusion for `vaadin-server` artifact, as in the example below.
+
+.Exclusion of `vaadin-server` transitive dependency
+[source,xml]
+----
+<dependency>
+        <groupId>org.vaadin</groupId>
+        <artifactId>an-addon</artifactId>
+        <version>1.2.3</version>
+    <exclusions>
+        <exclusion>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-server</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+----
+
+=== Check For Incompatible Framework 7 Dependency At Build Time
+
+To ensure that `vaadin-server` is not transitively imported by any dependency, you can configure the Maven enforcer plugin to stop the build with a failure if a reference to the artifact is detected.
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-enforcer-plugin</artifactId>
+    <version>3.1.0</version>
+    <executions>
+        <execution>
+            <id>ensure-vaadin-server-not-present</id>
+            <goals>
+                <goal>enforce</goal>
+            </goals>
+            <configuration>
+                <rules>
+                    <bannedDependencies>
+                        <excludes>
+                            <exclude>com.vaadin:vaadin-server</exclude>
+                        </excludes>
+                        <message><![CDATA[
+'com.vaadin:vaadin-server' is not compatible with Jakarta Servlet 5+ and must be excluded from dependencies
+run 'mvn -Pcheck-vaadin-server-deps' to locate the sources of the banned dependencies
+and add an exclusion to the dependency declaration
+
+<dependency>
+<groupId>org.vaadin</groupId>
+<artifactId>an-addon</artifactId>
+<version>1.2.3</version>
+<exclusions>
+    <exclusion>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-server</artifactId>
+    </exclusion>
+</exclusions>
+</dependency>
+                        ]]></message>
+                    </bannedDependencies>
+                </rules>
+                <fail>true</fail>
+                <failFast>true</failFast>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+
+
 === Maven Plugins
 
 If not already added in your build section, you need to add the `vaadin-maven-plugin` for it to manage the custom legacy widget set.
-Maven plugin version used at the moment is 7.7.17.
+Maven plugin version used at the moment is {vaadin-seven-version}.
 
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <build>
      <plugins>
          <plugin>
              <groupId>com.vaadin</groupId>
              <artifactId>vaadin-maven-plugin</artifactId>
-             <version>7.7.17</version>
+             <version>{vaadin-seven-version}</version>
              <executions>
                  <execution>
                      <goals>
@@ -109,14 +216,14 @@ Because the `vaadin-maven-plugin` can only be defined with one version, you'll h
 This forces you to manually define the plugin version,
 since Maven doesn't allow you to define a plugin version in the Bill-of-Materials (BOM).
 
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <build>
      <plugins>
          <plugin>
              <groupId>com.vaadin</groupId>
              <artifactId>flow-maven-plugin</artifactId>
-             <version>2.0.7</version>
+             <version>{vaadin-flow-version}</version>
              <executions>
                  <execution>
                      <goals>
@@ -162,18 +269,18 @@ The easiest way would be to use `slf4j-simple` dependency:
     <version>0.1</version>
 
     <properties>
-        <vaadin.version>7.7.17</vaadin.version>
+        <vaadin.version>{vaadin-seven-version}</vaadin.version>
         <vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
         <!-- Flow version needs to be defined manually for Flow Maven plugin,
             because Maven BOMs don't support plugin versions or defining properties.
             The Flow version to use can be checked from vaadin-bom. -->
-        <flow.version>2.0.7</flow.version>
+        <flow.version>{vaadin-flow-version}</flow.version>
 
         <slf4j.version>1.7.25</slf4j.version>
-        <jetty.plugin.version>9.4.19.v20190610</jetty.plugin.version>
+        <jetty.plugin.version>11.0.13</jetty.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <dependencyManagement>
@@ -200,7 +307,7 @@ The easiest way would be to use `slf4j-simple` dependency:
 
         <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-server</artifactId>
+            <artifactId>vaadin-server-mpr-jakarta</artifactId>
             <version>${vaadin.version}</version>
             <exclusions>
                 <exclusion>
