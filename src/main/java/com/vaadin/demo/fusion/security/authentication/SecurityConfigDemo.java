@@ -27,6 +27,7 @@ public class SecurityConfigDemo extends VaadinWebSecurity {
   public UserDetailsManager userDetailsService() {
     // Configure users and roles in memory
     return new InMemoryUserDetailsManager(
+      // the {noop} prefix tells Spring that the password is not encoded
       User.withUsername("user").password("{noop}password").roles("USER").build()
     );
   }
