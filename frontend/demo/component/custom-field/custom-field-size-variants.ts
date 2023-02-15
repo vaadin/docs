@@ -6,6 +6,8 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/select';
 import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
+import { TextField } from '@vaadin/text-field';
+import { Select } from '@vaadin/select';
 
 @customElement('custom-field-size-variants')
 export class Example extends LitElement {
@@ -16,11 +18,11 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('#amount > input')
-  private amount!: HTMLInputElement;
+  @query('#amount')
+  private amount!: TextField;
 
-  @query('#currency > [slot="value"]')
-  private currency!: HTMLElement;
+  @query('#currency')
+  private currency!: Select;
 
   @state()
   private currencies = [
@@ -35,11 +37,8 @@ export class Example extends LitElement {
 
   protected override firstUpdated() {
     // Set `aria-label` for screen readers
-    this.amount.setAttribute('aria-label', 'Amount');
-    this.amount.removeAttribute('aria-labelledby');
-
-    this.currency.setAttribute('aria-label', 'Currency');
-    this.currency.removeAttribute('aria-labelledby');
+    this.amount.focusElement!.setAttribute('aria-label', 'Amount');
+    this.currency.focusElement!.setAttribute('aria-label', 'Currency');
   }
 
   protected override render() {
