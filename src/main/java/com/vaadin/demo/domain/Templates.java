@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class Templates {
 
     private String richTextDelta;
+    private String richTextHtml;
 
     private String loremIpsum;
 
@@ -15,6 +16,14 @@ public class Templates {
 
     public void setRichTextDelta(String richTextDelta) {
         this.richTextDelta = richTextDelta;
+    }
+
+    public String getRichTextHtml() {
+        return richTextHtml;
+    }
+
+    public void setRichTextHtml(String richTextHtml) {
+        this.richTextHtml = richTextHtml;
     }
 
     public String getLoremIpsum() {
