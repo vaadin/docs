@@ -7,6 +7,7 @@ import '@vaadin/button';
 import '@vaadin/combo-box';
 import '@vaadin/email-field';
 import '@vaadin/form-layout';
+import '@vaadin/horizontal-layout';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
@@ -59,15 +60,19 @@ export class Example extends LitElement {
       >
         <vaadin-accordion-panel>
           <vaadin-accordion-heading slot="summary">
-            Customer details
-            <vaadin-vertical-layout
-              .hidden="${this.openedPanelIndex === 0}"
-              style="font-size: var(--lumo-font-size-s)"
-            >
-              <span>${this.personBinder.value.firstName} ${this.personBinder.value.lastName}</span>
-              <span>${this.personBinder.value.email}</span>
-              <span>${this.personBinder.value.address?.phone}</span>
-            </vaadin-vertical-layout>
+            <vaadin-horizontal-layout style="width: 100%; align-items: center">
+              Customer details
+              <vaadin-vertical-layout
+                .hidden="${this.openedPanelIndex === 0}"
+                style="font-size: var(--lumo-font-size-s); margin-left: auto"
+              >
+                <span>
+                  ${this.personBinder.value.firstName} ${this.personBinder.value.lastName}
+                </span>
+                <span>${this.personBinder.value.email}</span>
+                <span>${this.personBinder.value.address?.phone}</span>
+              </vaadin-vertical-layout>
+            </vaadin-horizontal-layout>
           </vaadin-accordion-heading>
           <!-- end::snippet[] -->
 
@@ -103,23 +108,25 @@ export class Example extends LitElement {
 
         <vaadin-accordion-panel>
           <vaadin-accordion-heading slot="summary">
-            Billing address
-            <vaadin-vertical-layout
-              .hidden="${this.openedPanelIndex === 1}"
-              style="font-size: var(--lumo-font-size-s)"
-            >
-              <span>${this.personBinder.value.address?.street}</span>
-              <span>
-                ${this.personBinder.value.address?.zip} ${this.personBinder.value.address?.city}
-              </span>
+            <vaadin-horizontal-layout style="width: 100%; align-items: center">
+              Billing address
+              <vaadin-vertical-layout
+                .hidden="${this.openedPanelIndex === 1}"
+                style="font-size: var(--lumo-font-size-s); margin-left: auto"
+              >
+                <span>${this.personBinder.value.address?.street}</span>
+                <span>
+                  ${this.personBinder.value.address?.zip} ${this.personBinder.value.address?.city}
+                </span>
 
-              <span>
-                ${
-                  // @ts-expect-error Workaround a Binder issue
-                  this.personBinder.value.address?.country?.name
-                }
-              </span>
-            </vaadin-vertical-layout>
+                <span>
+                  ${
+                    // @ts-expect-error Workaround a Binder issue
+                    this.personBinder.value.address?.country?.name
+                  }
+                </span>
+              </vaadin-vertical-layout>
+            </vaadin-horizontal-layout>
           </vaadin-accordion-heading>
 
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
@@ -156,14 +163,16 @@ export class Example extends LitElement {
 
         <vaadin-accordion-panel>
           <vaadin-accordion-heading slot="summary">
-            Payment
-            <vaadin-vertical-layout
-              .hidden="${this.openedPanelIndex === 2}"
-              style="font-size: var(--lumo-font-size-s)"
-            >
-              <span>${this.cardBinder.value.accountNumber}</span>
-              <span>${this.cardBinder.value.expiryDate}</span>
-            </vaadin-vertical-layout>
+            <vaadin-horizontal-layout style="width: 100%; align-items: center">
+              Payment
+              <vaadin-vertical-layout
+                .hidden="${this.openedPanelIndex === 2}"
+                style="font-size: var(--lumo-font-size-s); margin-left: auto"
+              >
+                <span>${this.cardBinder.value.accountNumber}</span>
+                <span>${this.cardBinder.value.expiryDate}</span>
+              </vaadin-vertical-layout>
+            </vaadin-horizontal-layout>
           </vaadin-accordion-heading>
 
           <vaadin-form-layout .responsiveSteps="${responsiveSteps}">
