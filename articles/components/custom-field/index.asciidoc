@@ -65,54 +65,65 @@ Custom Field handles the value type and format differently in Java and TypeScrip
 
 === Java
 
-Custom Field is a generic class that requires a value type. The value type can be anything: String, a bean, etc.
+Custom Field is a generic class that requires a value type. The value type can be anything: String, List, a bean, etc.
 
-In addition to that, you must provide the `generateModelValue` and `setPresentationValue` methods which specify how to build Custom Field's value from the child component values and how to propagate Custom Field's value to the child components respectively.
+In addition to that, you must provide the `generateModelValue` and `setPresentationValue` methods which specify how to build the Custom Field value from the child component values and how to propagate the Custom Field value to the child components respectively.
 
-The following example shows how to set up the value propagation:
+The following example shows how to set up value propagation, using a bean as the value type:
 
 [.example]
 --
 
-[source,java]
+[source, java]
 ----
-class ExpirationField extends CustomField<String> {
-  private final Select month = new Select();
-  private final Select year = new Select();
+class Phone {
+    private final String code;
+    private final String number;
 
-  public ExpirationField() {
-    add(month, year);
-  }
-
-  ...
-
-  @Override
-  protected String generateModelValue() {
-    if (month.getValue() == month.getEmptyValue() ||
-        year.getValue() == year.getEmptyValue()) {
-      return null;
+    public Phone(String code, String number) {
+        this.code = code;
+        this.number = number;
     }
 
-    return String.join(
-        month.getValue().getString(),
-        year.getValue().getString());
-  }
+    public String getCode() {
+        return code;
+    }
 
-  @Override
-  protected void setPresentationValue(String value) {
-    String[] valueParts = value.split("/");
-    month.setValue(valueParts[0]);
-    year.setValue(valueParts[1]);
-  }
+    public String getNumber() {
+        return number;
+    }
+}
+
+class PhoneField extends CustomField<Phone> {
+    private final Select code = new Select();
+    private final TextField number = new TextField();
+
+    public PhoneField() {
+        ...
+
+        add(code, number);
+    }
+
+    @Override
+    protected String generateModelValue() {
+        return new Phone(code.getValue(), number.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Phone value) {
+        code.setValue(value.getCode());
+        number.setValue(value.getNumber());
+    }
 }
 ----
 --
+
 
 === TypeScript
 
 Custom Field only supports string values. The default value format is a string concatenation of the child component values, separated by the `\t` character.
 
-You can customize the value format by providing a custom value formatter and parser, as shown in the following example:
+You can customize the value format by providing your own value formatter and parser, as shown in the following example:
 
 [.example]
 --
@@ -129,8 +140,12 @@ render() {
         return values[0] && values[1] ? values.join('/') : '';
       }}"
     >
-      <vaadin-select title="Month">...</vaadin-select>
-      <vaadin-select title="Year">...</vaadin-select>
+      <vaadin-select title="Month">
+        ...
+      </vaadin-select>
+      <vaadin-select title="Year">
+        ...
+      </vaadin-select>
     </vaadin-custom-field>
   `
 }
