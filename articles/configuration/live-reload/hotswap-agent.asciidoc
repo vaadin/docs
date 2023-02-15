@@ -11,9 +11,10 @@ JetBrains Runtime offers hot deployment of any type of Java changes into a runni
 In addition to getting the Java changes into the running JVM, most frameworks have some global data that needs to be updated when a class changes or some kind of caches that need to be cleared for the new class to take full effect. For this there is HotswapAgent which is basically a collection of plugins for various frameworks and offer this kind of global updates and cache clearing when needed.
 
 Setting up hotswapping consists of three steps:
-1. Install JetBrains Runtime
-2. Download HotswapAgent and install it into the JetBrains runtime
-3. Run the application using JetBrains Runtime with additional parameters
+
+. Install JetBrains Runtime
+. Download HotswapAgent and install it into the JetBrains runtime
+. Run the application using JetBrains Runtime with additional parameters
 
 == JetBrains Runtime
 
@@ -21,43 +22,46 @@ You can find the latest version to download at https://github.com/JetBrains/JetB
 
 == HotswapAgent
 
-HotSwapAgent can be downloaded from https://github.com/HotswapProjects/HotswapAgent/releases[the HotswapAgent GitHub release page]. You need at least version 1.4.2 (using 1.4.2-SNAPSHOT is fine).
-Download the jar file and place it inside the JetBrains Runtime installation directory as `lib/hotswap/hotswap-agent.jar`. You need to use that exact name for the JetBrains Runtime to pick it up and you need to create the `hotswap` folder yourself.
+You can download HotSwapAgent from https://github.com/HotswapProjects/HotswapAgent/releases[the HotswapAgent GitHub release page]. You need at least version 1.4.2 (using 1.4.2-SNAPSHOT is fine).
+Download the JAR file and place it inside the JetBrains Runtime installation directory as `lib/hotswap/hotswap-agent.jar`. You need to use that exact name for the JetBrains Runtime to pick it up (you need to create the `hotswap` folder yourself).
 
 If you want to know more about the features of HotswapAgent, the documentation in the http://hotswapagent.org/[HotswapAgent webpage] is a good resource.
 
-== Running the application
+== Running the Application
 
-For hotswapping to be enabled, you need to pass `-XX:+AllowEnhancedClassRedefinition -XX:HotswapAgent=fatjar` as JVM arguments (not program arguments) when launching the application.
+To enable hotswapping, you need to pass `-XX:+AllowEnhancedClassRedefinition -XX:HotswapAgent=fatjar` as JVM arguments (not program arguments) when launching the application.
 
-If you have a Spring Boot application you launch the application by running the `main` method of your application class. After you have launched the application once, you will have a run configuration that you can edit in your IDE so that you can select the proper JDK and give the necessary parameters.
+If you have a Spring Boot application, you launch the application by running the `main` method of your application class. After you have launched the application once, you'll have a run configuration that you can edit in your IDE so that you can select the proper JDK and give the necessary parameters.
 
-In IntelliJ IDEA it is  `Run` -> `Edit configurations...`. With your application run configuration selected, you can select the JDK to use in the first dropdown. If JetBrains Runtime is not shown, you find it through "Select alternative JRE...".
-In the same dialog you need to click `Modify options` -> `Add VM options` to be able to see the field where you can define the JVM arguments. Then you can add `-XX:+AllowEnhancedClassRedefinition -XX:HotswapAgent=fatjar`
+To do that in IntelliJ IDEA, select menu:Run[Edit configurations…]. With your application run configuration selected, you can select the JDK to use in the first dropdown. If [guilabel]*JetBrains Runtime* is not shown, you can find it through [guibutton]*Select alternative JRE…*.
+In the same dialog you need to click menu:Modify options[Add VM options] to be able to see the field where you can define the JVM arguments. Then you can add `-XX:+AllowEnhancedClassRedefinition -XX:HotswapAgent=fatjar`.
 
 If you have another type of application, you need to pass the JVM options in an appropriate way.
 
-== Verifying it works
+== Verifying It Works
 
-With the settings in place, when you start the application in debug mode, you will see a text like
-```
+With the settings in place, when you start the application in debug mode, you'll see the following type of log output:
+
+----
 HOTSWAP AGENT: 10:19:01.802 INFO (org.hotswap.agent.HotswapAgent) - Loading Hotswap agent {1.4.2-SNAPSHOT} - unlimited runtime class redefinition.
 HOTSWAP AGENT: 10:19:02.065 INFO (org.hotswap.agent.config.PluginRegistry) - Discovered plugins: [JdkPlugin, ClassInitPlugin, AnonymousClassPatch, WatchResources, Hotswapper, Hibernate, Hibernate3JPA, Hibernate3, Spring, Jersey1, Jersey2, Jetty, Tomcat, ZK, Logback, Log4j2, MyFaces, Mojarra, Omnifaces, ELResolver, WildFlyELResolver, OsgiEquinox, Owb, OwbJakarta, Proxy, WebObjects, Weld, WeldJakarta, JBossModules, ResteasyRegistry, Deltaspike, GlassFish, Weblogic, Vaadin, Wicket, CxfJAXRS, FreeMarker, Undertow, MyBatis, IBatis, JacksonPlugin, Idea]
-```
+----
 
-This indicates HotswapAgent is properly loaded. Now when you navigate to a view in your application, open the corresponding Java file in your project and make some changes (remember to compile and not only save the class if using IntelliJ), your view will be reloaded in the browser and the changes shown.
+This indicates that HotswapAgent is properly loaded. Now when you navigate to a view in your application, open the corresponding Java file in your project and make some changes (remember to compile and not only save the class if using IntelliJ), your view is reloaded in the browser and the changes are shown.
 
-[NOTE] 
+.Remember to use "debug" mode
+[CAUTION] 
 Do not start the application in "run" mode. The debug connection to the JVM running the application is needed for hotswapping to work.
 
-[NOTE]
-Do not launch the Maven `spring-boot:run` target as it will fork another JVM. The debug connection will then only be established to the Maven process and not the actual application, and hotswapping will not work.
+.Don't use `mvn spring-boot:run`
+[CAUTION]
+Don't launch the Maven `spring-boot:run` target as that will fork another JVM process. The debug connection will then only be established to the Maven process and not the actual application, and hotswapping will not work.
 
-== Working efficiently
+== Working Efficiently
 
-By default any change done in the Java code causes the application to reload in the browser. This is very handy when you make changes to the initial layout, constructors, post construct methods or similar. However if you are changing the logic inside a listener there is no need to do a page reload for the change to have effect. You can then turn it off in the Vaadin developer tools window on the `Info` tab. Especially when you edit code related to a dialog or some other part of the UI which is not directly mapped to a URL, it can be more efficient to disable live reload and manually reload only when that is needed.
+By default any change done in the Java code causes the application to reload in the browser. This is very handy when you make changes to the initial layout, constructors, post construct methods or similar. However, if you are changing the logic inside a listener there is no need to do a page reload for the change to have effect. You can then turn it off in the Vaadin Developer Tools on the [guilabel]*Info* tab. Especially when you edit code related to a dialog or some other part of the UI which is not directly mapped to a URL, it can be more efficient to disable live reload and manually reload only when needed.
 
-IntelliJ by default does not compile a Java file when you save it. If you are used to pressing the compile shortcut then hotswapping will work fine. Otherwise you might want to make IntelliJ automatically build the project when you save. This is done through `Settings`/`Preferences` -> `Build, Execution, Deployment` -> `Compiler`-> `Build project automatically`. You additionally need to ensure that the build also takes place when the application is running in debug mode, through `Advanced Settings` -> `Allow auto-make to start even if developed application is currently running`.
+IntelliJ by default does not compile a Java file when you save it. If you are used to pressing the compile shortcut then hotswapping works fine. Otherwise you might want to make IntelliJ automatically build the project when you save. This is done through menu:Settings[Build, Execution, Deployment > Compiler > Build project automatically]. You also need to ensure that the build takes place when the application is running in debug mode, through menu:Advanced Settings[Allow auto-make to start even if developed application is currently running].
 
 
 == Additional Considerations
