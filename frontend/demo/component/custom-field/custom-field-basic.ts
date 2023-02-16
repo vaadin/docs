@@ -6,6 +6,7 @@ import '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 import { Binder, field } from '@hilla/form';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
+import { differenceInDays, parseISO, isAfter } from 'date-fns';
 import type { DatePicker } from '@vaadin/date-picker';
 
 @customElement('custom-field-basic')
