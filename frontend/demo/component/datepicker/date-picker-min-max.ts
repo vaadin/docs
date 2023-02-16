@@ -8,7 +8,7 @@ import { addDays, formatISO } from 'date-fns';
 
 @customElement('date-picker-min-max')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -21,14 +21,14 @@ export class Example extends LitElement {
   @state()
   private upperLimit = '';
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.today = formatISO(Date.now(), { representation: 'date' });
 
     const upperLimit = addDays(Date.now(), 60);
     this.upperLimit = formatISO(upperLimit, { representation: 'date' });
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-date-picker

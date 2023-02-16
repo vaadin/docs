@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('time-picker-custom-validation')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,19 +19,16 @@ export class Example extends LitElement {
   // tag::snippet[]
   private binder = new Binder(this, AppointmentModel);
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.binder.for(this.binder.model.startTime).addValidator({
       message: 'The selected time is not available',
-      validate: (startTime: string) => {
-        return (
-          (startTime >= '08:00' && startTime <= '12:00') ||
-          (startTime >= '13:00' && startTime <= '16:00')
-        );
-      },
+      validate: (startTime: string) =>
+        (startTime >= '08:00' && startTime <= '12:00') ||
+        (startTime >= '13:00' && startTime <= '16:00'),
     });
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-time-picker
         label="Appointment time"
@@ -39,7 +36,7 @@ export class Example extends LitElement {
         min="08:00"
         max="16:00"
         .step="${60 * 30}"
-        ...="${field(this.binder.model.startTime)}"
+        ${field(this.binder.model.startTime)}
       ></vaadin-time-picker>
     `;
   }

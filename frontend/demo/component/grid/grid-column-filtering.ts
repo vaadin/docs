@@ -16,7 +16,7 @@ type PersonEnhanced = Person & { displayName: string };
 
 @customElement('grid-column-filtering')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -26,15 +26,15 @@ export class Example extends LitElement {
   @state()
   private items: PersonEnhanced[] = [];
 
-  async firstUpdated() {
-    const people = (await getPeople()).people.map((person) => ({
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people.map((person) => ({
       ...person,
       displayName: `${person.firstName} ${person.lastName}`,
     }));
-    this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid .items="${this.items}">
@@ -52,12 +52,10 @@ export class Example extends LitElement {
     `;
   }
 
-  private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => {
-    return html`
-      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-        <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
-        <span> ${person.displayName} </span>
-      </vaadin-horizontal-layout>
-    `;
-  };
+  private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => html`
+    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
+      <span> ${person.displayName} </span>
+    </vaadin-horizontal-layout>
+  `;
 }

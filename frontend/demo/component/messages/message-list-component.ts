@@ -15,20 +15,20 @@ export class Example extends LitElement {
   private yesterday = format(subDays(new Date(), 1), this.isoMinutes);
   private fiftyMinutesAgo = format(subMinutes(new Date(), 50), this.isoMinutes);
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
     this.person = people[0];
     this.requestUpdate();
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-message-list

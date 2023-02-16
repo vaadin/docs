@@ -18,14 +18,14 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
 
 @customElement('text-field-text-alignment')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <vaadin-form-item>

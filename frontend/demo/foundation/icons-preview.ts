@@ -96,7 +96,7 @@ export class IconsPreview extends HTMLElement {
       this.querySelectorAll('.docs-icon-preview').forEach((icon) => {
         icon.classList.toggle(
           'hidden',
-          icon.className.toLowerCase().indexOf(search.value.toLowerCase()) === -1
+          !icon.className.toLowerCase().includes(search.value.toLowerCase())
         );
       });
     });

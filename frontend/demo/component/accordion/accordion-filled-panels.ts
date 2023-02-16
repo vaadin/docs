@@ -9,20 +9,18 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('accordion-filled-panels')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-accordion>
-        <vaadin-accordion-panel theme="filled">
-          <div slot="summary">Personal information</div>
-
+        <vaadin-accordion-panel summary="Personal information" theme="filled">
           <vaadin-vertical-layout>
             <span>Sophia Williams</span>
             <span>sophia.williams@company.com</span>
@@ -31,9 +29,7 @@ export class Example extends LitElement {
         </vaadin-accordion-panel>
         <!-- end::snippet[] -->
 
-        <vaadin-accordion-panel theme="filled">
-          <div slot="summary">Billing address</div>
-
+        <vaadin-accordion-panel summary="Billing address" theme="filled">
           <vaadin-vertical-layout>
             <span>4027 Amber Lake Canyon</span>
             <span>72333-5884 Cozy Nook</span>
@@ -41,9 +37,7 @@ export class Example extends LitElement {
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel theme="filled">
-          <div slot="summary">Payment</div>
-
+        <vaadin-accordion-panel summary="Payment" theme="filled">
           <vaadin-vertical-layout>
             <span>MasterCard</span>
             <span>1234 5678 9012 3456</span>

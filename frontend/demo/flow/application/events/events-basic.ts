@@ -12,7 +12,7 @@ export class EventsBasic extends LitElement {
   @state()
   private count = 0;
 
-  render() {
+  protected override render() {
     return html`<vaadin-button @click="${this.onClick}">${this.caption}</vaadin-button>`;
   }
 

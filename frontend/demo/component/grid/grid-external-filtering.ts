@@ -20,7 +20,7 @@ type PersonEnhanced = Person & { displayName: string };
 
 @customElement('grid-external-filtering')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -33,34 +33,34 @@ export class Example extends LitElement {
 
   private items: PersonEnhanced[] = [];
 
-  async firstUpdated() {
-    const people = (await getPeople()).people.map((person) => ({
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    const items = people.map((person) => ({
       ...person,
       displayName: `${person.firstName} ${person.lastName}`,
     }));
-    this.items = this.filteredItems = people;
+    this.items = items;
+    this.filteredItems = items;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-vertical-layout theme="spacing">
         <vaadin-text-field
           placeholder="Search"
           style="width: 50%;"
           @value-changed="${(e: TextFieldValueChangedEvent) => {
-            const searchTerm = ((e.detail.value as string) || '').trim();
-            const matchesTerm = (value: string) => {
-              return value.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0;
-            };
+            const searchTerm = (e.detail.value || '').trim();
+            const matchesTerm = (value: string) =>
+              value.toLowerCase().includes(searchTerm.toLowerCase());
 
-            this.filteredItems = this.items.filter(({ displayName, email, profession }) => {
-              return (
+            this.filteredItems = this.items.filter(
+              ({ displayName, email, profession }) =>
                 !searchTerm ||
                 matchesTerm(displayName) ||
                 matchesTerm(email) ||
                 matchesTerm(profession)
-              );
-            });
+            );
           }}"
         >
           <vaadin-icon slot="prefix" icon="vaadin:search"></vaadin-icon>
@@ -80,12 +80,10 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => {
-    return html`
-      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-        <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
-        <span> ${person.displayName} </span>
-      </vaadin-horizontal-layout>
-    `;
-  };
+  private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => html`
+    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
+      <span> ${person.displayName} </span>
+    </vaadin-horizontal-layout>
+  `;
 }

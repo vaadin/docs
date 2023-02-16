@@ -7,7 +7,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-placeholder')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -38,7 +38,7 @@ export class Example extends LitElement {
     },
   ];
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-select label="Size" placeholder="Select size" .items="${this.items}"></vaadin-select>

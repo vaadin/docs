@@ -13,7 +13,21 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    /* Center the button within the example */
+    :host {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -23,18 +37,26 @@ export class Example extends LitElement {
   @state()
   private dialogOpened = true;
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-dialog
         header-title="New employee"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
+        @opened-changed="${(event: DialogOpenedChangedEvent) => {
+          this.dialogOpened = event.detail.value;
+        }}"
         ${dialogRenderer(this.renderDialog, [])}
         ${dialogFooterRenderer(this.renderFooter, [])}
       ></vaadin-dialog>
 
-      <vaadin-button @click="${() => (this.dialogOpened = true)}">Show dialog</vaadin-button>
+      <vaadin-button
+        @click="${() => {
+          this.dialogOpened = true;
+        }}"
+      >
+        Show dialog
+      </vaadin-button>
       <!-- end::snippet[] -->
     `;
   }
@@ -54,18 +76,4 @@ export class Example extends LitElement {
   private close() {
     this.dialogOpened = false;
   }
-
-  static styles = css`
-    /* Center the button within the example */
-    :host {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-    }
-  `;
 }

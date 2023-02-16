@@ -5,14 +5,13 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-column-freezing')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -22,12 +21,12 @@ export class Example extends LitElement {
   @state()
   private items?: Person[];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid .items="${this.items}">
         <!-- tag::snippet1[] -->
@@ -36,7 +35,10 @@ export class Example extends LitElement {
           header="Name"
           auto-width
           flex-grow="0"
-          ${columnBodyRenderer(this.nameRenderer, [])}
+          ${columnBodyRenderer<Person>(
+            (person) => html`${person.firstName} ${person.lastName}`,
+            []
+          )}
         ></vaadin-grid-column>
         <!-- end::snippet1[] -->
         <vaadin-grid-column path="email" auto-width></vaadin-grid-column>
@@ -48,18 +50,13 @@ export class Example extends LitElement {
           frozen-to-end
           auto-width
           flex-grow="0"
-          ${columnBodyRenderer(this.actionRenderer, [])}
+          ${columnBodyRenderer(
+            () => html`<vaadin-button theme="tertiary-inline">Edit</vaadin-button>`,
+            []
+          )}
         ></vaadin-grid-column>
         <!-- end::snippet2[] -->
       </vaadin-grid>
     `;
   }
-
-  private nameRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
-    return html`${person.firstName} ${person.lastName}`;
-  };
-
-  private actionRenderer: GridColumnBodyLitRenderer<Person> = () => {
-    return html`<vaadin-button theme="tertiary-inline">Edit</vaadin-button>`;
-  };
 }

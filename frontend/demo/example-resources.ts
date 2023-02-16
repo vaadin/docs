@@ -1,10 +1,10 @@
 import './init-flow-namespace';
 import { applyTheme } from 'Frontend/generated/theme';
-// See webpack.config 'externals.Frontend/generated/theme'
-// This file ends up in the docs-app bundle
-// @ts-ignore
+// See Vite config 'apply-theme-fallback'
+// This file ends up in the DSP bundle
+// @ts-expect-error See vite.config.ts
 window.__applyTheme = { applyTheme };
-// @ts-ignore
+// @ts-expect-error See webpack.dspublisher.js
 import('all-flow-imports-or-empty').catch(() => {});
 
 // Verify if session is still active and reload the page otherwise

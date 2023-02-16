@@ -9,27 +9,23 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('details-content')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    a {
+      text-decoration: none;
+      color: var(--lumo-primary-text-color);
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static get styles() {
-    return css`
-      a {
-        text-decoration: none;
-        color: var(--lumo-primary-text-color);
-      }
-    `;
-  }
-
-  render() {
+  protected override render() {
     return html`
-      <vaadin-details opened>
-        <div slot="summary">Analytics</div>
-
+      <vaadin-details summary="Analytics" opened>
         <vaadin-vertical-layout>
           <a href="#">Dashboard</a>
           <a href="#">Reports</a>
@@ -37,18 +33,14 @@ export class Example extends LitElement {
         </vaadin-vertical-layout>
       </vaadin-details>
 
-      <vaadin-details opened>
-        <div slot="summary">Customers</div>
-
+      <vaadin-details summary="Customers" opened>
         <vaadin-vertical-layout>
           <a href="#">Accounts</a>
           <a href="#">Contacts</a>
         </vaadin-vertical-layout>
       </vaadin-details>
 
-      <vaadin-details opened>
-        <div slot="summary">Finances</div>
-
+      <vaadin-details summary="Finances" opened>
         <vaadin-vertical-layout>
           <a href="#">Invoices</a>
           <a href="#">Transactions</a>
