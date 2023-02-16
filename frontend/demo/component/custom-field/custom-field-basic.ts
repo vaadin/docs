@@ -7,6 +7,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 import { Binder, field } from '@hilla/form';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 import { differenceInDays, parseISO, isAfter } from 'date-fns';
+import { DatePicker } from '@vaadin/date-picker';
 
 @customElement('custom-field-basic')
 export class Example extends LitElement {
@@ -17,21 +18,18 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('#start > input')
-  private start!: HTMLInputElement;
+  @query('#start')
+  private start!: DatePicker;
 
-  @query('#end > input')
-  private end!: HTMLInputElement;
+  @query('#end')
+  private end!: DatePicker;
 
   private binder = new Binder(this, AppointmentModel);
 
   protected override firstUpdated() {
-    // Set `aria-label` for screen readers
-    this.start.setAttribute('aria-label', 'Start date');
-    this.start.removeAttribute('aria-labelledby');
-
-    this.end.setAttribute('aria-label', 'End date');
-    this.end.removeAttribute('aria-labelledby');
+    // Set title for screen readers
+    this.start.focusElement!.setAttribute('title', 'Start date');
+    this.end.focusElement!.setAttribute('title', 'End date');
 
     this.binder.for(this.binder.model.enrollmentPeriod).addValidator({
       message: 'Dates cannot be more than 30 days apart',
