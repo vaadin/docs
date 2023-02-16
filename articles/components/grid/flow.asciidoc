@@ -737,6 +737,43 @@ grid.addColumn(LitRenderer.<Person>of(
 * The functions defined by the [methodname]`withFunction()` method can be called with any number of additional parameters.
 * The additional argument of type [classname]`String` (the updated profession) is obtained from the second handler parameter with [methodname]`args.getString(0)`, where the number is the index of the argument in the [classname]`JsonArray`.
 
+==== Accessing Model Properties
+
+In addition to the most commonly used `item` and `index`, `Grid` has the following meta properties associated with each item.
+The properties can be accessed in the template via the `model` object.
+
+- `model.expanded` Expanded state of the item (relevant only in `TreeGrid`)
+- `model.level` Hierarchy level index of the item (relevant only in `TreeGrid`)
+- `model.selected` Selected state of the item
+- `model.detailsOpened` Details opened state of the item
+
+*Example*: Creating a custom tree toggle for the `TreeGrid`
+[source,java]
+----
+// The click listener needs to check if the event gets canceled (by
+// vaadin-grid-tree-toggle) and only invoke the callback if it does.
+// vaadin-grid-tree-toggle will cancel the event if the user clicks on
+// a non-focusable element inside the toggle.
+var clickListener = "e => requestAnimationFrame(() => { e.defaultPrevented && onClick(e) })";
+
+grid.addColumn(LitRenderer.<Person> of(
+    "<vaadin-grid-tree-toggle @click=${" + clickListener + "} .leaf=${item.leaf} .expanded=${model.expanded} .level=${model.level}>"
+            + "${item.name}</vaadin-grid-tree-toggle>")
+    .withProperty("leaf",
+            item -> !grid.getDataCommunicator().hasChildren(item))
+    .withProperty("name",
+            item -> item.getName())
+    .withFunction("onClick", item -> {
+        if (grid.getDataCommunicator().hasChildren(item)) {
+            if (grid.isExpanded(item)) {
+                grid.collapse(item);
+            } else {
+                grid.expand(item);
+            }
+        }
+    }));
+----
+
 === Using Component Renderers
 
 You can use any component in the grid cells by providing a [classname]`ComponentRenderer` for a column.
