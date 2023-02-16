@@ -22,8 +22,8 @@ public class ButtonIcons extends Div {
         // Icon button using a tooltip to provide textual description
         // of the action that it triggers
         Button closeButton = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
-        plusButton.getElement().setAttribute("aria-label", "Close");
         closeButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+        closeButton.getElement().setAttribute("aria-label", "Close");
         closeButton.setTooltipText("Close the dialog");
 
         Button arrowLeftButton = new Button("Left",
