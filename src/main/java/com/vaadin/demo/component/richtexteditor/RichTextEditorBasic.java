@@ -14,7 +14,7 @@ public class RichTextEditorBasic extends Div {
         RichTextEditor rte = new RichTextEditor();
         rte.setMaxHeight("400px");
         String valueAsDelta = DataService.getTemplates().getRichTextDelta();
-        rte.setValue(valueAsDelta);
+        rte.asDelta().setValue(valueAsDelta);
         add(rte);
         // end::snippet[]
     }
