@@ -6,8 +6,8 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/select';
 import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
-import { TextField } from '@vaadin/text-field';
-import { Select } from '@vaadin/select';
+import type { Select } from '@vaadin/select';
+import type { TextField } from '@vaadin/text-field';
 
 @customElement('custom-field-size-variants')
 export class Example extends LitElement {
