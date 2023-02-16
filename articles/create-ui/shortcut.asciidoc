@@ -183,15 +183,14 @@ You can also use the [methodname]`bindLifecycleTo()` method to reconfigure the `
 [source,java]
 ----
 Grid<User> usersList = new Grid<>();
-Button newUserButton = new Button("Add New User", event -> {
+Button newUserButton = new Button("Add user", event -> {
         // show new user form
 });
 newUserButton.addClickShortcut(Key.KEY_N, KeyModifier.CONTROL)
         .bindLifecycleTo(usersList);
 ----
 
-Click shortcut is active when the `usersList` is present on the page (e.g. the user has a permissions), so the shortcut can be used to edit the list of users.
-Once the list component is detached or become invisible, the shortcut is not active.
+The keyboard shortcut for clicking the “Add user” button is active when the `usersList` component is visible on the page. Once the `usersList` component is detached or it becomes invisible, the shortcut is no longer active.
 
 == Listening for Shortcut Events
 
@@ -244,13 +243,14 @@ Calling [methodname]`withModifiers(...)` without parameters removes all modifier
 == Shortcut Event Behavior on the Client Side
 
 [classname]`ShortcutRegistration` provides methods to define the behavior of events on the client side.
-With DOM events, you can control whether an event should propagate upwards in the DOM tree, and whether it should allow default browser behavior.
+With browser DOM events, you can control whether an event should propagate upwards in the DOM tree (component hierarchy), and whether it should allow default browser behavior.
 
-By default, shortcuts created by Vaadin Flow consume the event.
-By default, this means:
+By default, shortcuts consume the event, which means that:
 
-* events don't propagate upwards in the DOM tree, and
-* default browser behavior is prevented; for example, the characters used in the shortcut aren't inserted into the input field, or clicking on a link prevent the link from following the URL, see link:https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault[Event.preventDefault()] for more information.
+* events don't propagate upwards in the DOM tree (component hierarchy), and
+* the default browser behavior is prevented; for example, the characters used in the shortcut aren't inserted into the input field, or clicking on a link prevents the browser from following the URL. See link:https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault[`Event.preventDefault()`] for more information.
+
+As an exception, click shortcuts created with the [methodname]`ClickNotifier::addClickShortcut(Key, KeyModifier...)` method allow default browser behavior by default.
 
 You can change the default behavior using the [methodname]`allowEventPropagation()` (fluent), [methodname]`allowBrowserDefault()` (fluent), [methodname]`setEventPropagationAllowed(boolean)`, and [methodname]`setBrowserDefaultAllowed(boolean)` methods.
 
@@ -260,39 +260,35 @@ You can change the default behavior using the [methodname]`allowEventPropagation
 ----
 Input input = new Input();
 input.addFocusShortcut(Key.KEY_F)
-        // the character 'f' is written out,
-        // if a text field is focused
+        // the character 'f' is entered
+        // into the input, if it's focused
         .allowBrowserDefault();
 ----
-pass:[<!-- vale Vaadin.ThereIs = NO -->]
 
-There is one exception to these rules: by default, click shortcuts created with the [methodname]`ClickNotifier::addClickShortcut(Key, KeyModifier...)` method allow default browser behavior.
-
-pass:[<!-- vale Vaadin.ThereIs = YES -->]
-
-*Example*: Using the [methodname]`allowEventPropagation()` method to react on shortcut event and change styles of the form component.
+*Example*: Using the [methodname]`allowEventPropagation()` method to react to a shortcut event and change the styles of a form.
 
 [source,java]
 ----
-TextField name = new TextField();
-TextField address = new TextField();
+TextField name = new TextField("Name");
+TextField address = new TextField("Address");
 VerticalLayout form = new VerticalLayout(name, address);
 add(form);
 
-// shortcut event is propagated from the text field to the
-// form and higher in the hierarchy
 name.addFocusShortcut(Key.KEY_N, KeyModifier.CONTROL)
-    .listenOn(form).allowEventPropagation();
+        .listenOn(form)
+        // the shortcut event is propagated from the text field to the
+        // form and higher in the hierarchy
+        .allowEventPropagation();
 
 // the listener attached to the view (this) can now catch the
-// shortcut event and change styles
+// shortcut event and change the form styles
 Shortcuts.addShortcutListener(this,
         () -> form.setClassName("red-border"),
         Key.KEY_N, KeyModifier.CONTROL)
         .listenOn(this);
 ----
 
-Once the form has a focus and the shortcut is activated, the event is propagated higher in the DOM tree and caught by the view component.
+Once the "Name" field has focus and the shortcut is activated, the event is propagated higher in the component hierarchy and caught by the view component.
 
 == Checking Shortcut States
 
