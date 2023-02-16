@@ -14,8 +14,7 @@ public class EmailFieldPattern extends Div {
         emailField.setLabel("Email address");
         emailField.getElement().setAttribute("name", "email");
         emailField.setPlaceholder("username@example.com");
-        emailField.setErrorMessage(
-                "Enter a valid example.com email address");
+        emailField.setErrorMessage("Enter a valid example.com email address");
         emailField.setClearButtonVisible(true);
         emailField.setPattern("^.+@example\\.com$");
         add(emailField);
