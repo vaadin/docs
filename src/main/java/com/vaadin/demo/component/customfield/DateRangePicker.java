@@ -19,11 +19,13 @@ public class DateRangePicker extends CustomField<LocalDateRange> {
         start = new DatePicker();
         start.setPlaceholder("Start date");
         // Sets title for screen readers
-        start.getElement().executeJs("this.focusElement.setAttribute('title', 'Start date')");
+        start.getElement().executeJs(
+                "this.focusElement.setAttribute('title', 'Start date')");
 
         end = new DatePicker();
         end.setPlaceholder("End date");
-        end.getElement().executeJs("this.focusElement.setAttribute('title', 'End date')");
+        end.getElement().executeJs(
+                "this.focusElement.setAttribute('title', 'End date')");
 
         add(start, new Text(" – "), end);
     }
