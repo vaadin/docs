@@ -31,7 +31,8 @@ public class RichTextEditorSetGetValue extends Div {
         TextArea deltaTextArea = new TextArea("Delta Value",
                 "Enter something in the Rich Text Editor to see its Delta value here.");
         deltaTextArea.setWidthFull();
-        rte.asDelta().addValueChangeListener(e -> deltaTextArea.setValue(e.getValue()));
+        rte.asDelta().addValueChangeListener(
+                e -> deltaTextArea.setValue(e.getValue()));
         deltaTextArea.addValueChangeListener(e -> {
             if (!rte.asDelta().getValue().equals(e.getValue())) {
                 rte.asDelta().setValue(e.getValue());
