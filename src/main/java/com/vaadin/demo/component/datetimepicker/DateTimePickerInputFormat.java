@@ -12,9 +12,9 @@ public class DateTimePickerInputFormat extends Div {
 
     public DateTimePickerInputFormat() {
         // tag::snippet[]
-    	DatePickerI18n dateFormat = new DatePickerI18n();
+        DatePickerI18n dateFormat = new DatePickerI18n();
         dateFormat.setDateFormat("dd/MM/yyyy");
-        
+
         DateTimePicker dateTimePicker = new DateTimePicker();
         dateTimePicker.setLabel("Select date and time");
         dateTimePicker.setDatePickerI18n(dateFormat);
