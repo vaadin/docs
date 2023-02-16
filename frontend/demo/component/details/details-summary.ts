@@ -42,22 +42,21 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-details opened>
-        <vaadin-horizontal-layout
-          slot="summary"
-          style="justify-content: space-between; width: 100%;"
-        >
-          <span>Contact information</span>
+        <vaadin-details-summary slot="summary">
+          <vaadin-horizontal-layout style="justify-content: space-between; width: 100%;">
+            <span>Contact information</span>
 
-          <vaadin-horizontal-layout
-            style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
-          >
-            <vaadin-icon
-              icon="vaadin:exclamation-circle"
-              style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s);"
-            ></vaadin-icon>
-            <span>2 errors</span>
+            <vaadin-horizontal-layout
+              style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
+            >
+              <vaadin-icon
+                icon="vaadin:exclamation-circle"
+                style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); margin-right: var(--lumo-space-xs)"
+              ></vaadin-icon>
+              <span>2 errors</span>
+            </vaadin-horizontal-layout>
           </vaadin-horizontal-layout>
-        </vaadin-horizontal-layout>
+        </vaadin-details-summary>
 
         <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
           <vaadin-text-field
