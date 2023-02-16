@@ -53,6 +53,7 @@ export class Example extends LitElement {
         <span>${person.profession}</span>
 
         <vaadin-details
+          summary="Contact information"
           .opened="${live(this.expandedPeople.has(person))}"
           @click="${(e: Event) => {
             const details = e.currentTarget as Details;
@@ -63,8 +64,6 @@ export class Example extends LitElement {
             }
           }}"
         >
-          <div slot="summary">Contact information</div>
-
           <vaadin-vertical-layout>
             <span>${person.email}</span>
             <span>${person.address.phone}</span>

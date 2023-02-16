@@ -18,9 +18,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-details opened>
-        <div slot="summary">Contact information</div>
-
+      <vaadin-details summary="Contact information" opened>
         <vaadin-vertical-layout>
           <span>Sophia Williams</span>
           <span>sophia.williams@company.com</span>

@@ -38,8 +38,7 @@ public class GridProPreventSave extends Div {
                     if (isValidPhoneNumber(newValue)) {
                         person.getAddress().setPhone(newValue);
                     } else {
-                        showErrorNotification(
-                                "Enter a valid phone number");
+                        showErrorNotification("Enter a valid phone number");
                     }
                 }).setHeader("Phone");
         // end::snippet[]
