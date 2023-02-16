@@ -19,12 +19,12 @@ public class ButtonIcons extends Div {
         plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         plusButton.getElement().setAttribute("aria-label", "Add item");
 
-        // Icon button using a tooltip to provide textual alternative
-        // to screen readers, as well as when hovering the button with
-        // a pointing device, or focusing the button using keyboard
+        // Icon button using a tooltip to provide textual description
+        // of the action that it triggers
         Button closeButton = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
+        plusButton.getElement().setAttribute("aria-label", "Close");
         closeButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-        closeButton.setTooltipText("Close");
+        closeButton.setTooltipText("Close the dialog");
 
         Button arrowLeftButton = new Button("Left",
                 new Icon(VaadinIcon.ARROW_LEFT));

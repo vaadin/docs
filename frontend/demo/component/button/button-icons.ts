@@ -28,12 +28,11 @@ export class Example extends LitElement {
           <vaadin-icon icon="vaadin:plus"></vaadin-icon>
         </vaadin-button>
 
-        <!-- Icon button using a tooltip to provide textual alternative 
-             to screen readers, as well as when hovering the button with 
-             a pointing device, or focusing the button using keyboard -->
-        <vaadin-button theme="icon">
+        <!-- Icon button using a tooltip to provide a textual description of 
+             the action that it triggers -->
+        <vaadin-button theme="icon" aria-label="Close">
           <vaadin-icon icon="vaadin:close-small"></vaadin-icon>
-          <vaadin-tooltip slot="tooltip" text="Close"></vaadin-tooltip>
+          <vaadin-tooltip slot="tooltip" text="Close the dialog"></vaadin-tooltip>
         </vaadin-button>
 
         <vaadin-button>
