@@ -13,7 +13,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class ButtonIcons extends Div {
     public ButtonIcons() {
         // tag::snippet[]
-        // Icon button using an aria-label to provide textual alternative
+        // Icon button using an aria-label to provide a textual alternative
         // to screen readers
         Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
         plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);

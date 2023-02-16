@@ -22,7 +22,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <!-- Icon button using an aria-label to provide textual alternative 
+        <!-- Icon button using an aria-label to provide a textual alternative 
              to screen readers -->
         <vaadin-button theme="icon" aria-label="Add item">
           <vaadin-icon icon="vaadin:plus"></vaadin-icon>
