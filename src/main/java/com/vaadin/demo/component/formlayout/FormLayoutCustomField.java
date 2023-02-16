@@ -17,10 +17,12 @@ import com.vaadin.flow.router.Route;
 public class FormLayoutCustomField extends Div {
     // tag::snippet[]
     public class ExpirationField extends CustomField<String> {
-        private final List<String> MONTHS = IntStream.range(1, 13).mapToObj(month -> String.format("%02d",
-                month)).toList();
-        private final List<String> YEARS = IntStream.range(LocalDate.now().getYear(),
-                LocalDate.now().getYear() + 11).mapToObj(year -> Integer.toString(year)).toList();
+        private final List<String> MONTHS = IntStream.range(1, 13)
+                .mapToObj(month -> String.format("%02d", month)).toList();
+        private final List<String> YEARS = IntStream
+                .range(LocalDate.now().getYear(),
+                        LocalDate.now().getYear() + 11)
+                .mapToObj(year -> Integer.toString(year)).toList();
 
         private final Select<String> month = new Select<String>();
         private final Select<String> year = new Select<String>();
@@ -34,12 +36,14 @@ public class FormLayoutCustomField extends Div {
             month.setItems(MONTHS);
             month.setPlaceholder("Month");
             // Set title for screen readers
-            month.getElement().executeJs("this.focusElement.setAttribute('title', 'Month');");
+            month.getElement().executeJs(
+                    "this.focusElement.setAttribute('title', 'Month');");
             layout.add(month);
 
             year.setItems(YEARS);
             year.setPlaceholder("Year");
-            year.getElement().executeJs("this.focusElement.setAttribute('title', 'Year');");
+            year.getElement().executeJs(
+                    "this.focusElement.setAttribute('title', 'Year');");
             layout.add(year);
 
             add(layout);
@@ -50,11 +54,13 @@ public class FormLayoutCustomField extends Div {
             String monthValue = month.getValue();
             String yearValue = year.getValue();
 
-            if (monthValue == month.getEmptyValue() || yearValue == year.getEmptyValue()) {
+            if (monthValue == month.getEmptyValue()
+                    || yearValue == year.getEmptyValue()) {
                 return null;
             }
 
-            return String.join("/", monthValue.toString(), yearValue.toString());
+            return String.join("/", monthValue.toString(),
+                    yearValue.toString());
         }
 
         @Override
