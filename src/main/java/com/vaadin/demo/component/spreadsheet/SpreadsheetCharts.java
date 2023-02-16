@@ -14,6 +14,7 @@ public class SpreadsheetCharts extends Div {
 
     public SpreadsheetCharts() throws IOException, URISyntaxException {
         // tag::snippet[]
+        // The example file rainfall.xlsx contains a pre-configured chart
         InputStream stream = getClass()
                 .getResourceAsStream("/testsheets/rainfall.xlsx");
 
