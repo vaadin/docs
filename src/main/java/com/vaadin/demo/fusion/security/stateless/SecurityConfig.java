@@ -11,13 +11,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.JwsAlgorithms;
 
 import com.vaadin.demo.ExcludeDemoSpringComponent; // hidden-source-line
-import com.vaadin.flow.spring.security.VaadinWebSecurityConfigurerAdapter;
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
 
 // tag::stateless-configure[]
 @EnableWebSecurity
 @Configuration
 @ExcludeDemoSpringComponent // hidden-source-line
-public class SecurityConfig extends VaadinWebSecurityConfigurerAdapter {
+public class SecurityConfig extends VaadinWebSecurity {
 
     @Value("${my.app.auth.secret}")
     private String authSecret;
