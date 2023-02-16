@@ -31,6 +31,140 @@ include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextE
 
 --
 
+== Value Format
+
+Rich Text Editor supports the HTML format and the https://github.com/quilljs/delta[Quill Delta format] for reading and setting its value.
+
+
+.HTML format details
+[%collapsible]
+====
+
+Rich Text Editor supports values in the HTML format, with the following restrictions:
+
+- Only a subset of HTML tags are supported, which are listed in the table below.
+- Block elements, such as paragraphs, lists, or block quotes, can't be nested.
+- Unsupported tags, such as `<b>`, are replaced with an equivalent supported tag, such as `<strong>`, or with a paragraph (`<p>`).
+
+.Supported HTML tags
+|===
+|Feature|Tags
+
+| Paragraphs and line breaks
+| `<p>`, `<br>`
+
+| Headings
+| `<h1>`, `<h2>`, ..., `<h6>`
+
+| Bold, italic, underlined and strike-through text
+| `<strong>`, `<em>`, `<u>`, `<strikethrough>`
+
+| Links
+| `<a href="...">...</a>`
+
+| Text alignment via the `text-align` CSS property
+| `<p style="text-align: center">`
+
+| Ordered, unordered lists, and list items +
+(can't be nested)
+| `<ol>`, `<ul>`, `<li>`
+
+| Block quotes
+| `<blockquote>`
+
+| Pre-formatted text
+| `<pre>`
+
+| Images, using either a web URL or a Base64-encoded data URL
+| `<img src="...">`
+
+|===
+
+The following snippet contains an HTML document that is supported by the component, and demonstrates the usage of several tags. Try pasting the snippet into the `HTML Value` text area in the example below and see how the editor updates. Then try modifying the value, either by using the editor's features, or by changing the HTML value directly.
+
+[source,html]
+----
+<h2>High quality rich text editor for the web</h2>
+<p>Rich text editor handles the following formatting:</p>
+<ul>
+  <li><strong>Bold</strong></li>
+  <li><em>Italic</em></li>
+  <li><u>Underline</u></li>
+  <li><s>Strike-through</s></li>
+</ul><h3>Blockquotes</h3>
+<blockquote>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
+  dolore magna aliqua.
+</blockquote><h3>Code blocks</h3>
+<pre spellcheck='false'>&lt;body&gt;
+  &lt;vaadin-rich-text-editor&gt;&lt;/vaadin-rich-text-editor&gt;
+&lt;/body&gt;
+</pre>
+----
+
+====
+
+.Delta format details
+[%collapsible]
+====
+
+The JSON-based Delta format consists of an array of operations to apply to a document.
+Rich Text Editor specifically only uses insert operations, each operation sequentially adding content to the document.
+Operations can have attributes, such as whether to render a piece of content with a specific text style, or as a link.
+For the full specification of the format, see the https://github.com/quilljs/delta[Quill Delta GitHub repository].
+
+The following snippet contains a Delta document that demonstrates some of the format's features.
+Try pasting the snippet into the `Delta Value` text area in the example below and see how the editor updates.
+Then try modifying the value, either by using the editor's features, or by changing the Delta value directly.
+
+[source,json]
+----
+[
+  {"insert": "High quality rich text editor for the web\n", "attributes": {"header":  2}},
+  {"insert": "Rich text editor handles the following formatting:\n"},
+  {"insert": "Bold\n","attributes": { "bold": true, "list": "bullet" }},
+  {"insert": "Italic\n", "attributes": { "italic": true, "list": "bullet" }},
+  {"insert": "Underline\n", "attributes": { "underline": true, "list": "bullet" }},
+  {"insert": "Strike-through\n", "attributes": { "strike": true, "list": "bullet" }},
+  {"insert": "Blockquotes\n", "attributes": { "header": 3 }},
+  {"insert": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n", "attributes": { "blockquote": true }},
+  {"insert": "Code blocks\n", "attributes": { "header": 3 }},
+  {"insert": "<vaadin-rich-text-editor></vaadin-rich-text-editor>\n", "attributes": { "code-block": true }}
+]
+----
+
+====
+
+For the Flow component, to read, write, or bind the component's value with `Binder`, use:
+
+- https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/richtexteditor/RichTextEditor.html#asDelta()[`RichTextEditor.asDelta()`] for the Delta format
+- https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/richtexteditor/RichTextEditor.html#asHtml()[`RichTextEditor.asHtml()`] for the HTML format
+
+For the web component, to read or write the value in the Delta format, use the `value` property.
+To read or write the value in the HTML format, use the `htmlValue` property and the `dangerouslySetHtmlValue` method.
+
+.HTML sanitization
+[NOTE]
+To prevent injecting malicious content, be sure to sanitize HTML strings before passing them to the web component using `dangerouslySetHtmlValue`. An example of this would be using a library such as https://www.npmjs.com/package/dompurify[dompurify].
+
+[.example]
+--
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=htmlsnippet,indent=0,group=TypeScript]
+
+...
+
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=snippet,indent=0,group=TypeScript]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorSetGetValue.java[render,tags=snippet,indent=0,group=Java]
+----
+
+--
+
 == Read-Only
 
 Setting the component to read-only hides the toolbar and makes the content non-editable.
@@ -109,29 +243,6 @@ include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-theme-no
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorThemeNoBorder.java[render,tags=snippet,indent=0,group=Java]
-----
-
---
-
-== Value Format
-
-Rich Text Editor natively uses the JSON-based https://github.com/quilljs/delta[Delta format] for reading and setting its value, but HTML values can also be used, with some limitations.
-
-[.example]
---
-
-[source,typescript]
-----
-include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=htmlsnippet,indent=0,group=TypeScript]
-
-...
-
-include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=snippet,indent=0,group=TypeScript]
-----
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorSetGetValue.java[render,tags=snippet,indent=0,group=Java]
 ----
 
 --
