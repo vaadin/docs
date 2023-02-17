@@ -15,6 +15,9 @@ Business objects are typically implemented as JavaBeans in an application. [clas
 
 You can use reflection based on bean property names to bind values.
 This reduces the amount of code needed when binding to fields in the bean.
+To use reflection, create a [classname]`Binder` by providing the bean class, for example `new Binder<>(Person.class);`.
+By default, [classname]`Binder` inspects top level properties when it is instantiated, but it can detect nested properties lazily when they are bound to a view field.
+To eagerly inspect nested properties, you can use the [constructorname]`Binder(Class<BEAN> beanType, boolean scanNestedDefinitions);` constructor, passing `true` as the value of `scanNestedDefinitions` parameter.
 
 *Examples*: Binding using reflection based on bean property names.
 
@@ -37,6 +40,16 @@ binder.forField(yearOfBirthField)
 [NOTE]
 Be cautious when using strings to identify properties.
 A typo in the string, or a subsequent change to the setter and getter method names, results in a runtime exception.
+
+== Binding Nested Properties
+
+Binding nested properties is possible if the bean provides all the `getters` necessary to reach the leaf property.
+The nested property should be expressed in the bean path syntax.
+For example to bind the [fieldname]`street` property of [classname]`Address` class, through the [fieldname]`Person.address` field, you should:
+
+* have a [methodname]`getStreet()` method in the [classname]`Address` class. If the property is writable, provide also the [methodname]`setStreet(String street)` method.
+* have a [methodname]`getAddress()` method in [classname]`Person` class. The getter should never return `null`, otherwise the nested binding will fail.
+* Bind the field using its bean path `address.street`, for example `binder.bind(streetAddressField, "address.street")`
 
 == Automatic Data Binding
 
@@ -89,13 +102,17 @@ The [methodname]`bindInstanceFields()` method processes all Java member fields w
 
 If the field name doesn't match the corresponding property name in the business object, you can use the `@PropertyId` annotation to specify the property name.
 
+The `@PropertyId` annotation is mandatory if the field should be bound to a nested property.
+
 *Example*: Using the `@PropertyId` annotation to specify the "sex" property for the `gender` field.
 
 [source,java]
 ----
 @PropertyId("sex")
-private ComboBox<Gender> gender =
-        new ComboBox<>("Gender");
+private ComboBox<Gender> gender = new ComboBox<>("Gender");
+
+@PropertyId("address.street")
+private TextField streetAddressField = new TextField("Street");
 ----
 
 === Configuring Converters and Validators
