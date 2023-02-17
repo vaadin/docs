@@ -11,6 +11,7 @@ layout: page
 Applications can use various types of resources, such as JavaScript code, CSS, and images.
 This article describes how they are stored in a project and then accessed in an application.
 
+[[flow.resource-cheat-sheet]]
 == Resource Cheat Sheet
 
 The following tables show how to load various resources and where the resource files should be placed in a project.
@@ -27,11 +28,15 @@ The following tables show how to load various resources and where the resource f
 |`@JsModule("./src/my-script.js")`<<foot-1,[1]>>
 |`/frontend/src/my-script.js`
 
-|Static files, such as images and icons (such as the favicon)
+|Static files such as images, icons (such as the favicon) and documents, directly requested from the browser
 |`new Image("img/flower.jpg", "A flower")`
+
+`new Anchor("assets/document.pdf", "A document");`<<foot-2,[2]>>
 |`/src/main/webapp/img/flower.jpg`
-+
+
 `/src/main/webapp/favicon.icon`
+
+`/src/main/webapp/assets/document.pdf`
 |===
 
 .In Spring projects
@@ -48,10 +53,14 @@ The following tables show how to load various resources and where the resource f
 
 |Static files, such as images and icons (for example, the favicon)
 |`new Image("img/flower.jpg", "A flower")`
+
+`new Anchor("assets/document.pdf", "A document");`<<foot-2,[2]>>
 |
 `/src/main/resources/META-INF/resources/img/flower.jpg`
 
 `/src/main/webapp/favicon.icon`
+
+`/src/main/resources/META-INF/resources/assets/document.pdf`
 |===
 
 .In add-ons
@@ -68,10 +77,14 @@ The following tables show how to load various resources and where the resource f
 
 |Static files, such as images and icons (for example, the favicon)
 |`new Image("img/flower.jpg", "A flower")`
+
+`new Anchor("assets/document.pdf", "A document");`<<foot-2,[2]>>
 |
 `/src/main/resources/META-INF/resources/img/flower.jpg`
 
 `/src/main/webapp/favicon.icon`
+
+`/src/main/resources/META-INF/resources/assets/document.pdf`
 |===
 
 === Footnotes
@@ -80,6 +93,71 @@ The following tables show how to load various resources and where the resource f
 . The `@JsModule` and `@CssImport` annotations can also be used to import from an `npm` package.
 In this case, the path is defined as `@JsModule("@polymer/paper-input")` or `@CssImport("some-package/style.css")`.
 Paths referring to the local front-end directory should be prefixed with `./`.
+[[foot-2]]
+. When using `Anchor` to provide a downloadable resource, the `router-ignore` attribute is required.
++
+[source,java]
+----
+Anchor anchor = new Anchor("assets/document.pdf", "A document");
+anchor.getElement().setAttribute("router-ignore", true);
+----
+
+== Programmatically Load Resources
+
+Components such as [classname]`Image` and [classname]`Anchor` allows to display or download dynamic content by providing a [classname]`StreamResource`.
+The contents are fetched by an instance of [interfacename]`InputStreamFactory`, that is passed to the [classname]`StreamResource` as a constructor parameter.
+The [interfacename]`InputStreamFactory` requires to implement the [methodname]`createInputStream()` method, and can be used to load for example images and documents shipped along the application.
+Resources can be loaded from application classpath or from the web application.
+
+The classpath resources are stored in the `/src/main/resources` folder and ca be loaded using [methodname]`Class.getResourceAsStream(name)` or [methodname]`ClassLoader.getResourceAsStream(name)` methods. The name is always consider to be an absolute path for [methodname]`ClassLoader.getResourceAsStream(name)`, whereas it can be an absolute path, starting with a `/` or relative to the class package for [methodname]`Class.getResourceAsStream(name)`.
+
+.Load resources from classpath
+[source,java]
+----
+// Given the following resources exists
+// `/src/main/resources/img/flower.jpg`
+// `/src/main/resources/com/example/document.pdf`
+package com.example;
+class MyView extends Div {
+    public MyView() {
+        add(new Image(new StreamResource("flower.jpg",
+            () -> getClass().getResourceAsStream("/img/flower.jpg")),
+            "Plant 3"
+        ));
+        Anchor anchor = new Anchor(new StreamResource("document.pdf",
+            () -> getClass().getResourceAsStream("document.pdf")),
+            "A document"
+        );
+        anchor.getElement().setAttribute("router-ignore", true);
+        add(anchor);
+    }
+}
+----
+
+Web application resources can be loaded through [methodname]`VaadinService.getResourceAsStream(path)` or directly from [methodname]`ServletContext.getResourceAsStream(path)`.
+The Servlet specifications state that the provided `path` should be absolute, but some Servlet container (for example Tomcat) allows to pass a path without the starting `/`.
+
+.Load resources from web application
+[source,java]
+----
+package com.example;
+class MyView extends Div {
+    public MyView() {
+        add(new Image(new StreamResource("flower.jpg",
+            () -> VaadinService.getCurrent().getResourceAsStream("/img/flower.jpg")),
+            "Plant 3"
+        ));
+        Anchor anchor = new Anchor(new StreamResource("document.pdf",
+            () ->  VaadinServlet.getCurrent().getServletContext()
+                      .getResourceAsStream("/assets/document.pdf")),
+            "A document");
+        anchor.getElement().setAttribute("router-ignore", true);
+        add(anchor);
+    }
+}
+----
+
+The physical location of the resources in the project is the same as described in the <<#flow.resource-cheat-sheet, Resource Cheat Sheet>> section.
 
 == Importing JavaScript and CSS
 
