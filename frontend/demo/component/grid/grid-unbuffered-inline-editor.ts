@@ -1,3 +1,4 @@
+import 'Frontend/demo/init';
 import '@vaadin/email-field';
 import '@vaadin/grid';
 import '@vaadin/icon';
