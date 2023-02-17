@@ -5,7 +5,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.spreadsheet.Spreadsheet;
 import com.vaadin.flow.component.spreadsheet.SpreadsheetComponentFactory;
 import com.vaadin.flow.component.textfield.TextField;
