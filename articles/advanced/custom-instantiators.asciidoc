@@ -1,0 +1,178 @@
+---
+title: Custom Instantiator
+description: Creating a custom Instantiator implementation.
+order: 750
+layout: page
+---
+
+
+= Custom Instantiator
+
+An [interfacename]`Instantiator` is used for discovering, creating and managing object instances that Flow uses.
+Usually a custom instantiator is needed for dependency injection frameworks so they can provide managed instances of objects according to the specific conventions of that DI framework.
+
+== Creating a custom Instantiator
+
+To create a custom instantiator implement the [interfacename]`Instantiator` interface and implement the methods:
+
+- `Stream<VaadinServiceInitListener> getServiceInitListeners()`
+- `T getOrCreate(Class<T> type)`
+- `T createComponent(Class<T> componentClass)`
+
+Usually it is good to extend the [classname]`DefaultInstantiator` and only implement [methodname]`getOrCreate` and [methodname]`createComponent` with dependency injection bean handling with a fallback to the default functionality.
+
+- [methodname]`getOrCreate(Class<T>)` should always return a initialized class of type T where the class returned is a initialized one from the current scope or generate a new bean instance or if not a bean handle field injection.
+- [methodname]`createComponent(Class<T>)` should always create a new component with field injection.
+
+As an example the simplified instantiator for cdi could be as follows
+
+.Simplified CustomInstantiator for CDI sample
+[source,java]
+----
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.di.DefaultInstantiator;
+
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.Unmanaged;
+import jakarta.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class CustomInstantiator extends DefaultInstantiator {
+
+    @Inject
+    private BeanManager beanManager;
+
+    public CustomInstantiator(BeanManager beanManager, VaadinService service) {
+        super(service);
+        this.beanManager = beanManager;
+    }
+
+    /**
+     * Hands over an existing bean or tries to instantiate one.
+     */
+    @Override
+    public<T> T getOrCreate(Class<T> type) {
+        Set<Bean<T>> beans = beanManager.getBeans(type);
+        if(beans == null || beans.isEmpty()) {
+            getLogger().debug("'{}' is not a CDI bean.",
+                        type.getName());
+            return createComponent(type);
+        }
+        Bean<?> bean = beanManager.resolve(beans);
+        final CreationalContext<?> ctx = beanManager.createCreationalContext(bean);
+        //noinspection unchecked
+        return (T) beanManager.getReference(bean, type, ctx);
+    }
+
+    /**
+     * Tries to instantiate new bean.
+     */
+    @Override
+    public<T extends Component> T createComponent(Class<T> componentClass) {
+        Unmanaged<T> unmanagedClass = new Unmanaged<T>(componentClass);
+        Unmanaged.UnmanagedInstance<T> instance = unmanagedClass.newInstance();
+        instance.produce().inject().postConstruct();
+        return instance.get();
+    }
+
+    private static Logger getLogger() {
+        return LoggerFactory.getLogger(CdiInstantiator.class);
+    }
+}
+----
+
+== Loading the custom instantiator using Java ServiceLoader
+
+To load the instantiator you should implement the [interfacename]`InstantiatorFactory` interface and load it through the Java ServiceLoader.
+
+[source,java]
+----
+package org.example;
+
+import com.vaadin.flow.di.Instantiator;
+import com.vaadin.flow.di.InstantiatorFactory;
+import com.vaadin.flow.server.VaadinService;
+
+import jakarta.enterprise.inject.spi.BeanManager;
+import org.apache.deltaspike.core.api.provider.BeanManagerProvider;
+
+public class CustomInstantiatorFactory implements InstantiatorFactory {
+
+    @Override
+    public Instantiator createInstantitor(VaadinService vaadinService) {
+        BeanManager beanManager = BeanManagerProvider.getInstance().getBeanManager();
+        return new CustomInstantiator(beanManager, service);
+    }
+}
+----
+
+To load the factory add to [filename]`src/main/resources/META-INF/services/` the file [filename]`com.vaadin.flow.di.InstantiatorFactory` with the content being the fully qualified name of the factory class.
+For this example the content would be `org.example.CustomInstantiatorFactory`.
+
+== Loading the custom instantiator though VaadinServletService
+
+Implement [classname]`VaadinServletService` and [classname]`VaadinServlet`.
+
+For [classname]`VaadinServletService` override the [methodname]`createInstantiator()`
+
+[source,java]
+----
+import com.vaadin.flow.di.Instantiator;
+import com.vaadin.flow.server.VaadinServletService;
+
+import jakarta.enterprise.inject.spi.BeanManager;
+
+public class CustomVaadinServletService extends VaadinServletService {
+    private BeanManager beanManager;
+
+    public CustomVaadinServletService(CustomServlet servlet,
+                DeploymentConfiguration configuration,
+                BeanManager beanManager) {
+        super(servlet, configuration);
+        this.beanManager = beanManager;
+    }
+
+    protected Instantiator createInstantiator() throws ServiceException {
+        Set<Bean<CdiInstantiator>> beans = beanManager.getBeans(CustomInstantiator.class);
+        if(beans == null || beans.isEmpty()) {
+            getLogger().debug("'{}' is not a CDI bean.", type.getName());
+            Unmanaged<T> unmanagedClass = new Unmanaged<T>(CustomInstantiator.class);
+            Unmanaged.UnmanagedInstance<T> instance = unmanagedClass.newInstance();
+            instance.produce().inject().postConstruct();
+            return instance.get();
+        }
+        Bean<?> bean = beanManager.resolve(beans);
+        final CreationalContext<?> ctx = beanManager.createCreationalContext(bean);
+        //noinspection unchecked
+        return (CustomInstantiator) beanManager.getReference(bean, CustomInstantiator.class, ctx);
+    }
+}
+----
+
+For [classname]`VaadinServlet` override the [methodname]`createServerService(DeploymentConfiguration deploymentConfiguration)` to return the custom VaadinServletService.
+
+[source,java]
+----
+import com.vaadin.flow.function.DeploymentConfiguration;
+import com.vaadin.flow.server.VaadinServlet;
+import com.vaadin.flow.server.VaadinServletService;
+
+import jakarta.enterprise.inject.spi.BeanManager;
+import org.apache.deltaspike.core.api.provider.BeanManagerProvider;
+
+@WebServlet(urlPatterns = "/*", asyncSupported = true)
+public class CustomServlet extends VaadinServlet {
+
+  @Override
+  protected VaadinServletService createServletService(DeploymentConfiguration deploymentConfiguration) throws ServiceException {
+      BeanManager beanManager = BeanManagerProvider.getInstance().getBeanManager();
+      CustomVaadinServletService service = new CustomVaadinServletService(this, deploymentConfiguration, beanManager);
+      service.init();
+      return service;
+  }
+}
+----
+
+[discussion-id]`?`
