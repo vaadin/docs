@@ -19,8 +19,18 @@ public class TimePickerMinMax extends Div {
         timePicker.setHelperText("Open 8:00-16:00");
         timePicker.setStep(Duration.ofMinutes(30));
         timePicker.setValue(LocalTime.of(8, 30));
-        timePicker.setMinTime(LocalTime.of(8, 0));
-        timePicker.setMaxTime(LocalTime.of(16, 0));
+        timePicker.setMin(LocalTime.of(8, 0));
+        timePicker.setMax(LocalTime.of(16, 0));
+        timePicker.addValueChangeListener(event -> {
+            LocalTime value = event.getValue();
+            if (value.compareTo(timePicker.getMin()) < 0) {
+                timePicker.setErrorMessage("Too early, choose another time");
+            } else if (value.compareTo(timePicker.getMax()) > 0) {
+                timePicker.setErrorMessage("Too late, choose another time");
+            } else {
+                timePicker.setErrorMessage(null);
+            }
+        });
         add(timePicker);
         // end::snippet[]
     }
