@@ -39,7 +39,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-grid .items="${this.items}" .cellClassNameGenerator="${this.cellClassNameGenerator}">
+      <vaadin-grid .items="${this.items}" .cellPartNameGenerator="${this.cellPartNameGenerator}">
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>
@@ -55,7 +55,7 @@ export class Example extends LitElement {
     <span>${this.ratingFormatter.format(person.customerRating)}</span>
   `;
 
-  private cellClassNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {
+  private cellPartNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {
     const item = model.item;
     let classes = '';
     // Make the customer rating column bold
