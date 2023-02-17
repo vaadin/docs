@@ -15,7 +15,7 @@ public class RichTextEditorMinMaxHeight extends Div {
         rte.setMaxHeight("400px");
         rte.setMinHeight("200px");
         String valueAsDelta = DataService.getTemplates().getRichTextDelta();
-        rte.setValue(valueAsDelta);
+        rte.asDelta().setValue(valueAsDelta);
         add(rte);
         // end::snippet[]
     }

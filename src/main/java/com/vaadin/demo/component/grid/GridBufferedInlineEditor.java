@@ -69,8 +69,8 @@ public class GridBufferedInlineEditor extends VerticalLayout {
         EmailField emailField = new EmailField();
         emailField.setWidthFull();
         binder.forField(emailField).asRequired("Email must not be empty")
-                .withValidator(new EmailValidator(
-                        "Enter a valid email address"))
+                .withValidator(
+                        new EmailValidator("Enter a valid email address"))
                 .withStatusLabel(emailValidationMessage)
                 .bind(Person::getEmail, Person::setEmail);
         emailColumn.setEditorComponent(emailField);
