@@ -20,18 +20,22 @@ public class MessageListWithThemeComponent extends Div {
         // tag::snippet[]
         Person person = DataService.getPeople(1).get(0);
         MessageList list = new MessageList();
+
         Instant yesterday = LocalDateTime.now(ZoneOffset.UTC).minusDays(1)
                 .toInstant(ZoneOffset.UTC);
-        Instant fiftyMinsAgo = LocalDateTime.now(ZoneOffset.UTC)
-                .minusMinutes(50).toInstant(ZoneOffset.UTC);
         MessageListItem message1 = new MessageListItem(
                 "Linsey, could you check if the details with the order are okay?",
                 yesterday, "Matt Mambo");
         message1.setUserColorIndex(1);
+
+        Instant fiftyMinsAgo = LocalDateTime.now(ZoneOffset.UTC)
+                .minusMinutes(50).toInstant(ZoneOffset.UTC);
         MessageListItem message2 = new MessageListItem("All good. Ship it.",
                 fiftyMinsAgo, "Linsey Listy", person.getPictureUrl());
-        message2.addThemeNames("current-user");
         message2.setUserColorIndex(2);
+        // Add custom theme name
+        message2.addThemeNames("current-user");
+
         list.setItems(Arrays.asList(message1, message2));
         add(list);
         // end::snippet[]

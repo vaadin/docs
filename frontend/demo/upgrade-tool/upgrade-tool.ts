@@ -63,8 +63,7 @@ export default class UpgradeTool extends LitElement {
       <div>
         <h2>Select your Vaadin versions:</h2>
         <div style="margin-bottom: 10px">${this.createSelectComponents()}</div>
-        <vaadin-details>
-          <div slot="summary">Earlier Versions</div>
+        <vaadin-details summary="Earlier Versions">
           <ul style="margin-top: 0">
             <li>
               <a href="https://vaadin.com/docs/v14/flow/upgrading/v10-13/">

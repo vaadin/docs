@@ -1,4 +1,519 @@
 ---
-title: Upgrading
+title: Upgrading Guide
 order: 900
 ---
+= Upgrading from Vaadin 23
+
+.Upgrading from an earlier version
+[TIP]
+See the https://vaadin.com/docs/latest/upgrading[Vaadin 23 upgrading guides] if you are upgrading from an earlier version.
+
+This guide goes through the changes you need to make in your application when upgrading from Vaadin 23. After these changes, your application should compile, run, behave and look the way it did before.
+
+Many of the breaking changes are needed because the fundamental changes in the Java platform and the major dependencies Vaadin relies on, including the following:
+
+*Servlet 6*::
+Vaadin 24 is based on Servlet 6 specifications and is compatible with the Jakarta EE 10. Vaadin encapsulates the usage of the classes from `javax` / `jakarta` packages. Therefore, the application's code doesn't need to use servlets, directly. Nevertheless, this is needed in various cases, like accessing the cookies, setting servlet's parameters, etc.
+
+*Spring Boot 3*::
+Vaadin 24 uses the latest Spring Boot 3 and Spring Framework 6 versions. This leads in turn to making breaking changes in Spring-based features compared to earlier Spring-boot 2 and Spring Framework 5 versions.
+
+*Java 17*::
+Vaadin 24 requires Java 17 or later. This is dictated by Spring framework and newer versions of application servers.
+
+
+== Overview
+
+Vaadin 24 doesn't fundamentally change how applications are developed and behave. Still, the upgrade process requires the following essential steps:
+
+* Upgrade Vaadin version in the project's `pom.xml`, checking for the latest Vaadin 24 release link:https://github.com/vaadin/platform/releases[in GitHub].
+* Convert package names to Jakarta EE 10 namespace.
+* For *Spring-based* applications, upgrade to Spring-boot 3 or Spring framework 6, depending on what is used in your project.
+* For *non-Spring* applications, upgrade the application server version to one compatible with Jakarta EE 10.
+* Upgrade third-party dependencies used in your project (such as, Maven/Gradle plugins, libraries, frameworks) to the Jakarta and Spring-compatible versions.
+* Check if your application is not using deprecated code fragments.
+* Make sure your application runs well on Java 17 runtime.
+* If you have used Webpack, it is recommended to check, if your application also build, runs and appears the same with Vite.
+
+== Limitations
+
+Portlet and OSGi integrations are not included, for two reasons:
+
+* The latest Portlet 3 specification corresponds to Servlet 3, and it doesn't work with Servlet 6.
+* Jakarta EE 10 compatible version of OSGi core runtime https://felix.apache.org/documentation/index.html[Apache Felix 8] is under development. https://karaf.apache.org/[Apache Karaf] container is based on Apache Felix and doesn't have a Jakarta compatible version.
+
+== Preparations
+
+Upgrade the Vaadin version in `pom.xml` / `build.gradle` to the latest release like so:
+
+.pom.xml
+[source,xml]
+----
+<vaadin.version>24.0.0.beta1</vaadin.version>
+----
+
+See the link:https://github.com/vaadin/platform/releases[list of releases in GitHub] for the latest one.
+
+Since a pre-release is used, you have to add the following repositories:
+
+.pom.xml
+[source,xml]
+----
+<repository>
+    <id>vaadin-prereleases</id>
+    <url>https://maven.vaadin.com/vaadin-prereleases/</url>
+</repository>
+
+<pluginRepository>
+    <id>vaadin-prereleases</id>
+    <url>https://maven.vaadin.com/vaadin-prereleases/</url>
+</pluginRepository>
+----
+
+The Flow Context and Dependency Injection (CDI) add-on is currently using a snapshot version of the DeltaSpike framework. Therefore, you need to add a snapshot repository to get this dependency if you use CDI add-on:
+
+.pom.xml
+[source,xml]
+----
+<repository>
+    <id>apache-snapshot-repository</id>
+    <url>https://repository.apache.org/snapshots/</url>
+    <snapshots>
+        <enabled>true</enabled>
+    </snapshots>
+</repository>
+----
+
+== Jakarta EE 10 Namespaces
+
+You can use the following free tools for the package name conversion:
+
+* https://github.com/eclipse/transformer[Eclipse transformer]
+* https://github.com/apache/tomcat-jakartaee-migration[Apache migration tool]
+
+When being applied to a project, those tools convert Java class imports, manifests, property files, and other resources to use `jakarta.*` namespace when needed. Conversion instructions are in each tool's `README` file.
+
+The last versions of IntelliJ IDEA offers https://www.jetbrains.com/help/idea/2022.2/migrate.html[migration refactoring] tools, including a Java EE to Jakarta EE package converter.
+
+Make sure that the Jakarta specifications in your project have the proper versions. Refer to the full list of https://jakarta.ee/release/10/[Jakarta EE 10 specifications] for more information.
+
+Below are a few examples:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>jakarta.servlet</groupId>
+    <artifactId>jakarta.servlet-api</artifactId>
+    <version>6.0.0</version>
+</dependency>
+<dependency>
+    <groupId>jakarta.annotation</groupId>
+    <artifactId>jakarta.annotation-api</artifactId>
+    <version>2.1.0</version>
+</dependency>
+<dependency>
+    <groupId>jakarta.enterprise</groupId>
+    <artifactId>jakarta.enterprise.cdi-api</artifactId>
+    <version>4.0.0</version>
+</dependency>
+<dependency>
+    <groupId>jakarta.enterprise.concurrent</groupId>
+    <artifactId>jakarta.enterprise.concurrent-api</artifactId>
+    <version>3.0.0</version>
+</dependency>
+----
+
+== Spring Upgrade Instructions
+
+Spring Boot 3 and Spring Framework 6 don't fundamentally change how applications are developed. The main changes are around Jakarta EE 10 namespaces and supported products, Java version and the dependency upgrades and deprecations.
+
+Spring Boot 3 / Framework 6 use new versions of third-party dependencies: Hibernate 6, Hibernate Validator 8, servlet containers - Jetty 11, Tomcat 10.1 and many others.
+
+Spring provides the https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide[Dedicated Migration Guide for Spring-boot 3.0] and https://github.com/spring-projects/spring-framework/wiki/Upgrading-to-Spring-Framework-6.x[Upgrading to Spring Framework 6.x Guide].
+
+To browse the full list of changes, see the https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Release-Notes[Spring-boot 3.0 Release Notes] and the https://github.com/spring-projects/spring-framework/wiki/What%27s-New-in-Spring-Framework-6.x[What's New in Spring Framework 6.x] page.
+
+Below is a general overview of the changes needed for Spring-based Vaadin applications:
+
+* *Upgrade Spring to the Latest*
++
+You need to upgrade Spring versions to the latest, including the starter parent dependency:
++
+.pom.xml
+[source,xml]
+----
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.0.0</version>
+</parent>
+----
+
+* *Deprecation*
++
+Deprecated `VaadinWebSecurityConfigurerAdapter` was removed since Spring no longer has `WebSecurityConfigurerAdapter` class. Use instead `VaadinWebSecurity` base class for your security configuration. Below is an example of this:
++
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+public class SecurityConfig extends VaadinWebSecurity {
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        // Delegating the responsibility of general configurations
+        // of http security to the super class. It's configuring
+        // the followings: Vaadin's CSRF protection by ignoring
+        // framework's internal requests, default request cache,
+        // ignoring public views annotated with @AnonymousAllowed,
+        // restricting access to other views/endpoints, and enabling
+        // ViewAccessChecker authorization.
+        // You can add any possible extra configurations of your own
+        // here (the following is just an example):
+
+        // http.rememberMe().alwaysRemember(false);
+
+        // Configure your static resources with public access before calling
+        // super.configure(HttpSecurity) as it adds final anyRequest matcher
+        http.authorizeHttpRequests().requestMatchers(
+                        new AntPathRequestMatcher("/admin-only/**"))
+                .hasAnyRole("admin");
+        http.authorizeHttpRequests().requestMatchers(
+                        new AntPathRequestMatcher("/public/**"))
+                .permitAll();
+        super.configure(http);
+
+        // This is important to register your login view to the
+        // view access checker mechanism:
+        setLoginView(http, LoginView.class);
+    }
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        // Customize your WebSecurity configuration.
+        super.configure(web);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Demo UserDetailsManager which only provides two hardcoded
+     * in memory users and their roles.
+     * NOTE: This shouldn't be used in real world applications.
+     */
+    @Bean
+    public UserDetailsService userDetailsService(
+            PasswordEncoder passwordEncoder) {
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        manager.createUser(User.withUsername("user")
+                .password(passwordEncoder.encode("userPass"))
+                .roles("USER").build());
+        manager.createUser(User.withUsername("admin")
+                .password(passwordEncoder.encode("adminPass"))
+                .roles("USER", "ADMIN").build());
+        return manager;
+    }
+}
+----
++
+In this example, `AuthenticationManagerBuilder`, used in Spring-boot 2.x, is replaced by `UserDetailsService`. And `http.authorizeRequests().antMatchers()` are replaced by `http.authorizeHttpRequests().requestMatchers()`.
+
+== Java Version
+
+*Java 17* or later is required. Below is an example of how to use this version:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<properties>
+    <java.version>17</java.version>
+    <!-- OR: -->
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+</properties>
+----
+[source,groovy]
+----
+<source-info group="Groovy"></source-info>
+plugins {
+    id 'java'
+}
+
+java {
+    sourceCompatibility = 17
+    targetCompatibility = 17
+}
+----
+--
+
+== Application Servers
+
+Before migrating, find the corresponding version of Jakarta EE 10-compatible application server used in your project. See https://jakarta.ee/compatibility/[Jakarta Compatible Products] for more information.
+
+== Polymer Templates
+
+Polymer support has been deprecated since Vaadin 18 (released in November 2020), in favor of faster and simpler <<{articles}/create-ui/templates#,Lit templates>>. The built-in support for Polymer templates has been removed and is only available for Prime and Enterprise customers.
+
+You can use the conversion tool to facilitate the migration from Polymer to Lit by automatically converting basic Polymer constructions into their Lit equivalents in Java and JavaScript source files.
+
+=== Limitations
+
+The converter covers only basic cases. More advanced cases, such as TypeScript source files or usage of internal Polymer API, should still be converted manually.
+
+See the https://github.com/vaadin/flow/tree/master/flow-polymer2lit[Polymer-to-Lit converter documentation] for more information about limitations and supported transformations.
+
+=== Usage
+
+Regarding usage, run the converter in your project's root folder as follows:
+
+[.example]
+--
+[source,text]
+----
+<source-info group="Maven"></source-info>
+mvn vaadin:convert-polymer
+----
+[source,groovy]
+----
+<source-info group="Groovy"></source-info>
+./gradlew vaadinConvertPolymer
+----
+--
+
+To convert a project that is based on versions before Vaadin 24, use the following:
+
+[.example]
+--
+[source,text]
+----
+<source-info group="Maven"></source-info>
+mvn com.vaadin:vaadin-maven-plugin:24.0.0.alpha5:convert-polymer
+----
+.`build.gradle`
+[source,groovy]
+----
+<source-info group="Groovy"></source-info>
+buildscript {
+  repositories {
+    classpath 'com.vaadin:flow-gradle-plugin:24.0-SNAPSHOT'
+  }
+}
+----
+--
+
+=== Configuring
+
+The converter accepts the following properties:
+
+`-Dvaadin.path=path/to/your/file`::
+By default, the converter scans all files that match `**/*.js` and `**/*.java` and then tries to convert them to Lit.
++
+To limit conversion to a specific file or directory, you can use the `vaadin.path` property like so:
++
+[.example]
+--
+[source,text]
+----
+<source-info group="Maven"></source-info>
+mvn vaadin:convert-polymer -Dvaadin.path=path/to/your/file
+----
+[source,text]
+----
+<source-info group="Groovy"></source-info>
+./gradlew vaadinConvertPolymer -Dvaadin.path=path/to/your/file
+----
+--
++
+The path is always relative to your project's root folder.
+
+`-Dvaadin.useLit1`::
+By default, the converter transforms Polymer imports into their Lit 2 equivalents.
++
+If your project is using Lit 1 (i.e., before Vaadin 21), you can use the vaadin.useLit1 flag to enforce Lit 1 compatible imports:
++
+[.example]
+--
+[source,text]
+----
+<source-info group="Maven"></source-info>
+mvn vaadin:convert-polymer -Dvaadin.useLit1
+----
+[source,text]
+----
+<source-info group="Groovy"></source-info>
+./gradlew vaadinConvertPolymer -Dvaadin.useLit1
+----
+--
+
+`-Dvaadin.disableOptionalChaining`::
+By default, the converter transforms `\[[prop.sub.something]]` expressions into `${this.prop?.sub?.something}`.
++
+If your project is using the Vaadin webpack configuration, which doesn't support the JavaScript optional chaining operator `(?.)`, you can use the `vaadin.disableOptionalChaining` flag like so:
++
+[.example]
+--
+[source,text]
+----
+<source-info group="Maven"></source-info>
+mvn vaadin:convert-polymer -Dvaadin.disableOptionalChaining
+----
+[source,text]
+----
+<source-info group="Groovy"></source-info>
+./gradlew vaadinConvertPolymer -Dvaadin.disableOptionalChaining
+----
+--
+
+== Multiplatform Runtime
+
+Multiplatform Runtime allows the use of legacy Vaadin 7 or 8 framework components in Vaadin Flow applications. The Multiplatform Runtime artifacts remain the same: `mpr-v8` and `mpr-v7`. However, the framework server dependencies now contain a `mpr-jakarta` postfix:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-server-mpr-jakarta</artifactId>
+    <version>8.18.0</version>
+</dependency>
+
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-compatibility-server-mpr-jakarta</artifactId>
+    <version>8.18.0</version>
+</dependency>
+----
+
+Other legacy framework dependencies have the same names, but transitive dependencies to `vaadin-server` artifacts must be detected and excluded. Consult <<{articles}/tools/mpr/introduction/1-maven-v8#exclude-incompatible-framework-8-dependency, Exclude Incompatible Framework 8 Dependency>> for further details.
+
+== Maven/Gradle Plugins
+
+Make sure that the versions of Maven plugins your project defines explicitly, are compatible with Java 17.
+
+As an example, `nexus-staging-maven-plugin` requires a minimal version 1.6.13. Gradle version 7.3 and higher is required to run on top of Java 17 (see https://docs.gradle.org/7.3/release-notes.html[Gradle release notes]).
+
+== SLF4J 2.0
+
+Vaadin 24 and Spring-boot 3 use SLF4J library version 2.0, which has breaking changes compared to earlier versions. See the https://www.slf4j.org/news.html[SLF4J release notes] for more information.
+
+
+== Breaking Changes in Vaadin Components
+
+* Badges no longer shrink by default; this can be overridden globally with CSS `[theme~="badge"] { flex-shrink:1; }`, or for specific instances with `badge.getStyle().set("flex-shrink", "1");` or `layout.setFlexShrink(badge, 1)`;
+* Buttons no longer shrink by default; this can be overridden globally with CSS `vaadin-button { flex-shrink:1; }`, or for specific instances with `btn.getStyle().set("flex-shrink", "1");` or `layout.setFlexShrink(btn, 1)`;
+* `CheckboxGroup::setItemLabelGenerator` no longer clears the current selection; `CheckboxGroup.clear()` can be used to clear value separately
+* `BlurNotifier<CustomField>` type signature was corrected to `BlurNotifier<CustomField<T>>`
+* Date Picker now uses the ISO 8601 date format (`yyyy-mm-dd`) as fallback for unsupported locales, instead of `mm-dd-yyyy`
+* Number Field's default width now matches that of other text input components; the old default can be brought back with CSS `vaadin-number-field { width:8em; }`
+* Time Picker no longer automatically adjusts values to fit min/max constraints
+* `RichTextEditor::setvalue` and `getValue` now use HTML format by default, instead of Delta
+** Applications using the Delta format must be refactored to use the `RichTextEditor.asDelta()` API (e.g. `rte.asDelta().getValue()` and `binder.forField(rte.asDelta())`)
+** To help avoid using the wrong setter, `RichTextEditor.setValue(String)` now throws an exception if the value looks like Delta format (starts with `[` or `{`)
+** To set an HTML value starting with the above characters, either wrap the value in an HTML tag, or use the `RichTextEditor.asHtml()` API that doesn't check for them
+* The default top and bottom margins of the `H1`...`H6` HTML elements have been removed; this change can be reverted by applying the following CSS:
++
+.styles.css
+[source,css]
+----
+h1,h2,h3,h4,h5,h6 { margin-top: 1.25em; }
+h1 { margin-bottom: 0.75em; }
+h2, h3, h4 { margin-bottom: 0.5em; }
+h5 { margin-bottom: 0.25em; }
+----
+
+
+=== Removed Flow Component APIs
+
+The following Vaadin component APIs have been removed or renamed in Flow:
+
+* The `Generated[ComponentName]` classes have been removed. Extend the normal component classes instead when extending components.
++
+The following event classes were introduced in V23.3 as replacements for the ones in the generated classes:
+`DatePicker.OpenedChangeEvent`,
+`DatePicker.InvalidChangeEvent`,
+`Dialog.OpenedChangeEvent`,
+`Notification.OpenedChangeEvent` and
+`SplitLayout.SplitterDragendEvent`
++
+The generic type parameters in these events (introduced in V23.3 for backward compatibility) was removed in V24.
+
+* `Button.setDisabled()` removed in favor of `setEnabled(false)`
+* Charts `HTMLLabels` and `HTMLLabelItem` APIs removed (as broken) in favor of `Configuration.addLabel` or `Configuration.setLabels` (with `AnnotationItemLabel` objects instead of ``HTMLLabel``s; Coordinate information for the label can be provided using `AnnotationItemLabel.setPoint`)
+* `Checkbox::setLabelAsHtml` removed in favor of renderers (`setRenderer`)
+* `CheckboxGroup` and `RadioButtonGroup` no longer implement the `HasComponents` and `HasItemComponents` interfaces, and the following methods have been removed:
+** `add(Component...)`, `add(Collection)` and `add(String)`
+** `remove(Component...)`, `remove(Collection)` and `removeAll()`
+** `addComponentAtIndex(int, Component)`
+** `addComponentAsFirst(Component)`
+** `addComponents(T, Component...)`
+** `prependComponents(T, Component...)`
+** `getItemPosition(T)`
+* `ContextMenu` `clickListener` API removed (wasn't working); apply click listeners to the menu's target component instead if needed
+* `CustomFieldI81n::parseValue` and `CustomFieldI18n::formatValue` moved to `CustomField::parseValue` and `CustomField::formatValue`
+* `DatePickerI18n` setters and getters for `clear`, `.calendar` and `.week` removed as unused
+* `FlexLayout.getFlexDirection(HasElement elementContainer)` overload removed (as pointless) in favor of `getFlexDirection()`
+* `Grid::setHeightByRows` removed in favor of `Grid::setAllRowsVisible`
+* `Grid.addColumn(renderer, sortingProperties)` removed in favor of `addColumn(renderer).setSortProperty(sortingProperties)`
+* `Grid.ItemClickEvent` and `ItemDoubleClickEvent` without `columnId` were removed
+* `Grid::findInShadowRoot` removed
+* `Grid::setVerticalScrollingEnabled` removed (wasn't working)
+* `Map.Coordinate::fromLonLat` removed as unnecessary since the default coordinate system is now EPSG:4326, and `new Coordinate(x,y)` is sufficient
+* `Map` APIs that used `float` values now use `double`
+* `NumberField::setMaxLength`, `setPattern` and `setPreventInvalidInput` removed as they didn't work
+* `NumberField::setHasControls` renamed `setStepButtonsVisible`
+* `RichTextEditor(String value)` constructor removed in favor of `RichTextEditor()` followed by `setValue(String value)`
+* `Select(T... items)` constructor removed in favor of `Select(String label, T... items)`
+* `SplitLayout.IronResizeEvent` was removed as part of move away from Polymer
+* `Tabs` no longer implements the `HasComponents` interface and the following APIs were removed or deprecated:
+** `add(Collection)` removed in favor of `add(Tab...)`
+** `remove(Collection)` removed in favor of `remove(Tab...)`
+** `add(String)` removed
+** `indexOf(Component)` deprecated in favor of `indexOf(Tab)`
+** `add(Component)` deprecated in favor of `add(Tab)`
+** `remove(Component)` deprecated in favor of `remove(Tab)`
+** `replace(Component, Component)` deprecated in favor of `replace(Tab, Tab)`
+** `getComponentAt(int)` deprecated in favor of `getTabAt(int)`
+** `addComponentAtIndex(int, Component)` deprecated in favor of `addTabAtIndex(int, Tab)`
+** `addComponentAsFirst(Component)` deprecated in favor of `addTabAsFirst(Tab)`
+* `TemplateRenderer` public API removed in favor of `LitRenderer`
+* `TextField::setPreventInvalidInput` removed in favor of `setAllowedCharPattern`
+* `TimePicker.setMin(String)` and `setMax(String)` removed in favor of `setMin(LocalTime)` and `setMax(LocalTime)`
+* Upload `SelectedChangeEvent(Tabs source, boolean fromClient)` overload removed in favor of `SelectedChangeEvent(Tabs source, Tab previousTab, boolean fromClient)`
+* `UploadI18n::setCancel`/`getCancel` removed as unused
+
+=== Web Component APIs
+.Click and read if you're using Vaadin components without Flow
+[%collapsible]
+====
+The following changes only affect the client-side APIs of Vaadin components:
+
+* The label on `vaadin-checkbox` and `vaadin-radio-button` must be set using the `label` property, as the default slot has been removed
+* `vaadin-confirm-dialog.cancel` and `.reject` properties renamed `.cancelButtonVisible` and `.rejectButtonVisible`
+* `vaadin-number-field` property `has-controls` renamed `step-buttons-visible`
+* Deprecated `@vaadin/vaadin-**` (e.g. `@vaadin/vaadin-grid`) npm packages have been removed; use the new `@vaadin/**` instead (e.g. `@vaadin/grid`)
+* Deprecated `**Element` legacy class aliases (e.g. `GridElement`) have been removed; use the plain component classes instead (e.g. `Grid`)
+* Deprecated misspelled `vaadin-icons` removed: `buss`, `funcion`, `megafone`, `palete`, `trendind-down`
+* `notifyResize` and `updateStyles` methods removed from various components as obsolete
+* `preventInvalidInput` in text input fields removed in favor of `setAllowedCharPattern`
+* The read-only `theme` _property_ was removed; use the `theme` _attribute_ instead
+
+====
+
+=== Update Your Component Styling
+.Click and read if you have styled Vaadin components
+[%collapsible]
+====
+include::_styling.adoc[]
+====
+
+== Removed Deprecations
+
+APIs which were deprecated earlier have now been removed. The following linked issue lists the removals:
+
+- https://github.com/vaadin/flow/issues/15665[Remove deprecated API and tools in Flow 24.0]
