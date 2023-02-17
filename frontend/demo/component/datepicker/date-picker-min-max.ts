@@ -21,34 +21,25 @@ export class Example extends LitElement {
   private errorMessage = '';
 
   @state()
-  private today = '';
+  private minDate = new Date();
 
   @state()
-  private upperLimit = '';
-
-  protected override firstUpdated() {
-    this.today = formatISO(Date.now(), { representation: 'date' });
-
-    const upperLimit = addDays(Date.now(), 60);
-    this.upperLimit = formatISO(upperLimit, { representation: 'date' });
-  }
+  private maxDate = addDays(new Date(), 60);
 
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-date-picker
-        .min="${this.today}"
-        .max="${this.upperLimit}"
         label="Appointment date"
         helper-text="Must be within 60 days from today"
+        .min="${formatISO(this.minDate, { representation: 'date' })}"
+        .max="${formatISO(this.maxDate, { representation: 'date' })}"
         .errorMessage="${this.errorMessage}"
         @change="${({ target }: DatePickerChangeEvent) => {
-          const [value, min, max] = [target.value, this.today, this.upperLimit].map((date) =>
-            dateFnsParse(date ?? '', 'yyyy-MM-dd', new Date())
-          );
-          if (isBefore(value, min)) {
+          const date = dateFnsParse(target.value ?? '', 'yyyy-MM-dd', new Date());
+          if (isBefore(date, this.minDate)) {
             this.errorMessage = 'Too early, choose another date';
-          } else if (isAfter(value, max)) {
+          } else if (isAfter(date, this.maxDate)) {
             this.errorMessage = 'Too late, choose another date';
           } else {
             this.errorMessage = '';

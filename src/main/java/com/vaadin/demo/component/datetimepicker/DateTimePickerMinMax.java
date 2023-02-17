@@ -22,15 +22,15 @@ public class DateTimePickerMinMax extends Div {
         dateTimePicker.setValue(LocalDateTime.now().plusDays(7));
         dateTimePicker.addValueChangeListener(event -> {
             LocalDateTime value = event.getValue();
-            if (value.compareTo(dateTimePicker.getMin()) < 0) {
-                dateTimePicker.setErrorMessage(
-                        "Too early, choose another date and time");
-            } else if (value.compareTo(dateTimePicker.getMax()) > 0) {
-                dateTimePicker.setErrorMessage(
-                        "Too late, choose another date and time");
-            } else {
-                dateTimePicker.setErrorMessage(null);
+            String errorMessage = null;
+            if (value != null) {
+                if (value.compareTo(dateTimePicker.getMin()) < 0) {
+                    errorMessage = "Too early, choose another date and time";
+                } else if (value.compareTo(dateTimePicker.getMax()) > 0) {
+                    errorMessage = "Too late, choose another date and time";
+                }
             }
+            dateTimePicker.setErrorMessage(errorMessage);
         });
         add(dateTimePicker);
         // end::snippet[]
