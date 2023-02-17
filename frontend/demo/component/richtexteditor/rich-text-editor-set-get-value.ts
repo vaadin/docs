@@ -46,7 +46,7 @@ export class Example extends LitElement {
 
       <vaadin-text-area
         label="HTML Value"
-        placeholder="Enter something in the Rich Text Editor to see its HTML value here."
+        helper-text="Shows the HTML representation of the edited document. You can also modify or paste HTML here to see the changes reflected in the editor above. Note that you have to leave (blur) this field in order for the editor to update."
         style="width: 100%;"
         .value="${this.htmlValue}"
         @change="${(e: TextAreaChangeEvent) => this.setHtmlValue(e.target.value)}"
@@ -54,7 +54,7 @@ export class Example extends LitElement {
 
       <vaadin-text-area
         label="Delta Value"
-        placeholder="Enter something in the Rich Text Editor to see its Delta value here."
+        helper-text="Shows the Delta representation of the edited document. You can also modify or paste the Delta JSON here to see the changes reflected in the editor above. Note that you have to leave (blur) this field in order for the editor to update."
         style="width: 100%;"
         .value="${this.deltaValue}"
         @change="${(e: TextAreaChangeEvent) => {
