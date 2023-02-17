@@ -7,6 +7,7 @@ order: 57
 = Distributed Deployment Architecture
 
 Vaadin applications can be deployed on multi-host distributed architectures.
+The same application can be installed on multiple servers and a load balancer distribute then load forwarding users requests to different machines.
 This architecture meets the requirements of scalability and high availability, but introduces extra complexity to the deployment processes.
 
 == Scalability
@@ -41,20 +42,23 @@ For Vaadin application, this scenario requires some kind of session replication,
 
 Even if the session replication is a requirement for full high availability, the recommendation is to keep using the sticky session approach for as long as a specific server is available.
 This is because the efforts required to make the Vaadin application state stored in the HTTP session fully serializable and distributable to different servers on the network.
+It is even more challenging if the application is not designed from the beginning to be deployed in a distributed system.
 
 
 == Session Replication
 
-To be able to replicate the session on different servers, the Java components used in the UI must implement the [interfacename]`java.io.Serializable` interface.
-Of course, also all class members must be serializable or defined as `transient` fields.
-In addition, the application must be able to handle transient fields during deserialization.
+Implementing an effective session replication for Vaadin application can be challenging:
 
-The session needs to be serialized and stored in a distributed persistence storage on every request.
-When the user requests are forwarded to a different server, the data must be loaded, deserialized and used to populate the new session.
+* All the Java components used in the UI must implement the [interfacename]`java.io.Serializable` interface
+* Class members must be serializable as well or defined as `transient` fields.
+* The application must be able to hook into the deserialization process to initialize transient fields values. 
+  For example, transient fields referencing singleton services injected by a Dependency Inject framework must be initialized upon deserialization with exactly the managed instances.
+* The session needs to be serialized and stored in a distributed persistence storage on every request.
+* When the user requests are forwarded to a different server, the data must be loaded, deserialized and used to populate the new session.
 
-Implementing an effective session replication for Vaadin application is not easy.
 
-A generic session replication solutions cannot be used because serialization must take care of Vaadin session locking that prevents concurrent modification of the user interface.
+In addition, a generic session replication solutions cannot be used with Vaadin application, because serialization must take care of Vaadin session locking that prevents concurrent modification of the user interface.
+
 More information can be found in the link:https://vaadin.com/blog/session-replication-in-the-world-of-vaadin[Session Replication in the World of Vaadin] blog post.
 
 For applications that require session replication, Vaadin provides a solution with the <<{articles}/tools/kubernetes/index#, Kubernetes Kit>>.
