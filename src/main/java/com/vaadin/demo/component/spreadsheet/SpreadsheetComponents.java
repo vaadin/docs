@@ -35,27 +35,29 @@ public class SpreadsheetComponents extends Div {
                     public Component getCustomComponentForCell(Cell cell,
                             int rowIndex, int columnIndex,
                             Spreadsheet spreadsheet, Sheet sheet) {
-                        if (rowIndex != 2 || columnIndex != 1) {
-                            return null;
+                        if (spreadsheet.getActiveSheetIndex() == 0
+                                && rowIndex == 2 && columnIndex == 1) {
+                            if (customComponent == null) {
+                                initCustomComponent();
+                            }
+                            return customComponent;
                         }
-                        if (customComponent == null) {
-                            initCustomComponent();
-                        }
-                        return customComponent;
+                        return null;
                     }
 
                     @Override
                     public Component getCustomEditorForCell(Cell cell,
                             int rowIndex, int columnIndex,
                             Spreadsheet spreadsheet, Sheet sheet) {
-                        if (rowIndex != 2 || columnIndex != 2) {
-                            return null;
+                        if (spreadsheet.getActiveSheetIndex() == 0
+                                && rowIndex == 2 && columnIndex == 2) {
+                            if (customEditor == null) {
+                                initCustomEditor(rowIndex, columnIndex,
+                                        spreadsheet);
+                            }
+                            return customEditor;
                         }
-                        if (customEditor == null) {
-                            initCustomEditor(rowIndex, columnIndex,
-                                    spreadsheet);
-                        }
-                        return customEditor;
+                        return null;
                     }
 
                     @Override
