@@ -1,4 +1,4 @@
-import { Binder } from '@hilla/form';
+import { Binder, StringModel } from '@hilla/form';
 import type { AbstractModel, FieldStrategy, ModelConstructor } from '@hilla/form';
 import { MyTextFieldStrategy } from './my-text-field-strategy';
 
@@ -7,9 +7,8 @@ export class MyBinder<T, M extends AbstractModel<T>> extends Binder<T, M> {
     super(context, model);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getFieldStrategy(element: any): FieldStrategy {
-    if (element.localName === 'my-text-field') {
+  override getFieldStrategy<T>(element: any, model?: AbstractModel<T>): FieldStrategy {
+    if (element.localName === 'my-text-field' && model instanceof StringModel) {
       return new MyTextFieldStrategy(element);
     }
     return super.getFieldStrategy(element);
