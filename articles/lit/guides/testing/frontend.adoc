@@ -1,0 +1,142 @@
+---
+title: Frontend
+description: How to setup and write frontend tests.
+order: 10
+---
+:lit:
+// tag::content[]
+
+= Frontend
+
+For TypeScript unit tests we recommend to use the following set of tools:
+
+* https://karma-runner.github.io/[Karma] for running tests.
+* https://vitejs.dev/[Vite] for building tests to run in the browser.
+* https://mochajs.org/[Mocha] for writing tests.
+* https://www.chaijs.com/[Chai] for creating assertions.
+* https://sinonjs.org/[Sinon] for creating spies and mocks.
+* https://modern-web.dev/docs/test-runner/writing-tests/helper-libraries/[OpenWC Testing library] to simplify testing.
+
+== Preparations
+
+Install basic packages and necessary plugins.
+This setup assumes that you already have `Vite` installed and configured.
+
+.terminal
+[source,terminal]
+----
+npm install --save-dev karma karma-coverage karma-mocha karma-vite mocha @types/mocha sinon @types/sinon @esm-bundle/chai @open-wc/testing
+----
+
+Additionally, install browser launchers.
+
+.terminal
+[source,terminal]
+----
+npm install --save-dev karma-chrome-launcher karma-firefox-launcher karma-safarinative-launcher
+----
+
+ifdef::react[]
+For React, it is also recommended to install React Testing Library.
+It contains useful tools for testing react components.
+
+.terminal
+[source,terminal]
+----
+npm install --save-dev @testing-library/react
+----
+endif::[]
+
+Create `karma.config.js` (or `karma.config.cjs` if you use ESM; note that Karma does not support EMS yet).
+
+[.example]
+--
+[source,Unix]
+----
+touch karma.config.js
+----
+
+[source,Windows]
+----
+echo "" > karma.config.js
+----
+--
+
+[NOTE]
+Note that Karma configuration is written in JavaScript.
+The reason is that for conversion from TypeScript to JavaScript Karma uses `ts-node` internally and does not allow to change it.
+It could cause various issues, so we recommend not using it.
+
+== Karma configuration
+
+.karma.config.js
+[source,javascript]
+----
+include::{root}/src/main/resources/hilla/testing/frontend/karma.config.js[]
+----
+
+<1> The `karma-safarinative-launcher` plugin works better with Safari after 12 version rather than the original `karma-safari-launcher`.
+<2> If we are in the CI environment, we could omit some unnecessary options and slightly speed up the testing.
+<3> In case you need to run tests in watch mode.
+<4> Option to collect test coverage.
+<5> For Chrome, it is better to launch without a sandbox in CI environment.
+<6> For coverage, we use a combination of karma-vite and karma-coverage.
+They have the built-in integration.
+<7> Generates human-readable code coverage as HTML.
+It is unnecessary in the CI environment, so we can drop it.
+<8> Generates machine-readable code coverage that could be used in various coverage collector tools like Codecov or Sonarcloud.
+You could also use https://cobertura.github.io/cobertura/[Cobertura] format to display coverage in https://www.jenkins.io/[Jenkins].
+
+To customize Karma configuration, please take a look at the https://karma-runner.github.io/6.4/config/configuration-file.html[documentation].
+
+To run tests, add the following scripts to the `package.json` file.
+
+.package.json
+[source,json]
+----
+{
+  "scripts": {
+    "test": "karma start karma.config.cjs",
+    "test:watch": "npm run test -- --watch",
+    "test:coverage": "npm run test -- --coverage"
+  }
+}
+----
+
+== Test suites
+
+ifdef::lit[]
+Let's imagine that we have a web component we want to test.
+It is in the file `frontend/components/Foo.ts`.
+
+.Foo.ts
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/testing/Foo.ts[tags=snippet,indent=0]
+----
+
+To add the first test, we should create a file in the `test` directory.
+
+[.example]
+--
+[source,Unix]
+----
+touch frontend/test/Foo.test.ts
+----
+
+[source,Windows]
+----
+echo "" > frontend/test/Foo.test.ts
+----
+--
+
+Then we could write some tests for the `Foo` component.
+
+.Foo.test.ts
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/testing/Foo.test.ts[tags=snippet,indent=0]
+----
+
+endif::lit[]
+// end::content[]
