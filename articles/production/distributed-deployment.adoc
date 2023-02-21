@@ -6,75 +6,75 @@ order: 57
 
 = Distributed Deployment Architecture
 
-Vaadin applications can be deployed on multi-host distributed architectures, such as container orchestration platform like Kubernetes or virtual or physical machine clusters.
-The same application can be installed on multiple servers and a load balancer then distributes users requests to different machines depending on load.
-This architecture meets the requirements of scalability and high availability, but introduces extra complexity to the deployment processes.
+Vaadin applications can be deployed on multi-host distributed architectures, such as container orchestration platforms like Kubernetes or virtual and physical machine clusters.
+The same Vaadin application can be installed on multiple servers with a load balancer that distributes the user requests to different machines depending on the load.
+This architecture meets the requirements for scalability and high availability but introduces extra complexity to the deployment processes.
 
 == Scalability
 
-Scalability refers to the ability of the application to handle huge volume of workload and expand in response to an increased traffic it receives.
-Vertical scalability consists in adding more resources to the system so that it meets demand, whereas horizontal scalability means adding more machines hosting different instances of the same application.
+Scalability refers to the ability of the application to handle a huge workload and expand in response to increased traffic.
+Vertical scalability means adding more resources to the system to meet increasing demand, whereas horizontal scalability means adding more machines to host different instances of the same application.
 
-Vertical scalability has the advantage of fewer costs and less complicated maintenance.
-However it is:
+Vertical scalability has the advantages of lower cost and simpler maintenance over horizontal scalability.
+However, the disadvantages are that it is:
 
-- susceptible to downtime, for example during upgrades
-- introduces a single point of failure
-- it should consider the machine's physical upgrade limitations.
+- susceptible to downtime, for example, during upgrades
+- introducing a single point of failure
+- limited by the physical upgrade limitations of a single machine.
 
-With horizontal scaling:
+Compared to vertical scalability, horizontal scalability has the advantages of:
 
-- downtime periods are highly reduced or even avoided
+- highly reduced or even avoided downtime periods
 - increased resilience
 - increased fault tolerance 
 - increased performance by delegating the traffic to multiple machines.
 
-The disadvantages are the increased complexity of maintenance and operation and the increased costs associated with adding new servers.    
+The disadvantages are the complex maintenance and operation and the increased cost of adding new servers.    
 
 Vaadin applications do not require any specific actions for vertical scaling.
-In contrast, for horizontal scaling it is required to configure sticky sessions in the load balancer, because of the stateful nature of the UI in Vaadin applications.
+In contrast, horizontal scaling requires configuring sticky sessions in the load balancer due to the stateful nature of Vaadin UIs.
 
-Sticky sessions are a load balancer feature that makes sure all requests from a particular user (session) are sent to the same server in a cluster. This means that sessions don't need to be replicated between servers, reducing server cluster complexity.
+Sticky sessions are a load balancer feature that ensures all requests from a user (session) are sent to the same server in a cluster. This means that sessions don't need to be replicated between servers, therefore reducing the complexity of the server cluster.
 
-However, using sticky session is not enough when down scaling an application.
-If the machine serving the application requests is taken out of service, the user session must be available on the other servers to allow the user to continue to work without disruptions.
-Session replication is a required feature to achieve non disruptive down scaling.
+However, sticky sessions are not enough when scaling down an application.
+If the machine serving the application requests goes out of service during a user session, the session must be available on the other servers to allow the user to continue their work without disruption.
+Session replication is a required feature to achieve non-disruptive downscaling.
 
 
 == High Availability
 
-High availability is the ability of a system to ensure high performance without interruption of any kind in a given period of time.
-This means that when a server stops working, it should be transparently replaced by a different machine, in a way that the user should be able to continue using the application without any disruption.
+High availability is the ability of a system to ensure high performance without interruption during a set time.
+When a server stops working, it is transparently replaced by a different machine so that the user can continue their work without disruption.
 
-Session replication is required for Vaadin applications in this scenario, since the session data must be distributed between multiple servers to ensure availability.
+Session replication is required for Vaadin applications to achieve high availability since the session data must be distributed between multiple servers.
 
-Even if the session replication is a requirement for full high availability, the recommendation is to keep using the sticky session approach for as long as a specific server is available.
-This is because of the efforts required to make the Vaadin application state stored in the HTTP session fully serializable and distributable to different servers on the network.
-It is even more challenging if the application is not designed from the beginning to be deployed in a distributed system.
+Even if session replication is a requirement for high availability, the recommendation is to keep using sticky sessions for as long as a specific server is available.
+This is recommended due to the effort required to make the Vaadin application state stored in the HTTP session fully serializable and distributable to different servers on the network.
+Further effort is required if the application is not designed from the beginning to be deployed in a distributed system.
 
 
 == Session Replication
 
-Implementing an effective session replication for Vaadin application can be challenging:
+Implementing effective session replication for Vaadin applications can be a challenge:
 
-* All the Java components used in the UI must implement the [interfacename]`java.io.Serializable` interface
+* All the Java components used in the UI must implement the [interfacename]`java.io.Serializable` interface.
 * Class members must be serializable as well or defined as `transient` fields.
-* The application must be able to hook into the deserialization process to initialize transient fields values. 
-  For example, transient fields referencing singleton services injected by a Dependency Inject framework must be initialized upon deserialization with exactly the managed instances.
+* The application must be able to hook into the deserialization process to initialize transient field values. 
+  For example, transient fields referencing singleton services injected by a Dependency Inject framework must be initialized upon deserialization with the managed instances.
 * The session needs to be serialized and stored in a distributed persistence storage on every request.
-* When the user requests are forwarded to a different server, the data must be loaded, deserialized and used to populate the new session.
+* When the user requests are forwarded to a different server, the data must be loaded, deserialized, and used to populate the new session.
 
 
-In addition, a generic session replication solutions cannot be used with Vaadin application, because serialization must take care of Vaadin session locking that prevents concurrent modification of the user interface.
+Generic session replication solutions cannot be used with a Vaadin application because serialization must take care of the Vaadin session locking that prevents concurrent modification of the user interface.
 
-More information can be found in the link:https://vaadin.com/blog/session-replication-in-the-world-of-vaadin[Session Replication in the World of Vaadin] blog post.
+For more information on session replication, read the link:https://vaadin.com/blog/session-replication-in-the-world-of-vaadin[Session Replication in the World of Vaadin] blog post.
 
-For applications that require session replication, Vaadin provides a solution with the <<{articles}/tools/kubernetes/index#, Kubernetes Kit>>.
+For applications that require session replication, Vaadin provides a solution with the <<{articles}/tools/kubernetes/index#, Kubernetes Kit>>:
 The Kit handles <<{articles}/tools/kubernetes/session-replication#kubernetes-kit-session-replication,session serialization and deserialization>> as well as persistence using distributed storage.
 It also provides a <<{articles}/tools/kubernetes/session-replication-debug-tool#,tool>> to help detect and fix serialization issues during development.
 
 The link:https://vaadin.com/blog/session-replication-in-vaadin-whats-new[Session Replication in Vaadin: What's new?] blog post provides a brief introduction to the Kubernetes Kit features.
 
-For more information on making a Vaadin application serializable, consult Kubernetes Kit serialization <<{articles}/tools/kubernetes/session-replication#session-replication-tips,tips>> and <<{articles}/tools/kubernetes/session-replication#session-replication-issues,issues>>.
+For more information on making a Vaadin application serializable, consult the Kubernetes Kit serialization <<{articles}/tools/kubernetes/session-replication#session-replication-tips,tips>> and <<{articles}/tools/kubernetes/session-replication#session-replication-issues,issues>>.
 
 [discussion-id]`76E07A9F-7FC5-4C17-96A4-1842E98B6FA1`
