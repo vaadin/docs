@@ -1,25 +1,25 @@
 ---
 title: Binding Beans to Forms
 description: |
-  Beans are the standard Java model for business objects.
-  This article describes how they are bound to forms.
+  Beans are the standard Java model for business objects. This article describes how they are bound to forms.
 order: 40
 layout: page
 ---
 
 = Binding Beans to Forms
 
-Business objects are typically implemented as JavaBeans in an application. [classname]`Binder` supports binding the properties of a business object to UI components in your forms.
+Business objects are typically implemented as JavaBeans in an application. [classname]`Binder` supports binding the properties of a business object to UI components in forms.
+
 
 == Manual Data Binding
 
-You can use reflection based on bean property names to bind values.
-This reduces the amount of code needed when binding to fields in the bean.
-To use reflection, create a [classname]`Binder` by providing the bean class, for example `new Binder<>(Person.class);`.
-By default, [classname]`Binder` inspects top level properties when it is instantiated, but it can detect nested properties lazily when they are bound to a view field.
+You can use reflection based on bean property names to bind values. This reduces the amount of code needed when binding to fields in the bean. 
+
+To use reflection, create a [classname]`Binder` by providing the bean class, for example `new Binder<>(Person.class);`. By default, [classname]`Binder` inspects top level properties when it is instantiated. However, it can detect nested properties lazily when they're bound to a view field. 
+
 To eagerly inspect nested properties, you can use the [constructorname]`Binder(Class<BEAN> beanType, boolean scanNestedDefinitions);` constructor, passing `true` as the value of `scanNestedDefinitions` parameter.
 
-*Examples*: Binding using reflection based on bean property names.
+For example, to bind using reflection based on bean property names, you would do something like this:
 
 [source,java]
 ----
@@ -38,28 +38,25 @@ binder.forField(yearOfBirthField)
 ----
 
 [NOTE]
-Be cautious when using strings to identify properties.
-A typo in the string, or a subsequent change to the setter and getter method names, results in a runtime exception.
+Be cautious when using strings to identify properties. A typo in the string, or a subsequent change to the setter and getter method names, results in a runtime exception.
+
 
 == Binding Nested Properties
 
-Binding nested properties is possible if the bean provides all the `getters` necessary to reach the leaf property.
-The nested property should be expressed in the bean path syntax.
-For example to bind the [fieldname]`street` property of [classname]`Address` class, through the [fieldname]`Person.address` field, you should:
+Binding nested properties is possible if the bean provides all of the `getters` necessary to reach the leaf property. The nested property should be expressed in the bean path syntax. For example, to bind the [fieldname]`street` property of [classname]`Address` class, through the [fieldname]`Person.address` field, you should:
 
-* have a [methodname]`getStreet()` method in the [classname]`Address` class. If the property is writable, provide also the [methodname]`setStreet(String street)` method.
-* have a [methodname]`getAddress()` method in [classname]`Person` class. The getter should never return `null`, otherwise the nested binding will fail.
-* Bind the field using its bean path `address.street`, for example `binder.bind(streetAddressField, "address.street")`
+* Have a [methodname]`getStreet()` method in the [classname]`Address` class -- provide also the [methodname]`setStreet(String street)` method, if the property is writable;
+* Have a [methodname]`getAddress()` method in [classname]`Person` class -- the getter should never return `null`, otherwise the nested binding will fail; and
+* Bind the field using its bean path `address.street`, for example `binder.bind(streetAddressField, "address.street")`.
+
 
 == Automatic Data Binding
 
-The [methodname]`bindInstanceFields()` method facilitates automatic data binding.
+The [methodname]`bindInstanceFields()` method facilitates automatic data binding. UI fields are typically defined as members of a UI Java class. This allows you to access the fields using the different methods made available by the class. 
 
-UI fields are typically defined as members of a UI Java class.
-This allows you to access the fields using the different methods made available by the class.
-In this scenario, binding the fields is also simple, because when you pass the object to the UI class, the [methodname]`bindInstanceFields()` method matches the fields of the object to the properties of the related business object, based on their names.
+In this scenario, binding the fields is also simple because when you pass the object to the UI class, the [methodname]`bindInstanceFields()` method matches the fields of the object to the properties of the related business object based on their names.
 
-*Example*: Using the [methodname]`bindInstanceFields()` method to bind all fields in a UI class.
+For example, you could use the [methodname]`bindInstanceFields()` method to bind all fields in a UI class like so:
 
 [source,java]
 ----
@@ -79,12 +76,9 @@ public class MyForm extends VerticalLayout {
 }
 ----
 
-* This binds the `firstName` text field to the `firstName` property in the item,
-`lastName` text field to the `lastName` property, and the `gender` combo box to the `gender` property.
+This binds the `firstName` text field to the `firstName` property in the item, `lastName` text field to the `lastName` property, and the `gender` combo box to the `gender` property.
 
-Without this method, it would be necessary to bind each field separately.
-
-*Example*: Binding each field separately.
+Without this method, it would be necessary to bind each field separately. Below is an example of this in which each field is bound separately:
 
 [source,java]
 ----
@@ -96,15 +90,14 @@ binder.forField(gender)
     .bind(Person::getGender, Person::setGender);
 ----
 
+
 === Specifying Property Names
 
-The [methodname]`bindInstanceFields()` method processes all Java member fields with a type that implements [interfacename]`HasValue` (such as `TextField`) that can be mapped to a property name.
+The [methodname]`bindInstanceFields()` method processes all Java member fields with a type that implements [interfacename]`HasValue` (such as, `TextField`) that can be mapped to a property name.
 
 If the field name doesn't match the corresponding property name in the business object, you can use the `@PropertyId` annotation to specify the property name.
 
-The `@PropertyId` annotation is mandatory if the field should be bound to a nested property.
-
-*Example*: Using the `@PropertyId` annotation to specify the "sex" property for the `gender` field.
+The `@PropertyId` annotation is mandatory if the field should be bound to a nested property. For example, using the `@PropertyId` annotation to specify the "sex" property for the `gender` field would look like this:
 
 [source,java]
 ----
@@ -115,16 +108,14 @@ private ComboBox<Gender> gender = new ComboBox<>("Gender");
 private TextField streetAddressField = new TextField("Street");
 ----
 
-=== Configuring Converters and Validators
 
-When using the automatic [methodname]`bindInstanceFields()` method to bind fields, all converters and validators must be configured beforehand using a special [methodname]`forMemberField()` configurator.
-It works similarly to the [methodname]`forField()` method, but it requires no explicit call to a bind method.
-If the [methodname]`bindInstanceFields()` method finds incompatible property-field pairs, it throws an [classname]`IllegalStateException`.
+=== Configuring Converters & Validators
 
-Alternatively, you can bind properties that need validators manually and then bind all remaining fields using the [methodname]`bindInstanceFields()` method.
-This method skips the properties that have already been bound manually.
+When using the automatic [methodname]`bindInstanceFields()` method to bind fields, all converters and validators must be configured beforehand using a special [methodname]`forMemberField()` configurator. This works similarly to the [methodname]`forField()` method, but it requires no explicit call to a bind method. If the [methodname]`bindInstanceFields()` method finds incompatible property-field pairs, it throws an [classname]`IllegalStateException`.
 
-*Example*: Manually specifying [classname]`StringToIntegerConverter` before calling the [methodname]`bindInstanceFields()` method.
+Alternatively, you can bind properties that need validators manually and then bind all remaining fields using the [methodname]`bindInstanceFields()` method. This method skips the properties that have already been bound manually.
+
+You can manually specify [classname]`StringToIntegerConverter`, for example, before calling the [methodname]`bindInstanceFields()` method like so:
 
 [source,java]
 ----
@@ -140,19 +131,18 @@ binder.bindInstanceFields(this);
 
 ----
 
-If you use Java Specification Requests (JSR) 303 validators, you should use [classname]`BeanValidationBinder`, which picks validators automatically when using [methodname]`bindInstanceFields()`.
+If you use Java Specification Requests (JSR) 303 validators, you should use [classname]`BeanValidationBinder`. It picks validators automatically when using [methodname]`bindInstanceFields()`.
+
 
 === Automatically Applied Converters
 
-The [methodname]`bindInstanceFields()` method can simplify [classname]`Binder` configuration by automatically applying out-of-the-box converters from the `com.vaadin.flow.data.converter` package for known types.
-An automatic choice is made only for fields that aren't manually configured using [methodname]`forField()` or [methodname]`forMemberField()`.
-Converter instances are created using the [classname]`ConverterFactory` provided by the [methodname]`Binder.getConverterFactory()` method.
-If a suitable converter can't be created, [methodname]`bindInstanceFields()` throws an [classname]`IllegalStateException`.
+The [methodname]`bindInstanceFields()` method can simplify [classname]`Binder` configuration by automatically applying out-of-the-box converters from the `com.vaadin.flow.data.converter` package for known types. An automatic choice is made only for fields that aren't manually configured using [methodname]`forField()` or [methodname]`forMemberField()`.
 
-The converter list can be augmented with custom converters by extending [classname]`Binder` and overriding [methodname]`getConverterFactory()`, so that it returns a custom [classname]`ConverterFactory` implementation.
-When using a custom converter factory, it's good practice to fall back to the default one if there is no specific match for the type to be converted.
+Converter instances are created using the [classname]`ConverterFactory` provided by the [methodname]`Binder.getConverterFactory()` method. If a suitable converter can't be created, [methodname]`bindInstanceFields()` throws an [classname]`IllegalStateException`.
 
-*Example*: Providing a custom [classname]`ConverterFactory` for [classname]`Binder`.
+The converter list can be augmented with custom converters by extending [classname]`Binder` and overriding [methodname]`getConverterFactory()`, so that it returns a custom [classname]`ConverterFactory` implementation. When using a custom converter factory, it's good practice to fall back to the default one if there is no specific match for the type to be converted.
+
+For example, providing a custom [classname]`ConverterFactory` for [classname]`Binder` might look like this:
 
 [source,java]
 ----
@@ -191,12 +181,11 @@ class CustomConverterFactory implements ConverterFactory {
 
 == Using JSR 303 Bean Validation
 
-You can use [classname]`BeanValidationBinder` if you prefer to use Java Specification Requests (JSR) 303 Bean Validation annotations, such as `Max`, `Min`, `Size`, etc.
+You can use [classname]`BeanValidationBinder` if you prefer to use Java Specification Requests (JSR) 303 Bean Validation annotations, such as `Max`, `Min`, and `Size`.
 
-[classname]`BeanValidationBinder` extends [classname]`Binder` (and therefore has the same API), but its implementation automatically adds validators based on JSR 303 constraints.
+[classname]`BeanValidationBinder` extends [classname]`Binder` -- and therefore has the same API -- but its implementation automatically adds validators based on JSR 303 constraints.
 
-To use Bean Validation annotations, you need a JSR 303 implementation, such as Hibernate Validator, available in your classpath.
-If your environment doesn't provide the implementation (such as Java EE container, for example), you can use the following dependency in Maven:
+To use Bean Validation annotations, you need a JSR 303 implementation, such as Hibernate Validator, available in your classpath. If your environment doesn't provide the implementation (e.g., Java EE container), you can use the following dependency in Maven:
 
 [source,xml]
 ----
@@ -207,9 +196,10 @@ If your environment doesn't provide the implementation (such as Java EE containe
 </dependency>
 ----
 
+
 === Defining Constraints for Properties
 
-*Example*: Using JSR 303 Bean Validation annotations with [classname]`BeanValidationBinder`.
+To use JSR 303 Bean Validation annotations with [classname]`BeanValidationBinder`, for example, you would do something like this:
 
 [source,java]
 ----
@@ -235,10 +225,9 @@ binder.forField(yearOfBirthField)
     .bind("yearOfBirth");
 ----
 
-Constraints defined for properties in the bean work in the same way as if configured programmatically when the binding is created.
-For example, the following code snippets have the same result:
+Constraints defined for properties in the bean work in the same way as if configured programmatically when the binding is created. For example, the following code snippets have the same result.
 
-*Example*: Declarative Bean Validation annotation.
+This first example is a declarative Bean Validation annotation:
 
 [source,java]
 ----
@@ -247,7 +236,8 @@ public class Person {
      "Year of Birth must be less than or equal to 2000")
     private int yearOfBirth;
 ----
-*Example*: Programmatic validation using Binder specific API.
+
+This next example is a programmatic validation using Binder specific API:
 
 [source,java]
 ----
@@ -259,18 +249,16 @@ binder.forField(yearOfBirthField)
 ----
 
 [NOTE]
-As an alternative to defining constraint annotations for specific properties, you can define constraints at the bean level.
-However, Vaadin's [classname]`BeanValidationBinder` doesn't currently support them.
-It ignores all JSR 303 validations that aren't assigned directly to properties.
+As an alternative to defining constraint annotations for specific properties, you can define constraints at the bean level. However, Vaadin's [classname]`BeanValidationBinder` doesn't currently support them. It ignores all JSR 303 validations that aren't assigned directly to properties.
+
 
 === Automatically Marking Form Fields as Required
 
-Some built-in validators in the bean validation API suggest that a value is required in input field.
-[classname]`BeanValidationBinder` automatically enables the visual "required" indicator using the [methodname]`HasValue.setRequiredIndicatorVisible(true)` method for properties annotated with such validators.
-By default, `@NotNull`, `@NotEmpty` and `@Size` (if `min()` value is greater than 0) configures the field as required.
-You can change this behavior using the [methodname]`BeanValidationBinder.setRequiredConfigurator()` method.
+Some built-in validators in the bean validation API suggest that a value is required in input field. The [classname]`BeanValidationBinder` automatically enables the visual "required" indicator using the [methodname]`HasValue.setRequiredIndicatorVisible(true)` method for properties annotated with such validators.
 
-*Example*: Overriding the default `@Size` behavior.
+By default, `@NotNull`, `@NotEmpty` and `@Size` (if `min()` value is greater than 0) configures the field as required. You can change this behavior using the [methodname]`BeanValidationBinder.setRequiredConfigurator()` method.
+
+As an example, the following shows how you might override the default `@Size` behavior:
 
 [source,java]
 ----
