@@ -6,7 +6,9 @@ import com.vaadin.demo.flow.routing.Route;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.sso.starter.AuthenticationContext;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 // tag::full-class[]
 @PermitAll
@@ -16,7 +18,7 @@ public class ProfileView extends VerticalLayout {
     // tag::class-content[]
     public ProfileView(AuthenticationContext authContext) {
         // tag::authenticated-user[]
-        authContext.getAuthenticatedUser().ifPresent(user -> {
+        authContext.getAuthenticatedUser(OidcUser.class).ifPresent(user -> {
             Avatar userAvatar = new Avatar(user.getFullName());
             add(userAvatar);
         });
