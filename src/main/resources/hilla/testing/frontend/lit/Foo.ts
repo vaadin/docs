@@ -1,5 +1,5 @@
 import { html, LitElement } from 'lit';
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property } from 'lit/decorators.js';
 
 export type FooEventData = { value: string };
 
@@ -15,7 +15,9 @@ export default class Foo extends LitElement {
 
   private _listener() {
     this.dispatchEvent(
-      new CustomEvent<FooEventData>('foo-click', { detail: { value: `${this.title} is clicked` } })
+      new CustomEvent<FooEventData>('foo-click', {
+        detail: { value: `${this.title} is clicked` },
+      })
     );
   }
 }
