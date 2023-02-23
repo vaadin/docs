@@ -20,7 +20,6 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-accordion>
-        <!-- end::snippet[] -->
         <vaadin-accordion-panel summary="Personal information">
           <vaadin-vertical-layout>
             <span>Sophia Williams</span>
