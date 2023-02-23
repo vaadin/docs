@@ -83,7 +83,7 @@ const hasLicenseChecker = (() => {
 
 const LICENSE_CHECK = hasLicenseChecker
   ? {
-      shell: MVN + ' -C -P --no-transfer-progress dspublisher-license-check',
+    shell: MVN + ' --no-transfer-progress -C -P dspublisher-license-check',
       phases: [
         {
           text: `Checking license${firstLaunchMessage}`,
@@ -110,7 +110,7 @@ const SCRIPTS = {
         ],
       },
       {
-        shell: MVN + ' -C --no-transfer-progress clean',
+        shell: MVN + ' --no-transfer-progress -C clean',
         phases: [
           {
             text: `Cleaning up project${firstLaunchMessage}`,
@@ -134,7 +134,7 @@ const SCRIPTS = {
           '--kill-others',
           '--raw',
           `"npx @vaadin/dspublisher@${DSP_VERSION} --develop"`,
-          '"mvn -C --no-transfer-progress"',
+          '"mvn --no-transfer-progress -C"',
         ],
         phases: [
           {
@@ -178,7 +178,7 @@ const SCRIPTS = {
         ],
       },
       {
-        shell: MVN + ' -C --no-transfer-progress clean package -DskipTests -Pproduction',
+        shell: MVN + ' --no-transfer-progress -C clean package -DskipTests -Pproduction',
         phases: [
           {
             text: 'Building a deployable jar',
