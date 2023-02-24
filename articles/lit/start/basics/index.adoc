@@ -71,7 +71,7 @@ You should install the following extensions to VS Code for an optimal developmen
 
 * https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack[Java Extension Pack]
 ifdef::lit[]
-* https://marketplace.visualstudio.com/items?itemName=runem.lit-plugin[lit-plugin]
+* https://marketplace.visualstudio.com/items?itemName=runem.lit-plugin[Lit-plugin]
 endif::[]
 * https://marketplace.visualstudio.com/items?itemName=Pivotal.vscode-spring-boot[Spring Boot Tools]
 
@@ -503,7 +503,7 @@ endif::[]
 ifdef::react[]
 Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with the following:
 
-.`TodoViex.tsx`
+.`TodoView.tsx`
 [source,typescript]
 ----
 import type Todo from 'Frontend/generated/com/example/application/Todo'; // <1>
@@ -526,9 +526,9 @@ export default function TodoView() { // <2>
 [discrete]
 === Define the view state
 
-Inside the `TodoView` class, define the view state as follows:
+Inside the `TodoView` function, define the view state as follows:
 
-.`TodoViex.tsx`
+.`TodoView.tsx`
 [source,typescript]
 ----
 const empty: Todo = { task: '', done: false };
@@ -573,7 +573,7 @@ const formik = useFormik({
 
 Add the following code inside the `return` statement:
 
-.`TodoViex.tsx`
+.`TodoView.tsx`
 [source,typescript]
 ----
 <>
@@ -596,7 +596,7 @@ Add the following code inside the `return` statement:
 
 Right below the previous `<div>`, add the following code:
 
-.`TodoViex.tsx`
+.`TodoView.tsx`
 [source,typescript]
 ----
 <div className="m-m flex flex-col items-stretch gap-s">
@@ -613,7 +613,7 @@ Right below the previous `<div>`, add the following code:
 
 Before the `return` method, add a React effect to load the initial values.
 
-.`TodoViex.tsx`
+.`TodoView.tsx`
 [source,typescript]
 ----
 useEffect(() => {
@@ -748,16 +748,16 @@ export default function TodoView() {
     initialValues: empty,
     onSubmit: async (value: Todo, { setSubmitting, setErrors }) => {
       try {
-        const saved = await TodoEndpoint.save(value) ?? value;
+        const saved = (await TodoEndpoint.save(value)) ?? value;
         setTodos([...todos, saved]);
         formik.resetForm();
       } catch (e: unknown) {
         if (e instanceof EndpointValidationError) {
-          const errors: FormikErrors<Todo> = {}
+          const errors: FormikErrors<Todo> = {};
           for (const error of e.validationErrorData) {
-            if (typeof error.parameterName === 'string' && error.parameterName in empty) {
-              const key = error.parameterName as (string & keyof Todo);
-              errors[key] = error.message;
+            if (typeof error.parameterName === 'string' && !(error.parameterName in empty)) {
+              const key = error.parameterName as string & keyof Todo;              
+              errors[key] = error.message.substring(error.message.indexOf("validation error:"));
             }
           }
           setErrors(errors);
@@ -778,12 +778,14 @@ async function changeStatus(todo: Todo, done: boolean) {
     <>
       <div className="m-m flex items-baseline gap-m">
         <TextField
-          name='task'
-          label="Task"
+          name="description"
+          label="Description"
           value={formik.values.task}
           onChange={formik.handleChange}
           onBlur={formik.handleChange}
-        />
+          errorMessage={formik.errors.task}
+          invalid={formik.errors.task? true : false}
+        ></TextField>
         <Button
           theme="primary"
           disabled={formik.isSubmitting}
