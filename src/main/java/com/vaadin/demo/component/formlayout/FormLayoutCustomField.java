@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.formlayout;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.joda.time.LocalDate;
@@ -18,11 +19,13 @@ public class FormLayoutCustomField extends Div {
     // tag::snippet[]
     public class ExpirationField extends CustomField<String> {
         private final List<String> MONTHS = IntStream.range(1, 13)
-                .mapToObj(month -> String.format("%02d", month)).toList();
+                .mapToObj(month -> String.format("%02d", month))
+                .collect(Collectors.toList());
         private final List<String> YEARS = IntStream
                 .range(LocalDate.now().getYear(),
                         LocalDate.now().getYear() + 11)
-                .mapToObj(year -> Integer.toString(year)).toList();
+                .mapToObj(year -> Integer.toString(year))
+                .collect(Collectors.toList());
 
         private final Select<String> month = new Select<String>();
         private final Select<String> year = new Select<String>();
