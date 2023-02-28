@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+
 /**
  * An example code for demoing the Spring Security configuration, shouldn't affect
  * the doc application itself.
@@ -36,7 +38,7 @@ public class SecurityConfigDemo extends VaadinWebSecurity {
   @Override
   public void configure(WebSecurity web) throws Exception {
       super.configure(web);
-      web.ignoring().antMatchers("/images/**"); 
+      web.ignoring().requestMatchers(antMatcher("/images/**")); 
   }
   // end::public-resources[]
 }
