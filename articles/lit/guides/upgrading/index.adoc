@@ -1,74 +1,58 @@
 ---
-title: Upgrading Guide
+title: Upgrading from Hilla 1.x
 order: 900
 ---
-= Upgrading from Vaadin 23
+:lit:
+// tag::content[]
 
-.Upgrading from an earlier version
-[TIP]
-See the https://vaadin.com/docs/latest/upgrading[Vaadin 23 upgrading guides] if you are upgrading from an earlier version.
+= Upgrading from Hilla 1
 
-This guide goes through the changes you need to make in your application when upgrading from Vaadin 23. After these changes, your application should compile, run, behave and look the way it did before.
-
-Many of the breaking changes are needed because the fundamental changes in the Java platform and the major dependencies Vaadin relies on, including the following:
-
-*Servlet 6*::
-Vaadin 24 is based on Servlet 6 specifications and is compatible with the Jakarta EE 10. Vaadin encapsulates the usage of the classes from `javax` / `jakarta` packages. Therefore, the application's code doesn't need to use servlets, directly. Nevertheless, this is needed in various cases, like accessing the cookies, setting servlet's parameters, etc.
-
-*Spring Boot 3*::
-Vaadin 24 uses the latest Spring Boot 3 and Spring Framework 6 versions. This leads in turn to making breaking changes in Spring-based features compared to earlier Spring-boot 2 and Spring Framework 5 versions.
-
-*Java 17*::
-Vaadin 24 requires Java 17 or later. This is dictated by Spring framework and newer versions of application servers.
-
+This article describes changes required for a Hilla 1.x application in order to migrate it to Hilla 2.0.
 
 == Overview
 
-Vaadin 24 doesn't fundamentally change how applications are developed and behave. Still, the upgrade process requires the following essential steps:
+Many of the breaking changes in Hilla 2 are introduced by the following updates of the underlying Java platform dependencies:
 
-* Upgrade Vaadin version in the project's `pom.xml`, checking for the latest Vaadin 24 release link:https://github.com/vaadin/platform/releases[in GitHub].
-* Convert package names to Jakarta EE 10 namespace.
-* For *Spring-based* applications, upgrade to Spring-boot 3 or Spring framework 6, depending on what is used in your project.
-* For *non-Spring* applications, upgrade the application server version to one compatible with Jakarta EE 10.
-* Upgrade third-party dependencies used in your project (such as, Maven/Gradle plugins, libraries, frameworks) to the Jakarta and Spring-compatible versions.
-* Check if your application is not using deprecated code fragments.
-* Make sure your application runs well on Java 17 runtime.
-* Make sure the front-end build works as it should with Vite, as webpack is no longer supported.
+*Jakarta EE 10 and Servlet 6*::
+Hilla 2 is based on Servlet 6 specifications and is compatible with the Jakarta EE 10. Changing from `javax.*` to `jakarta.*` is required for validation and some nullability annotations in Java.
 
-== Limitations
+*Spring Boot 3*::
+Hilla 2 uses the latest Spring Boot 3 and Spring Framework 6 versions. This leads in turn to making breaking changes in Spring-based features compared to earlier Spring-boot 2 and Spring Framework 5 versions.
 
-Portlet and OSGi integrations are not included, for two reasons:
+*Java 17*::
+Hilla 2 requires Java 17 or later. This is dictated by Spring framework and newer versions of application servers.
 
-* The latest Portlet 3 specification corresponds to Servlet 3, and it doesn't work with Servlet 6.
-* Jakarta EE 10 compatible version of OSGi core runtime https://felix.apache.org/documentation/index.html[Apache Felix 8] is under development. https://karaf.apache.org/[Apache Karaf] container is based on Apache Felix and doesn't have a Jakarta compatible version.
+Aside from these changes in Hilla dependencies, here are the notable changes in the framework itself:
+
+*Multi-module endpoints parser and generator*::
+Hilla 2 changes the parser and generator that are used to produce TypeScript code for endpoints. As a result, some adjustments to Java endpoints and entities code in Hilla applications might be required. The `hillaEngine` experimental feature flag was removed.
+
+*Reactive endpoints*::
+Previously released as an experimental feature behind the `hillaPush` feature flag, reactive endpoints are now enabled by default.
+
+*Vaadin components 24*::
+Hilla 2 complements Vaadin 24 release. Vaadin components version 24 introduces support of styling using the `::part()` CSS selector, which comes with some changes affecting styling the component internals.
+
 
 == Preparations
 
-Upgrade the Vaadin version in `pom.xml` / `build.gradle` to the latest release like so:
+=== Installing Maven and Node
+
+Installing up-to-date versions of Maven 3 and Node 18 is recommended before starting with Hilla 2 migration. For the optimal and smooth application development experience, make sure to have `mvn` and `node` executables in the `PATH` environment variable. Follow the link:https://maven.apache.org/install.html[Maven] and link:https://nodejs.dev/en/learn/how-to-install-nodejs/[Node]
+installation instructions, or configure your IDE to set the `PATH` with these tools.
+
+=== Hilla Dependency Upgrade
+
+Upgrade the Hilla version in `pom.xml` to the latest release:
 
 .pom.xml
 [source,xml]
 ----
-<vaadin.version>24.0.0.beta1</vaadin.version>
+<hilla.version>2.0.0.rc1</hilla.version>
 ----
 
-See the link:https://github.com/vaadin/platform/releases[list of releases in GitHub] for the latest one.
+Find the latest version number using the link:https://github.com/vaadin/hilla/releases[GitHub Hilla releases list].
 
-Since a pre-release is used, you have to add the following repositories:
-
-.pom.xml
-[source,xml]
-----
-<repository>
-    <id>vaadin-prereleases</id>
-    <url>https://maven.vaadin.com/vaadin-prereleases/</url>
-</repository>
-
-<pluginRepository>
-    <id>vaadin-prereleases</id>
-    <url>https://maven.vaadin.com/vaadin-prereleases/</url>
-</pluginRepository>
-----
 
 == Jakarta EE 10 Namespaces
 
@@ -109,6 +93,7 @@ Below are a few examples:
     <version>3.0.0</version>
 </dependency>
 ----
+
 
 == Spring Upgrade Instructions
 
@@ -172,7 +157,7 @@ public class SecurityConfig extends VaadinWebSecurity {
 
         // This is important to register your login view to the
         // view access checker mechanism:
-        setLoginView(http, LoginView.class);
+        setLoginView(http, '/login');
     }
 
     @Override
@@ -208,6 +193,7 @@ public class SecurityConfig extends VaadinWebSecurity {
 +
 In this example, `AuthenticationManagerBuilder`, used in Spring-boot 2.x, is replaced by `UserDetailsService`. And `http.authorizeRequests().antMatchers()` are replaced by `http.authorizeHttpRequests().requestMatchers()`.
 
+
 == Java Version
 
 *Java 17* or later is required. Below is an example of how to use this version:
@@ -238,169 +224,47 @@ java {
 ----
 --
 
-== Application Servers
 
-Before migrating, find the corresponding version of Jakarta EE 10-compatible application server used in your project. See https://jakarta.ee/compatibility/[Jakarta Compatible Products] for more information.
+== Maven Plugins
 
-CDI 4.0 specification, which is part of Jakarta EE 10, changes the default value of `bean-discovery-mode` attribute to **annotated** and uses **annotated** as the default when an empty [filename]`beans.xml` file is found in a deployment. See https://jakarta.ee/specifications/cdi/4.0/ for more information.
+=== Hilla Maven Plugin
 
-To let the container scan and manage Vaadin components and views when the `bean-discovery-mode` attribute is not defined and the default is used, one should annotate Vaadin components and views with the `com.vaadin.cdi.annotation.CdiComponent` annotation to allow Vaadin components to be detected correctly as CDI beans.
-
-Or you can set `bean-discovery-mode=all` in the [filename]`beans.xml` if it's applicable to your project. However, this is not recommended.
-
-== Polymer Templates
-
-Polymer support has been deprecated since Vaadin 18 (released in November 2020), in favor of faster and simpler <<{articles}/create-ui/templates#,Lit templates>>. The built-in support for Polymer templates has been removed and is only available for Prime and Enterprise customers.
-
-You can use the conversion tool to facilitate the migration from Polymer to Lit by automatically converting basic Polymer constructions into their Lit equivalents in Java and JavaScript source files.
-
-=== Limitations
-
-The converter covers only basic cases. More advanced cases, such as TypeScript source files or usage of internal Polymer API, should still be converted manually.
-
-See the https://github.com/vaadin/flow/tree/master/flow-polymer2lit[Polymer-to-Lit converter documentation] for more information about limitations and supported transformations.
-
-=== Usage
-
-Regarding usage, run the converter in your project's root folder as follows:
-
-[.example]
---
-[source,text]
-----
-<source-info group="Maven"></source-info>
-mvn vaadin:convert-polymer
-----
-[source,groovy]
-----
-<source-info group="Groovy"></source-info>
-./gradlew vaadinConvertPolymer
-----
---
-
-To convert a project that is based on versions before Vaadin 24, use the following:
-
-[.example]
---
-[source,text]
-----
-<source-info group="Maven"></source-info>
-mvn com.vaadin:vaadin-maven-plugin:24.0.0.alpha5:convert-polymer
-----
-.`build.gradle`
-[source,groovy]
-----
-<source-info group="Groovy"></source-info>
-buildscript {
-  repositories {
-    classpath 'com.vaadin:flow-gradle-plugin:24.0-SNAPSHOT'
-  }
-}
-----
---
-
-=== Configuring
-
-The converter accepts the following properties:
-
-`-Dvaadin.path=path/to/your/file`::
-By default, the converter scans all files that match `**/*.js` and `**/*.java` and then tries to convert them to Lit.
-+
-To limit conversion to a specific file or directory, you can use the `vaadin.path` property like so:
-+
-[.example]
---
-[source,text]
-----
-<source-info group="Maven"></source-info>
-mvn vaadin:convert-polymer -Dvaadin.path=path/to/your/file
-----
-[source,text]
-----
-<source-info group="Groovy"></source-info>
-./gradlew vaadinConvertPolymer -Dvaadin.path=path/to/your/file
-----
---
-+
-The path is always relative to your project's root folder.
-
-`-Dvaadin.useLit1`::
-By default, the converter transforms Polymer imports into their Lit 2 equivalents.
-+
-If your project is using Lit 1 (i.e., before Vaadin 21), you can use the vaadin.useLit1 flag to enforce Lit 1 compatible imports:
-+
-[.example]
---
-[source,text]
-----
-<source-info group="Maven"></source-info>
-mvn vaadin:convert-polymer -Dvaadin.useLit1
-----
-[source,text]
-----
-<source-info group="Groovy"></source-info>
-./gradlew vaadinConvertPolymer -Dvaadin.useLit1
-----
---
-
-`-Dvaadin.disableOptionalChaining`::
-By default, the converter transforms `\[[prop.sub.something]]` expressions into `${this.prop?.sub?.something}`.
-+
-If your project is using the Vaadin webpack configuration, which doesn't support the JavaScript optional chaining operator `(?.)`, you can use the `vaadin.disableOptionalChaining` flag like so:
-+
-[.example]
---
-[source,text]
-----
-<source-info group="Maven"></source-info>
-mvn vaadin:convert-polymer -Dvaadin.disableOptionalChaining
-----
-[source,text]
-----
-<source-info group="Groovy"></source-info>
-./gradlew vaadinConvertPolymer -Dvaadin.disableOptionalChaining
-----
---
-
-== Multiplatform Runtime
-
-Multiplatform Runtime allows the use of legacy Vaadin 7 or 8 framework components in Vaadin Flow applications. The Multiplatform Runtime artifacts remain the same: `mpr-v8` and `mpr-v7`. However, the framework server dependencies now contain a `mpr-jakarta` postfix:
+Starting from Vaadin 24, `vaadin-maven-plugin` alone does not support generating Hilla endpoints. Replace it with `hilla-maven-plugin` to enable using Hilla endpoint:
 
 .pom.xml
 [source,xml]
 ----
-<!-- Vaadin 8 -->
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-server-mpr-jakarta</artifactId>
-    <version>8.19.0</version>
-</dependency>
-
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-compatibility-server-mpr-jakarta</artifactId>
-    <version>8.19.0</version>
-</dependency>
-
-<!-- Vaadin 7 -->
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-server-mpr-jakarta</artifactId>
-    <version>7.7.37</version>
-</dependency>
+<groupId>dev.hilla</groupId>
+<artifactId>hilla-maven-plugin</artifactId>
+<version>${hilla.version}</version>
 ----
 
-Other legacy framework dependencies have the same names, but transitive dependencies to `vaadin-server` artifacts must be detected and excluded. Consult <<{articles}/tools/mpr/introduction/1-maven-v8#exclude-incompatible-framework-8-dependency, Exclude Incompatible Framework 8 Dependency>> for further details.
+You can use Maven goals of the former `vaadin-maven-plugin` the same way from the `hilla-maven-plugin`.
 
-== Maven/Gradle Plugins
+This primarily affects hybrid applications, which have both Hilla client-side and Flow server-side views, and were created with Vaadin / Fusion 23 or earlier.
+
+=== Third-Party Plugin Versions
 
 Make sure that the versions of Maven plugins your project defines explicitly, are compatible with Java 17.
 
-As an example, `nexus-staging-maven-plugin` requires a minimal version 1.6.13. Gradle version 7.3 and higher is required to run on top of Java 17 (see https://docs.gradle.org/7.3/release-notes.html[Gradle release notes]).
+As an example, `nexus-staging-maven-plugin` requires a minimal version 1.6.13.
+
 
 == SLF4J 2.0
 
-Vaadin 24 and Spring-boot 3 use SLF4J library version 2.0, which has breaking changes compared to earlier versions. See the https://www.slf4j.org/news.html[SLF4J release notes] for more information.
+Hilla 2, Vaadin 24 and Spring Boot 3 use SLF4J library version 2.0, which has breaking changes compared to earlier versions. See the https://www.slf4j.org/news.html[SLF4J release notes] for more information.
+
+
+== Changes in Hilla Endpoints
+
+The new behavior of null type annotations (`@dev.hilla.Nonnull` and such) for arrays in endpoints and entity classes is:
+
+- `@dev.hilla.Nonnull byte[]` is a nullable array type which items are non-null.
+- `byte @dev.hilla.Nonnull []` is non-null array type which items are nullable.
+
+This affects nullability in generated TypeScript code.
+
+Note that it may be more practical to use the link:https://hilla.dev/docs/lit/reference/type-nullability/#nonnullapi[@NonNullApi] annotation for declaring nullability on the package level.
 
 
 == Breaking Changes in Vaadin Components
@@ -427,71 +291,9 @@ h2, h3, h4 { margin-bottom: 0.5em; }
 h5 { margin-bottom: 0.25em; }
 ----
 
+=== Changes in Web Component APIs
 
-=== Removed Flow Component APIs
-
-The following Vaadin component APIs have been removed or renamed in Flow:
-
-* The `Generated[ComponentName]` classes have been removed. Extend the normal component classes instead when extending components.
-+
-The following event classes were introduced in V23.3 as replacements for the ones in the generated classes:
-`DatePicker.OpenedChangeEvent`,
-`DatePicker.InvalidChangeEvent`,
-`Dialog.OpenedChangeEvent`,
-`Notification.OpenedChangeEvent` and
-`SplitLayout.SplitterDragendEvent`
-+
-The generic type parameters in these events (introduced in V23.3 for backward compatibility) was removed in V24.
-
-* `Button.setDisabled()` removed in favor of `setEnabled(false)`
-* Charts `HTMLLabels` and `HTMLLabelItem` APIs removed (as broken) in favor of `Configuration.addLabel` or `Configuration.setLabels` (with `AnnotationItemLabel` objects instead of ``HTMLLabel``s; Coordinate information for the label can be provided using `AnnotationItemLabel.setPoint`)
-* `Checkbox::setLabelAsHtml` removed in favor of renderers (`setRenderer`)
-* `CheckboxGroup` and `RadioButtonGroup` no longer implement the `HasComponents` and `HasItemComponents` interfaces, and the following methods have been removed:
-** `add(Component...)`, `add(Collection)` and `add(String)`
-** `remove(Component...)`, `remove(Collection)` and `removeAll()`
-** `addComponentAtIndex(int, Component)`
-** `addComponentAsFirst(Component)`
-** `addComponents(T, Component...)`
-** `prependComponents(T, Component...)`
-** `getItemPosition(T)`
-* `ContextMenu` `clickListener` API removed (wasn't working); apply click listeners to the menu's target component instead if needed
-* `CustomFieldI81n::parseValue` and `CustomFieldI18n::formatValue` moved to `CustomField::parseValue` and `CustomField::formatValue`
-* `DatePickerI18n` setters and getters for `clear`, `.calendar` and `.week` removed as unused
-* `FlexLayout.getFlexDirection(HasElement elementContainer)` overload removed (as pointless) in favor of `getFlexDirection()`
-* `Grid::setHeightByRows` removed in favor of `Grid::setAllRowsVisible`
-* `Grid.addColumn(renderer, sortingProperties)` removed in favor of `addColumn(renderer).setSortProperty(sortingProperties)`
-* `Grid.ItemClickEvent` and `ItemDoubleClickEvent` without `columnId` were removed
-* `Grid::findInShadowRoot` removed
-* `Grid::setVerticalScrollingEnabled` removed (wasn't working)
-* `Map.Coordinate::fromLonLat` removed as unnecessary since the default coordinate system is now EPSG:4326, and `new Coordinate(x,y)` is sufficient
-* `Map` APIs that used `float` values now use `double`
-* `NumberField::setMaxLength`, `setPattern` and `setPreventInvalidInput` removed as they didn't work
-* `NumberField::setHasControls` renamed `setStepButtonsVisible`
-* `RichTextEditor(String value)` constructor removed in favor of `RichTextEditor()` followed by `setValue(String value)`
-* `Select(T... items)` constructor removed in favor of `Select(String label, T... items)`
-* `SplitLayout.IronResizeEvent` was removed as part of move away from Polymer
-* `Tabs` no longer implements the `HasComponents` interface and the following APIs were removed or deprecated:
-** `add(Collection)` removed in favor of `add(Tab...)`
-** `remove(Collection)` removed in favor of `remove(Tab...)`
-** `add(String)` removed
-** `indexOf(Component)` deprecated in favor of `indexOf(Tab)`
-** `add(Component)` deprecated in favor of `add(Tab)`
-** `remove(Component)` deprecated in favor of `remove(Tab)`
-** `replace(Component, Component)` deprecated in favor of `replace(Tab, Tab)`
-** `getComponentAt(int)` deprecated in favor of `getTabAt(int)`
-** `addComponentAtIndex(int, Component)` deprecated in favor of `addTabAtIndex(int, Tab)`
-** `addComponentAsFirst(Component)` deprecated in favor of `addTabAsFirst(Tab)`
-* `TemplateRenderer` public API removed in favor of `LitRenderer`
-* `TextField::setPreventInvalidInput` removed in favor of `setAllowedCharPattern`
-* `TimePicker.setMin(String)` and `setMax(String)` removed in favor of `setMin(LocalTime)` and `setMax(LocalTime)`
-* Upload `SelectedChangeEvent(Tabs source, boolean fromClient)` overload removed in favor of `SelectedChangeEvent(Tabs source, Tab previousTab, boolean fromClient)`
-* `UploadI18n::setCancel`/`getCancel` removed as unused
-
-=== Web Component APIs
-.Click and read if you're using Vaadin components without Flow
-[%collapsible]
-====
-The following changes only affect the client-side APIs of Vaadin components:
+The following changes affect the client-side APIs of Vaadin components:
 
 * The label on `vaadin-checkbox` and `vaadin-radio-button` must be set using the `label` property, as the default slot has been removed
 * `vaadin-confirm-dialog.cancel` and `.reject` properties renamed `.cancelButtonVisible` and `.rejectButtonVisible`
@@ -503,8 +305,6 @@ The following changes only affect the client-side APIs of Vaadin components:
 * `preventInvalidInput` in text input fields removed in favor of `setAllowedCharPattern`
 * The read-only `theme` _property_ was removed; use the `theme` _attribute_ instead
 
-====
-
 === Update Your Component Styling
 .Click and read if you have styled Vaadin components
 [%collapsible]
@@ -512,48 +312,4 @@ The following changes only affect the client-side APIs of Vaadin components:
 include::_styling.adoc[]
 ====
 
-
-== Hilla 2.0
-
-With Hilla 2.0 shares the following requirements with Vaadin 24.0:
-
-- Java 17
-- Servlet 6
-- Spring Boot 3
-- Jakarta EE
-
-For the above, see other sections of this guide for detailed upgrade instructions.
-
-=== Hilla Dependency Version
-
-Upgrade the Hilla version in `pom.xml` to the latest release:
-
-.pom.xml
-[source,xml]
-----
-<hilla.version>2.0.0.beta1</hilla.version>
-----
-
-Find the latest version number using the link:https://github.com/vaadin/hilla/releases[GitHub Hilla releases list].
-
-=== Limitations
-
-Maven and Node are required to be installed on the developer system, with the `mvn` and `node` executables available on the `PATH` environment variable. Follow the link:https://maven.apache.org/install.html[Maven] and link:https://nodejs.dev/en/learn/how-to-install-nodejs/[Node]
- installation instructions, or make sure your IDE is configured to set the `PATH`  with these tools.
-
-=== Annotating with Arrays
-
-The new behavior of null type annotations (`@dev.hilla.Nonnull` and such) for arrays in endpoints and entity classes is:
-
-- `@dev.hilla.Nonnull byte[]` is a nullable array type which items are non-null.
-- `byte @dev.hilla.Nonnull []` is non-null array type which items are nullable.
-
-This affects nullability in generated TypeScript code.
-
-Consider using link:https://hilla.dev/docs/lit/reference/type-nullability/#nonnullapi[@NonNullApi] for declaring nullability on the package level.
-
-== Removed Deprecations
-
-APIs which were deprecated earlier have now been removed. The following linked issue lists the removals:
-
-- https://github.com/vaadin/flow/issues/15665[Remove deprecated API and tools in Flow 24.0]
+// end:content[]
