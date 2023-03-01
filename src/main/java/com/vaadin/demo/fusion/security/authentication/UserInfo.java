@@ -3,7 +3,7 @@ package com.vaadin.demo.fusion.security.authentication;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * User information used in client-side authentication and authorization.

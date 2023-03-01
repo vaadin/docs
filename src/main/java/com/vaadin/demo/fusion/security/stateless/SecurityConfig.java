@@ -25,8 +25,8 @@ public class SecurityConfig extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         // end::stateless-configure[]
-        http.authorizeRequests().antMatchers("/").permitAll();
-        http.authorizeRequests().antMatchers("/public").permitAll();
+        http.authorizeRequests().requestMatchers("/").permitAll();
+        http.authorizeRequests().requestMatchers("/public").permitAll();
 
         // tag::stateless-configure[]
         super.configure(http);
