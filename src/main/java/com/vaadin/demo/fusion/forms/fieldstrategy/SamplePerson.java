@@ -1,6 +1,6 @@
 package com.vaadin.demo.fusion.forms.fieldstrategy;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 public class SamplePerson {
 

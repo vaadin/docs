@@ -31,4 +31,9 @@ public class ReactiveEndpoint {
         });
     }
     // end::snippet[]
+
+    // Needed to avoid a TypeScript compilation error // hidden-source-line
+    // See https://github.com/vaadin/hilla/issues/795 // hidden-source-line
+    public void dummy() { // hidden-source-line
+    } // hidden-source-line
 }

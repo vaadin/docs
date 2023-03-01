@@ -1,7 +1,7 @@
 package com.vaadin.demo.fusion.forms.dialogs;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 public class NewsletterSubscription {
     // tag::snippet[]

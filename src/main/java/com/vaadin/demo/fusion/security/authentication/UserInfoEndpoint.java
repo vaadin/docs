@@ -1,7 +1,7 @@
 package com.vaadin.demo.fusion.security.authentication;
 
-import javax.annotation.Nonnull;
-import javax.annotation.security.PermitAll;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.security.PermitAll;
 import java.util.List;
 import java.util.stream.Collectors;
 
