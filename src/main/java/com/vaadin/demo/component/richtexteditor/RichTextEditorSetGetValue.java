@@ -4,11 +4,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-
-import java.util.Objects;
 
 @Route("rich-text-editor-set-get-value")
 public class RichTextEditorSetGetValue extends Div {
