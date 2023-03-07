@@ -13,13 +13,18 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class ButtonIcons extends Div {
     public ButtonIcons() {
         // tag::snippet[]
+        // Icon button using an aria-label to provide a textual alternative
+        // to screen readers
         Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
         plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         plusButton.getElement().setAttribute("aria-label", "Add item");
 
+        // Icon button using a tooltip to provide textual description
+        // of the action that it triggers
         Button closeButton = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
         closeButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         closeButton.getElement().setAttribute("aria-label", "Close");
+        closeButton.setTooltipText("Close the dialog");
 
         Button arrowLeftButton = new Button("Left",
                 new Icon(VaadinIcon.ARROW_LEFT));

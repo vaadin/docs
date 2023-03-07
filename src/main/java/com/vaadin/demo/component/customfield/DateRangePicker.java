@@ -18,19 +18,14 @@ public class DateRangePicker extends CustomField<LocalDateRange> {
     public DateRangePicker() {
         start = new DatePicker();
         start.setPlaceholder("Start date");
+        // Sets title for screen readers
+        start.getElement().executeJs(
+                "this.focusElement.setAttribute('title', 'Start date')");
 
         end = new DatePicker();
         end.setPlaceholder("End date");
-
-        // aria-label for screen readers
-        start.getElement()
-                .executeJs("const start = this.inputElement;"
-                        + "start.setAttribute('aria-label', 'Start date');"
-                        + "start.removeAttribute('aria-labelledby');");
-        end.getElement()
-                .executeJs("const end = this.inputElement;"
-                        + "end.setAttribute('aria-label', 'End date');"
-                        + "end.removeAttribute('aria-labelledby');");
+        end.getElement().executeJs(
+                "this.focusElement.setAttribute('title', 'End date')");
 
         add(start, new Text(" – "), end);
     }

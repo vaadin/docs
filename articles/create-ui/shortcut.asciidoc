@@ -121,7 +121,7 @@ public class Scope extends Div {
 * This is useful where the same action should be triggered by a shortcut configured on all fields contained inside the same scope, but not outside of the enveloping component.
 * The shortcut is created using the factory class [classname]`Shortcuts`, which offers the most generic method for creating shortcuts.
 
-See <<Shortcut Life Cycle Owners>> below for more.
+See <<lifecycle-owners>> below for more.
 
 == Removing Shortcuts
 
@@ -143,23 +143,23 @@ ShortcutRegistration registration =
 registration.remove(); // shortcut removed!
 ----
 
+[[lifecycle-owners]]
+== Shortcut Lifecycle Owners
 
-== Shortcut Life Cycle Owners
-
-Shortcuts have a life cycle that's controlled by an associated `Component`, called the `lifecycleOwner` component.
+Shortcuts have a lifecycle that's controlled by an associated `Component`, called the `lifecycleOwner` component.
 
 When the component acting as a `lifecycleOwner` is both *attached* and *visible*, the shortcut is active.
 If these conditions aren't both met, the shortcut can't be triggered.
 
-* For focus and click shortcuts, the life cycle owner is the component itself.
+* For focus and click shortcuts, the lifecycle owner is the component itself.
 It only makes sense for the click shortcut to be active when the button or input field is both in the layout and visible.
 
-* For shortcuts registered through `UI`, the life cycle owner is the `UI`.
+* For shortcuts registered through `UI`, the lifecycle owner is the `UI`.
 This means that the shortcut only stops functioning when it's <<Removing Shortcuts,removed>>.
 
-You can use the [methodname]`Shortcuts.addShortcutListener(...)` method to create a shortcut with a life cycle bound to a specific component.
+You can use the [methodname]`Shortcuts.addShortcutListener(...)` method to create a shortcut with a lifecycle bound to a specific component.
 
-*Example*: Binding a shortcut to the life cycle of the `Paragraph` component using the [methodname]`Shortcuts.addShortcutListener(...)` method.
+*Example*: Binding a shortcut to the lifecycle of the `Paragraph` component using the [methodname]`Shortcuts.addShortcutListener(...)` method.
 
 [source,java]
 ----
@@ -174,19 +174,23 @@ add(paragraph);
 ----
 
 * The first parameter of the [methodname]`Shortcuts.addShortcutListener(Component, Command, Key, KeyModifier...)` method is the `lifecycleOwner` component.
-* This code binds the kbd:[Alt+G] shortcut to the life cycle of `paragraph` and is only active when the component is both attached and visible.
+* This code binds the kbd:[Alt+G] shortcut to the lifecycle of `paragraph` and is only active when the component is both attached and visible.
 
 You can also use the [methodname]`bindLifecycleTo()` method to reconfigure the `lifecycleOwner` component of shortcuts.
 
-*Example*: Binding the life cycle of a global shortcut to `anotherComponent` using the [methodname]`bindLifecycleTo()` method.
+*Example*: Binding the lifecycle of a click shortcut to another component using the [methodname]`bindLifecycleTo()` method.
 
 [source,java]
 ----
-UI.getCurrent().addShortcutListener(
-        () -> {/* do a thing*/}, Key.KEY_F)
-        .bindLifecycleTo(anotherComponent);
+Grid<User> usersList = new Grid<>();
+Button newUserButton = new Button("Add user", event -> {
+        // show new user form
+});
+newUserButton.addClickShortcut(Key.KEY_N, KeyModifier.CONTROL)
+        .bindLifecycleTo(usersList);
 ----
 
+The keyboard shortcut for clicking the “Add user” button is active when the `usersList` component is visible on the page. Once the `usersList` component is detached or it becomes invisible, the shortcut is no longer active.
 
 == Listening for Shortcut Events
 
@@ -239,33 +243,52 @@ Calling [methodname]`withModifiers(...)` without parameters removes all modifier
 == Shortcut Event Behavior on the Client Side
 
 [classname]`ShortcutRegistration` provides methods to define the behavior of events on the client side.
-With DOM events, you can control whether an event should propagate upwards in the DOM tree, and whether it should allow default browser behavior.
+With browser DOM events, you can control whether an event should propagate upwards in the DOM tree (component hierarchy), and whether it should allow default browser behavior.
 
-By default, shortcuts created by Vaadin Flow consume the event.
-By default, this means:
+By default, shortcuts consume the event, which means that:
 
-* events don't propagate upwards in the DOM tree, and
-* default browser behavior is prevented; for example, the characters used in the shortcut aren't inserted into the input field.
+* events don't propagate upwards in the DOM tree (component hierarchy), and
+* the default browser behavior is prevented; for example, the characters used in the shortcut aren't inserted into the input field, or clicking on a link prevents the browser from following the URL. See link:https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault[`Event.preventDefault()`] for more information.
+
+As an exception, click shortcuts created with the [methodname]`ClickNotifier::addClickShortcut(Key, KeyModifier...)` method allow default browser behavior by default.
 
 You can change the default behavior using the [methodname]`allowEventPropagation()` (fluent), [methodname]`allowBrowserDefault()` (fluent), [methodname]`setEventPropagationAllowed(boolean)`, and [methodname]`setBrowserDefaultAllowed(boolean)` methods.
 
-*Example*: Using the [methodname]`allowEventPropagation()` method to change the default behavior of a focus shortcut.
+*Example*: Using the [methodname]`allowBrowserDefault()` method to change the default behavior of a focus shortcut.
 
 [source,java]
 ----
 Input input = new Input();
 input.addFocusShortcut(Key.KEY_F)
-        // other handlers can now catch this event
-        .allowEventPropagation()
-        // the character 'f' is written out,
-        // if a text field is focused
+        // the character 'f' is entered
+        // into the input, if it's focused
         .allowBrowserDefault();
 ----
-pass:[<!-- vale Vaadin.ThereIs = NO -->]
 
-There is one exception to these rules: by default, click shortcuts created with the [methodname]`ClickNotifier::addClickShortcut(Key, KeyModifier...)` method allow default browser behavior.
+*Example*: Using the [methodname]`allowEventPropagation()` method to react to a shortcut event and change the styles of a form.
 
-pass:[<!-- vale Vaadin.ThereIs = YES -->]
+[source,java]
+----
+TextField name = new TextField("Name");
+TextField address = new TextField("Address");
+VerticalLayout form = new VerticalLayout(name, address);
+add(form);
+
+name.addFocusShortcut(Key.KEY_N, KeyModifier.CONTROL)
+        .listenOn(form)
+        // the shortcut event is propagated from the text field to the
+        // form and higher in the hierarchy
+        .allowEventPropagation();
+
+// the listener attached to the view (this) can now catch the
+// shortcut event and change the form styles
+Shortcuts.addShortcutListener(this,
+        () -> form.setClassName("red-border"),
+        Key.KEY_N, KeyModifier.CONTROL)
+        .listenOn(this);
+----
+
+Once the "Name" field has focus and the shortcut is activated, the event is propagated higher in the component hierarchy and caught by the view component.
 
 == Checking Shortcut States
 
