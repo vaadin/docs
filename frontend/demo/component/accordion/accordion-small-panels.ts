@@ -20,9 +20,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-accordion>
-        <vaadin-accordion-panel theme="small">
-          <div slot="summary">Personal information</div>
-
+        <vaadin-accordion-panel summary="Personal information" theme="small">
           <vaadin-vertical-layout>
             <span>Sophia Williams</span>
             <span>sophia.williams@company.com</span>
@@ -31,9 +29,7 @@ export class Example extends LitElement {
         </vaadin-accordion-panel>
         <!-- end::snippet[] -->
 
-        <vaadin-accordion-panel theme="small">
-          <div slot="summary">Billing address</div>
-
+        <vaadin-accordion-panel summary="Billing address" theme="small">
           <vaadin-vertical-layout>
             <span>4027 Amber Lake Canyon</span>
             <span>72333-5884 Cozy Nook</span>
@@ -41,9 +37,7 @@ export class Example extends LitElement {
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel theme="small">
-          <div slot="summary">Payment</div>
-
+        <vaadin-accordion-panel summary="Payment" theme="small">
           <vaadin-vertical-layout>
             <span>MasterCard</span>
             <span>1234 5678 9012 3456</span>

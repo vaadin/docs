@@ -3,25 +3,12 @@ import '@vaadin/icons';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { Iconset } from '@vaadin/icon/vaadin-iconset.js';
 
-const DEPRECATED_ICONS: Record<string, string> = {
-  'vaadin:buss': 'vaadin:bus',
-  'vaadin:palete': 'vaadin:palette',
-  'vaadin:funcion': 'vaadin:function',
-  'vaadin:megafone': 'vaadin:megaphone',
-  'vaadin:trendind-down': 'vaadin:trending-down',
-};
-
 type VaadinIconset = Iconset & { _icons: string[] };
 
 export class IconsPreview extends HTMLElement {
   connectedCallback() {
     const lumoIconset = Iconset.getIconset('lumo') as VaadinIconset;
     const vaadinIconset = Iconset.getIconset('vaadin') as VaadinIconset;
-
-    // A hack to get the `_icons` property computed.
-    // https://github.com/vaadin/web-components/blob/447e95e0e08d396167af9a42f68b04529b412ebd/packages/vaadin-icon/src/vaadin-iconset.js#L90
-    lumoIconset.applyIcon('');
-    vaadinIconset.applyIcon('');
 
     let iconNames = Object.keys(lumoIconset._icons).map((name) => `lumo:${name}`);
     iconNames = iconNames.concat(Object.keys(vaadinIconset._icons).map((name) => `vaadin:${name}`));
@@ -63,10 +50,6 @@ export class IconsPreview extends HTMLElement {
           margin-bottom: 0.5em;
         }
 
-        .docs-icon-preview.deprecated {
-          text-decoration: line-through;
-        }
-
         .docs-icon-preview.hidden {
           display: none;
         }
@@ -96,21 +79,12 @@ export class IconsPreview extends HTMLElement {
     `;
 
     iconNames.forEach((name: string) => {
-      let title = '';
-      const isDeprecated = name in DEPRECATED_ICONS;
-
-      if (isDeprecated) {
-        title = `Since Vaadin 21, '${name}' is deprecated. Use '${DEPRECATED_ICONS[name]}' instead.`;
-      }
-
       html += `
-        <li
-          class="docs-icon-preview icon-${name} ${isDeprecated ? 'deprecated' : ''}"
-          title="${title}"
-        >
+        <li class="docs-icon-preview icon-${name}">
           <vaadin-icon icon="${name}"></vaadin-icon>
           <span class="docs-icon-preview-name">${name}</div>
-        </li>`;
+        </li>
+      `;
     });
 
     html += '</ul>';
