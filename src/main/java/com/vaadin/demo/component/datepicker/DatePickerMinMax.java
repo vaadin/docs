@@ -19,6 +19,18 @@ public class DatePickerMinMax extends Div {
         datePicker.setMin(now);
         datePicker.setMax(now.plusDays(60));
         datePicker.setHelperText("Must be within 60 days from today");
+        datePicker.addValueChangeListener(event -> {
+            LocalDate value = datePicker.getValue();
+            String errorMessage = null;
+            if (value != null) {
+                if (value.compareTo(datePicker.getMin()) < 0) {
+                    errorMessage = "Too early, choose another date";
+                } else if (value.compareTo(datePicker.getMax()) > 0) {
+                    errorMessage = "Too late, choose another date";
+                }
+            }
+            datePicker.setErrorMessage(errorMessage);
+        });
         // end::snippet[]
 
         add(datePicker);

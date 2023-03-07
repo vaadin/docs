@@ -1,0 +1,73 @@
+---
+title: Customizing System Messages
+description: Configuring messages for application invalid state
+order: 147
+layout: page
+---
+
+= Configuring Customizing System Messages
+
+System messages are notifications that indicate a major invalid state that may require restarting the application.
+The different types of invalid state handled by system messages are the session expired, internal error, and cookie disabled states.
+
+When the client falls into invalid state, a notification appears in the browser that reloads the page and disappears after the user clicks on it.
+However, for the session expired state the default behavior is to reload the page without showing the notification.
+
+The message and behavior are defined in the [classname]`SystemMessages` class.
+
+Each invalid state has four properties: A short caption, a message, a URL to where to redirect after displaying the message, and a property indicating whether the notification is enabled.
+If the URL is not specified, the current page is reloaded.
+When the notification is disabled, the reload or redirect happens without any notification to the user.
+Setting both the caption and message to `null` has the same effect as disabling the notification.
+
+The default values of the properties are shown below.
+The default values for system messages are also documented in the [classname]`SystemMessages` class Javadocs.
+
+// Allow "ESC" in the default message strings
+pass:[<!-- vale Vaadin.Abbr = NO -->]
+
+* [propertyname]`sessionExpiredNotificationEnabled`: false
+* [propertyname]`sessionExpiredURL`: null
+* [propertyname]`sessionExpiredCaption`: Session Expired
+* [propertyname]`sessionExpiredMessage`: Take note of any unsaved data, and click here or press ESC key to continue.
+* [propertyname]`internalErrorNotificationEnabled`: true
+* [propertyname]`internalErrorURL`: null
+* [propertyname]`internalErrorCaption`: Internal error
+* [propertyname]`internalErrorMessage`: Please notify the administrator. Take note of any unsaved data, and click here or press ESC to continue.
+* [propertyname]`cookiesDisabledNotificationEnabled`: true
+* [propertyname]`cookiesDisabledURL`: null
+* [propertyname]`cookiesDisabledCaption`: Cookies disabled
+* [propertyname]`cookiesDisabledMessage`: This application requires cookies to function. Please enable cookies in your browser and click here or press ESC to try again.
+
+pass:[<!-- vale Vaadin.Abbr = YES -->]
+
+The notification is disabled by default for session expired, but enabled for internal error and cookie disabled.
+
+System messages can be overridden by setting the [classname]`SystemMessagesProvider` in the [classname]`VaadinService`.
+You need to implement the [methodname]`getSystemMessages(SystemMessagesInfo)` method, which returns a [classname]`SystemMessages` object.
+The simplest way to customize the messages is to use a [classname]`CustomizedSystemMessages` object with the provided setter methods to configure the desired properties.
+
+The [classname]`SystemMessagesInfo` parameter provided to [methodname]`getSystemMessages()` allows access to the UI locale, so that messages can be translated in the current user language.
+
+You can set the system message provider in the [methodname]`serviceInit()` method of a <<service-init-listener#, service init listener>>, for example as follows:
+
+
+[source,java]
+----
+public class CustomInitServiceListener implements VaadinServiceInitListener {
+    @Override
+    public void serviceInit(ServiceInitEvent event) {
+        event.getSource().setSystemMessagesProvider(new SystemMessagesProvider() {
+            @Override
+            public SystemMessages getSystemMessages(SystemMessagesInfo systemMessagesInfo) {
+                CustomizedSystemMessages messages = new CustomizedSystemMessages();
+                messages.setSessionExpiredCaption("Session expired");
+                messages.setSessionExpiredMessage("Take note of any unsaved data, and click here or press ESC key to continue.");
+                messages.setSessionExpiredURL("session-expired.html");
+                messages.setSessionExpiredNotificationEnabled(true);
+                return messages;
+            }
+        });
+    };
+};
+----
