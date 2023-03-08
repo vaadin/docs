@@ -1,0 +1,250 @@
+---
+title: Upgrading from Hilla 1.x
+order: 900
+---
+:lit:
+// tag::content[]
+
+= Upgrading from Hilla 1
+
+This article describes changes required for a Hilla 1.x application to migrate it to Hilla 2.0.
+
+== Overview
+
+Many of the breaking changes in Hilla 2 are introduced by the following updates of the underlying Java platform dependencies:
+
+*Jakarta EE 10 and Servlet 6*::
+Hilla 2 is based on Servlet 6 specifications and is compatible with the Jakarta EE 10. Changing from `javax.*` to `jakarta.*` is required for validation and some nullability annotations in Java.
+
+*Spring Boot 3*::
+Hilla 2 uses the latest Spring Boot 3 and Spring Framework 6 versions. This leads in turn to making breaking changes in Spring-based features compared to earlier Spring-boot 2 and Spring Framework 5 versions.
+
+*Java 17*::
+Hilla 2 requires Java 17 or later. This is dictated by Spring framework and newer versions of application servers.
+
+Aside from these changes in Hilla dependencies, here are the notable changes in the framework itself:
+
+*Multi-module endpoints parser and generator*::
+Hilla 2 changes the parser and generator that are used to produce TypeScript code for endpoints. As a result, some adjustments to Java endpoints and entities code in Hilla applications might be required. The `hillaEngine` experimental feature flag was removed.
+
+*Reactive endpoints*::
+Released before as an experimental feature behind the `hillaPush` feature flag, reactive endpoints are now enabled by default.
+
+*Vaadin components 24*::
+Hilla 2 complements Vaadin 24 release. Vaadin components version 24 introduces support of styling using the `::part()` CSS selector, which comes with some changes affecting styling the component internals.
+
+
+== Preparations
+
+=== Setting up Node.js
+
+Installing an up-to-date version of Node.js 18 is recommended before starting with Hilla 2 migration. For the optimal and smooth application development experience, make sure to have `node` executables in the `PATH` environment variable. Here are the link:https://nodejs.dev/en/learn/how-to-install-nodejs/[Node.js installation] instructions to follow.
+
+=== Maven wrapper
+
+Hilla 2 requires either a Maven wrapper script in the application, or the `mvn` executable in the environment for configuring the endpoints parser and generator from the settings declared `pom.xml`.
+
+If your project has `mvnw` and `mvnw.cmd` Maven wrapper scripts, Hilla 2 uses it to install and run Maven. The link:https://maven.apache.org/wrapper/[Maven Wrapper] website offers download links and instructions for installing it in a project.
+
+For installing Maven in your system environment, see the link:https://maven.apache.org/install.html[Installing Apache Maven] page.
+
+=== Hilla dependency upgrade
+
+Upgrade the Hilla version in `pom.xml` to the latest release:
+
+.pom.xml
+[source,xml]
+----
+<hilla.version>2.0.0</hilla.version>
+----
+
+Find the latest version number using the link:https://github.com/vaadin/hilla/releases[GitHub Hilla releases list].
+
+
+== Jakarta EE 10 namespaces
+
+You can use the following free tools for the package name conversion:
+
+* https://github.com/eclipse/transformer[Eclipse transformer]
+* https://github.com/apache/tomcat-jakartaee-migration[Apache migration tool]
+
+When being applied to a project, those tools convert Java class imports, manifests, property files, and other resources to use `jakarta.*` namespace when needed. Conversion instructions are in each tool's `README` file.
+
+The last versions of IntelliJ IDEA offers https://www.jetbrains.com/help/idea/2022.2/migrate.html[migration refactoring] tools, including a Java EE to Jakarta EE package converter.
+
+Make sure that the Jakarta specifications in your project have the proper versions. Refer to the full list of https://jakarta.ee/release/10/[Jakarta EE 10 specifications] for more information.
+
+Below are a some examples:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>jakarta.servlet</groupId>
+    <artifactId>jakarta.servlet-api</artifactId>
+    <version>6.0.0</version>
+</dependency>
+<dependency>
+    <groupId>jakarta.annotation</groupId>
+    <artifactId>jakarta.annotation-api</artifactId>
+    <version>2.1.0</version>
+</dependency>
+<dependency>
+    <groupId>jakarta.enterprise</groupId>
+    <artifactId>jakarta.enterprise.cdi-api</artifactId>
+    <version>4.0.0</version>
+</dependency>
+<dependency>
+    <groupId>jakarta.enterprise.concurrent</groupId>
+    <artifactId>jakarta.enterprise.concurrent-api</artifactId>
+    <version>3.0.0</version>
+</dependency>
+----
+
+
+== Spring upgrade instructions
+
+Spring Boot 3 and Spring Framework 6 don't fundamentally change how applications are developed. The main changes are around Jakarta EE 10 namespaces and supported products, Java version and the dependency upgrades and deprecations.
+
+Spring Boot 3 / Framework 6 use new versions of third-party dependencies: Hibernate 6, Hibernate Validator 8, servlet containers - Jetty 11, Tomcat 10.1 and many others.
+
+Spring provides the https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide[Dedicated Migration Guide for Spring-boot 3.0] and https://github.com/spring-projects/spring-framework/wiki/Upgrading-to-Spring-Framework-6.x[Upgrading to Spring Framework 6.x Guide].
+
+To browse the full list of changes, see the https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Release-Notes[Spring-boot 3.0 Release Notes] and the https://github.com/spring-projects/spring-framework/wiki/What%27s-New-in-Spring-Framework-6.x[What's New in Spring Framework 6.x] page.
+
+Below is a general overview of the changes needed for Spring-based Vaadin applications:
+
+* *Upgrade Spring to the Latest*
++
+You need to upgrade Spring versions to the latest, including the starter parent dependency:
++
+.pom.xml
+[source,xml]
+----
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.0.2</version>
+</parent>
+----
+
+* *Deprecation*
++
+Deprecated `VaadinWebSecurityConfigurerAdapter` was removed since Spring no longer has `WebSecurityConfigurerAdapter` class. Use instead `VaadinWebSecurity` base class for your security configuration. Below is an example of this:
++
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityConfig.java[tags="stateless-configure"]
+----
++
+In this example, `AuthenticationManagerBuilder`, used in Spring-boot 2.x, is replaced by `UserDetailsService`. And `http.authorizeRequests().antMatchers()` are replaced by `http.authorizeHttpRequests().requestMatchers()`.
+
+
+== Java version
+
+*Java 17* or later is required. Below is an example of how to use this version:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<properties>
+    <java.version>17</java.version>
+    <!-- OR: -->
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+</properties>
+----
+--
+
+
+== Maven plugins
+
+=== Hilla Maven plugin
+
+Starting from Vaadin 24, `vaadin-maven-plugin` alone does not support generating Hilla endpoints. Replace it with `hilla-maven-plugin` to enable using Hilla endpoint:
+
+.pom.xml
+[source,xml]
+----
+<groupId>dev.hilla</groupId>
+<artifactId>hilla-maven-plugin</artifactId>
+<version>${hilla.version}</version>
+----
+
+You can use Maven goals of the former `vaadin-maven-plugin` the same way from the `hilla-maven-plugin`.
+
+This primarily affects hybrid applications, which have both Hilla client-side and Flow server-side views, and were created with Vaadin / Fusion 23 or earlier.
+
+=== Third-party plugin versions
+
+Make sure that the versions of Maven plugins your project defines explicitly, are compatible with Java 17.
+
+As an example, `nexus-staging-maven-plugin` requires a minimal version 1.6.13.
+
+
+== SLF4J 2.0
+
+Hilla 2, Vaadin 24 and Spring Boot 3 use SLF4J library version 2.0, which has breaking changes compared to earlier versions. See the https://www.slf4j.org/news.html[SLF4J release notes] for more information.
+
+
+== Changes in Hilla endpoints
+
+The behavior of null type annotations, such as `@dev.hilla.Nonnull`, has been fixed according to the https://docs.oracle.com/javase/specs/jls/se17/html/jls-9.html#jls-9.7.4[Java Language Specification]. In particular, it means that for arrays in endpoints and entity classes is:
+
+- `@dev.hilla.Nonnull String[]` is a nullable array type whose items are non-null;
+- `String @dev.hilla.Nonnull []` is non-null array type whose items are nullable;
+- `@dev.hilla.Nonnull String @dev.hilla.Nonnull []` is a non-null array type whose items are non-null.
+
+This affects nullability in generated TypeScript code.
+
+Consider using the link:https://hilla.dev/docs/lit/reference/type-nullability/#nonnullapi[@NonNullApi] annotation for declaring nullability on the package level.
+
+
+== Breaking changes in Vaadin components
+
+=== Changes in behavior and styling
+
+* Badges no longer shrink by default; this can be overridden with CSS `[theme~="badge"] { flex-shrink:1; }`
+* Buttons no longer shrink by default; this can be overridden with CSS `vaadin-button { flex-shrink:1; }`
+* Number Field's default width now matches that of other text input components; you can bring the old default back with CSS `vaadin-number-field { width:8em; }`
+* Time Picker no longer automatically adjusts values to fit min/max constraints
+* The default top and bottom margins of the `H1`...`H6` HTML elements have been removed; this change can be reverted by applying the following CSS:
++
+.styles.css
+[source,css]
+----
+h1,h2,h3,h4,h5,h6 { margin-top: 1.25em; }
+h1 { margin-bottom: 0.75em; }
+h2, h3, h4 { margin-bottom: 0.5em; }
+h5 { margin-bottom: 0.25em; }
+----
+
+=== Changes in the API of web components
+
+The following changes affect the client-side APIs of Vaadin components:
+
+// Concise examples in parentheses seem to fit well in this list
+pass:[<!-- vale Vaadin.Parens = NO -->]
+
+* The label on `vaadin-checkbox` and `vaadin-radio-button` must be assigned using the `label` property, as the default slot has been removed
+* `vaadin-confirm-dialog.cancel` and `.reject` properties renamed `.cancelButtonVisible` and `.rejectButtonVisible`
+* `vaadin-number-field` property `has-controls` renamed `step-buttons-visible`
+* Deprecated `@vaadin/vaadin-**` (for example, `@vaadin/vaadin-grid`) npm packages have been removed; use the new `@vaadin/**` instead (`@vaadin/grid`)
+* Deprecated `**Element` legacy class aliases (for example, `GridElement`) have been removed; use the plain component classes instead (`Grid`)
+* Deprecated misspelled `vaadin-icons` removed: `buss`, `funcion`, `megafone`, `palete`, `trendind-down`
+* `notifyResize` and `updateStyles` methods removed from various components as obsolete
+* `preventInvalidInput` in text input fields removed in favor of `setAllowedCharPattern`
+* The read-only `theme` _property_ was removed; use the `theme` _attribute_ instead
+
+pass:[<!-- vale Vaadin.Parens = YES -->]
+
+=== Update your component styling
+.Click and read if you have styled Vaadin components
+[%collapsible]
+====
+include::_styling.adoc[]
+====
+
+// end:content[]
