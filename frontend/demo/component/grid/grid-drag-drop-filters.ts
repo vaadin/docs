@@ -77,6 +77,7 @@ export class Example extends LitElement {
       <vaadin-grid
         .dataProvider="${this.dataProvider}"
         .itemIdPath="${'id'}"
+        .itemHasChildrenPath="${'manager'}"
         .expandedItems="${this.expandedItems}"
         @expanded-items-changed="${(event: GridExpandedItemsChangedEvent<Person>) => {
           this.expandedItems = event.detail.value;
@@ -111,10 +112,7 @@ export class Example extends LitElement {
           );
         }}"
       >
-        <vaadin-grid-tree-column
-          path="firstName"
-          item-has-children-path="manager"
-        ></vaadin-grid-tree-column>
+        <vaadin-grid-tree-column path="firstName"></vaadin-grid-tree-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
