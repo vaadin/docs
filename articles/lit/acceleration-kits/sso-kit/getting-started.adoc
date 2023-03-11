@@ -29,7 +29,6 @@ npx @hilla/cli init --react <your-project-name>
 ----
 endif::[]
 
-
 == Backend
 
 === Add the SSO Kit dependency
@@ -131,25 +130,31 @@ To try this feature, replace the `@AnonymousAllowed` annotation in [filename]`He
 
 Start the application using the `./mvnw` command (`.\mvnw` on Windows). Then try the application in the browser. It should work correctly, except that when you click on the `Say hello` button, nothing happens. This is because the Endpoint is no longer accessible without authentication.
 
-
 == Frontend
 
-=== Implement authentication state
-
 ifdef::lit[]
-All of the essential authentication state is already available in a global variable and can be added to the application state, which is inside the `AppStore` class in [filename]`app-store.ts`:
+=== Add the SSO Kit Client dependency
 
-.frontend/stores/app-store.ts
-[source,typescript]
-----
-import SingleSignOnData from 'Frontend/generated/dev/hilla/sso/starter/SingleSignOnData';
+Add the `sso-kit-client-lit` library to the [filename]`packages.json` of a Hilla application like so:
 
-// All necessary data is already loaded in the Hilla global variable
-authInfo = (window as any).Hilla.SSO as SingleSignOnData;
+.[filename]`packages.json`
+[source,json]
 ----
+{
+  // ...
+  "dependencies": {
+    "@sso-kit/sso-kit-client-lit": "^2.1.0",
+    //  ...
+  }
+}
+----
+
+This dependency contains the `SingleSignOnContext` and the `AuthenticatedUser` classes which are needed in the later steps.
 endif::[]
 
 ifdef::react[]
+=== Implement authentication state
+
 All of the essential authentication state is already available in a global variable and can be used as application state. Create a new file named `useAuth.tsx` and define a React Context:
 
 .frontend/useAuth.tsx
@@ -223,34 +228,24 @@ export default function App() {
 ----
 endif::[]
 
-
 === Add log-in and log-out buttons
 
-As an example, add two buttons to the drawer footer -- one to sign in, and another to sign out. When signing out, it's important to invoke the `logout` function provided by Hilla to perform logout on the server. Then, load the SSO provider logout page.
+As an example, add two buttons to the drawer footer -- one to sign in, and another to sign out. Use the imported `singleSignOnContext` to add the `login` and the `logout` functions to the buttons.
 
 ifdef::lit[]
 .frontend/views/main-layout.ts
 [source,typescript]
 ----
-import { logout } from '@hilla/frontend';
+import '@vaadin/button';
+import { singleSignOnContext } from '@sso-kit/sso-kit-client-lit/SingleSignOnContext.js';
 
 // Replace the `footer` in the rendered `html`
 <footer slot="drawer">
-  ${appStore.authInfo.authenticated
-    ? html`<vaadin-button @click="${this.signOut}">Sign out</vaadin-button>`
-    : html`<vaadin-button @click="${this.signIn}">Sign in</vaadin-button>`
+  ${singleSignOnContext.authenticated
+      ? html`<vaadin-button @click="${singleSignOnContext.logout}">Sign out</vaadin-button>`
+      : html`<vaadin-button @click="${singleSignOnContext.login}">Sign in</vaadin-button>`
   }
 </footer>
-
-// Add the needed functions inside the class
-private signOut = async () => {
-  await logout(); // Logout on the server
-  location.href = appStore.authInfo.logoutLink!;
-};
-
-private signIn = () => {
-  location.href = appStore.authInfo.loginLink;
-};
 ----
 endif::[]
 
@@ -286,34 +281,18 @@ function signIn() {
 ----
 endif::[]
 
-
 === Add access control
 
 You can protect your views by verifying that each authentication has happened before loading the view.
 
 ifdef::lit[]
 
-In [filename]`app-store.ts`, add a new type definition and a function to check access rights using that type:
-
-.frontend/app-store.ts
-[source,typescript]
-----
-export type AccessProps = {
-  requiresLogin?: boolean;
-};
-
-// Put this function inside the AppStore class
-hasAccess = (route: AccessProps) => {
-  return !route.requiresLogin || this.authInfo.authenticated;
-};
-----
-
 In the [filename]`frontend/routes.ts` file, use the `AccessProps` type and protect the About view:
 
 .frontend/routes.ts
 [source,typescript]
 ----
-import { AccessProps } from './stores/app-store';
+import { AccessProps } from '@sso-kit/sso-kit-client-lit/SingleSignOnContext.js';
 
 // Add AccessProps to the ViewRoute type
 export type ViewRoute = Route & AccessProps & {
@@ -334,9 +313,9 @@ Then, filter the menu excluding unauthorized views by amending the view filter i
 [source,typescript]
 ----
 // Add a new condition in getMenuRoutes that checks for authentication
-private getMenuRoutes(): RouteInfo[] {
-  return views.filter((route) => route.title).filter(appStore.hasAccess) as RouteInfo[];
-}
+  private getMenuRoutes(): RouteInfo[] {
+    return views.filter((route) => route.title).filter(singleSignOnContext.hasUserAccess) as RouteInfo[];
+  }
 ----
 endif::[]
 
@@ -376,10 +355,9 @@ endif::[]
 
 Now the `About` item in the menu appears only when authenticated.
 
-
 === Show user information
 
-The SSO Kit provides a default endpoint to get information about the authenticated user. You can implement yours if you want to customize the returned object and its fields.
+The SSO Kit Client provides the `AuthenticatedUser` class which contains information about the authenticated user. You can implement yours if you want to customize the returned object and its fields.
 
 As the About page is now protected, that's a perfect place to show some information about the current user:
 
@@ -388,24 +366,12 @@ ifdef::lit[]
 .frontend/views/helloworld/about-view.ts
 [source,typescript]
 ----
-import User from 'Frontend/generated/dev/hilla/sso/starter/endpoint/User';
-import { UserEndpoint } from 'Frontend/generated/endpoints';
-import { property } from 'lit/decorators.js';
-
-// Add a property for the user
-@property()
-user: User | undefined;
-
-// Add the keyword `async` to connectedCallback and then load the user inside the function
-async connectedCallback() {
-  // ...
-  this.user = await UserEndpoint.getAuthenticatedUser();
-}
+import { authenticatedUser } from '@sso-kit/sso-kit-client-lit/AuthenticatedUser.js';
 
 // Add some output
-<p>Username: ${this.user?.preferredUsername}</p>
-<p>Full name: ${this.user?.fullName}</p>
-<p>Email: ${this.user?.email}</p>
+<p>Username: ${authenticatedUser?.preferredUsername}</p>
+<p>Full name: ${authenticatedUser?.fullName}</p>
+<p>Email: ${authenticatedUser?.email}</p>
 ----
 endif::[]
 
@@ -433,14 +399,12 @@ useEffect(() => {
 ----
 endif::[]
 
-
 == Single sign-off
 
 SSO Kit provides two methods for logging out the user. They're defined by the OpenID Connect specification like so:
 
 - https://openid.net/specs/openid-connect-rpinitiated-1_0.html[RP-Initiated Logout]
 - https://openid.net/specs/openid-connect-backchannel-1_0.html[Back-Channel Logout]
-
 
 === RP-initiated logout
 
@@ -475,69 +439,26 @@ The client should then be configured on the provider's dashboard to send logout 
 ==== Modify the frontend
 
 ifdef::lit[]
-State about back-channel logout can be added to [filename]`app-store.ts`:
+The `SingleSignOnContext` provided by the SSO Kit Client handles the back-channel logout and receives an event if the logout happens.
 
-.frontend/stores/app-store.ts
-[source,typescript]
-----
-import { BackChannelLogoutEndpoint } from 'Frontend/generated/endpoints';
-
-// Will become true when back-channel logout happens
-backChannelLogoutHappened = false;
-
-constructor() {
-  makeAutoObservable(this);
-
-  // Add this to the constructor to subscribe to back-channel logout events
-  if (this.authInfo.backChannelLogoutEnabled) {
-    const subscription = BackChannelLogoutEndpoint.subscribe();
-    subscription.onNext(() => {
-      this.backChannelLogoutHappened = true;
-      subscription.cancel();
-    });
-  }
-}
-
-// Clears authInfo without reloading the page
-clearAuthInfo() {
-  this.authInfo = {
-      ... this.authInfo,
-      authenticated: false,
-      backChannelLogoutEnabled: false,
-      logoutLink: undefined,
-      roles: [],
-  };
-}
-----
-
-Then, a dialog can be added to the application layout to notify the user:
+A dialog can be added to the application layout to notify the user:
 
 .frontend/views/main-layout.ts
 [source,typescript]
 ----
 import '@vaadin/confirm-dialog';
+import { singleSignOnContext } from '@sso-kit/sso-kit-client-lit/SingleSignOnContext.js';
 
 // Add the dialog to the rendered html
 <vaadin-confirm-dialog
-  header="Logged out"
-  cancel-button-visible
-  @confirm="${this.loginAgain}"
-  @cancel="${this.stayOnPage}"
-  .opened="${appStore.backChannelLogoutHappened}"
+        header="Logged out"
+        cancel-button-visible
+        @confirm="${singleSignOnContext.loginAgain}"
+        @cancel="${singleSignOnContext.stayOnPage}"
+        .opened="${singleSignOnContext.backChannelLogoutHappened}"
 >
-  <p>You have been logged out. Do you want to log in again?</p>
+    <p>You have been logged out. Do you want to log in again?</p>
 </vaadin-confirm-dialog>
-
-// Then add the event handlers
-private async stayOnPage() {
-  await logout(); // Logout on the server
-  appStore.clearAuthInfo(); // Logout on the client
-}
-
-private async loginAgain() {
-  await logout(); // Logout on the server
-  location.href = appStore.authInfo.loginLink!;
-}
 ----
 endif::[]
 
