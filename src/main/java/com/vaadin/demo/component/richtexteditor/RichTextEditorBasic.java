@@ -13,8 +13,8 @@ public class RichTextEditorBasic extends Div {
         // tag::snippet[]
         RichTextEditor rte = new RichTextEditor();
         rte.setMaxHeight("400px");
-        String valueAsDelta = DataService.getTemplates().getRichTextDelta();
-        rte.asDelta().setValue(valueAsDelta);
+        String valueAsHtml = DataService.getTemplates().getRichTextHtml();
+        rte.setValue(valueAsHtml);
         add(rte);
         // end::snippet[]
     }

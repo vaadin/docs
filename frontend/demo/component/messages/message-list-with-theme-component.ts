@@ -44,8 +44,9 @@ export class Example extends LitElement {
             time: this.fiftyMinutesAgo,
             userName: 'Linsey Listy',
             userColorIndex: 2,
-            theme: 'current-user',
             userImg: this.person ? this.person.pictureUrl : undefined,
+            /* Add custom theme name */
+            theme: 'current-user',
           },
         ]}"
       ></vaadin-message-list>
