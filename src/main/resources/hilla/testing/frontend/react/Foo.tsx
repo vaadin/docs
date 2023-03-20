@@ -4,6 +4,7 @@ export type FooProps = {
   title?: string;
   onClick?: MouseEventHandler<HTMLButtonElement>;
 };
+
 // tag::snippet[]
 export default function Foo({ onClick, title = 'Bar' }: FooProps) {
   return (

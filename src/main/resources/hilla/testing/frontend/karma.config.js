@@ -6,7 +6,7 @@ const karmaMocha = require('karma-mocha');
 const karmaVite = require('karma-vite');
 
 const isCI = !!process.env.CI; // <2>
-const watch = !!process.argv.find((arg) => arg.includes('watch')) && !isCI; // <3>
+const watch = !!process.argv.find((arg) => arg.includes('--watch')) && !isCI; // <3>
 const coverage = !!process.argv.find((arg) => arg.includes('--coverage')); // <4>
 
 module.exports = (config) => {

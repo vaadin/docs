@@ -1,4 +1,4 @@
-import { expect } from '@open-wc/testing';
+import { expect } from '@esm-bundle/chai';
 import { render } from '@testing-library/react';
 import sinon from 'sinon';
 import Foo from './Foo.js';
@@ -7,12 +7,12 @@ import Foo from './Foo.js';
 describe('Foo', () => {
   it('renders correctly', () => {
     const element = render(<Foo></Foo>).container.children[0];
-    expect(element).dom.to.be.equal(`<section><header>Bar</header></section>`);
+    expect(element).to.have.html(`<section><header>Bar</header></section>`);
   });
 
   it('sets the title', () => {
     const element = render(<Foo title="FooBar"></Foo>).container.children[0];
-    expect(element).dom.to.be.equal(`<section><header>FooBar</header></section>`);
+    expect(element).to.have.html(`<section><header>FooBar</header></section>`);
   });
 
   it('calls listener if clicked', () => {
