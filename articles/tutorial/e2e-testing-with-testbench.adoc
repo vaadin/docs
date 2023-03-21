@@ -11,137 +11,95 @@ End-to-end (e2e) tests are used to test the entire application.
 They are far more coarse-grained than unit or integration tests.
 This makes them well suited to checking that the application works as a whole, and catching any regressions that may be missed by more specific tests.
 
-End-to-end tests are executed in a browser window, controlled by a WebDriver and run on the server where the application is deployed.
-Vaadin TestBench takes care of all this.
+End-to-end tests are executed in a browser window. Vaadin TestBench controls browser window using Selenium WebDriver.
 
 .Vaadin TestBench is a commercial product
 [NOTE]
 ====
-The end-to-end tests use https://vaadin.com/testbench[Vaadin TestBench], which is a commercial tool that's a part of the Vaadin Pro Subscription.
+The end-to-end tests in this tutorial use https://vaadin.com/testbench[Vaadin TestBench], which is a commercial tool that's a part of the Vaadin Pro Subscription.
 You can get a free trial at https://vaadin.com/trial.
-All Vaadin Pro tools and components are free for students through the https://education.github.com/pack[GitHub Student Developer Pack].
+All Vaadin Pro tools and components are free for students through the https://education.github.com/pack[GitHub Student Developer Pack]. 
+If you need an open source alternative for TestBench, you can approach similar results also with plain https://www.selenium.dev[Selenium WebDriver] or https://playwright.dev[Playwright].
 ====
-
 
 == Creating the Base Test Class
 
-To avoid repetition in each test class, it's a good idea to put common logic in an abstract class and have all tests extend this class.
-Most of the heavy lifting relating to starting browsers, etc. is handled by `ParallelTest` in TestBench, but there are a couple of useful things you can add to the abstract class.
+Vaadin TestBench contains handy base classes that you can use aa a bases for your e2e tests.
+The JUnit5 version is called `BrowserTestBase`.
+It can be used alone if you orchestrate starting and stopping your server, with for example a Maven executions in `pre-integration-test` and `post-integration-test` and execute the actual test in integration test phase.
+In Spring Boot applications, it is easier to use the same @SpringBootTest annotation that you already used in the previous phase to ensure a running server during the browser test execution.
 
-Create a new class, [classname]`AbstractTest` in the `com.example.application.it` package.
+Create a new class, [classname]`LoginE2ETest` in the `com.example.application.it` package.
 Be sure to place it in `src/test/java` and not `src/main/java`.
 
 
-.`AbstractTest.java`
-[source,java]
-----
-package com.example.application.it;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import com.vaadin.testbench.IPAddress;
-import com.vaadin.testbench.ScreenshotOnFailureRule;
-import com.vaadin.testbench.parallel.ParallelTest;
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.slf4j.LoggerFactory;
-
-public abstract class AbstractTest extends ParallelTest {
-    private static final String SERVER_HOST = IPAddress.findSiteLocalAddress();
-    private static final int SERVER_PORT = 8080;
-    private final String route;
-
-    static {
-        // Prevent debug logging from Apache HTTP client
-        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        root.setLevel(Level.INFO);
-    }
-
-    @BeforeClass
-    public static void setupClass() {
-        WebDriverManager.chromedriver().setup(); // <1>
-    }
-
-    @Rule // <2>
-    public ScreenshotOnFailureRule rule = new ScreenshotOnFailureRule(this, true);
-
-    @Before
-    public void setup() throws Exception {
-        super.setup();
-        getDriver().get(getURL(route)); // <3>
-    }
-
-    protected AbstractTest(String route) {
-        this.route = route;
-    }
-
-    private static String getURL(String route) {
-        return String.format("http://%s:%d/%s", SERVER_HOST, SERVER_PORT, route);
-    }
-}
-----
-<1> Start by invoking the *Chrome* `WebDriverManager` before any test method is invoked.
-TestBench doesn't invoke the WebDriver manager.
-<2> `ScreenshotOnFailureRule` tells TestBench to grab a screenshot before exiting, if a test fails.
-This helps you understand what went wrong when tests don't pass.
-<3> Open the browser to the correct URL before each test.
-For this, you need the host name where the application runs ("localhost" in development), the port the server uses (set to 8080 in application.properties), and information about the route to start from.
-
-== Testing the Login View
-
-Now that your setup is complete, you can start developing your first test: ensuring that a user can log in.
-For this test, you need to open the base URL.
-
-Create a new class, [classname]`LoginIT`, in the same package as [classname]`AbstractTest`.
-The test validates that logging in with the correct user and password succeeds.
-
-.`*LoginIT.java*`
+.`LoginE2ETest.java`
 [source,java]
 ----
 package com.example.application.it;
 
 import com.vaadin.flow.component.login.testbench.LoginFormElement;
-import org.junit.Assert;
-import org.junit.Test;
+import com.vaadin.testbench.BrowserTest;
+import com.vaadin.testbench.BrowserTestBase;
+import com.vaadin.testbench.annotations.RunLocally;
+import com.vaadin.testbench.parallel.Browser;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
 
-public class LoginIT extends AbstractTest {
-    public LoginIT() {
-        super("");
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+//@RunLocally(Browser.FIREFOX) // <1>
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) 
+public class LoginE2ETest extends BrowserTestBase { // <2> 
+
+    @Autowired
+    Environment env;
+
+    static {
+        // Prevent Vaadin Development mode to launch browser window
+        System.setProperty("vaadin.launch-browser", "false"); 
     }
 
-    @Test
+    @BeforeEach
+    void openBrowser() {
+        getDriver().get("http://localhost:" +
+            env.getProperty("local.server.port") + "/"); // <3>
+    }
+    
+    @BrowserTest // <4>
     public void loginAsValidUserSucceeds() {
-        // Find the LoginForm used on the page
+        // Find the LoginForm used on the page, using a
+        // typed selector API provided by TestBench
         LoginFormElement form = $(LoginFormElement.class).first();
         // Enter the credentials and log in
         form.getUsernameField().setValue("user");
-        form.getPasswordField().setValue("userpass");
+        form.getPasswordField().setValue("password");
         form.getSubmitButton().click();
+
+        // Behind the scenes TestBench uses lower level WebDriver API
+        // Here we can configure it on the fly
+        getDriver().manage().timeouts().implicitlyWait(Duration.of(1, ChronoUnit.SECONDS));
+        // Here finding an element on the actual main layout (after login),
+        // using pure WebDriver API, BTW. There is also AppLayoutElement for TB
+        getDriver().findElement(By.tagName("vaadin-app-layout"));
+
         // Ensure the login form is no longer visible
-        Assert.assertFalse($(LoginFormElement.class).exists());
+        assertFalse($(LoginFormElement.class).exists());
     }
+
 }
 ----
+<1> This optional annotation specifies the test to be run on the local machine and using Firefox. 
+The default is Chrome.
+<2> The super class `BrowserTestBase` provides handy helper methods and configures TestBench.
+<3> The `openBrowser` method is annotated to be executed before each actual tests.
+The URL points to local test server with the random port SpringBootTest has selected.
+The browser should be automatically redirected to the login screen.
+<4> BrowserTest annotation is a TestBench extension of the better known `Test` annotation, that is handy if you decide to extend your end-to-end tests to cover multiple browsers at some point.
 
-.Make sure tests have the correct name
-[NOTE]
-====
-The name of the class should end in ”IT” for the test runner to pick it up as an integration test.
-If you name it [classname]`LoginTest`, it's run as a unit test.
-Hence, the server isn't started and the test fails.
-====
-
-.Start the server separately to speed up tests
-[TIP]
-====
-While developing tests, it isn't very efficient to run the tests as `mvn -Pit verify`.
-Instead, you can start the server manually by launching the [classname]`Application` class or with `spring-boot:run`.
-You can then execute the selected test in your IDE and, hence, don't have to wait for the server to start every time.
-====
-
-Start the application normally, then right-click [classname]`LoginIT.java` and select *Run 'LoginIT'*.
+Right-click [classname]`LoginE2ETest.java` and select *Run 'LoginE2ETest'*.
 
 The first time you run the test, you're asked to start a trial or to validate your existing license.
 Follow the instructions in the browser window that opens.
@@ -164,6 +122,11 @@ package com.example.application.it.elements;
 import com.vaadin.flow.component.login.testbench.LoginFormElement;
 import com.vaadin.flow.component.orderedlayout.testbench.VerticalLayoutElement;
 import com.vaadin.testbench.annotations.Attribute;
+import org.openqa.selenium.By;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 
 @Attribute(name = "class", contains = "login-view")
 public class LoginViewElement extends VerticalLayoutElement {
@@ -174,12 +137,16 @@ public class LoginViewElement extends VerticalLayoutElement {
         form.getPasswordField().setValue(password);
         form.getSubmitButton().click();
 
-        // Return true if we end up on another page
-        return !$(LoginViewElement.class).onPage().exists();
+        try {
+            getDriver().manage().timeouts().implicitlyWait(Duration.of(1, ChronoUnit.SECONDS));
+            getDriver().findElement(By.tagName("vaadin-app-layout"));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-}
-----
+}----
 
 .Class hierarchies must match
 [CAUTION]
@@ -201,29 +168,31 @@ By default, a `$` query starts from the active element.
 
 Now that you have the [classname]`LoginViewElement` class, you can simplify your [methodname]`loginAsValidUserSucceeds()` test to be:
 
-.`LoginIT.java`
+.`LoginE2ETest.java`
 [source,java]
 ----
-@Test
+@BrowserTest
 public void loginAsValidUserSucceeds() {
     LoginViewElement loginView = $(LoginViewElement.class).onPage().first();
-    Assert.assertTrue(loginView.login("user", "userpass"));
+    assertTrue(loginView.login("user", "password"));
 }
 ----
 
 Add a test to use an invalid password as follows:
 
-.`LoginIT.java`
+.`LoginE2ETest.java`
 [source,java]
 ----
-@Test
+@BrowserTest
 public void loginAsInvalidUserFails() {
     LoginViewElement loginView = $(LoginViewElement.class).onPage().first();
-    Assert.assertFalse(loginView.login("user", "invalid"));
+    assertFalse(loginView.login("user", "invalid"));
 }
 ----
 
 Continue testing the other views by creating similar view objects and IT classes.
+
+If you are building a large application, it probably makes sense to make slower end-to-end tests executed only when requested separately. You can do this with for example using https://maven.apache.org/surefire/maven-failsafe-plugin/[Maven Failsafe plugin] or using the https://junit.org/junit5/docs/current/user-guide/#writing-tests-tagging-and-filtering[tagging feature in JUnit 5].
 
 The next chapter covers how to make a production build of the application and deploy it to a cloud platform.
 
