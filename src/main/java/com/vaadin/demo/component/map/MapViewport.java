@@ -61,11 +61,11 @@ public class MapViewport extends VerticalLayout {
         // tag::snippet2[]
         // Add menu items for zooming
         menuBar.addItem(zoomInIcon, e -> {
-            float zoom = map.getView().getZoom();
+            double zoom = map.getView().getZoom();
             map.setZoom(zoom + 1);
         });
         menuBar.addItem(zoomOutIcon, e -> {
-            float zoom = map.getView().getZoom();
+            double zoom = map.getView().getZoom();
             map.setZoom(zoom - 1);
         });
         // end::snippet2[]

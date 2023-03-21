@@ -23,7 +23,6 @@ public class DateTimePickerInternationalization extends Div {
                 "Mittwoch", "Donnerstag", "Freitag", "Samstag"));
         germanI18n.setWeekdaysShort(
                 List.of("So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"));
-        germanI18n.setWeek("Woche");
         germanI18n.setToday("Heute");
         germanI18n.setCancel("Abbrechen");
 

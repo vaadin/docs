@@ -1,8 +1,10 @@
 ---
+tab-title: Usage
+layout: tabbed-page
 title: Rich Text Editor
 page-links:
-  - 'API: https://cdn.vaadin.com/vaadin-web-components/{moduleNpmVersion:vaadin-rich-text-editor}/#/elements/vaadin-rich-text-editor[TypeScript] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/richtexteditor/RichTextEditor.html[Java]'
-  - 'Source: https://github.com/vaadin/web-components/tree/v{moduleNpmVersion:vaadin-rich-text-editor}/packages/rich-text-editor[TypeScript] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-rich-text-editor-flow-parent[Java]'
+  - 'API: https://cdn.vaadin.com/vaadin-web-components/{moduleNpmVersion:@vaadin/rich-text-editor}/#/elements/vaadin-rich-text-editor[TypeScript] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/richtexteditor/RichTextEditor.html[Java]'
+  - 'Source: https://github.com/vaadin/web-components/tree/v{moduleNpmVersion:@vaadin/rich-text-editor}/packages/rich-text-editor[TypeScript] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-rich-text-editor-flow-parent[Java]'
 section-nav: commercial
 ---
 
@@ -27,6 +29,139 @@ include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-basic.ts
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorBasic.java[render,tags=snippet,indent=0,group=Java]
+----
+
+--
+
+== Value Format
+
+Rich Text Editor supports the HTML format and the https://github.com/quilljs/delta[Quill Delta format] for reading and setting its value.
+
+.HTML format details
+[%collapsible]
+====
+
+Rich Text Editor supports values in the HTML format, with the following restrictions:
+
+- Only a subset of HTML tags are supported, which are listed in the table below.
+- Block elements, such as paragraphs, lists, or block quotes, can't be nested.
+- Unsupported tags, such as `<b>`, are replaced with an equivalent supported tag, such as `<strong>`, or with a paragraph (`<p>`).
+
+.Supported HTML tags
+|===
+|Feature|Tags
+
+| Paragraphs and line breaks
+| `<p>`, `<br>`
+
+| Headings
+| `<h1>`, `<h2>`, ..., `<h6>`
+
+| Bold, italic, underlined and strike-through text
+| `<strong>`, `<em>`, `<u>`, `<strikethrough>`
+
+| Links
+| `<a href="...">...</a>`
+
+| Text alignment via the `text-align` CSS property
+| `<p style="text-align: center">`
+
+| Ordered, unordered lists, and list items +
+(can't be nested)
+| `<ol>`, `<ul>`, `<li>`
+
+| Block quotes
+| `<blockquote>`
+
+| Pre-formatted text
+| `<pre>`
+
+| Images, using either a web URL or a Base64-encoded data URL
+| `<img src="...">`
+
+|===
+
+The following snippet contains an HTML document that is supported by the component, and demonstrates the usage of several tags. Try pasting the snippet into the `HTML Value` text area in the example below and see how the editor updates. Then try modifying the value, either by using the editor's features, or by changing the HTML value directly.
+
+[source,html]
+----
+<h2>High quality rich text editor for the web</h2>
+<p>Rich text editor handles the following formatting:</p>
+<ul>
+  <li><strong>Bold</strong></li>
+  <li><em>Italic</em></li>
+  <li><u>Underline</u></li>
+  <li><s>Strike-through</s></li>
+</ul><h3>Blockquotes</h3>
+<blockquote>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
+  dolore magna aliqua.
+</blockquote><h3>Code blocks</h3>
+<pre spellcheck='false'>&lt;body&gt;
+  &lt;vaadin-rich-text-editor&gt;&lt;/vaadin-rich-text-editor&gt;
+&lt;/body&gt;
+</pre>
+----
+
+====
+
+.Delta format details
+[%collapsible]
+====
+
+The JSON-based Delta format consists of an array of operations to apply to a document.
+Rich Text Editor specifically only uses insert operations, each operation sequentially adding content to the document.
+Operations can have attributes, such as whether to render a piece of content with a specific text style, or as a link.
+For the full specification of the format, see the https://github.com/quilljs/delta[Quill Delta GitHub repository].
+
+The following snippet contains a Delta document that demonstrates some of the format's features.
+Try pasting the snippet into the `Delta Value` text area in the example below and see how the editor updates.
+Then try modifying the value, either by using the editor's features, or by changing the Delta value directly.
+
+[source,json]
+----
+[
+  {"insert": "High quality rich text editor for the web\n", "attributes": {"header":  2}},
+  {"insert": "Rich text editor handles the following formatting:\n"},
+  {"insert": "Bold\n","attributes": { "bold": true, "list": "bullet" }},
+  {"insert": "Italic\n", "attributes": { "italic": true, "list": "bullet" }},
+  {"insert": "Underline\n", "attributes": { "underline": true, "list": "bullet" }},
+  {"insert": "Strike-through\n", "attributes": { "strike": true, "list": "bullet" }},
+  {"insert": "Blockquotes\n", "attributes": { "header": 3 }},
+  {"insert": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n", "attributes": { "blockquote": true }},
+  {"insert": "Code blocks\n", "attributes": { "header": 3 }},
+  {"insert": "<vaadin-rich-text-editor></vaadin-rich-text-editor>\n", "attributes": { "code-block": true }}
+]
+----
+
+====
+
+For the Flow component, the default is the HTML format, which is also used automatically when binding the component with `Binder`.
+
+To read, write, or bind the component's value using the Delta format, use the https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/richtexteditor/RichTextEditor.html#asDelta()[`RichTextEditor.asDelta()`] wrapper.
+
+For the web component, to read or write the value in the Delta format, use the `value` property.
+
+To read or write the value in the HTML format, use the `htmlValue` property and the `dangerouslySetHtmlValue` method.
+
+.HTML sanitization
+[NOTE]
+To prevent injecting malicious content, be sure to sanitize HTML strings before passing them to the web component using `dangerouslySetHtmlValue`. An example of this would be using a library such as https://www.npmjs.com/package/dompurify[dompurify].
+
+[.example]
+--
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=htmlsnippet,indent=0,group=TypeScript]
+
+...
+
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=snippet,indent=0,group=TypeScript]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorSetGetValue.java[render,tags=snippet,indent=0,group=Java]
 ----
 
 --
@@ -96,7 +231,7 @@ include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextE
 
 === No Border
 
-Apply the `no-border` theme variant to remove Rich Text Editor’s border, for example when the component is wrapped in a container with its own borders.
+Apply the `no-border` theme variant to remove Rich Text Editor’s border. An example of this is when the component is wrapped in a container with its own borders.
 
 [.example]
 --
@@ -113,25 +248,6 @@ include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextE
 
 --
 
-== Value Format
-
-Rich Text Editor natively uses the JSON-based https://github.com/quilljs/delta[Delta format] for reading and setting its value, but HTML values can also be used, with some limitations.
-
-[.example]
---
-
-[source,typescript]
-----
-include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=htmlsnippet;snippet,indent=0,group=TypeScript]
-----
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorSetGetValue.java[render,tags=snippet,indent=0,group=Java]
-----
-
---
-
 == Toolbar Actions
 
 === History
@@ -142,11 +258,11 @@ include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextE
 
 |image::icons/undo.svg[opts=inline, 20, 20, role=icon]
 |Undo
-|Reverses the previous action
+|Reverses the previous action.
 
 |image::icons/redo.svg[opts=inline, 20, 20, role=icon]
 |Redo
-|Restores actions undone by `Undo`
+|Restores actions undone by `Undo`.
 
 |===
 
@@ -158,26 +274,26 @@ include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextE
 
 |[.bold.rte-button]#B#
 |Bold
-s|Boldens text
+s|Boldens text.
 
 |[.italic.rte-button]#I#
 |Italic
-e|Italicizes text
+e|Italicizes text.
 
 |[.underline.rte-button]#U#
 |Underline
-|[.underline]#Underlines text#
+|[.underline]#Underlines text.#
 
 |[.strikethrough.rte-button]#T#
 |Strikethrough
-|[.strikethrough]#Strikes through text#
+|[.strikethrough]#Strikes through text.#
 
 |===
 
 === Headings
 
-Three different headings are available in Rich Text Editor: H1, H2 ,and H3.
-Use them to signify structure (and importance).
+Three different headings are available in Rich Text Editor: H1, H2, and H3.
+Use them to signify structure, as well as importance.
 
 [cols="^.^1,4,8"]
 |===
@@ -185,15 +301,15 @@ Use them to signify structure (and importance).
 
 |[.h1.heading.rte-button]#H1#
 |H1
-|[.h1]#Heading level 1#
+|[.h1]#Heading level 1.#
 
 |[.h2.heading.rte-button]#H2#
 |H2
-|[.h2]#Heading level 2#
+|[.h2]#Heading level 2.#
 
 |[.h3.heading.rte-button]#H3#
 |H3
-|[.h3]#Heading level 3#
+|[.h3]#Heading level 3.#
 
 |===
 
@@ -205,11 +321,11 @@ Use them to signify structure (and importance).
 
 |[.subscript.rte-button]#X#
 |Subscript
-|Subscript text is positioned ~below~ the normal baseline and with smaller font size
+|Subscript text is positioned ~below~ the normal baseline and with a smaller font size.
 
 |[.superscript.rte-button]#X#
 |Superscript
-|Superscript text is positioned ^above^ the normal baseline and with smaller font size
+|Superscript text is positioned ^above^ the normal baseline and a with smaller font size.
 
 |===
 
@@ -221,11 +337,11 @@ Use them to signify structure (and importance).
 
 |image::icons/list-ordered.svg[opts=inline, 20, 20, role=icon]
 |Ordered list
-|. Creates a numbered list
+|. Creates a numbered list.
 
 |image::icons/list-bullet.svg[opts=inline, 20, 20, role=icon]
 |Unordered list
-|* Creates a bulleted list
+|* Creates a bulleted list.
 
 |===
 
@@ -237,15 +353,15 @@ Use them to signify structure (and importance).
 
 |image::icons/align-left.svg[opts=inline, 20, 20, role=icon]
 |Left align
-<|Left-aligns text (default)
+<|Left-aligns text (default).
 
 |image::icons/align-center.svg[opts=inline, 20, 20, role=icon]
 |Center align
-^|Center-aligns text
+^|Center-aligns text.
 
 |image::icons/align-right.svg[opts=inline, 20, 20, role=icon]
 |Right align
->|Right-aligns text
+>|Right-aligns text.
 
 |===
 
@@ -257,11 +373,11 @@ Use them to signify structure (and importance).
 
 |image::icons/image.svg[opts=inline, 20, 20, role=icon]
 |Image
-|Uploads and inserts an image from your device
+|Uploads and inserts an image from your device.
 
 |image::icons/link.svg[opts=inline, 20, 20, role=icon]
 |Link
-a|https://vaadin.com/[Creates a hyperlink]
+a|https://vaadin.com/[Creates a hyperlink].
 
 |===
 
@@ -273,11 +389,11 @@ a|https://vaadin.com/[Creates a hyperlink]
 
 |[.block-quote.rte-button]#”#
 |Block quote
-|Creates a section quoted from another source
+|Creates a section quoted from another source.
 
 |[.code-block.rte-button]#<>#
 |Code block
-|Creates a block formatted as code
+|Creates a block formatted as code.
 
 |===
 
@@ -289,7 +405,7 @@ a|https://vaadin.com/[Creates a hyperlink]
 
 |image::icons/clean.svg[opts=inline, 20, 20, role=icon]
 |Clear formatting
-|Removes all formatting of the selected text
+|Removes all formatting of the selected text.
 
 |===
 

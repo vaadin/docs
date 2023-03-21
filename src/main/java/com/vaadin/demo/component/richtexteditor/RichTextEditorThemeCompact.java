@@ -14,8 +14,8 @@ public class RichTextEditorThemeCompact extends Div {
         // tag::snippet[]
         RichTextEditor rte = new RichTextEditor();
         rte.getStyle().set("max-height", "400px");
-        String valueAsDelta = DataService.getTemplates().getRichTextDelta();
-        rte.setValue(valueAsDelta);
+        String valueAsHtml = DataService.getTemplates().getRichTextHtml();
+        rte.setValue(valueAsHtml);
         rte.addThemeVariants(RichTextEditorVariant.LUMO_COMPACT);
         add(rte);
         // end::snippet[]
