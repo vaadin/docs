@@ -25,9 +25,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-details opened>
-        <div slot="summary">Analytics</div>
-
+      <vaadin-details summary="Analytics" opened>
         <vaadin-vertical-layout>
           <a href="#">Dashboard</a>
           <a href="#">Reports</a>
@@ -35,18 +33,14 @@ export class Example extends LitElement {
         </vaadin-vertical-layout>
       </vaadin-details>
 
-      <vaadin-details opened>
-        <div slot="summary">Customers</div>
-
+      <vaadin-details summary="Customers" opened>
         <vaadin-vertical-layout>
           <a href="#">Accounts</a>
           <a href="#">Contacts</a>
         </vaadin-vertical-layout>
       </vaadin-details>
 
-      <vaadin-details opened>
-        <div slot="summary">Finances</div>
-
+      <vaadin-details summary="Finances" opened>
         <vaadin-vertical-layout>
           <a href="#">Invoices</a>
           <a href="#">Transactions</a>

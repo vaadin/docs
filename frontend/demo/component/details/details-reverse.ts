@@ -17,9 +17,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-details opened theme="reverse">
-        <div slot="summary">Members (8)</div>
-
+      <vaadin-details summary="Members (8)" opened theme="reverse">
         <ul>
           <li>Blake Martin</li>
           <li>Caroline Clark</li>

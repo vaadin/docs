@@ -14,8 +14,8 @@ public class RichTextEditorThemeNoBorder extends Div {
         // tag::snippet[]
         RichTextEditor rte = new RichTextEditor();
         rte.getStyle().set("max-height", "400px");
-        String valueAsDelta = DataService.getTemplates().getRichTextDelta();
-        rte.asDelta().setValue(valueAsDelta);
+        String valueAsHtml = DataService.getTemplates().getRichTextHtml();
+        rte.setValue(valueAsHtml);
         rte.addThemeVariants(RichTextEditorVariant.LUMO_NO_BORDER);
         add(rte);
         // end::snippet[]
