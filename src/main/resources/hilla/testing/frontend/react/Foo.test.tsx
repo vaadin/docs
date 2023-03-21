@@ -1,7 +1,10 @@
-import { expect } from '@esm-bundle/chai';
+import { expect, use } from '@esm-bundle/chai';
 import { render } from '@testing-library/react';
 import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 import Foo from './Foo.js';
+
+use(sinonChai)
 
 // tag::snippet[]
 describe('Foo', () => {
