@@ -1,4 +1,4 @@
-package com.vaadin.demo.hilla.testing;
+package com.vaadin.demo.hilla.testing; // hidden-source-line
 
 import java.util.List;
 
