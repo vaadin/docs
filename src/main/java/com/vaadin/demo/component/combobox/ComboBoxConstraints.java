@@ -11,10 +11,13 @@ public class ComboBoxConstraints extends HorizontalLayout {
     public ComboBoxConstraints() {
         setPadding(false);
 
+
+
+        ////  CHECK IF PATTERN ACTUALLY WORKS IN CB!!!
+
         // tag::snippet[]
         ComboBox<String> field = new ComboBox<>();
         field.setRequired(true);
-        field.setPattern("[A-Z][A-Z]");
         field.setAllowedCharPattern("[A-Z]");
         // end::snippet[]
         field.setLabel("Country code");

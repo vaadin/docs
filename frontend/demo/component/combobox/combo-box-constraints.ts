@@ -19,7 +19,6 @@ export class Example extends LitElement {
         <!-- tag::snippet[] -->
         <vaadin-combo-box
           required
-          pattern="[A-Z][A-Z]"
           allowed-char-pattern="[A-Z]"
           label="Country code"
           helper-text="2-letter uppercase ISO country code"
