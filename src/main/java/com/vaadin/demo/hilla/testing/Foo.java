@@ -1,4 +1,4 @@
-package com.vaadin.demo.hilla.testing; // hidden-source-line
+package com.vaadin.demo.hilla.testing;
 
 // tag::snippet[]
 public class Foo {

@@ -1,4 +1,4 @@
-package com.vaadin.demo.hilla.testing; // hidden-source-line
+package com.vaadin.demo.hilla.testing;
 
 import java.util.List;
 
@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import dev.hilla.Endpoint;
+import dev.hilla.Nonnull;
 
 // tag::snippet[]
 @Endpoint
@@ -18,7 +19,8 @@ public class UsersEndpoint {
     }
 
 
-    public List<User> findAll() {
+    @Nonnull
+    public List<@Nonnull User> findAll() {
         return users.findAll();
     }
 }

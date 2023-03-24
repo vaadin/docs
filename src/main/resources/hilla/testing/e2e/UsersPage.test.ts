@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 
+// tag::snippet[]
 test('should list all users', async ({ page }) => {
   await page.goto('/');
   const rows = await page.getByTestId('users').getByRole('row').all();
@@ -11,3 +12,4 @@ test('should list all users', async ({ page }) => {
 
   expect(names).toEqual(["John Doe", "Jane Doe"]);
 });
+// end::snippet[]

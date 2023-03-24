@@ -12,7 +12,7 @@ describe('Foo', () => {
     const element = await fixture(html`<x-foo></x-foo>`);
     expect(element.shadowRoot).to.have.html('<button>Bar</button>');
   });
-``
+
   it('should provide "title" property', async () => {
     const element = await fixture(html`<x-foo .title="Baz"></x-foo>`);
     expect(element.shadowRoot).to.have.html('<button>Baz</button>');

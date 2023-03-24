@@ -1,10 +1,11 @@
-import { html, nothing } from 'lit';
+import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { View } from '../../views/view.js';
 import * as UsersEndpoint from 'Frontend/generated/UsersEndpoint.js';
 import User from 'Frontend/generated/com/vaadin/demo/hilla/testing/User.js';
 
+// tag::snippet[]
 @customElement('users-page')
 export default class UsersPage extends View {
   #users: readonly User[] = [];
@@ -33,3 +34,4 @@ export default class UsersPage extends View {
     `;
   }
 }
+// end::snippet[]
