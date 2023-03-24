@@ -1,5 +1,5 @@
-import client from 'Frontend/generated/connect-client.default';
-import { applyTheme } from 'Frontend/generated/theme';
+import client from 'Frontend/generated/connect-client.default.js';
+import { applyTheme } from 'Frontend/generated/theme.js';
 
 // Apply the theme, so that overlay elements styles and custom property overrides work as expected
 applyTheme(document);

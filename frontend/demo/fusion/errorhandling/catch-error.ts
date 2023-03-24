@@ -1,6 +1,6 @@
 import { EndpointError } from '@hilla/frontend';
 
-import { DataEndpoint } from 'Frontend/generated/endpoints';
+import { DataEndpoint } from 'Frontend/generated/endpoints.js';
 
 export async function callEndpoint() {
   try {

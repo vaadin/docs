@@ -5,9 +5,9 @@ import '@vaadin/button';
 import '@vaadin/upload';
 import type { UploadBeforeEvent } from '@vaadin/upload';
 
-import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
-import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
-import { ContactEndpoint } from 'Frontend/generated/endpoints';
+import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact.js';
+import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel.js';
+import { ContactEndpoint } from 'Frontend/generated/endpoints.js';
 
 import { Binder } from '@hilla/form';
 

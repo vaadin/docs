@@ -1,5 +1,5 @@
 import { ConnectClient, InvalidSessionMiddleware } from '@hilla/frontend';
-import { setSessionExpired } from '../auth';
+import { setSessionExpired } from '../auth.js';
 const client = new ConnectClient({
   prefix: 'connect',
   middlewares: [

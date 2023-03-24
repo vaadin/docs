@@ -3,8 +3,8 @@
 import { login as loginImpl, LoginResult, logout as logoutImpl } from '@hilla/frontend';
 // end::impl[]
 // tag::userinfo[]
-import { UserInfoEndpoint } from 'Frontend/generated/endpoints';
-import UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
+import { UserInfoEndpoint } from 'Frontend/generated/endpoints.js';
+import UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo.js';
 // end::userinfo[]
 // tag::basic[]
 

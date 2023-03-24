@@ -1,8 +1,8 @@
-import 'Frontend/demo/init'; // hidden-source-line
+import 'Frontend/demo/init.js'; // hidden-source-line
 
 import { Binder, field, ObjectModel } from '@hilla/form';
-import NewsletterSubscriptionModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/dialogs/NewsletterSubscriptionModel';
-import { NewsletterEndpoint } from 'Frontend/generated/endpoints';
+import NewsletterSubscriptionModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/dialogs/NewsletterSubscriptionModel.js';
+import { NewsletterEndpoint } from 'Frontend/generated/endpoints.js';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/button';

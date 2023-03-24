@@ -1,7 +1,7 @@
 import { EndpointError } from '@hilla/frontend';
 
 // import the remote endpoint
-import { DataEndpoint } from 'Frontend/generated/endpoints';
+import { DataEndpoint } from 'Frontend/generated/endpoints.js';
 
 // wrap endpoint calls to return fallback data when offline
 export async function getViewData() {

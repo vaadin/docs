@@ -1,6 +1,6 @@
 import { EndpointValidationError } from '@hilla/frontend';
 
-import { DateEndpoint } from 'Frontend/generated/endpoints';
+import { DateEndpoint } from 'Frontend/generated/endpoints.js';
 
 export async function callEndpoint() {
   try {

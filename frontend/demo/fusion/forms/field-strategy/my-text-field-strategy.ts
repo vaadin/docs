@@ -1,6 +1,6 @@
 // tag::snippet[]
 import type { FieldStrategy } from '@hilla/form';
-import type { MyTextField } from './my-text-field';
+import type { MyTextField } from './my-text-field.js';
 
 export class MyTextFieldStrategy implements FieldStrategy {
   public element: MyTextField;

@@ -1,9 +1,9 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { field } from '@hilla/form';
-import './my-text-field';
-import { MyBinder } from './my-binder';
-import SamplePersonModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/fieldstrategy/SamplePersonModel';
+import './my-text-field.js';
+import { MyBinder } from './my-binder.js';
+import SamplePersonModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/fieldstrategy/SamplePersonModel.js';
 
 @customElement('person-form-view')
 export class PersonFormViewElement extends LitElement {

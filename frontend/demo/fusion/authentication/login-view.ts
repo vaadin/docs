@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { LoginResult } from '@hilla/frontend';
-import { login } from './auth';
+import { login } from './auth.js';
 import { AfterEnterObserver, RouterLocation } from '@vaadin/router';
 import '@vaadin/login';
 

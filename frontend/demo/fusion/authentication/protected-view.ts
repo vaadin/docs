@@ -1,7 +1,7 @@
 import { BeforeEnterObserver, PreventAndRedirectCommands, RouterLocation } from '@vaadin/router';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { isLoggedIn } from './auth';
+import { isLoggedIn } from './auth.js';
 
 @customElement('protected-view')
 export class ProtectedView extends LitElement implements BeforeEnterObserver {

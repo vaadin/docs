@@ -2,7 +2,7 @@ import { Subscription } from '@hilla/frontend';
 import '@vaadin/button';
 import '@vaadin/notification';
 import '@vaadin/text-field';
-import { ReactiveEndpoint } from 'Frontend/generated/endpoints';
+import { ReactiveEndpoint } from 'Frontend/generated/endpoints.js';
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 

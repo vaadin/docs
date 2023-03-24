@@ -1,5 +1,5 @@
 import { Route, Router } from '@vaadin/router';
-import { isUserInRole } from './auth';
+import { isUserInRole } from './auth.js';
 
 // Enable declaring additional data on the routes
 // tag::ViewRoute[]

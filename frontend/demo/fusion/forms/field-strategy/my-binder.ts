@@ -1,6 +1,6 @@
 import { Binder, StringModel } from '@hilla/form';
 import type { AbstractModel, FieldStrategy, ModelConstructor } from '@hilla/form';
-import { MyTextFieldStrategy } from './my-text-field-strategy';
+import { MyTextFieldStrategy } from './my-text-field-strategy.js';
 
 export class MyBinder<T, M extends AbstractModel<T>> extends Binder<T, M> {
   constructor(context: Element, model: ModelConstructor<T, M>) {
