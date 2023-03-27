@@ -114,6 +114,7 @@ otel.instrumentation.${instrumentationName}.enabled=true
 
 By default, frontend observability enables all out-of-the-box client-side instrumentation.
 Observability Kit provides a way to programmatically enable, disable and tune the instrumentation at runtime.
+
 This is done by implementing the [interfacename]`ObservabilityClientConfigurer` and applying the desired settings to the [interface]`ObservabilityClientConfiguration` instance provided to the [methodname]`configure` method.
 The configuration is applied during UI initialization, meaning that the configurator logic can access the current [classname]`VaadinRequest` and the user details, if a security infrastructure has been configured for the project and the user is logged into the application.
 This allows to fine tune the observability to single user granularity.
@@ -136,24 +137,26 @@ import com.vaadin.observability.ObservabilityClientConfigurer;
 public class UserBasedFrontendObservability implements ObservabilityClientConfigurer {
 
     @Override
-    public void configure(ObservabilityClientConfiguration observabilityClientConfiguration) {
+    public void configure(ObservabilityClientConfiguration config) {
         VaadinRequest request = VaadinRequest.getCurrent();
-        UserObservabilityConfig config = fetchConfiguration(request.getUserPrincipal());
-        if (config != null && config.isEnabled()) {
-            observabilityClientConfiguration.setEnabled(true);
-            observabilityClientConfiguration.setDocumentLoadEnabled(config.isDocumentLoad());
-            observabilityClientConfiguration.setUserInteractionEnabled(config.isUserInteraction());
-            observabilityClientConfiguration.setLongTaskEnabled(config.isLongTask());
-            observabilityClientConfiguration.setXMLHttpRequestEnabled(config.isXmlHTTPRequest());
-            observabilityClientConfiguration.setFrontendErrorEnabled(config.isFrontendError());
+        UserObservabilityConfig userSettings = fetchConfiguration(request.getUserPrincipal());
+        if (userSettings != null && userSettings.isEnabled()) {
+            config.setEnabled(true);
+            config.setDocumentLoadEnabled(userSettings.isDocumentLoad());
+            config.setUserInteractionEnabled(userSettings.isUserInteraction());
+            config.setLongTaskEnabled(userSettings.isLongTask());
+            config.setXMLHttpRequestEnabled(userSettings.isXmlHTTPRequest());
+            config.setFrontendErrorEnabled(userSettings.isFrontendError());
         } else {
-            observabilityClientConfiguration.setEnabled(false);
+            config.setEnabled(false);
         }
     }
 
+    // UserObservabilityConfig represent a simple DTO that carries user related information
+    // used to tune ObservabilityClientConfiguration
     private UserObservabilityConfig fetchConfiguration(Principal user) {
         if (user != null) {
-            // fetch the configuration for the give user from some storage
+            // fetch the configuration for the given user from some storage
             // e.g. in-memory data structure, database table, properties file, ...
             return config;
         }
@@ -164,7 +167,7 @@ public class UserBasedFrontendObservability implements ObservabilityClientConfig
 }
 ----
 
-With the above implementation, the configuration can be fetched from a database table, allowing changes to be applied at runtime after a browser page reload.
+With the above implementation, the configuration can for example be fetched from a database table, allowing changes to be applied at runtime after a browser page reload.
 
 The configurator is loaded through the Java ServiceLoader API, adding to [filename]`src/main/resources/META-INF/services/` the file [filename]`com.vaadin.observability.ObservabilityClientConfigurer` with the content being the fully qualified name of the configurator class. For this example, the content would be `org.example.UserBasedFrontendObservability`.
 
@@ -172,6 +175,6 @@ For details on observability client settings, consult the Javadocs of [interface
 
 .Load the configurator in a Spring project
 [NOTE]
-----
+====
 For Spring based project, the configurator can be loaded by exposing the implementation as a Spring managed [annotationname]`@Bean`, without the need to register the class for the ServiceLoader API.
-----
+====
