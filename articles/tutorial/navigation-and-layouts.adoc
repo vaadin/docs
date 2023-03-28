@@ -41,7 +41,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.HighlightConditions;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.server.PWA;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 public class MainLayout extends AppLayout { // <1>
 
@@ -53,43 +53,37 @@ public class MainLayout extends AppLayout { // <1>
     private void createHeader() {
         H1 logo = new H1("Vaadin CRM");
         logo.addClassNames(
-            LumoUtility.FontSize.LARGE,
+            LumoUtility.FontSize.LARGE, // <2>
             LumoUtility.Margin.MEDIUM);
 
-        HorizontalLayout header = new HorizontalLayout(
-          new DrawerToggle(), // <2>
-          logo
-        );
+        var header = new HorizontalLayout(new DrawerToggle(), logo ); // <3>
 
-        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER); // <3>
-        header.setWidth("100%");
+        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER); // <4>
+        header.setWidthFull();
         header.addClassNames(
             LumoUtility.Padding.Vertical.NONE,
             LumoUtility.Padding.Horizontal.MEDIUM);
 
-        addToNavbar(header); // <4>
+        addToNavbar(header); // <5>
 
     }
 
     private void createDrawer() {
-        RouterLink listLink = new RouterLink("List", ListView.class); // <5>
-        listLink.setHighlightCondition(HighlightConditions.sameLocation()); // <6>
-
-        addToDrawer(new VerticalLayout( // <7>
-            listLink
+        addToDrawer(new VerticalLayout( // <6>
+                new RouterLink("List", ListView.class)  // <7>
         ));
     }
 }
 ----
 <1> `AppLayout` is a Vaadin layout with a header and a responsive drawer.
-<2> `DrawerToggle` is a menu button that toggles the visibility of the sidebar.
-<3> Centers the components in the `header` along the vertical axis.
-<4> Adds the `header` layout to the application layout's nav bar, the section at the top of the screen.
-<5> Creates a `RouterLink` with the text "List" and `ListView.class` as the destination view.
-<6> Sets [methodname]`setHighlightCondition(HighlightConditions.sameLocation())` to avoid highlighting the link for partial route matches. Technically, every route starts with an empty route. Without this, it would always appear as active, even though the user isn't on the view.
-<7> Wraps the link in a `VerticalLayout` and adds it to the `AppLayout` drawer.
+<2> Instead of styling the text with raw CSS, use <<{articles}/styling/lumo/utility-classes#,Lumo Utility Classes>> shipped with the default theme.
+<3> `DrawerToggle` is a menu button that toggles the visibility of the sidebar.
+<4> Centers the components in the `header` along the vertical axis.
+<5> Adds the `header` layout to the application layout's nav bar, the section at the top of the screen.
+<6> Wraps the router link in a `VerticalLayout` and adds it to the `AppLayout` drawer.
+<7> Creates a `RouterLink` with the text "List" and `ListView.class` as the destination view.
 
-Next, add the following CSS to [filename]`frontend/themes/flowcrmtutorial/styles.css` to highlight the selected link:
+RouterLink automatically maintains `highlight` attribute in currently active the element, but there is no default styling for it. Add the following CSS to [filename]`frontend/themes/flowcrmtutorial/styles.css` to highlight the selected link.
 
 .`styles.css`
 [source,css]
@@ -141,6 +135,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route(value = "dashboard", layout = MainLayout.class) // <1>
 @PageTitle("Dashboard | Vaadin CRM")
@@ -177,15 +172,16 @@ public class DashboardView extends VerticalLayout {
 <2> Takes [classname]`CrmService` as a constructor parameter and saves it as a field.
 <3> Centers the contents of the layout.
 <4> Calls the service to get the number of contacts.
-<5> Calls the service to get all companies, then creates a [classname]`DataSeriesItem` for each, containing the company name and employee count.
+<5> Calls the service to get all companies, then creates a [classname]`DataSeriesItem` for each, containing the company name and employee count. The don't care about the compilation error, the missing method is added in the next step.
 
 .Vaadin Charts is a Commercial Component Set
 [NOTE]
 ====
-<<{articles}/components/charts#,Vaadin Charts>> is a collection of data visualization components that's a part of the https://vaadin.com/pricing[Vaadin Pro subscription]. Vaadin Charts comes with a free trial that you can activate in the browser. All Vaadin Pro tools and components are free for students through the https://education.github.com/pack?utm_source=github+vaadin[GitHub Student Developer Pack].
+<<{articles}/components/charts#,Vaadin Charts>> is a collection of data visualization components that's part of the https://vaadin.com/pricing[Vaadin Pro subscription]. Vaadin Charts comes with a free trial that you can activate in the browser. All Vaadin Pro tools and components are free for students through the https://education.github.com/pack?utm_source=github+vaadin[GitHub Student Developer Pack]. For an open source alternative for Vaadin Charts, check out the wide selection of community extensions via https://vaadin.com/directory/[Vaadin Directory].
 ====
 
 Open [filename]`Company.java` and add the following field and getter to get the employee count without having to fetch all of the entities.
+// TODO refactor this at some point. Probably not a good approach to suggest as all Company loads now do an extra query...
 
 .`Company.java`
 [source,java]
@@ -197,7 +193,7 @@ public int getEmployeeCount(){
     return employeeCount;
 }
 ----
-<1> The Formula gets the count of employees without needing to fetch all of the employees.
+<1> The Formula is a Hibernate feature that allows you to specify SQL snippets to fetch special fields. The query gets the count of employees without needing to fetch all of the employees. Note that in a larger application you will probably want to do this in some alternative way since all `Company` entity loads now triggers an additional SQL query, even though the `employeeCount` field is only needed in this `DashboardView` class.
 
 
 == Dashboard View in Main Layout Sidebar
@@ -208,13 +204,12 @@ To include a dashboard view in the main layout sidebase, add a navigation link t
 [source,java]
 ----
 private void createDrawer() {
-    RouterLink listLink = new RouterLink("List", ListView.class);
-    listLink.setHighlightCondition(HighlightConditions.sameLocation());
-
-    addToDrawer(new VerticalLayout(
-        listLink,
-        new RouterLink("Dashboard", DashboardView.class)
-    ));
+    private void createDrawer() {
+        addToDrawer(new VerticalLayout(
+                new RouterLink("List", ListView.class),
+                new RouterLink("Dashboard", DashboardView.class)
+        ));
+    }
 }
 ----
 

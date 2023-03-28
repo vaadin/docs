@@ -65,24 +65,19 @@ With these two lines of code, you've prepared the UI fields to be connected to a
 
 You're ready now to create a setter for the `contact`. Unlike the companies and statuses, it can change over time as a user browses through the contacts.
 
-To do this, add the following in the `ContactForm` class:
+To do this, add the following method in the `ContactForm` class:
 
 .`ContactForm.java`
 [source,java]
 ----
 public class ContactForm extends FormLayout {
-    private Contact contact;
-
-    // other methods and fields omitted
 
     public void setContact(Contact contact) {
-        this.contact = contact; // <1>
-        binder.readBean(contact); // <2>
+        binder.setBean(contact); // <1>
     }
 }
 ----
-<1> Save a reference to the contact so you can save the form values back into it later.
-<2> Calls `binder.readBean()` to bind the values from the contact to the UI fields. The `readBean()` copies the values from the contact to an internal model. That way you don't overwrite values if you cancel editing.
+<1> Calls `binder.setBean()` to bind the values from the contact to the UI fields. The method also add value change listeners to update changes in the UI back to the domain object.
 
 
 == Set Up Component Events
@@ -127,13 +122,20 @@ public static class CloseEvent extends ContactFormEvent {
   }
 }
 
-public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
-    ComponentEventListener<T> listener) { // <2>
-  return getEventBus().addListener(eventType, listener);
+public Registration addDeleteListener(ComponentEventListener<DeleteEvent> listener) { // <2> 
+  return addListener(DeleteEvent.class, listener);
+}
+
+public Registration addSaveListener(ComponentEventListener<SaveEvent> listener) {
+  return addListener(SaveEvent.class, listener);
+}
+public Registration addCloseListener(ComponentEventListener<CloseEvent> listener) {
+  return addListener(CloseEvent.class, listener);
 }
 ----
-<1> `ContactFormEvent` is a common superclass for all the events. It contains the `contact` that was edited or deleted. 
-<2> The `addListener()` method uses Vaadin's event bus to register the custom event types. Select the `com.vaadin` import for `Registration` if IntelliJ asks.
+
+<1> `ContactFormEvent` is a common superclass for all of the events. It contains the `contact` that was edited or deleted.
+<2> The `add*Listener()` methods that passes the well-typed event type to Vaadin's event bus to register the custom event types. Select the `com.vaadin` import for `Registration` if IntelliJ asks.
 
 
 == Save, Delete, & Close the Form
@@ -152,7 +154,7 @@ private Component createButtonsLayout() {
   close.addClickShortcut(Key.ESCAPE);
 
   save.addClickListener(event -> validateAndSave()); // <1>
-  delete.addClickListener(event -> fireEvent(new DeleteEvent(this, contact))); // <2>
+  delete.addClickListener(event -> fireEvent(new DeleteEvent(this, binder.getBean()))); // <2>
   close.addClickListener(event -> fireEvent(new CloseEvent(this))); // <3>
 
   binder.addStatusChangeListener(e -> save.setEnabled(binder.isValid())); // <4>
@@ -160,11 +162,8 @@ private Component createButtonsLayout() {
 }
 
 private void validateAndSave() {
-  try {
-    binder.writeBean(contact); // <5>
-    fireEvent(new SaveEvent(this, contact)); // <6>
-  } catch (ValidationException e) {
-    e.printStackTrace();
+  if(binder.isValid()) {
+    fireEvent(new SaveEvent(this, binder.getBean())); // <5>
   }
 }
 ----
@@ -172,8 +171,7 @@ private void validateAndSave() {
 <2> The *delete* button triggers a delete event and passes the active contact.
 <3> The *cancel* button fires a close event.
 <4> Validates the form every time it changes. If it's invalid, it disables the *save* button to avoid invalid submissions.
-<5> Write the form contents back to the original `contact`.
-<6> Fire a save event, so the parent component can handle the action.
+<5> Fire a save event, so the parent component can handle the action.
 
 pass:[<!-- vale Vaadin.ThereIs = NO -->]
 

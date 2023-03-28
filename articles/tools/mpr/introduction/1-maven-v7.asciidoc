@@ -10,7 +10,7 @@ include::{articles}/_vaadin-version.adoc[]
 
 == Maven Setup
 
-MPR is part of Vaadin. Therefore, the supported version of the project is set for you when importing the platform in your project. In other words, you only need to define the platform version:
+MPR is an integral part of Vaadin. Therefore, the supported version of the project is set for you when importing the platform into your project. In other words, you only need to define the platform version like so:
 
 [source,xml,subs="+attributes"]
 ----
@@ -27,7 +27,7 @@ MPR is part of Vaadin. Therefore, the supported version of the project is set fo
 </dependencyManagement>
 ----
 
-You would then declare the usage of `vaadin-core` and `mpr-v7` like so:
+You would then declare the usage of `vaadin-core` and `mpr-v7` like this:
 
 [source,xml]
 ----
@@ -40,6 +40,7 @@ You would then declare the usage of `vaadin-core` and `mpr-v7` like so:
     <artifactId>mpr-v7</artifactId>
 </dependency>
 ----
+
 
 === Framework 7 Dependency
 
@@ -69,13 +70,28 @@ When using MPR, the minimum requirement for Vaadin 7 is version 7.7.36 or later.
 </dependency>
 ----
 
-You also need to remove the dependency on the `vaadin-client-compiled`, since a custom widget set is served by the MPR project.
+You need to remove the dependency on the `vaadin-client-compiled` since a custom widget set is served by the MPR project.
 
 When using MPR, you can't use a Content Delivery Network (CDN) for the widget set. This means that the configuration `<vaadin.widgetset.mode>cdn</vaadin.widgetset.mode>` or `<vaadin.widgetset.mode>fetch</vaadin.widgetset.mode>` should be removed.
 
+
 === Exclude Incompatible Framework 7 Dependency
 
-A project may depend on artifacts that transitively bring in the legacy `vaadin-server` library. This artifact conflicts with `vaadin-server-mpr-jakarta`. Its presence may provoke unexpected errors at runtime. Therefore, for each of these dependencies, an exclusion of `vaadin-server` must be configured.
+A project may depend on artifacts that transitively bring in the `vaadin-server` legacy library. This artifact conflicts with `vaadin-server-mpr-jakarta`. Its presence may provoke unexpected errors at runtime. Therefore, for each of these dependencies, your configuration must explicitly exclude `vaadin-server`.
+
+The simplest way to do this is to add an explicit dependency with `provided` scope. This way, the `vaadin-server` artifact is not considered when packaging the application. Here's how that would look:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-server</artifactId>
+    <version>{vaadin-seven-version}</version>
+    <scope>provided</scope>
+</dependency>
+----
+
+This approach, however, may produce unexpected behavior during development since the `provided` scope means that the dependency is expected to be provided at runtime. For example, the IDE may give wrong code completion, open the wrong source class when inspecting code, or fail to stop at breakpoints during debugging. To avoid these issues, the legacy `vaadin-server` should not be added to the project [filename]`pom.xml` file, and exclusions should be added manually to dependencies that transitively import it.
 
 Maven `dependency:tree` goal can be used to detect the presence of a dependency that transitively imports `vaadin-server`. Using the latest version of the plugin is recommended for better results.
 
@@ -107,7 +123,7 @@ To simplify the operation, the following profile can be added to the [filename]`
 </profile>
 ----
 
-With the above profile configuration, run `mvn -Pcheck-vaadin-server-deps` to get the list of dependencies to fix. For every dependency found, add an exclusion for `vaadin-server` artifact, as shown in the example below:
+With this profile configuration, run `mvn -Pcheck-vaadin-server-deps` to get the list of dependencies to fix. For each dependency found, add an exclusion for `vaadin-server` artifact, as shown in the example here:
 
 .Exclusion of `vaadin-server` transitive dependency
 [source,xml]
@@ -124,6 +140,7 @@ With the above profile configuration, run `mvn -Pcheck-vaadin-server-deps` to ge
     </exclusions>
 </dependency>
 ----
+
 
 === Check for Incompatible Framework 7 Dependency at Build Time
 
@@ -177,7 +194,7 @@ and add an exclusion to the dependency declaration
 
 === Maven Plugins
 
-You need to add the `vaadin-maven-plugin` for it to manage the custom legacy widget set, if it's not already added in your build section. The Maven plugin version used at the moment is {vaadin-seven-version}.
+You need to add the `vaadin-maven-plugin` for it to manage the custom legacy widget set, if it's not already added in your build section. The Maven plugin version used currently is {vaadin-seven-version}.
 
 [source,xml,subs="+attributes"]
 ----
@@ -201,7 +218,7 @@ You need to add the `vaadin-maven-plugin` for it to manage the custom legacy wid
  </build>
 ----
 
-Vaadin 14 also requires a Maven plugin for processing front-end resources during development time. Because the `vaadin-maven-plugin` can only be defined with one version, you'll have to use the `flow-maven-plugin`, instead. This forces you to define manually the plugin version, since Maven doesn't allow you to define a plugin version in the Bill-of-Materials (BOM).
+Vaadin 14 also requires a Maven plugin for processing front-end resources during development time. Because the `vaadin-maven-plugin` can only be defined with one version, you'll have to use instead the `flow-maven-plugin`. This forces you to define manually the plugin version since Maven doesn't allow you to define a plugin version in the Bill-of-Materials (BOM).
 
 [source,xml,subs="+attributes"]
 ----
@@ -223,9 +240,10 @@ Vaadin 14 also requires a Maven plugin for processing front-end resources during
  </build>
 ----
 
+
 === Logging
 
-To display Flow application logs, any slf4j implementation should be added to the project. The easiest way would be to use `slf4j-simple` dependency:
+To display Flow application logs, any slf4j implementation should be added to the project. The easiest way would be to use `slf4j-simple` dependency like so:
 
 [source,xml]
 ----
@@ -235,6 +253,7 @@ To display Flow application logs, any slf4j implementation should be added to th
     <version>1.7.25</version>
 </dependency>
 ----
+
 
 == Next Step
 
@@ -257,9 +276,9 @@ To display Flow application logs, any slf4j implementation should be added to th
     <properties>
         <vaadin.version>{vaadin-seven-version}</vaadin.version>
         <vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
-        <!-- Flow version needs to be defined manually for Flow Maven plugin,
-            because Maven BOMs don't support plugin versions or defining properties.
-            The Flow version to use can be checked from vaadin-bom. -->
+        <!-- Flow version needs to be defined manually for Flow Maven plugin
+             because Maven BOMs don't support plugin versions or defining properties.
+             The Flow version to use can be checked from vaadin-bom. -->
         <flow.version>{vaadin-flow-version}</flow.version>
 
         <slf4j.version>1.7.25</slf4j.version>
@@ -336,8 +355,8 @@ To display Flow application logs, any slf4j implementation should be added to th
             </plugin>
 
             <!-- Since the Vaadin Maven plugin can only be defined with one version,
-                The Flow Maven plugin is used instead for handling Vaadin 14+ front-end
-                resources for development and production builds. -->
+                 the Flow Maven plugin is used instead for handling Vaadin 14+ front-end
+                 resources for development and production builds. -->
             <plugin>
                 <groupId>com.vaadin</groupId>
                 <artifactId>flow-maven-plugin</artifactId>
@@ -351,8 +370,8 @@ To display Flow application logs, any slf4j implementation should be added to th
                 </executions>
             </plugin>
 
-            <!-- The Jetty plugin allows us to test the development build by
-				running jetty:run on the command line. -->
+            <!-- The Jetty plugin allows the development build to be
+				 tested by running jetty:run on the command line. -->
             <plugin>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
