@@ -6,7 +6,7 @@ order: 100
 :lit:
 // tag::content[]
 
-== Getting started with SSO Kit
+= Getting started with SSO Kit
 :sectnums:
 
 SSO Kit builds upon https://spring.io/projects/spring-boot[Spring Boot] and https://spring.io/projects/spring-security[Spring Security]. It comes with a starter module that configures the security settings needed to authenticate with an identity provider.
@@ -32,6 +32,8 @@ endif::[]
 
 == Backend
 
+Once you've created the Hilla application, you can begin securing it by installing and configuring SSO Kit on the backend. The following section shows how to block unauthorized users from using a button in an application. You can install and update SSO Kit by adding it as a dependency to your application in the `pom.xml` file.
+
 === Add the SSO Kit dependency
 
 Add the `sso-kit-starter` module and other required dependencies to the [filename]`pom.xml` of a Vaadin application like so:
@@ -42,7 +44,7 @@ Add the `sso-kit-starter` module and other required dependencies to the [filenam
 <dependency>
     <groupId>dev.hilla</groupId>
     <artifactId>sso-kit-starter</artifactId>
-    <version>2.0.0.beta1</version>
+    <version>2.0.0</version>
 </dependency>
 
 <dependency>
@@ -61,6 +63,42 @@ Add the `sso-kit-starter` module and other required dependencies to the [filenam
 
 [NOTE]
 Check the https://github.com/vaadin/sso-kit/releases[SSO Kit releases] page for the latest version, or a different version of the `sso-kit-starter` dependency.
+
+=== Configure endpoints
+
+For Hilla to be able to parse and generate endpoints from an application and from SSO Kit for your frontend, you have to add a configuration to the Hilla Maven plugin with your application and SSO Kit package names like this:
+
+.[filename]`pom.xml`
+[source,xml]
+----
+<plugin>
+    <groupId>dev.hilla</groupId>
+    <artifactId>hilla-maven-plugin</artifactId>
+    <version>${hilla.version}</version>
+    <!-- Add this configuration -->
+    <configuration>
+        <parser>
+            <packages>
+                <package>com.example.application</package>
+                <package>dev.hilla.sso.starter</package>
+            </packages>
+        </parser>
+    </configuration>
+    <!-- ... -->
+</plugin>
+----
+
+By default, the package name in generated Hilla projects is `com.example.application`. SSO Kit uses the package name `dev.hilla.sso.starter`. To be able to find the annotated endpoints in SSO Kit that are required, you have to whitelist its package name in your Spring Boot application. To do this, open your [filename]`Application.java` and add these packages to the `@SpringBootApplication` annotation like so:
+
+.[filename]`Application.java`
+[source,java]
+----
+@SpringBootApplication(scanBasePackages = {
+  "com.example.application", // Application package
+  "dev.hilla.sso.starter" // SSO Kit package
+})
+public class Application // ...
+----
 
 === Configure the SSO provider in Spring
 
@@ -107,32 +145,22 @@ hilla:
 ----
 --
 
-By default, the package name in generated Hilla projects is `com.example.application`. Unless you use the same package name for your application, you have to whitelist your package in Spring Boot for Hilla to be able to find the Endpoint. Open your [filename]`Application.java` and add the package to the annotation like this:
-
-.[filename]`Application.java`
-[source,java]
-----
-@SpringBootApplication(scanBasePackages = {
-  "com.example.application", // Application package
-  "dev.hilla.sso.starter" // SSO Kit
-})
-public class Application // ...
-----
-
 === Secure the application
 
 A Hilla application includes front-end code and back-end endpoints. Both of them can and should benefit from the authentication protection.
 
-=== Protect the example endpoint
+==== Protect the example endpoint
 
-Hilla allows fine-grained authorization on Endpoints and Endpoint methods. You can use annotations like `@PermitAll` or `@RolesAllowed(...)` to declare who can access what.
+Hilla allows fine-grained authorization on endpoints and endpoint methods. You can use annotations like `@PermitAll` or `@RolesAllowed(...)` to declare who can access what.
 
 To try this feature, replace the `@AnonymousAllowed` annotation in [filename]`HelloWorldEndpoint.java` with `@PermitAll`, so that unauthenticated users will be unable to access all endpoint methods. You could also apply the same annotation at the method level for more fine-grained control.
 
-Start the application using the `./mvnw` command (`.\mvnw` on Windows). Then try the application in the browser. It should work correctly, except that when you click on the `Say hello` button, nothing happens. This is because the Endpoint is no longer accessible without authentication.
+Start the application using the `./mvnw` command (`.\mvnw` on Windows). Then try the application in the browser. It should work correctly, except that when you click on the `Say hello` button, nothing happens. This is because the endpoint is no longer accessible without authentication.
 
 
 == Frontend
+
+Once the backend is secure, you can begin extending authentication features to the frontend. The following section shows how to display user information (e.g., a name) on secured views and enable users to log in and out.
 
 === Implement authentication state
 
