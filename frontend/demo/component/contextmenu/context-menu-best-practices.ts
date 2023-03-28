@@ -49,10 +49,7 @@ export class Example extends LitElement {
             flex-grow="0"
             ${columnBodyRenderer(
               () => html`
-                <vaadin-menu-bar
-                  .items=${[{ component: this.makeIcon(), children: this.items }]}
-                  theme="tertiary"
-                ></vaadin-menu-bar>
+                <vaadin-menu-bar .items=${this.items} theme="tertiary"></vaadin-menu-bar>
               `,
               []
             )}
@@ -61,13 +58,6 @@ export class Example extends LitElement {
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;
-  }
-
-  makeIcon() {
-    const item = document.createElement('vaadin-context-menu-item');
-    item.textContent = '•••';
-    item.setAttribute('aria-label', 'More options');
-    return item;
   }
 
   onContextMenu(e: MouseEvent) {
