@@ -5,7 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/email-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('email-field-pattern')
+@customElement('email-field-constraints')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

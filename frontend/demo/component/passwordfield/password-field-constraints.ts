@@ -5,7 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/password-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('password-field-pattern')
+@customElement('password-field-constraints')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
