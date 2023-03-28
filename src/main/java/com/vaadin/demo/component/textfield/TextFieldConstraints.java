@@ -13,7 +13,7 @@ public class TextFieldConstraints extends HorizontalLayout {
 
         // tag::snippet[]
         TextField field = new TextField("Phone number");
-        field.setRequired(true);
+        field.setRequiredIndicatorVisible(true);
         field.setPattern("^[+]?[(]?[0-9]{3}[)]?[-s.]?[0-9]{3}[-s.]?[0-9]{4,6}$");
         field.setAllowedCharPattern("[0-9()+-]");
         field.setMinLength(5);

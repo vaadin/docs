@@ -13,7 +13,7 @@ public class EmailFieldConstraints extends HorizontalLayout {
 
         // tag::snippet[]
         EmailField field = new EmailField("Email address");
-        field.setRequired(true);
+        field.setRequiredIndicatorVisible(true);
         field.setPattern("^.+@example\\.com$");
         // end::snippet[]
         field.setHelperText("Only example.com addresses allowed");

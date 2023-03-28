@@ -13,7 +13,7 @@ public class ComboBoxConstraints extends HorizontalLayout {
 
         // tag::snippet[]
         ComboBox<String> field = new ComboBox<>();
-        field.setRequired(true);
+        field.setRequiredIndicatorVisible(true);
         field.setAllowedCharPattern("[A-Z]");
         // end::snippet[]
         field.setLabel("Country code");

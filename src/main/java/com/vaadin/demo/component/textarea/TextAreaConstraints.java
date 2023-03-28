@@ -13,7 +13,7 @@ public class TextAreaConstraints extends HorizontalLayout {
 
         // tag::snippet[]
         TextArea field = new TextArea("Sentence");
-        field.setRequired(true);
+        field.setRequiredIndicatorVisible(true);
         field.setPattern("^[A-Z]([A-Za-z0-9,\\-\\s])*\\.$");
         field.setAllowedCharPattern("[A-Za-z0-9,.\\-\\s]");
         field.setMinLength(5);

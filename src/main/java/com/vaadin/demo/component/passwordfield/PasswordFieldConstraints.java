@@ -13,7 +13,7 @@ public class PasswordFieldConstraints extends HorizontalLayout {
 
         // tag::snippet[]
         PasswordField field = new PasswordField("Password");
-        field.setRequired(true);
+        field.setRequiredIndicatorVisible(true);
         field.setAllowedCharPattern("[A-Za-z0-9]");
         field.setMinLength(6);
         field.setMaxLength(12);
