@@ -26,6 +26,7 @@ export class Example extends LitElement {
         <vaadin-button>Button 1</vaadin-button>
         <vaadin-button>Button 2</vaadin-button>
         <vaadin-button>Button 3</vaadin-button>
+        <vaadin-button>Button 4</vaadin-button>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;
