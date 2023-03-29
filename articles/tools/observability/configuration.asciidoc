@@ -109,8 +109,60 @@ To enable any of these, add the following line to the [filename]`agent.propertie
 otel.instrumentation.${instrumentationName}.enabled=true
 ----
 
+== Frontend Observability Configuration
 
-== Frontend Observability Runtime Configuration
+Frontend observability is enabled by default, with all the client side instrumentation active.
+The configuration can be tuned in two ways: 
+
+* statically, by editing the [filename]`agent.properties` or by providing environment variables or system properties
+* dynamically, implementing [interfacename]`ObservabilityClientConfigurer` that applies changes at runtime.
+
+With the static configuration the same settings are applied to all UI instances and to change the configuration a server restart is required.
+
+Opposite, with dynamic configuration the instrumentation can be enabled or disabled at runtime, without restarting the server, and can be tuned for a specific browser tab. Changes are applied when the browser page is reloaded.
+
+=== Frontend Observability Static Configuration
+
+Static frontend observability configuration can be provided by adding entries to the [filename]`agent.properties` file or with environment variables or system properties, as mentioned earlier.
+
+The following properties can be used to tune frontend instrumentation
+
+[cols="4,4,1"]
+|===
+|Property name
+|Description
+|Default value
+
+|`otel.instrumentation.vaadin.frontend.enabled`
+|Enables or disables all frontend instrumentation.
+|`true`
+
+|`otel.instrumentation.vaadin.frontend.document-load`
+|Enables or disables the Document Load instrumentation.
+|`true`
+
+|`otel.instrumentation.vaadin.frontend.user-interaction`
+|Enables or disables the User Interaction instrumentation.
+|`true`
+
+|`otel.instrumentation.vaadin.frontend.xml-http-request`
+|Enables or disables the XML HTTP Request instrumentation.
+|`true`
+
+|`otel.instrumentation.vaadin.frontend.long-task`
+|Enables or disables the Long Task instrumentation.
+|`true`
+
+|`otel.instrumentation.vaadin.frontend.frontend-error`
+|Enables or disables the Frontend Error instrumentation.
+|`true`
+
+|===
+
+For more information about the frontend instrumentation, consult the <<./reference#,Observability Kit Reference>> page.
+
+
+=== Frontend Observability Runtime Configuration
 
 By default, frontend observability enables all out-of-the-box client-side instrumentation.
 Observability Kit provides a way to programmatically enable, disable and tune the instrumentation at runtime.
@@ -138,8 +190,8 @@ public class UserBasedFrontendObservability implements ObservabilityClientConfig
 
     @Override
     public void configure(ObservabilityClientConfiguration config) {
-        VaadinRequest request = VaadinRequest.getCurrent();
-        UserObservabilityConfig userSettings = fetchConfiguration(request.getUserPrincipal());
+        var request = VaadinRequest.getCurrent();
+        var userSettings = fetchConfiguration(request.getUserPrincipal());
         if (userSettings != null && userSettings.isEnabled()) {
             config.setEnabled(true);
             config.setDocumentLoadEnabled(userSettings.isDocumentLoad());
@@ -152,8 +204,8 @@ public class UserBasedFrontendObservability implements ObservabilityClientConfig
         }
     }
 
-    // UserObservabilityConfig represent a simple DTO that carries user related information
-    // used to tune ObservabilityClientConfiguration
+    // UserObservabilityConfig represent a simple DTO that carries user
+    // related information used to tune ObservabilityClientConfiguration
     private UserObservabilityConfig fetchConfiguration(Principal user) {
         if (user != null) {
             // fetch the configuration for the given user from some storage
