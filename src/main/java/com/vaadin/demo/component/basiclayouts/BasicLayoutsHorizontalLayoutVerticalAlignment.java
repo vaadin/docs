@@ -64,7 +64,7 @@ public class BasicLayoutsHorizontalLayoutVerticalAlignment extends Div {
         // end::eventhandler[]
 
         this.setClassName("basic-layouts-example");
-        layout.setClassName("height-5xl");
+        layout.setClassName("height-3xl");
 
         this.add(layout, radioGroup);
     }

@@ -29,7 +29,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-vertical-layout
         theme="spacing padding"
-        class="height-5xl"
+        class="height-3xl"
         style="justify-content: ${this.justifyContent}"
       >
         <vaadin-button>Button 1</vaadin-button>
