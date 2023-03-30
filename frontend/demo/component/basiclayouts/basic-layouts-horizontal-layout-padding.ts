@@ -29,7 +29,6 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout
         theme="${this.theme} spacing"
-        class="height-4xl"
         style="align-items: stretch"
       >
         <vaadin-button>Button 1</vaadin-button>

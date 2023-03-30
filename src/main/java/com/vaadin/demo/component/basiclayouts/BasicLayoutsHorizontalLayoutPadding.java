@@ -31,8 +31,6 @@ public class BasicLayoutsHorizontalLayoutPadding extends Div {
         // end::snippet[]
 
         this.setClassName("basic-layouts-example");
-        layout.setClassName("height-4xl");
-
         this.add(layout, radioButtonGroup);
     }
 

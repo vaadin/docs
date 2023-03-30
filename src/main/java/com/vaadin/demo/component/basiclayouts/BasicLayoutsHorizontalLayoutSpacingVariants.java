@@ -39,8 +39,6 @@ public class BasicLayoutsHorizontalLayoutSpacingVariants extends Div {
         // end::snippet[]
 
         this.setClassName("basic-layouts-example");
-        layout.setClassName("height-5xl");
-
         this.add(layout, radioButtonGroup);
     }
 
