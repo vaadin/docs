@@ -19,7 +19,7 @@ public class DatePickerBasicFeatures extends HorizontalLayout {
         field.setPlaceholder("Placeholder");
         field.setTooltipText("Tooltip text");
         field.setClearButtonVisible(true);
-        field.setPrefixComponent(VaadinIcon.CALENDAR.create());
+        field.setPrefixComponent(VaadinIcon.VAADIN_H.create());
         // end::snippet[]
 
         add(field);

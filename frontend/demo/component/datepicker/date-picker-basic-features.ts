@@ -25,7 +25,7 @@ export class Example extends LitElement {
           placeholder="Placeholder"
           clear-button-visible>
           <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
-          <vaadin-icon slot="prefix" icon="vaadin:calendar"></vaadin-icon>
+          <vaadin-icon slot="prefix" icon="vaadin:vaadin-h"></vaadin-icon>
         </vaadin-date-picker>
         <!-- end::snippet[] -->
     `;
