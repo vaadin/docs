@@ -8,7 +8,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/padding")
+@Route("basic-layouts/horizontal-layout-padding")
 public class BasicLayoutsHorizontalLayoutPadding extends Div {
 
     private static final String ENABLED_OPTION = "Enabled";

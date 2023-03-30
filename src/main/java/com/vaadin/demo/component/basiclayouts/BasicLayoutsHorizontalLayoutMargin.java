@@ -8,7 +8,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/margin")
+@Route("basic-layouts/horizontal-layout-margin")
 public class BasicLayoutsHorizontalLayoutMargin extends Div {
 
     private static final String ENABLED_OPTION = "Enabled";

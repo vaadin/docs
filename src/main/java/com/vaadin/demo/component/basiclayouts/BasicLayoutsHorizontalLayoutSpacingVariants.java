@@ -8,7 +8,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/spacing-variants")
+@Route("basic-layouts/horizontal-layout-spacing-variants")
 public class BasicLayoutsHorizontalLayoutSpacingVariants extends Div {
 
     private static final String SPACING_XS_THEME = "spacing-xs";
