@@ -9,7 +9,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-tabs theme="hide-scroll-buttons">
+      <vaadin-tabs theme="hide-scroll-buttons" style="max-width: 100%; width: 400px;">
         <vaadin-tab>Analytics</vaadin-tab>
         <vaadin-tab>Customers</vaadin-tab>
         <vaadin-tab>Dashboards</vaadin-tab>
