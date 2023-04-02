@@ -38,7 +38,6 @@ public class BasicLayoutsHorizontalLayoutVerticalAlignment extends Div {
         // tag::layout[]
         HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
-        layout.setHeightFull();
         layout.add(new TextArea("Text area 1"));
         layout.add(new TextArea("Text area 2"));
         layout.add(new TextArea("Text area 3"));
