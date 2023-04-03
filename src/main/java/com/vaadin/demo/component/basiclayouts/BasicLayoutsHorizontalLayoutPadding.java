@@ -17,6 +17,7 @@ public class BasicLayoutsHorizontalLayoutPadding extends Div {
     public BasicLayoutsHorizontalLayoutPadding() {
         // tag::snippet[]
         HorizontalLayout layout = new HorizontalLayout();
+        layout.setPadding(true);
         layout.setAlignItems(FlexComponent.Alignment.STRETCH);
         layout.add(new Button("Button 1"));
         layout.add(new Button("Button 2"));

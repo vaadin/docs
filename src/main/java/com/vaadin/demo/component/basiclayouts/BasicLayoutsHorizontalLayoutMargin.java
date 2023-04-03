@@ -17,6 +17,7 @@ public class BasicLayoutsHorizontalLayoutMargin extends Div {
     public BasicLayoutsHorizontalLayoutMargin() {
         // tag::snippet[]
         HorizontalLayout layout = new HorizontalLayout();
+        layout.setPadding(true);
         layout.setWidth("auto");
         layout.setMargin(true);
         layout.setAlignItems(FlexComponent.Alignment.STRETCH);
