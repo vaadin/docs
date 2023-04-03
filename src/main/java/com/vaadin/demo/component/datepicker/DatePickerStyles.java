@@ -6,7 +6,6 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -26,7 +25,7 @@ public class DatePickerStyles extends HorizontalLayout {
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
-        field.setValue(LocalDate.now(ZoneId.systemDefault()));
+        field.setValue(LocalDate.of(2020, 6, 12));
 
         add(field);
     }

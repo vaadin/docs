@@ -4,7 +4,6 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/date-picker';
-import dateFnsFormat from 'date-fns/format';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-readonly-and-disabled')
@@ -20,7 +19,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <vaadin-date-picker readonly label="Read-only" value="${dateFnsFormat(new Date(), 'yyyy-MM-dd')}">
+        <vaadin-date-picker readonly label="Read-only" value="2020-06-12">
         </vaadin-date-picker>
 
         <vaadin-date-picker disabled label="Disabled">

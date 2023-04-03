@@ -3,7 +3,6 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/date-picker';
-import dateFnsFormat from 'date-fns/format';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-styles')
@@ -19,7 +18,7 @@ export class Example extends LitElement {
     return html`
         <!-- tag::snippet[] -->
         <vaadin-date-picker theme="align-right small helper-above-field"
-          label="Label" helper-text="Helper text" value="${dateFnsFormat(new Date(), 'yyyy-MM-dd')}">
+          label="Label" helper-text="Helper text" value="2020-06-12">
         </vaadin-date-picker>
         <!-- end::snippet[] -->
     `;

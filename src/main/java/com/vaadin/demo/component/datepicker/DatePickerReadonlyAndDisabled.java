@@ -5,7 +5,6 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -19,7 +18,7 @@ public class DatePickerReadonlyAndDisabled extends HorizontalLayout {
         DatePicker readonlyField = new DatePicker();
         readonlyField.setReadOnly(true);
         readonlyField.setLabel("Read-only");
-        readonlyField.setValue(LocalDate.now(ZoneId.systemDefault()));
+        readonlyField.setValue(LocalDate.of(2020, 6, 12));
 
         DatePicker disabledField = new DatePicker();
         disabledField.setEnabled(false);
