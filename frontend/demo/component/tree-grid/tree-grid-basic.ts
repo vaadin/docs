@@ -36,11 +36,8 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-grid .dataProvider="${this.dataProvider}">
-        <vaadin-grid-tree-column
-          path="firstName"
-          item-has-children-path="manager"
-        ></vaadin-grid-tree-column>
+      <vaadin-grid .itemHasChildrenPath="${'manager'}" .dataProvider="${this.dataProvider}">
+        <vaadin-grid-tree-column path="firstName"></vaadin-grid-tree-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
