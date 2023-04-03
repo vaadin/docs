@@ -38,7 +38,7 @@ getMajorVersion() {
 
 # get platform version
 version=$1
-currentMajorRelease=$2
+currentMajorRelease=23
 major=`getMajorVersion $1`
 [[ $version =~ (alpha|beta|rc) ]] && prerelease=true || prerelease=false
 
