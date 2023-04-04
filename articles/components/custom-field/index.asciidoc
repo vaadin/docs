@@ -3,8 +3,8 @@ tab-title: Usage
 layout: tabbed-page
 title: Custom Field
 page-links:
-  - 'API: https://cdn.vaadin.com/vaadin-web-components/{moduleNpmVersion:vaadin-custom-field}/#/elements/vaadin-custom-field[TypeScript] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/customfield/CustomField.html[Java]'
-  - 'Source: https://github.com/vaadin/web-components/tree/v{moduleNpmVersion:vaadin-custom-field}/packages/custom-field[TypeScript] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-custom-field-flow-parent[Java]'
+  - 'API: https://cdn.vaadin.com/vaadin-web-components/{moduleNpmVersion:@vaadin/custom-field}/#/elements/vaadin-custom-field[TypeScript] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/customfield/CustomField.html[Java]'
+  - 'Source: https://github.com/vaadin/web-components/tree/v{moduleNpmVersion:@vaadin/custom-field}/packages/custom-field[TypeScript] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-custom-field-flow-parent[Java]'
 ---
 
 = Custom Field
@@ -14,7 +14,7 @@ page-links:
 // tag::description[]
 Custom Field is a component for wrapping multiple components as a single field.
 // end::description[]
-It has the same features as <<{components-path-prefix}input-fields#,Input Fields>>, such as its own label, helper, validation, and data binding.
+It has the same features as <<{components-path-prefix}input-fields#,Input Fields>>, such as its label, helper, validation, and data binding.
 Use it to create custom input components.
 
 [.example]
@@ -59,13 +59,105 @@ Custom Field is optimized for wrapping the following components:
 * <<../date-picker#,Date Picker>>
 * <<../time-picker#,Time Picker>>
 
-It can also be used to provide a label, helper, and the other field features, for components that don't have them built-in, such as <<../list-box#,List Box>>.
+It can also be used to give a label, helper, and other field features for components that don't have them built-in, such as <<../list-box#,List Box>>.
+
+== Value Type and Format
+
+Custom Field handles the value types and formats differently in Java and TypeScript.
+
+=== Java
+
+Custom Field is a generic class that requires a value type. The value type can be anything: String, List, a bean, and so forth.
+
+Implement the `generateModelValue` and `setPresentationValue` methods to define how to build the Custom Field value from the child component values and how to propagate the Custom Field value to the child components respectively.
+
+The following example shows how to set up value propagation, using a bean as the value type:
+
+[.example]
+--
+
+[source, java]
+----
+class Phone {
+    private final String code;
+    private final String number;
+
+    public Phone(String code, String number) {
+        this.code = code;
+        this.number = number;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getNumber() {
+        return number;
+    }
+}
+
+class PhoneField extends CustomField<Phone> {
+    private final Select code = new Select();
+    private final TextField number = new TextField();
+
+    public PhoneField() {
+        ...
+
+        add(code, number);
+    }
+
+    @Override
+    protected String generateModelValue() {
+        return new Phone(code.getValue(), number.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Phone value) {
+        code.setValue(value.getCode());
+        number.setValue(value.getNumber());
+    }
+}
+----
+--
+
+=== TypeScript
+
+Custom Field only supports string values. The default value format is a string concatenation of the child component values, separated by the `\t` character.
+
+You can customize the value format by defining your own value formatter and parser, as shown in the following example:
+
+[.example]
+--
+
+[source,typescript]
+----
+render() {
+  return html`
+    <!-- Phone Custom Field -->
+    <vaadin-custom-field
+      .formatValue="${([code, number]: unknown[]) => {
+        return code && number ? [code, number].join('|') : '';
+      }}"
+      .parseValue="${(value: string) => {
+        return value ? value.split('|') : ['', ''];
+      }}"
+    >
+      <!-- Country code -->
+      <vaadin-select></vaadin-select>
+
+      <!-- Phone number -->
+      <vaadin-text-field></vaadin-text-field>
+    </vaadin-custom-field>
+  `
+}
+----
+--
 
 == Native Input Fields
 
 Custom Field works with native HTML elements.
 
-The `whitespace` variant can be used when components without an outer margin are used within Custom Field, to compensate for the missing space between the label and the component itself.
+The `whitespace` variant can be used when components without an outer margin are used within Custom Field to compensate for the missing space between the label and the component itself.
 
 [.example]
 --

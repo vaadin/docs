@@ -19,9 +19,11 @@ export class Example extends LitElement {
   // tag::snippet[]
   private binder = new Binder(this, AppointmentModel);
 
+  private errorMessage = 'The selected day of week or time is not available';
+
   protected override firstUpdated() {
     this.binder.for(this.binder.model.startDateTime).addValidator({
-      message: 'The selected day of week is not available',
+      message: this.errorMessage,
       validate: (startDateTime: string) => {
         const date = new Date(startDateTime);
         const validWeekDay = date.getDay() >= 1 && date.getDay() <= 5;
@@ -29,7 +31,7 @@ export class Example extends LitElement {
       },
     });
     this.binder.for(this.binder.model.startDateTime).addValidator({
-      message: 'The selected time is not available',
+      message: this.errorMessage,
       validate: (startDateTime: string) => {
         const time = startDateTime.split('T')[1];
         const validTime =
