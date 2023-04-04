@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-const DSP_VERSION = '2.1.0-alpha.5';
+const DSP_VERSION = '2.1.1';
 
 async function checkPreConditions() {
   try {
