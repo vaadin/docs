@@ -7,11 +7,11 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/progress-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 import './fake-progress-bar';
-import { FakeProgressBar } from './fake-progress-bar';
+import type { FakeProgressBar } from './fake-progress-bar';
 
 @customElement('button-disable-long-action')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -24,7 +24,7 @@ export class Example extends LitElement {
   @query('fake-progress-bar')
   private fakeProgressBar!: FakeProgressBar;
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing" style="align-items: center;">

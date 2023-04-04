@@ -9,7 +9,7 @@ import com.vaadin.flow.router.Route;
 public class ProgressBarDeterminate extends Div {
 
     public ProgressBarDeterminate() {
-        getStyle().set("font-family", "var(--lumo-font-family)").set("color", "var(--lumo-secondary-text-color)");
+        getStyle().set("color", "var(--lumo-secondary-text-color)");
 
         // tag::snippet[]
         ProgressBar progressBar = new ProgressBar();

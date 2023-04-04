@@ -14,7 +14,8 @@ public class CheckboxGroupBasic extends Div {
         // tag::snippet[]
         CheckboxGroup<String> checkboxGroup = new CheckboxGroup<>();
         checkboxGroup.setLabel("Export data");
-        checkboxGroup.setItems("Order ID", "Product name", "Customer", "Status");
+        checkboxGroup.setItems("Order ID", "Product name", "Customer",
+                "Status");
         checkboxGroup.select("Order ID", "Customer");
         checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         add(checkboxGroup);

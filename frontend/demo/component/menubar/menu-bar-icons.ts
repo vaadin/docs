@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-icons')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -32,7 +32,7 @@ export class Example extends LitElement {
   ];
   // end::snippet[]
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-menu-bar theme="icon" .items="${this.items}"></vaadin-menu-bar>
@@ -41,8 +41,8 @@ export class Example extends LitElement {
   }
 
   createItem(iconName: string, text: string, isChild = false) {
-    const item = window.document.createElement('vaadin-context-menu-item');
-    const icon = window.document.createElement('vaadin-icon');
+    const item = document.createElement('vaadin-context-menu-item');
+    const icon = document.createElement('vaadin-icon');
 
     if (isChild) {
       icon.style.width = 'var(--lumo-icon-size-s)';
@@ -50,13 +50,15 @@ export class Example extends LitElement {
       icon.style.marginRight = 'var(--lumo-space-s)';
     }
 
-    if (iconName == 'copy') {
+    if (iconName === 'copy') {
       item.setAttribute('aria-label', 'duplicate');
     }
 
     icon.setAttribute('icon', `vaadin:${iconName}`);
     item.appendChild(icon);
-    text && item.appendChild(window.document.createTextNode(text));
+    if (text) {
+      item.appendChild(document.createTextNode(text));
+    }
     return item;
   }
 }

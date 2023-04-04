@@ -20,6 +20,8 @@ public class DatePickerDateFormatIndicator extends Div {
 
         add(datePicker);
     }
-    public static class Exporter extends DemoExporter<DatePickerDateFormatIndicator> { // hidden-source-line
+
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DatePickerDateFormatIndicator> { // hidden-source-line
     } // hidden-source-line
 }

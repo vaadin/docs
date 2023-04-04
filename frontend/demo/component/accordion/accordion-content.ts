@@ -9,28 +9,25 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('accordion-content')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      a {
-        text-decoration: none;
-        color: var(--lumo-primary-text-color);
-      }
-    `;
-  }
-  protected createRenderRoot() {
+  static override styles = css`
+    a {
+      text-decoration: none;
+      color: var(--lumo-primary-text-color);
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-accordion>
-        <vaadin-accordion-panel>
-          <div slot="summary">Analytics</div>
-
+        <vaadin-accordion-panel summary="Analytics">
           <vaadin-vertical-layout>
             <a href="#">Dashboard</a>
             <a href="#">Reports</a>
@@ -39,18 +36,14 @@ export class Example extends LitElement {
         </vaadin-accordion-panel>
         <!-- end::snippet[] -->
 
-        <vaadin-accordion-panel>
-          <div slot="summary">Customers</div>
-
+        <vaadin-accordion-panel summary="Customers">
           <vaadin-vertical-layout>
             <a href="#">Accounts</a>
             <a href="#">Contacts</a>
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel>
-          <div slot="summary">Finances</div>
-
+        <vaadin-accordion-panel summary="Finances">
           <vaadin-vertical-layout>
             <a href="#">Invoices</a>
             <a href="#">Transactions</a>

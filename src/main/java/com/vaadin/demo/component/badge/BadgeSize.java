@@ -25,6 +25,7 @@ public class BadgeSize extends HorizontalLayout {
 
         add(pending, confirmed, denied, onHold);
     }
+
     public static class Exporter extends DemoExporter<BadgeSize> { // hidden-source-line
     } // hidden-source-line
 }

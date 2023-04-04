@@ -16,5 +16,6 @@ public class MapBasic extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<MapBasic> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapBasic> { // hidden-source-line
+    } // hidden-source-line
 }

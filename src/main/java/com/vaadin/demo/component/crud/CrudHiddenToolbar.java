@@ -18,74 +18,67 @@ import java.util.List;
 @Route("crud-hidden-toolbar")
 public class CrudHiddenToolbar extends Div {
 
-  private Crud<Person> crud;
-  private PersonDataProvider dataProvider;
+    private Crud<Person> crud;
+    private PersonDataProvider dataProvider;
 
-  private String FIRST_NAME = "firstName";
-  private String LAST_NAME = "lastName";
-  private String EDIT_COLUMN = "vaadin-crud-edit-column";
+    private String FIRST_NAME = "firstName";
+    private String LAST_NAME = "lastName";
+    private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudHiddenToolbar() {
-    // tag::snippet[]
-    crud = new Crud<>(
-      Person.class,
-      createEditor()
-    );
-    crud.setToolbarVisible(false);
-    // end::snippet[]
+    public CrudHiddenToolbar() {
+        // tag::snippet[]
+        crud = new Crud<>(Person.class, createEditor());
+        crud.setToolbarVisible(false);
+        // end::snippet[]
 
-    setupGrid();
-    setupDataProvider();
+        setupGrid();
+        setupDataProvider();
 
-    add(crud);
-  }
+        add(crud);
+    }
 
-  private CrudEditor<Person> createEditor() {
-    TextField firstName = new TextField("First name");
-    TextField lastName = new TextField("Last name");
-    FormLayout form = new FormLayout(firstName, lastName);
+    private CrudEditor<Person> createEditor() {
+        TextField firstName = new TextField("First name");
+        TextField lastName = new TextField("Last name");
+        FormLayout form = new FormLayout(firstName, lastName);
 
-    Binder<Person> binder = new Binder<>(Person.class);
-    binder.forField(firstName).asRequired().bind(Person::getFirstName, Person::setFirstName);
-    binder.forField(lastName).asRequired().bind(Person::getLastName, Person::setLastName);
+        Binder<Person> binder = new Binder<>(Person.class);
+        binder.forField(firstName).asRequired().bind(Person::getFirstName,
+                Person::setFirstName);
+        binder.forField(lastName).asRequired().bind(Person::getLastName,
+                Person::setLastName);
 
-    return new BinderCrudEditor<>(binder, form);
-  }
+        return new BinderCrudEditor<>(binder, form);
+    }
 
-  private void setupGrid() {
-    Grid<Person> grid = crud.getGrid();
+    private void setupGrid() {
+        Grid<Person> grid = crud.getGrid();
 
-    // Only show these columns (all columns shown by default):
-    List<String> visibleColumns = Arrays.asList(
-      FIRST_NAME,
-      LAST_NAME,
-      EDIT_COLUMN
-    );
-    grid.getColumns().forEach(column -> {
-      String key = column.getKey();
-      if (!visibleColumns.contains(key)) {
-        grid.removeColumn(column);
-      }
-    });
+        // Only show these columns (all columns shown by default):
+        List<String> visibleColumns = Arrays.asList(FIRST_NAME, LAST_NAME,
+                EDIT_COLUMN);
+        grid.getColumns().forEach(column -> {
+            String key = column.getKey();
+            if (!visibleColumns.contains(key)) {
+                grid.removeColumn(column);
+            }
+        });
 
-    // Reorder the columns (alphabetical by default)
-    grid.setColumnOrder(
-      grid.getColumnByKey(FIRST_NAME),
-      grid.getColumnByKey(LAST_NAME),
-      grid.getColumnByKey(EDIT_COLUMN)
-    );
-  }
+        // Reorder the columns (alphabetical by default)
+        grid.setColumnOrder(grid.getColumnByKey(FIRST_NAME),
+                grid.getColumnByKey(LAST_NAME),
+                grid.getColumnByKey(EDIT_COLUMN));
+    }
 
-  private void setupDataProvider() {
-    dataProvider = new PersonDataProvider();
-    crud.setDataProvider(dataProvider);
-    crud.addDeleteListener(deleteEvent ->
-      dataProvider.delete(deleteEvent.getItem())
-    );
-    crud.addSaveListener(saveEvent ->
-      dataProvider.persist(saveEvent.getItem())
-    );
-  }
+    private void setupDataProvider() {
+        dataProvider = new PersonDataProvider();
+        crud.setDataProvider(dataProvider);
+        crud.addDeleteListener(
+                deleteEvent -> dataProvider.delete(deleteEvent.getItem()));
+        crud.addSaveListener(
+                saveEvent -> dataProvider.persist(saveEvent.getItem()));
+    }
 
-  public static class Exporter extends DemoExporter<CrudHiddenToolbar> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<CrudHiddenToolbar> { // hidden-source-line
+    } // hidden-source-line
 }

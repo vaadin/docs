@@ -21,5 +21,7 @@ public class LoginOverlayBasic extends Div {
         login.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         add(login);
     }
-    public static class Exporter extends DemoExporter<LoginOverlayBasic> {} // hidden-source-line
+
+    public static class Exporter extends DemoExporter<LoginOverlayBasic> { // hidden-source-line
+    } // hidden-source-line
 }

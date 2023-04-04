@@ -62,6 +62,6 @@ public class DialogBasic extends Div {
         return saveButton;
     }
 
-    public static class Exporter extends DemoExporter<DialogBasic> {
+    public static class Exporter extends DemoExporter<DialogBasic> { // hidden-source-line
     } // hidden-source-line
 }

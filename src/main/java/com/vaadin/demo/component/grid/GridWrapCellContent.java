@@ -37,13 +37,12 @@ public class GridWrapCellContent extends Div {
     private static String formatAddress(Person person) {
         Address address = person.getAddress();
 
-        return String
-                .format("%s %s %s %s", address.getStreet(), address.getCity(),
-                        address.getZip(), address.getState());
+        return String.format("%s %s %s %s", address.getStreet(),
+                address.getCity(), address.getZip(), address.getState());
     }
 
     private static Renderer<Person> createAvatarRenderer() {
-        return LitRenderer.<Person>of(
+        return LitRenderer.<Person> of(
                 "<vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\" alt=\"User avatar\"></vaadin-avatar>")
                 .withProperty("pictureUrl", Person::getPictureUrl);
     }

@@ -9,23 +9,23 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("text-field-small-variant")
 public class TextFieldSmallVariant extends HorizontalLayout {
 
-  public TextFieldSmallVariant() {
-    setPadding(false);
+    public TextFieldSmallVariant() {
+        setPadding(false);
 
-    // tag::snippet[]
-    TextField defaultSize = new TextField();
-    defaultSize.setLabel("Default size");
-    defaultSize.setValue("Value");
-    add(defaultSize);
+        // tag::snippet[]
+        TextField defaultSize = new TextField();
+        defaultSize.setLabel("Default size");
+        defaultSize.setValue("Value");
+        add(defaultSize);
 
-    TextField smallSize = new TextField();
-    smallSize.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-    smallSize.setLabel("Small size");
-    smallSize.setValue("Value");
-    add(smallSize);
-    // end::snippet[]
-  }
+        TextField smallSize = new TextField();
+        smallSize.addThemeVariants(TextFieldVariant.LUMO_SMALL);
+        smallSize.setLabel("Small size");
+        smallSize.setValue("Value");
+        add(smallSize);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<TextFieldSmallVariant> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<TextFieldSmallVariant> { // hidden-source-line
+    } // hidden-source-line
 }

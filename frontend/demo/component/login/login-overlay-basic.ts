@@ -7,7 +7,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('login-overlay-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -17,15 +17,22 @@ export class Example extends LitElement {
   @state()
   private loginOpened = false;
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button @click="${() => (this.loginOpened = true)}" theme="primary">
+      <vaadin-button
+        theme="primary"
+        @click="${() => {
+          this.loginOpened = true;
+        }}"
+      >
         Log in
       </vaadin-button>
       <vaadin-login-overlay
         .opened="${this.loginOpened}"
-        @login="${() => (this.loginOpened = false)}"
+        @login="${() => {
+          this.loginOpened = false;
+        }}"
       ></vaadin-login-overlay>
       <!-- end::snippet[] -->
     `;

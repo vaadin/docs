@@ -22,11 +22,8 @@ public class UploadFileFormat extends Div {
         upload.addFileRejectedListener(event -> {
             String errorMessage = event.getErrorMessage();
 
-            Notification notification = Notification.show(
-                    errorMessage,
-                    5000,
-                    Notification.Position.MIDDLE
-            );
+            Notification notification = Notification.show(errorMessage, 5000,
+                    Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         });
         // end::snippet[]
@@ -34,9 +31,8 @@ public class UploadFileFormat extends Div {
         UploadExamplesI18N i18n = new UploadExamplesI18N();
         i18n.getAddFiles().setOne("Upload Report...");
         i18n.getDropFiles().setOne("Drop report here");
-        i18n.getError()
-                .setIncorrectFileType(
-                        "The provided file does not have the correct format. Please provide a PDF document.");
+        i18n.getError().setIncorrectFileType(
+                "The provided file does not have the correct format (PDF document).");
         upload.setI18n(i18n);
 
         H4 title = new H4("Upload report");

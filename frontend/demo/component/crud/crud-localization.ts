@@ -1,14 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/crud';
+import type { Crud } from '@vaadin/crud';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('crud-localization')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -18,42 +19,43 @@ export class Example extends LitElement {
   @state()
   private items: Person[] = [];
 
-  async firstUpdated() {
-    this.items = (await getPeople()).people;
+  @query('vaadin-crud')
+  private crud!: Crud<Person>;
+
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people;
     // tag::snippet[]
-    const crud = this.shadowRoot?.querySelector('vaadin-crud');
-    if (crud) {
-      crud.i18n = {
-        newItem: 'Luo uusi',
-        editItem: 'Muuta tietoja',
-        saveItem: 'Tallenna',
-        cancel: 'Peruuta',
-        deleteItem: 'Poista...',
-        editLabel: 'Muokkaa',
-        confirm: {
-          delete: {
-            title: 'Poista kohde',
-            content: 'Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.',
-            button: {
-              confirm: 'Poista',
-              dismiss: 'Peruuta',
-            },
-          },
-          cancel: {
-            title: 'Hylkää muutokset',
-            content: 'Kohteessa on tallentamattomia muutoksia',
-            button: {
-              confirm: 'Hylkää',
-              dismiss: 'Peruuta',
-            },
+    this.crud.i18n = {
+      newItem: 'Luo uusi',
+      editItem: 'Muuta tietoja',
+      saveItem: 'Tallenna',
+      cancel: 'Peruuta',
+      deleteItem: 'Poista...',
+      editLabel: 'Muokkaa',
+      confirm: {
+        delete: {
+          title: 'Poista kohde',
+          content: 'Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.',
+          button: {
+            confirm: 'Poista',
+            dismiss: 'Peruuta',
           },
         },
-      };
-    }
+        cancel: {
+          title: 'Hylkää muutokset',
+          content: 'Kohteessa on tallentamattomia muutoksia',
+          button: {
+            confirm: 'Hylkää',
+            dismiss: 'Peruuta',
+          },
+        },
+      },
+    };
     // end::snippet[]
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippethtml[] -->
 

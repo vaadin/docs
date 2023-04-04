@@ -10,18 +10,18 @@ import com.vaadin.flow.router.Route;
 @Route("avatar-name")
 public class AvatarName extends Div {
 
-  private Person person = DataService.getPeople(1).get(0);
+    private Person person = DataService.getPeople(1).get(0);
 
-  public AvatarName() {
-    String name = person.getFirstName() + " " + person.getLastName();
+    public AvatarName() {
+        String name = person.getFirstName() + " " + person.getLastName();
 
-    // tag::snippet[]
-    Avatar avatarName = new Avatar(name);
-    // end::snippet[]
+        // tag::snippet[]
+        Avatar avatarName = new Avatar(name);
+        // end::snippet[]
 
-    add(avatarName);
-  }
+        add(avatarName);
+    }
 
-  public static class Exporter extends DemoExporter<AvatarName> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<AvatarName> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -39,10 +39,8 @@ public class DialogDraggable extends Div {
         headline.addClassName("draggable");
         // end::snippet2[]
         headline.getStyle().set("margin", "0").set("font-size", "1.5em")
-                .set("font-weight", "bold")
-                .set("cursor", "move")
-                .set("padding", "var(--lumo-space-m) 0")
-                .set("flex", "1");
+                .set("font-weight", "bold").set("cursor", "move")
+                .set("padding", "var(--lumo-space-m) 0").set("flex", "1");
 
         return headline;
     }
@@ -70,7 +68,6 @@ public class DialogDraggable extends Div {
         dialog.getFooter().add(saveButton);
     }
 
-    public static class Exporter // hidden-source-line
-            extends DemoExporter<DialogDraggable> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DialogDraggable> { // hidden-source-line
     } // hidden-source-line
 }

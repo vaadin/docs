@@ -12,12 +12,8 @@ public class BoardColumnWrapping extends Div {
     public BoardColumnWrapping() {
         // tag::snippet[]
         Board board = new Board();
-        board.addRow(
-                createCell("Cell 1"),
-                createCell("Cell 2"),
-                createCell("Cell 3"),
-                createCell("Cell 4")
-        );
+        board.addRow(createCell("Cell 1"), createCell("Cell 2"),
+                createCell("Cell 3"), createCell("Cell 4"));
 
         SplitLayout splitLayout = new SplitLayout(board, new Div());
         // end::snippet[]

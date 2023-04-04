@@ -4,18 +4,16 @@ import '@vaadin/progress-bar';
 
 @customElement('fake-progress-bar')
 export class FakeProgressBar extends LitElement {
-  static get styles() {
-    return css`
-      :host {
-        width: 100%;
-      }
-    `;
-  }
+  static override styles = css`
+    :host {
+      width: 100%;
+    }
+  `;
 
-  @property()
+  @property({ type: Number })
   progress = 0;
 
-  public simulateProgress() {
+  simulateProgress() {
     this.progress = 0;
     const breakInterval = setInterval(() => {
       this.progress += 0.005;
@@ -27,7 +25,7 @@ export class FakeProgressBar extends LitElement {
     }, 25);
   }
 
-  render() {
+  protected override render() {
     return html`<vaadin-progress-bar .value="${this.progress}"></vaadin-progress-bar>`;
   }
 }

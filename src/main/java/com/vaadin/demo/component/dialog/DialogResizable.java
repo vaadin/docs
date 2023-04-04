@@ -52,7 +52,6 @@ public class DialogResizable extends Div {
         return dialogLayout;
     }
 
-    public static class Exporter // hidden-source-line
-            extends DemoExporter<DialogResizable> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DialogResizable> { // hidden-source-line
     } // hidden-source-line
 }

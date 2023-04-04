@@ -6,7 +6,7 @@ import '@vaadin/tabs';
 
 @customElement('tabs-horizontal')
 export class Example extends LitElement {
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs style="max-width: 100%; width: 400px;">

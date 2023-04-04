@@ -9,19 +9,17 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-helper')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      h4 {
-        margin-top: 0;
-      }
+  static override styles = css`
+    h4 {
+      margin-top: 0;
+    }
 
-      p {
-        color: var(--lumo-secondary-text-color);
-      }
-    `;
-  }
+    p {
+      color: var(--lumo-secondary-text-color);
+    }
+  `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -29,20 +27,18 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: Upload;
+  private upload!: Upload;
 
   // tag::snippet[]
-  firstUpdated() {
-    if (this.upload?.i18n) {
-      this.upload.i18n.addFiles.one = 'Upload Spreadsheet...';
-      this.upload.i18n.dropFiles.one = 'Drop spreadsheet here';
-      this.upload.i18n.error.incorrectFileType =
-        'Please provide the file in one of the supported formats (.xls, .xlsx, .csv).';
-      this.upload.i18n = { ...this.upload.i18n };
-    }
+  protected override firstUpdated() {
+    this.upload.i18n.addFiles.one = 'Upload Spreadsheet...';
+    this.upload.i18n.dropFiles.one = 'Drop spreadsheet here';
+    this.upload.i18n.error.incorrectFileType =
+      'Provide the file in one of the supported formats (.xls, .xlsx, .csv).';
+    this.upload.i18n = { ...this.upload.i18n };
   }
 
-  render() {
+  protected override render() {
     // end::snippet[]
     const maxFileSizeInMB = 1;
     const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;

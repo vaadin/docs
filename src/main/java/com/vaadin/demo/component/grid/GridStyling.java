@@ -21,7 +21,7 @@ public class GridStyling extends Div {
         grid.addColumn(PersonWithRating::getFormattedRating)
                 .setHeader("Customer rating (0-10)");
 
-        grid.setClassNameGenerator(person -> {
+        grid.setPartNameGenerator(person -> {
             if (person.getRating() >= 8)
                 return "high-rating";
             if (person.getRating() <= 4)

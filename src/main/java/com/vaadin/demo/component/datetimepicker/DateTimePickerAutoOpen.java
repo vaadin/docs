@@ -9,12 +9,14 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class DateTimePickerAutoOpen extends Div {
 
     public DateTimePickerAutoOpen() {
-        DateTimePicker dateTimePicker = new DateTimePicker("Meeting date and time");
+        DateTimePicker dateTimePicker = new DateTimePicker(
+                "Meeting date and time");
         // tag::snippet[]
         dateTimePicker.setAutoOpen(false);
         // end::snippet[]
         add(dateTimePicker);
     }
+
     public static class Exporter extends DemoExporter<DateTimePickerAutoOpen> { // hidden-source-line
     } // hidden-source-line
 }

@@ -10,27 +10,26 @@ import com.vaadin.flow.router.Route;
 @Route("custom-field-native-input")
 public class CustomFieldNativeInput extends Div {
 
-  private Span value;
+    private Span value;
 
-  public CustomFieldNativeInput() {
-    // tag::snippet[]
-    PaymentInformationField paymentInformationField = new PaymentInformationField("Payment information");
-    paymentInformationField.addValueChangeListener(event -> {
-      value.setText(
-        event.getValue().getCardholderName() + " " +
-        event.getValue().getCardNumber() + " " +
-        event.getValue().getSecurityCode()
-      );
-    });
+    public CustomFieldNativeInput() {
+        // tag::snippet[]
+        PaymentInformationField paymentInformationField = new PaymentInformationField(
+                "Payment information");
+        paymentInformationField.addValueChangeListener(event -> {
+            value.setText(event.getValue().getCardholderName() + " "
+                    + event.getValue().getCardNumber() + " "
+                    + event.getValue().getSecurityCode());
+        });
 
-    value = new Span();
-    Paragraph paragraph = new Paragraph(
-      new Html("<span><b>Payment information:</b> </span>"),
-      value
-    );
+        value = new Span();
+        Paragraph paragraph = new Paragraph(
+                new Html("<span><b>Payment information:</b> </span>"), value);
 
-    add(paymentInformationField, paragraph);
-    // end::snippet[]
-  }
-  public static class Exporter extends DemoExporter<CustomFieldNativeInput> {} // hidden-source-line
+        add(paymentInformationField, paragraph);
+        // end::snippet[]
+    }
+
+    public static class Exporter extends DemoExporter<CustomFieldNativeInput> { // hidden-source-line
+    } // hidden-source-line
 }

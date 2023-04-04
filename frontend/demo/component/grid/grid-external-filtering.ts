@@ -1,25 +1,26 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/grid';
-import type { GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import { TextFieldValueChangedEvent } from '@vaadin/text-field';
+import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 type PersonEnhanced = Person & { displayName: string };
 
 @customElement('grid-external-filtering')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -32,34 +33,34 @@ export class Example extends LitElement {
 
   private items: PersonEnhanced[] = [];
 
-  async firstUpdated() {
-    const people = (await getPeople()).people.map((person) => ({
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    const items = people.map((person) => ({
       ...person,
       displayName: `${person.firstName} ${person.lastName}`,
     }));
-    this.items = this.filteredItems = people;
+    this.items = items;
+    this.filteredItems = items;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-vertical-layout theme="spacing">
         <vaadin-text-field
           placeholder="Search"
           style="width: 50%;"
           @value-changed="${(e: TextFieldValueChangedEvent) => {
-            const searchTerm = ((e.detail.value as string) || '').trim();
-            const matchesTerm = (value: string) => {
-              return value.toLowerCase().indexOf(searchTerm.toLowerCase()) >= 0;
-            };
+            const searchTerm = (e.detail.value || '').trim();
+            const matchesTerm = (value: string) =>
+              value.toLowerCase().includes(searchTerm.toLowerCase());
 
-            this.filteredItems = this.items.filter(({ displayName, email, profession }) => {
-              return (
+            this.filteredItems = this.items.filter(
+              ({ displayName, email, profession }) =>
                 !searchTerm ||
                 matchesTerm(displayName) ||
                 matchesTerm(email) ||
                 matchesTerm(profession)
-              );
-            });
+            );
           }}"
         >
           <vaadin-icon slot="prefix" icon="vaadin:search"></vaadin-icon>
@@ -67,9 +68,9 @@ export class Example extends LitElement {
         <vaadin-grid .items="${this.filteredItems}">
           <vaadin-grid-column
             header="Name"
-            .renderer="${this.nameRenderer}"
             flex-grow="0"
             width="230px"
+            ${columnBodyRenderer(this.nameRenderer, [])}
           ></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column path="profession"></vaadin-grid-column>
@@ -79,20 +80,10 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  private nameRenderer = (
-    root: HTMLElement,
-    _: HTMLElement,
-    model: GridItemModel<Person & { displayName: string }>
-  ) => {
-    const person = model.item;
-    render(
-      html`
-        <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-          <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
-          <span> ${person.displayName} </span>
-        </vaadin-horizontal-layout>
-      `,
-      root
-    );
-  };
+  private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => html`
+    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
+      <span> ${person.displayName} </span>
+    </vaadin-horizontal-layout>
+  `;
 }

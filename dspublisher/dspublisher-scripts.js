@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-const DSP_VERSION = '2.0.1';
+const DSP_VERSION = '2.1.1';
 
 async function checkPreConditions() {
   try {
@@ -51,16 +51,11 @@ async function checkPreConditions() {
 
     // Verify the Node.js version is supported
     const MINIMUM_NODE_VERSION = 14;
-    const MAXIMUM_NODE_VERSION = 16;
     const RECOMMENDED_NODE_VERSION = 16;
     const nodeMajor = process.versions.node.split('.')[0];
     if (nodeMajor < MINIMUM_NODE_VERSION) {
       throw Error(
         `You're running Node.js ${process.versions.node} which is not supported. Node.js ${RECOMMENDED_NODE_VERSION} is recommended.`
-      );
-    } else if (nodeMajor > MAXIMUM_NODE_VERSION && process.argv.includes('--develop')) {
-      console.warn(
-        `\nYou're running Node.js ${process.versions.node} which may have issues with DSP dev mode locally! Node.js ${RECOMMENDED_NODE_VERSION} is recommended.\n`
       );
     }
   } catch (e) {

@@ -16,59 +16,60 @@ import com.vaadin.flow.router.Route;
 @Route("crud-grid-replacement")
 public class CrudGridReplacement extends Div {
 
-  private Crud<Person> crud;
+    private Crud<Person> crud;
 
-  public CrudGridReplacement() {
-    // tag::snippet1[]
-    crud = new Crud<>(
-      Person.class,
-      createGrid(),
-      createEditor()
-    );
-    // end::snippet1[]
+    public CrudGridReplacement() {
+        // tag::snippet1[]
+        crud = new Crud<>(Person.class, createGrid(), createEditor());
+        // end::snippet1[]
 
-    setupDataProvider();
+        setupDataProvider();
 
-    add(crud);
-  }
+        add(crud);
+    }
 
-  private CrudEditor<Person> createEditor() {
-    TextField firstName = new TextField("First name");
-    TextField lastName = new TextField("Last name");
-    EmailField email = new EmailField("Email");
-    TextField profession = new TextField("Profession");
-    FormLayout form = new FormLayout(firstName, lastName, email, profession);
+    private CrudEditor<Person> createEditor() {
+        TextField firstName = new TextField("First name");
+        TextField lastName = new TextField("Last name");
+        EmailField email = new EmailField("Email");
+        TextField profession = new TextField("Profession");
+        FormLayout form = new FormLayout(firstName, lastName, email,
+                profession);
 
-    Binder<Person> binder = new Binder<>(Person.class);
-    binder.forField(firstName).asRequired().bind(Person::getFirstName, Person::setFirstName);
-    binder.forField(lastName).asRequired().bind(Person::getLastName, Person::setLastName);
-    binder.forField(email).asRequired().bind(Person::getEmail, Person::setEmail);
-    binder.forField(profession).asRequired().bind(Person::getProfession, Person::setProfession);
+        Binder<Person> binder = new Binder<>(Person.class);
+        binder.forField(firstName).asRequired().bind(Person::getFirstName,
+                Person::setFirstName);
+        binder.forField(lastName).asRequired().bind(Person::getLastName,
+                Person::setLastName);
+        binder.forField(email).asRequired().bind(Person::getEmail,
+                Person::setEmail);
+        binder.forField(profession).asRequired().bind(Person::getProfession,
+                Person::setProfession);
 
-    return new BinderCrudEditor<>(binder, form);
-  }
+        return new BinderCrudEditor<>(binder, form);
+    }
 
-  // tag::snippet2[]
-  private Grid<Person> createGrid() {
-    Grid<Person> grid = new Grid<>();
-    Crud.addEditColumn(grid);
-    grid.addColumn(Person::getFirstName).setHeader("First name");
-    grid.addColumn(Person::getLastName).setHeader("Last name");
-    grid.addColumn(Person::getEmail).setHeader("Email");
-    grid.addColumn(Person::getProfession).setHeader("Profession");
-    return grid;
-  }
-  // end::snippet2[]
+    // tag::snippet2[]
+    private Grid<Person> createGrid() {
+        Grid<Person> grid = new Grid<>();
+        Crud.addEditColumn(grid);
+        grid.addColumn(Person::getFirstName).setHeader("First name");
+        grid.addColumn(Person::getLastName).setHeader("Last name");
+        grid.addColumn(Person::getEmail).setHeader("Email");
+        grid.addColumn(Person::getProfession).setHeader("Profession");
+        return grid;
+    }
+    // end::snippet2[]
 
-  private void setupDataProvider() {
-    PersonDataProvider dataProvider = new PersonDataProvider();
-    crud.setDataProvider(dataProvider);
-    crud.addDeleteListener(deleteEvent ->
-      dataProvider.delete(deleteEvent.getItem())
-    );
-    crud.addSaveListener(saveEvent ->
-      dataProvider.persist(saveEvent.getItem())
-    );
-  }
-  public static class Exporter extends DemoExporter<CrudGridReplacement> {} // hidden-source-line
+    private void setupDataProvider() {
+        PersonDataProvider dataProvider = new PersonDataProvider();
+        crud.setDataProvider(dataProvider);
+        crud.addDeleteListener(
+                deleteEvent -> dataProvider.delete(deleteEvent.getItem()));
+        crud.addSaveListener(
+                saveEvent -> dataProvider.persist(saveEvent.getItem()));
+    }
+
+    public static class Exporter extends DemoExporter<CrudGridReplacement> { // hidden-source-line
+    } // hidden-source-line
 }

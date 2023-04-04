@@ -15,9 +15,10 @@ public class UploadErrorMessages extends Div {
         Div cautionExample = setupCautionExample();
         Div recommendedExample = setupRecommendedExample();
 
-        FormLayout formLayout = new FormLayout(cautionExample, recommendedExample);
+        FormLayout formLayout = new FormLayout(cautionExample,
+                recommendedExample);
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
-                                      new FormLayout.ResponsiveStep("540px", 2));
+                new FormLayout.ResponsiveStep("540px", 2));
 
         add(formLayout);
     }
@@ -28,8 +29,7 @@ public class UploadErrorMessages extends Div {
         upload.setDropAllowed(false);
 
         UploadExamplesI18N i18N = new UploadExamplesI18N();
-        i18N.getUploading()
-                .getError()
+        i18N.getUploading().getError()
                 .setUnexpectedServerError("Unexpected Server Error");
         upload.setI18n(i18N);
 
@@ -38,7 +38,8 @@ public class UploadErrorMessages extends Div {
         upload.setId("upload-caution");
         label.setFor(upload.getId().get());
         upload.getElement().callJsFunction("setupMockErrorResponse"); // hidden-source-line
-        upload.getElement().executeJs("this.files = this.createFakeFilesUploadErrorMessagesA()"); // hidden-source-line
+        upload.getElement().executeJs( // hidden-source-line
+                "this.files = this.createFakeFilesUploadErrorMessagesA()"); // hidden-source-line
 
         return new Div(label, upload);
     }
@@ -50,10 +51,8 @@ public class UploadErrorMessages extends Div {
         upload.setDropAllowed(false);
 
         UploadExamplesI18N i18N = new UploadExamplesI18N();
-        i18N.getUploading()
-                .getError()
-                .setUnexpectedServerError(
-                        "File couldn't be uploaded, please try again later");
+        i18N.getUploading().getError().setUnexpectedServerError(
+                "File couldn't be uploaded, please try again later");
         upload.setI18n(i18N);
         // end::snippet[]
 
@@ -62,7 +61,8 @@ public class UploadErrorMessages extends Div {
         upload.setId("upload-recommended");
         label.setFor(upload.getId().get());
         upload.getElement().callJsFunction("setupMockErrorResponse"); // hidden-source-line
-        upload.getElement().executeJs("this.files = this.createFakeFilesUploadErrorMessagesB()"); // hidden-source-line
+        upload.getElement().executeJs( // hidden-source-line
+                "this.files = this.createFakeFilesUploadErrorMessagesB()"); // hidden-source-line
 
         return new Div(label, upload);
     }

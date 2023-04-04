@@ -6,8 +6,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-import java.util.Arrays;
-
 @Route("date-time-picker-week-numbers")
 public class DateTimePickerWeekNumbers extends Div {
 
@@ -16,10 +14,13 @@ public class DateTimePickerWeekNumbers extends Div {
         dateTimePicker.setLabel("Meeting date and time");
         // tag::snippet[]
         dateTimePicker.setWeekNumbersVisible(true);
-        dateTimePicker.setDatePickerI18n(new DatePicker.DatePickerI18n().setFirstDayOfWeek(1));
+        dateTimePicker.setDatePickerI18n(
+                new DatePicker.DatePickerI18n().setFirstDayOfWeek(1));
         // end::snippet[]
         add(dateTimePicker);
     }
-    public static class Exporter extends DemoExporter<DateTimePickerWeekNumbers> { // hidden-source-line
+
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DateTimePickerWeekNumbers> { // hidden-source-line
     } // hidden-source-line
 }

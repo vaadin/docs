@@ -15,57 +15,60 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("input-field-helper")
 public class InputFieldHelper extends HorizontalLayout {
 
-  private Icon checkIcon;
-  private Span passwordStrengthText;
+    private Icon checkIcon;
+    private Span passwordStrengthText;
 
-  public InputFieldHelper() {
-    // tag::snippet[]
-    TextField textField = new TextField();
-    textField.setLabel("Phone number");
-    textField.setHelperText("Include country and area prefixes");
+    public InputFieldHelper() {
+        // tag::snippet[]
+        TextField textField = new TextField();
+        textField.setLabel("Phone number");
+        textField.setHelperText("Include country and area prefixes");
 
-    PasswordField passwordField = new PasswordField();
-    passwordField.setLabel("Password");
-    passwordField.setRevealButtonVisible(false);
+        PasswordField passwordField = new PasswordField();
+        passwordField.setLabel("Password");
+        passwordField.setRevealButtonVisible(false);
 
-    checkIcon = VaadinIcon.CHECK.create();
-    checkIcon.setVisible(false);
-    passwordField.setSuffixComponent(checkIcon);
+        checkIcon = VaadinIcon.CHECK.create();
+        checkIcon.setVisible(false);
+        passwordField.setSuffixComponent(checkIcon);
 
-    Div passwordStrength = new Div();
-    passwordStrengthText = new Span();
-    passwordStrength.add(new Text("Password strength: "), passwordStrengthText);
-    passwordField.setHelperComponent(passwordStrength);
+        Div passwordStrength = new Div();
+        passwordStrengthText = new Span();
+        passwordStrength.add(new Text("Password strength: "),
+                passwordStrengthText);
+        passwordField.setHelperComponent(passwordStrength);
 
-    add(textField);
-    add(passwordField);
-    // end::snippet[]
+        add(textField);
+        add(passwordField);
+        // end::snippet[]
 
-    passwordField.setValueChangeMode(ValueChangeMode.EAGER);
-    passwordField.addValueChangeListener(e -> {
-      String password = e.getValue();
-      updateHelper(password);
-    });
+        passwordField.setValueChangeMode(ValueChangeMode.EAGER);
+        passwordField.addValueChangeListener(e -> {
+            String password = e.getValue();
+            updateHelper(password);
+        });
 
-    updateHelper("");
-  }
-
-  private void updateHelper(String password) {
-    if (password.length() > 9) {
-      passwordStrengthText.setText("strong");
-      passwordStrengthText.getStyle().set("color", "var(--lumo-success-color)");
-      checkIcon.setVisible(true);
-    } else if (password.length() > 5) {
-      passwordStrengthText.setText("moderate");
-      passwordStrengthText.getStyle().set("color", "#e7c200");
-      checkIcon.setVisible(false);
-    } else {
-      passwordStrengthText.setText("weak");
-      passwordStrengthText.getStyle().set("color", "var(--lumo-error-color)");
-      checkIcon.setVisible(false);
+        updateHelper("");
     }
-  }
 
-  public static class Exporter extends DemoExporter<InputFieldHelper> { // hidden-source-line
-  } // hidden-source-line
+    private void updateHelper(String password) {
+        if (password.length() > 9) {
+            passwordStrengthText.setText("strong");
+            passwordStrengthText.getStyle().set("color",
+                    "var(--lumo-success-color)");
+            checkIcon.setVisible(true);
+        } else if (password.length() > 5) {
+            passwordStrengthText.setText("moderate");
+            passwordStrengthText.getStyle().set("color", "#e7c200");
+            checkIcon.setVisible(false);
+        } else {
+            passwordStrengthText.setText("weak");
+            passwordStrengthText.getStyle().set("color",
+                    "var(--lumo-error-color)");
+            checkIcon.setVisible(false);
+        }
+    }
+
+    public static class Exporter extends DemoExporter<InputFieldHelper> { // hidden-source-line
+    } // hidden-source-line
 }

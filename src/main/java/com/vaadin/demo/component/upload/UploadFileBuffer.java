@@ -14,7 +14,8 @@ public class UploadFileBuffer extends Div {
         Upload singleFileUpload = new Upload(fileBuffer);
 
         singleFileUpload.addSucceededListener(event -> {
-            // Get information about the file that was written to the file system
+            // Get information about the file that was written to the file
+            // system
             FileData savedFileData = fileBuffer.getFileData();
             String absolutePath = savedFileData.getFile().getAbsolutePath();
 
@@ -29,7 +30,8 @@ public class UploadFileBuffer extends Div {
             // Determine which file was uploaded successfully
             String uploadFileName = event.getFileName();
             // Get information for that specific file
-            FileData savedFileData = multiFileBuffer.getFileData(uploadFileName);
+            FileData savedFileData = multiFileBuffer
+                    .getFileData(uploadFileName);
             String absolutePath = savedFileData.getFile().getAbsolutePath();
 
             System.out.printf("File saved to: %s%n", absolutePath);

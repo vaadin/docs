@@ -10,23 +10,23 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("details-basic")
 public class DetailsBasic extends Div {
 
-  public DetailsBasic() {
-    // tag::snippet[]
-    Span name = new Span("Sophia Williams");
-    Span email = new Span("sophia.williams@company.com");
-    Span phone = new Span("(501) 555-9128");
-    
-    VerticalLayout content = new VerticalLayout(name, email, phone);
-    content.setSpacing(false);
-    content.setPadding(false);
+    public DetailsBasic() {
+        // tag::snippet[]
+        Span name = new Span("Sophia Williams");
+        Span email = new Span("sophia.williams@company.com");
+        Span phone = new Span("(501) 555-9128");
 
-    Details details = new Details("Contact information", content);
-    details.setOpened(true);
+        VerticalLayout content = new VerticalLayout(name, email, phone);
+        content.setSpacing(false);
+        content.setPadding(false);
 
-    add(details);
-    // end::snippet[]
-  }
+        Details details = new Details("Contact information", content);
+        details.setOpened(true);
 
-  public static class Exporter extends DemoExporter<DetailsBasic> { // hidden-source-line
-  } // hidden-source-line
+        add(details);
+        // end::snippet[]
+    }
+
+    public static class Exporter extends DemoExporter<DetailsBasic> { // hidden-source-line
+    } // hidden-source-line
 }

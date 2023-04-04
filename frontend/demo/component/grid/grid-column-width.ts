@@ -5,16 +5,16 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
-import { GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/split-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('grid-column-width')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -24,15 +24,15 @@ export class Example extends LitElement {
   @state()
   private items: Person[] = [];
 
-  async firstUpdated() {
-    const people = (await getPeople()).people.map((person) => ({
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people.map((person) => ({
       ...person,
       displayName: `${person.firstName} ${person.lastName}`,
     }));
-    this.items = people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-split-layout>
         <vaadin-grid .items="${this.items}" style="width: 100%;">
@@ -44,20 +44,12 @@ export class Example extends LitElement {
             width="6em"
             flex-grow="0"
             header="Has Sub"
-            .renderer="${this.subscriptionRenderer}"
+            ${columnBodyRenderer<Person>((item) => html`${item.subscriber ? 'Yes' : 'No'}`, [])}
           ></vaadin-grid-column>
         </vaadin-grid>
         <div></div>
       </vaadin-split-layout>
     `;
   }
-
-  private subscriptionRenderer = (
-    root: HTMLElement,
-    _: HTMLElement,
-    model: GridItemModel<Person>
-  ) => {
-    root.textContent = model.item.subscriber ? 'Yes' : 'No';
-  };
 }
 // end::snippet[]

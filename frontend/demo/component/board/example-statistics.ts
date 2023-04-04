@@ -1,92 +1,90 @@
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
-import ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
+import type ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 
 @customElement('example-statistics')
 export class ExampleStatistics extends LitElement {
-  static get styles() {
-    return css`
-      :host {
-        display: flex;
-        flex-direction: column;
-        font-size: var(--lumo-font-size-s);
-      }
+  static override styles = css`
+    :host {
+      display: flex;
+      flex-direction: column;
+      font-size: var(--lumo-font-size-s);
+    }
 
-      .level {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
+    .level {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-      .level::before {
-        content: '';
-        width: var(--lumo-font-size-xxs);
-        height: var(--lumo-font-size-xxs);
-        border-radius: 50%;
-      }
+    .level::before {
+      content: '';
+      width: var(--lumo-font-size-xxs);
+      height: var(--lumo-font-size-xxs);
+      border-radius: 50%;
+    }
 
-      .excellent::before {
-        background-color: var(--lumo-success-color);
-      }
+    .excellent::before {
+      background-color: var(--lumo-success-color);
+    }
 
-      .ok::before {
-        background-color: var(--lumo-primary-color);
-      }
+    .ok::before {
+      background-color: var(--lumo-primary-color);
+    }
 
-      .failing::before {
-        background-color: var(--lumo-error-color);
-      }
+    .failing::before {
+      background-color: var(--lumo-error-color);
+    }
 
-      .legend {
-        display: flex;
-      }
+    .legend {
+      display: flex;
+    }
 
-      .legend label {
-        display: flex;
-        align-items: center;
-        margin-inline-end: var(--lumo-space-m);
-      }
+    .legend label {
+      display: flex;
+      align-items: center;
+      margin-inline-end: var(--lumo-space-m);
+    }
 
-      .legend .level {
-        margin-inline-end: var(--lumo-space-s);
-      }
+    .legend .level {
+      margin-inline-end: var(--lumo-space-s);
+    }
 
-      .title {
-        font-size: var(--lumo-font-size-l);
-        font-weight: 700;
-      }
+    .title {
+      font-size: var(--lumo-font-size-l);
+      font-weight: 700;
+    }
 
-      .table {
-        overflow: auto;
-        flex-grow: 1;
-      }
+    .table {
+      overflow: auto;
+      flex-grow: 1;
+    }
 
-      .table table {
-        width: 100%;
-        margin-block-start: var(--lumo-space-s);
-      }
+    .table table {
+      width: 100%;
+      margin-block-start: var(--lumo-space-s);
+    }
 
-      .table .number {
-        text-align: end;
-      }
+    .table .number {
+      text-align: end;
+    }
 
-      .table th,
-      .table td {
-        white-space: nowrap;
-      }
-    `;
-  }
+    .table th,
+    .table td {
+      white-space: nowrap;
+    }
+  `;
 
   @state()
   private serviceHealth: ServiceHealth[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.serviceHealth = await getServiceHealth();
   }
 
-  render() {
+  protected override render() {
     return html`
       <header class="title">Service health</header>
       <section class="legend">

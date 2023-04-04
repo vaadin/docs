@@ -12,25 +12,25 @@ import java.util.List;
 @Route("avatar-group-bg-color")
 public class AvatarGroupBgColor extends Div {
 
-  private List<Person> people = DataService.getPeople(6);
+    private List<Person> people = DataService.getPeople(6);
 
-  public AvatarGroupBgColor() {
-    int colorIndex = 0;
-    
-    // tag::snippet[]
-    AvatarGroup avatarGroup = new AvatarGroup();
+    public AvatarGroupBgColor() {
+        int colorIndex = 0;
 
-    for (Person person : people) {
-      String name = person.getFirstName() + " " + person.getLastName();
-      AvatarGroupItem avatar = new AvatarGroupItem(name);
-      avatar.setColorIndex(colorIndex++);
-      avatarGroup.add(avatar);
+        // tag::snippet[]
+        AvatarGroup avatarGroup = new AvatarGroup();
+
+        for (Person person : people) {
+            String name = person.getFirstName() + " " + person.getLastName();
+            AvatarGroupItem avatar = new AvatarGroupItem(name);
+            avatar.setColorIndex(colorIndex++);
+            avatarGroup.add(avatar);
+        }
+        // end::snippet[]
+
+        add(avatarGroup);
     }
-    // end::snippet[]
 
-    add(avatarGroup);
-  }
-
-  public static class Exporter extends DemoExporter<AvatarGroupBgColor> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<AvatarGroupBgColor> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -22,6 +22,7 @@ public class DateTimePickerMinutesStep extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerMinutesStep> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DateTimePickerMinutesStep> { // hidden-source-line
     } // hidden-source-line
 }

@@ -1,10 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, render } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/notification';
-import { NotificationRenderer, NotificationOpenedChangedEvent } from '@vaadin/notification';
+import type { NotificationOpenedChangedEvent } from '@vaadin/notification';
+import { notificationRenderer } from '@vaadin/notification/lit.js';
+import type { NotificationLitRenderer } from '@vaadin/notification/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-keyboard-a11y')
@@ -15,7 +17,7 @@ export class Example extends LitElement {
   @state()
   private isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -23,13 +25,10 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`
       <!-- end::snippet[] -->
-      <vaadin-button
-        @click="${() => (this.notificationOpened = true)}"
-        .disabled="${this.notificationOpened}"
-      >
+      <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">
         Try it
       </vaadin-button>
 
@@ -42,7 +41,7 @@ export class Example extends LitElement {
         @opened-changed="${(e: NotificationOpenedChangedEvent) => {
           this.notificationOpened = e.detail.value;
         }}"
-        .renderer="${this.renderer}"
+        ${notificationRenderer(this.renderer, [])}
       ></vaadin-notification>
     `;
   }
@@ -50,26 +49,21 @@ export class Example extends LitElement {
   // end::snippet[]
 
   // tag::renderer[]
-  renderer: NotificationRenderer = (root) => {
-    render(
-      html`
-        <vaadin-horizontal-layout style="align-items: center;">
-          <div>5 tasks deleted</div>
-          <vaadin-button
-            style="margin-left: var(--lumo-space-xl);"
-            theme="primary"
-            @click="${() => (this.notificationOpened = false)}"
-          >
-            Undo
-            <!-- Ideally, this should be hidden if the
+  renderer: NotificationLitRenderer = () => html`
+    <vaadin-horizontal-layout style="align-items: center;">
+      <div>5 tasks deleted</div>
+      <vaadin-button
+        style="margin-left: var(--lumo-space-xl);"
+        theme="primary"
+        @click="${this.close}"
+      >
+        Undo
+        <!-- Ideally, this should be hidden if the
                  device does not have a physical keyboard -->
-            ${this.isMac ? '⌘' : 'Ctrl-'}Z
-          </vaadin-button>
-        </vaadin-horizontal-layout>
-      `,
-      root
-    );
-  };
+        ${this.isMac ? '⌘' : 'Ctrl-'}Z
+      </vaadin-button>
+    </vaadin-horizontal-layout>
+  `;
 
   // end::renderer[]
 
@@ -87,12 +81,20 @@ export class Example extends LitElement {
   }
 
   onKeyDown = (event: KeyboardEvent) => {
-    if (this.notificationOpened && (event.metaKey || event.ctrlKey) && event.key == 'z') {
+    if (this.notificationOpened && (event.metaKey || event.ctrlKey) && event.key === 'z') {
       // Handle your custom undo logic here
       // Avoid triggering the native undo action
       event.preventDefault();
-      this.notificationOpened = false;
+      this.close();
     }
   };
   // end::key-down[]
+
+  private open() {
+    this.notificationOpened = true;
+  }
+
+  private close() {
+    this.notificationOpened = false;
+  }
 }

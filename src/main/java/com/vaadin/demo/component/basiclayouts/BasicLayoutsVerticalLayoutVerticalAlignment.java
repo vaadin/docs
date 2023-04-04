@@ -2,6 +2,7 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -36,24 +37,24 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
     public BasicLayoutsVerticalLayoutVerticalAlignment() {
         // tag::layout[]
         VerticalLayout layout = new VerticalLayout();
-        layout.add(new LayoutItem("Item 1"));
-        layout.add(new LayoutItem("Item 2"));
-        layout.add(new LayoutItem("Item 3"));
+        layout.add(new Button("Button 1"));
+        layout.add(new Button("Button 2"));
+        layout.add(new Button("Button 3"));
         // end::layout[]
 
-        List<JustifyContentModeOption> options = Arrays
-                .asList(new JustifyContentModeOption("Start (default)",
-                                FlexComponent.JustifyContentMode.START),
-                        new JustifyContentModeOption("Center",
-                                FlexComponent.JustifyContentMode.CENTER),
-                        new JustifyContentModeOption("End",
-                                FlexComponent.JustifyContentMode.END),
-                        new JustifyContentModeOption("Between",
-                                FlexComponent.JustifyContentMode.BETWEEN),
-                        new JustifyContentModeOption("Around",
-                                FlexComponent.JustifyContentMode.AROUND),
-                        new JustifyContentModeOption("Evenly",
-                                FlexComponent.JustifyContentMode.EVENLY));
+        List<JustifyContentModeOption> options = Arrays.asList(
+                new JustifyContentModeOption("Start (default)",
+                        FlexComponent.JustifyContentMode.START),
+                new JustifyContentModeOption("Center",
+                        FlexComponent.JustifyContentMode.CENTER),
+                new JustifyContentModeOption("End",
+                        FlexComponent.JustifyContentMode.END),
+                new JustifyContentModeOption("Between",
+                        FlexComponent.JustifyContentMode.BETWEEN),
+                new JustifyContentModeOption("Around",
+                        FlexComponent.JustifyContentMode.AROUND),
+                new JustifyContentModeOption("Evenly",
+                        FlexComponent.JustifyContentMode.EVENLY));
 
         RadioButtonGroup<JustifyContentModeOption> radioGroup = new RadioButtonGroup<>();
         radioGroup.setLabel("Vertical alignment");

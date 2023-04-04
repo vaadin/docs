@@ -12,12 +12,8 @@ public class BadgeCounter extends Div {
 
     public BadgeCounter() {
         // tag::snippet1[]
-        Tabs tabs = new Tabs(
-                createTab("Inbox", 12),
-                createTab("Important", 3),
-                createTab("Spam", 45),
-                createTab("Archive", 23)
-        );
+        Tabs tabs = new Tabs(createTab("Inbox", 12), createTab("Important", 3),
+                createTab("Spam", 45), createTab("Archive", 23));
         // end::snippet1[]
 
         add(tabs);

@@ -9,16 +9,16 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("radio-button-basic")
 public class RadioButtonBasic extends Div {
 
-  public RadioButtonBasic() {
-    // tag::snippet[]
-    RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>();
-    radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-    radioGroup.setLabel("Travel class");
-    radioGroup.setItems("Economy", "Business", "First Class");
-    add(radioGroup);
-    // end::snippet[]
-  }
+    public RadioButtonBasic() {
+        // tag::snippet[]
+        RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>();
+        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        radioGroup.setLabel("Travel class");
+        radioGroup.setItems("Economy", "Business", "First Class");
+        add(radioGroup);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<RadioButtonBasic> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<RadioButtonBasic> { // hidden-source-line
+    } // hidden-source-line
 }

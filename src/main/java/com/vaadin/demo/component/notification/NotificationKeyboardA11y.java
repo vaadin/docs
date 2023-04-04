@@ -15,59 +15,63 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("notification-keyboard-a11y")
 public class NotificationKeyboardA11y extends Div {
 
-  public NotificationKeyboardA11y() {
-    Button button = new Button("Try it");
-    button.addClickListener(clickEvent -> {
-      button.setEnabled(false);
+    public NotificationKeyboardA11y() {
+        Button button = new Button("Try it");
+        button.addClickListener(clickEvent -> {
+            button.setEnabled(false);
 
-      Notification notification = show();
-      notification.addDetachListener(detachEvent -> button.setEnabled(true));
-      setupUndoShortcut(notification);
-    });
+            Notification notification = show();
+            notification
+                    .addDetachListener(detachEvent -> button.setEnabled(true));
+            setupUndoShortcut(notification);
+        });
 
-    add(button);
-  }
+        add(button);
+    }
 
-  // tag::snippet[]
-  public Notification show() {
-    Notification notification = new Notification();
-    notification.setDuration(10000);
-    notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+    // tag::snippet[]
+    public Notification show() {
+        Notification notification = new Notification();
+        notification.setDuration(10000);
+        notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
 
-    Div statusText = new Div(new Text("5 tasks deleted"));
+        Div statusText = new Div(new Text("5 tasks deleted"));
 
-    Button undoButton = new Button();
-    undoButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-    undoButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
-    undoButton.getElement().executeJs(
-      "const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);" +
-      "this.textContent = `Undo ${isMac ? '⌘' : 'Ctrl-'}Z`;"
-    );
-    undoButton.addClickListener(event -> {
-      notification.close();
-    });
+        Button undoButton = new Button();
+        undoButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        undoButton.getElement().getStyle().set("margin-left",
+                "var(--lumo-space-xl)");
+        undoButton.getElement().executeJs(
+                "const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);"
+                        + "this.textContent = `Undo ${isMac ? '⌘' : 'Ctrl-'}Z`;");
+        undoButton.addClickListener(event -> {
+            notification.close();
+        });
 
-    HorizontalLayout layout = new HorizontalLayout(statusText, undoButton);
-    layout.setAlignItems(Alignment.CENTER);
+        HorizontalLayout layout = new HorizontalLayout(statusText, undoButton);
+        layout.setAlignItems(Alignment.CENTER);
 
-    notification.add(layout);
-    notification.open();
+        notification.add(layout);
+        notification.open();
+        // end::snippet[]
+
+        notification.setPosition(Notification.Position.MIDDLE);
+        // tag::snippet[]
+
+        return notification;
+    }
     // end::snippet[]
 
-    notification.setPosition(Notification.Position.MIDDLE);
-    // tag::snippet[]
+    // tag::setupUndoShortcut[]
+    public void setupUndoShortcut(Notification notification) {
+        Shortcuts.addShortcutListener(notification, notification::close,
+                Key.of("z"), KeyModifier.META);
+        Shortcuts.addShortcutListener(notification, notification::close,
+                Key.of("z"), KeyModifier.CONTROL);
+    }
+    // end::setupUndoShortcut[]
 
-    return notification;
-  }
-  // end::snippet[]
-
-  // tag::setupUndoShortcut[]
-  public void setupUndoShortcut(Notification notification) {
-    Shortcuts.addShortcutListener(notification, notification::close, Key.of("z"), KeyModifier.META);
-    Shortcuts.addShortcutListener(notification, notification::close, Key.of("z"), KeyModifier.CONTROL);
-  }
-  // end::setupUndoShortcut[]
-
-  public static class Exporter extends DemoExporter<NotificationKeyboardA11y> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<NotificationKeyboardA11y> { // hidden-source-line
+    } // hidden-source-line
 }

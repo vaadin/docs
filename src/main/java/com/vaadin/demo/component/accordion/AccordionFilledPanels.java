@@ -21,12 +21,14 @@ public class AccordionFilledPanels extends Div {
         Span email = new Span("sophia.williams@company.com");
         Span phone = new Span("(501) 555-9128");
 
-        VerticalLayout personalInformationLayout = new VerticalLayout(name, email, phone);
+        VerticalLayout personalInformationLayout = new VerticalLayout(name,
+                email, phone);
         personalInformationLayout.setSpacing(false);
         personalInformationLayout.setPadding(false);
 
         // tag::snippet[]
-        AccordionPanel personalInfoPanel = accordion.add("Personal information", personalInformationLayout);
+        AccordionPanel personalInfoPanel = accordion.add("Personal information",
+                personalInformationLayout);
         personalInfoPanel.addThemeVariants(DetailsVariant.FILLED);
         // end::snippet[]
 
@@ -38,8 +40,9 @@ public class AccordionFilledPanels extends Div {
         billingAddressLayout.setSpacing(false);
         billingAddressLayout.setPadding(false);
         billingAddressLayout.add(street, zipCode, city);
-        
-        AccordionPanel billingAddressPanel = accordion.add("Billing address", billingAddressLayout);
+
+        AccordionPanel billingAddressPanel = accordion.add("Billing address",
+                billingAddressLayout);
         billingAddressPanel.addThemeVariants(DetailsVariant.FILLED);
 
         Span cardBrand = new Span("Mastercard");
@@ -50,7 +53,7 @@ public class AccordionFilledPanels extends Div {
         paymentLayout.setSpacing(false);
         paymentLayout.setPadding(false);
         paymentLayout.add(cardBrand, cardNumber, expiryDate);
-        
+
         AccordionPanel paymentPanel = accordion.add("Payment", paymentLayout);
         paymentPanel.addThemeVariants(DetailsVariant.FILLED);
 

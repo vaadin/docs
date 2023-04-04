@@ -41,7 +41,8 @@ public class MenuBarIconOnly extends Div {
     }
 
     // tag::createIcon[]
-    private MenuItem createIconItem(MenuBar menu, VaadinIcon iconName, String ariaLabel) {
+    private MenuItem createIconItem(MenuBar menu, VaadinIcon iconName,
+            String ariaLabel) {
         Icon icon = new Icon(iconName);
         MenuItem item = menu.addItem(icon);
         item.getElement().setAttribute("aria-label", ariaLabel);

@@ -9,21 +9,21 @@ import com.vaadin.flow.router.Route;
 @Route("tabs-states")
 public class TabsStates extends Div {
 
-	public TabsStates() {
-		// tag::snippet[]
-		Tab selected = new Tab("Selected");
+    public TabsStates() {
+        // tag::snippet[]
+        Tab selected = new Tab("Selected");
 
-		Tab unselected = new Tab("Unselected");
+        Tab unselected = new Tab("Unselected");
 
-		Tab disabled = new Tab("Disabled");
-		disabled.setEnabled(false);
+        Tab disabled = new Tab("Disabled");
+        disabled.setEnabled(false);
 
-		Tabs tabs = new Tabs(selected, unselected, disabled);
-		tabs.setSelectedTab(selected);
-		// end::snippet[]
-		add(tabs);
-	}
+        Tabs tabs = new Tabs(selected, unselected, disabled);
+        tabs.setSelectedTab(selected);
+        // end::snippet[]
+        add(tabs);
+    }
 
-	public static class Exporter extends DemoExporter<TabsStates> { // hidden-source-line
-	} // hidden-source-line
+    public static class Exporter extends DemoExporter<TabsStates> { // hidden-source-line
+    } // hidden-source-line
 }

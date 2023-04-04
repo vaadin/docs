@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.grid;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
@@ -25,7 +24,8 @@ public class GridMultiSelectionMode extends Div {
         grid.setItems(people);
 
         grid.addSelectionListener(selection -> {
-            // System.out.printf("Number of selected people: %s%n", selection.getAllSelectedItems().size());
+            // System.out.printf("Number of selected people: %s%n",
+            // selection.getAllSelectedItems().size());
         });
         // end::snippet[]
 

@@ -5,21 +5,21 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/combo-box';
 import '@vaadin/details';
 import '@vaadin/form-layout';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/horizontal-layout';
-import '@vaadin/icon/vaadin-icon';
+import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/text-field';
 import '@vaadin/vaadin-lumo-styles/sizing';
 import '@vaadin/vaadin-lumo-styles/color';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('details-summary')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -35,29 +35,28 @@ export class Example extends LitElement {
     { minWidth: '20em', columns: 2 },
   ];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.items = await getCountries();
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-details opened>
-        <vaadin-horizontal-layout
-          slot="summary"
-          style="justify-content: space-between; width: 100%;"
-        >
-          <span>Contact information</span>
+        <vaadin-details-summary slot="summary">
+          <vaadin-horizontal-layout style="justify-content: space-between; width: 100%;">
+            <span>Contact information</span>
 
-          <vaadin-horizontal-layout
-            style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
-          >
-            <vaadin-icon
-              icon="vaadin:exclamation-circle"
-              style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s);"
-            ></vaadin-icon>
-            <span>2 errors</span>
+            <vaadin-horizontal-layout
+              style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
+            >
+              <vaadin-icon
+                icon="vaadin:exclamation-circle"
+                style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); margin-right: var(--lumo-space-xs)"
+              ></vaadin-icon>
+              <span>2 errors</span>
+            </vaadin-horizontal-layout>
           </vaadin-horizontal-layout>
-        </vaadin-horizontal-layout>
+        </vaadin-details-summary>
 
         <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
           <vaadin-text-field

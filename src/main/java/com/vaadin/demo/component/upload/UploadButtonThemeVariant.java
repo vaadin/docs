@@ -24,10 +24,12 @@ public class UploadButtonThemeVariant extends Div {
 
         // Disable the upload button after the file is selected
         // Re-enable the upload button after the file is cleared
-        upload.getElement().addEventListener("max-files-reached-changed", event -> {
-            boolean maxFilesReached = event.getEventData().getBoolean("event.detail.value");
-            uploadButton.setEnabled(!maxFilesReached);
-        }).addEventData("event.detail.value");
+        upload.getElement()
+                .addEventListener("max-files-reached-changed", event -> {
+                    boolean maxFilesReached = event.getEventData()
+                            .getBoolean("event.detail.value");
+                    uploadButton.setEnabled(!maxFilesReached);
+                }).addEventData("event.detail.value");
         // end::snippet[]
 
         UploadExamplesI18N i18N = new UploadExamplesI18N();

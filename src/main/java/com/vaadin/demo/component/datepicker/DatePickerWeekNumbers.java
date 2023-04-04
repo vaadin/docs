@@ -12,11 +12,13 @@ public class DatePickerWeekNumbers extends Div {
         DatePicker datePicker = new DatePicker("Vacation start date");
         // tag::snippet[]
         datePicker.setWeekNumbersVisible(true);
-        datePicker.setI18n(new DatePicker.DatePickerI18n().setFirstDayOfWeek(1));
+        datePicker
+                .setI18n(new DatePicker.DatePickerI18n().setFirstDayOfWeek(1));
         // end::snippet[]
 
         add(datePicker);
     }
+
     public static class Exporter extends DemoExporter<DatePickerWeekNumbers> { // hidden-source-line
     } // hidden-source-line
 }

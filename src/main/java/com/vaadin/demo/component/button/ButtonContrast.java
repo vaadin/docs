@@ -12,16 +12,19 @@ public class ButtonContrast extends Div {
     public ButtonContrast() {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
-        primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
+                ButtonVariant.LUMO_CONTRAST);
 
         Button secondaryButton = new Button("Secondary");
         secondaryButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
         Button tertiaryButton = new Button("Tertiary (avoid)");
-        tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_CONTRAST);
+        tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY,
+                ButtonVariant.LUMO_CONTRAST);
         // end::snippet[]
 
-        HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton, secondaryButton, tertiaryButton);
+        HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton,
+                secondaryButton, tertiaryButton);
         add(horizontalLayout);
     }
 

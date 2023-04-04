@@ -9,22 +9,23 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("text-area-basic")
 public class TextAreaBasic extends Div {
 
-  public TextAreaBasic() {
-    int charLimit = 140;
+    public TextAreaBasic() {
+        int charLimit = 140;
 
-    // tag::snippet[]
-    TextArea textArea = new TextArea();
-    textArea.setLabel("Comment");
-    textArea.setMaxLength(charLimit);
-    textArea.setValueChangeMode(ValueChangeMode.EAGER);
-    textArea.addValueChangeListener(e -> {
-      e.getSource().setHelperText(e.getValue().length() + "/" + charLimit);
-    });
-    textArea.setValue("Great job. This is excellent!");
-    add(textArea);
-    // end::snippet[]
-  }
+        // tag::snippet[]
+        TextArea textArea = new TextArea();
+        textArea.setLabel("Comment");
+        textArea.setMaxLength(charLimit);
+        textArea.setValueChangeMode(ValueChangeMode.EAGER);
+        textArea.addValueChangeListener(e -> {
+            e.getSource()
+                    .setHelperText(e.getValue().length() + "/" + charLimit);
+        });
+        textArea.setValue("Great job. This is excellent!");
+        add(textArea);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<TextAreaBasic> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<TextAreaBasic> { // hidden-source-line
+    } // hidden-source-line
 }

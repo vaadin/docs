@@ -5,7 +5,7 @@ import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/form-layout';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/upload';
-import { Upload } from '@vaadin/upload';
+import type { Upload } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
@@ -15,7 +15,7 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
 
 @customElement('upload-error-messages')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -29,7 +29,7 @@ export class Example extends LitElement {
   private uploadRecommended!: Upload;
 
   // tag::snippet[]
-  firstUpdated() {
+  protected override firstUpdated() {
     // end::snippet[]
     this.uploadCaution.setupMockErrorResponse(); // hidden-source-line
     this.uploadRecommended.setupMockErrorResponse(); // hidden-source-line
@@ -37,11 +37,11 @@ export class Example extends LitElement {
     this.uploadCaution.i18n = { ...this.uploadCaution.i18n };
     // tag::snippet[]
     this.uploadRecommended.i18n.uploading.error.unexpectedServerError =
-      "File couldn't be uploaded, please try again later";
+      "File couldn't be uploaded, try again later";
     this.uploadRecommended.i18n = { ...this.uploadRecommended.i18n };
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- end::snippet[] -->
       <vaadin-form-layout .responsiveSteps="${layoutSteps}">

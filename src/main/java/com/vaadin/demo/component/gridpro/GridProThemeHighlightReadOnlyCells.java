@@ -23,8 +23,7 @@ public class GridProThemeHighlightReadOnlyCells extends Div {
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getMembership).setHeader("Membership");
 
-        grid.addEditColumn(Person::getEmail)
-                .text(Person::setEmail)
+        grid.addEditColumn(Person::getEmail).text(Person::setEmail)
                 .setHeader("Email (Editable)");
 
         List<Person> people = DataService.getPeople();
@@ -33,6 +32,7 @@ public class GridProThemeHighlightReadOnlyCells extends Div {
         add(grid);
     }
 
-    public static class Exporter extends DemoExporter<GridProThemeHighlightReadOnlyCells> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<GridProThemeHighlightReadOnlyCells> { // hidden-source-line
     } // hidden-source-line
 }

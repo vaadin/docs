@@ -31,6 +31,7 @@ public class BadgeIconsOnly extends HorizontalLayout {
         icon.getElement().setAttribute("title", label);
         return icon;
     }
+
     // end::snippet2[]
     public static class Exporter extends DemoExporter<BadgeIconsOnly> { // hidden-source-line
     } // hidden-source-line

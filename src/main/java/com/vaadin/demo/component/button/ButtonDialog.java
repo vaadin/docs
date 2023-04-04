@@ -18,7 +18,8 @@ public class ButtonDialog extends VerticalLayout {
         TextField lastNameField = new TextField("Last name", "Smith", "");
         EmailField emailField = new EmailField("Email address");
         emailField.setValue("john.smith@example.com");
-        FormLayout formLayout = new FormLayout(firstNameField, lastNameField, emailField);
+        FormLayout formLayout = new FormLayout(firstNameField, lastNameField,
+                emailField);
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
         formLayout.setColspan(emailField, 2);
 
@@ -31,7 +32,8 @@ public class ButtonDialog extends VerticalLayout {
         Button createAccount = new Button("Create account");
         createAccount.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        HorizontalLayout buttonLayout = new HorizontalLayout(delete, cancel, createAccount);
+        HorizontalLayout buttonLayout = new HorizontalLayout(delete, cancel,
+                createAccount);
         buttonLayout.getStyle().set("flex-wrap", "wrap");
         buttonLayout.setJustifyContentMode(JustifyContentMode.END);
         // end::snippet[]

@@ -108,14 +108,14 @@ public class GridColumnFiltering extends Div {
         }
 
         private boolean matches(String value, String searchTerm) {
-            return searchTerm == null || searchTerm.isEmpty() || value
-                    .toLowerCase().contains(searchTerm.toLowerCase());
+            return searchTerm == null || searchTerm.isEmpty()
+                    || value.toLowerCase().contains(searchTerm.toLowerCase());
         }
     }
     // end::snippet2[]
 
     private static Renderer<Person> createPersonRenderer() {
-        return LitRenderer.<Person>of(
+        return LitRenderer.<Person> of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
                         + "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
                         + "  <span> ${item.fullName} </span>"

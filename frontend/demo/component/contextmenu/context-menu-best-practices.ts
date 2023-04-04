@@ -3,6 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/context-menu';
 import '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import type { Grid } from '@vaadin/grid';
 import '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -14,7 +15,7 @@ interface FileItem {
 
 @customElement('context-menu-best-practices')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -32,18 +33,7 @@ export class Example extends LitElement {
     { name: 'Financials.xlsx', size: '42 MB' },
   ];
 
-  private menuBarRenderer = (root: HTMLElement) => {
-    if (root.firstElementChild) {
-      return;
-    }
-
-    const menuBar = document.createElement('vaadin-menu-bar');
-    menuBar.items = [{ component: this.makeIcon(), children: this.items }];
-    menuBar.setAttribute('theme', 'tertiary');
-    root.appendChild(menuBar);
-  };
-
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
@@ -55,9 +45,17 @@ export class Example extends LitElement {
           <vaadin-grid-column path="name"></vaadin-grid-column>
           <vaadin-grid-column path="size"></vaadin-grid-column>
           <vaadin-grid-column
-            auto-width
+            width="70px"
             flex-grow="0"
-            .renderer="${this.menuBarRenderer}"
+            ${columnBodyRenderer(
+              () => html`
+                <vaadin-menu-bar
+                  .items=${[{ component: this.makeIcon(), children: this.items }]}
+                  theme="tertiary"
+                ></vaadin-menu-bar>
+              `,
+              []
+            )}
           ></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
@@ -66,7 +64,7 @@ export class Example extends LitElement {
   }
 
   makeIcon() {
-    const item = window.document.createElement('vaadin-context-menu-item');
+    const item = document.createElement('vaadin-context-menu-item');
     item.textContent = '•••';
     item.setAttribute('aria-label', 'More options');
     return item;

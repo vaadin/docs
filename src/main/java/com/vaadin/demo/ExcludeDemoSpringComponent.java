@@ -6,8 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that the class should be excluded from the Spring Boot
- * components scan, so that it has no effect in the demo application.
+ * Indicates that the class should be excluded from the Spring Boot components
+ * scan, so that it has no effect in the demo application.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

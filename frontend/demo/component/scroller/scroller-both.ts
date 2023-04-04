@@ -3,19 +3,19 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/scroller';
-import * as img from '../../../../src/main/resources/images/reindeer.jpg';
+import img from '../../../../src/main/resources/images/reindeer.jpg';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('scroller-basic')
+@customElement('scroller-both')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-scroller style="height: 300px; width: 100%;">

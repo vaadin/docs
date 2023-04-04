@@ -18,7 +18,8 @@ public class TreeGridBasic extends Div {
         // tag::snippet[]
         TreeGrid<Person> treeGrid = new TreeGrid<>();
         treeGrid.setItems(managers, this::getStaff);
-        treeGrid.addHierarchyColumn(Person::getFirstName).setHeader("First name");
+        treeGrid.addHierarchyColumn(Person::getFirstName)
+                .setHeader("First name");
         treeGrid.addColumn(Person::getLastName).setHeader("Last name");
         treeGrid.addColumn(Person::getEmail).setHeader("Email");
         // end::snippet[]
@@ -28,5 +29,7 @@ public class TreeGridBasic extends Div {
     public List<Person> getStaff(Person manager) {
         return DataService.getPeople(manager.getId());
     }
-    public static class Exporter extends DemoExporter<TreeGridBasic> {} // hidden-source-line
+
+    public static class Exporter extends DemoExporter<TreeGridBasic> { // hidden-source-line
+    } // hidden-source-line
 }
