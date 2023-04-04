@@ -10,15 +10,15 @@ import com.vaadin.demo.domain.DataService;
 @Route("combo-box-basic")
 public class ComboBoxBasic extends Div {
 
-  public ComboBoxBasic() {
-    // tag::snippet[]
-    ComboBox<Country> comboBox = new ComboBox<>("Country");
-    comboBox.setItems(DataService.getCountries());
-    comboBox.setItemLabelGenerator(Country::getName);
-    add(comboBox);
-    // end::snippet[]
-  }
+    public ComboBoxBasic() {
+        // tag::snippet[]
+        ComboBox<Country> comboBox = new ComboBox<>("Country");
+        comboBox.setItems(DataService.getCountries());
+        comboBox.setItemLabelGenerator(Country::getName);
+        add(comboBox);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<ComboBoxBasic> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<ComboBoxBasic> { // hidden-source-line
+    } // hidden-source-line
 }

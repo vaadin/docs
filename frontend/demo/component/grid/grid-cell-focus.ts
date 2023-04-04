@@ -6,24 +6,22 @@ import '@vaadin/grid';
 import type { Grid, GridCellFocusEvent } from '@vaadin/grid';
 import '@vaadin/text-area';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('grid-cell-focus')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    vaadin-text-area {
+      width: 100%;
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
-  }
-
-  static get styles() {
-    return css`
-      vaadin-text-area {
-        width: 100%;
-      }
-    `;
   }
 
   @query('vaadin-grid')
@@ -33,24 +31,24 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   @state()
-  private eventSummary?: string;
+  private eventSummary = '';
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`
       <vaadin-grid
-        theme="force-focus-outline"
+        class="force-focus-outline"
         .items="${this.items}"
         @cell-focus="${(e: GridCellFocusEvent<Person>) => {
           const eventContext = this.grid.getEventContext(e);
-          const section = eventContext.section || 'Not available';
-          const row = eventContext.index != undefined ? eventContext.index : 'Not available';
-          const column = eventContext.column?.path || 'Not available';
+          const section = eventContext.section ?? 'Not available';
+          const row = eventContext.index != null ? eventContext.index : 'Not available';
+          const column = eventContext.column?.path ?? 'Not available';
           const person = eventContext.item;
           const fullName =
             person?.firstName && person?.lastName

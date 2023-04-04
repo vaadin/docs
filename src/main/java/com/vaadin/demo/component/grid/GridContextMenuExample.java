@@ -25,7 +25,7 @@ public class GridContextMenuExample extends Div {
 
         PersonContextMenu contextMenu = new PersonContextMenu(grid);
 
-        add(grid, contextMenu);
+        add(grid);
         // end::snippet1[]
 
         List<Person> people = DataService.getPeople();
@@ -48,19 +48,21 @@ public class GridContextMenuExample extends Div {
 
             GridMenuItem<Person> emailItem = addItem("Email",
                     e -> e.getItem().ifPresent(person -> {
-                        // System.out.printf("Email: %s%n", person.getFullName());
+                        // System.out.printf("Email: %s%n",
+                        // person.getFullName());
                     }));
             GridMenuItem<Person> phoneItem = addItem("Call",
                     e -> e.getItem().ifPresent(person -> {
-                        // System.out.printf("Phone: %s%n", person.getFullName());
+                        // System.out.printf("Phone: %s%n",
+                        // person.getFullName());
                     }));
 
             setDynamicContentHandler(person -> {
                 // Do not show context menu when header is clicked
                 if (person == null)
                     return false;
-                emailItem.setText(
-                        String.format("Email: %s", person.getEmail()));
+                emailItem
+                        .setText(String.format("Email: %s", person.getEmail()));
                 phoneItem.setText(String.format("Call: %s",
                         person.getAddress().getPhone()));
                 return true;

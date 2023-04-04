@@ -19,33 +19,28 @@ public class GridProPreventSave extends Div {
         // tag::snippet[]
         GridPro<Person> grid = new GridPro<>();
 
-        grid.addEditColumn(Person::getFirstName)
-                .text(Person::setFirstName)
+        grid.addEditColumn(Person::getFirstName).text(Person::setFirstName)
                 .setHeader("First name");
 
-        grid.addEditColumn(Person::getLastName)
-                .text(Person::setLastName)
+        grid.addEditColumn(Person::getLastName).text(Person::setLastName)
                 .setHeader("Last name");
 
-        grid.addEditColumn(Person::getEmail)
-                .text((person, newValue) -> {
-                    if (isValidEmail(newValue)) {
-                        person.setEmail(newValue);
-                    } else {
-                        showErrorNotification("Please enter a valid email address");
-                    }
-                })
-                .setHeader("Email");
+        grid.addEditColumn(Person::getEmail).text((person, newValue) -> {
+            if (isValidEmail(newValue)) {
+                person.setEmail(newValue);
+            } else {
+                showErrorNotification("Enter a valid email address");
+            }
+        }).setHeader("Email");
 
         grid.addEditColumn(person -> person.getAddress().getPhone())
                 .text((person, newValue) -> {
                     if (isValidPhoneNumber(newValue)) {
                         person.getAddress().setPhone(newValue);
                     } else {
-                        showErrorNotification("Please enter a valid phone number");
+                        showErrorNotification("Enter a valid phone number");
                     }
-                })
-                .setHeader("Phone");
+                }).setHeader("Phone");
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();
@@ -55,13 +50,15 @@ public class GridProPreventSave extends Div {
     }
 
     private static boolean isValidPhoneNumber(String phoneNumber) {
-        if (phoneNumber == null) return false;
+        if (phoneNumber == null)
+            return false;
 
         return Pattern.compile("^[0-9-]+$").matcher(phoneNumber).matches();
     }
 
     private static boolean isValidEmail(String email) {
-        if (email == null) return false;
+        if (email == null)
+            return false;
 
         String regex = "^" + "([a-zA-Z0-9_.\\-+])+" // local
                 + "@" + "[a-zA-Z0-9-.]+" // domain
@@ -72,11 +69,8 @@ public class GridProPreventSave extends Div {
     }
 
     private static void showErrorNotification(String msg) {
-        Notification notification = new Notification(
-                msg,
-                5000,
-                Notification.Position.BOTTOM_CENTER
-        );
+        Notification notification = new Notification(msg, 5000,
+                Notification.Position.BOTTOM_CENTER);
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         notification.open();
     }
@@ -84,5 +78,3 @@ public class GridProPreventSave extends Div {
     public static class Exporter extends DemoExporter<GridProPreventSave> { // hidden-source-line
     } // hidden-source-line
 }
-
-

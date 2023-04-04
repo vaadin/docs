@@ -2,7 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
-import { Notification, NotificationOpenedChangedEvent } from '@vaadin/notification';
+import { Notification } from '@vaadin/notification';
+import type { NotificationOpenedChangedEvent } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-success')
@@ -10,7 +11,7 @@ export class Example extends LitElement {
   @state()
   private notificationOpened = false;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -34,7 +35,7 @@ export class Example extends LitElement {
     notification.addEventListener('opened-changed', handleOpenChanged);
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-button @click="${this.handleClick}" .disabled="${this.notificationOpened}">
         Try it

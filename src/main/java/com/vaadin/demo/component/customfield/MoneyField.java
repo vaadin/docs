@@ -11,55 +11,50 @@ import com.vaadin.flow.component.textfield.TextFieldVariant;
 // tag::snippet[]
 public class MoneyField extends CustomField<Money> {
 
-  private TextField amount;
-  private Select<String> currency;
+    private TextField amount;
+    private Select<String> currency;
 
-  public MoneyField(String label) {
-    this();
-    setLabel(label);
-  }
+    public MoneyField(String label) {
+        this();
+        setLabel(label);
+    }
 
-  public MoneyField() {
-    amount = new TextField();
+    public MoneyField() {
+        amount = new TextField();
+        // Sets title for screen readers
+        amount.getElement()
+                .executeJs("this.focusElement.setAttribute('title', 'Amount')");
 
-    currency = new Select();
-    currency.setItems("AUD", "CAD", "CHF", "EUR", "GBP", "JPY", "USD");
-    currency.setWidth("6em");
+        currency = new Select<>();
+        currency.setItems("AUD", "CAD", "CHF", "EUR", "GBP", "JPY", "USD");
+        currency.setWidth("6em");
+        currency.getElement().executeJs(
+                "this.focusElement.setAttribute('title', 'Currency')");
 
-    // aria-label for screen readers
-    amount.getElement()
-      .executeJs("const amount = this.inputElement;" +
-        "amount.setAttribute('aria-label', 'Amount');" +
-        "amount.removeAttribute('aria-labelledby');");
-    currency.getElement()
-      .executeJs("const currency = this.focusElement;" +
-        "currency.setAttribute('aria-label', 'Currency');" +
-        "currency.removeAttribute('aria-labelledby');");
+        HorizontalLayout layout = new HorizontalLayout(amount, currency);
+        // Removes default spacing
+        layout.setSpacing(false);
+        // Adds small amount of space between the components
+        layout.getThemeList().add("spacing-s");
 
-    HorizontalLayout layout = new HorizontalLayout(amount, currency);
-    // Removes default spacing
-    layout.setSpacing(false);
-    // Adds small amount of space between the components
-    layout.getThemeList().add("spacing-s");
+        add(layout);
+    }
 
-    add(layout);
-  }
+    public void addThemeVariant(CustomFieldVariant variant) {
+        super.addThemeVariants(variant);
+        amount.addThemeVariants(TextFieldVariant.valueOf(variant.name()));
+        currency.addThemeVariants(SelectVariant.valueOf(variant.name()));
+    }
 
-  public void addThemeVariant(CustomFieldVariant variant) {
-    super.addThemeVariants(variant);
-    amount.addThemeVariants(TextFieldVariant.valueOf(variant.name()));
-    currency.addThemeVariants(SelectVariant.valueOf(variant.name()));
-  }
+    @Override
+    protected Money generateModelValue() {
+        return new Money(amount.getValue(), currency.getValue());
+    }
 
-  @Override
-  protected Money generateModelValue() {
-    return new Money(amount.getValue(), currency.getValue());
-  }
-
-  @Override
-  protected void setPresentationValue(Money money) {
-    amount.setValue(money.getAmount());
-    currency.setValue(money.getCurrency());
-  }
+    @Override
+    protected void setPresentationValue(Money money) {
+        amount.setValue(money.getAmount());
+        currency.setValue(money.getCurrency());
+    }
 }
 // end::snippet[]

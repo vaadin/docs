@@ -14,31 +14,32 @@ import java.util.List;
 @Route("avatar-group-internationalisation")
 public class AvatarGroupInternationalisation extends Div {
 
-  private List<Person> people = DataService.getPeople(2);
+    private List<Person> people = DataService.getPeople(2);
 
-  public AvatarGroupInternationalisation() {
-    // tag::snippet[]
-    AvatarGroupI18n i18n = new AvatarGroupI18n();
-    i18n.setAnonymous("Anonyymi");
-    i18n.setManyActiveUsers("Yksi käyttäjä aktiivisena");
-    i18n.setOneActiveUser("{count} käyttäjää aktiivisena");
+    public AvatarGroupInternationalisation() {
+        // tag::snippet[]
+        AvatarGroupI18n i18n = new AvatarGroupI18n();
+        i18n.setAnonymous("Anonyymi");
+        i18n.setManyActiveUsers("Yksi käyttäjä aktiivisena");
+        i18n.setOneActiveUser("{count} käyttäjää aktiivisena");
 
-    AvatarGroup avatarGroup = new AvatarGroup();
-    avatarGroup.setI18n(i18n);
+        AvatarGroup avatarGroup = new AvatarGroup();
+        avatarGroup.setI18n(i18n);
 
-    // Add anonymous user
-    avatarGroup.add(new AvatarGroupItem());
+        // Add anonymous user
+        avatarGroup.add(new AvatarGroupItem());
 
-    for (Person person : people) {
-      String name = person.getFirstName() + " " + person.getLastName();
-      AvatarGroupItem avatar = new AvatarGroupItem(name);
-      avatarGroup.add(avatar);
+        for (Person person : people) {
+            String name = person.getFirstName() + " " + person.getLastName();
+            AvatarGroupItem avatar = new AvatarGroupItem(name);
+            avatarGroup.add(avatar);
+        }
+        // end::snippet[]
+
+        add(avatarGroup);
     }
-    // end::snippet[]
 
-    add(avatarGroup);
-  }
-
-  public static class Exporter extends DemoExporter<AvatarGroupInternationalisation> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<AvatarGroupInternationalisation> { // hidden-source-line
+    } // hidden-source-line
 }

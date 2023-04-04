@@ -24,31 +24,32 @@ public class GridProEditor extends Div {
 
     public GridProEditor() {
         Renderer<Person> birthdayDateRenderer = new TextRenderer<>(
-                person -> getBirthdayAsLocalDate(person).format(birthdayFormatter)
-        );
+                person -> getBirthdayAsLocalDate(person)
+                        .format(birthdayFormatter));
         // tag::snippet[]
         GridPro<Person> grid = new GridPro<>();
 
-        grid.addEditColumn(Person::getFirstName)
-                .text(Person::setFirstName)
+        grid.addEditColumn(Person::getFirstName).text(Person::setFirstName)
                 .setHeader("First name");
 
-        List<String> membershipOptions = Arrays.asList("Regular", "Premium", "VIP");
+        List<String> membershipOptions = Arrays.asList("Regular", "Premium",
+                "VIP");
         grid.addEditColumn(Person::getMembership)
                 .select(Person::setMembership, membershipOptions)
                 .setHeader("Membership");
 
-        grid.addEditColumn(Person::isSubscriber)
-                .checkbox(Person::setSubscriber)
+        grid.addEditColumn(Person::isSubscriber).checkbox(Person::setSubscriber)
                 .setHeader("Subscriber");
 
         DatePicker datePicker = new DatePicker();
         datePicker.setWidthFull();
 
-        grid.addEditColumn(GridProEditor::getBirthdayAsLocalDate, birthdayDateRenderer)
-                .custom(datePicker, (person, newValue) ->
-                        person.setBirthday(dateFromLocalDate(newValue))
-                ).setHeader("Birthday");
+        grid.addEditColumn(GridProEditor::getBirthdayAsLocalDate,
+                birthdayDateRenderer)
+                .custom(datePicker,
+                        (person, newValue) -> person
+                                .setBirthday(dateFromLocalDate(newValue)))
+                .setHeader("Birthday");
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();
@@ -57,18 +58,17 @@ public class GridProEditor extends Div {
         add(grid);
     }
 
-    private static final DateTimeFormatter birthdayFormatter =
-            DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
+    private static final DateTimeFormatter birthdayFormatter = DateTimeFormatter
+            .ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
 
     private static LocalDate getBirthdayAsLocalDate(Person person) {
-        return person.getBirthday()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
+        return person.getBirthday().toInstant().atZone(ZoneId.systemDefault())
                 .toLocalDate();
     }
 
     public static Date dateFromLocalDate(LocalDate localDate) {
-        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return Date.from(
+                localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
     public static class Exporter extends DemoExporter<GridProEditor> { // hidden-source-line

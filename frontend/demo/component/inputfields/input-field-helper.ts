@@ -7,23 +7,20 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/password-field';
 import '@vaadin/text-field';
-
-enum StrengthText {
-  weak = 'weak',
-  moderate = 'moderate',
-  strong = 'strong',
-}
-
-enum StrengthColor {
-  weak = 'var(--lumo-error-color)',
-  moderate = '#e7c200',
-  strong = 'var(--lumo-success-color)',
-}
+import type { PasswordFieldValueChangedEvent } from '@vaadin/password-field';
 import { applyTheme } from 'Frontend/generated/theme';
+
+type PasswordStrength = 'moderate' | 'strong' | 'weak';
+
+const StrengthColor: Record<PasswordStrength, string> = {
+  weak: 'var(--lumo-error-color)',
+  moderate: '#e7c200',
+  strong: 'var(--lumo-success-color)',
+};
 
 @customElement('input-field-helper')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -31,11 +28,12 @@ export class Example extends LitElement {
   }
 
   @state()
-  private strengthText: StrengthText = StrengthText.weak;
-  @state()
-  private strengthColor: StrengthColor = StrengthColor.weak;
+  private strengthText: PasswordStrength = 'weak';
 
-  render() {
+  @state()
+  private strengthColor = StrengthColor.weak;
+
+  protected override render() {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
@@ -52,8 +50,8 @@ export class Example extends LitElement {
           <vaadin-icon
             icon="vaadin:check"
             slot="suffix"
-            style="color:${StrengthText.strong}"
-            ?hidden="${this.strengthText !== StrengthText.strong}"
+            style="color:${StrengthColor.strong}"
+            ?hidden="${this.strengthText !== 'strong'}"
           ></vaadin-icon>
 
           <div slot="helper">
@@ -66,13 +64,14 @@ export class Example extends LitElement {
     `;
   }
 
-  private onPasswordChanged(e: CustomEvent) {
-    let strength: StrengthText = StrengthText.weak;
-    if (e.detail.value) {
-      if (e.detail.value.length > 9) {
-        strength = StrengthText.strong;
-      } else if (e.detail.value.length > 5) {
-        strength = StrengthText.moderate;
+  private onPasswordChanged(event: PasswordFieldValueChangedEvent) {
+    let strength: PasswordStrength = 'weak';
+    const { value } = event.detail;
+    if (value) {
+      if (value.length > 9) {
+        strength = 'strong';
+      } else if (value.length > 5) {
+        strength = 'moderate';
       }
     }
     this.strengthText = strength;

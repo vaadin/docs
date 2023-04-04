@@ -61,7 +61,7 @@ public class GridExternalFiltering extends Div {
     }
 
     private static Renderer<Person> createPersonRenderer() {
-        return LitRenderer.<Person>of(
+        return LitRenderer.<Person> of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
                         + "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
                         + "  <span> ${item.fullName} </span>"

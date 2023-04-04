@@ -7,8 +7,8 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
-import { Button } from '@vaadin/button';
-import { ComboBox } from '@vaadin/combo-box';
+import type { Button } from '@vaadin/button';
+import type { ComboBoxChangeEvent } from '@vaadin/combo-box';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
@@ -24,19 +24,19 @@ export class Example extends LitElement {
   @state()
   private selectedProfessions: readonly Profession[] = [];
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = [...new Set(people.map(({ profession }) => profession))];
   }
 
-  render() {
+  protected override render() {
     // tag::snippet[]
     return html`
       <vaadin-vertical-layout theme="spacing">
@@ -71,15 +71,15 @@ export class Example extends LitElement {
     // end::snippet[]
   }
 
-  private onChange({ target }: Event) {
-    const { selectedItem } = target as ComboBox;
+  private onChange(event: ComboBoxChangeEvent<Profession>) {
+    const { selectedItem } = event.target;
 
     if (selectedItem == null) {
       return;
     }
 
-    if (!this.selectedProfessions.includes(selectedItem as Profession)) {
-      this.selectedProfessions = [...this.selectedProfessions, selectedItem as Profession];
+    if (!this.selectedProfessions.includes(selectedItem)) {
+      this.selectedProfessions = [...this.selectedProfessions, selectedItem];
     }
   }
 

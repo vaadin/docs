@@ -29,6 +29,7 @@ public class DummyEndpoint {
     public void saveUserPermissions(UserPermissions userPermissions) {
 
     }
+
     public void saveViewEvent(ViewEvent viewEvent) {
 
     }

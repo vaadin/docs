@@ -23,8 +23,8 @@ public class GridColumnVisibility extends Div {
     public GridColumnVisibility() {
         // tag::snippet1[]
         Grid<Person> grid = new Grid<>(Person.class, false);
-        Grid.Column<Person> firstNameColumn = grid.addColumn(Person::getFirstName)
-                .setHeader("First name");
+        Grid.Column<Person> firstNameColumn = grid
+                .addColumn(Person::getFirstName).setHeader("First name");
         Grid.Column<Person> lastNameColumn = grid.addColumn(Person::getLastName)
                 .setHeader("Last name");
         Grid.Column<Person> emailColumn = grid.addColumn(Person::getEmail)
@@ -32,18 +32,21 @@ public class GridColumnVisibility extends Div {
         Grid.Column<Person> phoneColumn = grid
                 .addColumn(person -> person.getAddress().getPhone())
                 .setHeader("Phone");
-        Grid.Column<Person> professionColumn = grid.addColumn(Person::getProfession)
-                .setHeader("Profession");
+        Grid.Column<Person> professionColumn = grid
+                .addColumn(Person::getProfession).setHeader("Profession");
 
         Button menuButton = new Button("Show/Hide Columns");
         menuButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(
                 menuButton);
-        columnToggleContextMenu.addColumnToggleItem("First name", firstNameColumn);
-        columnToggleContextMenu.addColumnToggleItem("Last name", lastNameColumn);
+        columnToggleContextMenu.addColumnToggleItem("First name",
+                firstNameColumn);
+        columnToggleContextMenu.addColumnToggleItem("Last name",
+                lastNameColumn);
         columnToggleContextMenu.addColumnToggleItem("Email", emailColumn);
         columnToggleContextMenu.addColumnToggleItem("Phone", phoneColumn);
-        columnToggleContextMenu.addColumnToggleItem("Profession", professionColumn);
+        columnToggleContextMenu.addColumnToggleItem("Profession",
+                professionColumn);
         // end::snippet1[]
 
         List<Person> people = DataService.getPeople();
@@ -58,13 +61,13 @@ public class GridColumnVisibility extends Div {
         add(headerLayout, grid);
     }
 
+    // tag::snippet2[]
     private static class ColumnToggleContextMenu extends ContextMenu {
         public ColumnToggleContextMenu(Component target) {
             super(target);
             setOpenOnClick(true);
         }
 
-        // tag::snippet2[]
         void addColumnToggleItem(String label, Grid.Column<Person> column) {
             MenuItem menuItem = this.addItem(label, e -> {
                 column.setVisible(e.getSource().isChecked());
@@ -72,8 +75,8 @@ public class GridColumnVisibility extends Div {
             menuItem.setCheckable(true);
             menuItem.setChecked(column.isVisible());
         }
-        // end::snippet2[]
     }
+    // end::snippet2[]
 
     public static class Exporter // hidden-source-line
             extends DemoExporter<GridColumnVisibility> { // hidden-source-line

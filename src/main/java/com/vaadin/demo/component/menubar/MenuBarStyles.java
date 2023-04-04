@@ -31,13 +31,12 @@ public class MenuBarStyles extends Div {
         setInlineBlock(menuWithPrimaryTheme);
         setInlineBlock(menuWithSmallTheme);
 
-        add(menuWithDefaultTheme, menuWithTertiaryTheme, menuWithPrimaryTheme, menuWithSmallTheme);
+        add(menuWithDefaultTheme, menuWithTertiaryTheme, menuWithPrimaryTheme,
+                menuWithSmallTheme);
     }
 
     private void addItem(MenuBar menuItem, String label) {
-        menuItem.addItem(label)
-                .getSubMenu()
-                .addItem("Item");
+        menuItem.addItem(label).getSubMenu().addItem("Item");
     }
 
     private void setInlineBlock(MenuBar menuBar) {

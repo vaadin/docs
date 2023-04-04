@@ -4,8 +4,8 @@ import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/horizontal-layout';
 import '@vaadin/radio-group';
-import { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
-import './layout-item';
+import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import '@vaadin/text-area';
 
 @customElement('basic-layouts-horizontal-layout-individual-alignment')
 export class Example extends LitElement {
@@ -14,7 +14,7 @@ export class Example extends LitElement {
     this.classList.add('basic-layouts-example');
   }
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -23,32 +23,33 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private alignLayoutItems?: string;
+  private alignLayoutItems = 'stretch';
 
   @state()
-  private alignFirstItem?: string;
+  private alignFirstItem = 'auto';
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout
         theme="spacing padding"
         class="height-5xl"
         style="align-items: ${this.alignLayoutItems}"
       >
-        <layout-item style="align-self: ${this.alignFirstItem}">Item 1</layout-item>
-        <layout-item theme="inactive">Item 2</layout-item>
-        <layout-item theme="inactive">Item 3</layout-item>
+        <vaadin-text-area
+          label="Text area 1"
+          style="align-self: ${this.alignFirstItem}"
+        ></vaadin-text-area>
+        <vaadin-text-area label="Text area 2"></vaadin-text-area>
+        <vaadin-text-area label="Text area 3"></vaadin-text-area>
       </vaadin-horizontal-layout>
       <vaadin-radio-group
         label="Vertical alignment"
-        @value-changed="${(e: RadioGroupValueChangedEvent) =>
-          (this.alignLayoutItems = e.detail.value)}"
+        .value="${this.alignLayoutItems}"
+        @value-changed="${(event: RadioGroupValueChangedEvent) => {
+          this.alignLayoutItems = event.detail.value;
+        }}"
       >
-        <vaadin-radio-button
-          value="stretch"
-          label="Stretch (default)"
-          checked
-        ></vaadin-radio-button>
+        <vaadin-radio-button value="stretch" label="Stretch (default)"></vaadin-radio-button>
         <vaadin-radio-button value="flex-start" label="Start"></vaadin-radio-button>
         <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>
         <vaadin-radio-button value="flex-end" label="End"></vaadin-radio-button>
@@ -56,10 +57,12 @@ export class Example extends LitElement {
       </vaadin-radio-group>
       <vaadin-radio-group
         label="Item 1: alignment"
-        @value-changed="${(e: RadioGroupValueChangedEvent) =>
-          (this.alignFirstItem = e.detail.value)}"
+        .value="${this.alignFirstItem}"
+        @value-changed="${(event: RadioGroupValueChangedEvent) => {
+          this.alignFirstItem = event.detail.value;
+        }}"
       >
-        <vaadin-radio-button value="auto" checked label="Auto (default)"></vaadin-radio-button>
+        <vaadin-radio-button value="auto" label="Auto (default)"></vaadin-radio-button>
         <vaadin-radio-button value="stretch" label="Stretch"></vaadin-radio-button>
         <vaadin-radio-button value="flex-start" label="Start"></vaadin-radio-button>
         <vaadin-radio-button value="center" label="Center"></vaadin-radio-button>

@@ -3,7 +3,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/tabs';
 import '@vaadin/vertical-layout';
-import '@vaadin/vaadin-lumo-styles/typography';
+import type { TabsSelectedChangedEvent } from '@vaadin/tabs';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tabs-content')
@@ -14,13 +14,14 @@ export class Example extends LitElement {
   @state()
   private pages = ['Dashboard', 'Payment', 'Shipping'];
 
-  constructor() {
-    super();
+  protected override createRenderRoot() {
+    const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
-    applyTheme(this.shadowRoot);
+    applyTheme(root);
+    return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs @selected-changed="${this.selectedChanged}">
@@ -36,7 +37,7 @@ export class Example extends LitElement {
     `;
   }
 
-  selectedChanged(e: CustomEvent) {
+  selectedChanged(e: TabsSelectedChangedEvent) {
     this.content = `This is the ${this.pages[e.detail.value]} tab`;
   }
 }

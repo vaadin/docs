@@ -22,6 +22,7 @@ public class SplitLayoutMinimalThemeVariants extends Div {
         add(splitLayout);
     }
 
-    public static class Exporter extends DemoExporter<SplitLayoutMinimalThemeVariants> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<SplitLayoutMinimalThemeVariants> { // hidden-source-line
     } // hidden-source-line
 }

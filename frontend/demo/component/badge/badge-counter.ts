@@ -6,22 +6,20 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('badge-counter')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      span[theme~='badge'] {
-        margin-inline-start: var(--lumo-space-s);
-      }
-    `;
-  }
+  static override styles = css`
+    span[theme~='badge'] {
+      margin-inline-start: var(--lumo-space-s);
+    }
+  `;
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-tabs>
@@ -31,8 +29,9 @@ export class Example extends LitElement {
             theme="badge contrast pill small"
             aria-label="12 unread messages"
             title="12 unread messages"
-            >12</span
           >
+            12
+          </span>
         </vaadin-tab>
         <vaadin-tab>
           <span>Important</span>
@@ -40,8 +39,9 @@ export class Example extends LitElement {
             theme="badge contrast pill small"
             aria-label="3 unread messages"
             title="3 unread messages"
-            >3</span
           >
+            3
+          </span>
         </vaadin-tab>
         <vaadin-tab>
           <span>Spam</span>

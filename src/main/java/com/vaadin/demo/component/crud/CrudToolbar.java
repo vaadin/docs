@@ -24,91 +24,86 @@ import java.util.List;
 @Route("crud-toolbar")
 public class CrudToolbar extends Div {
 
-  private Crud<Person> crud;
-  private PersonDataProvider dataProvider;
+    private Crud<Person> crud;
+    private PersonDataProvider dataProvider;
 
-  private String FIRST_NAME = "firstName";
-  private String LAST_NAME = "lastName";
-  private String EDIT_COLUMN = "vaadin-crud-edit-column";
+    private String FIRST_NAME = "firstName";
+    private String LAST_NAME = "lastName";
+    private String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-  public CrudToolbar() {
-    crud = new Crud<>(
-      Person.class,
-      createEditor()
-    );
+    public CrudToolbar() {
+        crud = new Crud<>(Person.class, createEditor());
 
-    setupGrid();
-    setupDataProvider();
-    setupToolbar();
+        setupGrid();
+        setupDataProvider();
+        setupToolbar();
 
-    add(crud);
-  }
+        add(crud);
+    }
 
-  private CrudEditor<Person> createEditor() {
-    TextField firstName = new TextField("First name");
-    TextField lastName = new TextField("Last name");
-    FormLayout form = new FormLayout(firstName, lastName);
+    private CrudEditor<Person> createEditor() {
+        TextField firstName = new TextField("First name");
+        TextField lastName = new TextField("Last name");
+        FormLayout form = new FormLayout(firstName, lastName);
 
-    Binder<Person> binder = new Binder<>(Person.class);
-    binder.forField(firstName).asRequired().bind(Person::getFirstName, Person::setFirstName);
-    binder.forField(lastName).asRequired().bind(Person::getLastName, Person::setLastName);
+        Binder<Person> binder = new Binder<>(Person.class);
+        binder.forField(firstName).asRequired().bind(Person::getFirstName,
+                Person::setFirstName);
+        binder.forField(lastName).asRequired().bind(Person::getLastName,
+                Person::setLastName);
 
-    return new BinderCrudEditor<>(binder, form);
-  }
+        return new BinderCrudEditor<>(binder, form);
+    }
 
-  private void setupGrid() {
-    Grid<Person> grid = crud.getGrid();
+    private void setupGrid() {
+        Grid<Person> grid = crud.getGrid();
 
-    // Only show these columns (all columns shown by default):
-    List<String> visibleColumns = Arrays.asList(
-      FIRST_NAME,
-      LAST_NAME,
-      EDIT_COLUMN
-    );
-    grid.getColumns().forEach(column -> {
-      String key = column.getKey();
-      if (!visibleColumns.contains(key)) {
-        grid.removeColumn(column);
-      }
-    });
+        // Only show these columns (all columns shown by default):
+        List<String> visibleColumns = Arrays.asList(FIRST_NAME, LAST_NAME,
+                EDIT_COLUMN);
+        grid.getColumns().forEach(column -> {
+            String key = column.getKey();
+            if (!visibleColumns.contains(key)) {
+                grid.removeColumn(column);
+            }
+        });
 
-    // Reorder the columns (alphabetical by default)
-    grid.setColumnOrder(
-      grid.getColumnByKey(FIRST_NAME),
-      grid.getColumnByKey(LAST_NAME),
-      grid.getColumnByKey(EDIT_COLUMN)
-    );
-  }
+        // Reorder the columns (alphabetical by default)
+        grid.setColumnOrder(grid.getColumnByKey(FIRST_NAME),
+                grid.getColumnByKey(LAST_NAME),
+                grid.getColumnByKey(EDIT_COLUMN));
+    }
 
-  private void setupDataProvider() {
-    dataProvider = new PersonDataProvider();
-    crud.setDataProvider(dataProvider);
-    crud.addDeleteListener(deleteEvent ->
-      dataProvider.delete(deleteEvent.getItem())
-    );
-    crud.addSaveListener(saveEvent ->
-      dataProvider.persist(saveEvent.getItem())
-    );
-  }
+    private void setupDataProvider() {
+        dataProvider = new PersonDataProvider();
+        crud.setDataProvider(dataProvider);
+        crud.addDeleteListener(
+                deleteEvent -> dataProvider.delete(deleteEvent.getItem()));
+        crud.addSaveListener(
+                saveEvent -> dataProvider.persist(saveEvent.getItem()));
+    }
 
-  private void setupToolbar() {
-    // tag::snippet[]
-    Html total = new Html("<span>Total: <b>" + dataProvider.DATABASE.size() + "</b> employees</span>");
+    private void setupToolbar() {
+        // tag::snippet[]
+        Html total = new Html("<span>Total: <b>" + dataProvider.DATABASE.size()
+                + "</b> employees</span>");
 
-    Button button = new Button("New employee", VaadinIcon.PLUS.create());
-    button.addClickListener(event -> {
-      crud.edit(new Person(), Crud.EditMode.NEW_ITEM);
-    });
-    button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        Button button = new Button("New employee", VaadinIcon.PLUS.create());
+        button.addClickListener(event -> {
+            crud.edit(new Person(), Crud.EditMode.NEW_ITEM);
+        });
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-    HorizontalLayout toolbar = new HorizontalLayout(total, button);
-    toolbar.setAlignItems(FlexComponent.Alignment.CENTER);
-    toolbar.setFlexGrow(1, toolbar);
-    toolbar.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-    toolbar.setSpacing(false);
+        HorizontalLayout toolbar = new HorizontalLayout(total, button);
+        toolbar.setAlignItems(FlexComponent.Alignment.CENTER);
+        toolbar.setFlexGrow(1, toolbar);
+        toolbar.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        toolbar.setSpacing(false);
 
-    crud.setToolbar(toolbar);
-    // end::snippet[]
-  }
-  public static class Exporter extends DemoExporter<CrudToolbar> {} // hidden-source-line
+        crud.setToolbar(toolbar);
+        // end::snippet[]
+    }
+
+    public static class Exporter extends DemoExporter<CrudToolbar> { // hidden-source-line
+    } // hidden-source-line
 }

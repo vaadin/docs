@@ -13,7 +13,8 @@ public class CheckboxDisabled extends Div {
         // tag::snippet[]
         CheckboxGroup<String> disabledCheckGroup = new CheckboxGroup<>();
         disabledCheckGroup.setLabel("Departments");
-        disabledCheckGroup.setItems("Engineering", "Human Resources", "Marketing", "Operations", "Sales");
+        disabledCheckGroup.setItems("Engineering", "Human Resources",
+                "Marketing", "Operations", "Sales");
         disabledCheckGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         disabledCheckGroup.setEnabled(false);
         add(disabledCheckGroup);

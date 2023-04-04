@@ -9,7 +9,7 @@ import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/Appointm
 
 @customElement('date-picker-custom-validation')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,9 +19,9 @@ export class Example extends LitElement {
   // tag::snippet[]
   private binder = new Binder(this, AppointmentModel);
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.binder.for(this.binder.model.startDate).addValidator({
-      message: 'Please select a weekday',
+      message: 'Select a weekday',
       validate: (startDate: string) => {
         const date = new Date(startDate);
         const isWeekday = date.getDay() >= 1 && date.getDay() <= 5;
@@ -30,12 +30,12 @@ export class Example extends LitElement {
     });
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-date-picker
         label="Meeting date"
         helper-text="Mondays – Fridays only"
-        ...="${field(this.binder.model.startDate)}"
+        ${field(this.binder.model.startDate)}
       ></vaadin-date-picker>
     `;
   }

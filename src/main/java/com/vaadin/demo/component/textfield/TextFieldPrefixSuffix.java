@@ -12,26 +12,26 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("text-field-prefix-suffix")
 public class TextFieldPrefixSuffix extends HorizontalLayout {
 
-  public TextFieldPrefixSuffix() {
-    setPadding(false);
+    public TextFieldPrefixSuffix() {
+        setPadding(false);
 
-    // tag::snippet[]
-    TextField username = new TextField();
-    username.setPrefixComponent(VaadinIcon.USER.create());
-    username.setLabel("Username");
-    username.setValue("maverick");
-    add(username);
+        // tag::snippet[]
+        TextField username = new TextField();
+        username.setPrefixComponent(VaadinIcon.USER.create());
+        username.setLabel("Username");
+        username.setValue("maverick");
+        add(username);
 
-    TextField email = new TextField();
-    email.setSuffixComponent(new Div(new Text("@example.com")));
-    email.setLabel("Email Address");
-    email.setValue("michael");
-    email.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
-    email.setMaxLength(7);
-    add(email);
-    // end::snippet[]
-  }
+        TextField email = new TextField();
+        email.setSuffixComponent(new Div(new Text("@example.com")));
+        email.setLabel("Email Address");
+        email.setValue("michael");
+        email.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+        email.setMaxLength(7);
+        add(email);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<TextFieldPrefixSuffix> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<TextFieldPrefixSuffix> { // hidden-source-line
+    } // hidden-source-line
 }

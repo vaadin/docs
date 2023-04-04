@@ -16,11 +16,9 @@ public class GridProEditColumn extends Div {
         // tag::snippet[]
         GridPro<Person> grid = new GridPro<>();
 
-        grid.addColumn(Person::getFullName)
-                .setHeader("Name (read-only)");
+        grid.addColumn(Person::getFullName).setHeader("Name (read-only)");
 
-        grid.addEditColumn(Person::getProfession)
-                .text(Person::setProfession)
+        grid.addEditColumn(Person::getProfession).text(Person::setProfession)
                 .setHeader("Profession (editable)");
         // end::snippet[]
 
@@ -33,4 +31,3 @@ public class GridProEditColumn extends Div {
     public static class Exporter extends DemoExporter<GridProEditColumn> { // hidden-source-line
     } // hidden-source-line
 }
-

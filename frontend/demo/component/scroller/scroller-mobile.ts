@@ -9,31 +9,29 @@ import '@vaadin/icons';
 import '@vaadin/scroller';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('scroller-basic')
+@customElement('scroller-mobile')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    section {
+      border: 1px solid var(--lumo-contrast-20pct);
+      max-width: 100%;
+      width: 360px;
+    }
+
+    section h2 {
+      margin-left: var(--lumo-space-m);
+      margin-right: var(--lumo-space-m);
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static get styles() {
-    return css`
-      section {
-        border: 1px solid var(--lumo-contrast-20pct);
-        max-width: 100%;
-        width: 360px;
-      }
-
-      section h2 {
-        margin-left: var(--lumo-space-m);
-        margin-right: var(--lumo-space-m);
-      }
-    `;
-  }
-
-  render() {
+  protected override render() {
     return html`
       <section id="container">
         <h2>Create new...</h2>

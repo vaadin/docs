@@ -8,12 +8,12 @@ import type { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/g
 import '@vaadin/grid/vaadin-grid-tree-column.js';
 import '@vaadin/horizontal-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-column')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -43,32 +43,36 @@ export class Example extends LitElement {
   @state()
   private expandedItems: unknown[] = [];
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout
         style="align-items: center; height: var(--lumo-size-xl);"
         theme="spacing"
       >
         <h3 style="flex-grow: 1; margin: 0;">Employee</h3>
-        <vaadin-button @click="${() => (this.expandedItems = [...this.managers])}">
-          Expand All
-        </vaadin-button>
-        <vaadin-button @click="${() => (this.expandedItems = [])}">Collapse All</vaadin-button>
+        <vaadin-button @click="${this.expandAll}">Expand All</vaadin-button>
+        <vaadin-button @click="${this.collapseAll}">Collapse All</vaadin-button>
       </vaadin-horizontal-layout>
 
       <vaadin-grid
         .dataProvider="${this.dataProvider}"
         .itemIdPath="${'id'}"
+        .itemHasChildrenPath="${'manager'}"
         .expandedItems="${this.expandedItems}"
       >
-        <vaadin-grid-tree-column
-          path="firstName"
-          item-has-children-path="manager"
-        ></vaadin-grid-tree-column>
+        <vaadin-grid-tree-column path="firstName"></vaadin-grid-tree-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
     `;
+  }
+
+  private expandAll() {
+    this.expandedItems = [...this.managers];
+  }
+
+  private collapseAll() {
+    this.expandedItems = [];
   }
   // end::snippet[]
 }

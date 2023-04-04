@@ -11,7 +11,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class TextFieldTextAlignment extends FormLayout {
 
     public TextFieldTextAlignment() {
-        setResponsiveSteps(new ResponsiveStep("0" , 1, LabelsPosition.ASIDE));
+        setResponsiveSteps(new ResponsiveStep("0", 1, LabelsPosition.ASIDE));
 
         TextField left = new TextField();
         left.setValue("value");

@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-button-theme-variant')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -22,27 +22,26 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload?: Upload;
+  private upload!: Upload;
 
   @state()
   private maxFilesReached = false;
 
-  firstUpdated() {
-    if (this.upload?.i18n) {
-      this.upload.i18n.dropFiles.one = 'Drop PDF here';
-      this.upload.i18n = { ...this.upload.i18n };
-    }
+  protected override firstUpdated() {
+    this.upload.i18n.dropFiles.one = 'Drop PDF here';
+    this.upload.i18n = { ...this.upload.i18n };
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-upload
         max-files="1"
         accept="application/pdf,.pdf"
         @file-reject="${this.fileRejectHandler}"
-        @max-files-reached-changed="${(e: UploadMaxFilesReachedChangedEvent) =>
-          (this.maxFilesReached = e.detail.value)}"
+        @max-files-reached-changed="${(event: UploadMaxFilesReachedChangedEvent) => {
+          this.maxFilesReached = event.detail.value;
+        }}"
       >
         <vaadin-button slot="add-button" theme="primary" ?disabled="${this.maxFilesReached}">
           Upload PDF...

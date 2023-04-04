@@ -9,13 +9,14 @@ import com.vaadin.flow.router.Route;
 @Route("form-layout-native-input")
 public class FormLayoutNativeInput extends Div {
 
-  public FormLayoutNativeInput() {
-    FormLayout formLayout = new FormLayout();
-    // tag::snippet[]
-    formLayout.addFormItem(new Input(), "Revenue");
-    // end::snippet[]
-    add(formLayout);
-  }
-  public static class Exporter extends DemoExporter<FormLayoutNativeInput> { // hidden-source-line
-  } // hidden-source-line
+    public FormLayoutNativeInput() {
+        FormLayout formLayout = new FormLayout();
+        // tag::snippet[]
+        formLayout.addFormItem(new Input(), "Revenue");
+        // end::snippet[]
+        add(formLayout);
+    }
+
+    public static class Exporter extends DemoExporter<FormLayoutNativeInput> { // hidden-source-line
+    } // hidden-source-line
 }

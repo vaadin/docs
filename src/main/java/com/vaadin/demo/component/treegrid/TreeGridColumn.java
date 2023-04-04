@@ -21,7 +21,8 @@ public class TreeGridColumn extends Div {
     public TreeGridColumn() {
         TreeGrid<Person> treeGrid = new TreeGrid<>();
         treeGrid.setItems(managers, this::getStaff);
-        treeGrid.addHierarchyColumn(Person::getFirstName).setHeader("First name");
+        treeGrid.addHierarchyColumn(Person::getFirstName)
+                .setHeader("First name");
         treeGrid.addColumn(Person::getLastName).setHeader("Last name");
         treeGrid.addColumn(Person::getEmail).setHeader("Email");
 
@@ -36,7 +37,8 @@ public class TreeGridColumn extends Div {
         collapse.addClickListener(event -> treeGrid.collapse(managers));
         // end::snippet[]
 
-        HorizontalLayout header = new HorizontalLayout(employees, expand, collapse);
+        HorizontalLayout header = new HorizontalLayout(employees, expand,
+                collapse);
         header.setAlignItems(FlexComponent.Alignment.CENTER);
         header.setHeight("var(--lumo-space-xl)");
         header.setFlexGrow(1, employees);
@@ -47,5 +49,7 @@ public class TreeGridColumn extends Div {
     public List<Person> getStaff(Person manager) {
         return DataService.getPeople(manager.getId());
     }
-    public static class Exporter extends DemoExporter<TreeGridColumn> {} // hidden-source-line
+
+    public static class Exporter extends DemoExporter<TreeGridColumn> { // hidden-source-line
+    } // hidden-source-line
 }

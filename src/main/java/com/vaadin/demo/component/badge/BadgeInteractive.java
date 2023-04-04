@@ -35,12 +35,16 @@ public class BadgeInteractive extends VerticalLayout {
     // tag::snippet2[]
     private Span createFilterBadge(String profession) {
         Button clearButton = new Button(VaadinIcon.CLOSE_SMALL.create());
-        clearButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST, ButtonVariant.LUMO_TERTIARY_INLINE);
-        clearButton.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
+        clearButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST,
+                ButtonVariant.LUMO_TERTIARY_INLINE);
+        clearButton.getStyle().set("margin-inline-start",
+                "var(--lumo-space-xs)");
         // Accessible button name
-        clearButton.getElement().setAttribute("aria-label", "Clear filter: " + profession);
+        clearButton.getElement().setAttribute("aria-label",
+                "Clear filter: " + profession);
         // Tooltip
-        clearButton.getElement().setAttribute("title", "Clear filter: " + profession);
+        clearButton.getElement().setAttribute("title",
+                "Clear filter: " + profession);
 
         Span badge = new Span(new Span(profession), clearButton);
         badge.getElement().getThemeList().add("badge contrast pill");
@@ -52,6 +56,7 @@ public class BadgeInteractive extends VerticalLayout {
 
         return badge;
     }
+
     // end::snippet2[]
     public static class Exporter extends DemoExporter<BadgeInteractive> { // hidden-source-line
     } // hidden-source-line

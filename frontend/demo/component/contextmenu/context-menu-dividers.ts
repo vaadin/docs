@@ -5,12 +5,12 @@ import '@vaadin/context-menu';
 import '@vaadin/grid';
 import type { Grid } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-dividers')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -20,11 +20,11 @@ export class Example extends LitElement {
   @state()
   private gridItems: Person[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.gridItems = (await getPeople({ count: 5 })).people;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-context-menu

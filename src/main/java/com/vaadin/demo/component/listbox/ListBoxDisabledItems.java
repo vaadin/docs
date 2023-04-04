@@ -43,9 +43,8 @@ public class ListBoxDisabledItems extends Div {
         listBox.setItems(inProgress, done, cancelled);
         listBox.setItemEnabledProvider(status -> status.getCount() > 0);
         // end::snippet[]
-        listBox.setRenderer(new ComponentRenderer<>(status ->
-            new Text(status.getDisplayName()))
-        );
+        listBox.setRenderer(new ComponentRenderer<>(
+                status -> new Text(status.getDisplayName())));
         listBox.setValue(inProgress);
         add(listBox);
     }

@@ -26,50 +26,53 @@ public class MapViewport extends VerticalLayout {
 
         // Add menu items for moving the viewport to different cities
         moveToSubMenu.addItem("Berlin", e -> {
-            Coordinate coordinate = Coordinate.fromLonLat(13.404954, 52.520008);
-            map.getView().setCenter(coordinate);
-            map.getView().setZoom(10);
+            // For Vaadin 23.1, use Coordinate.fromLonLat to create coordinates
+            // from longitude and latitude
+            Coordinate coordinate = new Coordinate(13.404954, 52.520008);
+            map.setCenter(coordinate);
+            map.setZoom(10);
         });
         // end::snippet1[]
 
         moveToSubMenu.addItem("Hong Kong", e -> {
-            Coordinate coordinate = Coordinate.fromLonLat(114.162813, 22.279328);
-            map.getView().setCenter(coordinate);
-            map.getView().setZoom(10);
+            Coordinate coordinate = new Coordinate(114.162813, 22.279328);
+            map.setCenter(coordinate);
+            map.setZoom(10);
         });
 
         moveToSubMenu.addItem("Moscow", e -> {
-            Coordinate coordinate = Coordinate.fromLonLat(37.617298, 55.755825);
-            map.getView().setCenter(coordinate);
-            map.getView().setZoom(10);
+            Coordinate coordinate = new Coordinate(37.617298, 55.755825);
+            map.setCenter(coordinate);
+            map.setZoom(10);
         });
 
         moveToSubMenu.addItem("New York", e -> {
-            Coordinate coordinate = Coordinate.fromLonLat(-74.005974, 40.712776);
-            map.getView().setCenter(coordinate);
-            map.getView().setZoom(10);
+            Coordinate coordinate = new Coordinate(-74.005974, 40.712776);
+            map.setCenter(coordinate);
+            map.setZoom(10);
         });
 
         moveToSubMenu.addItem("Rio de Janeiro", e -> {
-            Coordinate coordinate = Coordinate.fromLonLat(-43.2093727, -22.9110137);
-            map.getView().setCenter(coordinate);
-            map.getView().setZoom(10);
+            Coordinate coordinate = new Coordinate(-43.2093727, -22.9110137);
+            map.setCenter(coordinate);
+            map.setZoom(10);
         });
 
         // tag::snippet2[]
         // Add menu items for zooming
         menuBar.addItem(zoomInIcon, e -> {
-            float zoom = map.getView().getZoom();
-            map.getView().setZoom(zoom + 1);
+            double zoom = map.getView().getZoom();
+            map.setZoom(zoom + 1);
         });
         menuBar.addItem(zoomOutIcon, e -> {
-            float zoom = map.getView().getZoom();
-            map.getView().setZoom(zoom - 1);
+            double zoom = map.getView().getZoom();
+            map.setZoom(zoom - 1);
         });
         // end::snippet2[]
         add(menuBar);
         setPadding(false);
     }
 
-    public static class Exporter extends DemoExporter<MapViewport> {} // hidden-source-line
+    public static class Exporter extends DemoExporter<MapViewport> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -20,41 +20,42 @@ import com.vaadin.demo.domain.DataService;
 @Route("radio-button-custom-option")
 public class RadioButtonCustomOption extends VerticalLayout {
 
-  public RadioButtonCustomOption() {
-    setPadding(false);
-    setSpacing(false);
+    public RadioButtonCustomOption() {
+        setPadding(false);
+        setSpacing(false);
 
-    // tag::snippet[]
-    RadioButtonGroup<Card> radioGroup = new RadioButtonGroup<>();
-    radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-    radioGroup.setLabel("Payment method");
+        // tag::snippet[]
+        RadioButtonGroup<Card> radioGroup = new RadioButtonGroup<>();
+        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        radioGroup.setLabel("Payment method");
 
-    List<Card> cards = new ArrayList<>(DataService.getCards());
-    Card other = new Card();
-    other.setId(-1);
-    cards.add(other);
-    radioGroup.setItems(cards);
-    radioGroup.setValue(cards.get(0));
+        List<Card> cards = new ArrayList<>(DataService.getCards());
+        Card other = new Card();
+        other.setId(-1);
+        cards.add(other);
+        radioGroup.setItems(cards);
+        radioGroup.setValue(cards.get(0));
 
-    radioGroup.setRenderer(new ComponentRenderer<>(card -> {
-      if (other.equals(card)) {
-        return new Text("Other");
-      } else {
-        Image logo = new Image(card.getPictureUrl(), card.getName());
-        logo.setHeight("1em");
-        Span number = new Span(new Text(card.getAccountNumber()));
-        return new HorizontalLayout(logo, number);
-      }
-    }));
+        radioGroup.setRenderer(new ComponentRenderer<>(card -> {
+            if (other.equals(card)) {
+                return new Text("Other");
+            } else {
+                Image logo = new Image(card.getPictureUrl(), card.getName());
+                logo.setHeight("1em");
+                Span number = new Span(new Text(card.getAccountNumber()));
+                return new HorizontalLayout(logo, number);
+            }
+        }));
 
-    TextField textField = new TextField("Card number");
-    textField.setVisible(false);
-    radioGroup.addValueChangeListener(e -> textField.setVisible(other.equals(e.getValue())));
+        TextField textField = new TextField("Card number");
+        textField.setVisible(false);
+        radioGroup.addValueChangeListener(
+                e -> textField.setVisible(other.equals(e.getValue())));
 
-    add(radioGroup, textField);
-    // end::snippet[]
-  }
+        add(radioGroup, textField);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<RadioButtonCustomOption> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<RadioButtonCustomOption> { // hidden-source-line
+    } // hidden-source-line
 }

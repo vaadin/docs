@@ -11,18 +11,19 @@ import com.vaadin.demo.domain.DataService;
 @Route("combo-box-filtering-2")
 public class ComboBoxFiltering2 extends Div {
 
-  public ComboBoxFiltering2() {
-    // tag::snippet[]
-    ComboBox<Country> comboBox = new ComboBox<>("Country");
+    public ComboBoxFiltering2() {
+        // tag::snippet[]
+        ComboBox<Country> comboBox = new ComboBox<>("Country");
 
-    ItemFilter<Country> filter = (country, filterString) -> country.getName().toLowerCase().startsWith(filterString.toLowerCase());
-    comboBox.setItems(filter, DataService.getCountries());
+        ItemFilter<Country> filter = (country, filterString) -> country
+                .getName().toLowerCase().startsWith(filterString.toLowerCase());
+        comboBox.setItems(filter, DataService.getCountries());
 
-    add(comboBox);
-    // end::snippet[]
-    comboBox.setItemLabelGenerator(Country::getName);
-  }
+        add(comboBox);
+        // end::snippet[]
+        comboBox.setItemLabelGenerator(Country::getName);
+    }
 
-  public static class Exporter extends DemoExporter<ComboBoxFiltering2> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<ComboBoxFiltering2> { // hidden-source-line
+    } // hidden-source-line
 }

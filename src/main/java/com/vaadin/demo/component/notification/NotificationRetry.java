@@ -16,54 +16,57 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("notification-retry")
 public class NotificationRetry extends Div {
 
-  public NotificationRetry() {
-    Button button = new Button("Try it");
-    button.addClickListener(clickEvent -> {
-      button.setEnabled(false);
+    public NotificationRetry() {
+        Button button = new Button("Try it");
+        button.addClickListener(clickEvent -> {
+            button.setEnabled(false);
 
-      Notification notification = show();
-      notification.addDetachListener(detachEvent -> button.setEnabled(true));
-    });
+            Notification notification = show();
+            notification
+                    .addDetachListener(detachEvent -> button.setEnabled(true));
+        });
 
-    add(button);
-  }
+        add(button);
+    }
 
-  private Notification show() {
-    // tag::snippet[]
-    // When creating a notification using the constructor,
-    // the duration is 0-sec by default which means that
-    // the notification does not close automatically.
-    Notification notification = new Notification();
-    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+    private Notification show() {
+        // tag::snippet[]
+        // When creating a notification using the constructor,
+        // the duration is 0-sec by default which means that
+        // the notification does not close automatically.
+        Notification notification = new Notification();
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-    Div statusText = new Div(new Text("Failed to generate report"));
+        Div statusText = new Div(new Text("Failed to generate report"));
 
-    Button retryButton = new Button("Retry");
-    retryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-    retryButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
-    retryButton.addClickListener(event -> {
-      notification.close();
-    });
+        Button retryButton = new Button("Retry");
+        retryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        retryButton.getElement().getStyle().set("margin-left",
+                "var(--lumo-space-xl)");
+        retryButton.addClickListener(event -> {
+            notification.close();
+        });
 
-    Button closeButton = new Button(new Icon("lumo", "cross"));
-    closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-    closeButton.getElement().setAttribute("aria-label", "Close");
-    closeButton.addClickListener(event -> {
-      notification.close();
-    });
+        Button closeButton = new Button(new Icon("lumo", "cross"));
+        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.getElement().setAttribute("aria-label", "Close");
+        closeButton.addClickListener(event -> {
+            notification.close();
+        });
 
-    HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
-    layout.setAlignItems(Alignment.CENTER);
+        HorizontalLayout layout = new HorizontalLayout(statusText, retryButton,
+                closeButton);
+        layout.setAlignItems(Alignment.CENTER);
 
-    notification.add(layout);
-    notification.open();
-    // end::snippet[]
+        notification.add(layout);
+        notification.open();
+        // end::snippet[]
 
-    notification.setPosition(Notification.Position.MIDDLE);
+        notification.setPosition(Notification.Position.MIDDLE);
 
-    return notification;
-  }
+        return notification;
+    }
 
-  public static class Exporter extends DemoExporter<NotificationRetry> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<NotificationRetry> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -2,14 +2,14 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/form-layout';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/password-field';
 import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('form-layout-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -24,7 +24,7 @@ export class Example extends LitElement {
     { minWidth: '500px', columns: 2 },
   ];
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
         <vaadin-text-field label="First name"></vaadin-text-field>

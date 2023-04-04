@@ -11,19 +11,22 @@ import com.vaadin.demo.domain.Person;
 @Route("combo-box-placeholder")
 public class ComboBoxPlaceholder extends Div {
 
-  public ComboBoxPlaceholder() {
-    ItemFilter<Person> filter = (person, filterString) -> (person.getProfession() + " " +person
-    .getFirstName() + " " + person.getLastName()).toLowerCase().indexOf(filterString.toLowerCase()) > -1;
+    public ComboBoxPlaceholder() {
+        ItemFilter<Person> filter = (person,
+                filterString) -> (person.getProfession() + " "
+                        + person.getFirstName() + " " + person.getLastName())
+                        .toLowerCase().indexOf(filterString.toLowerCase()) > -1;
 
-    // tag::snippet[]
-    ComboBox<Person> comboBox = new ComboBox<>("Employee");
-    comboBox.setPlaceholder("Select employee");
-    add(comboBox);
-    // end::snippet[]
-    comboBox.setItems(filter, DataService.getPeople());
-    comboBox.setItemLabelGenerator(person -> person.getFirstName() + " " + person.getLastName());
-  }
+        // tag::snippet[]
+        ComboBox<Person> comboBox = new ComboBox<>("Employee");
+        comboBox.setPlaceholder("Select employee");
+        add(comboBox);
+        // end::snippet[]
+        comboBox.setItems(filter, DataService.getPeople());
+        comboBox.setItemLabelGenerator(
+                person -> person.getFirstName() + " " + person.getLastName());
+    }
 
-  public static class Exporter extends DemoExporter<ComboBoxPlaceholder> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<ComboBoxPlaceholder> { // hidden-source-line
+    } // hidden-source-line
 }

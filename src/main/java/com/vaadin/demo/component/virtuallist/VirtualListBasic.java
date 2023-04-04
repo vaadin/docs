@@ -21,42 +21,47 @@ import com.vaadin.demo.domain.Person;
 @Route("virtual-list-basic")
 public class VirtualListBasic extends Div {
 
-  private List<Person> people = DataService.getPeople();
+    private List<Person> people = DataService.getPeople();
 
-  private ComponentRenderer<Component, Person> personCardRenderer = new ComponentRenderer<>(person -> {
-    HorizontalLayout cardLayout = new HorizontalLayout();
-    cardLayout.setMargin(true);
+    private ComponentRenderer<Component, Person> personCardRenderer = new ComponentRenderer<>(
+            person -> {
+                HorizontalLayout cardLayout = new HorizontalLayout();
+                cardLayout.setMargin(true);
 
-    Avatar avatar = new Avatar(person.getFullName(), person.getPictureUrl());
-    avatar.setHeight("64px");
-    avatar.setWidth("64px");
+                Avatar avatar = new Avatar(person.getFullName(),
+                        person.getPictureUrl());
+                avatar.setHeight("64px");
+                avatar.setWidth("64px");
 
-    VerticalLayout infoLayout = new VerticalLayout();
-    infoLayout.setSpacing(false);
-    infoLayout.setPadding(false);
-    infoLayout.getElement().appendChild(ElementFactory.createStrong(person.getFullName()));
-    infoLayout.add(new Div(new Text(person.getProfession())));
+                VerticalLayout infoLayout = new VerticalLayout();
+                infoLayout.setSpacing(false);
+                infoLayout.setPadding(false);
+                infoLayout.getElement().appendChild(
+                        ElementFactory.createStrong(person.getFullName()));
+                infoLayout.add(new Div(new Text(person.getProfession())));
 
-    VerticalLayout contactLayout = new VerticalLayout();
-    contactLayout.setSpacing(false);
-    contactLayout.setPadding(false);
-    contactLayout.add(new Div(new Text(person.getEmail())));
-    contactLayout.add(new Div(new Text(person.getAddress().getPhone())));
-    infoLayout.add(new Details("Contact information", contactLayout));
+                VerticalLayout contactLayout = new VerticalLayout();
+                contactLayout.setSpacing(false);
+                contactLayout.setPadding(false);
+                contactLayout.add(new Div(new Text(person.getEmail())));
+                contactLayout
+                        .add(new Div(new Text(person.getAddress().getPhone())));
+                infoLayout
+                        .add(new Details("Contact information", contactLayout));
 
-    cardLayout.add(avatar, infoLayout);
-    return cardLayout;
-  });
+                cardLayout.add(avatar, infoLayout);
+                return cardLayout;
+            });
 
-  public VirtualListBasic() {
-    // tag::snippet[]
-    VirtualList<Person> list = new VirtualList<>();
-    list.setItems(people);
-    list.setRenderer(personCardRenderer);
-    add(list);
-    // end::snippet[]
-  }
+    public VirtualListBasic() {
+        // tag::snippet[]
+        VirtualList<Person> list = new VirtualList<>();
+        list.setItems(people);
+        list.setRenderer(personCardRenderer);
+        add(list);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<VirtualListBasic> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<VirtualListBasic> { // hidden-source-line
+    } // hidden-source-line
 }

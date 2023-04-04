@@ -3,14 +3,14 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/date-picker';
 import '@vaadin/form-layout';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/text-field';
 import '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('form-layout-custom-layout')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -22,7 +22,7 @@ export class Example extends LitElement {
     { minWidth: '20em', columns: 3 },
   ];
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-form-layout .responsiveSteps="${this.responsiveSteps}">
         <!-- tag::snippet[] -->

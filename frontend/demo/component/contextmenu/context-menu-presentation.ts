@@ -5,18 +5,19 @@ import '@vaadin/avatar';
 import '@vaadin/context-menu';
 import type { ContextMenuItem } from '@vaadin/context-menu';
 import '@vaadin/grid';
-import type { Grid, GridItemModel } from '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
+import type { Grid } from '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-presentation')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -30,7 +31,7 @@ export class Example extends LitElement {
   private items?: ContextMenuItem[];
 
   // tag::snippet[]
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 10 });
 
     this.gridItems = people.slice(0, 5);
@@ -54,7 +55,7 @@ export class Example extends LitElement {
   }
   // end::snippet[]
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
@@ -65,7 +66,10 @@ export class Example extends LitElement {
         >
           <vaadin-grid-column
             header="Applicant"
-            .renderer=${this.nameRenderer}
+            ${columnBodyRenderer<Person>(
+              (person) => html`<span>${person.firstName} ${person.lastName}</span>`,
+              []
+            )}
           ></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column header="Phone number" path="address.phone"></vaadin-grid-column>
@@ -78,7 +82,9 @@ export class Example extends LitElement {
   createItemsArray(people: Person[]) {
     return people.map((person, index) => {
       const item = document.createElement('vaadin-item');
-      index == 0 && item.setAttribute('selected', '');
+      if (index === 0) {
+        item.setAttribute('selected', '');
+      }
       render(
         html`
           <vaadin-horizontal-layout
@@ -115,7 +121,9 @@ export class Example extends LitElement {
 
     icon.setAttribute('icon', iconName);
     item.appendChild(icon);
-    text && item.appendChild(document.createTextNode(text));
+    if (text) {
+      item.appendChild(document.createTextNode(text));
+    }
     return item;
   }
 
@@ -126,11 +134,4 @@ export class Example extends LitElement {
       e.stopPropagation();
     }
   }
-
-  private nameRenderer = (root: HTMLElement, _: HTMLElement, model: GridItemModel<Person>) => {
-    if (model?.item) {
-      const person = model.item;
-      render(html`<span>${person.firstName} ${person.lastName}</span>`, root);
-    }
-  };
 }

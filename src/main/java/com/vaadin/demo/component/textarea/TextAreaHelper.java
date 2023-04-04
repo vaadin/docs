@@ -10,24 +10,25 @@ import com.vaadin.demo.domain.DataService;
 @Route("text-area-helper")
 public class TextAreaHelper extends Div {
 
-  public TextAreaHelper() {
-    String loremIpsum = DataService.getTemplates().getLoremIpsum();
-    int charLimit = 600;
+    public TextAreaHelper() {
+        String loremIpsum = DataService.getTemplates().getLoremIpsum();
+        int charLimit = 600;
 
-    // tag::snippet[]
-    TextArea textArea = new TextArea();
-    textArea.setWidthFull();
-    textArea.setLabel("Description");
-    textArea.setMaxLength(charLimit);
-    textArea.setValueChangeMode(ValueChangeMode.EAGER);
-    textArea.addValueChangeListener(e -> {
-      e.getSource().setHelperText(e.getValue().length() + "/" + charLimit);
-    });
-    textArea.setValue(loremIpsum);
-    add(textArea);
-    // end::snippet[]
-  }
+        // tag::snippet[]
+        TextArea textArea = new TextArea();
+        textArea.setWidthFull();
+        textArea.setLabel("Description");
+        textArea.setMaxLength(charLimit);
+        textArea.setValueChangeMode(ValueChangeMode.EAGER);
+        textArea.addValueChangeListener(e -> {
+            e.getSource()
+                    .setHelperText(e.getValue().length() + "/" + charLimit);
+        });
+        textArea.setValue(loremIpsum);
+        add(textArea);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<TextAreaHelper> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<TextAreaHelper> { // hidden-source-line
+    } // hidden-source-line
 }

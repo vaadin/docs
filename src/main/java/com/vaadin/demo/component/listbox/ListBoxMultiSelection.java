@@ -22,9 +22,8 @@ public class ListBoxMultiSelection extends Div {
         listBox.setItems(items);
         listBox.select(items.get(0), items.get(3));
         // end::snippet[]
-        listBox.setRenderer(new ComponentRenderer<>(person ->
-            new Text(person.getFullName()))
-        );
+        listBox.setRenderer(new ComponentRenderer<>(
+                person -> new Text(person.getFullName())));
         listBox.setHeight("200px");
         add(listBox);
     }

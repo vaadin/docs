@@ -11,23 +11,24 @@ import java.util.List;
 @Route("avatar-group-max-items")
 public class AvatarGroupMaxItems extends Div {
 
-  private List<Person> people = DataService.getPeople(6);
+    private List<Person> people = DataService.getPeople(6);
 
-  public AvatarGroupMaxItems() {
-    // tag::snippet[]
-    AvatarGroup avatarGroup = new AvatarGroup();
-    avatarGroup.setMaxItemsVisible(3);
+    public AvatarGroupMaxItems() {
+        // tag::snippet[]
+        AvatarGroup avatarGroup = new AvatarGroup();
+        avatarGroup.setMaxItemsVisible(3);
 
-    for (Person person : people) {
-      String name = person.getFirstName() + " " + person.getLastName();
-      AvatarGroup.AvatarGroupItem avatar = new AvatarGroup.AvatarGroupItem(name);
-      avatarGroup.add(avatar);
+        for (Person person : people) {
+            String name = person.getFirstName() + " " + person.getLastName();
+            AvatarGroup.AvatarGroupItem avatar = new AvatarGroup.AvatarGroupItem(
+                    name);
+            avatarGroup.add(avatar);
+        }
+        // end::snippet[]
+
+        add(avatarGroup);
     }
-    // end::snippet[]
 
-    add(avatarGroup);
-  }
-
-  public static class Exporter extends DemoExporter<AvatarGroupMaxItems> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<AvatarGroupMaxItems> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -9,17 +9,18 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("input-field-helper-position")
 public class InputFieldHelperPosition extends Div {
 
-  public InputFieldHelperPosition() {
-    // tag::snippet[]
-    TextField textField = new TextField();
-    textField.setLabel("Phone number");
-    textField.setHelperText("Include country and area prefixes");
-    textField.addThemeVariants(TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
-    textField.setWidth("15em");
-    add(textField);
-    // end::snippet[]
-  }
+    public InputFieldHelperPosition() {
+        // tag::snippet[]
+        TextField textField = new TextField();
+        textField.setLabel("Phone number");
+        textField.setHelperText("Include country and area prefixes");
+        textField.addThemeVariants(TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
+        textField.setWidth("15em");
+        add(textField);
+        // end::snippet[]
+    }
 
-  public static class Exporter extends DemoExporter<InputFieldHelperPosition> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<InputFieldHelperPosition> { // hidden-source-line
+    } // hidden-source-line
 }

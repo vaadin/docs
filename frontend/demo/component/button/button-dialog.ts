@@ -12,25 +12,25 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-dialog')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout theme="spacing" style="align-items: stretch;">
         <vaadin-form-layout .responsiveSteps="${[{ columns: 2 }]}">
           <vaadin-text-field label="First name" value="John"></vaadin-text-field>
           <vaadin-text-field label="Last name" value="Smith"></vaadin-text-field>
-          <vaadin-text-field
+          <vaadin-email-field
             label="Email address"
             value="john.smith@example.com"
             colspan="2"
-          ></vaadin-text-field>
+          ></vaadin-email-field>
         </vaadin-form-layout>
 
         <vaadin-horizontal-layout

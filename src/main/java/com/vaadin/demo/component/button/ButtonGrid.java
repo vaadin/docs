@@ -53,7 +53,8 @@ public class ButtonGrid extends VerticalLayout {
             delete.setEnabled(size != 0);
         });
 
-        HorizontalLayout footer = new HorizontalLayout(editProfile, managePermissions, resetPassword, delete);
+        HorizontalLayout footer = new HorizontalLayout(editProfile,
+                managePermissions, resetPassword, delete);
         footer.getStyle().set("flex-wrap", "wrap");
         // end::snippet[]
 

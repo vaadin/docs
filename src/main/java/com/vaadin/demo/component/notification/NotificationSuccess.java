@@ -10,23 +10,25 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("notification-success")
 public class NotificationSuccess extends Div {
 
-  public NotificationSuccess() {
-    Button button = new Button("Try it");
-    button.addClickListener(clickEvent -> {
-      button.setEnabled(false);
+    public NotificationSuccess() {
+        Button button = new Button("Try it");
+        button.addClickListener(clickEvent -> {
+            button.setEnabled(false);
 
-      // tag::snippet[]
-      Notification notification = Notification.show("Application submitted!");
-      notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-      // end::snippet[]
-      notification.setPosition(Notification.Position.MIDDLE);
+            // tag::snippet[]
+            Notification notification = Notification
+                    .show("Application submitted!");
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            // end::snippet[]
+            notification.setPosition(Notification.Position.MIDDLE);
 
-      notification.addDetachListener(detachEvent -> button.setEnabled(true));
-    });
+            notification
+                    .addDetachListener(detachEvent -> button.setEnabled(true));
+        });
 
-    add(button);
-  }
+        add(button);
+    }
 
-  public static class Exporter extends DemoExporter<NotificationSuccess> { // hidden-source-line
-  } // hidden-source-line
+    public static class Exporter extends DemoExporter<NotificationSuccess> { // hidden-source-line
+    } // hidden-source-line
 }

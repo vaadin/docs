@@ -11,11 +11,14 @@ public class CookieConsentTheming extends Div {
 
     public CookieConsentTheming() {
         // tag::snippet[]
-        UI.getCurrent().getElement().getClassList().add("cookie-consent-theming");
+        UI.getCurrent().getElement().getClassList()
+                .add("cookie-consent-theming");
 
         CookieConsent cookieConsent = new CookieConsent();
         add(cookieConsent);
         // end::snippet[]
     }
-    public static class Exporter extends DemoExporter<CookieConsentTheming> {} // hidden-source-line
+
+    public static class Exporter extends DemoExporter<CookieConsentTheming> { // hidden-source-line
+    } // hidden-source-line
 }

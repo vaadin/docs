@@ -6,12 +6,12 @@ import '@vaadin/grid';
 import type { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-tree-column.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tree-grid-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -34,13 +34,10 @@ export class Example extends LitElement {
     callback(people, hierarchyLevelSize);
   }
 
-  render() {
+  protected override render() {
     return html`
-      <vaadin-grid .dataProvider="${this.dataProvider}">
-        <vaadin-grid-tree-column
-          path="firstName"
-          item-has-children-path="manager"
-        ></vaadin-grid-tree-column>
+      <vaadin-grid .itemHasChildrenPath="${'manager'}" .dataProvider="${this.dataProvider}">
+        <vaadin-grid-tree-column path="firstName"></vaadin-grid-tree-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>

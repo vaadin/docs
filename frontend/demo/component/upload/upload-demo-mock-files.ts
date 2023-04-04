@@ -2,6 +2,7 @@ import { createFakeUploadFiles, mockErrorXhrGenerator } from './upload-demo-help
 import { Upload } from '@vaadin/upload';
 
 declare module '@vaadin/upload' {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   class Upload {
     createFakeFilesUploadBasic(): void;
     createFakeFilesUploadAutoUploadDisabled(): void;
@@ -12,7 +13,7 @@ declare module '@vaadin/upload' {
   }
 }
 
-// upload-basic.ts
+// Used by `upload-basic.ts`
 export function createFakeFilesUploadBasic() {
   return createFakeUploadFiles([
     { name: 'Annual Report.docx', complete: true },
@@ -25,7 +26,7 @@ export function createFakeFilesUploadBasic() {
   ]);
 }
 
-// upload-auto-upload-disabled.ts
+// Used by `upload-auto-upload-disabled.ts`
 export function createFakeFilesUploadAutoUploadDisabled() {
   return createFakeUploadFiles([
     {
@@ -36,7 +37,7 @@ export function createFakeFilesUploadAutoUploadDisabled() {
   ]);
 }
 
-// upload-all-files.ts
+// Used by `upload-all-files.ts`
 export function createFakeFilesUploadAllFiles() {
   return createFakeUploadFiles([
     {
@@ -52,15 +53,15 @@ export function createFakeFilesUploadAllFiles() {
   ]);
 }
 
-// upload-error-messages.ts
+// Used by `upload-error-messages.ts`
 export function createFakeFilesUploadErrorMessagesA() {
   return createFakeUploadFiles([{ name: 'Financials.xlsx', error: 'Unexpected Server Error' }]);
 }
 
-// upload-error-messages.ts
+// Used by `upload-error-messages.ts`
 export function createFakeFilesUploadErrorMessagesB() {
   return createFakeUploadFiles([
-    { name: 'Financials.xlsx', error: "File couldn't be uploaded, please try again later" },
+    { name: 'Financials.xlsx', error: "File couldn't be uploaded, try again later" },
   ]);
 }
 

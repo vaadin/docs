@@ -5,7 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/text-field';
 import '@vaadin/form-layout';
 import '@vaadin/form-layout/vaadin-form-item.js';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
+import { applyTheme } from 'Frontend/generated/theme';
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   {
@@ -14,18 +15,17 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
     labelsPosition: 'aside',
   },
 ];
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-text-alignment')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <vaadin-form-item>

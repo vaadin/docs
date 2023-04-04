@@ -8,12 +8,14 @@ import com.vaadin.flow.component.customfield.CustomFieldVariant;
 @Route("custom-field-size-variants")
 public class CustomFieldSizeVariants extends Div {
 
-  public CustomFieldSizeVariants() {
-    // tag::snippet[]
-    MoneyField moneyField = new MoneyField("Price");
-    moneyField.addThemeVariant(CustomFieldVariant.LUMO_SMALL);
-    // end::snippet[]
-    add(moneyField);
-  }
-  public static class Exporter extends DemoExporter<CustomFieldSizeVariants> {} // hidden-source-line
+    public CustomFieldSizeVariants() {
+        // tag::snippet[]
+        MoneyField moneyField = new MoneyField("Price");
+        moneyField.addThemeVariant(CustomFieldVariant.LUMO_SMALL);
+        // end::snippet[]
+        add(moneyField);
+    }
+
+    public static class Exporter extends DemoExporter<CustomFieldSizeVariants> { // hidden-source-line
+    } // hidden-source-line
 }
