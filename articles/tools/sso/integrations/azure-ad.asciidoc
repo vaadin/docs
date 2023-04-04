@@ -1,0 +1,158 @@
+---
+title: Azure Active Directory
+page-title: Vaadin SSO Kit Azure AD Integration 
+description: How to use SSO Kit with Azure Active Directory.
+page-links:
+  - https://azure.microsoft.com[Azure website]
+---
+
+= Azure AD Integration
+
+Azure Active Directory is a commercial identification and access management solution. This tutorial shows how to restrict access to a Vaadin view by using SSO Kit together with Azure Active Directory.
+
+This tutorial assumes you have a subscription with access to SSO Kit or a trial license, as well as an Azure account. It also assumes you already have a Vaadin application with SSO Kit. You can follow the <<../getting-started#,Getting Started>> tutorial to configure your application for SSO Kit.
+
+
+== Access Azure Active Directory
+
+You can access Azure AD through the Microsoft Azure Portal after registering. A default directory and an administrator user is included in your account.
+
+
+== New Application Registration
+
+To create a new application registration, select [guilabel]*Azure Active Directory* from the [guilabel]*Azure services* list in the portal. You're presented initially with the default directory overview that shows your details. Click the &plus; sign next to [guilabel]*Add*. Choose [guilabel]*App registration* to register your Vaadin application in Azure AD. 
+
+Give the registration a name and choose a scope for the registration. Choose between the following options:
+
+. Accounts in this organizational directory only;
+. Accounts in any organizational directory;
+. Accounts in any organizational directory and personal Microsoft accounts; and
+. Personal Microsoft accounts only.
+
+The first option is for the default directory provided by Microsoft when creating an Azure account.
+
+Select [guilabel]*Web* as the application type and click [guibutton]*register* to complete your registration.
+
+
+== Sign-In and Sign-Out URIs
+
+To set the sign-in and sign-out URIs, open your [guilabel]*App registration* and select [guilabel]*Authentication* from the sidebar menu. Then enter the following URIs, where Azure redirects users when they sign in and out of the application:
+
+Redirect URI:: 
+`\http://localhost:8080/login/oauth2/code/azure`
+
+Front-channel logout URI::
+`\https://login.microsoftonline.com/common/oauth2/v2.0/logout`
+
+
+== Configure Vaadin Application to Use Azure AD
+
+Open the `application.properties` file located in your Vaadin project and add the client ID and issuer URI to the Spring Security configurations. The issuer URI in this example is `\https://login.microsoftonline.com/common/v2.0`, where `common` is a general Tenant ID and v2.0 is the token type.
+
+You can find your Tenant ID in the [guilabel]*Properties* menu in the Azure Active Directory dashboard.
+
+
+=== Client Secret
+
+You can use secret identifications to establish a secure connection with your Vaadin application. To create a secret, select your newly created [guilabel]*App Registration* and navigate to [guilabel]*Certificates & secrets* from the sidebar menu. Copy and paste the secret immediately to your Vaadin project as it can only be viewed once. Click [guilabel]*New client secret* and then [guibutton]*Save* to create a new secret ID. Copy and paste it to your `applications.properties` file, like so:
+
+.`application.properties`
+[source,properties]
+----
+spring.security.oauth2.client.registration.azure.active-directory.client-secret=Paste your Client secret here
+----
+
+=== Access Tokens
+
+Add the URIs for your access tokens to your `applications.properties` file. You can find them in the Azure portal by selecting [guilabel]*Endpoints* from your [guilabel]*App registration*, like so:
+
+.`application.properties`
+[source,properties]
+----
+security.oauth2.client.access-token-uri=https://login.microsoftonline.com/common/oauth2/v2.0/token
+security.oauth2.client.user-authorization-uri=https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+----
+
+
+=== Configure the Manifest
+
+Navigate to [guilabel]*Manifest* from the sidebar menu and replace `"accessTokenAcceptedVersion": null,` with `"accessTokenAcceptedVersion": 2,` and click [guibutton]*Save*. This allows you to use `v2` access tokens in your application. The first lines of the manifest should then look something like this:
+
+.`manifest`
+[source,json]
+----
+{
+	"id": "934i9efugsf0s0poq+wdlwa9e0d8awfj",
+	"acceptMappedClaims": null,
+	"accessTokenAcceptedVersion": 2,
+	"addIns": [],
+}
+----
+
+Views protected by the `@PermitAll` annotation now redirect to Microsoft for login.
+
+==== Create a Security Key
+
+You need a security key if you want to use the HTTPS protocol on localhost. Use the `keytool` command in your application terminal to create a new Security Key. You would enter something like this:
+
+----
+keytool -genkeypair -alias testCert -keyalg RSA -storetype PKCS12 -keystore keystore.p12 -storepass password
+----
+
+You would, of course, adjust this for your password and other details. This results in the following properties:
+
+----
+Password: password
+Alias: testCert
+Type: PKCS12
+Path: {your vaadin app root}/keystore.p12
+----
+
+Then add the key to your `application.properties` file. It should look something like this:
+
+.`application.properties`
+[source,properties]
+----
+# SSO Kit configuration
+
+
+vaadin.sso.login-route=/oauth/authorization/azure.active-directory
+spring.security.oauth2.client.registration.azure.active-directory.client-secret=Paste your Client secret here
+spring.security.oauth2.client.registration.azure.active-directory.client-id=Paste your Client ID here
+spring.security.oauth2.client.registration.azure.active-directory.scope=openid
+spring.security.oauth2.client.provider.azure.active-directory.issuer-uri=https://login.microsoftonline.com/common/
+security.oauth2.client.access-token-uri=https://login.microsoftonline.com/common/oauth2/v2.0/token
+security.oauth2.client.user-authorization-uri=https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+
+
+# Common settings
+server.port=${PORT:8080}
+
+
+# SSL configuration
+server.ssl.key-store=/Users/mikael/Desktop/sso-kit-demo-app/keystore.p12
+server.ssl.key-store-password=password
+server.ssl.key-store-type=PKCS12
+server.ssl.key-alias=testCert
+server.ssl.key-password=password
+----
+
+
+=== Assign Permissions
+
+Users need to provide consent for using the permissions set by the OpenID protocol. They can accept the permissions when signing into your application, or you may grant permission for users as an administrator for testing purposes. 
+
+Select [guilabel]*API Permissions* from the sidebar menu and choose [guilabel]*Add a permission*. Click [guilabel]*Microsoft Graph* from the menu and then [guilabel]*Delegated permissions*. You can then type `openid` to find it from the list of permissions. Tick the box next to `openid` and click [guibutton]*Add permissions* at the bottom of the menu.
+
+.Grant consent for your users
+[TIP]
+If you want to grant consent for your users, you can click [guilabel]*Grant admin consent for Default Directory* in the API Permissions page.
+
+==== Add New Users
+
+In the Azure developer dashboard, select your directory and select [guilabel]*Users* from the sidebar menu. Click [guibutton]*New user* to start the user creation wizard and fill in the user details. Click [guibutton]*Create* to create the user.
+
+==== Assign Users to the Application
+
+Navigate to [guilabel]*Enterprise applications* in your directory dashboard. Select your application from the list and select [guilabel]*Users and groups* from the sidebar menu. Add the user to the application by selecting [guilabel]*Add user/group*. Your administrator user account is added already by default.
+
