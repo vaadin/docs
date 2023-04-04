@@ -16,7 +16,7 @@ The form:
 * saves and deletes contacts in the database.
 
 == Showing the Selected Contact in the Form
-
+// TODO this section should be enhanced, just simply replacing code, would be better to split into couple of insertions so that reader could follow what is happening here.
 The first step is to show the selected grid row in the form.
 
 To do this, update [classname]`ListView` as follows:
@@ -28,6 +28,7 @@ package com.example.application.views.list;
 
 import com.example.application.data.entity.Contact;
 import com.example.application.data.service.CrmService;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -83,7 +84,7 @@ public class ListView extends VerticalLayout {
             editContact(event.getValue())); // <2>
     }
 
-    private HorizontalLayout getToolbar() {
+    private Component getToolbar() {
         filterText.setPlaceholder("Filter by name...");
         filterText.setClearButtonVisible(true);
         filterText.setValueChangeMode(ValueChangeMode.LAZY);
@@ -92,7 +93,7 @@ public class ListView extends VerticalLayout {
         Button addContactButton = new Button("Add contact");
         addContactButton.addClickListener(click -> addContact()); // <3>
 
-        HorizontalLayout toolbar = new HorizontalLayout(filterText, addContactButton);
+        var toolbar = new HorizontalLayout(filterText, addContactButton);
         toolbar.addClassName("toolbar");
         return toolbar;
     }
@@ -143,25 +144,6 @@ But, none of the buttons work yet.
 
 image::images/handling-view-state/form-showing-contact.png[Form showing a contact]
 
-== Making the Layout Responsive
-
-To make the layout responsive and usable on both mobile and desktop, you need to add CSS.
-
-To do this, add the following CSS to [filename]`frontend/themes/flowcrmtutorial/styles.css`:
-
-.`styles.css`
-[source,css]
-----
-@media all and (max-width: 1100px) {
-  .list-view.editing .toolbar,
-  .list-view.editing .contact-grid {
-    display: none;
-  }
-}
-----
-
-The CSS media query hides the grid and the toolbar when you are editing contacts on a narrow screen.
-
 == Handling Form Events
 
 pass:[<!-- vale Vaadin.So = NO -->]
@@ -180,9 +162,9 @@ To handle event listeners, update [methodname]`configureForm()` and add [methodn
 private void configureForm() {
     form = new ContactForm(service.findAllCompanies(), service.findAllStatuses());
     form.setWidth("25em");
-    form.addListener(ContactForm.SaveEvent.class, this::saveContact); // <1>
-    form.addListener(ContactForm.DeleteEvent.class, this::deleteContact); // <2>
-    form.addListener(ContactForm.CloseEvent.class, e -> closeEditor()); // <3>
+    form.addSaveListener(this::saveContact); // <1>
+    form.addDeleteListener(this::deleteContact); // <2>
+    form.addCloseListener(e -> closeEditor()); // <3>
 }
 
 private void saveContact(ContactForm.SaveEvent event) {
@@ -211,6 +193,28 @@ It:
 Build the application and verify that you are now able to select, add, update, and delete contacts.
 
 image::images/handling-view-state/updated-contact.png[The selected contact has updated first and last names.]
+
+== Making the Layout Responsive
+
+Now if you try the UI with a mobile device or make your desktop browser really narrow, you see that the UI is not currently well optimised for small screens.
+It usually makes sense to hide certain UI elements for smaller screens.
+You can accomplish this using Java code or with CSS media queries.
+
+This example uses CSS and utilise the class names previously assigned to the components.
+Add the following CSS to [filename]`frontend/themes/flowcrmtutorial/styles.css`:
+
+.`styles.css`
+[source,css]
+----
+@media all and (max-width: 1100px) {
+  .list-view.editing .toolbar,
+  .list-view.editing .contact-grid {
+    display: none;
+  }
+}
+----
+
+The CSS media query hides the grid and the toolbar when you are editing contacts on a narrow screen.
 
 include::{root}/articles/tutorial/_ebook-banner.adoc[opts=optional]
 

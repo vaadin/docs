@@ -1,10 +1,9 @@
 package com.vaadin.demo.component.formlayout;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import org.joda.time.LocalDate;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.customfield.CustomField;
