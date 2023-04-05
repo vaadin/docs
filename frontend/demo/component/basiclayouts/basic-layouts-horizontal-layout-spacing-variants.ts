@@ -28,7 +28,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-horizontal-layout
-        theme="${this.themeVariant} padding"S
+        theme="${this.themeVariant} padding"
         style="align-items: stretch"
       >
         <vaadin-button>Button 1</vaadin-button>
