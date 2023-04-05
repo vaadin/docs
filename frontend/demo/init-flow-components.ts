@@ -8,7 +8,7 @@
 // globally for all examples.
 
 // General Flow modules
-import '@vaadin/flow-frontend/dndConnector-es6.js';
+import '@vaadin/flow-frontend/dndConnector.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 
 // Flow component specific modules
