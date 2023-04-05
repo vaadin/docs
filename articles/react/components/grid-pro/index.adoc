@@ -1,0 +1,301 @@
+---
+title: Grid Pro
+description: Grid Pro is an extension of the Grid component that provides inline editing with full keyboard navigation.
+section-nav: commercial
+---
+
+= Grid Pro
+
+:commercial-feature: Grid Pro
+include::{articles}/_commercial-banner.asciidoc[opts=optional]
+
+[source,tsx]
+----
+<GridPro items={people}>
+  <GridProEditColumn path="firstName" />
+  <GridProEditColumn path="lastName" />
+  <GridProEditColumn path="email" />
+  <GridProEditColumn path="profession" />
+</GridPro>
+----
+
+// Permitting "previous"
+pass:[<!-- vale Vaadin.ComplexWords = NO -->]
+pass:[<!-- vale Vaadin.Will = NO -->]
+
+.Features shared with Grid
+[NOTE]
+====
+Grid Pro is an extension of the <<../grid#,Grid>> component, so that all Grid's features are applicable to Grid Pro, as well.
+====
+
+== Usage
+Begin editing by:
+
+- double-clicking on the editable cell
+- pressing kbd:[Enter], kbd:[Space] or typing an alphanumeric character when an editable cell is focused
+
+When editing:
+
+- kbd:[Esc] discards the changes and exits edit mode
+- kbd:[Enter] and kbd:[Shift + Enter] save the changes and exit edit mode
+- kbd:[Tab] and kbd:[Shift + Tab] save the changes and focus the next and previous editable cell, respectively, while remaining in edit mode
+
+== Modes
+
+=== Edit on single click
+
+Single Click Edit is a mode that enables the user to begin editing by single-clicking on an editable cell.
+
+[source,tsx]
+----
+<GridPro items={people} editOnClick>
+  <GridProEditColumn path="firstName" />
+  <GridProEditColumn path="lastName" />
+  <GridProEditColumn path="email" />
+  <GridProEditColumn path="profession" />
+</GridPro>
+----
+
+=== Single cell edit
+
+By default, when in edit mode, kbd:[Tab] and kbd:[Shift+Tab] move to the next and previous editable cell, respectively, while remaining in edit mode.
+
+Single Cell Edit is a mode that makes tabbing from one cell to another exit from edit mode.
+
+[source,tsx]
+----
+<GridPro items={people} singleCellEdit>
+  <GridProEditColumn path="firstName" />
+  <GridProEditColumn path="lastName" />
+  <GridProEditColumn path="email" />
+  <GridProEditColumn path="profession" />
+</GridPro>
+----
+
+=== Enter next row
+
+Pressing kbd:[Enter] and kbd:[Shift+Enter] saves the changes and exits edit mode by default.
+
+By using the Enter Next Row mode, kbd:[Enter] and kbd:[Shift+Enter] will focus the editable cell in the next and previous row, respectively. 
+
+[source,tsx]
+----
+<GridPro items={people} enterNextRow>
+  <GridProEditColumn path="firstName" />
+  <GridProEditColumn path="lastName" />
+  <GridProEditColumn path="email" />
+  <GridProEditColumn path="profession" />
+</GridPro>
+----
+
+== Edit column
+
+Editing is enabled on a per-column basis.
+
+[source,tsx]
+----
+<GridPro items={people} enterNextRow>
+  <GridColumn header="Name (read-only)">
+    {({ item }) => (
+      <>
+        {item.firstName} {item.lastName}
+      </>
+    )}
+  </GridColumn>
+  <GridProEditColumn header="Profession (editable)" path="profession" />
+</GridPro>
+----
+
+=== Recommended built-in editors
+
+Grid Pro features three recommended built-in editors: Text Field, Checkbox, and Select.
+
+[cols=2, options=header]
+|===
+|Editor
+|Usage Recommendation
+
+|Text
+|Editing basic text.
+
+|Checkbox
+|Editing boolean, binary values.
+
+|Select
+|Selecting a single value from a set of options.
+|===
+
+Although Grid Pro can be configured to use any input field for editing, the built-in editors have better keyboard usability and rendering.
+
+[source,tsx]
+----
+<GridPro items={people}>
+  <GridProEditColumn path="firstName" />
+  <GridProEditColumn
+    path="membership"
+    editorType="select"
+    editorOptions={["Regular", "Premium", "VIP"]}
+  />
+  <GridProEditColumn path="subscriber" editorType="checkbox" />
+  <GridProEditColumn<Person>
+    path="birthday"
+    renderer={({ item: { birthday } }) => (
+      <>{format(parseISO(birthday), "dd/MM/yyyy")}</>
+    )}
+    editModeRenderer={({ item: { birthday } }) => (
+      <DatePicker style={{ width: "100%" }} value={birthday} />
+    )}
+  />
+</GridPro>
+----
+
+== Prevent saving changes
+
+You can rollback changes when the entered input is wrong or invalid.
+
+[source,tsx]
+----
+const people = usePeople();
+
+const showErrorNotification = (msg: string) => {
+  const notification = Notification.show(msg, { position: "bottom-center" });
+  notification.setAttribute("theme", "error");
+};
+
+const itemPropertyListener = ({
+  detail: {
+    path,
+    item: {
+      address: { phone },
+      email,
+    },
+  },
+  preventDefault,
+}: GridProItemPropertyChangedEvent<Person>) => {
+  console.log(path);
+  switch (path) {
+    case "address.phone":
+      if (!/^[0-9-]+$/.test(phone)) {
+        // Incorrect phone
+        preventDefault();
+        showErrorNotification("Enter a valid phone number");
+      }
+      break;
+    case "email":
+      if (!/^[\w-.]+@([\w-]+.)+[\w-]{2,4}$/.test(email)) {
+        // Incorrect email
+        preventDefault();
+        showErrorNotification("Enter a valid email address");
+      }
+      break;
+    default:
+      break;
+  }
+};
+
+return (
+  <GridPro items={people} onItemPropertyChanged={itemPropertyListener}>
+    <GridProEditColumn path="firstName" />
+    <GridProEditColumn path="lastName" />
+    <GridProEditColumn path="email" />
+    <GridProEditColumn path="address.phone" />
+  </GridPro>
+);
+----
+
+== Distinguish editable / read-only cells
+
+Editable cells are indicated with a hover effect by default, but you can give further help to users in distinguishing these by highlighting either editable or read-only cells.
+This is recommended for grids with both editable and read-only cells.
+
+=== Highlight editable cells
+
+Editable cells can be highlighted by applying the `highlight-editable-cells` theme variant.
+
+[source,tsx]
+----
+<GridPro items={people} theme="highlight-editable-cells">
+  <GridColumn path="firstName" />
+  <GridColumn path="lastName" />
+  <GridColumn path="membership" />
+  <GridProEditColumn path="email" header="Email (Editable)" />
+</GridPro>
+----
+
+You can also apply custom styling to editable cells by targeting the `editable-cell` part in CSS.
+The following example shows how to apply custom styling to all Grid Pro elements that have the `editable-custom-effect` class name:
+
+pass:[<!-- vale Vaadin.SourceCode = NO -->]
+
+[source,css]
+----
+/* Add this to your global CSS, for example in: */
+/* frontend/theme/[my-theme]/styles.css */
+
+vaadin-grid-pro.editable-custom-effect::part(editable-cell):hover,
+vaadin-grid-pro.editable-custom-effect::part(editable-cell focused-cell) {
+  background: var(--lumo-contrast-10pct);
+}
+
+vaadin-grid-pro.editable-custom-effect::part(editable-cell) {
+  background: var(--lumo-contrast-5pct);
+}
+----
+
+pass:[<!-- vale Vaadin.SourceCode = YES -->]
+
+
+=== Highlight read-only cells
+
+Read-only cells can be highlighted by applying the `highlight-read-only-cells` theme variant.
+
+[source,tsx]
+----
+<GridPro items={people} theme="highlight-read-only-cells">
+  <GridColumn path="firstName" />
+  <GridColumn path="lastName" />
+  <GridColumn path="membership" />
+  <GridProEditColumn path="email" header="Email (Editable)" />
+</GridPro>
+----
+
+
+== Best practices
+
+=== Inline vs non-inline editing
+
+Inline editing is recommended when:
+
+- the user typically needs to make a lot of small changes to different items
+- quick editing is important.
+
+Non-inline editing is preferable when:
+
+- there are a lot of columns/fields
+- users typically need to edit only one item at a time
+- adding new items is common (as you might want to have edit and create modes work the same way, and creating new items with inline editing isn't recommended with Grid Pro)
+- any of the editors need to be bigger than a simple field, such as a Text Area or multi-select field of any kind
+- fields alone may be insufficient, for example when helpers, validation errors or other features are needed
+- explicit save/cancel actions are beneficial, for example to prevent accidental edits.
+
+If your use case would benefit more from non-inline editing, consider using <<../crud#, CRUD>>.
+
+pass:[<!-- vale Vaadin.Will = YES -->]
+pass:[<!-- vale Vaadin.ComplexWords = YES -->]
+
+
+== Related components
+
+|===
+|Component | Usage recommendations
+
+|<<../crud#, CRUD>>
+|Component for creating, displaying, updating and deleting tabular data.
+
+|<<../grid#, Grid>>
+|Component for showing tabular data.
+|===
+
+:component-path: grid-pro
+include::{articles}/react/components/_vaadindocs.adoc[]
