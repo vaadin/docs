@@ -5,6 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/number-field';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/tooltip';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('number-field-basic-features')

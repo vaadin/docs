@@ -5,7 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/multi-select-combo-box';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('multi-select-combo-box-basic-features')
+@customElement('multi-select-combo-box-constraints')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
