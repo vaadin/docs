@@ -13,6 +13,7 @@ const cmd = program
     .option('-d, --debug', 'run in debug mode')
     .option('-T, --tmp <tmp>', 'Temporary folder', './tmp')
     .option('-s, --branchSource <source>', 'source branch', 'latest')
+    .option('-s, --tagSource <tag|hash>', 'Tag or Hash in the source branch that should be used for picking changes', 'HEAD')
     .option('-t, --branchTarget <target>', 'target branch', 'dsp')
     .option('-c, --config <config>', 'config file', cfgDefault)
     .option('-r, --repo <repository>', 'repository', 'git@github.com:vaadin/docs.git')
@@ -146,6 +147,9 @@ async function cloneBranches() {
     } else {
       log(`cloning repo=${cmd.repo} branch=${b} folder=${f} ...`)
       await run(`git clone -b ${b} ${cmd.repo} ${f}`);
+    }
+    if (b == cmd.branchSource) {
+      await run (`git -C ${f} checkout ${cmd.tagSource}`)
     }
   };
 }

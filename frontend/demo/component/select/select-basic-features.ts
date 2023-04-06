@@ -5,6 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/select';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/tooltip';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-basic-features')

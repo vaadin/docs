@@ -5,6 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/password-field';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/tooltip';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('password-field-basic-features')

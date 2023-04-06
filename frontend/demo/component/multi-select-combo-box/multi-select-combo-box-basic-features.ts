@@ -5,6 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/multi-select-combo-box';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/tooltip';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('multi-select-combo-box-basic-features')

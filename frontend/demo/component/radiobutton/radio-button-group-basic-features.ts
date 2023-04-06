@@ -3,6 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/radio-group';
+import '@vaadin/tooltip';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-group-basic-features')

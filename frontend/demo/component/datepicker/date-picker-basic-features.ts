@@ -5,6 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import '@vaadin/date-picker';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/tooltip';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-basic-features')
