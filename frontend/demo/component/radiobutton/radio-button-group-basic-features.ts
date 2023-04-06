@@ -17,7 +17,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
         <!-- tag::snippet[] -->
-        <vaadin-radio-button-group
+        <vaadin-radio-group
           label="Label"
           helper-text="Helper text">
           <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
@@ -26,7 +26,7 @@ export class Example extends LitElement {
           <vaadin-radio-button value="2" label="Item 2"></vaadin-radio-button>
           <vaadin-radio-button value="3" label="Item 3"></vaadin-radio-button>
           <!-- end::snippet[] -->
-        </vaadin-radio-button-group>
+        </vaadin-radio-group>
         <!-- end::snippet[] -->
     `;
   }
