@@ -181,15 +181,15 @@ This dependency contains the `SingleSignOnContext` class which is needed in the 
 ifdef::lit[]
 === Add single sign-on context
 
-Add the single sign-on context to the [filename]`app-store.ts` file.
+Export the single sign-on context in the [filename]`app-store.ts` file.
 
 .frontend/stored/app-store.ts
 [source,typescript]
 ----
 import singleSignOnContext from "@hilla/sso-kit-client/SingleSignOnContext.js";
 
-// Add ssoContext variable to the AppStore class
-ssoContext = singleSignOnContext();
+// Export the ssoContext
+export const ssoContext = singleSignOnContext();
 ----
 endif::[]
 
@@ -219,9 +219,9 @@ import '@vaadin/button';
 
 // Replace the `footer` in the rendered `html`
 <footer slot="drawer">
-  ${appStore.ssoContext.authenticated
-      ? html`<vaadin-button @click="${appStore.ssoContext.logout}">Sign out</vaadin-button>`
-      : html`<vaadin-button @click="${appStore.ssoContext.login}">Sign in</vaadin-button>`
+  ${ssoContext.authenticated
+      ? html`<vaadin-button @click="${ssoContext.logout}">Sign out</vaadin-button>`
+      : html`<vaadin-button @click="${ssoContext.login}">Sign in</vaadin-button>`
   }
 </footer>
 ----
@@ -275,7 +275,7 @@ Filter the menu excluding unauthorized views by amending the view filter in [fil
 ----
 // Add the hasUserAccess condition in getMenuRoutes that checks for authentication
 private getMenuRoutes(): RouteInfo[] {
-  return views.filter((route) => route.title).filter(appStore.ssoContext.hasUserAccess) as RouteInfo[];
+  return views.filter((route) => route.title).filter(ssoContext.hasAccess) as RouteInfo[];
 }
 ----
 endif::[]
@@ -295,7 +295,7 @@ export type ViewRouteObject = (IndexViewRouteObject | NonIndexViewRouteObject) &
 {
   path: '/about',
   // ...
-  requiresLogin: true,
+  requiresLogin: true
 },
 ----
 
@@ -305,10 +305,10 @@ Filter the menu excluding unauthorized views by amending the view filter in [fil
 [source,typescript]
 ----
 
-// Add the hasUserAccess condition in menuRoutes that checks for authentication
+// Add the hasAccess condition in menuRoutes that checks for authentication
 const menuRoutes = (routes[0]?.children || [])
   .filter((route) => route.path && route.handle && route.handle.icon && route.handle.title)
-  .filter(ssoContext.hasUserAccess) as readonly MenuRoute[];
+  .filter(ssoContext.hasAccess) as readonly MenuRoute[];
 ----
 endif::[]
 
@@ -316,7 +316,7 @@ Now the `About` item in the menu appears only when authenticated.
 
 === Show user information
 
-The SSO Kit Client provides the `User` class which contains information about the authenticated user. You can implement yours if you want to customize the returned object and its fields.
+The SSO Kit Client provides the `User` class which contains information about the authenticated user. You can get the user information by calling the asynchronous `SingleSignOnContext.getUser()` function. You can implement yours if you want to customize the returned object and its fields.
 
 As the About page is now protected, that's a perfect place to show some information about the current user:
 
@@ -324,12 +324,21 @@ ifdef::lit[]
 .frontend/views/helloworld/about-view.ts
 [source,typescript]
 ----
-import { appStore } from "Frontend/stores/app-store.js";
+import { ssoContext } from "Frontend/stores/app-store.js";
+import { User } from "@hilla/sso-kit-client";
+import { property } from 'lit/decorators.js';
 
-// Add some output
-<p>Username: ${appStore.ssoContext.user?.preferredUsername}</p>
-<p>Full name: ${appStore.ssoContext.user?.fullName}</p>
-<p>Email: ${appStore.ssoContext.user?.email}</p>
+// Add property for the user in the AboutView class
+@property()
+user: User | undefined;
+
+// Add some output in the AboutView class
+<p>Username: ${this.user?.preferredUsername}</p>
+<p>Full name: ${this.user?.fullName}</p>
+<p>Email: ${this.user?.email}</p>
+
+// Get and await the user in the connectedCallback function
+this.user = await ssoContext.getUser();
 ----
 endif::[]
 
@@ -338,10 +347,20 @@ ifdef::react[]
 [source,typescript]
 ----
 import { ssoContext } from "Frontend/App.js";
+import { useEffect, useState } from "react";
+import { User } from "@hilla/sso-kit-client";
 
-<p>Username: {ssoContext.user?.preferredUsername}</p>
-<p>Full name: {ssoContext.user?.fullName}</p>
-<p>Email: {ssoContext.user?.email}</p>
+// Add state for the user in the AboutView class
+const [user, setUser] = useState<User>({});
+// Get, await and set the user in the AboutView class
+useEffect(() => {
+  ssoContext.getUser()?.then((u: User) => setUser(u))
+}, []);
+
+// Add some output in the AboutView class
+<p>Username: {user.preferredUsername}</p>
+<p>Full name: {user?.fullName}</p>
+<p>Email: {user?.email}</p>
 ----
 endif::[]
 
@@ -398,7 +417,7 @@ isLoggedOut = false;
 // Register a callback in the constructor
 constructor() {
 // ...
-  this.ssoContext.onBackChannelLogout(() => {
+  ssoContext.onBackChannelLogout(() => {
     this.isLoggedOut = true;
   });
 }
@@ -415,8 +434,8 @@ import '@vaadin/confirm-dialog';
 <vaadin-confirm-dialog
       header="Logged out"
       cancel-button-visible
-      @confirm="${appStore.ssoContext.loginAgain}"
-      @cancel="${appStore.ssoContext.stayOnPage}"
+      @confirm="${ssoContext.login}"
+      @cancel="${ssoContext.logout}"
       .opened="${appStore.isLoggedOut}"
 >
   <p>You have been logged out. Do you want to log in again?</p>
@@ -433,7 +452,7 @@ import { ConfirmDialog } from '@hilla/react-components/ConfirmDialog.js';
 // Store the logged out state
 const [loggedOut, setLoggedOut] = useState(false);
 
-// Register a callback using useEffect
+// Subscribe to the back-channel logout event and set logged out state to true on the event
 useEffect(() => {
   ssoContext.onBackChannelLogout(() => {
     setLoggedOut(true);
@@ -443,11 +462,9 @@ useEffect(() => {
 // Add the confirm dialog to the AppLayout
 <ConfirmDialog header='Logged out' cancelButtonVisible
              opened={loggedOut}
-             onConfirm={ssoContext.loginAgain}
-             onCancel={() => {
-               ssoContext.stayOnPage();
-               setLoggedOut(false);
-             }}>
+             onConfirm={ssoContext.login}
+             onCancel={ssoContext.logout}
+>
   <p>You have been logged out. Do you want to log in again?</p>
 </ConfirmDialog>
 ----
