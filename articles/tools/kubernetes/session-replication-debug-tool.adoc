@@ -6,18 +6,21 @@ order: 110
 
 = Kubernetes Kit Session Replication Debug Tool
 
-The debug tool is composed by three components working together:
+The Kubernetes Kit session replication debugging tool is composed of three components working together:
 
-* an HTTP session replication tester which tries to serialize and deserialize the HTTP session;
-* a Vaadin [classname]`RequestHandler` that evaluates if the HTTP request produces UI changes and prepares the tester execution and the result notification on the UI notification, if server push is enabled;
-* an HTTP filter that runs the tester after the HTTP request has been processed.
+* HTTP Session Replication Tester
+* Vaadin [classname]`RequestHandler`
+* HTTP Filter
+
+The tester tries to serialize and deserialize the HTTP session. The `RequestHandler` evaluates if the HTTP request produces UI changes and prepares the tester execution and the result notification on the UI notification, if server push is enabled. The HTTP filter runs the tester after the HTTP request has been processed.
+
 
 == Enabling the Debug Tool
 
-The debug tool doesn't work in production builds. During development, it works only if the following preconditions match:
+The debug tool won't work in production builds. During development, it works only if a couple of conditions are met.
 
-* `vaadin.devmode.sessionSerialization.enabled` application configuration property is `true`. Set it either in a properties file or in a YAML file.
-+
+First, `vaadin.devmode.sessionSerialization.enabled` application configuration property has to be set to `true`. You may set it either in a properties file or in a YAML file like so:
+
 [.example]
 --
 .`application.properties`
@@ -36,11 +39,11 @@ vaadin:
 ----
 --
 
-* The `sun.io.serialization.extendedDebugInfo` system property is `true` and the JVM is started with the `--add-opens java.base/java.io=ALL-UNNAMED` flag. The way you provide these depends on if you run your application with the Spring Boot Maven Plugin or by directly executing the application JAR.
-+
+Second, the `sun.io.serialization.extendedDebugInfo` system property has to be set to `true` and the JVM has to have been started with the `--add-opens java.base/java.io=ALL-UNNAMED` flag. How you provide these factors depends on whether you run your application with the Spring Boot Maven Plugin or by directly executing the application JAR.
+
 [.example]
 --
-You can define the configuration in the `pom.xml` file or as environment variables when you run the application from the command line.
+You can define the configuration in the `pom.xml` file, or define it as environment variables when you run the application from the command-line.
 
 .`pom.xml`
 [source,xml]
@@ -80,8 +83,9 @@ java \
 
 include::_shared.adoc[tag=extended-debug-info]
 
-The debug tool is installed automatically on Spring Boot projects. Otherwise, you can install it manually. Configure the provided <<{articles}/advanced/service-init-listener#,Service Init Listener>>, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using the Vaadin Spring add-on.
-In addition, the HTTP filter must be registered, either as a Spring bean or with a [classname]`ServletContextListener`.
+The debug tool is installed automatically on Spring Boot projects. Otherwise, you can install it, manually. Configure the provided <<{articles}/advanced/service-init-listener#,Service Init Listener>>, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using the Vaadin Spring add-on.
+
+Additionally, the HTTP filter must be registered either as a Spring bean, or with a [classname]`ServletContextListener`.
 
 [.example]
 --
@@ -129,21 +133,22 @@ private static class SerializationDebugToolFilterRegistration implements Servlet
 ----
 --
 
+
 == Serialization Test Results
 
-The results from the test are saved in the server logs, and include the following details:
+The results from the test are saved in the server logs. They include the following details:
 
  * Test process outcomes, for example `SERIALIZATION_FAILED`, `DESERIALIZATION_FAILED`, `SUCCESS`, etc.;
- * A list of unserializable classes;
- * An object class graph in case of deserialization errors; and
+ * List of unserializable classes;
+ * Object class graph in case of deserialization errors; and
  * Potential causes of [classname]`SerializedLambda` [classname]`ClassCastException`.
 
 
 === Examples
 
-Suppose you have an application that is not coded from the beginning to support session replication. With the Kubernetes Kit session replication debug tool in action, issues like the following can be spotted during development mode, by checking server logs.
+As an example, suppose you have an application that isn't coded from the beginning to support session replication. With the Kubernetes Kit session replication debug tool in action, issues like the following can be spotted during development mode by checking server logs.
 
-For views directly or indirectly referencing unserializable objects, the classes causing issues are reported. Double check those classes, make them [classname]`Serializable` and then navigate to the view again to see if the issues are solved or if other problems have arisen.
+For views directly or indirectly referencing unserializable objects, the classes causing issues are reported. Double check those classes and make them [classname]`Serializable`. Then navigate to the view again to see if the issues are solved or if other problems have arisen.
 
 [.limit-height]
 ----
@@ -351,7 +356,7 @@ SERIALIZED LAMBDA CLASS CAST EXCEPTION BEST CANDIDATES:
 		numCaptured=2]
 ----
 
-The mentioned method presents the following code, and it can be deduced that the problem is that the lambda expression is capturing `this` and providing it to other components that probably store a reference to it.
+The mentioned method presents the following code. It can be deduced that the problem is that the lambda expression is capturing `this` and providing it to other components that probably store a reference to it.
 
 [source,java]
 ----

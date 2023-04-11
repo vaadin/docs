@@ -37,7 +37,7 @@ const themeOptions = {
 };
 
 // this matches css files in the theme
-const themeCssRegex = /(\\|\/).*frontend(\\|\/)themes\1[\s\S]*?\.css/;
+const themeCssRegex = /(\\|\/).*frontend(\\|\/).*themes\1[\s\S]*?\.css/;
 const embeddedWcRegex = /(\\|\/).*target(\\|\/)frontend(\\|\/)[\s\S]*-wc.js/;
 
 const projectThemePath = path.resolve(__dirname, 'frontend/themes');
@@ -118,4 +118,6 @@ module.exports = async function (config) {
       ]
     }
   };
+
+  config.resolve.extensionAlias = { '.js': ['.js', '.ts'] }
 };
