@@ -8,18 +8,16 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('details-disabled')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
-      <vaadin-details disabled>
-        <div slot="summary">Members (8)</div>
-
+      <vaadin-details summary="Members (8)" disabled>
         <ul>
           <li>Blake Martin</li>
           <li>Caroline Clark</li>

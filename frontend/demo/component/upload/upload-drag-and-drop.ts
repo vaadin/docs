@@ -14,22 +14,20 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
 
 @customElement('upload-drag-and-drop')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  static override styles = css`
+    label {
+      font-weight: 600;
+    }
+  `;
+
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  static get styles() {
-    return css`
-      label {
-        font-weight: 600;
-      }
-    `;
-  }
-
-  render() {
+  protected override render() {
     return html`
       <vaadin-form-layout .responsiveSteps="${layoutSteps}">
         <div>

@@ -12,7 +12,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -25,16 +25,18 @@ export class Example extends LitElement {
   @state()
   private filteredItems: Person[] = [];
 
-  async firstUpdated() {
-    this.allItems = this.filteredItems = (await getPeople()).people.map((person) => {
-      return {
-        ...person,
-        displayName: `${person.firstName} ${person.lastName}`,
-      };
-    });
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    const items = people.map((person) => ({
+      ...person,
+      displayName: `${person.firstName} ${person.lastName}`,
+    }));
+
+    this.allItems = items;
+    this.filteredItems = items;
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::combobox[] -->
       <vaadin-combo-box
@@ -51,9 +53,9 @@ export class Example extends LitElement {
 
   private filterChanged(e: ComboBoxFilterChangedEvent) {
     const filter = e.detail.value;
-    this.filteredItems = this.allItems.filter(({ firstName, lastName, profession }) => {
-      return `${firstName} ${lastName} ${profession}`.toLowerCase().includes(filter.toLowerCase());
-    });
+    this.filteredItems = this.allItems.filter(({ firstName, lastName, profession }) =>
+      `${firstName} ${lastName} ${profession}`.toLowerCase().includes(filter.toLowerCase())
+    );
   }
 
   // tag::renderer[]
@@ -62,22 +64,20 @@ export class Example extends LitElement {
   // We recommend placing CSS in a separate style sheet and
   // encapsulating the styling in a new component.
 
-  private renderer: ComboBoxLitRenderer<Person> = (person) => {
-    return html`
-      <div style="display: flex;">
-        <img
-          style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
-          src="${person.pictureUrl}"
-          alt="Portrait of ${person.firstName} ${person.lastName}"
-        />
-        <div>
-          ${person.firstName} ${person.lastName}
-          <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
-            ${person.profession}
-          </div>
+  private renderer: ComboBoxLitRenderer<Person> = (person) => html`
+    <div style="display: flex;">
+      <img
+        style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
+        src="${person.pictureUrl}"
+        alt="Portrait of ${person.firstName} ${person.lastName}"
+      />
+      <div>
+        ${person.firstName} ${person.lastName}
+        <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
+          ${person.profession}
         </div>
       </div>
-    `;
-  };
+    </div>
+  `;
   // end::renderer[]
 }

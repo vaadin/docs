@@ -17,7 +17,7 @@ interface PersonWithRating extends Person {
 
 @customElement('grid-styling')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -32,14 +32,14 @@ export class Example extends LitElement {
     maximumFractionDigits: 2,
   });
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people.map((person) => ({ ...person, customerRating: Math.random() * 10 }));
   }
 
-  render() {
+  protected override render() {
     return html`
-      <vaadin-grid .items="${this.items}" .cellClassNameGenerator="${this.cellClassNameGenerator}">
+      <vaadin-grid .items="${this.items}" .cellPartNameGenerator="${this.cellPartNameGenerator}">
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>
@@ -55,21 +55,21 @@ export class Example extends LitElement {
     <span>${this.ratingFormatter.format(person.customerRating)}</span>
   `;
 
-  private cellClassNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {
+  private cellPartNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {
     const item = model.item;
-    let classes = '';
+    let parts = '';
     // Make the customer rating column bold
     if (column.header?.startsWith('Customer rating')) {
-      classes += ' font-weight-bold';
+      parts += ' font-weight-bold';
     }
-    // Add high-rating class to customer ratings of 8 or higher
+    // Add high-rating part to customer ratings of 8 or higher
     if (item.customerRating >= 8.0) {
-      classes += ' high-rating';
-      // Add low-rating class to customer ratings of 4 or lower
+      parts += ' high-rating';
+      // Add low-rating part to customer ratings of 4 or lower
     } else if (item.customerRating <= 4.0) {
-      classes += ' low-rating';
+      parts += ' low-rating';
     }
-    return classes;
+    return parts;
   }
 }
 // end::snippet[]

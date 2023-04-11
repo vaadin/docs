@@ -15,7 +15,7 @@ interface FileItem {
 
 @customElement('context-menu-best-practices')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -33,12 +33,7 @@ export class Example extends LitElement {
     { name: 'Financials.xlsx', size: '42 MB' },
   ];
 
-  private menuBarRenderer = () => {
-    const items = [{ component: this.makeIcon(), children: this.items }];
-    return html`<vaadin-menu-bar .items=${items} theme="tertiary"></vaadin-menu-bar>`;
-  };
-
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
@@ -52,19 +47,17 @@ export class Example extends LitElement {
           <vaadin-grid-column
             width="70px"
             flex-grow="0"
-            ${columnBodyRenderer(this.menuBarRenderer, [])}
+            ${columnBodyRenderer(
+              () => html`
+                <vaadin-menu-bar .items=${this.items} theme="tertiary"></vaadin-menu-bar>
+              `,
+              []
+            )}
           ></vaadin-grid-column>
         </vaadin-grid>
       </vaadin-context-menu>
       <!-- end::snippethtml[] -->
     `;
-  }
-
-  makeIcon() {
-    const item = document.createElement('vaadin-context-menu-item');
-    item.textContent = '•••';
-    item.setAttribute('aria-label', 'More options');
-    return item;
   }
 
   onContextMenu(e: MouseEvent) {

@@ -11,7 +11,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 
 @customElement('message-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -21,7 +21,7 @@ export class Example extends LitElement {
   @state()
   private items: MessageListItem[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
     const person = people[0];
     this.items = [
@@ -41,7 +41,7 @@ export class Example extends LitElement {
     ];
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-message-list .items="${this.items}"></vaadin-message-list>

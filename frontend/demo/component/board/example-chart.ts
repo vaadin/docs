@@ -27,24 +27,22 @@ const chartOptions = {
 
 @customElement('example-chart')
 export class Example extends LitElement {
-  static get styles() {
-    return css`
-      .title {
-        font-size: var(--lumo-font-size-l);
-        font-weight: 700;
-        margin-block-end: var(--lumo-space-m);
-      }
-    `;
-  }
+  static override styles = css`
+    .title {
+      font-size: var(--lumo-font-size-l);
+      font-weight: 700;
+      margin-block-end: var(--lumo-space-m);
+    }
+  `;
 
   @state()
   private events: ViewEvent[] = [];
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     this.events = await getViewEvents();
   }
 
-  render() {
+  protected override render() {
     return html`
       <header class="title">View events</header>
       <vaadin-chart .additionalOptions="${chartOptions}" .categories="${monthNames}" type="area">

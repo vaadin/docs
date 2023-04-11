@@ -8,9 +8,9 @@ layout: page
 [[flow.loading-resources]]
 = Loading Resources
 
-Applications can use various types of resources, such as JavaScript code, CSS, and images.
-This article describes how they are stored in a project and then accessed in an application.
+Applications can use various types of resources, such as JavaScript code, CSS, and images. This article describes how they are stored in a project and then accessed in an application.
 
+[[flow.resource-cheat-sheet]]
 == Resource Cheat Sheet
 
 The following tables show how to load various resources and where the resource files should be placed in a project.
@@ -27,11 +27,15 @@ The following tables show how to load various resources and where the resource f
 |`@JsModule("./src/my-script.js")`<<foot-1,[1]>>
 |`/frontend/src/my-script.js`
 
-|Static files, such as images and icons (such as the favicon)
+|Static files such as images, icons (including the favicon) and documents, directly requested from the browser
 |`new Image("img/flower.jpg", "A flower")`
+
+`new Anchor("assets/document.pdf", "A document");`<<foot-2,[2]>>
 |`/src/main/webapp/img/flower.jpg`
-+
+
 `/src/main/webapp/favicon.icon`
+
+`/src/main/webapp/assets/document.pdf`
 |===
 
 .In Spring projects
@@ -48,10 +52,14 @@ The following tables show how to load various resources and where the resource f
 
 |Static files, such as images and icons (for example, the favicon)
 |`new Image("img/flower.jpg", "A flower")`
+
+`new Anchor("assets/document.pdf", "A document");`<<foot-2,[2]>>
 |
 `/src/main/resources/META-INF/resources/img/flower.jpg`
 
 `/src/main/webapp/favicon.icon`
+
+`/src/main/resources/META-INF/resources/assets/document.pdf`
 |===
 
 .In add-ons
@@ -68,25 +76,90 @@ The following tables show how to load various resources and where the resource f
 
 |Static files, such as images and icons (for example, the favicon)
 |`new Image("img/flower.jpg", "A flower")`
+
+`new Anchor("assets/document.pdf", "A document");`<<foot-2,[2]>>
 |
 `/src/main/resources/META-INF/resources/img/flower.jpg`
 
 `/src/main/webapp/favicon.icon`
+
+`/src/main/resources/META-INF/resources/assets/document.pdf`
 |===
+
 
 === Footnotes
 
-[[foot-1]]
-. The `@JsModule` and `@CssImport` annotations can also be used to import from an `npm` package.
-In this case, the path is defined as `@JsModule("@polymer/paper-input")` or `@CssImport("some-package/style.css")`.
-Paths referring to the local front-end directory should be prefixed with `./`.
+. [[foot-1]]The `@JsModule` and `@CssImport` annotations can also be used to import from an `npm` package. In which case, the path is defined as `@JsModule("@polymer/paper-input")` or `@CssImport("some-package/style.css")`. Paths referring to the local front-end directory should be prefixed with `./`.
 
-== Importing JavaScript and CSS
+. [[foot-2]]When using `Anchor` to provide a downloadable resource, the `router-ignore` attribute is required.
++
+[source,java]
+----
+Anchor anchor = new Anchor("assets/document.pdf", "A document");
+anchor.getElement().setAttribute("router-ignore", true);
+----
+
+
+== Programmatically Load Resources
+
+Components such as [classname]`Image` and [classname]`Anchor` allow you to display or download dynamic content by providing a [classname]`StreamResource`. Content is fetched by an instance of [interfacename]`InputStreamFactory`, that is passed to the [classname]`StreamResource` as a constructor parameter. The [interfacename]`InputStreamFactory` requires implementing the [methodname]`createInputStream()` method. It can be used to load, for example, images and documents shipped along with the application. Resources can be loaded from an application classpath or from the web application.
+
+The classpath resources are stored in the `/src/main/resources` folder and can be loaded using the  [methodname]`Class.getResourceAsStream(name)` or [methodname]`ClassLoader.getResourceAsStream(name)` methods. The name is always considered to be an absolute path (i.e., starting with a `/`) for [methodname]`ClassLoader.getResourceAsStream(name)`. For [methodname]`Class.getResourceAsStream(name)`, however, it can be an absolute path or relative to the class package.
+
+.Load resources from classpath
+[source,java]
+----
+// Given the following resources exists
+// `/src/main/resources/img/flower.jpg`
+// `/src/main/resources/com/example/document.pdf`
+package com.example;
+class MyView extends Div {
+    public MyView() {
+        add(new Image(new StreamResource("flower.jpg",
+            () -> getClass().getResourceAsStream("/img/flower.jpg")),
+            "Plant 3"
+        ));
+        Anchor anchor = new Anchor(new StreamResource("document.pdf",
+            () -> getClass().getResourceAsStream("document.pdf")),
+            "A document"
+        );
+        anchor.getElement().setAttribute("router-ignore", true);
+        add(anchor);
+    }
+}
+----
+
+Web application resources can be loaded through [methodname]`VaadinService.getResourceAsStream(path)` or directly from [methodname]`ServletContext.getResourceAsStream(path)`. The Servlet specifications state that the provided `path` should be absolute. However, some Servlet containers (e.g., Tomcat) are allowed to pass a path without the starting `/`.
+
+.Load resources from web application
+[source,java]
+----
+package com.example;
+class MyView extends Div {
+    public MyView() {
+        add(new Image(new StreamResource("flower.jpg",
+            () -> VaadinService.getCurrent().getResourceAsStream("/img/flower.jpg")),
+            "Plant 3"
+        ));
+        Anchor anchor = new Anchor(new StreamResource("document.pdf",
+            () ->  VaadinServlet.getCurrent().getServletContext()
+                      .getResourceAsStream("/assets/document.pdf")),
+            "A document");
+        anchor.getElement().setAttribute("router-ignore", true);
+        add(anchor);
+    }
+}
+----
+
+The physical location of the resources in the project is the same as described in the <<#flow.resource-cheat-sheet, Resource Cheat Sheet>> section.
+
+
+== Importing JavaScript & CSS
 
 You can add JavaScript files in two ways: either by using annotations or through the [classname]`Page` object.
 
-Sometimes the way client-side resources are loaded by the browser affects the functionality of the application.
-Vaadin Flow provides advanced methods to configure the loading of these resources.
+Sometimes the way client-side resources are loaded by the browser will affect the functionality of the application. Vaadin Flow provides advanced methods to configure the loading of these resources.
+
 
 === Using Annotations
 
@@ -107,33 +180,29 @@ static class CustomComponent extends Component
 The following annotations are available:
 
 `@JsModule`::
-Defines a JavaScript module dependency.
-These dependencies are loaded first.
+Defines a JavaScript module dependency. These dependencies are loaded first.
 +
 Lit templates should be imported using `@JsModule` (see <<{articles}/create-ui/templates/basic#,Creating a Simple Component Using the Template API>> for more information).
 
 `@JavaScript`::
-Defines a JavaScript file dependency.
-The file is loaded according to the load mode, as described in <<flow.loading-resources.load-mode>>.
+Defines a JavaScript file dependency. The file is loaded according to the load mode, as described in <<flow.loading-resources.load-mode>>.
 
 `@CssImport`::
-Imports a local style sheet, which can be bundled in the front-end bundle.
+Imports a local style sheet, which can be included in the front-end bundle.
 +
-See <<{articles}/styling/advanced/importing-stylesheets#importing.bundled,Importing Bundled Style Sheets>>.
+See <<{articles}/styling/legacy/css-import#,@CssImport Annotation>>.
 
 `@StyleSheet`::
 Imports an external or linked style sheet.
 +
-See <<{articles}/styling/advanced/importing-stylesheets#importing.external,Importing External Style Sheets>>.
+See <<{articles}/styling/advanced/lazy-loading-stylesheets#,Lazy-loading Stylesheets>>.
 
-All the resource annotations are repeatable.
-Add one annotation for each file that you need to add.
+All of the resource annotations are repeatable. Include one annotation for each file that you need to add.
 
 
 === Loading JavaScript with the Page Object
 
-You can use the [methodname]`addJavaScript(String url)` method in [classname]`Page` to load JavaScript.
-The [classname]`Page` object also has an [methodname]`addJsModule(String url)` method, which you can use to load an external JavaScript module.
+You can use the [methodname]`addJavaScript(String url)` method in [classname]`Page` to load JavaScript. The [classname]`Page` object also has an [methodname]`addJsModule(String url)` method, which you can use to load an external JavaScript module.
 
 The following example uses [methodname]`addJavaScript(String url)` to import JavaScript files:
 
@@ -145,19 +214,14 @@ UI.getCurrent().getPage()
         .addJsModule("https://unpkg.com/lodash@4.17.15");
 ----
 
+
 === Dependency Loading Order
 
-Imported dependency files of the same type load in the order they are defined in the class.
-For example, CSS files load in the `@CssImport` annotation definition order, JavaScript files in the `@JsModule` and `@JavaScript` annotation definition order.
+Imported dependency files of the same type load in the order they are defined in the class. For example, CSS files load in the `@CssImport` annotation definition order, while JavaScript files in the `@JsModule` and `@JavaScript` annotation definition order.
 
-The loading order of imported dependencies is only guaranteed for one file type, in one class.
-Specifically, loading order isn't guaranteed between classes; annotations on class `A` could be imported before or after annotations on class `B`.
+The loading order of imported dependencies is only guaranteed for one file type, in one class. Specifically, loading order isn't guaranteed between classes: annotations on class `A` could be imported before or after annotations on class `B`.
 
-Front-end resources bundled by Vite also have a type group ordering; JavaScript files loaded by the `@JsModule` annotation always come before JavaScript files loaded by `@JavaScript`, and both of those come before CSS files loaded by `@CssImport`.
-The exception to this rule is `@JsModule` annotations of files annotated with `@Theme`.
-All JavaScript modules found on such classes are imported before other file types.
-This covers both the `Lumo` and `Material` themes, as well as custom themes created by the developer.
-
+Front-end resources bundled by Vite also have a type group ordering. JavaScript files loaded by the `@JsModule` annotation always come before JavaScript files loaded by `@JavaScript`, and both of those come before CSS files loaded by `@CssImport`. The exception to this rule is the `@JsModule` annotations of files annotated with `@Theme`. All JavaScript modules found on such classes are imported before other file types. This covers both the `Lumo` and `Material` themes, as well as custom themes created by the developer.
 
 For example, you could have multiple imported dependencies of different file types in a single class, as follows:
 
@@ -173,14 +237,13 @@ static class OrderedDependencies extends Div {
 }
 ----
 
-The loading order of the files would be: `a.js`, `b.js`, `1.js`, `2.js`, `1.css`, and `2.css`.
+The loading order of the files here would be: `a.js`, `b.js`, `1.js`, `2.js`, `1.css`, then `2.css`.
 
-Imports on other classes could be before or after the imports present here (within each file group).
+Imports on other classes could be before or after the imports present here, within each file group. You can control the load order of dependencies of different file types by adding imports within a JavaScript import.
 
 You can control the load order of dependencies of different file types by adding imports within a JavaScript import.
 
 In the following example, using JavaScript imports ensures that [filename]`custom-css.js` runs before [filename]`javascript-file.js`.
-The [filename]`custom-css.js` code uses the technique for wrapping CSS into JavaScript presented in <<{articles}/styling/advanced/importing-stylesheets#importing, Importing Style Sheets>>.
 
 [source,javascript]
 ----
@@ -191,39 +254,31 @@ import './javascript-file.js';
 [[flow.loading-resources.load-mode]]
 === Load Mode
 
-Resources referenced with annotations or loaded with the methods in the [classname]`Page` object can be imported with different levels of "eagerness".
-This is controlled with the _load mode_.
+Resources referenced with annotations, or loaded with the methods in the [classname]`Page` object, can be imported with different levels of "eagerness". This is controlled with the _load mode_.
 
-The load mode doesn't affect files that are bundled by Vite.
-These files are included into the front-end resource bundle and are available after the bundle has been loaded.
+The load mode doesn't affect files that are bundled by Vite. These files are included in the front-end resource bundle and are available after the bundle has been loaded.
 
 Three load modes are available:
 
 `LoadMode.EAGER` (default)::
-This is the default load mode for all dependencies.
-The "eager" mode ensures that the dependency is loaded as soon as possible, and before the initial page load.
+This is the default load mode for all dependencies. The "eager" mode ensures that the dependency is loaded as soon as possible, and before the initial page load.
 +
-The "eager" mode is usually suitable.
-Use it if you are unsure which mode to use.
+The "eager" mode is usually suitable. Use it if you are unsure which mode to use.
 
 `LoadMode.INLINE`::
-The dependencies are included inline in the body of the page.
-This mode eliminates round trips when fetching dependencies.
+The dependencies are included inline in the body of the page. This mode eliminates round trips when fetching dependencies.
 // TODO How to catch exception for annotation?
 If the contents can't be fetched, an exception is thrown and loading stops.
 +
 [NOTE]
-Pay attention to URLs used for inline dependencies; the URLs may change and could be incorrect after loading.
+Pay attention to URLs used for inline dependencies. The URLs may change and could be incorrect after loading.
 
 `LoadMode.LAZY`::
-The dependencies are loaded in the background, after all eager and inline dependencies have loaded.
-"Lazy" dependency loading is independent of page initialization.
+The dependencies are loaded in the background, after all eager and inline dependencies have loaded. "Lazy" dependency loading is independent of page initialization.
 +
-"Lazy" mode is suitable when you need to load the dependency, but it isn't important *when* it's loaded.
+"Lazy" mode is suitable when you need to load the dependency, but it isn't important when it's loaded.
 
-You can give the load mode as a parameter for annotations that load the resources.
-
-The following example shows how to use annotations to add resource files:
+You can give the load mode as a parameter for annotations that load the resources. The following example shows how to use annotations to add resource files:
 
 [source,java]
 ----
@@ -242,7 +297,7 @@ When loading resources with the [classname]`Page` object, you can use the follow
 * [methodname]`addStyleSheet(String url, LoadMode loadMode)`
 * [methodname]`addJavaScript(String url, LoadMode loadMode)`
 
-For example:
+Below is an example of this:
 
 [source,java]
 ----
@@ -260,54 +315,43 @@ For example:
 
 All "eager" and inline dependencies are guaranteed to load before "lazy" dependencies.
 
-For example, a component could use JavaScript animation, say [filename]`/js/animation.js`.
-It's optional and not required to display when the page is loaded.
-You can postpone its loading, giving priority to other resources.
+For example, a component could use JavaScript animation, say [filename]`/js/animation.js`. It's optional and not required to display when the page is loaded. You can postpone its loading, giving priority to other resources.
 
-Dependencies with the same load mode are guaranteed to load in the order defined in the component.
-This is true for all load modes.
+Dependencies with the same load mode are guaranteed to load in the order defined in the component. This is true for all load modes.
 
 
 == Storing Resources
 
-Resources can be loaded as individual files or bundled into the front-end bundle that also includes all Vaadin web components and other resources.
+Resources can be loaded as individual files or included in the front-end bundle that also contains all Vaadin web components and other resources.
+
 
 === Bundled Front-End Resources
 
-Vaadin bundles all the web components used in an application into a single front-end bundle file, which can be loaded efficiently when the application page is loaded.
-You can include your own files into the bundle as well.
+Vaadin bundles all of the web components used in an application into a single front-end bundle file, which can be loaded efficiently when the application page is loaded. You can include your own files into the bundle, as well.
 
-Static resources that are bundled using Vite and referenced with the `@JavaScript`, `@JsModule`, and `@CssImport` annotations should be placed under `{project directory}/frontend`.
-This includes normal JavaScript and TypeScript files, Lit template files, and CSS files.
-When importing files using these annotations, prefix the path with `./`, which signifies the `frontend/` directory.
-For example, a CSS file [filename]`my-custom.css` under [filename]`{project directory}/frontend/styles/my-custom.css` would be referenced `@CssImport("./styles/my-custom.css")`.
+Static resources that are bundled using Vite and referenced with the `@JavaScript`, `@JsModule`, and `@CssImport` annotations should be placed under `{project directory}/frontend`. This includes normal JavaScript and TypeScript files, Lit template files, and CSS files.
+
+When importing files using these annotations, prefix the path with `./`, which signifies the `frontend/` directory. For example, a CSS file [filename]`my-custom.css` under [filename]`{project directory}/frontend/styles/my-custom.css` would be referenced `@CssImport("./styles/my-custom.css")`.
 
 If the `./` prefix is missing from an `@JsModule` annotation, the import is treated as a reference to an `npm` module under the `node_modules/` folder.
 
+
 === Static Resources
 
-This section covers static resource locations for resources that shouldn't be bundled by Vite.
+This section covers locations for static resource that shouldn't be bundled by Vite. You can place your resource files (i.e., CSS style sheets and JavaScript files, and other static resources) in any folder in your Web Archive (`WAR`) file, except `/VAADIN`, which is reserved for internal framework use.
 
-You can place your resource files (CSS style sheets and JavaScript files, and other static resources) in any folder in your Web Archive (`WAR`) file, except `/VAADIN`, which is reserved for internal framework use.
+[classname]`VaadinServlet` handles static resource requests, if you have mapped it to `/*`. If not, the servlet container takes care of static resource requests.
 
-[classname]`VaadinServlet` handles static resource requests, if you have mapped it to `/*`.
-If not, the servlet container takes care of static resource requests.
+If you use relative URLs, it's irrelevant whether your application is deployed in the root context (e.g., `\http://mysite.com/`) or in a sub-context (e.g., `\http://mysite.com/myapp/`). Relative URLs are resolved using the page base URI, which is always set to match the servlet URL.
 
-If you use relative URLs, it's irrelevant whether your application is deployed in the root context (for example `\http://mysite.com/`) or in a sub-context (for example `\http://mysite.com/myapp/`).
-Relative URLs are resolved using the page base URI, which is always set to match the servlet URL.
 
 === Using a Servlet Path
 
-If you use a servlet path for the servlet, for example `\http://mysite.com/myapp/myservlet/`, you need to take the servlet path into account when including resources.
-This is because the base URI is `\http://mysite.com/myapp/myservlet/`, but static resources are deployed at `\http://mysite.com/myapp/`.
+If you use a servlet path for the servlet (e.g., `\http://mysite.com/myapp/myservlet/`), you need to take the servlet path into account when including resources. This is because the base URI is `\http://mysite.com/myapp/myservlet/`, but static resources are deployed at `\http://mysite.com/myapp/`.
 
-You can use the `context://` protocol, with the [methodname]`Page.addStyleSheet()` method, for example.
-This ensures that the URL is relative to the context path.
-This protocol is only supported when including resources.
+You can use the `context://` protocol, with the [methodname]`Page.addStyleSheet()` method, for example. This ensures that the URL is relative to the context path. This protocol is only supported when including resources.
 
-When you configure an element, for example setting the `src` attribute for an `<img>`, you can't use the `context://` protocol.
-
-Your options are:
+When you configure an element, such as setting the `src` attribute for an `<img>`, you can't use the `context://` protocol. Your options are to do one of the following:
 
 * Take the servlet path into account with your relative URL, for example `../images/logo.png`.
 * Use an absolute URL, for example `/myapp/images/logo.png`.

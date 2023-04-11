@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-popup-width')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,16 +19,15 @@ export class Example extends LitElement {
   @state()
   private items: Person[] = [];
 
-  async firstUpdated() {
-    this.items = (await getPeople()).people.map((person) => {
-      return {
-        ...person,
-        displayName: `${person.profession} - ${person.firstName} ${person.lastName}`,
-      };
-    });
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people.map((person) => ({
+      ...person,
+      displayName: `${person.profession} - ${person.firstName} ${person.lastName}`,
+    }));
   }
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-combo-box

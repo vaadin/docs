@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-group-basic')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,13 +19,15 @@ export class Example extends LitElement {
   @state()
   private value = ['0', '2'];
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-checkbox-group
         label="Export data"
         .value="${this.value}"
-        @value-changed="${(e: CheckboxGroupValueChangedEvent) => (this.value = e.detail.value)}"
+        @value-changed="${(event: CheckboxGroupValueChangedEvent) => {
+          this.value = event.detail.value;
+        }}"
         theme="vertical"
       >
         <vaadin-checkbox value="0" label="Order ID"></vaadin-checkbox>

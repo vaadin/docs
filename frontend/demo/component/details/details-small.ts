@@ -8,18 +8,16 @@ import { applyTheme } from 'Frontend/generated/theme';
 // tag::snippet[]
 @customElement('details-small')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
 
-  render() {
+  protected override render() {
     return html`
-      <vaadin-details opened theme="small">
-        <div slot="summary">Members (8)</div>
-
+      <vaadin-details summary="Members (8)" opened theme="small">
         <ul>
           <li>Blake Martin</li>
           <li>Caroline Clark</li>

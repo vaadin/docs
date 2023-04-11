@@ -17,7 +17,7 @@ export class Example extends LitElement {
   @state()
   private isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -25,13 +25,10 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  render() {
+  protected override render() {
     return html`
       <!-- end::snippet[] -->
-      <vaadin-button
-        @click="${() => (this.notificationOpened = true)}"
-        .disabled="${this.notificationOpened}"
-      >
+      <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">
         Try it
       </vaadin-button>
 
@@ -52,23 +49,21 @@ export class Example extends LitElement {
   // end::snippet[]
 
   // tag::renderer[]
-  renderer: NotificationLitRenderer = () => {
-    return html`
-      <vaadin-horizontal-layout style="align-items: center;">
-        <div>5 tasks deleted</div>
-        <vaadin-button
-          style="margin-left: var(--lumo-space-xl);"
-          theme="primary"
-          @click="${this.close}"
-        >
-          Undo
-          <!-- Ideally, this should be hidden if the
+  renderer: NotificationLitRenderer = () => html`
+    <vaadin-horizontal-layout style="align-items: center;">
+      <div>5 tasks deleted</div>
+      <vaadin-button
+        style="margin-left: var(--lumo-space-xl);"
+        theme="primary"
+        @click="${this.close}"
+      >
+        Undo
+        <!-- Ideally, this should be hidden if the
                  device does not have a physical keyboard -->
-          ${this.isMac ? '⌘' : 'Ctrl-'}Z
-        </vaadin-button>
-      </vaadin-horizontal-layout>
-    `;
-  };
+        ${this.isMac ? '⌘' : 'Ctrl-'}Z
+      </vaadin-button>
+    </vaadin-horizontal-layout>
+  `;
 
   // end::renderer[]
 
@@ -90,10 +85,14 @@ export class Example extends LitElement {
       // Handle your custom undo logic here
       // Avoid triggering the native undo action
       event.preventDefault();
-      this.notificationOpened = false;
+      this.close();
     }
   };
   // end::key-down[]
+
+  private open() {
+    this.notificationOpened = true;
+  }
 
   private close() {
     this.notificationOpened = false;

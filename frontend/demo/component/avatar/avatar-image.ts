@@ -6,11 +6,11 @@ import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import * as companyLogo from '../../../../src/main/resources/images/company-logo.png';
+import companyLogo from '../../../../src/main/resources/images/company-logo.png';
 
 @customElement('avatar-image')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -20,12 +20,12 @@ export class Example extends LitElement {
   @state()
   private person?: Person;
 
-  async firstUpdated() {
+  protected override async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
     this.person = people[0];
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->

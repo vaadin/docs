@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('custom-field-native-input')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -18,13 +18,15 @@ export class Example extends LitElement {
   @state()
   private customFieldValue = '';
 
-  render() {
+  protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-custom-field
         label="Payment information"
         theme="whitespace"
-        @change="${(e: CustomFieldChangeEvent) => (this.customFieldValue = e.target.value || '')}"
+        @change="${(event: CustomFieldChangeEvent) => {
+          this.customFieldValue = event.target.value ?? '';
+        }}"
       >
         <vaadin-horizontal-layout theme="spacing-s">
           <input

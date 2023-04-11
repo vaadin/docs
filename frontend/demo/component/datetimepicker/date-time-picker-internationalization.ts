@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-internationalization')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -19,7 +19,7 @@ export class Example extends LitElement {
   @query('vaadin-date-time-picker')
   private dateTimePicker!: DateTimePicker;
 
-  firstUpdated() {
+  protected override firstUpdated() {
     this.dateTimePicker.i18n = {
       ...this.dateTimePicker.i18n,
       monthNames: [
@@ -38,13 +38,12 @@ export class Example extends LitElement {
       ],
       weekdays: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
       weekdaysShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
-      week: 'Woche',
       today: 'Heute',
       cancel: 'Abbrechen',
     };
   }
 
-  render() {
+  protected override render() {
     return html`<vaadin-date-time-picker label="Sitzungsdatum"></vaadin-date-time-picker>`;
   }
   // end::snippet[]

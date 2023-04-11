@@ -10,7 +10,7 @@ import getDaysInMonth from 'date-fns/getDaysInMonth';
 
 @customElement('date-picker-individual-input-fields')
 export class Example extends LitElement {
-  protected createRenderRoot() {
+  protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
@@ -73,7 +73,7 @@ export class Example extends LitElement {
     this.selectedDay = e.detail.value!;
   }
 
-  render() {
+  protected override render() {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <vaadin-combo-box

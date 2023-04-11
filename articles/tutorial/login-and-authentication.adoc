@@ -104,53 +104,43 @@ Enable and configure Spring Security with a new class, [classname]`SecurityConfi
 ----
 package com.example.application.security;
 
-import java.util.Collections;
-
 import com.example.application.views.LoginView;
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-
-import com.vaadin.flow.spring.security.VaadinWebSecurity;
 
 @EnableWebSecurity // <1>
 @Configuration
 public class SecurityConfig extends VaadinWebSecurity { // <2>
 
-    /**
-     * Demo SimpleInMemoryUserDetailsManager, which only provides
-     * two hardcoded in-memory users and their roles.
-     * NOTE: This shouldn't be used in real-world applications.
-     */
-    private static class SimpleInMemoryUserDetailsManager extends InMemoryUserDetailsManager {
-        public SimpleInMemoryUserDetailsManager() {
-            createUser(new User("user",
-                "{noop}userpass",
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
-            ));
-            createUser(new User("admin",
-                "{noop}userpass",
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_ADMIN"))
-            ));
-        }
-    }
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests().antMatchers("/images/**").permitAll(); // <3>
-
+        http.authorizeHttpRequests()
+                .requestMatchers("/images/*.png").permitAll();  // <3>
         super.configure(http);
-
         setLoginView(http, LoginView.class); // <4>
     }
 
     @Bean
-    public InMemoryUserDetailsManager userDetailsService() {
-        return new SimpleInMemoryUserDetailsManager(); // <5>
+    public UserDetailsService users() {
+        UserDetails user = User.builder()
+                .username("user")
+                // password = password with this hash, don't tell anybody :-)
+                .password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
+                .roles("USER")
+                .build();
+        UserDetails admin = User.builder()
+                .username("admin")
+                .password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
+                .roles("USER", "ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(user, admin); // <5>
     }
 }
 ----
@@ -158,7 +148,7 @@ public class SecurityConfig extends VaadinWebSecurity { // <2>
 <2> Extend the [classname]`VaadinWebSecurity` class to configure Spring Security for Vaadin.
 <3> Allow public access to the image directory.
 <4> Allow access to `LoginView`.
-<5> Configure an in-memory user for testing (see note below).
+<5> Configure an in-memory users for testing (see note below).
 
 .Never use hard-coded credentials in production
 [WARNING]
@@ -175,40 +165,30 @@ Then, in the same package, create a service for accessing information on the log
 ----
 package com.example.application.security;
 
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.server.VaadinServletRequest;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SecurityService {
 
-    private static final String LOGOUT_SUCCESS_URL = "/";
+    private final AuthenticationContext authenticationContext;
+
+    public SecurityService(AuthenticationContext authenticationContext) {
+        this.authenticationContext = authenticationContext;
+    }
 
     public UserDetails getAuthenticatedUser() {
-        SecurityContext context = SecurityContextHolder.getContext();
-        Object principal = context.getAuthentication().getPrincipal();
-        if (principal instanceof UserDetails) {
-            return (UserDetails) principal;
-        }
-        // Anonymous or no authentication.
-        return null;
+        return authenticationContext.getAuthenticatedUser(UserDetails.class).get();
     }
 
     public void logout() {
-        UI.getCurrent().getPage().setLocation(LOGOUT_SUCCESS_URL);
-        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
-        logoutHandler.logout(
-                VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
-                null);
+        authenticationContext.logout();
     }
 }
 ----
 
-Finally, add `@PermitAll` annotations to both views to allow all logged-in users to access them.
+Finally, add `@PermitAll` annotations to both views to allow all logged-in users to access them. 
 
 .`ListView.java`
 [source,java]
@@ -253,13 +233,13 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.HighlightConditions;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 public class MainLayout extends AppLayout {
     private final SecurityService securityService;
 
-    public MainLayout(SecurityService securityService) { // <1>
+    public MainLayout(SecurityService securityService) {  // <1>
         this.securityService = securityService;
         createHeader();
         createDrawer();
@@ -267,28 +247,30 @@ public class MainLayout extends AppLayout {
 
     private void createHeader() {
         H1 logo = new H1("Vaadin CRM");
-        logo.addClassNames("text-l", "m-m");
+        logo.addClassNames(
+            LumoUtility.FontSize.LARGE,
+            LumoUtility.Margin.MEDIUM);
 
-        Button logout = new Button("Log out", e -> securityService.logout()); // <2>
+        String u = securityService.getAuthenticatedUser().getUsername();
+        Button logout = new Button("Log out " + u, e -> securityService.logout()); // <2>
 
-        HorizontalLayout header = new HorizontalLayout(new DrawerToggle(), logo, logout); // <3>
+        var header = new HorizontalLayout(new DrawerToggle(), logo, logout); // <3>
 
         header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
         header.expand(logo); // <4>
-        header.setWidth("100%");
-        header.addClassNames("py-0", "px-m");
+        header.setWidthFull();
+        header.addClassNames(
+            LumoUtility.Padding.Vertical.NONE,
+            LumoUtility.Padding.Horizontal.MEDIUM);
 
-        addToNavbar(header);
+        addToNavbar(header); 
 
     }
 
     private void createDrawer() {
-        RouterLink listLink = new RouterLink("List", ListView.class);
-        listLink.setHighlightCondition(HighlightConditions.sameLocation());
-
         addToDrawer(new VerticalLayout(
-            listLink,
-            new RouterLink("Dashboard", DashboardView.class)
+                new RouterLink("List", ListView.class),
+                new RouterLink("Dashboard", DashboardView.class)
         ));
     }
 }
@@ -305,7 +287,7 @@ Verify that you can't access http://localhost:8080/dashboard without being logge
 You can log in with:
 
 * Username: `user`
-* Password: `userpass`
+* Password: `password`
 
 image::images/login/logout-button.png[Log out button on page]
 
