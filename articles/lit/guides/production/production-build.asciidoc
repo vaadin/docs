@@ -4,8 +4,6 @@ description: Learn how to create a production ready package of your application,
 order: 10
 ---
 
-// TODO partly outdated (mentions of webpack at least)
-
 = Production build
 
 By default, Hilla applications are configured to run in development mode.
@@ -19,36 +17,30 @@ The [filename]`pom.xml` file in a Hilla project has the following built-in Maven
 .pom.xml
 [source,xml]
 ----
-<profiles>
-    <profile>
-        <id>production</id>
-        <properties>
-            <vaadin.productionMode>true</vaadin.productionMode>
-        </properties>
-
-        <!--
-		.. configuration depending on environment ..
-		 -->
-         <executions>
-             <execution>
-                 <goals>
-                     <goal>build-frontend</goal>
-                 </goals>
-                 <phase>compile</phase>
-             </execution>
-         </executions>
-		 <!--
-		 .. more configuration ..
-		 -->
-    </profile>
-</profiles>
+<profile>
+    <!-- Production mode is activated using -Pproduction -->
+    <id>production</id>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>dev.hilla</groupId>
+                <artifactId>hilla-maven-plugin</artifactId>
+                <version>${hilla.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-frontend</goal>
+                        </goals>
+                        <phase>compile</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
 ----
 
-The actual content of the profile depends on what environment your application is running in, but all the variants do two things:
-
-. Set the property `vaadin.productionMode` to `true`
-. Call the Maven goal `vaadin:build-frontend`.
-The Maven goal `vaadin:prepare-frontend` is also required, but this is often already declared in the development build.
+The actual content of the profile depends on what environment your application is running in, but all the variants call the Maven goal `hilla:build-frontend`.
 
 == Creating a production build
 
@@ -66,7 +58,7 @@ If your operating system is 64-bit, make sure to use a 64-bit JDK installation a
 
 == Excluding the development server module
 
-The `webpack` server integration and live-reload features, which are available only during development, are contained in the module `com.vaadin:vaadin-dev-server`.
+The `Vite` server integration and live-reload features, which are available only during development, are contained in the module `com.vaadin:vaadin-dev-server`.
 It's recommended to exclude this module from production builds.
 You can do that by adding the following dependency exclusion to the `<dependencies>` section in the `production` profile:
 
@@ -82,11 +74,11 @@ You can do that by adding the following dependency exclusion to the `<dependenci
         <dependencies>
             <dependency>
                 <groupId>com.vaadin</groupId>
-                <artifactId>vaadin</artifactId>
+                <artifactId>vaadin-core</artifactId>
                 <exclusions>
                     <exclusion>
                         <groupId>com.vaadin</groupId>
-                        <artifactId>vaadin-dev-server</artifactId>
+                        <artifactId>vaadin-dev</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -110,16 +102,19 @@ Hence, this isn't done during development.
 Bundling is an optimization where multiple files are merged to a single collection, so that the browser doesn't need to request so many files from the server.
 This helps the application to load faster.
 
+////
+Must be massively updated
+
 == Maven plugin goals and goal parameters
 
 === `prepare-frontend`
 
 This goal validates whether the `node` and `npm` tools are installed and aren't too old (`node` version 10 or later and `npm` version 5.6 or later), and also installs them automatically to the `.vaadin` folder in the user's home directory if they are missing.
 If they are installed globally but too old, there will be an error message suggesting that you install newer versions instead.
-`Node.js` is needed to run `npm` to install front-end dependencies and `webpack`, which bundles the front-end files served to the client.
+`Node.js` is needed to run `npm` to install front-end dependencies and `Vite`, which bundles the front-end files served to the client.
 
-In addition, it visits all the resources used by the application and copies them under the `node_modules` folder, so that they are available when `webpack` builds the frontend.
-It also creates or updates the [filename]`package.json`, [filename]`webpack.config.json` and [filename]`webpack.generated.json` files.
+In addition, it visits all the resources used by the application and copies them under the `node_modules` folder, so that they are available when `Vite` builds the frontend.
+It also creates or updates the [filename]`package.json`, [filename]`tsconfig.json` and [filename]`vite.generated.json` files.
 
 ==== Goal parameters
 
@@ -207,3 +202,4 @@ Executing the `clean-frontend` goal removes:
 The goal also cleans all dependencies that are managed by the framework, and any dependencies that target the build folder from the [filename]`package.json` file.
 
 The `clean-frontend` goal supports the same parameters as `prepare-frontend`.
+////
