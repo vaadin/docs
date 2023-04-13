@@ -17,12 +17,7 @@ description: Customizing the configuration of a Hilla application for both the d
 // When adding [filename]`index.ts` or [filename]`index.html`, the application server needs to be restarted to update the entry point and the bootstrap template.
 
 [[java-compiler-options]]
-== Enable multi-module projects and other JVM languages
-
-.Preview features
-[TIP]
-Support for multi-module projects and all JVM languages are preview features.
-You need to enable the <<../reference/feature-flags#,`hillaEngine` feature flag>> to use them.
+== Configure the endpoint generator
 
 To allow the <<endpoint-generator#,endpoint generator>> to use the correct parameter names when building TypeScript files, you need to configure the Java compiler to not omit them by using the `javac -parameters` option. For example, the following shows how configure the Maven plugin to include that compiler option:
 
@@ -46,11 +41,37 @@ To allow the <<endpoint-generator#,endpoint generator>> to use the correct param
 </build>
 ----
 
-See each programming language's documentation how to enable the `parameters` option:
+== Use multi-module projects or endpoints from external dependencies
 
-- https://kotlinlang.org/docs/compiler-reference.html#java-parameters[Kotlin compiler options]
-- https://docs.gradle.org/current/dsl/org.gradle.api.tasks.compile.GroovyCompileOptions.html#org.gradle.api.tasks.compile.GroovyCompileOptions:parameters[Groovy compiler options]
+By default, Hilla searches for endpoints in your application only. You can extend the search to other modules of your project, or even to dependencies, like the <<../../acceleration-kits/sso-kit#, SSO Kit>>.
 
+The Hilla Maven plugin can be configured to list the Java packages that contain the endpoints. That list should always include the main application package and can include any number of other packages as needed.
+
+If your application is in a package named `com.example.application`, you have another module containing endpoints in `com.example.module`, and you want to use some third-party endpoints in `com.acme.module`, you can configure the plugin as follows:
+
+[source,xml]
+----
+<plugin>
+    <groupId>dev.hilla</groupId>
+    <artifactId>hilla-maven-plugin</artifactId>
+    <version>${hilla.version}</version>
+    <!-- Add this configuration -->
+    <configuration>
+        <parser>
+            <packages>
+                <package>com.example.application</package>
+                <package>com.example.module</package>
+                <package>com.acme.module</package>
+            </packages>
+        </parser>
+    </configuration>
+    <!-- ... -->
+</plugin>
+----
+
+.Endpoints and Spring dependencies
+[NOTE]
+If the endpoints coming from outside of the main application have autowired Spring dependencies, make sure that Spring can find them, otherwise Hilla will try to instantiate them using a default no-arguments constructor, which will not trigger dependency injection.
 
 [[ts-compiler-options]]
 == TypeScript compiler options
