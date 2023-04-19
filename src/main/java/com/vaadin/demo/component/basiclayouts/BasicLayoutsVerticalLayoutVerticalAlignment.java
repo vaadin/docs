@@ -20,7 +20,7 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
         // end::layout[]
 
         this.setClassName("basic-layouts-example");
-        layout.setClassName("height-5xl");
+        layout.setClassName("height-4xl");
         this.add(layout);
     }
     

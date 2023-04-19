@@ -24,7 +24,7 @@ export class Example extends LitElement {
     <!-- tag::snippet[] -->
       <vaadin-horizontal-layout
         theme="spacing padding"
-        class="height-5xl" // hidden-source-line
+        class="height-4xl" // hidden-source-line
         style="align-items: center"
       >
         <vaadin-text-area
