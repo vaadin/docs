@@ -23,7 +23,7 @@ The visibility level of the default [classname]`ObjectMapper` can be configured 
 
 Other properties of the default [classname]`ObjectMapper` can be customized by following the https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[Spring Boot documentation] on the subject. Alternatively, the entire [classname]`ObjectMapper` can be replaced with a custom one by providing an `ObjectMapper` bean with the qualifier defined in `com.vaadin.connect.HillaConnectController#VAADIN_ENDPOINT_MAPPER_BEAN_QUALIFIER`.
 
-The default [classname]`ObjectMapper` always converts TypeScript values to a JSON object before sending them to the backend, so that the values need to be compliant with the JSON specification. This only accepts values from the following types: `string`, `number`, `array`, `boolean`, JSON object or `null`. This implies that `NaN` and `Infinity` are non-compliant. If these values are sent, the server will return an error response: `400 Bad Request`. Sending a parameter of `undefined` from TypeScript results in default values for primitive types, `null` for a Java object, and `Optional.empty()` for `Optional`.
+The default [classname]`ObjectMapper` always converts TypeScript values to a JSON object before sending them to the backend, so that the values need to be compliant with the JSON specification. This only accepts values from the following types: `string`, `number`, `array`, `boolean`, JSON object or `null`. This implies that `NaN` and `Infinity` are non-compliant. If these values are sent, the server returns an error response: `400 Bad Request`. Sending a parameter of `undefined` from TypeScript results in default values for primitive types, `null` for a Java object, and `Optional.empty()` for `Optional`.
 
 
 [discrete]
@@ -51,22 +51,22 @@ The default conversion rules are summarized as follows. Incidentally, TypeScript
 | `byte`
 | An integer or decimal number in the range `-129 < X < 256`. `100`, `100.0`, and `100.9` -> `100`
 | Any value which isn't a number in TypeScript. Any number value which is outside the compliant range.
-| If TypeScript sends a value which is greater than Java's `Byte.MAX_VALUE` (2^8^ - 1), the bits are rolled over. For example, if you send a value of `128` (`Byte.MAX_VALUE + 1`), the Java side receives `-128`(`Byte.MIN_VALUE`). If the Java side expects a `byte` value but TypeScript sends an underflow number, for example `-129` (`Byte.MIN_VALUE - 1`), the backend returns an error.
+| If TypeScript sends a value which is greater than Java's `Byte.MAX_VALUE` (2^8^ &minus; 1), the bits are rolled over. For example, if you send a value of `128` (`Byte.MAX_VALUE + 1`), the Java side receives `-128`(`Byte.MIN_VALUE`). If the Java side expects a `byte` value but TypeScript sends an underflow number, for example `-129` (`Byte.MIN_VALUE &minus; 1`), the backend returns an error.
 
 | `short`
-| An integer or decimal number in the range `-2^16^ < X < 2^16^ - 1`. `100`, `100.0` and `100.9` -> `100`.
+| An integer or decimal number in the range `-2^16^ < X < 2^16^ &minus; 1`. `100`, `100.0` and `100.9` -> `100`.
 | Any value which isn't a number in TypeScript. Any number value which is outside the compliant range.
 | Overflow and underflow numbers aren't accepted for `short`.
 
 | `int`
 | An integer or decimal number: `100`, `100.0` and `100.9` -> `100`.
 | Any value which isn't a number in TypeScript.
-| If TypeScript sends a value which is greater than Java's `Integer.MAX_VALUE` (2^31^ - 1), the bits get rolled over. For example, if you send a value of `2^31^` (`Integer.MAX_VALUE + 1`), the Java side receives `-2^31^` (`Integer.MIN_VALUE`). Underflows are the reverse of the overflow case. If you send `-2^31^ - 1` (`Integer.MIN_VALUE - 1`), the Java side receives `2^31^ - 1` (`Integer.MAX_VALUE`).
+| If TypeScript sends a value which is greater than Java's `Integer.MAX_VALUE` (2^31^ &minus; 1), the bits get rolled over. For example, if you send a value of `2^31^` (`Integer.MAX_VALUE + 1`), the Java side receives `-2^31^` (`Integer.MIN_VALUE`). _Underflows_ are the reverse of the overflow case. If you send `-2^31^ &minus; 1` (`Integer.MIN_VALUE &minus; 1`), the Java side receives `2^31^ &minus; 1` (`Integer.MAX_VALUE`).
 
 | `long`
 | An integer or decimal number: `100`, `100.0` and `100.9` -> `100`.
 | Any value which isn't a number in TypeScript.
-| Bits are rolled over when receiving overflow/underflow numbers; that is, `2^63^` -> `-2^63^`, `-2^63^ - 1` -> `2^63^ - 1`.
+| Bits are rolled over when receiving overflow/underflow numbers; that is, `2^63^` -> `-2^63^`, `-2^63^ &minus; 1` -> `2^63^ &minus; 1`.
 
 | `float`, `double`
 | An integer or decimal number: `100` and `100.0` -> `100.0`, `100.9` -> `100.9`.
@@ -319,9 +319,16 @@ Type Conversion can be customized by using annotations on the object to serializ
 
 === Number Type
 
-All Java types that extend [classname]`java.lang.Number` are deserialized to `number` in TypeScript. There are a few exceptions with extremely large or extremely small numbers. The safe integer range is from `-(2^53^ - 1)` to `2^53^ - 1`. This means that only numbers in this range can be represented exactly and compared correctly. See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger[more information about safe integers].
+// Skipping "There is..." and "IEEE"
+pass:[<!-- vale Vaadin.ThereIs = NO -->]
+pass:[<!-- vale Vaadin.Abbr = NO -->] 
 
-In fact, not all `long` numbers in Java can be converted correctly to TypeScript, since its range is `-2^63^` to `2^63^ - 1`. Unsafe numbers are rounded using the rules defined in the https://en.wikipedia.org/wiki/IEEE_754#Rounding_rules[IEEE-754 standard].
+All Java types that extend [classname]`java.lang.Number` are deserialized to `number` in TypeScript. There are a few exceptions with extremely large or extremely small numbers. The safe integer range is from `-(2^53^ &minus; 1)` to `2^53^ &minus; 1`. This means that only numbers in this range can be represented exactly and compared correctly. See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger[more information about safe integers].
+
+In fact, not all `long` numbers in Java can be converted correctly to TypeScript, since its range is `-2^63^` to `2^63^ &minus; 1`. Unsafe numbers are rounded using the rules defined in the https://en.wikipedia.org/wiki/IEEE_754#Rounding_rules[IEEE-754 standard].
+
+pass:[<!-- vale Vaadin.ThereIs = YES -->]
+pass:[<!-- vale Vaadin.Abbr = YES -->]
 
 Special values such as `NaN`, `POSITIVE_INFINITY` and `NEGATIVE_INFINITY` are converted into `string` when sent to TypeScript.
 
@@ -343,7 +350,7 @@ Normal array types such as `int[]`, `MyBean[]` and all types that implement or e
 
 === Object
 
-Any kind of object in Java is converted to the corresponding defined type in TypeScript. For example, if the endpoint method returns a [classname]`MyBean` type, when you call the method, you will receive an object of type [classname]`MyBean`. If the generator cannot get information about your bean, it returns an object of type `any`.
+Any kind of object in Java is converted to the corresponding defined type in TypeScript. For example, if the endpoint method returns a [classname]`MyBean` type, when you call the method, you'll receive an object of type [classname]`MyBean`. If the generator cannot get information about your bean, it returns an object of type `any`.
 
 
 === Map
@@ -455,6 +462,8 @@ public class Product {
 
 In addition to the properties passed as the annotation value, the `@JsonIgnoreProperties` annotation accepts the following options:
 
+// Ignoring these section headings
+pass:[<!-- vale Vaadin.Spelling = NO -->]
 
 ==== allowSetters
 
@@ -498,12 +507,13 @@ During deserializing, `ignoreUnknown` prevents an error caused by the presence o
 
 This is a corner case, and shouldn't be necessary in Hilla, since the TypeScript-generated API shouldn't pass unknown properties.
 
+pass:[<!-- vale Vaadin.Spelling = YES -->]
 
 === The `@JsonIgnoreType` Annotation
 
 The `@JsonIgnoreType` annotation is a class-level annotation that indicates that all properties of the annotated class type should be ignored during serializing and deserializing.
 
-In the following example, the field `client` in [classname]`Sale` will be omitted in the JSON result.
+In the following example, the field `client` in [classname]`Sale` is omitted in the JSON result.
 
 [source,java]
 ----
