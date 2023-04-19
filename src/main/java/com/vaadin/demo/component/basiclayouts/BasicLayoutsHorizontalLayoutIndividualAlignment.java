@@ -15,11 +15,14 @@ public class BasicLayoutsHorizontalLayoutIndividualAlignment extends Div {
         TextArea textArea1 = new TextArea("Text area 1");
         HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
+        layout.setAlignItems(FlexComponent.Alignment.STRETCH);
         layout.add(textArea1);
-        layout.setAlignSelf(FlexComponent.Alignment.END, textArea1);
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setAlignSelf(FlexComponent.Alignment.START, textArea1);
         layout.add(new TextArea("Text area 2"));
-        layout.add(new TextArea("Text area 3"));
+		TextArea textArea3 = new TextArea("Text area 3");
+        layout.add(textArea3);
+        layout.setAlignSelf(FlexComponent.Alignment.END, textArea3);
+        
         // end::layout[]
 
         this.setClassName("basic-layouts-example");

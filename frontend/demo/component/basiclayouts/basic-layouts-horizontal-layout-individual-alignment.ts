@@ -25,16 +25,20 @@ export class Example extends LitElement {
       <vaadin-horizontal-layout
         theme="spacing padding"
         class="height-4xl" // hidden-source-line
-        style="align-items: center"
+        style="align-items: stretch"
       >
         <vaadin-text-area
           label="Text area 1"
-          style="align-self: end"
+          style="align-self: start"
         >
         </vaadin-text-area>
         <vaadin-text-area label="Text area 2"></vaadin-text-area>
-        <vaadin-text-area label="Text area 3"></vaadin-text-area>
+        <vaadin-text-area
+          label="Text area 3"
+          style="align-self: end"
+          </vaadin-text-area>
       </vaadin-horizontal-layout>
+
     <!-- end::snippet[] -->
     `;
   }
