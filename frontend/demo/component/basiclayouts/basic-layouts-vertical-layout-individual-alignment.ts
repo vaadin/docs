@@ -24,14 +24,17 @@ export class Example extends LitElement {
     <!-- tag::snippet[] -->
       <vaadin-vertical-layout
         theme="spacing padding"
-        style="align-items: center"
+        style="align-items: start"
       >
         <vaadin-button style="align-self: end"
           theme="primary"
         >
           Button 1
         </vaadin-button>
-        <vaadin-button>Button 2</vaadin-button>
+        <vaadin-button style="align-self: center"
+      >
+        Button 2
+      </vaadin-button>
         <vaadin-button>Button 3</vaadin-button>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->
