@@ -4,12 +4,12 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/spacing-variants")
-public class BasicLayoutsSpacingVariants extends Div {
+@Route("basic-layouts/horizontal-layout-spacing-variants")
+public class BasicLayoutsHorizontalLayoutSpacingVariants extends Div {
 
     private static final String SPACING_XS_THEME = "spacing-xs";
     private static final String SPACING_S_THEME = "spacing-s";
@@ -17,9 +17,9 @@ public class BasicLayoutsSpacingVariants extends Div {
     private static final String SPACING_L_THEME = "spacing-l";
     private static final String SPACING_XL_THEME = "spacing-xl";
 
-    public BasicLayoutsSpacingVariants() {
+    public BasicLayoutsHorizontalLayoutSpacingVariants() {
         // tag::snippet[]
-        VerticalLayout layout = new VerticalLayout();
+        HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(false);
         layout.getThemeList().add(SPACING_XL_THEME);
         layout.setAlignItems(FlexComponent.Alignment.STRETCH);
@@ -39,8 +39,6 @@ public class BasicLayoutsSpacingVariants extends Div {
         // end::snippet[]
 
         this.setClassName("basic-layouts-example");
-        layout.setClassName("height-4xl");
-
         this.add(layout, radioButtonGroup);
     }
 
