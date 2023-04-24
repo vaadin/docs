@@ -14,7 +14,6 @@ public class BasicLayoutsVerticalLayout extends Div {
         layout.add(new Button("Button 1"));
         layout.add(new Button("Button 2"));
         layout.add(new Button("Button 3"));
-        layout.add(new Button("Button 4"));
         // end::snippet[]
 
         this.setClassName("basic-layouts-example");
