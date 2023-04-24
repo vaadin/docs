@@ -5,9 +5,9 @@ import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/button';
 import '@vaadin/radio-group';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
-import '@vaadin/vertical-layout';
+import '@vaadin/horizontal-layout';
 
-@customElement('basic-layouts-spacing-variants')
+@customElement('basic-layouts-spacing')
 export class Example extends LitElement {
   constructor() {
     super();
@@ -23,31 +23,27 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private themeVariant = 'spacing-xl';
+  private theme = 'spacing';
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout
-        theme="${this.themeVariant} padding"
-        class="height-4xl"
+      <vaadin-horizontal-layout
+        theme="${this.theme} padding"
         style="align-items: stretch"
       >
         <vaadin-button>Button 1</vaadin-button>
         <vaadin-button>Button 2</vaadin-button>
         <vaadin-button>Button 3</vaadin-button>
-      </vaadin-vertical-layout>
+      </vaadin-horizontal-layout>
       <vaadin-radio-group
-        label="Spacing variant"
-        .value="${this.themeVariant}"
+        label="Spacing"
+        .value="${this.theme}"
         @value-changed="${(event: RadioGroupValueChangedEvent) => {
-          this.themeVariant = event.detail.value;
+          this.theme = event.detail.value;
         }}"
       >
-        <vaadin-radio-button value="spacing-xs" label="spacing-xs"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing-s" label="spacing-s"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing" label="spacing"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing-l" label="spacing-l"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing-xl" label="spacing-xl"></vaadin-radio-button>
+        <vaadin-radio-button value="spacing" label="Enabled"></vaadin-radio-button>
+        <vaadin-radio-button value="" label="Disabled"></vaadin-radio-button>
       </vaadin-radio-group>
     `;
   }

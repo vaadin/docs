@@ -5,7 +5,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/button';
 import '@vaadin/radio-group';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
-import '@vaadin/vertical-layout';
+import '@vaadin/horizontal-layout';
 
 @customElement('basic-layouts-spacing-variants')
 export class Example extends LitElement {
@@ -27,15 +27,14 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout
+      <vaadin-horizontal-layout
         theme="${this.themeVariant} padding"
-        class="height-4xl"
         style="align-items: stretch"
       >
         <vaadin-button>Button 1</vaadin-button>
         <vaadin-button>Button 2</vaadin-button>
         <vaadin-button>Button 3</vaadin-button>
-      </vaadin-vertical-layout>
+      </vaadin-horizontal-layout>
       <vaadin-radio-group
         label="Spacing variant"
         .value="${this.themeVariant}"
