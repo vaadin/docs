@@ -33,7 +33,7 @@ export class Example extends LitElement {
         <!-- tag::snippet[] -->
         <vaadin-confirm-dialog
           header='Delete "Report Q4"?'
-          cancel
+          cancel-button-visible
           confirm-text="Delete"
           confirm-theme="error primary"
           .opened="${this.dialogOpened}"
