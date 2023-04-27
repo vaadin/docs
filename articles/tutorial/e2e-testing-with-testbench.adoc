@@ -1,37 +1,91 @@
 ---
-title: End-to-end testing
+title: End-to-End Testing
 order: 130
-page-title: "Running end-to-end browser tests with Vaadin TestBench"
-description: Learn how to do full-stack tests on a Flow application using Vaadin TestBench.
+page-title: Run End-to-End Browser Tests with Vaadin TestBench
+description: This article explains how to do full-stack tests on a Flow application using Vaadin TestBench.
 ---
 
-= Testing Vaadin Applications in the Browser with End-To-End Tests
+= Test Vaadin Applications in Browser with End-To-End Tests
 
-End-to-end (e2e) tests are used to test the entire application.
-They are far more coarse-grained than unit or integration tests.
-This makes them well suited to checking that the application works as a whole, and catching any regressions that may be missed by more specific tests.
+End-to-end (e2e) tests are used to test an entire application. They're much more coarse-grained than unit or integration tests. This makes them well suited to check that the application works as a whole, and catch any regressions that may be missed by more specific tests.
 
-End-to-end tests are executed in a browser window. Vaadin TestBench controls browser window using Selenium WebDriver.
+End-to-end tests are executed in a browser window. Vaadin TestBench controls the browser window using Selenium WebDriver.
 
-.Vaadin TestBench is a commercial product
+.Vaadin TestBench is a commercial product.
 [NOTE]
 ====
-The end-to-end tests in this tutorial use https://vaadin.com/testbench[Vaadin TestBench], which is a commercial tool that's a part of the Vaadin Pro Subscription.
-You can get a free trial at https://vaadin.com/trial.
-All Vaadin Pro tools and components are free for students through the https://education.github.com/pack[GitHub Student Developer Pack].
-If you need an open source alternative for TestBench, you can approach similar results also with plain https://www.selenium.dev[Selenium WebDriver] or https://playwright.dev[Playwright].
+The end-to-end tests use https://vaadin.com/testbench[Vaadin TestBench], which is a commercial tool that's part of the Vaadin Pro Subscription. You can get a free trial at https://vaadin.com/trial. All Vaadin Pro tools and components are free for students through the https://education.github.com/pack[GitHub Student Developer Pack]. For an open source alternative for TestBench, you can get similar results with plain https://www.selenium.dev[Selenium WebDriver] or https://playwright.dev[Playwright].
 ====
 
-== Creating the Base Test Class
 
-Vaadin TestBench contains handy base classes that you can use aa a bases for your e2e tests.
-The JUnit5 version is called `BrowserTestBase`.
-It can be used alone if you orchestrate starting and stopping your server, with for example a Maven executions in `pre-integration-test` and `post-integration-test` and execute the actual test in integration test phase.
-In Spring Boot applications, it is easier to use the same @SpringBootTest annotation that you already used in the previous phase to ensure a running server during the browser test execution.
+== The Base Test Class
 
-Create a new class, [classname]`LoginE2ETest` in the `com.example.application.it` package.
-Be sure to place it in `src/test/java` and not `src/main/java`.
+Vaadin TestBench contains handy base classes that you can use as a basis for your e2e tests. The JUnit5 version is called `BrowserTestBase`. It can be used alone, if you orchestrate starting and stopping your server. For example, it can be used with Maven executions in `pre-integration-test` and `post-integration-test`, and to execute the actual test in integration test phase.
 
+In Spring Boot applications, it's easier to use the same @SpringBootTest annotation that you already used in the previous phase to ensure a running server during the browser test execution.
+
+First, create a new class, [classname]`LoginE2ETest` in the `com.example.application.it` package. Be sure to place it in `src/test/java` and not `src/main/java`.
+
+.`LoginE2ETest.java`
+[source,java]
+----
+package com.example.application.it;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import com.vaadin.testbench.IPAddress;
+import com.vaadin.testbench.ScreenshotOnFailureRule;
+import com.vaadin.testbench.parallel.ParallelTest;
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.slf4j.LoggerFactory;
+
+public abstract class LoginE2ETest extends ParallelTest {
+    private static final String SERVER_HOST = IPAddress.findSiteLocalAddress();
+    private static final int SERVER_PORT = 8080;
+    private final String route;
+
+    static {
+        // Prevent debug logging from Apache HTTP client
+        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.INFO);
+    }
+
+    @BeforeClass
+    public static void setupClass() {
+        WebDriverManager.chromedriver().setup(); // <1>
+    }
+
+    @Rule // <2>
+    public ScreenshotOnFailureRule rule = new ScreenshotOnFailureRule(this, true);
+
+    @Before
+    public void setup() throws Exception {
+        super.setup();
+        getDriver().get(getURL(route)); // <3>
+    }
+
+    protected LoginE2ETest(String route) {
+        this.route = route;
+    }
+
+    private static String getURL(String route) {
+        return String.format("http://%s:%d/%s", SERVER_HOST, SERVER_PORT, route);
+    }
+}
+----
+<1> Start by invoking the *Chrome* `WebDriverManager` before any test method is invoked. TestBench doesn't invoke the WebDriver manager.
+<2> `ScreenshotOnFailureRule` tells TestBench to grab a screenshot before exiting, if a test fails. This can help you understand what went wrong when tests don't pass.
+<3> Open the browser to the correct URL before each test. For this, you need the host name where the application runs (i.e., "localhost" in development), the port the server uses, which is set to 8080 in application.properties, and information about the route from which to start.
+
+
+== Test the Login View
+
+Now that your setup is complete, you can start developing your first test: ensuring that a user can log in. For this test, you need to open the base URL.
+
+Create a new class, [classname]`LoginIT`, in the same package as [classname]`LoginE2ETest`. The test validates that logging in with the correct user and password succeeds.
 
 .`LoginE2ETest.java`
 [source,java]
@@ -101,16 +155,12 @@ The browser should be automatically redirected to the login screen.
 
 Right-click [classname]`LoginE2ETest.java` and select *Run 'LoginE2ETest'*.
 
-The first time you run the test, you're asked to start a trial or to validate your existing license.
-Follow the instructions in the browser window that opens.
 
-== Creating a View Object
+== Create a View Object
 
-You can now add a second test: validating that you can't log in with an invalid password.
+You can now add a second test, one to validate that you can't log in with an invalid password. 
 
-For this test, you need to write the same code to access the components in the view as you did for the first test.
-To make your tests more maintainable, you can create a view object (otherwise known as a call page object or element class) for each view.
-A view object provides a high-level API to interact with the view and hides the implementation details.
+For this test, you need to write the same code to access the components in the view as you did for the first test. To make your tests more maintainable, you can create for each view a view object -- otherwise known as a call page object or element class. A view object provides a high-level API to interact with the view and hides the implementation details.
 
 For the login view, create the [classname]`LoginViewElement` class in a new package, `com.example.application.it.elements`:
 
@@ -149,13 +199,13 @@ public class LoginViewElement extends VerticalLayoutElement {
 }
 ----
 
-.Class hierarchies must match
+.Class hierarchies must match.
 [CAUTION]
 ====
-To make the correct functionality available from superclasses, the hierarchy of the view object should match the hierarchy of the view (`public class LoginView extends VerticalLayout` vs `public class LoginViewElement extends VerticalLayoutElement`).
+To make the correct functionality available from superclasses, the hierarchy of the view object should match the hierarchy of the view (i.e., `public class LoginView extends VerticalLayout` vs `public class LoginViewElement extends VerticalLayoutElement`).
 ====
 
-Adding the `@Attribute(name = "class", contains = "login-view")` annotation allows you to find the [classname]`LoginViewElement` using the TestBench query API, for example:
+Adding the `@Attribute(name = "class", contains = "login-view")` annotation allows you to find the [classname]`LoginViewElement` using the TestBench query API. The following is an example of this:
 
 .Finding a LoginViewElement using the TestBench query API
 [source,java]
@@ -163,11 +213,9 @@ Adding the `@Attribute(name = "class", contains = "login-view")` annotation allo
 LoginViewElement loginView = $(LoginViewElement.class).onPage().first();
 ----
 
-The annotation searches for the `login-view` class name, which is set for the login view in the constructor.
-The [methodname]`onPage()` call ensures that the whole page is searched.
-By default, a `$` query starts from the active element.
+The annotation searches for the `login-view` class name, which is set for the login view in the constructor. The [methodname]`onPage()` call ensures that the whole page is searched. By default, a `$` query starts from the active element.
 
-Now that you have the [classname]`LoginViewElement` class, you can simplify your [methodname]`loginAsValidUserSucceeds()` test to be:
+Now that you have the [classname]`LoginViewElement` class, you can simplify your [methodname]`loginAsValidUserSucceeds()` test to be this:
 
 .`LoginE2ETest.java`
 [source,java]
@@ -191,11 +239,11 @@ public void loginAsInvalidUserFails() {
 }
 ----
 
-Continue testing the other views by creating similar view objects and IT classes.
+You can continue testing the other views by creating similar view objects and IT classes.
 
-If you are building a large application, it probably makes sense to make slower end-to-end tests executed only when requested separately. You can do this with for example using https://maven.apache.org/surefire/maven-failsafe-plugin/[Maven Failsafe plugin] or using the https://junit.org/junit5/docs/current/user-guide/#writing-tests-tagging-and-filtering[tagging feature in JUnit 5].
+If you're building a large application, it's probably better to make slower end-to-end tests executed only when requested separately. You can do this by using https://maven.apache.org/surefire/maven-failsafe-plugin/[Maven Failsafe plugin] or using the https://junit.org/junit5/docs/current/user-guide/#writing-tests-tagging-and-filtering[tagging feature in JUnit 5].
 
-The next chapter covers how to make a production build of the application and deploy it to a cloud platform.
+The next part covers how to make a production build of the application and deploy it to a cloud platform.
 
 include::{root}/articles/tutorial/_ebook-banner.adoc[opts=optional]
 
