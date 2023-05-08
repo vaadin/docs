@@ -9,6 +9,9 @@ import '@vaadin/text-area';
 export class Example extends LitElement {
   constructor() {
     super();
+  }
+  connectedCallback() {
+    super.connectedCallback();
     this.classList.add('basic-layouts-example');
   }
 

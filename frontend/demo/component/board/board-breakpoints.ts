@@ -9,6 +9,9 @@ import { applyTheme } from 'Frontend/generated/theme';
 export class Example extends LitElement {
   constructor() {
     super();
+  }
+  connectedCallback() {
+    super.connectedCallback();
     this.classList.add('board-breakpoints');
   }
 
