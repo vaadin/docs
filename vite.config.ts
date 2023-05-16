@@ -8,7 +8,7 @@ const customConfig: UserConfigFn = (env) => ({
     {
       name: 'filter-out-external-deps',
       transform(code, id) {
-        if (id.endsWith('target/frontend/generated-flow-imports.js')) {
+        if (id.endsWith('frontend/generated/flow/generated-flow-imports.js')) {
           return code
             .split('\n')
             .filter((row) => {
@@ -28,7 +28,7 @@ const customConfig: UserConfigFn = (env) => ({
         // The docs app has its own bundle with all the Vaadin resources.
         // Polymer etc dependencies have purposefully been excluded from the
         // docs project (Vaadin) bundle. However, the embedded Flow examples
-        // (like target/frontend/accordion-basic-wc.ts)
+        // (like frontend/generated/flow/web-components/accordion-basic-wc.ts)
         // now import "applyTheme" which has an indirect dependency to Polymer
         // so we need to direct the applyTheme function to use the version
         // bundled with docs-app. Otherwise we'd end up with conflicting imports
