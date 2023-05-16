@@ -20,7 +20,7 @@ public class MapMarkerDragDrop extends Div {
         MarkerFeature marker = new MarkerFeature();
         marker.setId("draggable-marker");
         marker.setDraggable(true);
-        marker.setLabel("Drag me");
+        marker.setText("Drag me");
         map.getFeatureLayer().addFeature(marker);
 
         // Listen to marker drop event
