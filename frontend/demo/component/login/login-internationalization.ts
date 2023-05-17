@@ -35,6 +35,8 @@ export class Example extends LitElement {
     errorMessage: {
       title: 'Väärä käyttäjätunnus tai salasana',
       message: 'Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.',
+      username: 'Käyttäjätunnus vaaditaan',
+      password: 'Salasana vaaditaan',
     },
   };
 
