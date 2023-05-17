@@ -81,6 +81,8 @@ const config = {
       "src/main/java/com/vaadin/demo/collaboration",
 
       "dspublisher/theme",
+      
+      "PULL_REQUEST_TEMPLATE.md",
     ],
   },
   rename: {

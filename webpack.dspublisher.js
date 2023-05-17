@@ -28,7 +28,7 @@ const themeResourceFolder = path.resolve(__dirname, settings.themeResourceFolder
 
 const themeOptions = {
   devMode: false,
-  // The following matches folder 'target/flow-frontend/themes/'
+  // The following matches folder 'frontend/generated/jar-resources/themes/'
   // (not 'frontend/themes') for theme in JAR that is copied there
   themeResourceFolder,
   themeProjectFolders,
@@ -38,10 +38,9 @@ const themeOptions = {
 
 // this matches css files in the theme
 const themeCssRegex = /(\\|\/).*frontend(\\|\/).*themes\1[\s\S]*?\.css/;
-const embeddedWcRegex = /(\\|\/).*target(\\|\/)frontend(\\|\/)[\s\S]*-wc.js/;
+const embeddedWcRegex = /(\\|\/).*frontend(\\|\/)generated(\\|\/)[\s\S]*-wc.js/;
 
 const projectThemePath = path.resolve(__dirname, 'frontend/themes');
-const reusableThemesPath = path.resolve(__dirname, 'target/flow-frontend/themes');
 
 // List of all the directories under projectThemePath (frontend/themes)
 const projectThemeNames = fs.readdirSync(projectThemePath);
@@ -58,7 +57,7 @@ const usesProjectTheme = projectThemeNames.some((themeName) =>
   themeLine.includes(`"${themeName}"`)
 );
 
-const themesPath = usesProjectTheme ? projectThemePath : reusableThemesPath;
+const themesPath = usesProjectTheme ? projectThemePath : themeResourceFolder;
 const applyThemePath = path.resolve(frontendGeneratedFolder, 'theme.js');
 
 module.exports = async function (config) {
@@ -66,7 +65,7 @@ module.exports = async function (config) {
     buildDirectory + '/plugins/application-theme-plugin/application-theme-plugin.js'
   );
 
-  const allFlowImportsPath = path.resolve(__dirname, 'target/frontend/generated-flow-imports.js');
+  const allFlowImportsPath = path.resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
   config.resolve.alias['all-flow-imports-or-empty'] =
     process.env.DOCS_IMPORT_EXAMPLE_RESOURCES === 'true'
       ? allFlowImportsPath
@@ -88,6 +87,10 @@ module.exports = async function (config) {
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
 
   config.resolve.alias['@vaadin/flow-frontend'] = jarResourcesFolder;
+
+  // Temporary workaround for embedded web components, where due to a bug Flow currently generates
+  // theme imports from `/generated/theme`, rather than `Frontend/generated/theme.js`
+  config.resolve.alias['/generated/theme'] = applyThemePath;
 
   // If there are pre-existing rules that affect CSS files,
   // make them exclude files that match the themeCssRegex pattern...
