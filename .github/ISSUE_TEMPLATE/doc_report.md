@@ -1,17 +1,11 @@
 ---
 name: Bug report or feature request
-about: Issues for documentation related bugs and enhancments
+about: Documentation related bugs and enhancements.
 title: ''
 labels: ''
 assignees: ''
 
 ---
-
-<!-- Please keep this note for the community -->
-
-**Vote to prioritize:** add a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to help the community and maintainers prioritize this issue.
-
-<!-- Thank you for keeping this note for the community -->
 
 <!--
 
@@ -22,3 +16,11 @@ If you think you’ve found a potential security issue, don't report it here as 
 -->
 
 **Tell us about your request**
+
+---
+
+<!-- Please keep this note for the community -->
+
+If you think this issue is important, add a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to help the community and maintainers prioritize this issue.
+
+<!-- Thank you for keeping this note for the community -->
