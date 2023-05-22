@@ -4,7 +4,7 @@ import { Flow } from '@vaadin/flow-frontend';
 
 // Get automatically generated routes to server-side views
 const { serverSideRoutes } = new Flow({
-  imports: async () => import('../../../../../target/frontend/generated-flow-imports'),
+  imports: async () => import('../../../../../frontend/generated/flow/generated-flow-imports'),
 });
 
 export const router = new Router(document.querySelector('#outlet'));
