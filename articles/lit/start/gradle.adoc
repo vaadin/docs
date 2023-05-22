@@ -1,0 +1,245 @@
+---
+title: Gradle
+page-title: Using Gradle in Hilla applications
+description: Building and running a Hilla application using Gradle.
+order: 40
+---
+:lit:
+
+= Using Gradle in Hilla applications
+
+[.introText]
+Gradle is a popular build tool for Java, Groovy, Kotlin, and other projects.
+It is an alternative to using Maven, and in many ways much more powerful, if that is required.
+You can use it to build and publish a Hilla applications as well.
+
+This tutorial describes how to compile, build, and run a Hilla application using the *Hilla Gradle plugin*.
+
+For information about the general usage of Gradle, please refer to the link:https://docs.gradle.org/current/userguide/userguide.html[Gradle User Manual].
+
+.Get to know about Hilla applications
+[NOTE]
+In this tutorial, we are not going through every detail of a Hilla application, as we focus on exploring Gradle related parts for the sake of brevity.
+If you are interested to know more about the core concepts of Hilla applications in general, please refer to
+ifdef::react[]
+<<{articles}/react/start/basic/quick.adoc#, Getting started with Hilla and React>>.
+endif::[]
+ifdef::lit[]
+<<{articles}/lit/start/basic/quick.adoc#, Getting Started with Hilla and Lit>>.
+endif::[]
+
+== Requirements
+
+This tutorial is intended for developers with a basic understanding of Java, SpringBoot, and Gradle.
+Although, in this tutorial we are not going write or analyze any JavaScript,
+ifdef::react[]
+React,
+endif::[]
+HTML, and CSS directly, understanding the syntax and basic concepts makes it easier to follow along.
+
+Using Gradle in a Hilla application does not need any extra settings or setup on your environment other than the followings - as in any Hilla application:
+
+// tag::requirements[]
+- https://nodejs.org/[Node] 16.14 or later.
+- JDK 17 or later, for example, https://adoptium.net/[Eclipse Temurin JDK].
+- https://gradle.org/install[Gradle] (Optional)
+// end::requirements[]
+
+.Installing Gradle is optional
+[NOTE]
+If you plan to use Hilla's Gradle-based starter projects, there is no need to install Gradle on your machine.
+A Gradle Wrapper script is included in those starter projects.
+This script manages the download and execution of Gradle locally for your project.
+For more information on using Gradle Wrapper, please refer to the https://docs.gradle.org/current/userguide/gradle_wrapper.html[Official Gradle Documentation].
+If you prefer to install Gradle directly, you can find the instructions at https://gradle.org/install
+
+There are several ways to obtain a Hilla starter project that uses Gradle as the build and dependency management tool:
+
+1. https://start.spring.io/[Spring Initializr] which enables you to configure a barebone Hilla project by adding the `Hilla` dependency
+2. Directly downloading a zipped archive from
+ifdef::react[]
+https://github.com/vaadin/skeleton-starter-hilla-react-gradle/archive/refs/heads/v2.1.zip[here]
+endif::[]
+ifdef::lit[]
+https://github.com/vaadin/skeleton-starter-hilla-lit-gradle/archive/refs/heads/v2.1.zip[here]
+endif::[]
+, that contains a minimal hello-world Hilla application
+
+
+== Structure of a Gradle based Hilla project
+
+A bare-minimum Gradle based Hilla application normally has the following directory layout:
+
+----
+[project-root]
+frontend/
+└── views/
+    └── helloworld/
+ifdef::react[]
+        └── HelloWorldView.tsx
+endif::[]
+ifdef::lit[]
+        └── HelloWorldView.ts
+endif::[]
+ifdef::react[]
+└── App.tsx
+└── index.html
+└── index.ts
+└── routes.tsx
+endif::[]
+ifdef::lit[]
+└── index.html
+└── index.ts
+└── routes.ts
+endif::[]
+gradle/                             <1>
+└── wrapper
+    ├── gradle-wrapper.jar
+    └── gradle-wrapper.properties
+src/
+└── main
+    ├── java
+    └── resources
+└── test/
+gradle.build                        <2>
+gradle.properties                   <3>
+gradlew                             <4>
+gradlew.bat                         <5>
+package.json
+package-lock.json
+tsconfig.json
+types.d.ts
+----
+<1> The directory that contains the Gradle wrapper files.
+<2> The main Gradle config file.
+<3> The file that contains properties that is used in the `build.gradle` file.
+<4> The Gradle wrapper script for Unix based operating systems.
+<5> The Gradle wrapper script for Microsoft Windows.
+
+.Details of a Hilla starter might be different from what is depicted above
+[NOTE]
+As mentioned earlier, here we are only exploring the structure of the minim Hilla application.
+However, if you download a starter project, for example from official repository mentioned in <<#_requirements, Requirements>>, it also contains other files and folders such as components, layouts, theming and CSS, and much more.
+As they have no effect on the execution of Gradle tasks and commands, those details are dropped here.
+
+Items 1, 4, and 5 from the listing above do not need to be expanded and analyzed in this tutorial as they are completely standard Gradle Wrapper scripts and related files with no changes.
+In case you are interested in more information about Gradle Wrapper, please refer to the https://docs.gradle.org/current/userguide/gradle_wrapper.html[Official Gradle Documentation].
+
+==== gradle.properties
+
+Having a `gradle.properties` is completely optional both for the Gradle and Hilla.
+But, having it can help centralizing some configurations and versions needed in other Gradle related build files such as the `build.gradle` or `settings.gradle`.
+
+For instance, we can set the Hilla version we are going to use in our project in the `gradle.properties` file as:
+
+[source,properties,subs="normal"]
+----
+hillaVersion=2.1.0
+----
+
+We will explore the usage of this property right away in the next sections.
+
+==== build.gradle
+
+A minimal `gradle.build` file for a Hilla application looks like this:
+
+[source,groovy,subs="normal"]
+----
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.0.6'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'dev.hilla' version "$hillaVersion"
+}
+
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+ifdef::react[]
+    implementation 'dev.hilla:hilla-react-spring-boot-starter'
+endif::[]
+ifdef::lit[]
+    implementation 'dev.hilla:hilla-spring-boot-starter'
+endif::[]
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "dev.hilla:hilla-bom:$hillaVersion"
+    }
+}
+----
+
+- Note that the `hillaVersion` property from `gradle.properties` is resolved here automatically.
+
+As many useful components and add-ons for Hilla applications also can be found in https://vaadin.com/directory/[Vaadin Directory], you would see that repository is usually listed in Hilla starter projects:
+
+[source,groovy,subs="normal"]
+----
+repositories {
+    mavenCentral()
+    maven {
+        setUrl("https://maven.vaadin.com/vaadin-addons")
+    }
+}
+----
+
+.A pluginManagement configuration is needed for trying pre-release versions
+[NOTE]
+In case you want to try out the Hilla pre-release versions, you need to the add the https://maven.vaadin.com/vaadin-prereleases[Vaadin Pre-releases] repository.
+Please refer to the <<#_trying_pre_release_versions,Trying Pre-release versions>> section to see how it should be configured.
+
+=== Running the Project
+
+As Hilla applications rely on SpringBoot for the backend, the *bootRun* task from official SpringBoot Gradle plugin is used to run it in an embedded web server.
+
+
+
+=== Available Hilla Gradle Plugin's tasks
+
+===== hillaConfigure
+
+===== hillaGenerate
+
+===== hillaInitApp
+
+
+=== Trying Pre-release versions
+
+For trying out the Pre-release versions, the https://maven.vaadin.com/vaadin-prereleases repository should be added and configured in two places:
+
+- In the `repositories` closure of `build.gradle` file:
+
+[source,groovy,subs="normal"]
+----
+repositories {
+    mavenCentral()
+    maven {
+        setUrl("https://maven.vaadin.com/vaadin-prereleases")
+    }
+}
+----
+
+- To the `pluginManagement` of `settings.gradle` file:
+
+.settings.gradle file might not exist in your project
+[NOTE]
+If you don't have `settings.gradle` file in your project yet, you need to create one under the project-root directory.
+
+[source,groovy,subs="normal"]
+----
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven { url = 'https://maven.vaadin.com/vaadin-prereleases' }
+    }
+}
+----
+
+
