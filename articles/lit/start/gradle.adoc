@@ -28,6 +28,7 @@ ifdef::lit[]
 <<{articles}/lit/start/basic/quick.adoc#, Getting Started with Hilla and Lit>>.
 endif::[]
 
+[#_requirements]
 == Requirements
 
 This tutorial is intended for developers with a basic understanding of Java, SpringBoot, and Gradle.
@@ -112,7 +113,7 @@ types.d.ts
 ----
 <1> The directory that contains the Gradle wrapper files.
 <2> The main Gradle config file.
-<3> The file that contains properties that is used in the `build.gradle` file.
+<3> The file that contains properties that is used in the [filename]#build.gradle# file.
 <4> The Gradle wrapper script for Unix based operating systems.
 <5> The Gradle wrapper script for Microsoft Windows.
 
@@ -125,12 +126,12 @@ As they have no effect on the execution of Gradle tasks and commands, those deta
 Items 1, 4, and 5 from the listing above do not need to be expanded and analyzed in this tutorial as they are completely standard Gradle Wrapper scripts and related files with no changes.
 In case you are interested in more information about Gradle Wrapper, please refer to the https://docs.gradle.org/current/userguide/gradle_wrapper.html[Official Gradle Documentation].
 
-==== gradle.properties
+=== gradle.properties
 
-Having a `gradle.properties` is completely optional both for the Gradle and Hilla.
-But, having it can help centralizing some configurations and versions needed in other Gradle related build files such as the `build.gradle` or `settings.gradle`.
+Having a [filename]#gradle.properties# is completely optional both for the Gradle and Hilla.
+But, having it can help centralizing some configurations and versions needed in other Gradle related build files such as the [filename]#build.gradle# or [filename]#settings.gradle#.
 
-For instance, we can set the Hilla version we are going to use in our project in the `gradle.properties` file as:
+For instance, we can set the Hilla version we are going to use in our project in the [filename]#gradle.properties# file as:
 
 [source,properties,subs="normal"]
 ----
@@ -139,10 +140,11 @@ hillaVersion=2.1.0
 
 We will explore the usage of this property right away in the next sections.
 
-==== build.gradle
+=== build.gradle
 
 A minimal `gradle.build` file for a Hilla application looks like this:
 
+ifdef::react[]
 [source,groovy,subs="normal"]
 ----
 plugins {
@@ -159,12 +161,7 @@ repositories {
 }
 
 dependencies {
-ifdef::react[]
     implementation 'dev.hilla:hilla-react-spring-boot-starter'
-endif::[]
-ifdef::lit[]
-    implementation 'dev.hilla:hilla-spring-boot-starter'
-endif::[]
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
@@ -175,6 +172,36 @@ dependencyManagement {
     }
 }
 ----
+endif::[]
+
+ifdef::lit[]
+----
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.0.6'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'dev.hilla' version "$hillaVersion"
+}
+
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'dev.hilla:hilla-spring-boot-starter'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "dev.hilla:hilla-bom:$hillaVersion"
+    }
+}
+----
+endif::[]
 
 - Note that the `hillaVersion` property from `gradle.properties` is resolved here automatically.
 
@@ -193,28 +220,204 @@ repositories {
 .A pluginManagement configuration is needed for trying pre-release versions
 [NOTE]
 In case you want to try out the Hilla pre-release versions, you need to the add the https://maven.vaadin.com/vaadin-prereleases[Vaadin Pre-releases] repository.
-Please refer to the <<#_trying_pre_release_versions,Trying Pre-release versions>> section to see how it should be configured.
+Please refer to the <<#_trying_the_pre_release_versions,Trying the pre-release versions>> section to see how it should be configured.
 
+[#_run]
 === Running the Project
 
-As Hilla applications rely on SpringBoot for the backend, the *bootRun* task from official SpringBoot Gradle plugin is used to run it in an embedded web server.
+As Hilla applications rely on SpringBoot for the backend, you can run it similar to any SpringBoot application.
+This means you can run the main method of the class annotated with `@SpringBootApplication` in your preferred IDE, or by executing the *bootRun* task from official SpringBoot Gradle plugin.
+
+.The Unix style of running gradlew is used for the rest of this document
+[NOTE]
+To avoid unnecessary verbosity, only the Unix style of running `./gradlew` is used for the rest of this document.
+You obviously need to replace it with `gradlew` if you are on a Windows machine.
 
 
+[source,terminal,subs="normal"]
+----
+./gradlew bootRun
+----
 
+On Windows:
+
+[source,terminal,subs="normal"]
+----
+gradlew bootRun
+----
+
+This makes the application available at http://localhost:8080.
+
+The Hilla Gradle plugin has some tasks that are being executed after the compilation is done and also during the project run.
+In the following section we are going through the available tasks in the Hilla Gradle plugin and their responsibilities.
+
+[#_available_gradle_tasks]
 === Available Hilla Gradle Plugin's tasks
 
-===== hillaConfigure
+`hillaConfigure`::
+  This task collects the configurations from project and also from the build file and creates a temporary file in the `build` directory called `hilla-engine-configuration.json`.
+  This is needed for endpoint generation process that comes next.
+  As a standard Gradle task, `hillaConfigure` can be executed independent of the startup process:
 
-===== hillaGenerate
+[source,terminal,subs="normal"]
+----
+./gradlew hillaConfigure
+----
 
-===== hillaInitApp
+On Windows:
 
+[source,terminal,subs="normal"]
+----
+gradlew hillaConfigure
+----
 
-=== Trying Pre-release versions
+`hillaGenerate`::
+  This task will read the configuration file created by the configure task, and then parses the classes annotated by `@Endpoint` to generated an `openapi.json` file.
+  Then that `openapi.json` file is loaded and passed to a process that generates/updates the typescript stubs for calling the backend's endpoint.
+  As a standard Gradle task, `hillaGenerate` can be executed independent of the startup process:
+
+[source,terminal,subs="normal"]
+----
+./gradlew hillaGenerate
+----
+
+On Windows:
+
+[source,terminal,subs="normal"]
+----
+gradlew hillaGenerate
+----
+
+`hillaInitApp`::
+  This task not related to running a Hilla application, and it is not necessary
+  If you obtain a barebone Hilla project, for instance, from https://start.spring.io/[Spring Initializr], it has no routes, no views, no endpoints, so it might be a little confusing where to start.
+  This task will scaffold a sample Hello-World endpoint and view, and also the needed frontend dependencies and typescript configs to speed up the development process.
+  As a standard Gradle task, `hillaInitApp` can be executed like this:
+
+[source,terminal,subs="normal"]
+----
+./gradlew hillaInitApp
+----
+
+On Windows:
+
+[source,terminal,subs="normal"]
+----
+gradlew hillaInitApp
+----
+
+[#_all_options]
+== Plugin Configuration Options
+
+There are some options provided by the Hilla Gradle Plugin that can be used while configuring a Hilla project:
+
+`exposedPackagesToParser`::
+  By default, the classes annotated by `@Endpoint` in the current gradle module's `src` folder are parsed by Hilla to generate the Typescript code needed for calling the endpoints.
+  But, if you have Hilla Endpoints in a dependency or in another module of a multi-module Gradle project, you need to explicitly expose their package to Hilla.
+  This can be achieved like this:
+
+.Option to be added to the build.gradle
+[source,groovy,subs="normal"]
+----
+hilla {
+    exposedPackagesToParser = ["com.example.application", "org.another.example.foobar"]
+}
+----
+
+[#_production]
+== Going to Production
+When doing a production-ready build, the Vaadin Gradle plugin transpiles, bundles, and optimizes all the client-side dependencies for faster startup and better performance on the browser.
+
+The `pproductionMode` can be enabled in two ways:
+
+In [filename]#build.gradle#:
+
+[source,groovy,subs="normal"]
+----
+vaadin {
+   productionMode = true
+}
+----
+
+Or at the command line:
+
+[source,terminal]
+----
+./gradlew -Pvaadin.productionMode=true build
+----
+
+In Windows:
+
+[source,terminal]
+----
+gradlew -Pvaadin.productionMode=true build
+----
+
+.Spring Boot-specific configuration
+[NOTE]
+If you are using Vaadin with Spring Boot, the default packaging for production would normally be the `jar`.
+But, if you intend to package a Spring Boot application as a `WAR` to be deployed on a standalone container, such as `tomcat`, there are two additional steps you need to perform:
+
+- Add the `war` plugin to your [filename]#build.gradle# and enable it:
+
+.Plugin to be added to the build.gradle file
+[source,groovy,subs="normal"]
+----
+plugins {
+  //... other plugins
+  id 'war'
+}
+
+war {
+    enabled = true
+}
+----
+
+- Your application class that is annotated with `@SpringBootApplication` should extend [classname]`SpringBootServletInitializer` and override the [methodname]`configure()` method:
+
+.Example of enabling SpringBootServletInitializer
+[source,java,subs="normal"]
+----
+@SpringBootApplication
+public class DemoApplication extends SpringBootServletInitializer {
+    @Override
+    protected SpringApplicationBuilder configure(
+	                     SpringApplicationBuilder application) {
+        return application.sources(DemoApplication.class);
+    }
+}
+----
+
+- Adding the following dependency:
+
+.Dependency to be added to the build.gradle
+[source,groovy,subs="normal"]
+----
+dependencies {
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+}
+----
+
+And obviously, when running the Gradle command to create the `WAR` archive, call the `war` task:
+
+[source,terminal]
+----
+./gradlew -Pvaadin.productionMode=true war
+----
+
+In Windows:
+
+[source,terminal]
+----
+gradlew -Pvaadin.productionMode=true war
+----
+
+[#_trying_the_pre_release_versions]
+== Trying the pre-release versions
 
 For trying out the Pre-release versions, the https://maven.vaadin.com/vaadin-prereleases repository should be added and configured in two places:
 
-- In the `repositories` closure of `build.gradle` file:
+- In the `repositories` closure of the [filename]#build.gradle# file:
 
 [source,groovy,subs="normal"]
 ----
@@ -226,11 +429,11 @@ repositories {
 }
 ----
 
-- To the `pluginManagement` of `settings.gradle` file:
+- To the `pluginManagement` of the [filename]#settings.gradle# file:
 
 .settings.gradle file might not exist in your project
 [NOTE]
-If you don't have `settings.gradle` file in your project yet, you need to create one under the project-root directory.
+If you don't have [filename]#settings.gradle# file in your project yet, you need to create one under the project-root directory.
 
 [source,groovy,subs="normal"]
 ----
@@ -242,4 +445,10 @@ pluginManagement {
 }
 ----
 
+With the above settings you can try out pre-release and SNAPSHOT versions of Hilla and Hilla Gradle Plugin.
 
+.Vaadin recommends using final releases for Production
+[NOTE]
+To avoid any inconsistencies, do not use any prerelease versions in your production environment, especially snapshots.
+Vaadin always recommends using the Final releases of the newer versions.
+Visit the https://github.com/vaadin/platform/releases[Vaadin platform release] page for the latest releases of newer versions.
