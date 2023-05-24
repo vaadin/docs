@@ -1,0 +1,296 @@
+---
+title: Setting up Web Push
+order: 115
+page-title: Make a Vaadin Flow application use to Web Push notifications
+description: This article shows how to setup, subscribe and send Web Push notifications from a Vaadin Flow application.
+---
+
+= Make a Vaadin Flow Application support Web Push
+
+On this part of this tutorial, you'll enable Web Push for the completed Customer Relationship Management (CRM) application, so that users can receive notification even when not in the application.
+
+== Understanding web push
+
+Web push notifications can be used to deliver real-time updates, reminders, and other important messages.
+
+When a user signs up for web push notifications, their browser contacts a 3rd party web push server hosted by the browser vendor.
+
+== Setting Up Web Push
+
+==== VAPID keys
+
+The first step is to generate public-private link:https://web.dev/push-notifications-web-push-protocol/[VAPID key] pair
+
+This can be done with the command `npx web-push generate-vapid-keys`, which will result the output looking something like
+
+.Sample key pair output (Not for use as they aren't valid)
+----
+
+=======================================
+
+Public Key:
+BO66S__WPMwVXKBXEh1OiQrM--9pSGXwxqAWQudqmcv41RcWgk1ssUeItv4_ArqkJwPBtayUR4
+
+Private Key:
+VNlfcVVFB4V50tqKO8WFHHOhx_ZrabUkZ2BYVOnNg9A
+
+=======================================
+
+----
+
+These can be added to the `application.properties` property file or set as environment variables.
+
+For the demo the property names that are used are: `public.key`, `private.key` and `subject`.
+
+=== Web Push Dependencies
+
+For web push usage the project needs to have the Web Push library and Bouncy Castle Crypto package.
+
+.`pom.xml`
+[source,xml]
+----
+<dependencies>
+    <!-- Other application dependencies -->
+    <dependency>
+        <groupId>nl.martijndwars</groupId>
+        <artifactId>web-push</artifactId>
+        <version>5.1.1</version>
+    </dependency>
+    <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk15on</artifactId>
+        <version>1.69</version>
+    </dependency>
+</dependencies>
+----
+
+=== Generate Service Worker With Web Push Methods
+
+Vaadin provides the `@WebPush` and `@PWA` annotations, that automatically generate the required PWA resources. Add the `@PWA` annotation on [classname]`Application.java` as follows:
+
+.`Application.java`
+[source,java]
+----
+@SpringBootApplication
+@PWA(name = "Vaadin CRM", shortName = "CRM")
+@WebPush
+public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}
+----
+
+`@PWA` will enable ServiceWorker creation and `@WebPush` will extend the ServiceWorker to register web push listeners and functionality.
+
+=== Create WebPushService For Subscribing and Sending Notifications
+
+[source, java]
+----
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
+import nl.martijndwars.webpush.Notification;
+import nl.martijndwars.webpush.PushService;
+import nl.martijndwars.webpush.Subscription;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jose4j.lang.JoseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.security.Security;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import com.vaadin.flow.server.frontend.webpush.WebPushToggle;
+
+@Service
+public class WebPushService {
+
+    @Value("${public.key}")
+    private String publicKey;
+    @Value("${private.key}")
+    private String privateKey;
+    @Value("${subject}")
+    private String subject;
+
+    private PushService pushService;
+
+    private final Map<String, Subscription> endpointToSubscription = new HashMap<>();
+
+    /**
+     * Initialize security and push service after construction when all autowiring is done.
+     *
+     * @throws GeneralSecurityException security exception for security complications
+     */
+    @PostConstruct
+    private void init() throws GeneralSecurityException {
+        Security.addProvider(new BouncyCastleProvider());
+        // Initialize push service with the public key, private key and subject
+        pushService = new PushService(publicKey, privateKey, subject);
+    }
+
+    /**
+     * Get the used public key for registration.
+     *
+     * @return public key for service
+     */
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    /**
+     * Send a notification for target subscription.
+     *
+     * @param subscription subscription to notify
+     * @param messageJson  message content to send
+     */
+    public void sendNotification(Subscription subscription, String messageJson) {
+        try {
+            HttpResponse response = pushService.send(new Notification(subscription, messageJson));
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != 201) {
+                getLogger().error("Server error, status code:" + statusCode);
+                InputStream content = response.getEntity().getContent();
+                List<String> strings = IOUtils.readLines(content, "UTF-8");
+                getLogger().error(String.join("\n", strings));
+            }
+        } catch (GeneralSecurityException | IOException | JoseException |
+                 ExecutionException
+                 | InterruptedException e) {
+            getLogger().error("Failed to send notification.", e);
+        }
+    }
+
+    /**
+     * Record subscription for subscription event.
+     *
+     * @param event subscription event containing subscription details
+     */
+    public void subscribe(WebPushToggle.SubscribeEvent event) {
+        subscribe(new Subscription(event.getEndpoint(), new Subscription.Keys(event.getAuth(), event.getP256dh())));
+    }
+
+    private void subscribe(Subscription subscription) {
+        getLogger().info("Subscribed to " + subscription.endpoint);
+        /*
+         * Note, in a real world app you'll want to persist these
+         * in the backend. Also, you probably want to know which
+         * subscription belongs to which user to send custom messages
+         * for different users. In this demo, we'll just use
+         * endpoint URL as key to store subscriptions in memory.
+         */
+        endpointToSubscription.put(subscription.endpoint, subscription);
+    }
+
+
+    /**
+     * Remove subscribed subscription for unsubscription event.
+     *
+     * @param event unsubscribe event containing subscription details
+     */
+    public void unsubscribe(WebPushToggle.UnsubscribeEvent event) {
+        unsubscribe(new Subscription(event.getEndpoint(), new Subscription.Keys(event.getAuth(), event.getP256dh())));
+    }
+
+    private void unsubscribe(Subscription subscription) {
+        getLogger().info("Unsubscribed " + subscription.endpoint + " auth:" + subscription.keys.auth);
+        endpointToSubscription.remove(subscription.endpoint);
+    }
+
+    /**
+     * Message object.
+     *
+     * @param title message title
+     * @param body  message body
+     */
+    public record Message(String title, String body) {
+    }
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    /**
+     * Send a notification to all subscriptions.
+     *
+     * @param title message title
+     * @param body message body
+     */
+    public void notifyAll(String title, String body) {
+        try {
+            String msg = mapper.writeValueAsString(new Message(title, body));
+            endpointToSubscription.values().forEach(subscription -> {
+                sendNotification(subscription, msg);
+            });
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Logger getLogger() {
+        return LoggerFactory.getLogger(WebPushService.class);
+    }
+}
+
+----
+
+=== Adding Push Registration
+
+The last thing left is to add the possibility to register to the push service.
+
+Flow contains a simple component `WebPushToggle` that can be added to any view and only requires the public VAPID key.
+
+The toggle events for subscribe and unsubscribe need to be sent to the `WebPushService` for registration so that notifications can be sent.
+
+[source,java]
+----
+WebPushToggle toggle = new WebPushToggle(webPushService.getPublicKey());
+
+toggle.addSubscribeListener(webPushService::subscribe);
+toggle.addUnsubscribeListener(webPushService::unsubscribe);
+----
+
+=== Sending Notifications
+
+The `WebPushService` had the methods `sendNotification(subscription, messageJson)` and `notifyAll(title, body)`.
+
+Using notifyAll will send the push message to each registered subscription for instance:
+
+[source,java]
+----
+TextField message = new TextField("Message");
+Button broadcast = new Button("Broadcast message");
+broadcast.addClickListener(e ->
+    webPushService.notifyAll("Message from administration", message.getValue())
+);
+----
+
+For using `sendNotification` the correct user subscription needs to be gotten and the message nees to be in the content:
+
+[source,json]
+----
+{
+  "title": "title content",
+  "body": "body content"
+}
+----
+
+
+=== Known Issues
+
+For the Brave browser web push notifications might work by default, as soon as you install the browser, but in case they do not then the notifications need to be enabled from the browser settings:
+
+- Open the browser settings for privacy: brave://settings/privacy
+- Then enable the option “Use Google services for push messaging“
+
+[discussion-id]`AA0C567E-EEC6-4CEB-95FA-D9D96666D98F`
