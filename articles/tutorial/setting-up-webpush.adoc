@@ -112,7 +112,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import com.vaadin.flow.server.frontend.webpush.WebPushToggle;
+import com.vaadin.flow.server.frontend.webpush.WebPushRegistration;
 
 @Service
 public class WebPushService {
@@ -153,7 +153,7 @@ public class WebPushService {
      * Send a notification for target subscription.
      *
      * @param subscription subscription to notify
-     * @param messageJson  message content to send
+     * @param messageJson  message content to send as a json {title, body}
      */
     public void sendNotification(Subscription subscription, String messageJson) {
         try {
@@ -177,8 +177,8 @@ public class WebPushService {
      *
      * @param event subscription event containing subscription details
      */
-    public void subscribe(WebPushToggle.SubscribeEvent event) {
-        subscribe(new Subscription(event.getEndpoint(), new Subscription.Keys(event.getAuth(), event.getP256dh())));
+    public void subscribe(WebPushRegistration.WebPushSubscription event) {
+        subscribe(new Subscription(event.getEndpoint(), new Subscription.Keys(event.getP256dh(), event.getAuth())));
     }
 
     private void subscribe(Subscription subscription) {
@@ -199,13 +199,17 @@ public class WebPushService {
      *
      * @param event unsubscribe event containing subscription details
      */
-    public void unsubscribe(WebPushToggle.UnsubscribeEvent event) {
-        unsubscribe(new Subscription(event.getEndpoint(), new Subscription.Keys(event.getAuth(), event.getP256dh())));
+    public void unsubscribe(WebPushRegistration.WebPushSubscription event) {
+        unsubscribe(new Subscription(event.getEndpoint(), new Subscription.Keys(event.getP256dh(), event.getAuth())));
     }
 
     private void unsubscribe(Subscription subscription) {
         getLogger().info("Unsubscribed " + subscription.endpoint + " auth:" + subscription.keys.auth);
         endpointToSubscription.remove(subscription.endpoint);
+    }
+
+    public boolean isEmpty() {
+        return endpointToSubscription.isEmpty();
     }
 
     /**
@@ -240,24 +244,58 @@ public class WebPushService {
         return LoggerFactory.getLogger(WebPushService.class);
     }
 }
-
 ----
 
 === Adding Push Registration
 
 The last thing left is to add the possibility to register to the push service.
 
-Flow contains a simple component `WebPushToggle` that can be added to any view and only requires the public VAPID key.
+Flow contains the `WebPushRegistration` class that can be used to handle registration and un-registration of web push on the client.
+The WebPushRegistration needs the VAPID public key on construction.
 
-The toggle events for subscribe and unsubscribe need to be sent to the `WebPushService` for registration so that notifications can be sent.
+The UI components for this can for instance be 2 buttons one for registering and one for un-registering notifications.
 
 [source,java]
 ----
-WebPushToggle toggle = new WebPushToggle(webPushService.getPublicKey());
+WebPushRegistration pushApi = new WebPushRegistration(webPushService.getPublicKey());
 
-toggle.addSubscribeListener(webPushService::subscribe);
-toggle.addUnsubscribeListener(webPushService::unsubscribe);
+Button subscribe = new Button("Subscribe");
+subscribe.setEnabled(false);
+subscribe.addClickListener(e -> {
+    pushApi.subscribeWebPush(subscribe.getUI().get(), subscription -> {
+        webPushService.subscribe(subscription);
+        subscribe.setEnabled(false);
+        unsubscribe.setEnabled(true);
+    });
+});
+
+Button unsubscribe = new Button("UnSubscribe");
+unsubscribe.setEnabled(false);
+unsubscribe.addClickListener(e -> {
+    pushApi.unsubscribeWebPush(unsubscribe.getUI().get(), subscription -> {
+        webPushService.unsubscribe(subscription);
+        subscribe.setEnabled(true);
+        unsubscribe.setEnabled(false);
+    });
+});
 ----
+
+In cases where there exists a subscription on the client for the application, but it has been lost for the server, we can return it from the serviceWorker.
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    pushApi.isWebPushRegistered(getUI().get(), registered -> {
+        subscribe.setEnabled(!registered);
+        unsubscribe.setEnabled(registered);
+        if(registered && webPushService.isEmpty()) {
+            pushApi.getExistingSubscription(getUI().get(), webPushService::subscribe);
+        }
+    });
+}
+----
+
 
 === Sending Notifications
 
