@@ -18,7 +18,8 @@ export class Example extends LitElement {
     return html`
         <!-- tag::snippet[] -->
         <vaadin-time-picker theme="align-right small helper-above-field"
-          label="Label" helper-text="Helper text" value="07:00">
+          label="Label" helper-text="Helper text" value="07:00"
+          style="--vaadin-input-field-border-width: 1px;">
         </vaadin-time-picker>
         <!-- end::snippet[] -->
     `;
