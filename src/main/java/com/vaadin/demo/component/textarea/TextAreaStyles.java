@@ -19,6 +19,7 @@ public class TextAreaStyles extends HorizontalLayout {
             TextAreaVariant.LUMO_ALIGN_RIGHT,
             TextAreaVariant.LUMO_HELPER_ABOVE_FIELD
         );
+        field.getStyle().set("--vaadin-input-field-border-width", "1px");
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
