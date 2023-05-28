@@ -17,13 +17,13 @@ public class ButtonIcons extends Div {
         // to screen readers
         Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
         plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-        plusButton.getElement().setAttribute("aria-label", "Add item");
+        plusButton.setAriaLabel("Add item");
 
         // Icon button using a tooltip to provide textual description
         // of the action that it triggers
         Button closeButton = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
         closeButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-        closeButton.getElement().setAttribute("aria-label", "Close");
+        closeButton.setAriaLabel("Close");
         closeButton.setTooltipText("Close the dialog");
 
         Button arrowLeftButton = new Button("Left",
