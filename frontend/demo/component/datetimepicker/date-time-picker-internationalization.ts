@@ -40,6 +40,8 @@ export class Example extends LitElement {
       weekdaysShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
       today: 'Heute',
       cancel: 'Abbrechen',
+      dateLabel: 'datum',
+      timeLabel: 'zeit'
     };
   }
 
