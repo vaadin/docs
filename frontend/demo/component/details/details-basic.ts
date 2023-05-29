@@ -6,7 +6,6 @@ import '@vaadin/details';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('details-basic')
 export class Example extends LitElement {
   protected override createRenderRoot() {
@@ -17,6 +16,7 @@ export class Example extends LitElement {
   }
 
   protected override render() {
+    // tag::snippet[]
     return html`
       <vaadin-details summary="Contact information" opened>
         <vaadin-vertical-layout>
@@ -26,6 +26,6 @@ export class Example extends LitElement {
         </vaadin-vertical-layout>
       </vaadin-details>
     `;
+    // end::snippet[]
   }
 }
-// end::snippet[]
