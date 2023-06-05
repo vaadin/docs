@@ -22,14 +22,12 @@ public class ButtonLabels extends VerticalLayout {
         Button clearPrimaryEmail = new Button("Remove", event -> {
             emailField.setValue("");
         });
-        clearPrimaryEmail.getElement().setAttribute("aria-label",
-                "Remove primary email address");
+        clearPrimaryEmail.setAriaLabel("Remove primary email address");
 
         Button clearSecondaryEmail = new Button("Remove", event -> {
             secondaryEmailField.setValue("");
         });
-        clearSecondaryEmail.getElement().setAttribute("aria-label",
-                "Remove secondary email address");
+        clearSecondaryEmail.setAriaLabel("Remove secondary email address");
         // end::snippet[]
 
         HorizontalLayout horizontalLayout1 = new HorizontalLayout(emailField,
