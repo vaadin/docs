@@ -48,7 +48,7 @@ public class MenuBarIcons extends Div {
         });
 
         if (ariaLabel != null) {
-            item.getElement().setAttribute("aria-label", ariaLabel);
+            item.setAriaLabel(ariaLabel);
         }
 
         if (label != null) {
