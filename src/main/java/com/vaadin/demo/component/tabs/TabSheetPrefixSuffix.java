@@ -27,7 +27,7 @@ public class TabSheetPrefixSuffix extends Div {
 
         Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
         plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-        plusButton.getElement().setAttribute("aria-label", "Add tab");
+        plusButton.setAriaLabel("Add tab");
         tabSheet.setSuffixComponent(plusButton);
         // end::snippet[]
 
