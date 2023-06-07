@@ -19,3 +19,5 @@ export function patchSideNavNavigation(sideNav: SideNav) {
     });
   });
 }
+
+(window as any).patchSideNavNavigation = patchSideNavNavigation;

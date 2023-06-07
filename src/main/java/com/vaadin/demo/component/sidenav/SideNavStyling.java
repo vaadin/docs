@@ -27,7 +27,9 @@ public class SideNavStyling extends Div {
         Div navWrapper = new Div(nav);
         nav.setWidthFull();
         add(navWrapper);
-        
+
+        nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
+
         this.addClassName("side-nav-sample");
     }
 

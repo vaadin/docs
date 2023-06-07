@@ -39,7 +39,10 @@ public class SideNavLabelled extends Div {
         messagesNav.setWidthFull();
         adminNav.setWidthFull();
         add(navWrapper);
-        
+
+        messagesNav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
+        adminNav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
+
         this.addClassName("side-nav-sample");
     }
 
