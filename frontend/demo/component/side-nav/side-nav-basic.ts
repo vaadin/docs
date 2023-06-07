@@ -1,11 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/side-nav';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import { applyTheme } from 'Frontend/generated/theme';
+import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
 
 @customElement('side-nav-basic')
 export class Example extends LitElement {
@@ -16,12 +17,17 @@ export class Example extends LitElement {
     return root;
   }
 
+  protected firstUpdated() {
+    // hidden-source-line
+    patchSideNavNavigation(this.shadowRoot!.querySelector('vaadin-side-nav')!); // hidden-source-line
+  } // hidden-source-line
+
   protected override render() {
     return html`
       <div class="side-nav-sample">
         <div>
           <!-- tag::snippet[] -->
-          <vaadin-side-nav style="width:100%">
+          <vaadin-side-nav style="width:100%" id="sideNav">
             <vaadin-side-nav-item path="/dashboard">
               <vaadin-icon icon="vaadin:dashboard" slot="prefix"></vaadin-icon>
               Dashboard

@@ -1,12 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/side-nav';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
 
 @customElement('side-nav-labelled')
 export class Example extends LitElement {
@@ -17,12 +18,16 @@ export class Example extends LitElement {
     return root;
   }
 
+  protected firstUpdated() {
+    // hidden-source-line
+    patchSideNavNavigation(this.shadowRoot!.querySelector('vaadin-side-nav')!); // hidden-source-line
+  } // hidden-source-line
+
   protected override render() {
     return html`
       <div class="side-nav-sample">
         <!-- tag::snippet[] -->
         <vaadin-vertical-layout theme="spacing">
-  
           <vaadin-side-nav style="width:100%">
             <span slot="label">Messages</span>
             <vaadin-side-nav-item path="/inbox">
@@ -50,7 +55,6 @@ export class Example extends LitElement {
               Permissions
             </vaadin-side-nav-item>
           </vaadin-side-nav>
-
         </vaadin-vertical-layout>
         <!-- end::snippet[] -->
       </div>
