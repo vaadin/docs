@@ -20,7 +20,8 @@ export class Example extends LitElement {
 
   protected firstUpdated() {
     // hidden-source-line
-    patchSideNavNavigation(this.shadowRoot!.querySelector('vaadin-side-nav')!); // hidden-source-line
+    patchSideNavNavigation(this.shadowRoot!.querySelector('vaadin-side-nav:first-child')!); // hidden-source-line
+    patchSideNavNavigation(this.shadowRoot!.querySelector('vaadin-side-nav:nth-child(2)')!); // hidden-source-line
   } // hidden-source-line
 
   protected override render() {
