@@ -22,6 +22,7 @@ public class DatePickerStyles extends HorizontalLayout {
             DatePickerVariant.LUMO_ALIGN_RIGHT,
             DatePickerVariant.LUMO_HELPER_ABOVE_FIELD
         );
+        field.getStyle().set("--vaadin-input-field-border-width", "1px");
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");

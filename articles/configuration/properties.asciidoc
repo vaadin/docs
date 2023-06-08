@@ -1,29 +1,30 @@
 ---
 title: Properties
-description: Vaadin applications have configuration properties that change their behavior.
+description: You can change the behavior of Vaadin applications by setting configuration properties.
 order: 10
 ---
 
+
 = Configuration Properties
 
-Vaadin applications have configuration properties that change their behavior. You can use either system properties or servlet initialization parameters to set them. See the <<properties,full list of properties>> for details.
+You can use either system properties or servlet initialization parameters to set configuration properties. See the <<properties,full list of properties>> for details.
 
 .Spring Applications
-[TIP] 
+[TIP]
 See the <<{articles}/integrations/spring/configuration#, Spring-specific instructions>> for Spring-based applications.
 
-[[system-properties]]
 
+[[system-properties]]
 == Using System Properties
 
-When using Java system properties to set Vaadin application parameters, the `vaadin.` prefix must be specified *before* the parameter names. The following example shows how to set the `pnpm.enable` system property when executing a Maven goal from the command-line:
+When using Java system properties to set Vaadin application parameters, the `vaadin.` prefix must be specified before each parameter name. The following example shows how to set the `pnpm.enable` system property when executing a Maven goal from the command-line:
 
 [source,bash]
 ----
 mvn jetty:run -Dvaadin.pnpm.enable=true
 ----
 
-You can configure system properties for Maven plugin executions. For instance, the following example sets a Vaadin-specific system property when running the Jetty Maven plugin:
+You can configure system properties for Maven plugin executions. For instance, the following sets a Vaadin-specific system property when running the Jetty Maven plugin:
 
 [source,xml]
 ----
@@ -41,9 +42,10 @@ You can configure system properties for Maven plugin executions. For instance, t
 </plugin>
 ----
 
-== Using Servlet Initialization Parameters
 
-Another option is to use servlet initialization parameters. You can use the Servlet 3.0 `@WebServlet` annotation, which requires you to configure your servlet unless you want it done automatically by Vaadin with default parameter values.
+== Servlet Initialization Parameters
+
+Another option for setting configuration properties is to use servlet initialization parameters. You can use the Servlet 3.0 `@WebServlet` annotation. This requires you to configure your servlet, unless you want Vaadin to do it using default parameter values.
 
 [source,java]
 ----
@@ -53,7 +55,7 @@ public class MyServlet extends VaadinServlet {
 }
 ----
 
-Yet another approach is to use the [filename]`web.xml` file.
+Yet another approach is to use the [filename]`web.xml` file. Below is an example of one:
 
 [source,xml]
 ----
@@ -85,112 +87,136 @@ Yet another approach is to use the [filename]`web.xml` file.
 </web-app>
 ----
 
-.System properties override servlet parameters.
+
+.System Properties Override Servlet Parameters
 [NOTE]
-The system property is used when a system property and a servlet parameter have the same name.
+When a system property and a servlet parameter have the same name, the system property is used.
+
 
 [[properties]]
 == Configuration Properties
 
-The following list contains the properties that are defined in [classname]`com.vaadin.server.DeploymentConfiguration` and [classname]`com.vaadin.server.Constants` classes in alphabetical order.
+The following table contains the properties that are defined in the [classname]`com.vaadin.server.DeploymentConfiguration` and [classname]`com.vaadin.server.Constants` classes. They're listed in alphabetical order. Please notice that if you use Spring Boot, you should add the `vaadin.` prefix to these (e.g., change `brotli` to `vaadin.brotli`).
 
-.Spring Boot Applications
-[NOTE]
-If you use Spring Boot, you should add the `vaadin.` prefix. For example, `vaadin.productionMode=true`.
-
-[cols="1,4,1"]
+[cols="1,1,4"]
 |===
-|Property Name
+|Property Name |Default Value |Description
+
+|`brotli`
+|`true`
+|Decide whether pre-compressed https://github.com/google/brotli[Brotli] files should be used if accepted by the browser. Brotli files are created during a production build and the property is only used in production mode. Set to `false` if you want to serve uncompressed static resources.
+
+|`ci.build`
+|`false`
+|Decide whether `npm ci` is run instead of `npm i` in production front-end builds. If you use `pnpm`, the install command is run with the `--frozen-lockfile` parameter. The build fails if the `package.json` and `package-lock.json` files have mismatching versions.
+
+|`closeIdleSessions`
+|`false`
+|Close the Vaadin session if no UI is active. A UI is considered active if it's open on the client-side and has any activity -- besides heartbeat requests. By default, heartbeat requests keep the Vaadin session open even when there is no user interaction. Set to `true` to close idle sessions. See `heartbeatInterval` below. 
+
+|`devmode.liveReload.enabled`
+|`true`
+|Enable live reload. When using a server-side <<live-reload/index#, live reload tool>>, the browser is automatically refreshed after code is rebuilt on the server. Set to `false` to disable automatic reloading of the browser. This only applies to development mode. 
+
+|`devmode.optimizeBundle`
+|`false`
+|Optimize front-end resource bundles. All front-end resources in the classpath are included in the generated bundle in development mode, by default. When set to `true`, the front-end build creates an optimized bundle by including only front-end resources that are used from the application entry points. Note that it uses bytecode scanning, which increases application start-up time. Set to `false` to skip the optimization in production mode. 
+
+|`devmode.sessionSerialization.enabled`
+|`false`
+|Enable session serialization. When session serialization is enabled, [classname]`UI` instances and registered [classname]`StreamResource` instances are serialized or deserialized when restarting the development server. When set to `true`, for example, access control information can be preserved during development so that you don't need to log in for each change. This only applies to development mode.
+
+|`devmode.usageStatistics.enabled`
+|`true`
+|Enable Vaadin to collect usage statistics that are used to guide further development. Statistics are collected based on features that are used in the application. No data is collected in production mode. Some usage statistics are collected through the web browser. See the https://github.com/vaadin/vaadin-usage-statistics[client-side collector repository] for instructions on how to opt out. This only applies to development mode.
+
+|`disable.automatic.servlet.registration`
+|`false`
+|Disable automatic servlet registration that's required by Vaadin applications. You must register Vaadin servlets yourself if set to `true`.
+
+|`disable-xsrf-protection`
+|`false`
+|Disable cross-site request forgery protection. The protection is enabled by default and you should keep it enabled except for certain types of testing.
+
+|`eagerServerLoad`
+|`false`
+|Enable the client-side bootstrap page to include the initial JSON data fragment.
+
+|`frontend.hotdeploy`
+|`false`
+|Enable development using the front-end development server instead of an application bundle. This only applies to development mode.
+
+|`heartbeatInterval`
+|300 seconds (i.e., 5 minutes)
+|Set the heartbeat interval time. UIs that are open on the client-side send a regular heartbeat to the server indicating that they're still active even without ongoing user interaction. When the server doesn't receive a valid heartbeat from a given UI within a certain amount of time, it removes that UI from the session. The interval value is expressed in `seconds`. See also `closeIdleSessions`.
+
+|`i18n.provider`
+|`null`
+|Set the fully-qualified name for the internationalization provider class. To translate strings for localization, the application should implement the `I18NProvider` interface and define the class name in the `i18n.provider` property. See the <<{articles}/advanced/i18n-localization#, Localization documentation>> for details.
+
+|`maxMessageSuspendTimeout`
+|5000 ms (5 seconds)
+|Set the maximum time in `milliseconds` that the client waits for predecessors of an out-of-sequence message before considering them missing and requesting a full state resynchronization from the server. For example, when the server sends adjacent `XmlHttpRequest` responses and pushes messages over a low-bandwidth connection, the client may receive the messages out of sequence. Increase this value if your application experiences excessive resynchronization requests. However, be aware that it degrades the UX with flickering and loss of client-side-only states, such as scroll position.
+
+|`pnpm.enable`
+|`false`
+|Enable `pnpm` instead of `npm` to resolve and download front-end dependencies. It's set to `false` by default since `npm` is typically used. Set it to `true` to enable `pnpm`. See <<development-mode/npm-pnpm#, Switching Between npm and pnpm>> for more information.
+
+|`productionMode`
+|`false`
+|Set the application to work in production mode. This disables most of the logged information that appears on the server and browser console to improve performance. Development mode JavaScript functions aren't exported. Any `push` is given as a minified JavaScript file instead of a full-size one, and any static resources are cached. See the <<../production#,Deploying to Production>> for more information. Set to `true` when building applications for public deployment.
+
+|`pushLongPollingSuspendTimeout`
+|`-1` (i.e., no timeout)
+|Set the timeout in `milliseconds` for network requests when using long polling transport. If you have long polling enabled with a proxy that has a timeout, set `pushLongPollingSuspendTimeout` to less time than the proxy timeout for clients to reconnect.
+
+|`pushMode`
+|`disabled`
+|Enable server push. The permitted values are `disabled`, `manual`, or `automatic`. See <<{articles}/advanced/server-push#, Server Push>> for more information.
+
+|`pushServletMapping`
+|`""`
+|Specify the servlet mapping used for bidirectional ("push") client-server communication. Some Java application servers require special context. For example, you can specify websockets here.
+
+|`requestTiming`
+|`true` for development mode; `false` for production mode
+|Include basic timing information in responses that can be used for performance testing. 
+
+|`syncIdCheck`
+|`true`
+|Enable sync ID checking. The sync ID is used to handle situations in which the client sends a message to a connector that has been removed from the server. It's set to `true`, by default. You should only disable it if your application doesn't need to stay in sync, and suffers from a bad network connection.
+
+|`webComponentDisconnect`
+|300 seconds (i.e., 5 minutes)
+|Set the number of `seconds` that a Vaadin application embedded as a Web Component waits for a reconnect before removing the server-side component from memory.
+
+|===
+
+== Vaadin Plugin Properties
+
+The following list contains the properties that are only used by Vaadin Maven and Gradle Plugin and not applicable for deployment configuration.
+
+[cols="1,1,3,1"]
+|===
+|System Property
+|Plugin Configuration
 |Description
 |Default Value
 
-|`brotli`
-|Decide whether pre-compressed https://github.com/google/brotli[Brotli] files should be used if accepted by the browser. Brotli files are created during a production build and the property is only used in production mode. Set to `false` if you want to serve uncompressed static resources.
-|`true`
-
-|`ci.build`
-|Decide whether `npm ci` is run instead of `npm i` in production front-end builds. If you use pnpm, the install command is run with the `--frozen-lockfile` parameter. The build fails if the `package.json` and `package-lock.json` files have mismatching versions.
+|`vaadin.ci.build`
+|`ciBuild`
+|Decide whether `npm ci` is run instead of `npm i` for production front-end builds. If you use pnpm, the install command runs with the `--frozen-lockfile` parameter. The build fails if the `package.json` and `package-lock.json` files have mismatching versions.
 |`false`
 
-|`closeIdleSessions`
-|Close the Vaadin session if no UI is active. A UI is considered active if it is open on the client-side and has any activity in addition to heartbeat requests. By default, heartbeat requests keep the Vaadin session open even when there is no user interaction. Set to `true` to close idle sessions. Also see `heartbeatInterval` below. 
+|`vaadin.force.production.bundle`
+|`forceProductionBuild`
+|Force Vaadin to create a new production bundle even if there is a usable pre-compiled bundle already. This is usually required when creating an optimized production bundle and to load component sources to the browser on demand, i.e., when opening a route where these components are used.
 |`false`
 
-|`devmode.liveReload.enabled`
-|Enable live reload. When using a server-side <<live-reload/index#, live reload tool>>, the browser is automatically refreshed after code is rebuilt on the server. Set to `false` to disable the automatic browser reload. This only applies to development mode. 
-|`true`
-
-|`devmode.optimizeBundle`
-|Optimize front-end resource bundles. All front-end resources in the classpath are included in the generated bundle in development mode by default. When set to `true`, the front-end build creates an optimized bundle by including only front-end resources that are used from the application entry points. Note that it uses bytecode scanning, which increases application start-up time. Set to `false` to skip the optimization in production mode. 
+|`vaadin.skip.dev.bundle`
+|`skipDevBundleRebuild`
+|Prevent a front-end development bundle from being re-built even if Vaadin decides to use an existing compiled development bundle. This is mainly needed when re-bundling checker in Flow has issues leading to false re-bundling and one needs a workaround while the problem is being resolved.
 |`false`
-
-|`devmode.sessionSerialization.enabled`
-|Enable session serialization. When session serialization is enabled, [classname]`UI` instances and registered [classname]`StreamResource` instances are serialized or deserialized when restarting the development server. When set to `true`, for example, access control information can be preserved during development so that you don't need to log in again for each change. This only applies to development mode.
-|`false`
-
-|`devmode.usageStatistics.enabled`
-|Enable Vaadin to collect usage statistics that are used to guide further development. Statistics are collected based on features that are used in the application. No data is collected in production mode. Some usage statistics are collected through the web browser. See the https://github.com/vaadin/vaadin-usage-statistics[client-side collector repository] for instructions on how to opt out. This only applies to development mode.
-|`true`
-
-|`disable.automatic.servlet.registration`
-|Disable automatic servlet registration required by Vaadin applications. You must register Vaadin servlets yourself if set to `true`.
-|`false`
-
-|`disable-xsrf-protection`
-|Disable cross-site request forgery protection. The protection is enabled by default and you should keep it enabled unless for certain types of testing.
-|`false`
-
-|`eagerServerLoad`
-|Enable the client-side bootstrap page to include the initial JSON data fragment.
-|`false`
-
-|`frontend.hotdeploy`
-|Enable development using the front-end development server instead of an application bundle. This only applies to development mode.
-|`false`
-
-|`heartbeatInterval`
-|Set the heartbeat interval time. UIs that are open on the client-side send a regular heartbeat to the server indicating that they are still active even without ongoing user interaction. When the server doesn't receive a valid heartbeat from a given UI within a certain amount of time, it removes that UI from the session. The interval value is expressed in `seconds`. See also `closeIdleSessions`.
-|300 seconds (5 minutes)
-
-|`i18n.provider`
-|Set the fully-qualified name for the internationalization provider class. To translate strings for localization, the application should implement the `I18NProvider` interface and define the class name in the `i18n.provider` property. See the <<{articles}/advanced/i18n-localization#, Localization documentation>> for details.
-|`null`
-
-|`maxMessageSuspendTimeout`
-|Set the maximum time in `milliseconds` that the client waits for predecessors of an out-of-sequence message before considering them missing and requesting a full state resynchronization from the server. For example, when the server sends adjacent `XmlHttpRequest` responses and pushes messages over a low-bandwidth connection, the client may receive the messages out of sequence. Increase this value if your application experiences excessive resynchronization requests. However, be mindful that it degrades the UX with flickering and loss of client-side-only states, such as scroll position.
-|5000 ms (5 seconds)
-
-|`pnpm.enable`
-|Enable `pnpm` instead of `npm` to resolve and download front-end dependencies. It's set to `false` since `npm` is used by default. Set it to `true` to enable `pnpm`. See <<development-mode/npm-pnpm#, Switching Between npm and pnpm>> for more information.
-|`false`
-
-|`productionMode`
-|Set the application to work in production mode. It disables most of the logged information that appears on the server and browser console to improve performance. Development mode JavaScript functions aren't exported. Any `push` is given as a minified JavaScript file instead of a full-size one and any static resources are cached. See the <<../production#,Deploying to Production>> for more information. Set to `true` when building applications for public deployment.
-|`false`
-
-|`pushLongPollingSuspendTimeout`
-|Set the timeout in `milliseconds` for network requests when using long polling transport. If you have long polling enabled with a proxy that has a timeout, you want `pushLongPollingSuspendTimeout` to be shorter than the proxy timeout to make clients reconnect.
-|`-1` (no timeout)
-
-|`pushMode`
-|Enable server push. The permitted values are "disabled", "manual", or "automatic". See <<{articles}/advanced/server-push#, Server Push>> for more information.
-|`disabled`
-
-|`pushServletMapping`
-|Specify the servlet mapping used for bidirectional ("push") client-server communication. Some Java application servers require special context, for example for websockets, which you can specify here.
-|`""`
-
-|`requestTiming`
-|Include basic timing information in responses that can be used for performance testing. 
-|`true` for development mode and `false` for production mode.
-
-|`syncIdCheck`
-|Enable sync ID checking. The sync ID is used to handle situations where the client sends a message to a connector that has been removed from the server. It's set to `true` by default, and you should only disable it if your application doesn't need to stay in sync and suffers from a bad network connection.
-|`true`
-
-|`webComponentDisconnect`
-|Set the number of `seconds` that a Vaadin application embedded as a Web Component waits for a reconnect before removing the server-side component from memory.
-|300 seconds (5 minutes)
 |===
 
 [discussion-id]`27BF72FB-1E23-42B0-B540-A602F9AD4571`
