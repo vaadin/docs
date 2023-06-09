@@ -17,8 +17,7 @@ export class Example extends LitElement {
     return root;
   }
 
-  protected firstUpdated() {
-    // hidden-source-line
+  /* prettier-ignore */ protected firstUpdated() { // hidden-source-line
     patchSideNavNavigation(this.shadowRoot!.querySelector('vaadin-side-nav')!); // hidden-source-line
   } // hidden-source-line
 
