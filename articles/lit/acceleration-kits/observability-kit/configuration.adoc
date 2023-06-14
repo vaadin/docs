@@ -1,0 +1,159 @@
+---
+title: Configuring Observability Kit
+description: How to configure Observability Kit and what are its default settings.
+order: 200
+---
+:lit:
+// tag::content[]
+
+= Configuring Observability Kit
+:sectnums:
+
+Instrumentation can be configured in the [filename]`agent.properties` file that’s used with the Java agent.
+
+
+== Service Configuration
+
+The `service` attributes are used to differentiate traces from services or applications which might have many instances running simultaneously, such as horizontally scaled services.
+
+The service attributes are as follows:
+
+- `service.name` is an attribute that's used to distinguish a service by name. The default value is `vaadin` -- the only attribute with a default value.
+It's also the only one required.
+- `service.namespace` helps to distinguish a group of services.
+- `service.instance.id` helps to distinguish instances of the same service that exist simultaneously. It must be unique for each instance of the same `service.namespace`, `service.name` pair.
+- `service.version` is the semantic versioning string of the service version.
+
+The `service.name` attribute is configured using the `otel.service.name` property, either in the [filename]`agent.properties` configuration file as a system property, or as an environment variable.
+
+[.example]
+--
+
+Add the following line to the [filename]`agent.properties` file:
+[source,properties]
+----
+<source-info group="Configuration file"></source-info>
+otel.service.name=myapp
+----
+
+Pass the `otel.service.name` system property when starting the Java process.
+[source,terminal]
+----
+<source-info group="System property"></source-info>
+java -Dotel.service.name="myapp" ...
+----
+
+Define the `OTEL_SERVICE_NAME` environment variable before starting the Java process.
+[source,terminal]
+----
+<source-info group="Environment variable"></source-info>
+# Linux / macOS
+export OTEL_SERVICE_NAME="myapp"
+# Windows
+set OTEL_SERVICE_NAME="myapp"
+----
+
+--
+
+Other service attributes are configured using the `otel.resource.attributes` property, either in the [filename]`agent.properties` configuration file as a system property, or as en environment variable. Multiple attributes are separated by commas.
+
+[.example]
+--
+
+Add the following line to the [filename]`agent.properties` file:
+[source,properties]
+----
+<source-info group="Configuration file"></source-info>
+otel.resource.attributes=service.namespace=myservices,service.instance.id=myapp-eu
+----
+
+Pass the `otel.resource.attributes` system property when starting the Java process.
+[source,terminal]
+----
+<source-info group="System property"></source-info>
+java -Dotel.resource.attributes="service.namespace=myservices,service.instance.id=myapp-eu" ...
+----
+
+Define the `OTEL_RESOURCE_ATTRIBUTES` environment variable before starting the Java process.
+[source,terminal]
+----
+<source-info group="Environment variable"></source-info>
+# Linux / macOS
+export OTEL_RESOURCE_ATTRIBUTES="service.namespace=myservices,service.instance.id=myapp-eu"
+# Windows
+set OTEL_RESOURCE_ATTRIBUTES="service.namespace=myservices,service.instance.id=myapp-eu"
+----
+
+--
+
+For more information about service configuration, see the https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/#service[OpenTelemetry documentation].
+
+
+== Default OpenTelemetry Instrumentation
+
+The custom distribution disables default OpenTelemetry instrumentation for Vaadin and servlets.
+
+The default instrumentation is disabled because logging all requests for a single-page application isn't helpful -- although it does generate plenty of data. It was disabled to have control over which requests generate a trace.
+
+The `jetty`, `servlet`, and `tomcat` instrumentation modules are disabled by default. To enable any of them, add the following line to the [filename]`agent.properties` file:
+
+[source,properties]
+----
+otel.instrumentation.${instrumentationName}.enabled=true
+----
+
+
+== Frontend Observability Configuration
+
+:prerelease-feature: Frontend Observability
+:artifact-id: observability-kit-starter
+:version: 2.1.1
+
+To enable frontend observability, you need to add the `@hilla/observability-kit-client` package to your `package.json` file.
+After that, you can use the `init` function provided by the package.
+
+The `init` function requires two parameters: the `export` method from the `ObservabilityEndpoint` that comes with the starter artifact, and a list of options.
+
+The options list has the following structure:
+
+[source,typescript]
+----
+export interface TelemetryInitializationOptions {
+  /** Specifies URLs to ignore */
+  ignoredURLs?: readonly string[];
+  /** Disables tracking of internal Vaadin/Hilla URLs */
+  ignoreVaadinURLs?: boolean;
+  /** Frontend-specific `service.instance.id` attribute */
+  instanceId?: string;
+  /** Frontend-specific `service.name` attribute */
+  serviceName?: string;
+  /** Frontend-specific `service.version` attribute */
+  serviceVersion?: string;
+  /** Enables or disables the Document Load instrumentation. */
+  traceDocumentLoad?: boolean;
+  /** Enables or disables the Frontend Error instrumentation. */
+  traceErrors?: boolean;
+  /** Enables or disables the Long Task instrumentation. */
+  traceLongTask?: boolean;
+  /** Enables or disables the User Interaction instrumentation. */
+  traceUserInteraction?: readonly EventName[] | null;
+  /** Enables or disables the XML HTTP Request instrumentation. */
+  traceXmlHTTPRequest?: boolean;
+}
+----
+
+By default, the options are set as follows:
+
+[source,typescript]
+----
+const options = {
+  serviceName: 'hilla',
+  traceDocumentLoad: true,
+  traceErrors: true,
+  traceLongTask: true,
+  traceUserInteraction: ['click'],
+  traceXmlHTTPRequest: true,
+};
+----
+
+// end::content[]
