@@ -11,50 +11,37 @@ layout: page
 
 .Experimental Feature
 [IMPORTANT]
-The Collaboration Kit backend for clustering support is an experimental feature. What it means is that the behavior, API, and look and feel are subject to change.
-You may enable it through a <<Feature Flag>>.
+The Collaboration Kit backend for clustering support is an experimental feature. What it means is that the behavior, API, and look and feel are subject to change. You may enable it through a <<Feature Flag>>.
 
-Using Collaboration Kit with its default settings in a clustered environment results in users being able to collaborate only with other users that are connected to the same application instance, i.e., the same node.
-To run clustered application deployments, Collaboration Kit provides the [classname]`Backend` superclass that can be extended to support multi-instance environments.
+Using Collaboration Kit with its default settings in a clustered environment results in users being able to collaborate only with other users that are connected to the same application instance, i.e., the same node. To run clustered application deployments, Collaboration Kit provides the [classname]`Backend` superclass that can be extended to support multi-instance environments.
 
 This page shows how to implement a custom backend to support clustering on the https://hazelcast.com[Hazelcast] platform.
 
 
-== Understanding the Event Log
+== Event Log Basics
 
-Collaboration Kit uses a custom [classname]`Backend` implementation as the gateway for accessing Event Logs.
-An *Event Log* is an ordered log of submitted events involving Topic data, such as added items or value changes.
-The [classname]`EventLog` API provides methods to submit new events to the log and to add a subscriber that receives past and future events.
-All events are marked by a unique identifier. The API uses it for a method that removes all events in the log before a given identifier.
+Collaboration Kit uses a custom [classname]`Backend` implementation as the gateway for accessing Event Logs. An *Event Log* is an ordered log of submitted events involving Topic data, such as added items or value changes. The [classname]`EventLog` API provides methods to submit new events to the log and to add a subscriber that receives past and future events. All events are marked by a unique identifier. The API uses it for a method that removes all events in the log before a given identifier.
 
 
-=== Implementing an Event Log for Hazelcast
+=== Event Log for Hazelcast
 
-Start by implementing the [classname]`EvengLog` interface for the reference Hazelcast platform.
-Hazelcast provides a straightforward streaming API based on shared maps and lists.
-The Event Log can be implemented to make use of a Hazelcast [classname]`IList`. However, you need a class to store both the event identifier and payload first.
+Start by implementing the [classname]`EvengLog` interface for the reference Hazelcast platform. Hazelcast provides a straightforward streaming API based on shared maps and lists. The Event Log can be implemented to make use of a Hazelcast [classname]`IList`. However, you need a class to store both the event identifier and payload first.
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastBackend.java[tags=id-payload,indent=0]
 ----
 
-Once you have that, you can start implementing the interface methods.
-The [methodname]`submitEvent` method uses the event identifier and payload so you can store them in a new [classname]`IdAndPayload` object. You may also add it to the Hazelcast list for the Event Log.
+Once you have that, you can start implementing the interface methods. The [methodname]`submitEvent` method uses the event identifier and payload so you can store them in a new [classname]`IdAndPayload` object. You may also add it to the Hazelcast list for the Event Log.
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastBackend.java[tags=event-log;submit-event;!*,indent=0]
 ----
 
-To implement subscriptions to events, add an item listener to the Hazelcast list.
-The subscriber then receives all past and future events in the Event Log.
-A new subscriber receives all earlier events in the log in their original order. This allows it to catch up to the latest state.
-New events are delivered in order after all earlier events have been delivered.
-The [methodname]`subscribe` method may not be invoked again until the previous subscriber has been removed.
+To implement subscriptions to events, add an item listener to the Hazelcast list. The subscriber then receives all past and future events in the Event Log. A new subscriber receives all earlier events in the log in their original order. This allows it to catch up to the latest state. New events are delivered in order after all earlier events have been delivered. The [methodname]`subscribe` method may not be invoked again until the previous subscriber has been removed.
 
-The [methodname]`subscribe` method optionally takes the identifier of the last known event so that the subscriber is notified only about newer events.
-If an identifier is provided but not found in the Event Log, an [classname]`EventIdNotFoundException` is thrown.
+The [methodname]`subscribe` method optionally takes the identifier of the last known event so that the subscriber is notified only about newer events. If an identifier is provided but not found in the Event Log, an [classname]`EventIdNotFoundException` is thrown.
 
 .Exception Handling
 [TIP]
@@ -70,18 +57,14 @@ include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastB
 <4> All past events are initially delivered.
 <5> [classname]`Registration` is returned and can be used to remove the subscriber.
 
-The [methodname]`deliverEvents` method is `synchronized` to prevent it from being invoked by multiple threads simultaneously and to avoid duplicate events being notified to the subscriber.
-The method keeps track of the Hazelcast list index to identify the next event and it increments that index until all events are delivered.
-If an event identifier is set as the starting point, no new events are delivered until that identifier is reached.
+The [methodname]`deliverEvents` method is `synchronized` to prevent it from being invoked by multiple threads simultaneously and to avoid duplicate events being notified to the subscriber. The method keeps track of the Hazelcast list index to identify the next event and it increments that index until all events are delivered. If an event identifier is set as the starting point, no new events are delivered until that identifier is reached.
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastBackend.java[tags=deliver-events,indent=0]
 ----
 
-The last method to implement for the [classname]`EventLog` interface is the [methodname]`truncate` method.
-This method is used to limit the number of events contained in the log, preventing it from growing infinitely.
-It takes the identifier of the oldest known event that should be preserved, or, if a `null` identifier is provided, it empties the entire log.
+The last method to implement for the [classname]`EventLog` interface is the [methodname]`truncate` method. This method is used to limit the number of events contained in the log, preventing it from growing infinitely. It takes the identifier of the oldest known event that should be preserved, or, if a `null` identifier is provided, it empties the entire log.
 
 To implement this behavior for Hazelcast, create a [classname]`Predicate` class and pass it to the [methodname]`removeIf` method in the list.
 
@@ -93,8 +76,7 @@ include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastB
 
 == Opening an Event Log
 
-Now that you have a Hazelcast implementation of the [classname]`EventLog` interface, you need to extend the [classname]`Backend` class to be able to create and get instances of it.
-Since this implementation depends only on a single Hazelcast [classname]`IList`, it's simple to implement the [methodname]`openEventLog` method. You can do so by returning a new instance of the [classname]`HazelcastEventLog` with the list named after the `logId` parameter.
+Now that you have a Hazelcast implementation of the [classname]`EventLog` interface, you need to extend the [classname]`Backend` class to be able to create and get instances of it. Since this implementation depends only on a single Hazelcast [classname]`IList`, it's simple to implement the [methodname]`openEventLog` method. You can do so by returning a new instance of the [classname]`HazelcastEventLog` with the list named after the `logId` parameter.
 
 [source,java]
 ----
@@ -102,16 +84,13 @@ include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastB
 ----
 
 
-== Managing Event Log Snapshots
+== Event Log Snapshots
 
-A _snapshot_ is an opaque representation of data at a certain moment in time.
-It can be used, for example, by nodes joining a cluster to catch up with a recent state of data without the need to replay all events.
-Snapshots are identified by name. Each version of a named snapshot is assigned an extra unique identifier.
+A _snapshot_ is an opaque representation of data at a certain moment in time. It can be used, for example, by nodes joining a cluster to catch up with a recent state of data without the need to replay all events. Snapshots are identified by name. Each version of a named snapshot is assigned an extra unique identifier.
 
 
 === Loading a Snapshot
-To load the latest version of a snapshot, the [classname]`Backend` class provides the [methodname]`loadLatestSnapshot` method.
-This method can be implemented for Hazelcast by using a map to store the latest available snapshot.
+To load the latest version of a snapshot, the [classname]`Backend` class provides the [methodname]`loadLatestSnapshot` method. This method can be implemented for Hazelcast by using a map to store the latest available snapshot.
 
 [source,java]
 ----
@@ -121,9 +100,7 @@ include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastB
 
 === Submitting a New Snapshot
 
-To submit a new snapshot of data, use the [methodname]`replaceSnapshot` method.
-It takes the name of the snapshot, the expected unique identifier of the latest snapshot, the unique identifier of the new snapshot, and the payload of the snapshot itself.
-To implement this method for Hazelcast, you need some logic to verify that the latest snapshot is the expected snapshot.
+To submit a new snapshot of data, use the [methodname]`replaceSnapshot` method. It takes the name of the snapshot, the expected unique identifier of the latest snapshot, the unique identifier of the new snapshot, and the payload of the snapshot itself. To implement this method for Hazelcast, you need some logic to verify that the latest snapshot is the expected snapshot.
 
 [source,java]
 ----
@@ -133,25 +110,21 @@ include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastB
 
 == Node Identity and Membership Events
 
-The primary purpose of the Backend API is to support collaborative features in applications that are deployed in clustered environments.
-Every [classname]`Backend` instance represents a member of the cluster and is uniquely identified by a [classname]`UUID`, which should is returned by the [methodname]`getNodeId` method.
-Return the local member identifier for your Hazelcast implementation.
+The primary purpose of the Backend API is to support collaborative features in applications that are deployed in clustered environments. Every [classname]`Backend` instance represents a member of the cluster and is uniquely identified by a [classname]`UUID`, which should is returned by the [methodname]`getNodeId` method. Return the local member identifier for your Hazelcast implementation.
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastBackend.java[tags=getNodeId,indent=0]
 ----
 
-When many [classname]`Backend` instances are involved, it's necessary to know when they join or leave the cluster.
-For this purpose, the [classname]`Backend` provides an implementation of the [methodname]`addMembershipListener` method that takes a [classname]`MembershipListener` and notifies it when cluster members join or leave.
-Since Hazelcast uses the same idea, the implementation is straightforward: You only need to map Hazelcast's events to Collaboration Kit's [classname]`MembershipEvent` events. This grabs the [classname]`MembershipEventType`, `JOIN` or `LEAVE`, and the identifier of the member.
+When many [classname]`Backend` instances are involved, it's necessary to know when they join or leave the cluster. For this purpose, the [classname]`Backend` provides an implementation of the [methodname]`addMembershipListener` method that takes a [classname]`MembershipListener` and notifies it when cluster members join or leave. Since Hazelcast uses the same idea, the implementation is straightforward: You only need to map Hazelcast's events to Collaboration Kit's [classname]`MembershipEvent` events. This grabs the [classname]`MembershipEventType`, `JOIN` or `LEAVE`, and the identifier of the member.
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/collaboration/hazelcast/HazelcastBackend.java[tags=addMembershipListener,indent=0]
 ----
 
-.Returning a Registration Object
+.Registration Object
 [NOTE]
 The [methodname]`addMembershipListener` returns a [classname]`Registration` object that can be used to remove the listener later.
 
