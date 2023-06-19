@@ -6,6 +6,7 @@ This repository does not generate the [vaadin.com/docs](https://vaadin.com/docs)
 
 The `latest` branch is for Vaadin documentation and selected by default. Select the `hilla` branch if you wish to contribute to Hilla documentation.
 As an exception, any contributions to component documentation (including that related to Hilla) should be done to the `latest` branch.
+To unhide the React live examples for local development, remove the `hiddenContent` config from `dspublisher/config/default.json`.
 
 ## Contents
 
