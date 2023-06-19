@@ -55,7 +55,7 @@ export class Example extends LitElement {
   }
 
   createItem(iconName: string) {
-    const item = document.createElement('vaadin-context-menu-item');
+    const item = document.createElement('vaadin-menu-bar-item');
     const icon = document.createElement('vaadin-icon');
     icon.setAttribute('icon', `vaadin:${iconName}`);
     item.appendChild(icon);
