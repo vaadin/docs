@@ -55,7 +55,7 @@ For the examples here, the property names used are `public.key`, `private.key` a
 
 === Web Push Dependencies
 
-For web push usage, the project needs to have the `Web Push` library and the `Bouncy Castle Crypto` package.
+For web push usage, the project needs to have the `Flow WebPush` dependency.
 
 .`pom.xml`
 [source,xml]
@@ -63,20 +63,13 @@ For web push usage, the project needs to have the `Web Push` library and the `Bo
 <dependencies>
     <!-- Other application dependencies -->
     <dependency>
-        <groupId>nl.martijndwars</groupId>
+        <groupId>com.vaadin</groupId>
         <artifactId>web-push</artifactId>
-        <version>5.1.1</version>
-    </dependency>
-    <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcprov-jdk15on</artifactId>
-        <version>1.69</version>
     </dependency>
 </dependencies>
 ----
 
-
-=== Generate Service Worker 
+=== Generate Service Worker
 
 Using Web Push methods, Vaadin provides the `@PWA` annotations that automatically generate the required PWA resources. Add the `@PWA` annotation on [classname]`Application.java` as follows:
 
@@ -99,35 +92,23 @@ public class Application extends SpringBootServletInitializer implements AppShel
 
 === Create WebPushService
 
-Next, you'll have to create WebPushService for subscribing and sending notifications.
+Next, you'll have to create WebPushService for initializing WebPush and storing the user subscriptions.
 
 [source, java]
 ----
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
-import nl.martijndwars.webpush.Notification;
-import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.jose4j.lang.JoseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.GeneralSecurityException;
-import java.security.Security;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
-import com.vaadin.flow.server.frontend.webpush.WebPushRegistration;
+import com.vaadin.flow.server.webpush.WebPush;
+import com.vaadin.flow.server.webpush.WebPushMessage;
 
 @Service
 public class WebPushService {
@@ -139,9 +120,9 @@ public class WebPushService {
     @Value("${subject}")
     private String subject;
 
-    private PushService pushService;
-
     private final Map<String, Subscription> endpointToSubscription = new HashMap<>();
+
+    WebPush webPush;
 
     /**
      * Initialize security and push service after construction when all autowiring is done.
@@ -149,55 +130,32 @@ public class WebPushService {
      * @throws GeneralSecurityException security exception for security complications
      */
     @PostConstruct
-    private void init() throws GeneralSecurityException {
-        Security.addProvider(new BouncyCastleProvider());
-        // Initialize push service with the public key, private key and subject
-        pushService = new PushService(publicKey, privateKey, subject);
+    private void init() {
+        webPush = new WebPush(publicKey, privateKey, subject);
+    }
+
+    public WebPush getWebPush() {
+        return webPush;
     }
 
     /**
-     * Get the used public key for registration.
+     * Send a notification to all subscriptions.
      *
-     * @return public key for service
+     * @param title message title
+     * @param body message body
      */
-    public String getPublicKey() {
-        return publicKey;
+    public void notifyAll(String title, String body) {
+        endpointToSubscription.values().forEach(subscription -> {
+            webPush.sendNotification(subscription, new WebPushMessage(title, body));
+        });
     }
 
-    /**
-     * Send a notification for target subscription.
-     *
-     * @param subscription subscription to notify
-     * @param messageJson  message content to send as a json {title, body}
-     */
-    public void sendNotification(Subscription subscription, String messageJson) {
-        try {
-            HttpResponse response = pushService.send(new Notification(subscription, messageJson));
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode != 201) {
-                getLogger().error("Server error, status code:" + statusCode);
-                InputStream content = response.getEntity().getContent();
-                List<String> strings = IOUtils.readLines(content, "UTF-8");
-                getLogger().error(String.join("\n", strings));
-            }
-        } catch (GeneralSecurityException | IOException | JoseException |
-                 ExecutionException
-                 | InterruptedException e) {
-            getLogger().error("Failed to send notification.", e);
-        }
+    private Logger getLogger() {
+        return LoggerFactory.getLogger(WebPushService.class);
     }
 
-    /**
-     * Record subscription for subscription event.
-     *
-     * @param event subscription event containing subscription details
-     */
-    public void subscribe(WebPushRegistration.WebPushSubscription event) {
-        subscribe(new Subscription(event.getEndpoint(), new Subscription.Keys(event.getP256dh(), event.getAuth())));
-    }
-
-    private void subscribe(Subscription subscription) {
-        getLogger().info("Subscribed to " + subscription.endpoint);
+    public void store(Subscription subscription) {
+        getLogger().info("Subscribed to {}", subscription.endpoint);
         /*
          * Note, in a real world app you'll want to persist these
          * in the backend. Also, you probably want to know which
@@ -209,17 +167,8 @@ public class WebPushService {
     }
 
 
-    /**
-     * Remove subscribed subscription for unsubscription event.
-     *
-     * @param event unsubscribe event containing subscription details
-     */
-    public void unsubscribe(WebPushRegistration.WebPushSubscription event) {
-        unsubscribe(new Subscription(event.getEndpoint(), new Subscription.Keys(event.getP256dh(), event.getAuth())));
-    }
-
-    private void unsubscribe(Subscription subscription) {
-        getLogger().info("Unsubscribed " + subscription.endpoint + " auth:" + subscription.keys.auth);
+    public void remove(Subscription subscription) {
+        getLogger().info("Unsubscribed {}", subscription.endpoint);
         endpointToSubscription.remove(subscription.endpoint);
     }
 
@@ -227,37 +176,6 @@ public class WebPushService {
         return endpointToSubscription.isEmpty();
     }
 
-    /**
-     * Message object.
-     *
-     * @param title message title
-     * @param body  message body
-     */
-    public record Message(String title, String body) {
-    }
-
-    ObjectMapper mapper = new ObjectMapper();
-
-    /**
-     * Send a notification to all subscriptions.
-     *
-     * @param title message title
-     * @param body message body
-     */
-    public void notifyAll(String title, String body) {
-        try {
-            String msg = mapper.writeValueAsString(new Message(title, body));
-            endpointToSubscription.values().forEach(subscription -> {
-                sendNotification(subscription, msg);
-            });
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Logger getLogger() {
-        return LoggerFactory.getLogger(WebPushService.class);
-    }
 }
 ----
 
@@ -276,13 +194,13 @@ pass:[<!-- vale Vale.Spelling = YES -->]
 
 [source,java]
 ----
-WebPushRegistration pushApi = new WebPushRegistration(webPushService.getPublicKey());
+WebPush webpush = webPushService.getWebPush();
 
 Button subscribe = new Button("Subscribe");
 subscribe.setEnabled(false);
 subscribe.addClickListener(e -> {
-    pushApi.subscribeWebPush(subscribe.getUI().get(), subscription -> {
-        webPushService.subscribe(subscription);
+    webpush.subscribe(subscribe.getUI().get(), subscription -> {
+        webPushService.store(subscription);
         subscribe.setEnabled(false);
         unsubscribe.setEnabled(true);
     });
@@ -291,8 +209,8 @@ subscribe.addClickListener(e -> {
 Button unsubscribe = new Button("UnSubscribe");
 unsubscribe.setEnabled(false);
 unsubscribe.addClickListener(e -> {
-    pushApi.unsubscribeWebPush(unsubscribe.getUI().get(), subscription -> {
-        webPushService.unsubscribe(subscription);
+    webpush.unsubscribe(unsubscribe.getUI().get(), subscription -> {
+        webPushService.remove(subscription);
         subscribe.setEnabled(true);
         unsubscribe.setEnabled(false);
     });
@@ -305,11 +223,11 @@ In cases where there exists a subscription on the client for the application, bu
 ----
 @Override
 protected void onAttach(AttachEvent attachEvent) {
-    pushApi.isWebPushRegistered(getUI().get(), registered -> {
+    webpush.isWebPushRegistered(getUI().get(), registered -> {
         subscribe.setEnabled(!registered);
         unsubscribe.setEnabled(registered);
         if(registered && webPushService.isEmpty()) {
-            pushApi.getExistingSubscription(getUI().get(), webPushService::subscribe);
+            webpush.getExistingSubscription(getUI().get(), webPushService::store);
         }
     });
 }
@@ -331,16 +249,7 @@ broadcast.addClickListener(e ->
 );
 ----
 
-For using `sendNotification`, the correct user subscription is needed. The message must be in this format:
-
-[source,json]
-----
-{
-  "title": "title content",
-  "body": "body content"
-}
-----
-
+For using `sendNotification`, the correct user subscription is needed.
 
 [CAUTION]
 ====
