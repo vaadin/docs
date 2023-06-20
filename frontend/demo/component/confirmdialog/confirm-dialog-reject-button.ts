@@ -33,8 +33,8 @@ export class Example extends LitElement {
         <!-- tag::snippet[] -->
         <vaadin-confirm-dialog
           header="Unsaved changes"
-          cancel
-          reject
+          cancel-button-visible
+          reject-button-visible
           reject-text="Discard"
           confirm-text="Save"
           .opened="${this.dialogOpened}"

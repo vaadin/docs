@@ -9,6 +9,9 @@ import '@vaadin/vertical-layout';
 export class Example extends LitElement {
   constructor() {
     super();
+  }
+  connectedCallback() {
+    super.connectedCallback();
     this.classList.add('basic-layouts-example');
   }
 
@@ -26,7 +29,6 @@ export class Example extends LitElement {
         <vaadin-button>Button 1</vaadin-button>
         <vaadin-button>Button 2</vaadin-button>
         <vaadin-button>Button 3</vaadin-button>
-        <vaadin-button>Button 4</vaadin-button>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->
     `;

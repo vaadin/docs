@@ -11,6 +11,9 @@ import '@vaadin/vertical-layout';
 export class Example extends LitElement {
   constructor() {
     super();
+  }
+  connectedCallback() {
+    super.connectedCallback();
     this.classList.add('basic-layouts-example');
   }
 
@@ -29,7 +32,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-vertical-layout
         theme="${this.themeVariant} padding"
-        class="height-5xl"
+        class="height-4xl"
         style="align-items: stretch"
       >
         <vaadin-button>Button 1</vaadin-button>
