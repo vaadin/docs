@@ -49,7 +49,7 @@ export class Example extends LitElement {
   }
 
   createItem(iconName: string, ariaLabel: string) {
-    const item = document.createElement('vaadin-context-menu-item');
+    const item = document.createElement('vaadin-menu-bar-item');
     const icon = document.createElement('vaadin-icon');
     item.setAttribute('aria-label', ariaLabel);
     icon.setAttribute('icon', `vaadin:${iconName}`);

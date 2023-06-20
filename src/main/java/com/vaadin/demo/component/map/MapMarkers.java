@@ -56,9 +56,9 @@ public class MapMarkers extends Div {
         // end::snippet[]
 
         // Override marker icons to use inline images // hidden-source-line
-        vaadinHq.setIcon(Icons.DEFAULT_MARKER_ICON); // hidden-source-line
-        germanOffice.setIcon(Icons.GERMAN_FLAG_ICON); // hidden-source-line
-        usOffice.setIcon(Icons.US_FLAG_ICON); // hidden-source-line
+        vaadinHq.setIcon(Icons.createDefaultIcon()); // hidden-source-line
+        germanOffice.setIcon(Icons.createGermanFlagIcon()); // hidden-source-line
+        usOffice.setIcon(Icons.createUsFlagIcon()); // hidden-source-line
     }
 
     public static class Exporter extends DemoExporter<MapMarkers> { // hidden-source-line
