@@ -1,17 +1,25 @@
 ---
 title: Production Build
-description: How to create a production ready package of an application, which can then be deployed.
+description: How to create a production-ready package of an application, which can then be deployed.
 order: 10
 ---
 
+
 = Production Build
 
-By default, Hilla applications are configured to run in development mode. This requires a bit more memory and CPU power, but it makes for easier debugging. When deploying your application to users, you should instead create a production build.
+If you generated your application with Hilla CLI, you can create a production build by running the following command on the command-line:
+
+[source,terminal]
+----
+mvn clean package -Pproduction
+----
+
+Executing this line builds a `JAR` file, with all of the dependencies and bundled front-end resources, ready to be deployed. You can find the file in the `target` folder after the build is finished. 
 
 
-== Production Configuration
+== Enabling Production Builds
 
-The [filename]`pom.xml` file in a Hilla project has the following built-in Maven configuration to create a production build:
+The production build command works out-of-the-box for Hilla starter projects. For example, it works with projects that are generated using the Hilla CLI. The starter projects come with the necessary Maven configuration. If you've manually created your project's [filename]`pom.xml` file, add the following Maven profile to enable production builds:
 
 .pom.xml
 [source,xml]
@@ -46,18 +54,18 @@ The actual content of the profile depends on the environment in which your appli
 
 To create a production build, you can execute `mvn clean package -Pproduction`. This builds a `JAR` or `WAR` file with all of the dependencies and front-end resources compiled and ready to be deployed. The file is created in the `target` folder after the build completes.
 
-If you don't have the production Maven profile in your `POM` file, the easiest way to get it is to create a project base using the CLI, and then copy the production profile from the downloaded `POM` file.
+If you don't have the production Maven profile in your `POM` file, the easiest way to get it is to create a project base using the CLI. Then copy the production profile from the downloaded `POM` file.
 
-Having a production build as a separate Maven profile is recommended so that you don't get any unexpected problems due to production settings during development.
+Having a production build as a separate Maven profile should help to avoid any unexpected problems during development, due to production settings.
 
 .Building for 64-Bit
 [NOTE]
-If your operating system is 64-bit, make sure to use a 64-bit JDK installation, as well.
+If your operating system is 64-bit, be sure to use a 64-bit JDK installation, as well.
 
 
 == Excluding Development Server Module
 
-The `Vite` server integration and live-reload features, which are available only during development, are contained in the module `com.vaadin:vaadin-dev-server`. It's recommended that you exclude this module from production builds. You can do that by adding the following dependency exclusion to the `<dependencies>` section in the `production` profile:
+The `Vite` server integration and live-reload features -- which are available only during development -- are contained in the module `com.vaadin:vaadin-dev-server`. You should exclude this module from production builds. You can do so by adding the following dependency exclusion to the `<dependencies>` section in the `production` profile:
 
 .pom.xml
 [source,xml]
@@ -89,101 +97,105 @@ This results in less code and fewer dependency libraries being bundled in the pr
 
 == Transpilation & Bundling
 
-Transpilation in Hilla means converting all ES6 JavaScript to ES5 JavaScript format for older browsers. All Vaadin components are written using ES6, and consist of several JavaScript and CSS files. Transpilation makes sure the newer JavaScript code also works in browsers which don't support all of the latest JavaScript features.
+Transpilation in Hilla means converting all ES6 JavaScript to ES5 JavaScript format for older browsers. All Vaadin components are written using ES6, and consist of several JavaScript and CSS files. Transpilation ensures the newer JavaScript code also works in browsers that don't support all of the latest JavaScript features.
 
-During the build, minimization is carried out to make the files smaller. When minifying code, it's often obfuscated, which makes it harder to read. Hence, this isn't done during development.
+During the build, minimization is carried out to make the files smaller. When minifying code, it's often obfuscated, making it harder to read. Therefore, this isn't done during development.
 
-Bundling is an optimization in which multiple files are merged to a single collection. This is so that the browser doesn't need to request so many files from the server. As a result, it helps the application to load faster.
+Bundling is an optimization in which multiple files are merged into a single collection. This is so that the browser doesn't need to request so many files from the server. As a result, the application usually loads faster.
 
-//// Must be massively updated
+
 
 == Maven Plugin Goals & Goal Parameters
 
-=== `prepare-frontend`
+// Need an Introduction
 
-The `prepare-frontend` goal validates whether the `node` and `npm` tools are installed and aren't too old (i.e., `node` version 10 or later; `npm` version 5.6 or later). It also installs them automatically, if they're missing, to the `.vaadin` folder in the user's home directory. If they're installed globally, but too old, there's an error message suggesting that you install newer versions. `Node.js` is needed to run `npm` to install front-end dependencies and `Vite`, which bundles the front-end files served to the client.
+=== The `prepare-frontend` Goal
+
+The `prepare-frontend` goal validates whether the `node` and `npm` tools are installed and aren't too old (i.e., not earlier than version 10 of `node`, and not earlier than version 5.6  of `npm`). It also automatically installs them, if they're missing, in the `.vaadin` folder, located in the user's home directory. If they're installed globally but they're too old, an error message suggests that you install newer versions. `Node.js` is needed to run `npm` to install front-end dependencies and `Vite`, which bundles the front-end files served to the client.
 
 Additionally, it visits all resources used by the application and copies them to the `node_modules` folder. This is so that they're available when `Vite` builds the frontend. It also creates or updates the [filename]`package.json`, [filename]`tsconfig.json` and [filename]`vite.generated.json` files.
 
+pass:[<!-- vale Vale.Spelling = NO -->]
 pass:[<!-- vale Vaadin.ThereIs = NO -->] 
 
-There are a few parameters for this goal:
 
-*includes* (default: `&#42;&#42;/&#42;.js,&#42;&#42;/&#42;.css`)::
+There are a few parameters for this goal. They're listed here with the default values in parentheses, along with comments or a description of each:
+
+*includes* (`&#42;&#42;/&#42;.js,&#42;&#42;/&#42;.css`)::
     Comma-separated wildcards for files and directories that should be copied. The default is only [filename]`.js` and [filename]`.css` files.
 
-*npmFolder* (default: `${project.basedir}`)::
+*npmFolder* (`${project.basedir}`)::
     The folder where the [filename]`package.json` file is located. The default is the project root folder.
 
-*webpackTemplate* (default: `webpack.config.js`)::
+*webpackTemplate* (`webpack.config.js`)::
     Copy [filename]`webapp.config.js` from the specified URL if it's missing. The default is the template provided by this plugin. Set it to an empty string to disable the feature.
 
-*webpackGeneratedTemplate* (default: `webpack.generated.js`)::
+*webpackGeneratedTemplate* (`webpack.generated.js`)::
     Copy [filename]`webapp.config.js` from the specified URL if it's missing. The default is the template provided by this plugin. Set it to an empty string to disable the feature.
 
-*generatedFolder* (default: `${project.build.directory}/frontend/`)::
+*generatedFolder* (`${project.build.directory}/frontend/`)::
     The folder where Flow puts generated files that'll be used by `webpack`.
 
-*require.home.node* (default: `false`)::
-   If set to `true`, always prefer `Node.js` automatically downloaded and installed into the `.vaadin` directory in the user's home directory.
+*require.home.node* (`false`)::
+   If set to `true`, always prefer `Node.js` automatically downloaded and installed in the `.vaadin` directory in the user's home directory.
 
 
-=== `build-frontend`
+=== The `build-frontend` Goal
 
 This goal builds the front-end bundle. It's a complex process involving several steps:
 
 - Update [filename]`package.json` with all the `@NpmPackage` annotation values found in the classpath and automatically install these dependencies.
 - Update the JavaScript files containing code to import everything used in the application. These files are generated in the `target/frontend` folder, and are used as the entry point of the application.
-- Create [filename]`webpack.config.js`, if it's not found, or update it if some project parameters have changed.
+- Create [filename]`webpack.config.js`, if it's not found. Otherwise, update it if some project parameters have changed.
 - Generate JavaScript bundles, chunks and transpile to ES5 using the `webpack` server. The target folder for `WAR` packaging is `target/${artifactId}-${version}/build`; for `JAR` packaging, it's `target/classes/META-INF/resources/build`.
 
-There are also a few parameters for this goal:
+There are also a few parameters for this goal. They're listed here with their default values in parentheses, along with comments or a description of each:
 
 pass:[<!-- vale Vaadin.ThereIs = YES -->]
 
-*npmFolder* (default: `${project.basedir}`::
+*npmFolder* (`${project.basedir}`::
     The folder where the [filename]`package.json` file is located. The default is the project root folder.
 
-*generatedFolder* (default: `${project.build.directory}/frontend/`)::
+*generatedFolder* (`${project.build.directory}/frontend/`)::
     The folder where Flow puts generated files that'll be used by `webpack`.
 
-*frontendDirectory* (default: `${project.basedir}/frontend`)::
+*frontendDirectory* (`${project.basedir}/frontend`)::
     The directory with the project's front-end source files.
 
-*generateBundle* (default: `true`)::
+*generateBundle* (`true`)::
     Whether to generate a bundle from the project front-end sources.
 
-*runNpmInstall* (default: `true`)::
+*runNpmInstall* (`true`)::
     Whether to run `pnpm install` -- or `npm install`, depending on the *pnpmEnable* parameter value -- after updating dependencies.
 
-*generateEmbeddableWebComponents* (default: `true`)::
+*generateEmbeddableWebComponents* (`true`)::
     Whether to generate embedded web components from [classname]`WebComponentExporter` inheritors.
 
-*optimizeBundle* (default: `true`)::
-    Whether to include only front-end resources used from application entry points -- the default -- or to include all resources found on the class path. It should normally be left to the default, but a value of `false` can be useful for faster production builds or debugging discrepancies between development and production builds.
+*optimizeBundle* (`true`)::
+    Whether to include only front-end resources used from application entry points -- the default -- or to include all resources found on the classpath. It should normally be left to the default, but a value of `false` can be useful for faster production builds or debugging discrepancies between development and production builds.
 
-*pnpmEnable* (default: `false`)::
+*pnpmEnable* (`false`)::
     Whether to use the `pnpm` or `npm` tool to handle front-end resources. The default is `npm`.
 
-*useGlobalPnpm* (default: `false`)::
+*useGlobalPnpm* (`false`)::
     Whether to use a globally installed `pnpm` tool instead of the default supported version of `pnpm`.
 
+pass:[<!-- vale Vale.Spelling = YES -->]
 pass:[<!-- vale Vaadin.Terms-FrontendBackend = NO -->]
 
 
-=== `clean-frontend`
+=== The `clean-frontend` Goal
 
-This goal cleans frontend files that may cause inconsistencies when changing versions. It's suggested that you don't add the goal as a default to [filename]`pom.xml`, but instead to use it with `mvn vaadin:clean-frontend` when necessary.
+This goal cleans frontend files that may cause inconsistencies when changing versions. Don't add the goal as a default to [filename]`pom.xml`. Instead, use it with `mvn vaadin:clean-frontend` when necessary.
 
 pass:[<!-- vale Vaadin.Terms-FrontendBackend = YES -->]
 
 Executing the `clean-frontend` goal removes a few things:
 
 - the package lock file;
-- the generated frontend folder which is by default `frontend/generated`; and
-- the `node_modules` folder, but this might need manual deletion.
+- the generated frontend folder which is by default, `frontend/generated`; and
+- the `node_modules` folder -- but this might need manual deletion.
 
 The goal also cleans all dependencies that are managed by the framework, and any dependencies that target the build folder from the [filename]`package.json` file.
 
 The `clean-frontend` goal supports the same parameters as `prepare-frontend`.
-////
