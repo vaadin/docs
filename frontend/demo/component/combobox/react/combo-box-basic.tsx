@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-export default reactExample(Example); // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import { getCountries } from 'Frontend/demo/domain/DataService';
@@ -19,3 +18,5 @@ function Example() {
     </>
   );
 }
+
+export default reactExample(Example); // hidden-source-line

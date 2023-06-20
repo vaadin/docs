@@ -1,12 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-export default reactExample(Example); // hidden-source-line
 import React from 'react';
 import { Accordion } from '@hilla/react-components/Accordion.js';
 import { AccordionPanel as _AccordionPanel } from '@hilla/react-components/AccordionPanel.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 
-// TODO: Remove this temporary workaround for https://github.com/vaadin/react-components/issues/119 // hidden-source-line
-const AccordionPanel = _AccordionPanel as any; // hidden-source-line
+// TODO: Remove this temporary workaround for https://github.com/vaadin/react-components/issues/119
+const AccordionPanel = _AccordionPanel as any;
 
 function Example() {
   return (
@@ -44,4 +43,4 @@ function Example() {
   );
 }
 
-
+export default reactExample(Example); // hidden-source-line

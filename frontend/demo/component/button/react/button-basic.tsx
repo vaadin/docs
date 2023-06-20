@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-export default reactExample(Example); // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
@@ -18,3 +17,5 @@ function Example() {
     </>
   );
 }
+
+export default reactExample(Example); // hidden-source-line

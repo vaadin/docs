@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-export default reactExample(Example); // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid, GridCellPartNameGenerator } from '@hilla/react-components/Grid.js';
+import { Grid, type GridCellPartNameGenerator } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
+// tag::snippet[]
 interface PersonWithRating extends Person {
   customerRating: number;
 }
@@ -32,9 +32,9 @@ const ratingFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 });
 
-const ratingRenderer = (person: PersonWithRating) => {
-  return <span>${ratingFormatter.format(person.customerRating)}</span>;
-};
+const ratingRenderer = (person: PersonWithRating) => (
+  <span>${ratingFormatter.format(person.customerRating)}</span>
+);
 
 function Example() {
   const [items, setItems] = useState<PersonWithRating[]>([]);
@@ -49,17 +49,14 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Grid items={items} cellPartNameGenerator={cellPartNameGenerator}>
-        <GridColumn path="firstName" />
-        <GridColumn path="lastName" />
-        <GridColumn path="profession" />
-        <GridColumn header="Customer rating (0-10)">
-          {({ item }) => ratingRenderer(item)}
-        </GridColumn>
-      </Grid>
-      {/* end::snippet[] */}
-    </>
+    <Grid items={items} cellPartNameGenerator={cellPartNameGenerator}>
+      <GridColumn path="firstName" />
+      <GridColumn path="lastName" />
+      <GridColumn path="profession" />
+      <GridColumn header="Customer rating (0-10)">{({ item }) => ratingRenderer(item)}</GridColumn>
+    </Grid>
   );
 }
+// end::snippet[]
+
+export default reactExample(Example); // hidden-source-line

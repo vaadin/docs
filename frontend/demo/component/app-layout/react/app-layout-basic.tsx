@@ -1,13 +1,22 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-export default reactExample(Example); // hidden-source-line
 import React from 'react';
 import { AppLayout } from '@hilla/react-components/AppLayout.js';
 import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
 import { Tabs } from '@hilla/react-components/Tabs.js';
 import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
-import { iconStyle, h1Style } from './app-layout-styles';
 import '@vaadin/icons';
+
+const h1Style = {
+  fontSize: 'var(--lumo-font-size-l)',
+  margin: 0,
+};
+
+const iconStyle = {
+  marginInlineEnd: 'var(--lumo-space-m)',
+  marginInlineStart: 'var(--lumo-space-xs)',
+  padding: 'var(--lumo-space-xs)',
+};
 
 function Example() {
   return (
@@ -68,4 +77,4 @@ function Example() {
   );
 }
 
-
+export default reactExample(Example); // hidden-source-line
