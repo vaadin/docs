@@ -79,6 +79,7 @@ const config = {
       "src/main/java/com/vaadin/demo/pwa",
       "src/main/java/com/vaadin/demo/sso",
       "src/main/java/com/vaadin/demo/collaboration",
+      "src/main/java/com/vaadin/demo/observability",
 
       "dspublisher/theme",
       
@@ -109,6 +110,14 @@ const config = {
       path: 'articles/ds/components/grid/flow.asciidoc',
       callback: content => content.replace(/.*_items-identities.adoc.*/, '')
     },
+    {
+      path: 'pom.xml',
+      callback: content => content.replace(/\s*<dependency>[\s\S]*?<\/dependency>/g, match => /kit-starter/.test(match) ? '' : match)
+    },
+    {
+      path: 'package.json',
+      callback: content => content.replace(/.*@opentelemetry\/.*\n/g, '').replace(/,(\s*?})/sg, '$1')
+    }
   ]
 }
 
