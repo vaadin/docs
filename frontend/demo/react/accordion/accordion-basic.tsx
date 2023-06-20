@@ -37,7 +37,9 @@ function Example() {
             <span>Expires 06/21</span>
           </VerticalLayout>
         </AccordionPanel>
+        {/* tag::snippet[] */}
       </Accordion>
+      {/* end::snippet[] */}
     </>
   );
 }
