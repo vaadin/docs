@@ -171,6 +171,10 @@ async function commitChanges(folder, message) {
     log(`Nothing to commit in ${folder}`);
   }
 }
+async function compileProject(folder) {
+  log(`Compiling project for production in ${folder} ...`);
+  await run(`mvn ${cmd.debug ? '' : '-q'} -f ${folder}/pom.xml clean package -Pproduction`);
+}
 
 async function main() {
   tmpSource = `${cmd.tmp}/${cmd.branchSource}`;
@@ -181,6 +185,7 @@ async function main() {
   await createPrBranch(tmpTarget, prBranch);
   log("Updating files")
   copyFolderRecursive("", "", config);
+  await compileProject(tmpTarget);
   commitChanges(tmpTarget, 'Update DSP branch from latest');
 }
 
