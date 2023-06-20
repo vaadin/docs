@@ -45,7 +45,7 @@ public class MenuBarIconOnly extends Div {
             String ariaLabel) {
         Icon icon = new Icon(iconName);
         MenuItem item = menu.addItem(icon);
-        item.getElement().setAttribute("aria-label", ariaLabel);
+        item.setAriaLabel(ariaLabel);
 
         return item;
     }
