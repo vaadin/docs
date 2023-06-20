@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react/react-example'; // hidden-source-line
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 export default reactExample(Example); // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Grid, GridCellPartNameGenerator } from '@hilla/react-components/Grid.js';

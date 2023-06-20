@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react/react-example'; // hidden-source-line
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 export default reactExample(Example); // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';

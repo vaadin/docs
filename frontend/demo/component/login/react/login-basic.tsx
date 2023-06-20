@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react/react-example'; // hidden-source-line
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { loginHostStyles } from './login-host-styles';
 export default reactExample(Example, loginHostStyles); // hidden-source-line
 import React from 'react';
