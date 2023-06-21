@@ -7,33 +7,33 @@ order: 100
 
 = Session Replication
 
-For a Vaadin application to reach the goals of High Availability and Down Scaling, it is fundamental that the HTTP session is correctly distributed between multiple servers.
+For a Vaadin application to reach the goals of High Availability and Down Scaling, it's fundamental that the HTTP session is correctly distributed between multiple servers.
 
 If the server processing user requests becomes unavailable, it should be transparently replaced by another, in a way that the user should be able to continue using the application without any disruption.
 
 An offline notification or the loading indicator may appear for an instant, but the browser page is not reloaded. Therefore, work can continue without losing any data.
 
-This means that attributes must be constantly stored in a shared/distributed storage so that newly created HTTP sessions may be filled with the most recent user data.
+This means that attributes must be constantly stored in a shared or distributed storage so that newly created HTTP sessions may be filled with the most recent user data.
 
 
 == Kubernetes Kit Session Replication
 
-Kubernetes Kit helps with session replication, by transferring HTTP session data via a back-end session storage (e.g., Hazelcast or Redis) for every request. When a server becomes unavailable, the one taking its place loads user data from the session storage and fills the new server-side HTTP session object.
+Kubernetes Kit helps with session replication by transferring HTTP session data via a back-end session storage (e.g., Hazelcast or Redis) for every request. When a server becomes unavailable, the one taking its place loads user data from the session storage and fills the new server-side HTTP session object.
 
 To transfer information to the session storage, the HTTP session attributes are encoded in a binary format, using https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/index.html[Java serialization^].
 
-This means that to have session replication working, the application code should be written in way that all objects stored in the HTTP session are eligible for Java serialization, meaning they must implement a special marker interface, [classname]`java.io.Serializable`. Objects that for any reason cannot be serializable (e.g. third party classes) must be defined `transient`, so they are skipped by the serialization process. Of course, after deserialization, transient fields are null.
+This means that to have session replication working, the application code should be written in a way that all objects stored in the HTTP session are eligible for Java serialization. This means they must implement a special marker interface, [classname]`java.io.Serializable`. Objects that can't be serializable (e.g., third party classes) must be defined `transient`. As a result, they're skipped by the serialization process. After deserialization, transient fields are null.
 
 For Spring applications, Kubernetes Kit is also able to overcome this limitation. Transient fields referencing Spring beans are detected during serialization and metadata is stored along with the session attributes. On deserialization, transient fields matching metadata are injected with the corresponding Spring bean.
 
-Transient field inspection and injection is performed using Java reflection. For performance reasons and to avoid potential issues with reflection access checks, restrict the inspection to application classes only.
+Transient field inspection and injection is performed using Java reflection. For performance reasons, and to avoid potential issues with reflection access checks, restrict the inspection to only application classes.
 
-Restrictions can be imposed by configuring `vaadin.serialization.transients.include-packages` and `vaadin.serialization.transients.exclude-packages` properties, to limit the inspection to classes whose packages match the configured rules.
+Restrictions can be imposed by configuring `vaadin.serialization.transients.include-packages` and `vaadin.serialization.transients.exclude-packages` properties to limit the inspection to classes whose packages match the configured rules.
 
 [NOTE]
 You may want to exclude packages not involved in the session.
 
-.Setting transient inspection restrictions
+.Setting Transient Inspection Restrictions
 [source,text]
 ----
 vaadin.serialization.transients.include-packages=com.example.app.ui,com.example.app.data
@@ -41,27 +41,23 @@ vaadin.serialization.transients.exclude-packages=com.example.app.ui.utils
 ----
 
 
-== Vaadin and HTTP Session
+== Vaadin & HTTP Session
 
 A Vaadin application consists of UI objects that act as root nodes of graphs of components that represent the web page with which the user interacts through the browser. UIs are collected into a [classname]`VaadinSession` that is stored in the HTTP session, to preserve the server-side state across requests. For this reason, application code should be carefully written to be serializable for session replication to succeed.
 
-.Java Serialization Documentation
-[TIP]
 For more information on serialization process, consult https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/index.html[Java documentation^] website.
 
 
 == Session Replication Tips
 
-The aim of the following sections is to give tips and best practices on how to code a fully serializable Vaadin application.
+The following sections contain best practices on how to code a fully serializable Vaadin application.
 
 
 === Use Serializable Object as UI Components Members
 
 When writing a component, make sure that all of its non-transient members implement [classname]`Serializable`.
 
-All Vaadin UI components and listeners are already marked as serializable. So if a class extends or implements one of them, it's not necessary to add explicitly the `Serializable` implementation statement.
-
-However, it is necessary to do so on non UI components that may be referenced in the UI graph.
+All Vaadin UI components and listeners are already marked as serializable. So if a class extends or implements one of them, it's not necessary to add explicitly the `Serializable` implementation statement. However, it's necessary to do so on non-UI components that may be referenced in the UI graph.
 
 For example, if a view is holding a reference to a data transfer object or a configuration object, it must be marked as serializable, and all its members must be serializable.
 
@@ -83,11 +79,9 @@ class Category implements Serializable { // <5>
 }
 ----
 <1> The [classname]`ContactForm` class extends a Vaadin component that is already serializable.
-<2> The [classname]`ContactForm` class has a field of type [classname]`Product`.
-Therefore, the [classname]`Product` class must also be made serializable.
+<2> The [classname]`ContactForm` class has a field of type [classname]`Product`. Therefore, the [classname]`Product` class must also be made serializable.
 <3> The [classname]`Product` class is made serializable by extending [interfacename]`Serializable`.
-<4> The [classname]`Product` class has a field of type [classname]`Category`.
-Therefore, the [classname]`Category` class must also be made serializable.
+<4> The [classname]`Product` class has a field of type [classname]`Category`. Therefore, the [classname]`Category` class must also be made serializable.
 <5> The [classname]`Category` class is made serializable by extending [interfacename]`Serializable`.
 
 
@@ -151,7 +145,7 @@ class ProductForm extends VerticalLayout {
 
 Vaadin offers a serializable-ready version of the most used Java functional interfaces in the [packagename]`com.vaadin.flow.function` package.
 
-Take care also when writing utility classes that use functional interfaces as input parameters or return types.
+Make sure when writing utility classes that you use functional interfaces as input parameters or return types.
 
 The following class breaks serialization if methods are used:
 
@@ -226,7 +220,7 @@ class OrderEditor {
 }
 ----
 
-In this case, probably a solution may store the `service` reference as [classname]`OrderEditor` transient field, accessing the instance in the lambda with a method call (for example, a `getter`), and implement Java deserialization hooks to somehow inject the service instance.
+In this case, probably a solution may store the `service` reference as [classname]`OrderEditor` transient field, accessing the instance in the lambda with a method call (e.g., a `getter`), and implement Java deserialization hooks to somehow inject the service instance.
 
 In Spring projects using Kubernetes Kit, you can rely on transient field handling, and simply add the field for the service instance.
 
