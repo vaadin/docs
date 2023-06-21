@@ -4,11 +4,13 @@ description: Step-by-step guide showing how to enable scalability, high availabi
 order: 10
 ---
 
+
 = Getting Started with Kubernetes Kit
 :sectnums:
 :hide-uri-scheme:
 
 This tutorial guides you through setting up and deploying an application with Kubernetes Kit in a local Kubernetes cluster.
+
 
 == Requirements
 
@@ -20,9 +22,8 @@ This tutorial assumes that you have the following software installed on your loc
  https://kind.sigs.k8s.io/docs/user/quick-start/[kind], or
  https://docs.docker.com/desktop/kubernetes/[Docker] itself.
 
-== Set Up a Vaadin Project
+Additionally, you'll need to download a new Vaadin project from `https://start.vaadin.com`.
 
-Download a new Vaadin project from https://start.vaadin.com.
 
 == Add the Kubernetes Kit Dependency
 
@@ -50,13 +51,14 @@ vaadin.serialization.transients.include-packages=com.example.application
 <1> This property enables the session serialization debug tool during development.
 <2> This property defines the classes which should be inspected for transient fields during session serialization. In this case, inspection is limited to classes within the starter project. For more information, see <<session-replication#,Session Replication>>.
 
+
 == Session Replication Backend
 
-_You don't need to enable session replication if you only need <<update-version#,rolling updates>>._
+You don't need to enable session replication if you only need <<update-version#,rolling updates>>.
 
 High availability and the possibility to scale applications up and down in a cluster are enabled by storing session data in a backend that is accessible to the cluster. This tutorial uses Hazelcast for this purpose. However, Redis is also supported.
 
-. Add the Hazelcast dependency to the project:
+- Add the Hazelcast dependency to the project:
 +
 .`pom.xml`
 [source,xml]
@@ -67,7 +69,7 @@ High availability and the possibility to scale applications up and down in a clu
 </dependency>
 ----
 
-. Add the following property to the application configuration file:
+- Add the following property to the application configuration file:
 +
 .application.properties
 [source,properties]
@@ -75,7 +77,7 @@ High availability and the possibility to scale applications up and down in a clu
 vaadin.kubernetes.hazelcast.service-name=hazelcast-service
 ----
 
-. Deploy the Hazelcast service to the cluster by running the following command:
+- Deploy the Hazelcast service to the cluster by running the following command:
 +
 [source,terminal]
 ----
@@ -91,7 +93,7 @@ If you want to deploy to another namespace than `default`, you need to download 
 kubectl apply -f path/to/custom/kubernetes-rbac.yaml
 ====
 
-. Deploy a load balancer service to your cluster. Create the following Kubernetes manifest file:
+- Deploy a load balancer service to your cluster. Create the following Kubernetes manifest file:
 +
 .`hazelcast.yaml`
 [source,yaml]
@@ -114,7 +116,7 @@ Then deploy the manifest to your cluster:
 [source,terminal]
 kubectl apply -f hazelcast.yaml
 
-. Run the following command to see that the load balancer service is running:
+- Run the following command to see that the load balancer service is running:
 +
 [source,terminal]
 kubectl get svc hazelcast-service
@@ -126,16 +128,17 @@ NAME                TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        
 hazelcast-service   LoadBalancer   10.96.178.190   <pending>     5701:31516/TCP   18h
 ----
 
-== Build and Deploy the Application
+
+== Build & Deploy the Application
 
 The next step is to build a container image of the application and deploy it to your Kubernetes cluster.
 
-. Clean the project and create a production build of the application:
+- Clean the project and create a production build of the application:
 +
 [source,terminal]
 mvn clean package -Pproduction
 
-. Create the following `Dockerfile` file in the project directory:
+- Create the following `Dockerfile` file in the project directory:
 +
 [source,Dockerfile]
 ----
@@ -147,14 +150,14 @@ EXPOSE 8080
 CMD java -jar /usr/app/app.jar
 ----
 
-. Open a terminal to the project directory and use Docker to build a container image for the application. Tag it with version 1.0.0. Note the required period `.` at the end in the line:
+- Open a terminal to the project directory and use Docker to build a container image for the application. Tag it with version 1.0.0. Note the required period `.` at the end in the line:
 +
 [source,terminal]
 docker build -t my-app:1.0.0 .
 +
 include::_shared.adoc[tag=publish-local-image]
 
-. Create a deployment manifest for the application:
+- Create a deployment manifest for the application:
 +
 .`app-v1.yaml`
 [source,yaml]
@@ -209,7 +212,7 @@ Deploy the manifest to your cluster:
 [source,terminal]
 kubectl apply -f app-v1.yaml
 
-. Run the following command to verify that you have 4 pods running:
+- Run the following command to verify that you have 4 pods running:
 +
 [source,terminal]
 kubectl get pods
@@ -224,16 +227,17 @@ my-app-v1-f87bfcbb4-gjqw6       1/1     Running   0             22s
 my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             22s
 ----
 
+
 == Ingress Rules
 
 To access the application, you need to provide some ingress rules.
 
-. If you don't already have `ingress-nginx` installed in your cluster, install it with the following command:
+- If you don't already have `ingress-nginx` installed in your cluster, install it with the following command:
 +
 [source,terminal]
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
 
-. Create an ingress rule manifest file like so:
+- Create an ingress rule manifest file like so:
 +
 .`ingress-v1.yaml`
 [source,yaml]
@@ -270,7 +274,7 @@ Deploy the manifest to your cluster with the following command:
 [source,terminal]
 kubectl apply -f ingress-v1.yaml
 
-. The application should now be available at http://localhost.
+- The application should now be available at http://localhost.
 +
 .Accessing the application from your local machine
 [NOTE]
@@ -282,6 +286,7 @@ kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
 
 The application should now be available at http://localhost:8080.
 ====
+
 
 == Scaling the Application
 
