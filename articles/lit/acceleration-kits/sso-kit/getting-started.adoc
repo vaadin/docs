@@ -4,14 +4,14 @@ description: Step-by-step guide on how to use SSO Kit in an application.
 order: 100
 ---
 :lit:
+
 // tag::content[]
 
 
 = Getting Started with SSO Kit
 :sectnums:
 
-SSO Kit builds upon https://spring.io/projects/spring-boot[Spring Boot] and https://spring.io/projects/spring-security[Spring Security]. It comes with a starter module for configuring the security settings needed to authenticate with an identity provider.
-
+SSO Kit builds upon https://spring.io/projects/spring-boot[Spring Boot] and https://spring.io/projects/spring-security[Spring Security]. It comes with a starter and client side modules for configuring the security settings needed to authenticate with an identity provider.
 
 
 == Create a Hilla Application
@@ -33,15 +33,14 @@ npx @hilla/cli init --react <your-project-name>
 endif::[]
 
 
-
 == Backend
 
-Once you've created the Hilla application, you can begin securing it by installing and configuring SSO Kit on the backend. The following section shows how to block unauthorized users from using a button in an application. You can install and update SSO Kit by adding it as a dependency to your application in the `pom.xml` file.
+Once you've created a Hilla application, you can begin securing it by installing and configuring SSO Kit on the backend. The following section shows how to block unauthorized users from using a button in an application. You can install and update SSO Kit by adding it as a dependency to your application in the [filename]`pom.xml` file.
 
 
 === Add SSO Kit Dependency
 
-Add the `sso-kit-starter` module and other required dependencies to the [filename]`pom.xml` file of a Vaadin application like so:
+Add the `sso-kit-starter` module to the [filename]`pom.xml` file of a Vaadin application like so:
 
 .[filename]`pom.xml`
 [source,xml]
@@ -49,20 +48,7 @@ Add the `sso-kit-starter` module and other required dependencies to the [filenam
 <dependency>
     <groupId>dev.hilla</groupId>
     <artifactId>sso-kit-starter</artifactId>
-    <version>2.0.0</version>
-</dependency>
-
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-oauth2-client</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-security</artifactId>
+    <version>2.1.0</version>
 </dependency>
 ----
 
@@ -73,55 +59,47 @@ See the https://github.com/vaadin/sso-kit/releases[SSO Kit releases page] for th
 
 === Configure Endpoints
 
-For Hilla to be able to parse and generate endpoints from an application and from SSO Kit for your frontend, you have to add a configuration to the Hilla Maven plugin with your application and SSO Kit package names like this:
+For Hilla to be able to parse and generate endpoints from an application and from SSO Kit dependency for your frontend, you have to add a configuration to the Hilla Maven plugin with your application and SSO Kit dependency package names like this:
 
 .[filename]`pom.xml`
 [source,xml]
 ----
-<plugin>
-    <groupId>dev.hilla</groupId>
-    <artifactId>hilla-maven-plugin</artifactId>
-    <version>${hilla.version}</version>
-    <!-- Add this configuration -->
-    <configuration>
-        <parser>
-            <packages>
-                <package>com.example.application</package>
-                <package>dev.hilla.sso.starter</package>
-            </packages>
-        </parser>
-    </configuration>
-    <!-- ... -->
-</plugin>
-----
-
-By default, the package name in generated Hilla projects is `com.example.application`. SSO Kit uses the package name `dev.hilla.sso.starter`. To be able to find the annotated endpoints in SSO Kit that are required, you have to allow-list its package name in your Spring Boot application. To do this, open your [filename]`Application.java` file and add these packages to the `@SpringBootApplication` annotation like so:
-
-.[filename]`Application.java`
-[source,java]
-----
-@SpringBootApplication(scanBasePackages = {
-  "com.example.application", // Application package.
-  "dev.hilla.sso.starter" // SSO Kit package.
-})
-public class Application // ...
+ <build>
+    <defaultGoal>spring-boot:run</defaultGoal>
+    <plugins>
+        <plugin>
+            <groupId>dev.hilla</groupId>
+            <artifactId>hilla-maven-plugin</artifactId>
+            <version>${hilla.version}</version>
+            <!-- Add this configuration. -->
+            <configuration>
+                <parser>
+                    <packages>
+                        <package>com.example.application</package>
+                        <package>dev.hilla.sso.starter</package>
+                    </packages>
+                </parser>
+            </configuration>
+            <!-- ... -->
+        </plugin>
+    </plugins>
+</build>
 ----
 
 
 === Configure SSO Provider in Spring
 
-Next, you need to set some configuration properties to connect SSO Kit to your OpenID Connect provider. These properties can be added to your [filename]`application.properties` file where you give the provider URL and the client registration details, such as credentials and scope.
+Next, you need to set some configuration properties to connect SSO Kit to an OpenID Connect provider. These properties can be added to your [filename]`application.properties` file where you give the provider URL and the client registration details, such as credentials and scope.
 
 Provider definition is configured within the `spring.security.oauth2.provider` namespace where you give a key to identify your provider, such as `keycloak`. You can use the same key to register the client for that provider within the `spring.security.oauth2.registration` namespace, where you specify client credentials and the requested scope.
 
-The scope is a list of keywords to request the provider for a specific set of information, such as user `profile`, `email` or `roles`. The following is an example of the properties to set to enable a Keycloak instance to perform authentication:
+The scope is a list of keywords to request the provider for a specific set of information, such as user `profile`, `email`, and `roles`. The following is an example of the properties to set to enable a Keycloak instance to perform authentication:
 
 [.example]
 --
 .[filename]`application.properties`
 [source,properties]
 ----
-hilla.sso.login-route=/oauth2/authorization/keycloak
 spring.security.oauth2.client.registration.keycloak.scope=profile,openid,email,roles
 # Customize the following property values for your Keycloak configuration:
 spring.security.oauth2.client.provider.keycloak.issuer-uri=https://my-keycloak.io/realms/my-realm
@@ -135,6 +113,7 @@ spring:
   security:
     oauth2:
       client:
+        # Customize the following property values for your Keycloak configuration:
         provider:
           keycloak:
             issuer-uri: https://my-keycloak.io/realms/my-realm
@@ -147,11 +126,41 @@ spring:
             - openid
             - email
             - roles
+----
+--
+
+
+==== Single Sign-On
+
+SSO Kit provides the [classname]`SingleSignOnConfiguration` auto-configuration class to set up Hilla and Spring to allow single sign-on with external identity providers.
+
+.Customized Security Configuration
+[NOTE]
+If you need a customized security configuration, you can disable this auto-configuration class by adding its fully-qualified name to the `spring.autoconfigure.exclude` property and define your own configuration class.
+
+The following configuration enables login for the identity providers defined in the application configuration. It instructs the application to accept requests for the login route. It can be configured by setting the `hilla.sso.login-route` property, which defaults to `/login`.
+
+To redirect users automatically to the provider login form, you can set this property to `/oauth2/authorization/{provider-key}`, where `{provider-key}` is the key used to configure the provider in `application.properties` file.
+
+[.example]
+--
+.application.properties
+[source,properties]
+----
+hilla.sso.login-route=/oauth2/authorization/keycloak
+----
+.application.yaml
+[source,yaml]
+----
 hilla:
   sso:
     login-route: /oauth2/authorization/keycloak
 ----
 --
+
+.Custom Login Page
+[TIP]
+Some providers support a custom theme for their login pages. Learn more about this in <<theming#, Theming>>.
 
 
 === Secure the Application
@@ -163,164 +172,92 @@ A Hilla application includes front-end code and backend endpoints. Both of them 
 
 Hilla allows fine-grained authorization on endpoints and endpoint methods. You can use annotations like `@PermitAll` or `@RolesAllowed(...)` to declare who can access what.
 
-To try this feature, replace the `@AnonymousAllowed` annotation in [filename]`HelloWorldEndpoint.java` with `@PermitAll`, so that unauthenticated users are unable to access all endpoint methods. You could also apply the same annotation at the method level for more fine-grained control.
+To try this feature, replace the `@AnonymousAllowed` annotation in [filename]`HelloWorldEndpoint.java` with `@PermitAll`. When you do this, unauthenticated users won't be able to access all endpoint methods. You could also apply the same annotation at the method level for more fine-grained control.
 
 Start the application using the `mvnw` command. Then try the application in the browser. It should work correctly, except that when you click on the `Say Hello` button, nothing happens. This is because the endpoint is no longer accessible without authentication.
 
 
-
 == Frontend
 
-Once the backend is secure, you can begin extending authentication features to the frontend. The following section shows how to display user information, for example a name, on secured views and enable users to log in and out.
+Once the backend is secure, you can begin extending authentication features to the frontend. The following section shows how to display user information (e.g., a name), on secured views and enable users to log in and out.
 
 
-=== Implement Authentication State
+=== Install SSO Kit Client Dependency
 
 ifdef::lit[]
-All the essential authentication state is already available in a global variable and can be added to the application state, which is inside the `AppStore` class in [filename]`app-store.ts`:
-
-.frontend/stores/app-store.ts
-[source,typescript]
+[source,bash]
 ----
-import SingleSignOnData from 'Frontend/generated/dev/hilla/sso/starter/SingleSignOnData';
-
-// All necessary data is already loaded in the Hilla global variable.
-authInfo = (window as any).Hilla.SSO as SingleSignOnData;
+npm install --save @hilla/sso-kit-client-lit
 ----
+
+This dependency contains the `SingleSignOnContext` class which is needed in the later steps.
 endif::[]
 
 ifdef::react[]
-All of the essential authentication state is already available in a global variable and can be used as application state. Create a new file named `useAuth.tsx` and define a React Context:
-
-.frontend/useAuth.tsx
-[source,typescript]
+[source,bash]
 ----
-import { createContext, Dispatch, SetStateAction } from "react";
-import SingleSignOnData from "./generated/dev/hilla/sso/starter/SingleSignOnData";
-
-// Used for access control
-export type AccessProps = Readonly<{
-    requiresLogin?: boolean;
-}>;
-
-// The context type
-export type Authentication = Readonly<{
-    state: SingleSignOnData;
-    hasAccess: (route: AccessProps) => boolean;
-    clearAuthInfo: () => void;
-}>;
-
-// All necessary data is already loaded in the Hilla global variable.
-export const initialState = (window as any).Hilla.SSO as SingleSignOnData;
-
-// The context itself.
-export const AuthContext = createContext<Authentication>({
-    state: initialState,
-    hasAccess: () => false,
-    clearAuthInfo: () => { },
-});
-
-// The hook to use the context.
-export const useAuth = (
-    state: SingleSignOnData,
-    setState: Dispatch<SetStateAction<SingleSignOnData>>
-): Authentication => {
-    return {
-        state,
-        hasAccess: (route: AccessProps) => {
-            return !route.requiresLogin || state.authenticated;
-        },
-        clearAuthInfo: () => {
-            setState({
-                ...state,
-                authenticated: false,
-                backChannelLogoutEnabled: false,
-                logoutLink: undefined,
-                roles: [],
-            });
-        }
-    }
-};
+npm install --save @hilla/sso-kit-client-react
 ----
 
-Next, add the state and the context to `App.tsx` and wrap the `RouterProvider` like so:
+This dependency contains the `SsoProvider` provider and the `useSsoContext` hook which are needed in the later steps.
+
+
+=== Add SSO Provider
+
+The `SsoProvider` provides the single sign-on context to the application. Import the `SsoProvider` and pass the `RouterProvider` as a parameter to it in the [filename]`App.tsx` file.
 
 .frontend/App.tsx
 [source,typescript]
 ----
-import router from 'Frontend/routes.js';
-import { useState } from 'react';
-import { RouterProvider } from 'react-router-dom';
-import { AuthContext, initialState, useAuth } from './useAuth';
+import { SsoProvider } from "@hilla/sso-kit-client-react";
 
-export default function App() {
-  const [state, setState] = useState(initialState);
-
-  return <AuthContext.Provider value={useAuth(state, setState)}>
-    <RouterProvider router={router} />
-  </AuthContext.Provider >;
-}
+return (
+  <SsoProvider>
+    <RouterProvider router={router}/>
+  </SsoProvider>
+);
 ----
 endif::[]
 
 
 === Add Log-In & Log-Out Buttons
 
-As an example, add two buttons to the drawer footer -- one to sign in, and another to sign out. When signing out, it's important to invoke the `logout` function provided by Hilla to perform logout on the server. Then, load the SSO provider logout page.
-
 ifdef::lit[]
+As an example, add two buttons to the drawer footer -- one to sign in, and another to sign out. Use the imported `ssoContext` to add the `login` and the `logout` functions to the buttons.
+
 .frontend/views/main-layout.ts
 [source,typescript]
 ----
-import { logout } from '@hilla/frontend';
+import '@vaadin/button';
+import ssoContext from "@hilla/sso-kit-client-lit";
 
 // Replace the `footer` in the rendered `html`.
 <footer slot="drawer">
-  ${appStore.authInfo.authenticated
-    ? html`<vaadin-button @click="${this.signOut}">Sign out</vaadin-button>`
-    : html`<vaadin-button @click="${this.signIn}">Sign in</vaadin-button>`
+  ${ssoContext.authenticated
+      ? html`<vaadin-button @click="${ssoContext.logout}">Sign out</vaadin-button>`
+      : html`<vaadin-button @click="${ssoContext.login}">Sign in</vaadin-button>`
   }
 </footer>
-
-// Add the needed functions inside the class.
-private signOut = async () => {
-  await logout(); // Logout on the server
-  location.href = appStore.authInfo.logoutLink!;
-};
-
-private signIn = () => {
-  location.href = appStore.authInfo.loginLink;
-};
 ----
 endif::[]
 
 ifdef::react[]
+As an example, add two buttons to the drawer footer -- one to sign in, and another to sign out. Use the imported `useSsoContext` hook to get the `authenticated` state and to add the `login` and `logout` functions to the buttons.
+
 .frontend/views/MainLayout.tsx
 [source,typescript]
 ----
-import { logout } from '@hilla/frontend';
 import { Button } from '@hilla/react-components/Button.js';
-import { AuthContext } from 'Frontend/useAuth';
-import { Suspense, useContext } from 'react';
+import { useSsoContext } from "@hilla/sso-kit-client-react";
 
-// Use the AuthContext.
-const { state } = useContext(AuthContext);
+// Get the authenticated state, the login and logout functions in the MenuOnLeftLayout function.
+const {authenticated, login, logout} = useSsoContext();
 
-// Define button event handlers.
-async function signOut() {
-  await logout(); // Logout on the server
-  location.href = state.logoutLink!;
-};
-
-function signIn() {
-  location.href = state.loginLink;
-};
-
-// Add the buttons to the footer.
+// Replace the `footer` in the returned element.
 <footer slot="drawer">
-  {state.authenticated
-    ? <Button onClick={signOut}>Sign out</Button>
-    : <Button onClick={signIn}>Sign in</Button>
+  {authenticated
+    ? <Button onClick={logout}>Sign out</Button>
+    : <Button onClick={login}>Sign in</Button>
   }
 </footer>
 ----
@@ -332,85 +269,89 @@ endif::[]
 You can protect your views by verifying that each authentication has happened before loading the view.
 
 ifdef::lit[]
+In the [filename]`frontend/routes.ts` file, enrich the ViewRoute type with `ProtectedRoute` type to be able to protect a view, add the `requireAuthentication` parameter to a view, and use the `protectRoutes` function to add a protection to the views which requires authentication.
+endif::[]
 
-In [filename]`app-store.ts`, add a new type definition and a function to check access rights using that type:
+.Custom Redirect Path
+[TIP]
+You can define a custom redirect path in the `protectRoutes` function on which to redirect users that are not authenticated. The default value is the predefined `/ssologin` path, which redirects the user to the provider's login page.
 
-.frontend/app-store.ts
-[source,typescript]
-----
-export type AccessProps = {
-  requiresLogin?: boolean;
-};
-
-// Put this function inside the AppStore class.
-hasAccess = (route: AccessProps) => {
-  return !route.requiresLogin || this.authInfo.authenticated;
-};
-----
-
-In the [filename]`frontend/routes.ts` file, use the `AccessProps` type and protect the About view:
-
+ifdef::lit[]
 .frontend/routes.ts
 [source,typescript]
 ----
-import { AccessProps } from './stores/app-store';
+import type { ProtectedRoute } from '@hilla/sso-kit-client-lit';
+import ssoContext from "@hilla/sso-kit-client-lit";
 
-// Add AccessProps to the ViewRoute type.
-export type ViewRoute = Route & AccessProps & {
+// Enrich the ViewRoute type with ProtectedRoute.
+export type ViewRoute = Route & ProtectedRoute & {
   // ...
 }
 
-// Add the requiresLogin attribute to the About view.
+// Add the requireAuthentication parameter to the About view.
 {
   path: 'about',
   // ...
-  requiresLogin: true,
+  requireAuthentication: true,
 },
+
+// Protect the views which require authentication.
+export const routes: ViewRoute[] = ssoContext.protectRoutes([
+  {
+    path: '',
+    component: 'main-layout',
+    children: views,
+  },
+]) as ViewRoute[];
 ----
 
-Then, filter the menu excluding unauthorized views by amending the view filter in [filename]`main-layout.ts`:
+Filter the menu excluding unauthorized views by amending the view filter in [filename]`main-layout.ts`:
 
 .frontend/views/main-layout.ts
 [source,typescript]
 ----
-// Add a new condition in getMenuRoutes that checks for authentication.
-private getMenuRoutes(): RouteInfo[] {
-  return views.filter((route) => route.title).filter(appStore.hasAccess) as RouteInfo[];
-}
+// Gather the hasAccess function and add filter to the views that checks for authentication.
+return views
+  .filter((route) => route.title)
+  .filter(ssoContext.hasAccess) as RouteInfo[];
 ----
 endif::[]
 
 ifdef::react[]
-Open the [filename]`frontend/routes.tsx` and add the `requiredLogin` parameter to a view:
+In the [filename]`frontend/routes.tsx` file, enrich the `ViewRouteObject` type with `AccessProps` type to be able to protect a view and add the `requireAuthentication` parameter to a view:
 
 .frontend/routes.tsx
 [source,typescript]
 ----
-import { AccessProps } from './useAuth';
+import { AccessProps, protectRoutes } from "@hilla/sso-kit-client-react";
 
 // Enrich the ViewRouteObject type with AccessProps.
 export type ViewRouteObject = (IndexViewRouteObject | NonIndexViewRouteObject) & AccessProps;
 
-// Add requiresLogin to the About View.
+// Add requireAuthentication to the About View.
 {
   path: '/about',
-  element: <AboutView />,
-  handle: { icon: 'la la-file', title: 'About' },
-  requiresLogin: true,
+  // ...
+  requireAuthentication: true,
 },
+
+// Protect the views which require authentication.
+export const routes: readonly ViewRouteObject[] = protectRoutes([
+  // ...
+]);
 ----
 
-Next, in the main layout, filter the menu:
+Filter the menu excluding unauthorized views by amending the view filter in [filename]`MainLayout.tsx`:
 
 .frontend/views/MainLayout.tsx
 [source,typescript]
 ----
-// Gather the hasAccess function.
-const { state, hasAccess } = useContext(AuthContext);
+// Gather the hasAccess function and add filter to the routes that checks for authentication.
+const { hasAccess } = useSsoContext();
 
-// Filter the menu when rendering.
-{menuRoutes.filter(hasAccess).map(({ path, handle: { icon, title } }) => (
-  // ...
+const menuRoutes = (routes[0]?.children || [])
+  .filter((route) => route.path && route.handle && route.handle.icon && route.handle.title)
+  .filter(hasAccess) as readonly MenuRoute[];
 ----
 endif::[]
 
@@ -419,60 +360,57 @@ Now the `About` item in the menu appears only when authenticated.
 
 === Show User Information
 
-The SSO Kit provides a default endpoint to get information about the authenticated user. You can implement yours if you want to customize the returned object and its fields.
+ifdef::lit[]
+The SSO Kit Client provides the `User` class which contains information about the authenticated user. You can get the user information by calling the asynchronous `SingleSignOnContext.getUser()` function.
+endif::[]
+
+ifdef::react[]
+The SSO Kit Client provides the `User` class which contains information about the authenticated user. You can get the user information by using the `useSsoContext` hook.
+endif::[]
 
 Since the About page is now protected, it's a perfect place to show some information about the current user:
 
 ifdef::lit[]
-
 .frontend/views/helloworld/about-view.ts
 [source,typescript]
 ----
-import User from 'Frontend/generated/dev/hilla/sso/starter/endpoint/User';
-import { UserEndpoint } from 'Frontend/generated/endpoints';
 import { property } from 'lit/decorators.js';
+import { User } from "@hilla/sso-kit-client-lit";
+import ssoContext from "@hilla/sso-kit-client-lit";
 
 // Add a property for the user.
 @property()
 user: User | undefined;
 
-// Add the keyword `async` to connectedCallback and then load the user inside the function.
-async connectedCallback() {
-  // ...
-  this.user = await UserEndpoint.getAuthenticatedUser();
-}
-
-// Add some output.
+// Add some output in the AboutView class.
 <p>Username: ${this.user?.preferredUsername}</p>
 <p>Full name: ${this.user?.fullName}</p>
 <p>Email: ${this.user?.email}</p>
+
+// Make the connectedCallback function to be async
+// and await the user in the function.
+async connectedCallback() {
+  // ...
+  this.user = await ssoContext.getUser();
+}
 ----
 endif::[]
 
 ifdef::react[]
-
 .frontend/views/about/AboutView.tsx
 [source,typescript]
 ----
-import User from "Frontend/generated/dev/hilla/sso/starter/endpoint/User";
-import { UserEndpoint } from "Frontend/generated/endpoints";
-import { useEffect, useState } from "react";
+import { useSsoContext } from "@hilla/sso-kit-client-react";
 
-// Store the authenticated user.
-const [user, setUser] = useState<User | undefined>();
+// Gather the user from the SSO context.
+const { user } = useSsoContext();
 
-// Fetch the authenticated user from the server.
-useEffect(() => {
-  UserEndpoint.getAuthenticatedUser().then(setUser);
-}, []);
-
-// Add some output.
+// Add some output in the return.
 <p>Username: {user?.preferredUsername}</p>
 <p>Full name: {user?.fullName}</p>
 <p>Email: {user?.email}</p>
 ----
 endif::[]
-
 
 
 == Single Sign-Off
@@ -495,7 +433,7 @@ Back-Channel Logout is a feature that enables the provider to close user session
 
 ==== Enable the Feature
 
-To enable the feature in the application, you need to set the `hilla.sso.back-channel-logout` property to `true`. You would do that like you see here:
+To enable the feature in an application, you need to set the `hilla.sso.back-channel-logout` property to `true`. You would do that like you see here:
 
 [.example]
 --
@@ -518,43 +456,29 @@ The client should then be configured on the provider's dashboard to send logout 
 
 ==== Modify the Frontend
 
-ifdef::lit[]
-State about back-channel logout can be added to [filename]`app-store.ts`:
+As an example, show a dialog when the user is logged out from outside the application.
 
-.frontend/stores/app-store.ts
+ifdef::lit[]
+The `SingleSignOnContext` provided by the SSO Kit Client handles the back-channel logout and receives an event if the logout happens. To get notified about the logout event, register a callback using the `onBackChannelLogout` function and store the logged out state:
+
+.frontend/store/app-store.ts
 [source,typescript]
 ----
-import { BackChannelLogoutEndpoint } from 'Frontend/generated/endpoints';
+import ssoContext from "@hilla/sso-kit-client-lit";
 
-// Will become true when back-channel logout happens.
-backChannelLogoutHappened = false;
+// Store the logged out state in the AppStore class.
+isLoggedOut = false;
 
+// Subscribe to the back-channel logout event and set logged out state to true on the event.
 constructor() {
-  makeAutoObservable(this);
-
-  // Add this to the constructor to subscribe to back-channel logout events.
-  if (this.authInfo.backChannelLogoutEnabled) {
-    const subscription = BackChannelLogoutEndpoint.subscribe();
-    subscription.onNext(() => {
-      this.backChannelLogoutHappened = true;
-      subscription.cancel();
-    });
-  }
-}
-
-// Clears authInfo without reloading the page.
-clearAuthInfo() {
-  this.authInfo = {
-      ... this.authInfo,
-      authenticated: false,
-      backChannelLogoutEnabled: false,
-      logoutLink: undefined,
-      roles: [],
-  };
+// ...
+  ssoContext.onBackChannelLogout(() => {
+    this.isLoggedOut = true;
+  });
 }
 ----
 
-Now, a dialog can be added to the application layout to notify the user:
+A dialog can be added now to the application layout to notify the user:
 
 .frontend/views/main-layout.ts
 [source,typescript]
@@ -563,74 +487,50 @@ import '@vaadin/confirm-dialog';
 
 // Add the dialog to the rendered html.
 <vaadin-confirm-dialog
-  header="Logged out"
-  cancel-button-visible
-  @confirm="${this.loginAgain}"
-  @cancel="${this.stayOnPage}"
-  .opened="${appStore.backChannelLogoutHappened}"
+      header="Logged out"
+      cancel-button-visible
+      @confirm="${ssoContext.login}"
+      @cancel="${ssoContext.logout}"
+      .opened="${appStore.isLoggedOut}"
 >
   <p>You have been logged out. Do you want to log in again?</p>
 </vaadin-confirm-dialog>
-
-// Then add the event handlers.
-private async stayOnPage() {
-  await logout(); // Logout on the server
-  appStore.clearAuthInfo(); // Logout on the client
-}
-
-private async loginAgain() {
-  await logout(); // Logout on the server
-  location.href = appStore.authInfo.loginLink!;
-}
 ----
 endif::[]
 
 ifdef::react[]
-As an example, show a dialog when the user is logged out from outside the application. You can do that in the main layout file like this:
+The `useSsoContext` hook provided by the SSO Kit Client handles the back-channel logout and receives an event if logout happens. To get notified about a logout event, register a callback using the `onBackChannelLogout` function and store the logged out state:
 
 .frontend/views/MainLayout.tsx
 [source,typescript]
 ----
 import { ConfirmDialog } from '@hilla/react-components/ConfirmDialog.js';
-import { BackChannelLogoutEndpoint } from 'Frontend/generated/endpoints';
-import { Suspense, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSsoContext } from "@hilla/sso-kit-client-react";
 
-// Add a state that is modified when the log-out event happens.
-const [backChannelLogout, setBackChannelLogout] = useState(false);
+const { onBackChannelLogout } = useSsoContext();
 
-// Gather the clearAuthInfo function from the AuthContext.
-const { state, hasAccess, clearAuthInfo } = useContext(AuthContext);
-
-// Subscribe to the endpoint and update the state, accordingly.
+// Store the logged out state.
+const [loggedOut, setLoggedOut] = useState(false);
+// Subscribe to the back-channel logout event and set logged out state to true on the event.
 useEffect(() => {
-  if (state.backChannelLogoutEnabled) {
-    const subscription = BackChannelLogoutEndpoint.subscribe();
-    subscription.onNext(() => {
-      setBackChannelLogout(true);
-      subscription.cancel();
-    });
-  }
+  onBackChannelLogout(() => {
+    setLoggedOut(true);
+  });
 }, []);
 
-// Add the click event handlers.
-async function loginAgain() { 
-  await logout(); // Logout on the server
-  location.href = state.loginLink;
-}
-
-async function stayOnPage() { 
-  setBackChannelLogout(false);
-  await logout(); // Logout on the server.
-  clearAuthInfo(); // Clear the user info on the client.
-}
-
-// Finally, add the dialog.
-<ConfirmDialog header='Logged out' cancelButtonVisible opened={backChannelLogout}
-  onConfirm={loginAgain} onCancel={stayOnPage}>
-  <p>You have been logged out. Do you want to log in again?</p>
+// Add the confirm dialog to the AppLayout.
+<ConfirmDialog header='Logged out' cancelButtonVisible
+             opened={loggedOut}
+             onConfirm={login}
+             onCancel={logout}
+>
+<p>You have been logged out. Do you want to log in again?</p>
 </ConfirmDialog>
 ----
 endif::[]
 
-You can trigger a logout externally with the provider tools. For Keycloak, you can sign out a session from the admin console or visit the page `https://my-keycloak.io/realms/my-realm/protocol/openid-connect/logout`.
+You can trigger a logout externally with the provider tools. For Keycloak, you can sign out a session from the administration console or visit the page `https://my-keycloak.io/realms/my-realm/protocol/openid-connect/logout`.
 
+
+// tag::content[]
