@@ -25,7 +25,7 @@ const employeeRenderer = (person: Person) => (
       <span
         style={{ fontSize: 'var(--lumo-font-size-s)', color: 'var(--lumo-secondary-text-color)' }}
       >
-        ${person.email}
+        {person.email}
       </span>
     </VerticalLayout>
   </HorizontalLayout>
