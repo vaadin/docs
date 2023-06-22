@@ -6,7 +6,11 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function columnRenderer(column: HTMLElement, index: number) {
-  return <>{column.dataset.index} - {index}</>;
+  return (
+    <>
+      {column.dataset.index} - {index}
+    </>
+  );
 }
 
 function indexColumnRenderer(index: number) {
@@ -21,19 +25,16 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Grid items={items} columnRendering="lazy">
-        {/* end::snippet[] */}
-        <GridColumn frozen>{({ model }) => indexColumnRenderer(model.index)}</GridColumn>$
-        {[...Array(100).keys()].map((index) => (
-          // Generate 100 columns
-          <GridColumn data-index={index} header={`Col ${index}`}>
-            {({ original, model }) => columnRenderer(original, model.index)}
-          </GridColumn>
-        ))}
-      </Grid>
-    </>
+    <Grid items={items} columnRendering="lazy">
+      <GridColumn frozen>{({ model }) => indexColumnRenderer(model.index)}</GridColumn>
+
+      {[...Array(100).keys()].map((index) => (
+        // Generate 100 columns
+        <GridColumn data-index={index} header={`Col ${index}`}>
+          {({ original, model }) => columnRenderer(original, model.index)}
+        </GridColumn>
+      ))}
+    </Grid>
   );
   // end::snippet[]
 }
