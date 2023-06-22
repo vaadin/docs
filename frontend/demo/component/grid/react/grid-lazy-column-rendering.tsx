@@ -6,11 +6,11 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function columnRenderer(column: HTMLElement, index: number) {
-  return `${column.dataset.index} - ${index}`;
+  return <>{column.dataset.index} - {index}</>;
 }
 
 function indexColumnRenderer(index: number) {
-  return `Row ${index}`;
+  return <>Row {index}</>;
 }
 
 function Example() {
