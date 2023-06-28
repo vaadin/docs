@@ -44,7 +44,7 @@ public class TutorialView extends VerticalLayout {
         add(nameField, dateOfBirthField);
         // end::add-components[]
         // tag::user-info[]
-        // NOTE: In a real application, use the user id of the logged in user
+        // NOTE: Use the user id of the logged-in user
         // instead
         String userId = System.identityHashCode(UI.getCurrent()) + "";
         UserInfo localUser = new UserInfo(userId, "User " + userId);

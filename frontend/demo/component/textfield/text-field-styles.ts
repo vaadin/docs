@@ -18,7 +18,8 @@ export class Example extends LitElement {
     return html`
         <!-- tag::snippet[] -->
         <vaadin-text-field theme="align-right small helper-above-field"
-          label="Label" helper-text="Helper text" value="Value">
+          label="Label" helper-text="Helper text" value="Value"
+          style="--vaadin-input-field-border-width: 1px;">
         </vaadin-text-field>
         <!-- end::snippet[] -->
     `;

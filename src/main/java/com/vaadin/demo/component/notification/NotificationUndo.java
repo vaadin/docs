@@ -47,7 +47,7 @@ public class NotificationUndo extends Div {
 
         Button closeButton = new Button(new Icon("lumo", "cross"));
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        closeButton.getElement().setAttribute("aria-label", "Close");
+        closeButton.setAriaLabel("Close");
         closeButton.addClickListener(event -> {
             notification.close();
         });

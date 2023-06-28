@@ -4,38 +4,59 @@ order: 10
 description: Create an optimized build of your applications for production deployment.
 ---
 
+
 = Production Build
 
-To create a production build, run the following command:
+To create a production build, run the following from the command-line:
 
 [source,terminal]
 ----
 mvn clean package -Pproduction
 ----
 
-This command builds a `JAR` or `WAR` file, with all the dependencies and bundled front-end resources, ready to be deployed. You can find the file in the `target` folder after the build is completed. 
+Executing this line builds a `JAR` or `WAR` file, with all of the dependencies and bundled front-end resources, ready to be deployed. You can find the file in the `target` folder after the build is finished. 
 
-If no add-ons or front-end files are used in the application, the previous command uses a pre-compiled production bundle to eliminate the need to run front-end tools like npm and Vite. However, front-end tools are still used to generate an application-specific bundle in the following situations:
+If no add-ons or front-end files are used in the application, the previous command uses a pre-compiled production bundle to eliminate the need to run front-end tools like `npm` and Vite. However, front-end tools are still used to generate an application-specific bundle in the following situations:
 
-- An npm/pnpm package is added with `@NpmPackage` or directly into [filename]`package.json`;
+- An `npm`/`pnpm` package is added with `@NpmPackage` or directly into [filename]`package.json`;
 - CSS or JavaScript is added with `@CssImport`, `@JsModule` or `@JavaScript`;
 - Vaadin add-on with front-end customizations is added;
 - Custom theme packaged as a `JAR` dependency is included, if it defines any assets to be added to the project;
 - Exported web component is added; or
 - `@LoadDependenciesOnStartup` is defined for `AppShellConfigurator`.
 
-Production builds that use npm and Vite are slower to generate than builds that use a pre-compiled bundle. However, builds that use npm and Vite are more optimized in the sense that they only include the front-end resources that are used in the application. 
+Production builds that use `npm` and Vite are slower to generate than builds that use a pre-compiled bundle. However, builds that use `npm` and Vite are more optimized in the sense that they only include the front-end resources that are used in the application. 
+
 
 If needed, you can force the creation of an optimized production bundle by executing the following from the command-line:
 
 [source,terminal]
 ----
-mvn clean package -Pproduction -Dforce.production.build=true
+mvn clean package -Pproduction -Dvaadin.force.production.build=true
 ----
+
+[NOTE]
+====
+The pre-compiled production bundle is not the same as a pre-compiled front-end bundle for development mode. The development mode pre-compiled bundle has debugging features enabled.
+
+Output from an optimized production bundle is not used as a pre-compiled bundle for later production builds. Only the pre-compiled production bundle from platform is used, if possible.
+====
+
+By default, Vaadin uses `npm install` to install front-end packages.
+This can be changed to `npm ci` by setting the following configuration parameter:
+
+[source,terminal]
+----
+<source-info group="System Property"></source-info>
+-Dvaadin.ci.build=true
+----
+
+When set, Vaadin interrupts package installation if it spots any mismatch between package versions in the `package.json` and `package-lock.json` files and recommends re-running `npm install`.
+This makes production builds in the CI pipelines reproducible, enabling you to identify problems in advance.
 
 == Enabling Production Builds
 
-The production build command works out-of-the-box for Vaadin starter projects. For example, projects that are generated with https://start.vaadin.com. The starter projects come with the necessary Maven configuration. If you've manually created your project's [filename]`pom.xml` file, add the following Maven profile to enable production builds:
+The production build command works out-of-the-box for Vaadin starter projects. For example, it works with projects that are generated with https://start.vaadin.com. The starter projects come with the necessary Maven configuration. If you've manually created your project's [filename]`pom.xml` file, add the following Maven profile to enable production builds:
 
 .`pom.xml`
 [source,xml]
@@ -47,7 +68,7 @@ The production build command works out-of-the-box for Vaadin starter projects. F
         <!--
 		.. configuration depending on environment ..
 		 -->
-         
+
 		<build>
 			<plugins>
                 <plugin>
@@ -63,9 +84,11 @@ The production build command works out-of-the-box for Vaadin starter projects. F
                         </execution>
                     </executions>
                     <configuration>
-                        <!-- To always force a production build set this configuration to 'true' -->
-                        <!-- To possibly use the pre-generated bundle remove or set to 'false' -->
+                        <!-- To always force an optimized production bundle build set this configuration to 'true' -->
+                        <!-- To possibly use the pre-compiled production bundle remove or set to 'false' -->
                         <forceProductionBuild>true</forceProductionBuild>
+                        <!-- To have reproducible build by running 'npm ci' -->
+                        <ciBuild>true</ciBuild>
                     </configuration>
                 </plugin>
                 <!--
@@ -80,7 +103,7 @@ The production build command works out-of-the-box for Vaadin starter projects. F
 </profiles>
 ----
 
-The content of the profile depends on the environment in which your application is running, but all variations call the Maven goal `vaadin:build-frontend`. The Maven goal `vaadin:prepare-frontend` is also required, but that's often declared already in the development build. Once the Maven profile is added, you can call the production build command. 
+The content of the profile depends on the environment in which your application is running, but all variations call the Maven goal `vaadin:build-frontend`. The Maven goal `vaadin:prepare-frontend` is also required, but that's often declared already in the development build. Once the Maven profile is added, you can call the production build command.
 
 If you don't have the production Maven profile in your [filename]`pom.xml` file, get a project base: for Spring Boot projects, get it from https://start.vaadin.com; for other stacks (e.g., Jakarta EE or plain Java) from https://vaadin.com/hello-world-starters. Then copy the production profile from the downloaded [filename]`pom.xml` file.
 
@@ -88,7 +111,7 @@ Having the production build as a separate Maven profile is recommended to avoid 
 
 .Building for 64-bit
 [NOTE]
-If your operating system is 64-bit, make sure to use a 64-bit JDK installation, as well.
+If your operating system is 64-bit, be sure to use a 64-bit JDK installation, as well.
 
 
 == Excluding the Development Server Module
@@ -111,7 +134,7 @@ The Vite server integration and live reload features, which are available only i
                 <exclusions>
                     <exclusion>
                         <groupId>com.vaadin</groupId>
-                        <artifactId>vaadin-dev-server</artifactId>
+                        <artifactId>vaadin-dev</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -138,23 +161,25 @@ pass:[<!-- vale Vaadin.HeadingCase = NO -->]
 
 === prepare-frontend
 
-This goal validates whether the `node` and `npm` tools are installed and not too old (i.e., not earlier than `node` version `16.14` and not older than `npm` version `8.3`). It installs them in the `.vaadin` folder in the user's home directory if they're missing. If they're already installed globally but too old, an error message is generated suggesting that you install newer versions. Node.js is needed to run `npm` to install front-end dependencies and Vite, which bundles the front-end files served to the client.
+This goal validates whether the `node` and `npm` tools are installed and aren't too old (i.e., not earlier than `node` version `16.14`, and not older than `npm` version `8.3`). It installs them in the `.vaadin` folder in the user's home directory if they're missing. If they're already installed globally, but too old, an error message is generated suggesting that you install newer versions. 
 
-Additionally, it reviews all resources used by the application and copies them under the `node_modules` folder, so they're available when `vite` builds the frontend. It also creates or updates the [filename]`package.json`, [filename]`vite.config.ts` and [filename]`vite.generated.ts` files.
+`Node.js` is needed to run `npm` to install front-end dependencies and Vite, which bundles the front-end files served to the client.
+
+Additionally, this goal reviews all resources used by the application and copies them into the `node_modules` folder, so they're available when `vite` builds the frontend. It also creates or updates the [filename]`package.json`, [filename]`vite.config.ts` and [filename]`vite.generated.ts` files.
 
 This plugin has several goal parameters:
 
-* `includes` (default: `&#42;&#42;/&#42;.js,&#42;&#42;/&#42;.css`):
-    Comma-separated wildcards for files and directories that should be copied. The default is only `.js` and `.css` files.
+`includes` (default: `&#42;&#42;/&#42;.js,&#42;&#42;/&#42;.css`)::
+Comma-separated wildcards for files and directories that should be copied. The default is only `.js` and `.css` files.
 
-* `npmFolder` (default: `${project.basedir}`):
-    The folder where the [filename]`package.json` file is located. The default is the project root folder.
+`npmFolder` (default: `${project.basedir}`)::
+The folder where the [filename]`package.json` file is located. The default is the project root folder.
 
-* `generatedFolder` (default: `${project.build.directory}/frontend/`):
-    The folder where Flow puts generated files that are used by Vite.
+`generatedFolder` (default: `${project.build.directory}/frontend/`)::
+The folder where Flow puts generated files that are used by Vite.
 
-* `require.home.node` (default: `false`):
-   If set to `true`, always prefer Node.js is automatically downloaded and installed into the `.vaadin` directory in the user's home directory.
+`require.home.node` (default: `false`)::
+If set to `true`, always prefer `Node.js` is automatically downloaded and installed into the `.vaadin` sub-directory, in the user's home directory.
 
 
 === build-frontend
@@ -168,35 +193,35 @@ This goal builds the front-end bundle. This is a complex process involving sever
 
 This plugin has several goal parameters:
 
-`npmFolder` (default: `${project.basedir}`::
-    The folder where the [filename]`package.json` file is located. The default is the project root folder.
+`npmFolder` (default: `${project.basedir}`)::
+The folder where the [filename]`package.json` file is located. The default is the project root folder.
 
 `generatedFolder` (default: `${project.build.directory}/frontend/`)::
-    The folder where Flow puts generated files used by Vite.
+The folder where Flow puts generated files used by Vite.
 
 `frontendDirectory` (default: `${project.basedir}/frontend`)::
-    The directory with the project's front-end source files.
+The directory with the project's front-end source files.
 
 `generateBundle` (default: `true`)::
-    Whether to generate a bundle from the project front-end sources.
+Whether to generate a bundle from the project front-end sources.
 
 `runNpmInstall` (default: `true`)::
-    Whether to run `pnpm install` (or `npm install`, depending on *pnpmEnable* parameter value) after updating dependencies.
+Whether to run `pnpm install` (or `npm install`, depending on *pnpmEnable* parameter value) after updating dependencies.
 
 `generateEmbeddableWebComponents` (default: `true`)::
-    Whether to generate embedded web components from [classname]`WebComponentExporter` inheritors.
+Whether to generate embedded web components from [classname]`WebComponentExporter` inheritors.
 
 `optimizeBundle` (default: `true`)::
-    Whether to include only front-end resources used from application entry points (the default) or to include all resources found on the classpath. This should normally be left to the default, but a value of `false` can be useful for faster production builds or debugging discrepancies between development and production builds.
+Whether to include only front-end resources used from application entry points (the default) or to include all resources found on the classpath. This should normally be left to the default, but a value of `false` can be useful for faster production builds or debugging discrepancies between development and production builds.
 
 `pnpmEnable` (default: `false`)::
-    Whether to use the `pnpm` or `npm` tool to handle front-end resources. The default is `npm`.
+Whether to use the `pnpm` or `npm` tool to handle front-end resources. The default is `npm`.
 
 `useGlobalPnpm` (default: `false`)::
-    Whether to use a globally installed `pnpm` tool instead of the default supported version of `pnpm`.
+Whether to use a globally installed `pnpm` tool instead of the default supported version of `pnpm`.
 
 `forceProductionBuild` (default: `false`)::
-    Whether to generate a production bundle even if an existing pre-generated bundle could be used.
+Whether to generate a production bundle even if an existing pre-generated bundle could be used.
 
 
 === clean-frontend
@@ -228,7 +253,7 @@ With the pre-compiled production bundle, all components are eager loaded apart f
 [NOTE]
 Any components that are loaded using reflection should be named on the `Route` class using `@Uses` so that they're collected.
 
-.Uses example
+.Uses Example
 [source,java]
 ----
 @Route("my-view")
@@ -246,6 +271,8 @@ public class MyView extends Div {
     }
 }
 ----
+
+pass:[<!-- vale Vaadin.HeadingCase = YES -->]
 
 
 === Eager Loading
