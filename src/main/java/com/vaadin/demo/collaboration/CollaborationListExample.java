@@ -13,7 +13,7 @@ public class CollaborationListExample extends VerticalLayout {
 
     public CollaborationListExample() {
         // tag::snippet[]
-        // NOTE: In a real application, use the user id of the logged in user
+        // NOTE: Use the user id of the logged-in user
         // instead
         String userId = System.identityHashCode(UI.getCurrent()) + "";
         UserInfo localUser = new UserInfo(userId, "User " + userId);
