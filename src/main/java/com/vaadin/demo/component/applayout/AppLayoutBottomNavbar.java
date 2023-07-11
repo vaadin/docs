@@ -62,7 +62,9 @@ public class AppLayoutBottomNavbar extends AppLayout {
         // link.setRoute(viewClass.java);
         link.setTabIndex(-1);
 
-        return new Tab(link);
+        Tab tab = new Tab(link);
+        tab.setAriaLabel(viewName);
+        return tab;
     }
 
     public static class Exporter extends DemoExporter<AppLayoutBottomNavbar> { // hidden-source-line
