@@ -17,12 +17,15 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <div style="color: var(--lumo-secondary-text-color);">
-        <div>Generating report...</div>
-        <vaadin-progress-bar indeterminate></vaadin-progress-bar>
-        <div style="font-size: var(--lumo-font-size-xs)">
+      <div>
+        <label class="text-secondary" id="pblbl">Generating report...</label>
+        <vaadin-progress-bar indeterminate
+          aria-labelledby="pblbl"
+          aria-describedby="sublbl">
+        </vaadin-progress-bar>
+        <span class="text-secondary text-xs" id="sublbl">
           Process can take upwards of 10 minutes
-        </div>
+        </span>
       </div>
       <!-- end::snippet[] -->
     `;

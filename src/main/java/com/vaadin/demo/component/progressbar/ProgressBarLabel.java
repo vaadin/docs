@@ -2,7 +2,9 @@ package com.vaadin.demo.component.progressbar;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.router.Route;
@@ -17,13 +19,14 @@ public class ProgressBarLabel extends Div {
         ProgressBar progressBar = new ProgressBar();
         progressBar.setValue(0.5);
 
-        Div progressBarLabelText = new Div();
-        progressBarLabelText.setText("Processing Financials.xlsx");
-        Div progressBarLabelValue = new Div();
-        progressBarLabelValue.setText("50%");
-        FlexLayout progressBarLabel = new FlexLayout();
+        NativeLabel progressBarLabelText = new NativeLabel("Processing Financials.xlsx");
+        progressBarLabelText.setId("pblabel");
+        // Associates the label with the progressbar for screen readers:
+        progressBar.getElement().setAttribute("aria-labelledby", "pblabel");
+
+        Span progressBarLabelValue = new Span("50%");
+        HorizontalLayout progressBarLabel = new HorizontalLayout(progressBarLabelText, progressBarLabelValue);
         progressBarLabel.setJustifyContentMode(JustifyContentMode.BETWEEN);
-        progressBarLabel.add(progressBarLabelText, progressBarLabelValue);
 
         add(progressBarLabel, progressBar);
         // end::snippet[]
