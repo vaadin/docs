@@ -18,7 +18,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <div>
-      <!-- tag::snippet[] -->        
+        <!-- tag::snippet[] -->
         <vaadin-horizontal-layout style="justify-content: space-between;">
           <label class="text-secondary" id="pblabel">Processing Financials.xlsx</label>
           <span class="text-secondary">50%</span>

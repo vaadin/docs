@@ -19,10 +19,11 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <div>
         <label class="text-secondary" id="pblbl">Generating report...</label>
-        <vaadin-progress-bar indeterminate
+        <vaadin-progress-bar
+          indeterminate
           aria-labelledby="pblbl"
-          aria-describedby="sublbl">
-        </vaadin-progress-bar>
+          aria-describedby="sublbl"
+        ></vaadin-progress-bar>
         <span class="text-secondary text-xs" id="sublbl">
           Process can take upwards of 10 minutes
         </span>
