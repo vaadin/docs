@@ -26,7 +26,7 @@ module.exports = async function (config) {
   });
 
   // Root index file under ds
-  updateTemplate(path.resolve(ROOT, 'articles/ds/index.asciidoc'), {
+  updateTemplate(path.resolve(ROOT, 'articles/index.adoc'), {
     title: config.dsName || 'Design System',
   });
 
@@ -35,13 +35,13 @@ module.exports = async function (config) {
     title: config.dsName || 'Design System',
   });
 
-  // Have components / foundation expanded by default
+  // Have components / lumo expanded by default
   appendFrontMatter(
-    path.resolve(ROOT, 'articles/ds/components/index.asciidoc'),
+    path.resolve(ROOT, 'articles/components/index.adoc'),
     'section-nav: expanded\n'
   );
   appendFrontMatter(
-    path.resolve(ROOT, 'articles/ds/foundation/index.asciidoc'),
+    path.resolve(ROOT, 'articles/lumo/index.adoc'),
     'section-nav: expanded\n'
   );
 };
