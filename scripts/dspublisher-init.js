@@ -20,9 +20,9 @@ function appendFrontMatter(articlePath, frontMatter) {
 }
 
 module.exports = async function (config) {
-  // .env file for dspublisher
-  updateTemplate(path.resolve(ROOT, 'dspublisher/.env'), {
-    title: config.dsName,
+  // The config file for dspublisher
+  updateTemplate(path.resolve(ROOT, 'dspublisher/config/default.json'), {
+    title: config.dsName || 'Design System',
   });
 
   // Root index file under ds
