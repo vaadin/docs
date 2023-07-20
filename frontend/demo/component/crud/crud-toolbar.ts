@@ -35,16 +35,13 @@ export class Example extends LitElement {
         .items="${this.items}"
         @size-changed="${() => this.requestUpdate()}"
       >
-        <vaadin-horizontal-layout
-          slot="toolbar"
-          style="align-items: center; flex-grow: 1; justify-content: space-between;"
-        >
+        <vaadin-horizontal-layout slot="toolbar" style="align-items: center; flex-grow: 1;">
           <span>Total: <b>${this.items.length}</b> employees</span>
-          <vaadin-button theme="tertiary" new-button>
-            <vaadin-icon slot="prefix" icon="vaadin:plus"></vaadin-icon>
-            New employee
-          </vaadin-button>
         </vaadin-horizontal-layout>
+        <vaadin-button theme="tertiary" slot="new-button">
+          <vaadin-icon slot="prefix" icon="vaadin:plus"></vaadin-icon>
+          New employee
+        </vaadin-button>
       </vaadin-crud>
       <!-- end::snippet[] -->
     `;
