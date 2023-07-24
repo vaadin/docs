@@ -10,7 +10,7 @@ function Example() {
         {/* tag::snippet[] */}
         <Button theme="primary contrast">Primary</Button>
         <Button theme="secondary contrast">Secondary</Button>
-        <Button theme="tertiary contrast">Tertiary</Button>
+        <Button theme="tertiary contrast">Tertiary (avoid)</Button>
         {/* end::snippet[] */}
       </HorizontalLayout>
     </>
