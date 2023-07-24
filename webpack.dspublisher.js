@@ -1,4 +1,5 @@
 const path = require('path');
+const url = require('url');
 const fs = require('fs');
 const settings = require('./target/vaadin-dev-server-settings.json');
 
@@ -61,8 +62,8 @@ const themesPath = usesProjectTheme ? projectThemePath : themeResourceFolder;
 const applyThemePath = path.resolve(frontendGeneratedFolder, 'theme.js');
 
 module.exports = async function (config) {
-  const { ApplicationThemePlugin, extractThemeName, findParentThemes } = await import(
-    buildDirectory + '/plugins/application-theme-plugin/application-theme-plugin.js'
+  const { ApplicationThemePlugin, extractThemeName, findParentThemes } = await import(url.pathToFileURL(
+    buildDirectory + '/plugins/application-theme-plugin/application-theme-plugin.js').href
   );
 
   const allFlowImportsPath = path.resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
