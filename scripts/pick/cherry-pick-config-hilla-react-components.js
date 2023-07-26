@@ -110,22 +110,6 @@ const config = {
         // replace all instances of "{articles}/components" with "{articles}/react/components"
         content = content.replace(/{articles}\/components/g, '{articles}/react/components');
 
-        // Remove Spreadsheet from the components index page
-        if (content.includes('=== Spreadsheet')) {
-          content = removeLines(content, '=== Spreadsheet', '[.component-card', -1, -1);
-        }
-
-        // Remove the "Didn't Find What You Need?" section on the index page
-        if (content.includes('== Didn\'t Find What You Need?') && content.includes('++++')) {
-          content = removeLines(content, '== Didn\'t Find What You Need?', '++++', -1, -1);
-        }
-
-        // Remove all Flow-specific content
-        content = removeLines(content, 'ifdef::flow[]', 'endif::');
-
-        // Remove all Lit-specific content
-        content = removeLines(content, 'ifdef::lit[]', 'endif::');
-
         return content;
       }
         
