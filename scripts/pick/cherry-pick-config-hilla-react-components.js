@@ -110,6 +110,9 @@ const config = {
         // replace all instances of "{articles}/components" with "{articles}/react/components"
         content = content.replace(/{articles}\/components/g, '{articles}/react/components');
 
+        // Remove discussion ids
+        content = removeLines(content, '[discussion-id]');
+
         return content;
       }
         
