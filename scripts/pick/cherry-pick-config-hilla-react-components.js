@@ -5,10 +5,13 @@
  * StartOffset and endOffset are used to adjust the start and end of the block to be removed.
  */
 function removeLines(content, startIdentifier, endIdentifier = startIdentifier, startOffset = 0, endOffset = 0) {
-  const lines = content.split('\n');
-  const start = lines.findIndex((line) => line.includes(startIdentifier));
-  const end = lines.findIndex((line, index) => index >= start && line.includes(endIdentifier));
-  return lines.filter((_line, index) => index < start + startOffset || index > end + endOffset).join('\n');
+  while (content.includes(startIdentifier) && content.includes(endIdentifier)) {
+    const lines = content.split('\n');
+    const start = lines.findIndex((line) => line.includes(startIdentifier));
+    const end = lines.findIndex((line, index) => index >= start && line.includes(endIdentifier));
+    content = lines.filter((_line, index) => index < start + startOffset || index > end + endOffset).join('\n');
+  }
+  return content;
 }
 
 const config = {
@@ -151,6 +154,12 @@ const config = {
         if (content.includes('== Didn\'t Find What You Need?') && content.includes('++++')) {
           content = removeLines(content, '== Didn\'t Find What You Need?', '++++', -1, -1);
         }
+
+        // Remove all Flow-specific content
+        content = removeLines(content, 'ifdef::flow[]', 'endif::');
+
+        // Remove all Lit-specific content
+        content = removeLines(content, 'ifdef::lit[]', 'endif::');
 
         return content;
       }
