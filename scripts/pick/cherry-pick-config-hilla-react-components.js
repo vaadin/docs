@@ -22,15 +22,12 @@ const config = {
     copy: [
       // folders
       'articles',
-      'articles/react/components',
       'src',
       'frontend',
       // files
     ],
     // paths in 'latest' to ignore (since they shouldn't be copied to 'hilla')
     ignore: [
-      // /(^|\/)\..+/, // hidden files
-
       /* Ignore temporarily until Vaadin version update */
       'articles/components/map',
       'articles/components/menubar',
@@ -46,20 +43,6 @@ const config = {
       'articles/components/avatar',
       'articles/components/cookieconsent',
 
-      'src/main/java/com/vaadin/demo/component/map',
-      'src/main/java/com/vaadin/demo/component/menubar',
-      'src/main/java/com/vaadin/demo/component/notification',
-      'src/main/java/com/vaadin/demo/component/sidenav',
-      'src/main/java/com/vaadin/demo/component/splitlayout',
-      'src/main/java/com/vaadin/demo/component/tabs',
-      'src/main/java/com/vaadin/demo/component/grid',
-      'src/main/java/com/vaadin/demo/component/button',
-      'src/main/java/com/vaadin/demo/component/applayout',
-      'src/main/java/com/vaadin/demo/component/datetimepicker',
-      'src/main/java/com/vaadin/demo/component/login',
-      'src/main/java/com/vaadin/demo/component/avatar',
-      'src/main/java/com/vaadin/demo/component/cookieconsent',
-
       'frontend/demo/component/datetimepicker',
       'frontend/demo/component/login',
       'frontend/demo/component/avatar',
@@ -67,36 +50,17 @@ const config = {
       'frontend/demo/component/cookieconsent',
       /* END Ignore */
 
+      // Ignore Spreadsheet
       'articles/components/spreadsheet',
-      'articles/guide',
-      'articles/advanced',
-      'articles/configuration',
-      'articles/tutorial',
-      'articles/tools',
-      'articles/api.adoc',
-      'articles/security',
-      'articles/contributing',
-      'articles/create-ui',
-      'articles/binding-data',
-      'articles/integrations',
-      'articles/testing',
-      'articles/styling',
-      'articles/kb',
 
-      'articles/index.asciidoc',
-      'articles/compatibility.adoc',
-      'articles/overview.asciidoc',
-      'articles/contributing-docs',
-      'articles/upgrading',
-      'articles/application',
-      'articles/routing',
-      'articles/production',
-      'articles/_images',
-      'articles/_vaadin-version.adoc',
-      'articles/_commercial-banner.asciidoc',
-      'articles/_terminal.asciidoc',
-      'articles/404.asciidoc',
-      'articles/_figma-banner.adoc',
+      // Regex to ignore everything but "components" under articles
+      /articles\/(?!components).*/,
+
+      // Ignore all Java examples
+      /src\/main\/java\/com\/vaadin\/demo\/component\/.*/,
+      
+      // Ignore all TypeScript examples (not react nor icons)
+      /frontend\/demo\/component\/(?!icons)[a-z-]+\/(?!react).*/,
 
       'frontend/demo/component/spreadsheet',
       'frontend/demo/fusion',
@@ -115,6 +79,7 @@ const config = {
       'src/main/java/com/vaadin/demo/observability',
       'frontend/themes',
       'src/main/java/com/vaadin/demo/DemoExporter.java',
+      'src/main/resources/testsheets',
     ],
   },
   rename: {
