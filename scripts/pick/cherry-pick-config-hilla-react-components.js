@@ -11,10 +11,21 @@ function removeLines(
   startOffset = 0,
   endOffset = 0
 ) {
-  while (content.includes(startIdentifier) && content.includes(endIdentifier)) {
+  while (content.includes(startIdentifier)) {
     const lines = content.split('\n');
     const start = lines.findIndex((line) => line.includes(startIdentifier));
-    const end = lines.findIndex((line, index) => index >= start && line.includes(endIdentifier));
+    const end = lines.findIndex(
+      (line, index) => {
+        if (index >= start) {
+          if (typeof endIdentifier === 'function') {
+            return endIdentifier(line);
+          } else {
+            return line.includes(endIdentifier);
+          }
+        }
+      }
+        
+    );
     content = lines
       .filter((_line, index) => index < start + startOffset || index > end + endOffset)
       .join('\n');
@@ -115,7 +126,7 @@ const config = {
   callback: [
     {
       // Regex to match all asciidoc files under articles/components
-      path: /articles\/components\/.*\.asciidoc/,
+      path: /articles\/components\/.*\.[asciidoc|adoc]/,
       callback: (content) => {
         // replace all instances of "{articles}/components" with "{articles}/react/components"
         content = content.replace(/{articles}\/components/g, '{articles}/react/components');
@@ -123,6 +134,10 @@ const config = {
         // Remove discussion ids
         content = removeLines(content, '[discussion-id]');
 
+        // Remove page links (components/index and individual component pages)
+        const pageLinksEndIdentifier = line => !line.includes('page-links') && !line.startsWith('  - ');
+        content = removeLines(content, 'page-links', pageLinksEndIdentifier, 0, -1);
+        
         return content;
       },
     },
