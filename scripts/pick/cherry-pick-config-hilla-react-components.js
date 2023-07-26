@@ -4,12 +4,20 @@
  * whereas endIdentifier identifies the end of the block to be removed.
  * StartOffset and endOffset are used to adjust the start and end of the block to be removed.
  */
-function removeLines(content, startIdentifier, endIdentifier = startIdentifier, startOffset = 0, endOffset = 0) {
+function removeLines(
+  content,
+  startIdentifier,
+  endIdentifier = startIdentifier,
+  startOffset = 0,
+  endOffset = 0
+) {
   while (content.includes(startIdentifier) && content.includes(endIdentifier)) {
     const lines = content.split('\n');
     const start = lines.findIndex((line) => line.includes(startIdentifier));
     const end = lines.findIndex((line, index) => index >= start && line.includes(endIdentifier));
-    content = lines.filter((_line, index) => index < start + startOffset || index > end + endOffset).join('\n');
+    content = lines
+      .filter((_line, index) => index < start + startOffset || index > end + endOffset)
+      .join('\n');
   }
   return content;
 }
@@ -58,7 +66,7 @@ const config = {
 
       // Ignore all Java examples
       /src\/main\/java\/com\/vaadin\/demo\/component\/.*/,
-      
+
       // Ignore all TypeScript examples (not react nor icons)
       /frontend\/demo\/component\/(?!icons)[a-z-]+\/(?!react).*/,
 
@@ -69,10 +77,9 @@ const config = {
       'frontend/demo/flow',
       'frontend/demo/init.ts',
       'frontend/demo/init-flow-components.ts',
+      'frontend/demo/foundation/material-tokens.ts',
 
       'src/main/java/com/vaadin/demo/ui',
-      'src/main/java/com/vaadin/demo/component/spreadsheet',
-
       'src/main/java/com/vaadin/demo/flow',
       'src/main/java/com/vaadin/demo/sso',
       'src/main/java/com/vaadin/demo/collaboration',
@@ -80,6 +87,8 @@ const config = {
       'frontend/themes',
       'src/main/java/com/vaadin/demo/DemoExporter.java',
       'src/main/resources/testsheets',
+      'src/main/resources/META-INF/resources/icons/icon.png',
+      'src/main/resources/application.properties',
     ],
   },
   rename: {
@@ -96,6 +105,7 @@ const config = {
       'articles/_commercial-banner.asciidoc',
       'src/main/java/com/vaadin/demo/fusion',
       'src/main/java/com/vaadin/demo/DemoExporter.java',
+      'src/main/resources/application.properties',
       'frontend/demo/fusion',
       'frontend/themes',
       'frontend/demo/init.ts',
@@ -114,8 +124,7 @@ const config = {
         content = removeLines(content, '[discussion-id]');
 
         return content;
-      }
-        
+      },
     },
   ],
 };
