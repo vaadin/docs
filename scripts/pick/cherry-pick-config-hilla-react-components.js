@@ -1,38 +1,3 @@
-/**
- * A helper function for removing lines from the given content.
- * The argument startIdentifier is string that identifies the start of the block to be removed
- * whereas endIdentifier identifies the end of the block to be removed.
- * StartOffset and endOffset are used to adjust the start and end of the block to be removed.
- */
-function removeLines(
-  content,
-  startIdentifier,
-  endIdentifier = startIdentifier,
-  startOffset = 0,
-  endOffset = 0
-) {
-  while (content.includes(startIdentifier)) {
-    const lines = content.split('\n');
-    const start = lines.findIndex((line) => line.includes(startIdentifier));
-    const end = lines.findIndex(
-      (line, index) => {
-        if (index >= start) {
-          if (typeof endIdentifier === 'function') {
-            return endIdentifier(line);
-          } else {
-            return line.includes(endIdentifier);
-          }
-        }
-      }
-        
-    );
-    content = lines
-      .filter((_line, index) => index < start + startOffset || index > end + endOffset)
-      .join('\n');
-  }
-  return content;
-}
-
 const config = {
   source: {
     // paths in 'latest' to copy, they should be relative to the root folder
@@ -132,12 +97,18 @@ const config = {
         content = content.replace(/{articles}\/components/g, '{articles}/react/components');
 
         // Remove discussion ids
-        content = removeLines(content, '[discussion-id]');
+        content = content.replace(/\[discussion-id\].*/g, '');
 
         // Remove page links (components/index and individual component pages)
-        const pageLinksEndIdentifier = line => !line.includes('page-links') && !line.startsWith('  - ');
-        content = removeLines(content, 'page-links', pageLinksEndIdentifier, 0, -1);
-        
+        if (content.includes('page-links')) {
+          const lines = content.split('\n');
+          const start = lines.findIndex((line) => line.includes('page-links'));
+          const end = lines.findIndex((line, index) => index > start && !line.startsWith('  - ')) - 1;
+          content = lines
+            .filter((_line, index) => index < start || index > end)
+            .join('\n');
+        }
+
         return content;
       },
     },
