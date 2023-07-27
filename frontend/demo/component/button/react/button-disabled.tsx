@@ -5,15 +5,13 @@ import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 
 function Example() {
   return (
-    <>
-      <HorizontalLayout theme="spacing">
-        {/* tag::snippet[] */}
-        <Button theme="primary" disabled>Primary</Button>
-        <Button theme="secondary" disabled>Secondary</Button>
-        <Button theme="tertiary" disabled>Tertiary</Button>
-        {/* end::snippet[] */}
-      </HorizontalLayout>
-    </>
+    <HorizontalLayout theme="spacing">
+      {/* tag::snippet[] */}
+      <Button theme="primary" disabled>Primary</Button>
+      <Button theme="secondary" disabled>Secondary</Button>
+      <Button theme="tertiary" disabled>Tertiary</Button>
+      {/* end::snippet[] */}
+    </HorizontalLayout>
   );
 }
 
