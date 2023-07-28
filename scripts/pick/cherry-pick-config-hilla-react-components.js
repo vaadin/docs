@@ -109,6 +109,11 @@ const config = {
             .join('\n');
         }
 
+        // Add :react: at the top of the file before the title ("= ").
+        if (content.includes('ifdef::react[]')) {
+          content = content.replace(/= .*/, ':react:\n\n$&');
+        }
+
         return content;
       },
     },
