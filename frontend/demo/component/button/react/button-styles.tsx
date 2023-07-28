@@ -7,9 +7,9 @@ function Example() {
   return (
     <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
-      <Button theme="primary success">Primary</Button>
-      <Button theme="secondary success">Secondary</Button>
-      <Button theme="tertiary success">Tertiary</Button>
+      <Button theme="primary">Primary</Button>
+      <Button theme="secondary">Secondary</Button>
+      <Button theme="tertiary">Tertiary</Button>
       {/* end::snippet[] */}
     </HorizontalLayout>
   );
