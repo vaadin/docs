@@ -1,0 +1,16 @@
+import { reactExample } from 'Frontend/demo/react-example';
+import React from 'react';
+import { Scroller } from '@hilla/react-components/Scroller.js';
+import img from '../../../../src/main/resources/images/reindeer.jpg';
+
+function Example() {
+  return (
+    <>
+      <Scroller style={{ height: '300px', width: '100%' }}>
+        <img src={img} alt="A reindeer walking on a snowy lake shore at dusk" />
+      </Scroller>
+    </>
+  );
+}
+
+export default reactExample(Example);

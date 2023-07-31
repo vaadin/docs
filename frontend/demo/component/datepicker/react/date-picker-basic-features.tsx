@@ -1,0 +1,25 @@
+import { reactExample } from 'Frontend/demo/react-example';
+import React from 'react';
+import { DatePicker } from '@hilla/react-components/DatePicker';
+import { Icon } from '@hilla/react-components/Icon';
+import { Tooltip } from '@hilla/react-components/Tooltip';
+
+function Example() {
+  return (
+    <>
+      {/* tag::snippet[] */}
+      <DatePicker
+        label="Label"
+        helperText="Helper text"
+        placeholder="Placeholder"
+        clearButtonVisible
+      >
+        <Tooltip slot="tooltip" text="Tooltip text" />
+        <Icon slot="prefix" icon="vaadin:vaadin-h" />
+      </DatePicker>
+      {/* end::snippet[] */}
+    </>
+  );
+}
+
+export default reactExample(Example);

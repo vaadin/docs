@@ -1,0 +1,9 @@
+import { reactExample } from 'Frontend/demo/react-example';
+import React from 'react';
+import { Checkbox } from '@hilla/react-components/Checkbox.js';
+
+function Example() {
+  return <Checkbox label="Yes, I agree" />;
+}
+
+export default reactExample(Example);
