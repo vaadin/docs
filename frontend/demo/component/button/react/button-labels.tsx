@@ -13,22 +13,22 @@ function Example() {
     <>
       {/* tag::snippet[] */}
       <VerticalLayout>
-        <HorizontalLayout theme="spacing">
+        <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
           <EmailField
             label="Primary email address"
             value={primaryEmail}
             onValueChanged={(event: any) => setPrimaryEmail(event.target.value)}
           />
-          <Button className={'mt-xl'} onClick={() => setPrimaryEmail('')}>Remove</Button>
+          <Button onClick={() => setPrimaryEmail('')}>Remove</Button>
         </HorizontalLayout>
 
-        <HorizontalLayout theme="spacing">
+        <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
           <EmailField
             label="Secondary email address"
             value={secondaryEmail}
             onValueChanged={(event: any) => setSecondaryEmail(event.target.value)}
           />
-          <Button className={'mt-xl'} onClick={() => setSecondaryEmail('')}>Remove</Button>
+          <Button onClick={() => setSecondaryEmail('')}>Remove</Button>
         </HorizontalLayout>
       </VerticalLayout>
       {/* end::snippet[] */}
