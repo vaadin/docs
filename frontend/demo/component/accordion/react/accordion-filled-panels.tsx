@@ -9,7 +9,7 @@ function Example() {
     <>
       {/* tag::snippet[] */}
       <Accordion>
-        <AccordionPanel summary="Personal information">
+        <AccordionPanel summary="Personal information" theme="filled">
           <VerticalLayout>
             <span>Sophia Williams</span>
             <span>sophia.williams@company.com</span>
@@ -17,7 +17,7 @@ function Example() {
           </VerticalLayout>
         </AccordionPanel>
 
-        <AccordionPanel summary="Billing address">
+        <AccordionPanel summary="Billing address" theme="filled">
           <VerticalLayout>
             <span>4027 Amber Lake Canyon</span>
             <span>72333-5884 Cozy Nook</span>
@@ -25,7 +25,7 @@ function Example() {
           </VerticalLayout>
         </AccordionPanel>
 
-        <AccordionPanel summary="Payment">
+        <AccordionPanel summary="Payment" theme="filled">
           <VerticalLayout>
             <span>MasterCard</span>
             <span>1234 5678 9012 3456</span>
