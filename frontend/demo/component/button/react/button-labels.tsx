@@ -3,8 +3,6 @@ import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { EmailField } from '@hilla/react-components/EmailField.js';
-import type { EmailFieldValueChangedEvent } from '@hilla/react-components/EmailField.js';
-
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 
 function Example() {
@@ -19,7 +17,7 @@ function Example() {
           <EmailField
             label="Primary email address"
             value={primaryEmail}
-            onValueChanged={(event: EmailFieldValueChangedEvent) => setPrimaryEmail(event.detail.value)}
+            onValueChanged={(event) => setPrimaryEmail(event.detail.value)}
           />
           <Button onClick={() => setPrimaryEmail('')}>Remove</Button>
         </HorizontalLayout>
@@ -28,7 +26,7 @@ function Example() {
           <EmailField
             label="Secondary email address"
             value={secondaryEmail}
-            onValueChanged={(event: EmailFieldValueChangedEvent) => setSecondaryEmail(event.detail.value)}
+            onValueChanged={(event) => setSecondaryEmail(event.detail.value)}
           />
           <Button onClick={() => setSecondaryEmail('')}>Remove</Button>
         </HorizontalLayout>
