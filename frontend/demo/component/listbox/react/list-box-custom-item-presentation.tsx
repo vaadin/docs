@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState, useEffect } from 'react';
 import { ListBox } from '@hilla/react-components/ListBox.js';
 import { Item } from '@hilla/react-components/Item.js';
@@ -27,7 +27,7 @@ function Example() {
       >
         {items.map((person) => (
           <Item
-            value={items.indexOf(person)}
+            value={String(items.indexOf(person))}
             style={{ lineHeight: 'var(--lumo-line-height-m)' }}
             key={items.indexOf(person)}
           >
@@ -55,4 +55,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

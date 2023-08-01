@@ -1,6 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
 import React from 'react';
-import { Input } from '@hilla/react-components/Input.js';
 
 function DetailContent() {
   return (
@@ -36,7 +34,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -64,7 +62,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -92,7 +90,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -120,7 +118,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -148,7 +146,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -176,7 +174,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -204,7 +202,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -232,7 +230,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -260,7 +258,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -288,7 +286,7 @@ function DetailContent() {
               height: 'var(--lumo-font-size-xxs)',
             }}
           />
-          <Input
+          <input
             type="text"
             style={{
               background: 'var(--lumo-contrast-10pct)',
@@ -304,4 +302,4 @@ function DetailContent() {
   );
 }
 
-export default reactExample(DetailContent);
+export default DetailContent;

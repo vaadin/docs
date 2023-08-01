@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
@@ -19,4 +19,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

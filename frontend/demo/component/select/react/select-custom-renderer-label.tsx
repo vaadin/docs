@@ -14,7 +14,7 @@ function Example() {
   const [people, setPeople] = useState<Person[]>([]);
 
   useEffect(() => {
-    getPeople({ count: 5 }).then(({ people }) => setPeople(people));
+    getPeople({ count: 5 }).then(({ people: items }) => setPeople(items));
   }, []);
 
   return (
@@ -24,7 +24,11 @@ function Example() {
           {people.map((person) => (
             // tag::snippet[]
             // Use the label attribute to display full name of the person as selected value label
-            <Item value={String(person.id)} key={person.id}  {...{label: formatPersonFullName(person)} as {}}>
+            <Item
+              value={String(person.id)}
+              key={person.id}
+              {...{ label: formatPersonFullName(person) }}
+            >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <img
                   src={person.pictureUrl}

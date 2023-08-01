@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { FormLayout } from '@hilla/react-components/FormLayout.js';
 import { FormItem } from '@hilla/react-components/FormItem.js';
@@ -9,14 +9,23 @@ function Example() {
     <>
       {/* tag::snippet[] */}
       <FormLayout>
-        <FormItem label="Revenue">
-          <TextField suffix="EUR" />
+        <FormItem>
+          <label slot="label">Revenue</label>
+          <TextField>
+            <span slot="suffix">EUR</span>
+          </TextField>
         </FormItem>
-        <FormItem label="Expenses">
-          <TextField suffix="EUR" />
+        <FormItem>
+          <label slot="label">Expenses</label>
+          <TextField>
+            <span slot="suffix">EUR</span>
+          </TextField>
         </FormItem>
-        <FormItem label="Invoices">
-          <TextField suffix="EUR" />
+        <FormItem>
+          <label slot="label">Invoices</label>
+          <TextField>
+            <span slot="suffix">EUR</span>
+          </TextField>
         </FormItem>
       </FormLayout>
       {/* end::snippet[] */}
@@ -24,4 +33,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,6 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { ComboBox } from '@hilla/react-components/ComboBox.js';
+import { ComboBox, type ComboBoxFilterChangedEvent } from '@hilla/react-components/ComboBox.js';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
@@ -15,8 +15,8 @@ function Example() {
     });
   }, []);
 
-  function filterChanged(event: React.SyntheticEvent, { value }: { value: string }) {
-    const filter = value;
+  function filterChanged(event: ComboBoxFilterChangedEvent) {
+    const filter = event.detail.value;
     setFilteredItems(
       allItems.filter(({ name }) => name.toLowerCase().startsWith(filter.toLowerCase()))
     );
@@ -37,4 +37,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

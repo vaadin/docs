@@ -1,19 +1,24 @@
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState, useRef } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
+import { Grid, type GridCellFocusEvent, type GridElement } from '@hilla/react-components/Grid.js';
 import { TextArea } from '@hilla/react-components/TextArea.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-// import Person interface here
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { GridColumn } from '@hilla/react-components/GridColumn.js';
 
 function Example() {
-  const gridRef = useRef(null);
-  const [items, setItems] = useState([]);
+  const gridRef = useRef<GridElement>(null);
+  const [items, setItems] = useState<Person[]>([]);
   const [eventSummary, setEventSummary] = useState('');
 
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
-  const handleCellFocus = (event) => {
+  const handleCellFocus = (event: GridCellFocusEvent<Person>) => {
+    if (!gridRef.current) {
+      return;
+    }
     const {
       section,
       index,
@@ -45,11 +50,11 @@ function Example() {
       </Grid>
 
       <div>
-        <TextArea label="Cell focus event information" readOnly value={eventSummary} />
+        <TextArea label="Cell focus event information" readonly value={eventSummary} />
       </div>
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,22 +1,17 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
+import { Notification } from '@hilla/react-components/Notification.js';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
 
   function handleClick() {
     // tag::snippet[]
-    const notification = {
-      show: (content: string, options: any) => {
-        options.position = 'middle';
-      },
-      setAttribute: (attribute: string, value: string) => {},
-      addEventListener: (event: string, handler: any) => {},
-      removeEventListener: (event: string, handler: any) => {},
-    };
-    notification.show('Application submitted!', {});
-    notification.setAttribute('theme', 'success');
+    const notification = Notification.show('Application submitted!', {
+      position: 'middle',
+      theme: 'success',
+    });
     // end::snippet[]
     setNotificationOpened(true);
     const handleOpenChanged = (e: { detail: { value: boolean } }) => {
@@ -37,4 +32,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

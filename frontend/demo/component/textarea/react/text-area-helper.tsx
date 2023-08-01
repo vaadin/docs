@@ -1,6 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { TextArea } from '@hilla/react-components/TextArea.js';
+import { loremIpsum } from '../../../../../src/main/resources/data/templates.json';
 
 function Example() {
   const charLimit = 600;
@@ -11,7 +12,7 @@ function Example() {
       {/* tag::snippet[] */}
       <TextArea
         label="Description"
-        maxLength={charLimit}
+        maxlength={charLimit}
         value={text}
         helperText={`${text.length}/${charLimit}`}
         onValueChanged={(event) => setText(event.detail.value)}
@@ -21,4 +22,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

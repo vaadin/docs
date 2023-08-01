@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
 import { FormLayout } from '@hilla/react-components/FormLayout.js';
@@ -7,7 +7,7 @@ import { EmailField } from '@hilla/react-components/EmailField.js';
 
 function Example() {
   const responsiveSteps = [
-    { minWidth: 0, columns: 1 },
+    { minWidth: '0', columns: 1 },
     { minWidth: '320px', columns: 2 },
     { minWidth: '500px', columns: 3 },
   ];
@@ -24,4 +24,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { MenuBar } from '@hilla/react-components/MenuBar.js';
 import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
@@ -37,4 +37,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

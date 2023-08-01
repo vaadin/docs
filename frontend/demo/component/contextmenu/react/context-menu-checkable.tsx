@@ -1,6 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { ContextMenu, ContextMenuItem } from '@hilla/react-components/ContextMenu.js';
+import {
+  ContextMenu,
+  type ContextMenuItemSelectedEvent,
+  type ContextMenuItem,
+} from '@hilla/react-components/ContextMenu.js';
 
 function Example() {
   const [items, setItems] = useState<ContextMenuItem[]>([
@@ -13,8 +17,8 @@ function Example() {
 
   const selectedItem = items.find((item) => item.checked);
 
-  function itemSelected(value: ContextMenuItem) {
-    setItems(items.map((item) => ({ ...item, checked: item === value })));
+  function itemSelected(e: ContextMenuItemSelectedEvent) {
+    setItems(items.map((item) => ({ ...item, checked: item === e.detail.value })));
   }
 
   return (
@@ -26,4 +30,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

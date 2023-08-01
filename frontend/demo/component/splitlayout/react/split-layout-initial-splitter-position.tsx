@@ -1,6 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
+import MasterContent from './master-content';
+import DetailContent from './detail-content';
 
 function Example() {
   return (
@@ -18,13 +20,5 @@ function Example() {
     </>
   );
 }
-
-const MasterContent = () => {
-  return <div className="master-content" />;
-};
-
-const DetailContent = () => {
-  return <div className="detail-content" />;
-};
 
 export default reactExample(Example); // hidden-source-line

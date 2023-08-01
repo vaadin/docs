@@ -1,9 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
-import { RadioButtonGroup } from '@hilla/react-components/RadioButtonGroup.js';
-import type { RadioButtonGroupValueChangedEvent } from '@hilla/react-components/RadioButtonGroup.js';
+import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
+import type { RadioGroupValueChangedEvent } from '@hilla/react-components/RadioGroup.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { RadioButton } from '@hilla/react-components/RadioButton.js';
 
 function Example() {
   const [theme, setTheme] = useState('padding');
@@ -20,19 +21,20 @@ function Example() {
         <Button>Button 2</Button>
         <Button>Button 3</Button>
       </VerticalLayout>
-      <RadioButtonGroup
+
+      <RadioGroup
         label="Padding"
         value={theme}
-        onValueChanged={(event: RadioButtonGroupValueChangedEvent) => {
+        onValueChanged={(event: RadioGroupValueChangedEvent) => {
           setTheme(event.detail.value);
         }}
       >
-        <RadioButtonGroup.CustomButton value="padding" label="Enabled" />
-        <RadioButtonGroup.CustomButton value="" label="Disabled" />
-      </RadioButtonGroup>
+        <RadioButton value="padding" label="Enabled" />
+        <RadioButton value="" label="Disabled" />
+      </RadioGroup>
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

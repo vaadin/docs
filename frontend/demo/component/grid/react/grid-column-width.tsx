@@ -9,7 +9,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 function Example() {
-    const [items, setItems] = useState<Person[]>([]);
+  const [items, setItems] = useState<Person[]>([]);
   useEffect(() => {
     getPeople().then(({ people }) =>
       setItems(

@@ -1,7 +1,8 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import getDaysInMonth from 'date-fns/getDaysInMonth';
 
 function Example() {
   const months = [
@@ -46,9 +47,9 @@ function Example() {
           label="Year"
           style={{ width: '6em' }}
           items={years}
-          value={selectedYear}
+          value={String(selectedYear)}
           onValueChanged={(e) => {
-            setSelectedYear(e.detail.value!);
+            setSelectedYear(parseInt(e.detail.value));
             setSelectedMonth(undefined);
             setSelectedDay(undefined);
           }}
@@ -61,7 +62,7 @@ function Example() {
           value={selectedMonth}
           disabled={!selectedYear}
           onValueChanged={(e) => {
-            setSelectedMonth(e.detail.value!);
+            setSelectedMonth(e.detail.value);
             setSelectedDay(undefined);
           }}
         />
@@ -70,9 +71,9 @@ function Example() {
           label="Day"
           style={{ width: '5em' }}
           items={selectableDays}
-          value={selectedDay}
+          value={String(selectedDay)}
           disabled={!selectedYear || !selectedMonth}
-          onValueChanged={(e) => setSelectedDay(e.detail.value!)}
+          onValueChanged={(e) => setSelectedDay(parseInt(e.detail.value))}
         />
       </HorizontalLayout>
       {/* end::snippet[] */}
@@ -80,4 +81,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { RichTextEditor } from '@hilla/react-components/RichTextEditor.js';
-import templates from '../../../../src/main/resources/data/templates.json';
+import templates from '../../../../../src/main/resources/data/templates.json';
 
 function Example() {
   const [richText, setRichText] = useState(templates.richTextDelta);
@@ -19,4 +19,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

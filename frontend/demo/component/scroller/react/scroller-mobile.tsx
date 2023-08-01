@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
@@ -7,6 +7,7 @@ import '@vaadin/icons';
 import { Scroller } from '@hilla/react-components/Scroller.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import { Button } from '@hilla/react-components/Button.js';
 
 function Example() {
   return (
@@ -40,4 +41,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

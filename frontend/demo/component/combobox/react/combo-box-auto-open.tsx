@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
@@ -26,4 +26,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

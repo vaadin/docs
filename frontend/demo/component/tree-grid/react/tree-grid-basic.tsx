@@ -1,12 +1,19 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
+import {
+  Grid,
+  type GridDataProviderCallback,
+  type GridDataProviderParams,
+} from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { GridTreeColumn } from '@hilla/react-components/GridTreeColumn.js'; // hidden-source-line
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-async function dataProvider(params) {
+async function dataProvider(
+  params: GridDataProviderParams<Person>,
+  callback: GridDataProviderCallback<Person>
+) {
   // The requested page and the full length of the corresponding
   // hierarchy level is requested from the data service
   const { people, hierarchyLevelSize } = await getPeople({
@@ -15,16 +22,12 @@ async function dataProvider(params) {
     managerId: params.parentItem ? params.parentItem.id : null,
   });
 
-  params.successCallback(people, hierarchyLevelSize);
+  callback(people, hierarchyLevelSize);
 }
 
 function Example() {
   return (
-    <Grid
-      itemHasChildrenPath="manager" // hidden-source-line
-      columnReorderingAllowed // hidden-source-line
-      .dataProvider={dataProvider}
-    >
+    <Grid itemHasChildrenPath="manager" dataProvider={dataProvider}>
       <GridTreeColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="email" />
@@ -32,4 +35,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

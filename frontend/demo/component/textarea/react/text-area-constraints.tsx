@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { TextArea } from '@hilla/react-components/TextArea.js';
 
@@ -8,8 +8,8 @@ function Example() {
       {/* tag::snippet[] */}
       <TextArea
         required
-        minLength={5}
-        maxLength={50}
+        minlength={5}
+        maxlength={50}
         pattern="^[A-Z]([A-Za-z0-9,-\s])*\.$"
         allowedCharPattern="[A-Za-z0-9,.-\s]"
         label="Sentence"
@@ -21,4 +21,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

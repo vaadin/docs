@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { AppLayout } from '@hilla/react-components/AppLayout.js';
 import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
@@ -63,4 +63,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

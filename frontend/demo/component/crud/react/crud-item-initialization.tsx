@@ -1,6 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
-import { Crud } from '@hilla/react-components/Crud.js';
+import { Crud, type CrudNewEvent } from '@hilla/react-components/Crud.js';
 import { EmailField } from '@hilla/react-components/EmailField.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -8,18 +8,19 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
   const crudRef = useRef(null);
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<Person[]>([]);
+  const [editedItem, setEditedItem] = useState<Partial<Person> | undefined>(undefined);
 
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
-  const handleNewItem = (event) => {
+  const handleNewItem = (event: CrudNewEvent) => {
     event.preventDefault();
-    crudRef.current.editedItem = {
+    setEditedItem({
       email: '@vaadin.com',
       profession: 'Developer',
-    };
+    });
   };
 
   return (
@@ -28,7 +29,8 @@ function Example() {
       <Crud
         include="firstName, lastName, email, profession"
         items={items}
-        onNewItem={handleNewItem}
+        editedItem={editedItem}
+        onNew={handleNewItem}
         ref={crudRef}
       >
         <GridColumn path="firstName" />
@@ -41,4 +43,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

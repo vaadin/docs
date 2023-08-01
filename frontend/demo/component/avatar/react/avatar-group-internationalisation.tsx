@@ -1,26 +1,22 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { AvatarGroup } from '@hilla/react-components/AvatarGroup.js';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { AvatarGroup, type AvatarGroupI18n } from '@hilla/react-components/AvatarGroup.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 // tag::snippet[]
+
+const i18n: AvatarGroupI18n = {
+  anonymous: 'Anonyymi',
+  activeUsers: {
+    one: 'Yksi käyttäjä aktiivisena',
+    many: '{count} käyttäjää aktiivisena',
+  },
+  joined: 'liittyi',
+  left: 'lähti',
+};
+
 function Example() {
-  const [items, setItems] = useState<{ name: string }[]>([]);
-  const [i18n, setI18n] = useState<{
-    anonymous: string;
-    activeUsers: { one: string; many: string };
-    joined: string;
-    left: string;
-  }>({
-    anonymous: 'Anonyymi',
-    activeUsers: {
-      one: 'Yksi käyttäjä aktiivisena',
-      many: '{count} käyttäjää aktiivisena',
-    },
-    joined: 'liittyi',
-    left: 'lähti',
-  });
+  const [items, setItems] = useState<Array<{ name: string }>>([]);
 
   useEffect(() => {
     getPeople({ count: 2 }).then(({ people }) => {
@@ -58,4 +54,4 @@ function Example() {
 }
 // end::snippet[]
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

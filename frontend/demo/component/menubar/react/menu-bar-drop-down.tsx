@@ -1,7 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { MenuBar } from '@hilla/react-components/MenuBar.js';
-import { MenuItem } from '@hilla/react-components/MenuItem.js';
 
 function Example() {
   // tag::snippet[]
@@ -20,10 +19,10 @@ function Example() {
   // end::snippet[]
 
   return (
-    // tag::snippethtml[]
+    // tag::snippet[]
     <MenuBar items={items}></MenuBar>
-    // end::snippethtml[]
+    // end::snippet[]
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

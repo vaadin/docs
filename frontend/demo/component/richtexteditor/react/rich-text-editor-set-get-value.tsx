@@ -1,20 +1,23 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState, useRef } from 'react';
 import { RichTextEditor } from '@hilla/react-components/RichTextEditor.js';
-import { TextArea } from '@hilla/react-components/TextArea.js';
-import type { RichTextEditorChangeEvent } from '@hilla/react-components/RichTextEditor.js';
+import { TextArea, type TextAreaChangeEvent } from '@hilla/react-components/TextArea.js';
+import type {
+  RichTextEditorElement,
+  RichTextEditorValueChangedEvent,
+} from '@hilla/react-components/RichTextEditor.js';
 
 function Example() {
   const [htmlValue, setHtmlValue] = useState('');
   const [deltaValue, setDeltaValue] = useState('');
 
-  const richTextEditorRef = useRef<RichTextEditor>(null);
+  const richTextEditorRef = useRef<RichTextEditorElement>(null);
 
-  const handleEditorChange = (event: RichTextEditorChangeEvent) => {
+  const handleEditorChange = (event: RichTextEditorValueChangedEvent) => {
     setDeltaValue(event.detail.value);
   };
 
-  const handleHtmlChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleHtmlChange = (event: TextAreaChangeEvent) => {
     const value = event.target.value;
     setHtmlValue(value);
     if (richTextEditorRef.current) {
@@ -53,4 +56,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

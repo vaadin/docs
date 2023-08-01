@@ -1,25 +1,25 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Tabsheet } from '@hilla/react-components/Tabsheet.js';
+import { TabSheet } from '@hilla/react-components/TabSheet.js';
+import { Tabs } from '@hilla/react-components/Tabs.js';
+import { Tab } from '@hilla/react-components/Tab.js';
 
 // tag::snippet[]
 function Example() {
   return (
-    <Tabsheet theme="bordered">
-      <Tabsheet.Tabs>
-        <Tabsheet.Tab id="dashboard-tab">Dashboard</Tabsheet.Tab>
-        <Tabsheet.Tab id="payment-tab">Payment</Tabsheet.Tab>
-        <Tabsheet.Tab id="shipping-tab">Shipping</Tabsheet.Tab>
-      </Tabsheet.Tabs>
+    <TabSheet theme="bordered">
+      <Tabs>
+        <Tab id="dashboard-tab">Dashboard</Tab>
+        <Tab id="payment-tab">Payment</Tab>
+        <Tab id="shipping-tab">Shipping</Tab>
+      </Tabs>
 
-      <Tabsheet.TabItem for="dashboard-tab">This is the Dashboard tab content</Tabsheet.TabItem>
-
-      <Tabsheet.TabItem for="payment-tab">This is the Payment tab content</Tabsheet.TabItem>
-
-      <Tabsheet.TabItem for="shipping-tab">This is the Shipping tab content</Tabsheet.TabItem>
-    </Tabsheet>
+      <div {...{ for: 'dashboard-tab' }}>This is the Dashboard tab content</div>
+      <div {...{ for: 'payment-tab' }}>This is the Payment tab content</div>
+      <div {...{ for: 'shipping-tab' }}>This is the Shipping tab content</div>
+    </TabSheet>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line
 // end::snippet[]

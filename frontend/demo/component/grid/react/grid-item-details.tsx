@@ -1,14 +1,15 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState, useEffect } from 'react';
 import { Grid } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { FormLayout } from '@hilla/react-components/FormLayout.js';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { getPeople } from 'Frontend/demo/domain/DataService.js';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
-  const [items, setItems] = useState([]);
-  const [detailsOpenedItem, setDetailsOpenedItem] = useState([]);
+  const [items, setItems] = useState<Person[]>([]);
+  const [detailsOpenedItem, setDetailsOpenedItem] = useState<Person[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -30,8 +31,7 @@ function Example() {
         onActiveItemChanged={({ detail: { value } }) => {
           setDetailsOpenedItem(value ? [value] : []);
         }}
-      >
-        {(person) => (
+        rowDetailsRenderer={({ item: person }) => (
           <>
             <GridColumn path="displayName" header="Name" />
 
@@ -41,19 +41,24 @@ function Example() {
               <GridColumn>
                 {() => (
                   <FormLayout responsiveSteps={[{ minWidth: '0', columns: 3 }]}>
-                    <TextField label="Email address" value={person.email} colspan={3} readonly />
+                    <TextField
+                      label="Email address"
+                      value={person.email}
+                      {...{ colspan: 3 }}
+                      readonly
+                    />
 
                     <TextField
                       label="Phone number"
                       value={person.address.phone}
-                      colspan={3}
+                      {...{ colspan: 3 }}
                       readonly
                     />
 
                     <TextField
                       label="Street address"
                       value={person.address.street}
-                      colspan={3}
+                      {...{ colspan: 3 }}
                       readonly
                     />
 
@@ -68,9 +73,9 @@ function Example() {
             )}
           </>
         )}
-      </Grid>
+      ></Grid>
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

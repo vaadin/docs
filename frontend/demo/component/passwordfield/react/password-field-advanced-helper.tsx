@@ -1,6 +1,9 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { PasswordField } from '@hilla/react-components/PasswordField.js';
+import {
+  PasswordField,
+  type PasswordFieldChangeEvent,
+} from '@hilla/react-components/PasswordField.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 
 type PasswordStrength = 'moderate' | 'strong' | 'weak';
@@ -17,7 +20,7 @@ function Example() {
 
   const pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*';
 
-  function onPasswordChanged(event: React.ChangeEvent<HTMLInputElement>) {
+  function onPasswordChanged(event: PasswordFieldChangeEvent) {
     let strength: PasswordStrength = 'weak';
     const { value } = event.target;
     if (value) {
@@ -54,4 +57,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

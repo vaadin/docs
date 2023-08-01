@@ -1,11 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState, useEffect } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
+import { Grid, type GridEventContext } from '@hilla/react-components/Grid.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { Icon } from '@hilla/react-components/Icon.js';
-import { GridEventContext } from '@hilla/react-components/Grid.js';
 import { Tooltip } from '@hilla/react-components/Tooltip.js';
 import { differenceInYears, parseISO } from 'date-fns';
 
@@ -19,7 +18,7 @@ function Example() {
   }, []);
 
   const tooltipGenerator = (context: GridEventContext<Person>): string => {
-    let text: string = '';
+    let text = '';
 
     const { column, item } = context;
     if (column && item) {
@@ -38,7 +37,7 @@ function Example() {
     return text;
   };
 
-  const statusRenderer = ({ status }: { status: string }) => {
+  const statusRenderer = ({ item: { status } }: { item: Person }) => {
     const icon = status === 'Available' ? 'check' : 'close-small';
     const theme = status === 'Available' ? 'success' : 'error';
 
@@ -66,4 +65,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

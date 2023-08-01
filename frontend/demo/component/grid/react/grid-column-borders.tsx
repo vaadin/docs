@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Avatar } from '@hilla/react-components/Avatar.js';
 import { Grid } from '@hilla/react-components/Grid.js';
@@ -22,7 +22,7 @@ function Example() {
           <Avatar
             img={item.pictureUrl}
             name={`${item.firstName} ${item.lastName}`}
-            alt="User avatar"
+            {...{ alt: 'User avatar' }}
           />
         )}
       </GridColumn>
@@ -33,4 +33,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

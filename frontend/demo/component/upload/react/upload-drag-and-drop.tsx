@@ -1,9 +1,9 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { FormLayout } from '@hilla/react-components/FormLayout.js';
+import { FormLayout, type FormLayoutResponsiveStep } from '@hilla/react-components/FormLayout.js';
 import { Upload } from '@hilla/react-components/Upload.js';
 
-const layoutSteps = [
+const layoutSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1, labelsPosition: 'top' },
   { minWidth: '520px', columns: 2, labelsPosition: 'top' },
 ];
@@ -27,4 +27,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

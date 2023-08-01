@@ -1,21 +1,33 @@
-React: import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { Icon } from '@hilla/react-components/Icon.js';
-import { Grid } from '@hilla/react-components/Grid.js';
+import {
+  Grid,
+  type GridDataProviderCallback,
+  type GridDataProviderParams,
+  type GridSorterDefinition,
+  type GridSorterDirection,
+} from '@hilla/react-components/Grid.js';
 import { GridSortColumn } from '@hilla/react-components/GridSortColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-function matchesTerm(value, searchTerm) {
+function matchesTerm(value: string, searchTerm: string) {
   return value.toLowerCase().includes(searchTerm.toLowerCase());
 }
 
-function compare(a, b, direction) {
+function compare(a: string, b: string, direction: GridSorterDirection) {
   return direction === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
 }
 
-async function fetchPeople(params) {
+async function fetchPeople(params: {
+  page: number;
+  pageSize: number;
+  searchTerm: string;
+  sortOrders: GridSorterDefinition[];
+}) {
   const { page, pageSize, searchTerm, sortOrders } = params;
   const { people } = await getPeople();
   let result = people.map((person) => ({
@@ -48,7 +60,10 @@ async function fetchPeople(params) {
 function Example() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const dataProvider = async (params) => {
+  const dataProvider = async (
+    params: GridDataProviderParams<Person>,
+    callback: GridDataProviderCallback<Person>
+  ) => {
     const { page, pageSize, sortOrders } = params;
 
     const { people, count } = await fetchPeople({
@@ -58,7 +73,7 @@ function Example() {
       searchTerm,
     });
 
-    return { items: people, size: count };
+    callback(people, count);
   };
 
   return (
@@ -80,4 +95,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

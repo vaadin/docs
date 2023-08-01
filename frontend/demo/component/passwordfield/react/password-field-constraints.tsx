@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { PasswordField } from '@hilla/react-components/PasswordField.js';
 
@@ -9,8 +9,8 @@ function Example() {
       <PasswordField
         allowedCharPattern="[A-Za-z0-9]"
         required
-        minLength={6}
-        maxLength={12}
+        minlength={6}
+        maxlength={12}
         label="Password"
         helperText="6 to 12 characters. Only letters A-Z and numbers supported."
       />
@@ -19,4 +19,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,8 +1,8 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
-import './master-content';
-import './detail-content';
+import MasterContent from './master-content';
+import DetailContent from './detail-content';
 
 function Example() {
   return (
@@ -17,4 +17,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,30 +1,53 @@
-import { reactExample } from 'Frontend/demo/react-example';
-import React from 'react';
-import { DatePicker } from '@hilla/react-components/DatePicker.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React, { useEffect, useRef } from 'react';
+import {
+  DatePicker,
+  type DatePickerElement,
+  type DatePickerDate,
+} from '@hilla/react-components/DatePicker.js';
 import { useState } from 'react';
-import { formatISO, parseISO } from 'date-fns';
+import dateFnsFormat from 'date-fns/format';
+import dateFnsParse from 'date-fns/parse';
+
+function formatDateIso8601(dateParts: DatePickerDate) {
+  const { year, month, day } = dateParts;
+  const date = new Date(year, month, day);
+
+  return dateFnsFormat(date, 'yyyy-MM-dd');
+}
+
+function parseDateIso8601(inputValue: string) {
+  const date = dateFnsParse(inputValue, 'yyyy-MM-dd', new Date());
+
+  return { year: date.getFullYear(), month: date.getMonth(), day: date.getDate() };
+}
 
 function Example() {
   const [selectedDateValue, setSelectedDateValue] = useState(
-    formatISO(new Date(), { representation: 'date' })
+    dateFnsFormat(new Date(), 'yyyy-MM-dd')
   );
 
-  const formatDateIso8601 = (dateString) => {
-    const date = parseISO(dateString);
-    return formatISO(date, { representation: 'date' });
-  };
+  const datePickerRef = useRef<DatePickerElement>(null);
+  useEffect(() => {
+    const datePicker = datePickerRef.current;
+    if (datePicker) {
+      datePicker.i18n = {
+        ...datePicker.i18n,
+        formatDate: formatDateIso8601,
+        parseDate: parseDateIso8601,
+      };
+    }
+  }, [datePickerRef]);
 
   return (
     <DatePicker
+      ref={datePickerRef}
       label="Select a date:"
       value={selectedDateValue}
       helperText="Date picker configured to use ISO 8601 format"
       onValueChanged={(event) => setSelectedDateValue(event.detail.value)}
-      i18n={{ formatDate: formatDateIso8601 }}
     />
   );
 }
 
-//# sourceMappingURL=DatePickerCustomFunctions.tsx.map
-
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

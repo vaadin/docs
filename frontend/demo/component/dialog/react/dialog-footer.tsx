@@ -1,11 +1,13 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { Dialog } from '@hilla/react-components/Dialog.js';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
   const [dialogOpened, setDialogOpened] = useState(false);
-  const [user, setUser] = useState<Person | undefined>();
+  const [user, setUser] = useState<Person>();
 
   React.useEffect(() => {
     getPeople({ count: 1 }).then(({ people }) => {
@@ -30,10 +32,7 @@ function Example() {
         onOpenedChanged={(event) => {
           setDialogOpened(event.detail.value);
         }}
-      >
-        {() => <>Are you sure you want to delete this user permanently?</>}
-
-        {() => (
+        footerRenderer={() => (
           <>
             {/* The following code is the dialog footer */}
             <Button theme="primary error" onClick={close} style={{ marginRight: 'auto' }}>
@@ -44,6 +43,8 @@ function Example() {
             </Button>
           </>
         )}
+      >
+        {() => <>Are you sure you want to delete this user permanently?</>}
       </Dialog>
       {/* end::snippet[] */}
 
@@ -52,4 +53,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

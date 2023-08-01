@@ -1,11 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
+import { Grid, type GridDropEvent, type GridDragStartEvent } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { Avatar } from '@hilla/react-components/Avatar.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { DragStartEvent, DropEvent } from '@hilla/react-components/GridEvents';
 
 function Example() {
   const [items, setItems] = React.useState<Person[]>([]);
@@ -15,7 +14,7 @@ function Example() {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
-  function handleDragStart(event: DragStartEvent<Person>): void {
+  function handleDragStart(event: GridDragStartEvent<Person>): void {
     setDraggedItem(event.detail.draggedItems[0]);
   }
 
@@ -23,7 +22,7 @@ function Example() {
     setDraggedItem(undefined);
   }
 
-  function handleDrop(event: DropEvent<Person>): void {
+  function handleDrop(event: GridDropEvent<Person>): void {
     const { dropTargetItem, dropLocation } = event.detail;
     // Only act when dropping on another item
     if (draggedItem && dropTargetItem !== draggedItem) {
@@ -45,21 +44,16 @@ function Example() {
         items={items}
         draggable
         dropMode="between"
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDrop={handleDrop}
+        onGridDragstart={handleDragStart}
+        onGridDragend={handleDragEnd}
+        onGridDrop={handleDrop}
       >
-        <GridColumn
-          header="Image"
-          flexGrow={0}
-          autoWidth
-          // @ts-ignore - `renderer` missing in current typings
-        >
-          {(person) => (
+        <GridColumn header="Image" flexGrow={0} autoWidth>
+          {({ item: person }) => (
             <Avatar
               img={person.pictureUrl}
               name={`${person.firstName} ${person.lastName}`}
-              alt="User avatar"
+              {...{ alt: 'User avatar' }}
             />
           )}
         </GridColumn>
@@ -73,4 +67,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

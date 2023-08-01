@@ -1,4 +1,4 @@
-React: import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Grid } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
@@ -11,22 +11,15 @@ function Example() {
       <ContextMenu
         items={[
           { text: 'View' },
-          <hr />,
+          { component: 'hr' },
           { text: 'Edit' },
           { text: 'Delete' },
-          <hr />,
+          { component: 'hr' },
           { text: 'Email' },
           { text: 'Call' },
         ]}
       >
-        <Grid
-          allRowsVisible
-          onContextMenu={({ target }) => {
-            if (target.section !== 'body') {
-              return false;
-            }
-          }}
-        >
+        <Grid allRowsVisible>
           <GridColumn path="firstName" />
           <GridColumn path="lastName" />
           <GridColumn path="email" />

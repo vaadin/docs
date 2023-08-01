@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { Crud } from '@hilla/react-components/Crud.js';
 import { Grid } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
@@ -7,6 +7,7 @@ import { EmailField } from '@hilla/react-components/EmailField.js';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import React, { useEffect, useState } from 'react';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippetreact[]
 function Example() {
@@ -57,11 +58,11 @@ function Example() {
         <GridColumn path="profession" header="Ammatti" />
       </Grid>
       <div slot="form">
-        <TextField path="firstName" label="Etunimi" required />
-        <TextField path="lastName" label="Sukunimi" required />
-        <EmailField path="email" label="Sähköposti" required />
+        <TextField {...{ path: 'firstName' }} label="Etunimi" required />
+        <TextField {...{ path: 'lastName' }} label="Sukunimi" required />
+        <EmailField {...{ path: 'email' }} label="Sähköposti" required />
         <ComboBox
-          path="profession"
+          {...{ path: 'profession' }}
           label="Ammatti"
           items={[...new Set(items.map((i) => i.profession))]}
         />
@@ -71,4 +72,4 @@ function Example() {
 }
 // end::snippetreact[]
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

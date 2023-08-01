@@ -1,7 +1,8 @@
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { ComboBox } from '@hilla/react-components/ComboBox.js';
-import { Button } from '@hilla/react-components/Button.js';
+import { ComboBox, type ComboBoxChangeEvent } from '@hilla/react-components/ComboBox.js';
+import { Button, type ButtonElement } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 
@@ -10,8 +11,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 type Profession = string;
 
 function Example() {
-  const [items, setItems] = useState<readonly Profession[]>([]);
-  const [selectedProfessions, setSelectedProfessions] = useState<readonly Profession[]>([]);
+  const [items, setItems] = useState<Profession[]>([]);
+  const [selectedProfessions, setSelectedProfessions] = useState<Profession[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -20,7 +21,7 @@ function Example() {
     });
   }, []);
 
-  const onChange = (event: React.ChangeEvent<any>) => {
+  const onChange = (event: ComboBoxChangeEvent<Profession>) => {
     const { value } = event.target;
 
     if (value) {
@@ -30,7 +31,7 @@ function Example() {
     }
   };
 
-  const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const onClick = (event: React.MouseEvent<ButtonElement>) => {
     const profession = event.currentTarget.dataset.profession;
 
     if (profession) {
@@ -44,7 +45,7 @@ function Example() {
 
       <HorizontalLayout style={{ flexWrap: 'wrap' }} theme="spacing">
         {selectedProfessions.map((profession) => (
-          <span key={profession} theme="badge pill contrast">
+          <span key={profession} {...{ theme: 'badge pill contrast' }}>
             <span>{profession}</span>
             <Button
               aria-label={`Clear filter: ${profession}`}
@@ -63,4 +64,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Crud } from '@hilla/react-components/Crud.js';
-import { Grid } from '@hilla/react-components/Grid.js';
+import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -19,7 +19,7 @@ function Example() {
   }
 
   function onDblClick(e: MouseEvent) {
-    const target = e.currentTarget as Grid<Person>;
+    const target = e.currentTarget as GridElement<Person>;
     setEditedItem(target.getEventContext(e).item);
   }
 
@@ -27,12 +27,12 @@ function Example() {
     <>
       {/* tag::snippet[] */}
       <Crud
-        include={['firstName', 'lastName', 'email', 'profession']}
+        include="firstName, lastName, email, profession"
         items={items}
         editedItem={editedItem}
         onEditedItemChanged={onEditedItemChanged}
       >
-        <Grid slot="grid" onDblClick={onDblClick}>
+        <Grid slot="grid" ondblclick={onDblClick}>
           <GridColumn path="firstName" header="First name" />
           <GridColumn path="lastName" header="Last name" />
           <GridColumn path="email" header="Email" />
@@ -44,4 +44,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -32,7 +32,6 @@ function employeeRenderer({ item: person }: { item: Person }) {
   );
 }
 
-
 function birthdayRenderer({ item: person }: { item: Person }) {
   const birthday = parseISO(person.birthday);
   return (

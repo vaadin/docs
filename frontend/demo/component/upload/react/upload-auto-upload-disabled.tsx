@@ -1,12 +1,15 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useRef, useEffect } from 'react';
-import { Upload } from '@hilla/react-components/Upload.js';
+import { Upload, type UploadElement } from '@hilla/react-components/Upload.js';
 import { createFakeFilesUploadAutoUploadDisabled } from './upload-demo-mock-files'; // hidden-source-line
 
 function Example() {
-  const uploadRef = useRef();
+  const uploadRef = useRef<UploadElement>(null);
 
   useEffect(() => {
+    if (!uploadRef.current) {
+      return;
+    }
     uploadRef.current.i18n.addFiles.many = 'Select Files...';
     uploadRef.current.i18n = { ...uploadRef.current.i18n };
   }, []);
@@ -14,4 +17,4 @@ function Example() {
   return <Upload noAuto ref={uploadRef} files={createFakeFilesUploadAutoUploadDisabled()}></Upload>;
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

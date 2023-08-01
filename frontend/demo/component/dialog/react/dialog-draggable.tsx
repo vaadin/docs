@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Dialog } from '@hilla/react-components/Dialog.js';
 import { Button } from '@hilla/react-components/Button.js';
@@ -43,7 +43,16 @@ function Example() {
             Add note
           </h2>
         )}
-        contentRenderer={() => (
+        footerRenderer={() => (
+          <>
+            <Button onClick={close}>Cancel</Button>
+            <Button theme="primary" onClick={close}>
+              Add note
+            </Button>
+          </>
+        )}
+      >
+        {() => (
           <VerticalLayout
             theme="spacing"
             style={{ width: '300px', maxWidth: '100%', alignItems: 'stretch' }}
@@ -54,19 +63,11 @@ function Example() {
             </VerticalLayout>
           </VerticalLayout>
         )}
-        footerRenderer={() => (
-          <>
-            <Button onClick={close}>Cancel</Button>
-            <Button theme="primary" onClick={close}>
-              Add note
-            </Button>
-          </>
-        )}
-      />
+      </Dialog>
       {/* end::snippet[] */}
       <Button onClick={open}>Show dialog</Button>
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

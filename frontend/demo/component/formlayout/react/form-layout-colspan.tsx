@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { DatePicker } from '@hilla/react-components/DatePicker.js';
 import { FormLayout } from '@hilla/react-components/FormLayout.js';
@@ -7,7 +7,7 @@ import { TextField } from '@hilla/react-components/TextField.js';
 
 function Example() {
   const responsiveSteps = [
-    { minWidth: 0, columns: 1 },
+    { minWidth: '0', columns: 1 },
     { minWidth: '20em', columns: 3 },
   ];
 
@@ -15,7 +15,7 @@ function Example() {
     <>
       <FormLayout responsiveSteps={responsiveSteps}>
         {/* tag::snippet[] */}
-        <TextField label="Title" colspan={3} />
+        <TextField label="Title" {...{ colspan: 3 }} />
         {/* end::snippet[] */}
         <DatePicker label="Date" />
         <TimePicker label="From" />
@@ -25,4 +25,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

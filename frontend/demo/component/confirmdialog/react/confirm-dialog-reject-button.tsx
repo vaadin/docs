@@ -1,14 +1,17 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
-import { ConfirmDialog } from '@hilla/react-components/ConfirmDialog.js';
+import {
+  ConfirmDialog,
+  type ConfirmDialogOpenedChangedEvent,
+} from '@hilla/react-components/ConfirmDialog.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 
 function Example() {
   const [dialogOpened, setDialogOpened] = useState(false);
   const [status, setStatus] = useState('');
 
-  const openedChanged = (e: any) => {
+  const openedChanged = (e: ConfirmDialogOpenedChangedEvent) => {
     setDialogOpened(e.detail.value);
     if (e.detail.value) {
       setStatus('');
@@ -51,4 +54,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

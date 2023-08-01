@@ -8,11 +8,12 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <ComboBox allowCustomValue label="Browser" helperText="Select or type a browser">
-        {items.map((item) => (
-          <ComboBox.Item key={item} value={item} />
-        ))}
-      </ComboBox>
+      <ComboBox
+        allowCustomValue
+        label="Browser"
+        helperText="Select or type a browser"
+        items={items}
+      ></ComboBox>
       {/* end::snippet[] */}
     </>
   );

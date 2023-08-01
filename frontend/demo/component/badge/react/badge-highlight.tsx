@@ -1,16 +1,20 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Grid } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService';
-import { formatDate } from 'Frontend/demo/domain/formatDate';
-import { Badge } from '@hilla/react-components/Badge.js';
 import type Report from 'Frontend/generated/com/vaadin/demo/domain/Report';
 
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+
 function Example() {
-  const [items, setItems] = useState<readonly Report[]>([]);
+  const [items, setItems] = useState<Report[]>([]);
   useEffect(() => {
-    getReports().then((reports) => setItems(reports));
+    getReports().then((reports) => setItems(reports as Report[]));
   }, []);
 
   return (
@@ -20,7 +24,7 @@ function Example() {
         <GridColumn path="report" header="Report" />
 
         <GridColumn header="Due date">
-          {({ item: report }) => <span>{formatDate(new Date(report.due))}</span>}
+          {({ item: report }) => <span>{dateFormatter.format(new Date(report.due))}</span>}
         </GridColumn>
 
         <GridColumn path="assignee" header="Assignee" />
@@ -49,7 +53,7 @@ function Example() {
                 break;
             }
 
-            return <Badge {...{ theme: `badge ${theme} primary` }}>{title}</Badge>;
+            return <span {...{ theme: `badge ${theme} primary` }}>{title}</span>;
           }}
         </GridColumn>
       </Grid>
@@ -58,4 +62,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

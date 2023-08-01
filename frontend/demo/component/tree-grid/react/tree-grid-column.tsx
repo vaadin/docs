@@ -1,6 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
+import {
+  Grid,
+  type GridDataProviderCallback,
+  type GridDataProviderParams,
+} from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { GridTreeColumn } from '@hilla/react-components/GridTreeColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -10,20 +14,27 @@ import { Button } from '@hilla/react-components/Button.js';
 
 function Example() {
   const [managers, setManagers] = useState<Person[]>([]);
-  const [expandedItems, setExpandedItems] = useState<unknown[]>([]);
+  const [expandedItems, setExpandedItems] = useState<Person[]>([]);
 
   useEffect(() => {
     getPeople({ count: 10 }).then(({ people }) => setManagers(people));
   }, []);
 
-  const dataProvider = async (_params, callback) => {
-    const { people } = await getPeople({
-      count: _params.pageSize,
-      startIndex: _params.page * _params.pageSize,
-      managerId: _params.parentItem ? _params.parentItem.id : null,
+  const dataProvider = async (
+    params: GridDataProviderParams<Person>,
+    callback: GridDataProviderCallback<Person>
+  ) => {
+    const { people, hierarchyLevelSize } = await getPeople({
+      count: params.pageSize,
+      startIndex: params.page * params.pageSize,
+      managerId: params.parentItem ? params.parentItem.id : null,
     });
 
-    callback({ items: people, size: 1000 });
+    if (!params.parentItem) {
+      setManagers(people);
+    }
+
+    callback(people, hierarchyLevelSize);
   };
 
   const expandAll = () => {
@@ -48,8 +59,8 @@ function Example() {
 
       <Grid
         dataProvider={dataProvider}
-        key="id"
-        itemHasChildren={({ item }) => item.manager}
+        itemIdPath="id"
+        itemHasChildrenPath="manager"
         expandedItems={expandedItems}
       >
         <GridTreeColumn path="firstName" />
@@ -61,4 +72,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

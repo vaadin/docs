@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
 
@@ -8,7 +8,7 @@ function Example() {
       {/* tag::snippet[] */}
       <ComboBox
         required
-        charPattern="[A-Z]"
+        allowedCharPattern="[A-Z]"
         label="Country code"
         helperText="2-letter uppercase ISO country code"
         allowCustomValue
@@ -19,4 +19,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,9 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Iconset } from '@hilla/react-components/Iconset.js';
 import { Notification } from '@hilla/react-components/Notification.js';
+import { Icon } from '@hilla/react-components/Icon.js';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
@@ -30,7 +31,7 @@ function Example() {
             onClick={() => setNotificationOpened(false)}
             aria-label="Close"
           >
-            <Iconset icon="lumo:cross" />
+            <Icon icon="lumo:cross" />
           </Button>
         </HorizontalLayout>
       </Notification>
@@ -39,4 +40,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

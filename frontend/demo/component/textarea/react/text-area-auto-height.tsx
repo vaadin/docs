@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { TextArea } from '@hilla/react-components/TextArea.js';
-import { loremIpsum } from '.../../../../../src/main/resources/data/templates.json';
+import { loremIpsum } from '../../../../../src/main/resources/data/templates.json';
 
 function Example() {
   return (
@@ -13,4 +13,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Crud } from '@hilla/react-components/Crud.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -16,4 +16,4 @@ function Example() {
   return <Crud include="firstName, lastName, profession" noSort noFilter items={items} />;
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,8 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Crud } from '@hilla/react-components/Crud.js';
-import { DatePicker } from '@hilla/react-components/DatePicker.js';
-import { EmailField } from '@hilla/react-components/EmailField.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -15,22 +13,14 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <Crud items={items}>
-        <Crud.Column
-          exclude={[
-            'lastName',
-            'address',
-            'id',
-            'subscribe',
-            'membership',
-            'pictureUrl',
-            'manager',
-          ]}
-        />
-      </Crud>
+      {/* Use 'include' or 'exclude' to select which fields to show */}
+      <Crud
+        items={items}
+        exclude="lastName, address, id, subscribe, membership, pictureUrl, manager"
+      />
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

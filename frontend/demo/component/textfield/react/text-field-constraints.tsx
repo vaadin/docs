@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { TextField } from '@hilla/react-components/TextField.js';
 
@@ -8,8 +8,8 @@ function Example() {
       {/* tag::snippet[] */}
       <TextField
         required
-        minLength={5}
-        maxLength={18}
+        minlength={5}
+        maxlength={18}
         pattern="^[+]?[(]?[0-9]{3}[)]?[-s.]?[0-9]{3}[-s.]?[0-9]{4,6}$"
         allowedCharPattern="[0-9()+-]"
         label="Phone number"
@@ -20,4 +20,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

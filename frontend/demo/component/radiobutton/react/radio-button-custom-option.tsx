@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
@@ -7,6 +7,7 @@ import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
 
 import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { getCards } from 'Frontend/demo/domain/DataService';
+import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 
 function Example() {
   const [value, setValue] = useState<string>();
@@ -31,16 +32,14 @@ function Example() {
         }}
       >
         {items.map((card) => (
-          <RadioButton
-            value={String(card.id)}
-            key={card.id}
-            renderLabel={() => (
-              <span>
+          <RadioButton value={String(card.id)} key={card.id}>
+            <label slot="label">
+              <HorizontalLayout theme="spacing">
                 <img src={card.pictureUrl} alt={card.name} style={{ height: '1em' }} />
-                {card.accountNumber}
-              </span>
-            )}
-          />
+                <span>${card.accountNumber}</span>
+              </HorizontalLayout>
+            </label>
+          </RadioButton>
         ))}
         <RadioButton value="-1" label="Other" />
       </RadioGroup>
@@ -51,4 +50,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

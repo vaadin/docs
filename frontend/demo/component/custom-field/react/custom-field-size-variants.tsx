@@ -1,13 +1,13 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useRef, useEffect } from 'react';
 import { CustomField } from '@hilla/react-components/CustomField.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Select } from '@hilla/react-components/Select.js';
-import { TextField } from '@hilla/react-components/TextField.js';
+import { Select, type SelectElement } from '@hilla/react-components/Select.js';
+import { TextField, type TextFieldElement } from '@hilla/react-components/TextField.js';
 
 function Example() {
-  const amountRef = useRef<TextField>(null);
-  const currencyRef = useRef<Select>(null);
+  const amountRef = useRef<TextFieldElement>(null);
+  const currencyRef = useRef<SelectElement>(null);
 
   useEffect(() => {
     amountRef.current?.focusElement?.setAttribute('title', 'Amount');
@@ -41,4 +41,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

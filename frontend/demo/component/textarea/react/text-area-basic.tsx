@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { TextArea } from '@hilla/react-components/TextArea.js';
 
@@ -11,7 +11,7 @@ function Example() {
       {/* tag::snippet[] */}
       <TextArea
         label="Comment"
-        maxLength={charLimit}
+        maxlength={charLimit}
         value={text}
         helperText={`${text.length}/${charLimit}`}
         onValueChanged={(event) => {
@@ -23,4 +23,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

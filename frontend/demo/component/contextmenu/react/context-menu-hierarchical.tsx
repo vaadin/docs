@@ -1,7 +1,8 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { ContextMenu, MenuItem } from '@hilla/react-components/ContextMenu.js';
+import { ContextMenu } from '@hilla/react-components/ContextMenu.js';
 import { Grid } from '@hilla/react-components/Grid.js';
+import { GridColumn } from '@hilla/react-components/GridColumn.js';
 
 interface FileItem {
   name: string;
@@ -31,22 +32,11 @@ const Example: React.FC = () => {
     { name: 'Financials.xlsx', size: '42 MB' },
   ];
 
-  const onContextMenu = (e: React.MouseEvent<HTMLElement>, context: Grid<FileItem>) => {
-    // Prevent opening context menu on header row.
-    if (context.getEventContext(e).section !== 'body') {
-      e.stopPropagation();
-    }
-  };
-
   return (
     <>
       {/* tag::snippet[] */}
       <ContextMenu items={items}>
-        <Grid
-          allRowsVisible
-          items={gridItems}
-          onContextMenu={(e, context) => onContextMenu(e, context)}
-        >
+        <Grid allRowsVisible items={gridItems}>
           <GridColumn path="name" />
           <GridColumn path="size" />
         </Grid>
@@ -56,4 +46,4 @@ const Example: React.FC = () => {
   );
 };
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

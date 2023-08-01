@@ -1,8 +1,9 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
+import { RadioButton } from '@hilla/react-components/RadioButton.js';
 
 function Example() {
   const [size, setSize] = useState('0');
@@ -28,4 +29,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

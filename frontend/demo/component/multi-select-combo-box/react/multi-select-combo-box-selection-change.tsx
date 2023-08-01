@@ -1,16 +1,15 @@
-import { reactExample } from 'Frontend/demo/react-example';
-import React, { useState } from 'react';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React, { useEffect, useState } from 'react';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { MultiSelectComboBox } from '@hilla/react-components/MultiSelectComboBox.js';
 import { TextArea } from '@hilla/react-components/TextArea.js';
-import type { SelectedItemsChangedEvent } from '@vaadin/multi-select-combo-box';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 function Example() {
   const [items, setItems] = useState<Country[]>([]);
-  useState(async () => {
-    setItems(await getCountries());
+  useEffect(() => {
+    getCountries().then((countries) => setItems(countries));
   }, []);
 
   const [selectedCountries, setSelectedCountries] = useState<Country[]>([]);
@@ -24,7 +23,7 @@ function Example() {
         itemIdPath="id"
         items={items}
         selectedItems={selectedCountries}
-        onSelectedItemsChanged={(event: SelectedItemsChangedEvent<Country>) => {
+        onSelectedItemsChanged={(event) => {
           setSelectedCountries(event.detail.value);
         }}
       />
@@ -34,4 +33,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

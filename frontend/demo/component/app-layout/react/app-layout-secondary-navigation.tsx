@@ -1,51 +1,108 @@
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { AppBar } from '@hilla/react-components/AppBar.js';
-import { Drawer } from '@hilla/react-components/Drawer.js';
+import { AppLayout } from '@hilla/react-components/AppLayout.js';
+import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
 import { Tabs } from '@hilla/react-components/Tabs.js';
 import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
-import { Toolbar } from '@hilla/react-components/Toolbar.js';
-import { Typography } from '@hilla/react-components/Typography.js';
+import '@vaadin/icons';
+
+const h1Style = {
+  fontSize: 'var(--lumo-font-size-l)',
+  lineHeight: 'var(--lumo-size-l)',
+  margin: '0 var(--lumo-space-m)',
+};
+
+const h2Style = {
+  fontSize: 'var(--lumo-font-size-l)',
+  margin: 0,
+};
+
+const iconStyle = {
+  marginInlineEnd: 'var(--lumo-space-m)',
+  padding: 'var(--lumo-space-xs)',
+};
 
 function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <AppBar position="sticky">
-        <Toolbar>
-          <Typography variant="h6" component="h1">
-            MyApp
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Drawer>
-        <Tabs orientation="vertical" value={1}>
-          <Tab label="Dashboard" icon={<Icon icon="vaadin:dashboard" />}></Tab>
-          <Tab label="Orders" icon={<Icon icon="vaadin:cart" />}></Tab>
-          <Tab label="Customers" icon={<Icon icon="vaadin:user-heart" />}></Tab>
-          <Tab label="Products" icon={<Icon icon="vaadin:package" />}></Tab>
-          <Tab label="Documents" icon={<Icon icon="vaadin:records" />}></Tab>
-          <Tab label="Tasks" icon={<Icon icon="vaadin:list" />}></Tab>
-          <Tab label="Analytics" icon={<Icon icon="vaadin:chart" />}></Tab>
+      <AppLayout primarySection="drawer">
+        <h1 slot="drawer" style={h1Style}>
+          MyApp
+        </h1>
+        <Tabs slot="drawer" selected={1} orientation="vertical">
+          <Tab>
+            <a tabIndex={-1}>
+              <Icon icon="vaadin:dashboard" style={iconStyle} />
+              <span>Dashboard</span>
+            </a>
+          </Tab>
+          <Tab>
+            <a tabIndex={-1}>
+              <Icon icon="vaadin:cart" style={iconStyle} />
+              <span>Orders</span>
+            </a>
+          </Tab>
+          {/* end::snippet[] */}
+          <Tab>
+            <a tabIndex={-1}>
+              <Icon icon="vaadin:user-heart" style={iconStyle} />
+              <span>Customers</span>
+            </a>
+          </Tab>
+          <Tab>
+            <a tabIndex={-1}>
+              <Icon icon="vaadin:package" style={iconStyle} />
+              <span>Products</span>
+            </a>
+          </Tab>
+          <Tab>
+            <a tabIndex={-1}>
+              <Icon icon="vaadin:records" style={iconStyle} />
+              <span>Documents</span>
+            </a>
+          </Tab>
+          <Tab>
+            <a tabIndex={-1}>
+              <Icon icon="vaadin:list" style={iconStyle} />
+              <span>Tasks</span>
+            </a>
+          </Tab>
+          <Tab>
+            <a tabIndex={-1}>
+              <Icon icon="vaadin:chart" style={iconStyle} />
+              <span>Analytics</span>
+            </a>
+          </Tab>
+          {/* tag::snippet[] */}
         </Tabs>
-      </Drawer>
-      <AppBar position="sticky">
-        <Toolbar>
-          <Drawer.Toggle></Drawer.Toggle>
-          <Typography variant="h6" component="h2">
-            Orders
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Tabs>
-        <Tab label="All"></Tab>
-        <Tab label="Open"></Tab>
-        <Tab label="Completed"></Tab>
-        <Tab label="Cancelled"></Tab>
-      </Tabs>
+        <div slot="navbar">
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <DrawerToggle />
+            <h2 style={h2Style}>Orders</h2>
+          </div>
+          <Tabs>
+            <Tab>
+              <a tabIndex={-1}>All</a>
+            </Tab>
+            <Tab>
+              <a tabIndex={-1}>Open</a>
+            </Tab>
+            {/* end::snippet[] */}
+            <Tab>
+              <a tabIndex={-1}>Completed</a>
+            </Tab>
+            <Tab>
+              <a tabIndex={-1}>Cancelled</a>
+            </Tab>
+            {/* tag::snippet[] */}
+          </Tabs>
+        </div>
+      </AppLayout>
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

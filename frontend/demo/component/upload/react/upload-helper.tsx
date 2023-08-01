@@ -1,6 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Upload } from '@hilla/react-components/Upload.js';
+import { Notification } from '@hilla/react-components/Notification.js';
 
 function Example() {
   const maxFileSizeInMB = 1;
@@ -39,4 +40,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

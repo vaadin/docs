@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
@@ -9,6 +9,14 @@ function Example() {
   const [isMac, setIsMac] = useState(
     /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform)
   );
+
+  const open = () => {
+    setNotificationOpened(true);
+  };
+
+  const close = () => {
+    setNotificationOpened(false);
+  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -24,14 +32,6 @@ function Example() {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [notificationOpened]);
-
-  const open = () => {
-    setNotificationOpened(true);
-  };
-
-  const close = () => {
-    setNotificationOpened(false);
-  };
 
   const renderer = () => (
     <HorizontalLayout style={{ alignItems: 'center' }}>
@@ -62,4 +62,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

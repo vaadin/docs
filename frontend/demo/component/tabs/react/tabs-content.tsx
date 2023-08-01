@@ -1,13 +1,14 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Tabs, Tab } from '@hilla/react-components/Tabs.js';
+import { Tabs, type TabsSelectedChangedEvent } from '@hilla/react-components/Tabs.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { Tab } from '@hilla/react-components/Tab.js';
 
 function Example() {
   const [value, setValue] = useState(0);
   const pages = ['Dashboard', 'Payment', 'Shipping'];
 
-  const selectedChanged = (e) => {
+  const selectedChanged = (e: TabsSelectedChangedEvent) => {
     setValue(e.detail.value);
   };
 
@@ -28,4 +29,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { Notification } from '@hilla/react-components/Notification.js';
 import React, { useEffect, useRef } from 'react';
 import { Upload } from '@hilla/react-components/Upload.js';
@@ -31,4 +31,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

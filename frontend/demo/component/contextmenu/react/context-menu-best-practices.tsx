@@ -1,8 +1,8 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Grid } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { contextMenuRenderer } from '@hilla/react-components/ContextMenu.js';
+import { ContextMenu } from '@hilla/react-components/ContextMenu.js';
 import { MenuBar } from '@hilla/react-components/MenuBar.js';
 
 interface FileItem {
@@ -17,32 +17,15 @@ function Example() {
     { name: 'Financials.xlsx', size: '42 MB' },
   ]);
 
-  const onContextMenu = (e: React.MouseEvent) => {
-    const target = e.currentTarget as Grid<FileItem>;
-    if (target.getEventContext(e).section !== 'body') {
-      e.stopPropagation();
-    }
-  };
-
   return (
     <>
       {/* tag::snippet[] */}
-      <ContextMenu .items={items}>
-        <Grid
-          allRowsVisible
-          items={gridItems}
-          onContextMenu={onContextMenu}
-        >
+      <ContextMenu items={items}>
+        <Grid allRowsVisible items={gridItems}>
           <GridColumn path="name" />
           <GridColumn path="size" />
-          <GridColumn
-            width="70px"
-            flexGrow={0}
-            
-          >
-            {() => (
-              <MenuBar items={items} theme="tertiary" />
-            )}
+          <GridColumn width="70px" flexGrow={0}>
+            {() => <MenuBar items={items} theme="tertiary" />}
           </GridColumn>
         </Grid>
       </ContextMenu>
@@ -51,7 +34,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
-
-    
-
+export default reactExample(Example); // hidden-source-line

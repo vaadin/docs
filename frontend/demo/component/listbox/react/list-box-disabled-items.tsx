@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { ListBox } from '@hilla/react-components/ListBox.js';
 import { Item } from '@hilla/react-components/Item.js';
@@ -7,7 +7,7 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <ListBox selected="0">
+      <ListBox selected={0}>
         <Item>In progress (2)</Item>
         <Item>Done (4)</Item>
         <Item disabled>Cancelled (0)</Item>
@@ -17,4 +17,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

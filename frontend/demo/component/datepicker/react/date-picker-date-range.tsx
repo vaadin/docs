@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { DatePicker } from '@hilla/react-components/DatePicker.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';

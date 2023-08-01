@@ -1,8 +1,20 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { AppLayout, DrawerToggle } from '@hilla/react-components/AppLayout.js';
-import { Tabs, Tab } from '@hilla/react-components/Tabs.js';
+import { AppLayout } from '@hilla/react-components/AppLayout.js';
+import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
+import { Tabs } from '@hilla/react-components/Tabs.js';
+import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+
+const h1Style = {
+  fontSize: 'var(--lumo-font-size-l)',
+  margin: 0,
+};
+
+const iconStyle = {
+  marginInlineEnd: 'var(--lumo-space-m)',
+  padding: 'var(--lumo-space-xs)',
+};
 
 function Example() {
   return (
@@ -10,48 +22,92 @@ function Example() {
       {/* tag::snippet[] */}
       <AppLayout primarySection="drawer">
         <DrawerToggle slot="navbar" />
-        <h1 slot="navbar">Dashboard</h1>
+        <h1 slot="navbar" style={h1Style}>
+          Dashboard
+        </h1>
         <Tabs slot="drawer" orientation="vertical">
           <Tab>
             <a tabIndex={-1}>
-              <Icon icon="vaadin:dashboard" />
+              <Icon
+                icon="vaadin:dashboard"
+                style={{
+                  ...iconStyle,
+                  boxSizing: 'border-box',
+                }}
+              />
               <span>Dashboard</span>
             </a>
           </Tab>
           <Tab>
             <a tabIndex={-1}>
-              <Icon icon="vaadin:cart" />
+              <Icon
+                icon="vaadin:cart"
+                style={{
+                  ...iconStyle,
+                  boxSizing: 'border-box',
+                }}
+              />
               <span>Orders</span>
             </a>
           </Tab>
           {/* end::snippet[] */}
           <Tab>
             <a tabIndex={-1}>
-              <Icon icon="vaadin:user-heart" />
+              <Icon
+                icon="vaadin:user-heart"
+                style={{
+                  ...iconStyle,
+                  boxSizing: 'border-box',
+                }}
+              />
               <span>Customers</span>
             </a>
           </Tab>
           <Tab>
             <a tabIndex={-1}>
-              <Icon icon="vaadin:package" />
+              <Icon
+                icon="vaadin:package"
+                style={{
+                  ...iconStyle,
+                  boxSizing: 'border-box',
+                }}
+              />
               <span>Products</span>
             </a>
           </Tab>
           <Tab>
             <a tabIndex={-1}>
-              <Icon icon="vaadin:records" />
+              <Icon
+                icon="vaadin:records"
+                style={{
+                  ...iconStyle,
+                  boxSizing: 'border-box',
+                }}
+              />
               <span>Documents</span>
             </a>
           </Tab>
           <Tab>
             <a tabIndex={-1}>
-              <Icon icon="vaadin:list" />
+              <Icon
+                icon="vaadin:list"
+                style={{
+                  ...iconStyle,
+                  boxSizing: 'border-box',
+                }}
+              />
               <span>Tasks</span>
             </a>
           </Tab>
           <Tab>
             <a tabIndex={-1}>
-              <Icon icon="vaadin:chart" />
+              <Icon
+                icon="vaadin:chart"
+                style={{
+                  ...iconStyle,
+                  boxSizing: 'border-box',
+                }}
+              />
               <span>Analytics</span>
             </a>
           </Tab>
@@ -63,4 +119,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

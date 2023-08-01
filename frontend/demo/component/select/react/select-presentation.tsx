@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { ListBox } from '@hilla/react-components/ListBox.js';
 import { Select } from '@hilla/react-components/Select.js';
@@ -9,7 +9,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 function Example() {
   const [people, setPeople] = useState<Person[]>([]);
   useEffect(() => {
-    getPeople({ count: 4 }).then(({ people }) => setPeople(people));
+    getPeople({ count: 4 }).then(({ people: items }) => setPeople(items));
   }, []);
 
   return (
@@ -26,7 +26,7 @@ function Example() {
                     alt={`Portrait of ${person.firstName} ${person.lastName}`}
                     style={{ width: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
                   />
-                  
+
                   <div>
                     {person.firstName} {person.lastName}
                     <div
@@ -49,4 +49,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

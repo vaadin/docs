@@ -1,14 +1,14 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useRef, useEffect, useState } from 'react';
 import { FormLayout } from '@hilla/react-components/FormLayout.js';
 import { FormItem } from '@hilla/react-components/FormItem.js';
-import { Select } from '@hilla/react-components/Select.js';
+import { Select, type SelectElement } from '@hilla/react-components/Select.js';
 import { CustomField } from '@hilla/react-components/CustomField.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 
 function Example() {
-  const monthFieldRef = useRef();
-  const yearFieldRef = useRef();
+  const monthFieldRef = useRef<SelectElement>(null);
+  const yearFieldRef = useRef<SelectElement>(null);
   const [months, setMonths] = useState(
     Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'))
   );
@@ -47,4 +47,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

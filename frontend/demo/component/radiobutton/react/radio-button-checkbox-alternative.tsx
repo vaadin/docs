@@ -1,9 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 import React from 'react';
 import { Checkbox } from '@hilla/react-components/Checkbox.js';
-import { RadioButtonGroup } from '@hilla/react-components/RadioButtonGroup.js';
+import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { RadioButton } from '@hilla/react-components/RadioButton.js';
 
 function Example() {
   return (
@@ -12,13 +13,13 @@ function Example() {
       <Checkbox checked>
         <label slot="label">Reply All by default (unchecked state not clear)</label>
       </Checkbox>
-      <RadioButtonGroup label="Default reply behavior" value="Reply">
+      <RadioGroup label="Default reply behavior" value="Reply">
         <RadioButton label="Reply" checked value="Reply" />
         <RadioButton label="Reply to all" value="Reply to all" />
-      </RadioButtonGroup>
+      </RadioGroup>
       {/* end::snippet[] */}
     </VerticalLayout>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

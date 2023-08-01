@@ -1,7 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
-import { Notification } from '@hilla/react-components/Notification.js';
+import {
+  Notification,
+  type NotificationOpenedChangedEvent,
+} from '@hilla/react-components/Notification.js';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
@@ -13,7 +16,7 @@ function Example() {
     notification.setAttribute('theme', 'contrast');
     setNotificationOpened(true);
 
-    const handleOpenChanged = (e) => {
+    const handleOpenChanged = (e: NotificationOpenedChangedEvent) => {
       if (!e.detail.value) {
         setNotificationOpened(false);
         notification.removeEventListener('opened-changed', handleOpenChanged);
@@ -30,4 +33,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

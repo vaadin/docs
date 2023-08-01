@@ -1,8 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { GridPro } from '@hilla/react-components/GridPro.js';
+import { GridPro, type GridProItemPropertyChangedEvent } from '@hilla/react-components/GridPro.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { Notification } from '@vaadin/notification';
+import { GridProEditColumn } from '@hilla/react-components/GridProEditColumn.js';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 
 export function Example() {
   const [items, setItems] = React.useState<Person[]>([]);
@@ -16,17 +18,20 @@ export function Example() {
     notification.setAttribute('theme', 'error');
   };
 
-  const itemPropertyListener = (event: CustomEvent<{ value: string; path: string }>) => {
+  const itemPropertyListener = (event: GridProItemPropertyChangedEvent<Person>) => {
     switch (event.detail.path) {
       case 'address.phone':
-        if (!/^[0-9-]+$/.test(event.detail.value)) {
+        if (typeof event.detail.value === 'string' && !/^[0-9-]+$/.test(event.detail.value)) {
           // Incorrect phone
           event.preventDefault();
           showErrorNotification('Enter a valid phone number');
         }
         break;
       case 'email':
-        if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(event.detail.value)) {
+        if (
+          typeof event.detail.value === 'string' &&
+          !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(event.detail.value)
+        ) {
           // Incorrect email
           event.preventDefault();
           showErrorNotification('Enter a valid email address');
@@ -41,14 +46,14 @@ export function Example() {
     <>
       {/* tag::snippet[] */}
       <GridPro items={items} onItemPropertyChanged={itemPropertyListener}>
-        <GridPro.EditColumn path="firstName" />
-        <GridPro.EditColumn path="lastName" />
-        <GridPro.EditColumn path="email" />
-        <GridPro.EditColumn path="address.phone" />
+        <GridProEditColumn path="firstName" />
+        <GridProEditColumn path="lastName" />
+        <GridProEditColumn path="email" />
+        <GridProEditColumn path="address.phone" />
       </GridPro>
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

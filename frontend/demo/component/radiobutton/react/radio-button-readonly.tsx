@@ -1,20 +1,20 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { RadioButtonGroup } from '@hilla/react-components/RadioButtonGroup.js';
+import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
 import { RadioButton } from '@hilla/react-components/RadioButton.js';
 
 function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <RadioButtonGroup label="Status" readonly>
+      <RadioGroup label="Status" readonly>
         <RadioButton value="inProgress" label="In progress" checked />
         <RadioButton value="done" label="Done" />
         <RadioButton value="cancelled" label="Cancelled" />
-      </RadioButtonGroup>
+      </RadioGroup>
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,8 +1,12 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { Button } from '@hilla/react-components/Button.js';
-import { RadioGroup, RadioGroupValueChangedEvent } from '@hilla/react-components/RadioGroup.js';
+import {
+  RadioGroup,
+  type RadioGroupValueChangedEvent,
+} from '@hilla/react-components/RadioGroup.js';
+import { RadioButton } from '@hilla/react-components/RadioButton.js';
 
 function Example() {
   const [theme, setTheme] = useState('spacing');
@@ -26,12 +30,12 @@ function Example() {
           setTheme(event.detail.value);
         }}
       >
-        <input type="radio" value="spacing" as="vaadin-radio-button" label="Enabled" />
-        <input type="radio" value="" as="vaadin-radio-button" label="Disabled" />
+        <RadioButton value="spacing" label="Enabled" />
+        <RadioButton value="" label="Disabled" />
       </RadioGroup>
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

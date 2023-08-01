@@ -1,24 +1,54 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { SyntheticEvent, useRef } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
+import React, { useEffect, useRef, useState } from 'react';
+import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { ContextMenu } from '@hilla/react-components/ContextMenu.js';
+import {
+  ContextMenu,
+  type ContextMenuElement,
+  type ContextMenuRendererContext,
+} from '@hilla/react-components/ContextMenu.js';
 import { Item } from '@hilla/react-components/Item.js';
 import { ListBox } from '@hilla/react-components/ListBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
-  const gridRef = useRef<HTMLGridElement>(null);
-  const renderMenu = (event: SyntheticEvent, menu: HTMLDivElement) => {
-    const { sourceEvent } = event.nativeEvent as PointerEvent;
-    const grid = menu.firstElementChild as Grid<Person>;
+  const [items, setItems] = useState<Person[]>([]);
+
+  useEffect(() => {
+    getPeople().then(({ people }) => setItems(people));
+  }, []);
+
+  const gridRef = useRef<GridElement>(null);
+
+  function onContextMenu(e: React.MouseEvent) {
+    if (!gridRef.current) {
+      return;
+    }
+    // Prevent opening context menu on header row.
+    if (gridRef.current.getEventContext(e.nativeEvent).section !== 'body') {
+      e.stopPropagation();
+    }
+  }
+
+  const renderMenu = ({
+    context,
+  }: Readonly<{
+    context: ContextMenuRendererContext;
+    original: ContextMenuElement;
+  }>) => {
+    if (!gridRef.current) {
+      return null;
+    }
+
+    const { sourceEvent } = context.detail as { sourceEvent: Event };
+    const grid = gridRef.current;
 
     const eventContext = grid.getEventContext(sourceEvent);
-    const person = eventContext.item!;
+    const person = eventContext.item;
 
     const clickHandler = (action: string) => () => {
-      // console.log(`${action}: ${person.firstName} ${person.lastName}`);
+      console.log(`${action}: ${person.firstName} ${person.lastName}`);
     };
 
     return (
@@ -34,7 +64,7 @@ function Example() {
 
   return (
     <ContextMenu renderer={renderMenu}>
-      <Grid items={getPeople().people} ref={gridRef} onContextmenu={onContextMenu}>
+      <Grid items={items} ref={gridRef} onContextMenu={onContextMenu}>
         <GridColumn path="firstName" />
         <GridColumn path="lastName" />
         <GridColumn path="email" />
@@ -42,13 +72,6 @@ function Example() {
       </Grid>
     </ContextMenu>
   );
-}
-
-function onContextMenu(e: React.MouseEvent<HTMLElement, MouseEvent>) {
-  // Prevent opening context menu on header row.
-  if ((e.currentTarget as HTMLGridElement).getEventContext(e.nativeEvent).section !== 'body') {
-    e.stopPropagation();
-  }
 }
 
 export default reactExample(Example); // hidden-source-line

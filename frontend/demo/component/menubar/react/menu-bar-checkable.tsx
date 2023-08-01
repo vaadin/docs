@@ -1,6 +1,10 @@
-React: import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { MenuBar } from '@hilla/react-components/MenuBar.js';
+import {
+  MenuBar,
+  type SubMenuItem,
+  type MenuBarItemSelectedEvent,
+} from '@hilla/react-components/MenuBar.js';
 
 function Example() {
   const [items, setItems] = useState([
@@ -10,7 +14,7 @@ function Example() {
     },
   ]);
 
-  const itemSelected = (e) => {
+  const itemSelected = (e: MenuBarItemSelectedEvent) => {
     const item = e.detail.value;
     (item as SubMenuItem).checked = !(item as SubMenuItem).checked;
     setItems([...items]);
@@ -19,4 +23,4 @@ function Example() {
   return <MenuBar items={items} onItemSelected={itemSelected}></MenuBar>;
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

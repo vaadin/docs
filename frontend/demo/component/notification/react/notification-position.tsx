@@ -1,11 +1,11 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 import type { NotificationPosition } from '@hilla/react-components/Notification';
 
 function Example() {
-  const show = (position) => {
+  const show = (position: NotificationPosition) => {
     Notification.show(position, { position });
   };
 
@@ -26,4 +26,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

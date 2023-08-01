@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Scroller } from '@hilla/react-components/Scroller.js';
-import img from '../../../../src/main/resources/images/reindeer.jpg';
+import img from '../../../../../src/main/resources/images/reindeer.jpg';
 
 function Example() {
   return (
@@ -13,4 +13,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

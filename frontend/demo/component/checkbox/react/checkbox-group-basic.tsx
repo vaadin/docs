@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { CheckboxGroup } from '@hilla/react-components/CheckboxGroup.js';
 import { Checkbox } from '@hilla/react-components/Checkbox.js';
@@ -25,4 +25,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

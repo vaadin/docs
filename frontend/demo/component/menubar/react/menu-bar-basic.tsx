@@ -1,9 +1,9 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { MenuBar, type MenuBarItem } from '@hilla/react-components/MenuBar.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { MenuBar, MenuItem } from '@hilla/react-components';
 
 function Example() {
-  const [selectedItem, setSelectedItem] = useState<MenuItem | undefined>(undefined);
+  const [selectedItem, setSelectedItem] = useState<MenuBarItem | undefined>(undefined);
 
   const items = [
     { text: 'View' },
@@ -40,4 +40,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

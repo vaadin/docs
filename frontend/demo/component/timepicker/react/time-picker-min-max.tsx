@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { TimePicker } from '@hilla/react-components/TimePicker.js';
 import type { TimePickerChangeEvent } from '@hilla/react-components/TimePicker.js';
@@ -17,8 +17,8 @@ function Example() {
         max="16:00"
         step={60 * 30}
         errorMessage={errorMessage}
-        onValueChanged={(event: TimePickerChangeEvent) => {
-          const { min, max, value } = event.detail;
+        onChange={(event: TimePickerChangeEvent) => {
+          const { min, max, value } = event.target;
           if (value < min) {
             setErrorMessage('Too early, choose another time');
           } else if (value > max) {
@@ -33,4 +33,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

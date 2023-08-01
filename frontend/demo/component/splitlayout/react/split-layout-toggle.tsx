@@ -1,8 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
+import MasterContent from './master-content';
+import DetailContent from './detail-content';
 
 function Example() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -24,11 +26,13 @@ function Example() {
         >
           <Icon icon={sidebarCollapsed ? 'vaadin:arrow-right' : 'vaadin:arrow-left'} />
         </Button>
-        <master-content></master-content>
+        <MasterContent />
       </div>
-      <detail-content style={{ width: `${100 - sidebarWidthPercentage}%` }} />
+      <div style={{ width: `${100 - sidebarWidthPercentage}%` }}>
+        <DetailContent />
+      </div>
     </SplitLayout>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

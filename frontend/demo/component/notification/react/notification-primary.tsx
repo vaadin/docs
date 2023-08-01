@@ -1,5 +1,5 @@
 import React from 'react';
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { Button } from '@hilla/react-components/Button.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 import type { NotificationOpenedChangedEvent } from '@hilla/react-components/Notification.js';
@@ -11,8 +11,8 @@ function Example() {
   const handleClick = () => {
     const notification = Notification.show('New project plan available', {
       position: 'middle',
+      theme: 'primary',
     });
-    notification.setTheme('primary');
 
     setNotificationOpened(true);
 
@@ -35,4 +35,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

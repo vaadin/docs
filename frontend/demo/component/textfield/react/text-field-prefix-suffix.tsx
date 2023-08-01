@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
@@ -17,7 +17,7 @@ function Example() {
         placeholder="name"
         value="michael"
         theme="align-right"
-        maxLength={7}
+        maxlength={7}
       >
         <div slot="suffix">@example.com</div>
       </TextField>
@@ -26,4 +26,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

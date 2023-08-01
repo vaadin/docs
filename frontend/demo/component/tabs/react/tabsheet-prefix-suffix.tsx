@@ -1,8 +1,8 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { Icon } from '@hilla/react-components/Icon.js';
-import { Tabsheet } from '@hilla/react-components/Tabsheet.js';
+import { TabSheet } from '@hilla/react-components/TabSheet.js';
 import { Tabs } from '@hilla/react-components/Tabs.js';
 import { Tab } from '@hilla/react-components/Tab.js';
 
@@ -10,7 +10,7 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <Tabsheet>
+      <TabSheet>
         <Button slot="prefix">Close all</Button>
 
         <Button slot="suffix" theme="icon" aria-label="Add tab">
@@ -23,13 +23,13 @@ function Example() {
           <Tab id="shipping-tab">Shipping</Tab>
         </Tabs>
 
-        <div tab="dashboard-tab">This is the Dashboard tab content</div>
-        <div tab="payment-tab">This is the Payment tab content</div>
-        <div tab="shipping-tab">This is the Shipping tab content</div>
-      </Tabsheet>
+        <div {...{ for: 'dashboard-tab' }}>This is the Dashboard tab content</div>
+        <div {...{ for: 'payment-tab' }}>This is the Payment tab content</div>
+        <div {...{ for: 'shipping-tab' }}>This is the Shipping tab content</div>
+      </TabSheet>
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

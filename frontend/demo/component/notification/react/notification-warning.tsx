@@ -1,9 +1,8 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Notification } from '@hilla/react-components/Notification.js';
-import { notificationRenderer } from '@hilla/react-components/notification.js';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
@@ -43,4 +42,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

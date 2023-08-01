@@ -1,6 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { MenuBar, MenuItem } from '@hilla/react-components/MenuBar.js';
+import { MenuBar } from '@hilla/react-components/MenuBar.js';
 
 function Example() {
   const items = [
@@ -11,19 +11,15 @@ function Example() {
       children: [
         {
           text: 'On social media',
-          children: [
-            <MenuItem text="Facebook" />,
-            <MenuItem text="Twitter" />,
-            <MenuItem text="Instagram" />,
-          ],
+          children: [{ text: 'Facebook' }, { text: 'Twitter' }, { text: 'Instagram' }],
         },
-        <MenuItem text="By email" />,
-        <MenuItem text="Get link" />,
+        { text: 'By email' },
+        { text: 'Get link' },
       ],
     },
     {
       text: 'Move',
-      children: [<MenuItem text="To folder" />, <MenuItem text="To trash" />],
+      children: [{ text: 'To folder' }, { text: 'To trash' }],
     },
     { text: 'Duplicate' },
   ];
@@ -34,23 +30,9 @@ function Example() {
 
   return (
     <>
-      <MenuBar i18n={customI18n}>
-        {items.map((item) => {
-          if (Array.isArray(item.children)) {
-            return (
-              <MenuItem text={item.text}>
-                {item.children.map((child) => (
-                  <MenuItem text={child.text}>{child.children}</MenuItem>
-                ))}
-              </MenuItem>
-            );
-          } else {
-            return <MenuItem text={item.text} />;
-          }
-        })}
-      </MenuBar>
+      <MenuBar i18n={customI18n} items={items} />
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -21,7 +21,7 @@ function Example() {
     <>
       {/* tag::snippet[] */}
       <ComboBox
-        style={{ '--vaadin-combo-box-overlay-width': '350px' }}
+        style={{ '--vaadin-combo-box-overlay-width': '350px' } as React.CSSProperties}
         label="Employee"
         itemLabelPath="displayName"
         itemValuePath="id"
@@ -32,4 +32,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

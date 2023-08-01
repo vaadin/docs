@@ -1,7 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
-import { ComboBoxRenderer } from '@hilla/react-components/ComboBox/litRenderer.js';
 import type { ComboBoxFilterChangedEvent } from '@hilla/react-components/ComboBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -37,10 +36,9 @@ function Example() {
         label="Choose doctor"
         itemLabelPath="displayName"
         filteredItems={filteredItems}
-        style={{ '--vaadin-combo-box-overlay-width': '16em' }}
+        style={{ '--vaadin-combo-box-overlay-width': '16em' } as React.CSSProperties}
         onFilterChanged={filterChanged}
-      >
-        {ComboBoxRenderer((person) => (
+        renderer={({ item: person }) => (
           <div style={{ display: 'flex' }}>
             <img
               style={{ height: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
@@ -59,11 +57,11 @@ function Example() {
               </div>
             </div>
           </div>
-        ))}
-      </ComboBox>
+        )}
+      ></ComboBox>
       {/* end::combobox[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

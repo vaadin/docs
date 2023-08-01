@@ -1,6 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { RadioButtonGroup } from '@hilla/react-components/RadioButtonGroup.js';
+import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
 import { RadioButton } from '@hilla/react-components/RadioButton.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { getCards } from 'Frontend/demo/domain/DataService';
@@ -20,7 +20,7 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <RadioButtonGroup
+      <RadioGroup
         label="Payment method"
         theme="vertical"
         value={value}
@@ -37,10 +37,10 @@ function Example() {
             </label>
           </RadioButton>
         ))}
-      </RadioButtonGroup>
+      </RadioGroup>
       {/* end::snippet[] */}
     </>
   );
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line
