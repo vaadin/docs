@@ -428,6 +428,45 @@ export default client;
 
 The middleware checks the response status and calls the [methodname]`uiState.logout()` action if it gets a 401 response code.
 
+== Avoiding Unauthorized Endpoint Calls
+
+To avoid unauthorized endpoint calls, delay early server calls for state initialization until authentication succeeds. In the `crm-store.ts` file, modify the `constructor` method to postpone the call to the `initFromServer` method. Additionally, add a check to this method to prevent unauthenticated requests.
+
+.`crm-store.ts`
+[source,typescript]
+----
+constructor() {
+  makeAutoObservable(
+    this,
+    {
+      initFromServer: false,
+      contacts: observable.shallow,
+      companies: observable.shallow,
+      statuses: observable.shallow,
+    },
+    { autoBind: true }
+  );
+
+  setTimeout(() => {this.initFromServer()}, 0);
+}
+
+async initFromServer() {
+  if (!uiStore.loggedIn) {
+    return;
+  }
+  const data = await cacheable(
+    CrmEndpoint.getCrmData,
+    'crm',
+    CrmDataModel.createEmptyValue()
+  );
+  runInAction(() => {
+    this.contacts = data.contacts;
+    this.companies = data.companies;
+    this.statuses = data.statuses;
+  });
+}
+----
+
 == Adding a Logout Link
 
 Add a logout link to the header in the main layout to allow users to log out.
