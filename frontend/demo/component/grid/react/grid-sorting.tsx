@@ -19,17 +19,15 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Grid items={items}>
-        <GridSortColumn path="id" />
-        <GridSortColumn header="Name" path="displayName" />
-        <GridSortColumn path="email" />
-        <GridSortColumn path="profession" />
-        <GridSortColumn path="birthday" />
-      </Grid>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Grid items={items}>
+      <GridSortColumn path="id" />
+      <GridSortColumn header="Name" path="displayName" />
+      <GridSortColumn path="email" />
+      <GridSortColumn path="profession" />
+      <GridSortColumn path="birthday" />
+    </Grid>
+    // end::snippet[]
   );
 }
 

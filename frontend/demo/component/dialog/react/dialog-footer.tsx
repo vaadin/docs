@@ -44,7 +44,7 @@ function Example() {
           </>
         )}
       >
-        {() => <>Are you sure you want to delete this user permanently?</>}
+        Are you sure you want to delete this user permanently?
       </Dialog>
       {/* end::snippet[] */}
 

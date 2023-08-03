@@ -8,17 +8,16 @@ function Example() {
   const [text, setText] = useState(loremIpsum);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <TextArea
-        label="Description"
-        maxlength={charLimit}
-        value={text}
-        helperText={`${text.length}/${charLimit}`}
-        onValueChanged={(event) => setText(event.detail.value)}
-      ></TextArea>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <TextArea
+      label="Description"
+      maxlength={charLimit}
+      value={text}
+      helperText={`${text.length}/${charLimit}`}
+      onValueChanged={(event) => setText(event.detail.value)}
+      style={{ width: '100%' }}
+    ></TextArea>
+    // end::snippet[]
   );
 }
 

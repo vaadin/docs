@@ -5,6 +5,7 @@ import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { Button } from '@hilla/react-components/Button.js';
 import { Avatar } from '@hilla/react-components/Avatar.js';
+import '@vaadin/icons';
 
 function Example() {
   function open(event: React.MouseEvent) {

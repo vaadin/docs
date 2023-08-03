@@ -33,17 +33,15 @@ function DateTimePickerInputFormat() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <DateTimePicker
-        label="Select date and time"
-        helperText="Format: DD/MM/YYYY and HH:MM"
-        datePlaceholder="Date"
-        timePlaceholder="Time"
-        ref={dateTimePickerRef}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <DateTimePicker
+      label="Select date and time"
+      helperText="Format: DD/MM/YYYY and HH:MM"
+      datePlaceholder="Date"
+      timePlaceholder="Time"
+      ref={dateTimePickerRef}
+    />
+    // end::snippet[]
   );
 }
 

@@ -11,15 +11,9 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Crud
-        editorPosition="bottom"
-        include="firstName, lastName, email, profession"
-        items={items}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Crud editorPosition="bottom" include="firstName, lastName, email, profession" items={items} />
+    // end::snippet[]
   );
 }
 

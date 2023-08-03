@@ -6,30 +6,31 @@ import { TextField } from '@hilla/react-components/TextField.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <FormLayout>
-        <FormItem>
-          <label slot="label">Revenue</label>
-          <TextField>
-            <span slot="suffix">EUR</span>
-          </TextField>
-        </FormItem>
-        <FormItem>
-          <label slot="label">Expenses</label>
-          <TextField>
-            <span slot="suffix">EUR</span>
-          </TextField>
-        </FormItem>
-        <FormItem>
-          <label slot="label">Invoices</label>
-          <TextField>
-            <span slot="suffix">EUR</span>
-          </TextField>
-        </FormItem>
-      </FormLayout>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <FormLayout>
+      {/* Wrap fields into form items, which displays labels on the side by default */}
+      <FormItem>
+        <label slot="label">Revenue</label>
+        <TextField>
+          <span slot="suffix">EUR</span>
+        </TextField>
+      </FormItem>
+
+      <FormItem>
+        <label slot="label">Expenses</label>
+        <TextField>
+          <span slot="suffix">EUR</span>
+        </TextField>
+      </FormItem>
+
+      <FormItem>
+        <label slot="label">Invoices</label>
+        <TextField>
+          <span slot="suffix">EUR</span>
+        </TextField>
+      </FormItem>
+    </FormLayout>
+    // end::snippet[]
   );
 }
 

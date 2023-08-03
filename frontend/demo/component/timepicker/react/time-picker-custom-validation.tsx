@@ -6,17 +6,15 @@ import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/Appointm
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <TimePicker
-        label="Appointment time"
-        helperText="Open 8:00-12:00, 13:00-16:00"
-        min="08:00"
-        max="16:00"
-        step={60 * 30}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <TimePicker
+      label="Appointment time"
+      helperText="Open 8:00-12:00, 13:00-16:00"
+      min="08:00"
+      max="16:00"
+      step={60 * 30}
+    />
+    // end::snippet[]
   );
 }
 

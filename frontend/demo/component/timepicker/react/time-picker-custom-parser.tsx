@@ -4,11 +4,9 @@ import { TimePicker } from '@hilla/react-components/TimePicker.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <TimePicker label="Alarm" />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <TimePicker label="Alarm" />
+    // end::snippet[]
   );
 }
 

@@ -9,6 +9,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
+  // tag::snippet[]
   const [items, setItems] = useState<Person[]>([]);
   const [detailsOpenedItems, setDetailsOpenedItems] = useState<Person[]>([]);
 
@@ -70,6 +71,7 @@ function Example() {
       </GridColumn>
     </Grid>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

@@ -6,6 +6,7 @@ import { Notification } from '@hilla/react-components/Notification.js';
 function Example() {
   return (
     <>
+      {/* tag::snippet[] */}
       <h4>Upload report</h4>
       <p>Accepted file formats: PDF (.pdf)</p>
       <Upload
@@ -15,6 +16,7 @@ function Example() {
           Notification.show(event.detail.error);
         }}
       />
+      {/* end::snippet[] */}
     </>
   );
 }

@@ -3,6 +3,7 @@ import React from 'react';
 import { Upload } from '@hilla/react-components/Upload.js';
 
 function Example() {
+  // tag::snippet[]
   const i18n = {
     dropFiles: {
       one: 'Raahaa tiedosto tähän',
@@ -41,6 +42,7 @@ function Example() {
   };
 
   return <Upload i18n={i18n} />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

@@ -6,6 +6,7 @@ import {
   type ConfirmDialogOpenedChangedEvent,
 } from '@hilla/react-components/ConfirmDialog.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import confirmDialogBasicStyles from './confirm-dialog-basic-styles';
 
 function Example() {
   const [dialogOpened, setDialogOpened] = useState(true);
@@ -52,4 +53,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, confirmDialogBasicStyles); // hidden-source-line

@@ -15,6 +15,7 @@ const Example = () => {
   const uploadCaution = useRef<UploadElement>(null);
   const uploadRecommended = useRef<UploadElement>(null);
 
+  // tag::snippet[]
   useEffect(() => {
     if (!uploadCaution.current || !uploadRecommended.current) {
       return;
@@ -38,6 +39,7 @@ const Example = () => {
           <strong>Caution</strong>
           <Upload ref={uploadCaution} nodrop files={createFakeFilesUploadErrorMessagesA()} />
         </div>
+
         <div>
           <strong>Recommended</strong>
           <Upload ref={uploadRecommended} nodrop files={createFakeFilesUploadErrorMessagesB()} />
@@ -45,6 +47,7 @@ const Example = () => {
       </FormLayout>
     </>
   );
+  // end::snippet[]
 };
 
 export default reactExample(Example); // hidden-source-line

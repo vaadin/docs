@@ -5,11 +5,9 @@ import { CookieConsent } from '@hilla/react-components/CookieConsent.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <CookieConsent />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <CookieConsent />
+    // end::snippet[]
   );
 }
 

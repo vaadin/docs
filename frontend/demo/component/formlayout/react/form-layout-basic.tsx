@@ -5,6 +5,7 @@ import { TextField } from '@hilla/react-components/TextField.js';
 import { PasswordField } from '@hilla/react-components/PasswordField.js';
 
 function Example() {
+  // tag::snippet[]
   const responsiveSteps = [
     { minWidth: '0', columns: 1 },
     { minWidth: '500px', columns: 2 },
@@ -19,6 +20,7 @@ function Example() {
       <PasswordField label="Confirm password" />
     </FormLayout>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

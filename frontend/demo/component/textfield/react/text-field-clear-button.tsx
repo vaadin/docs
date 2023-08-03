@@ -4,11 +4,9 @@ import { TextField } from '@hilla/react-components/TextField.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <TextField value="Value" clearButtonVisible />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <TextField value="Value" clearButtonVisible />
+    // end::snippet[]
   );
 }
 

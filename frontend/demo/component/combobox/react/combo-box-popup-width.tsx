@@ -18,17 +18,15 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ComboBox
-        style={{ '--vaadin-combo-box-overlay-width': '350px' } as React.CSSProperties}
-        label="Employee"
-        itemLabelPath="displayName"
-        itemValuePath="id"
-        items={items}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ComboBox
+      style={{ '--vaadin-combo-box-overlay-width': '350px' } as React.CSSProperties}
+      label="Employee"
+      itemLabelPath="displayName"
+      itemValuePath="id"
+      items={items}
+    />
+    // end::snippet[]
   );
 }
 

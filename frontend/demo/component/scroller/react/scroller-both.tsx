@@ -5,11 +5,11 @@ import img from '../../../../../src/main/resources/images/reindeer.jpg';
 
 function Example() {
   return (
-    <>
-      <Scroller style={{ height: '300px', width: '100%' }}>
-        <img src={img} alt="A reindeer walking on a snowy lake shore at dusk" />
-      </Scroller>
-    </>
+    // tag::snippet[]
+    <Scroller style={{ height: '300px', width: '100%' }}>
+      <img src={img} alt="A reindeer walking on a snowy lake shore at dusk" />
+    </Scroller>
+    // end::snippet[]
   );
 }
 

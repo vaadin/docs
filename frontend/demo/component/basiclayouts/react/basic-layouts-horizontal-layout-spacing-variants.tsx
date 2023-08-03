@@ -4,6 +4,7 @@ import { Button } from '@hilla/react-components/Button.js';
 import { RadioButton } from '@hilla/react-components/RadioButton.js';
 import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   const [themeVariant, setThemeVariant] = useState('spacing-xl');
@@ -11,7 +12,10 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <HorizontalLayout theme={`${themeVariant} padding`} style={{ alignItems: 'stretch' }}>
+      <HorizontalLayout
+        theme={`${themeVariant} padding`}
+        style={{ alignItems: 'stretch', ...layoutExampleStyle }}
+      >
         <Button>Button 1</Button>
         <Button>Button 2</Button>
         <Button>Button 3</Button>

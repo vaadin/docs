@@ -12,17 +12,15 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ComboBox
-        autoOpenDisabled
-        label="Country"
-        itemLabelPath="name"
-        itemValuePath="id"
-        items={items}
-      ></ComboBox>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ComboBox
+      autoOpenDisabled
+      label="Country"
+      itemLabelPath="name"
+      itemValuePath="id"
+      items={items}
+    ></ComboBox>
+    // end::snippet[]
   );
 }
 

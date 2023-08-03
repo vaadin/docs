@@ -8,6 +8,7 @@ function Example() {
 
   return (
     <>
+      {/* tag::snippet[] */}
       <h4>Upload files</h4>
       <p>Maximum of {maxFiles} files allowed</p>
       <Upload
@@ -16,6 +17,7 @@ function Example() {
           Notification.show(event.detail.error);
         }}
       />
+      {/* end::snippet[] */}
     </>
   );
 }

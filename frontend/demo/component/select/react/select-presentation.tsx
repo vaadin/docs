@@ -13,39 +13,35 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Select label="Choose doctor">
-        {() => (
-          <ListBox>
-            {people.map((person) => (
-              <Item value={String(person.id)} key={person.id}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <img
-                    src={person.pictureUrl}
-                    alt={`Portrait of ${person.firstName} ${person.lastName}`}
-                    style={{ width: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
-                  />
+    // tag::snippet[]
+    <Select label="Choose doctor">
+      <ListBox>
+        {people.map((person) => (
+          <Item value={String(person.id)} key={person.id}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img
+                src={person.pictureUrl}
+                alt={`Portrait of ${person.firstName} ${person.lastName}`}
+                style={{ width: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
+              />
 
-                  <div>
-                    {person.firstName} {person.lastName}
-                    <div
-                      style={{
-                        fontSize: 'var(--lumo-font-size-s)',
-                        color: 'var(--lumo-secondary-text-color)',
-                      }}
-                    >
-                      {person.profession}
-                    </div>
-                  </div>
+              <div>
+                {person.firstName} {person.lastName}
+                <div
+                  style={{
+                    fontSize: 'var(--lumo-font-size-s)',
+                    color: 'var(--lumo-secondary-text-color)',
+                  }}
+                >
+                  {person.profession}
                 </div>
-              </Item>
-            ))}
-          </ListBox>
-        )}
-      </Select>
-      {/* end::snippet[] */}
-    </>
+              </div>
+            </div>
+          </Item>
+        ))}
+      </ListBox>
+    </Select>
+    // end::snippet[]
   );
 }
 

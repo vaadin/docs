@@ -3,30 +3,51 @@ import React from 'react';
 import { Details } from '@hilla/react-components/Details.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 
+const anchorStyle = {
+  textDecoration: 'none',
+  color: 'var(--lumo-primary-text-color)',
+};
+
 function Example() {
   return (
     <>
       {/* tag::snippet[] */}
       <Details summary="Analytics" opened>
         <VerticalLayout>
-          <a href="#">Dashboard</a>
-          <a href="#">Reports</a>
-          <a href="#">Data sources</a>
+          <a href="#" style={anchorStyle}>
+            Dashboard
+          </a>
+          <a href="#" style={anchorStyle}>
+            Reports
+          </a>
+          <a href="#" style={anchorStyle}>
+            Data sources
+          </a>
         </VerticalLayout>
       </Details>
 
       <Details summary="Customers" opened>
         <VerticalLayout>
-          <a href="#">Accounts</a>
-          <a href="#">Contacts</a>
+          <a href="#" style={anchorStyle}>
+            Accounts
+          </a>
+          <a href="#" style={anchorStyle}>
+            Contacts
+          </a>
         </VerticalLayout>
       </Details>
 
       <Details summary="Finances" opened>
         <VerticalLayout>
-          <a href="#">Invoices</a>
-          <a href="#">Transactions</a>
-          <a href="#">Statements</a>
+          <a href="#" style={anchorStyle}>
+            Invoices
+          </a>
+          <a href="#" style={anchorStyle}>
+            Transactions
+          </a>
+          <a href="#" style={anchorStyle}>
+            Statements
+          </a>
         </VerticalLayout>
       </Details>
       {/* end::snippet[] */}

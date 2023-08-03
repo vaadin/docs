@@ -7,6 +7,7 @@ import {
   type RadioGroupValueChangedEvent,
 } from '@hilla/react-components/RadioGroup.js';
 import { RadioButton } from '@hilla/react-components/RadioButton.js';
+import layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   const [theme, setTheme] = useState('spacing');
@@ -17,12 +18,13 @@ function Example() {
       <VerticalLayout
         theme={`${theme} padding`}
         className="height-4xl"
-        style={{ alignItems: 'stretch' }}
+        style={{ alignItems: 'stretch', ...layoutExampleStyle }}
       >
         <Button>Button 1</Button>
         <Button>Button 2</Button>
         <Button>Button 3</Button>
       </VerticalLayout>
+
       <RadioGroup
         label="Spacing"
         value={theme}

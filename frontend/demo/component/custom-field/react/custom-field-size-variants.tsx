@@ -15,29 +15,27 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <CustomField label="Price" theme="small">
-        <HorizontalLayout theme="spacing-s">
-          <TextField ref={amountRef} theme="small" />
-          <Select
-            ref={currencyRef}
-            items={[
-              { label: 'AUD', value: 'aud' },
-              { label: 'CAD', value: 'cad' },
-              { label: 'CHF', value: 'chf' },
-              { label: 'EUR', value: 'eur' },
-              { label: 'GBP', value: 'gbp' },
-              { label: 'JPY', value: 'jpy' },
-              { label: 'USD', value: 'usd' },
-            ]}
-            theme="small"
-            style={{ width: '6em' }}
-          />
-        </HorizontalLayout>
-      </CustomField>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <CustomField label="Price" theme="small">
+      <HorizontalLayout theme="spacing-s">
+        <TextField ref={amountRef} theme="small" />
+        <Select
+          ref={currencyRef}
+          items={[
+            { label: 'AUD', value: 'aud' },
+            { label: 'CAD', value: 'cad' },
+            { label: 'CHF', value: 'chf' },
+            { label: 'EUR', value: 'eur' },
+            { label: 'GBP', value: 'gbp' },
+            { label: 'JPY', value: 'jpy' },
+            { label: 'USD', value: 'usd' },
+          ]}
+          theme="small"
+          style={{ width: '6em' }}
+        />
+      </HorizontalLayout>
+    </CustomField>
+    // end::snippet[]
   );
 }
 

@@ -23,17 +23,15 @@ function Example() {
   }
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ComboBox
-        label="Country"
-        itemLabelPath="name"
-        itemValuePath="id"
-        filteredItems={filteredItems}
-        onFilterChanged={filterChanged}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ComboBox
+      label="Country"
+      itemLabelPath="name"
+      itemValuePath="id"
+      filteredItems={filteredItems}
+      onFilterChanged={filterChanged}
+    />
+    // end::snippet[]
   );
 }
 

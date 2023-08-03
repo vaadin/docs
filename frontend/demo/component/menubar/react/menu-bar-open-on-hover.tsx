@@ -2,8 +2,8 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { MenuBar } from '@hilla/react-components/MenuBar.js';
 
-// tag::snippet[]
 function Example() {
+  // tag::snippet[]
   const items = [
     { text: 'View' },
     { text: 'Edit' },
@@ -25,14 +25,8 @@ function Example() {
     { text: 'Duplicate' },
   ];
 
-  return (
-    <>
-      {/* tag::snippethtml[] */}
-      <MenuBar items={items} openOnHover />
-      {/* end::snippethtml[] */}
-    </>
-  );
+  return <MenuBar items={items} openOnHover />;
+  // end::snippet[]
 }
-// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

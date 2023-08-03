@@ -5,15 +5,13 @@ import { Tabs } from '@hilla/react-components/Tabs.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Tabs theme="equal-width-tabs">
-        <Tab>Details</Tab>
-        <Tab>Payment</Tab>
-        <Tab>Shipping</Tab>
-      </Tabs>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Tabs theme="equal-width-tabs">
+      <Tab>Details</Tab>
+      <Tab>Payment</Tab>
+      <Tab>Shipping</Tab>
+    </Tabs>
+    // end::snippet[]
   );
 }
 

@@ -4,6 +4,7 @@ import { MenuBar } from '@hilla/react-components/MenuBar.js';
 import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
 
 function Example() {
+  // tag::snippet[]
   const items = [
     { text: 'View' },
     { text: 'Edit' },
@@ -26,15 +27,12 @@ function Example() {
   ];
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <SplitLayout>
-        <MenuBar items={items} />
-        <div>Move the splitter to see overflow feature</div>
-      </SplitLayout>
-      {/* end::snippet[] */}
-    </>
+    <SplitLayout>
+      <MenuBar items={items} />
+      <div>Move the splitter to see overflow feature</div>
+    </SplitLayout>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

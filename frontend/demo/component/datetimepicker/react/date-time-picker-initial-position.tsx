@@ -10,11 +10,9 @@ const startOfNextMonthISOString = formatISO(startOfNextMonth, { representation: 
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <DateTimePicker label="Meeting date and time" initialPosition={startOfNextMonthISOString} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <DateTimePicker label="Meeting date and time" initialPosition={startOfNextMonthISOString} />
+    // end::snippet[]
   );
 }
 

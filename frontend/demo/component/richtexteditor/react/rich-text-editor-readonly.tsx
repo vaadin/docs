@@ -5,11 +5,9 @@ import templates from '../../../../../src/main/resources/data/templates.json';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <RichTextEditor style={{ height: '400px' }} readonly value={templates.richTextDelta} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <RichTextEditor style={{ height: '400px' }} readonly value={templates.richTextDelta} />
+    // end::snippet[]
   );
 }
 

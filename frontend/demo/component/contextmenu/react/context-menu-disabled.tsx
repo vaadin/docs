@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ContextMenu } from '@hilla/react-components/ContextMenu.js';
-import { Grid } from '@hilla/react-components/Grid.js';
+import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 
 interface FileItem {
@@ -10,6 +10,22 @@ interface FileItem {
 }
 
 function Example() {
+  const gridRef = useRef<GridElement>(null);
+
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (grid) {
+      // Workaround: Prevent opening context menu on header row.
+      // @ts-expect-error vaadin-contextmenu isn't a GridElement event.
+      grid.addEventListener('vaadin-contextmenu', (e) => {
+        if (grid.getEventContext(e).section !== 'body') {
+          e.stopPropagation();
+        }
+      });
+    }
+  }, []);
+
+  // tag::snippet[]
   const items = [
     { text: 'Preview' },
     { text: 'Edit' },
@@ -33,17 +49,14 @@ function Example() {
   ];
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ContextMenu items={items}>
-        <Grid allRowsVisible items={gridItems}>
-          <GridColumn path="name" />
-          <GridColumn path="size" />
-        </Grid>
-      </ContextMenu>
-      {/* end::snippet[] */}
-    </>
+    <ContextMenu items={items}>
+      <Grid allRowsVisible items={gridItems} ref={gridRef}>
+        <GridColumn path="name" />
+        <GridColumn path="size" />
+      </Grid>
+    </ContextMenu>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

@@ -5,15 +5,13 @@ import { CustomField } from '@hilla/react-components/CustomField.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <CustomField label="Enrollment period" helperText="Cannot be longer than 30 days" required>
-        <DatePicker placeholder="Start date"></DatePicker>
-        &ndash;
-        <DatePicker placeholder="End date"></DatePicker>
-      </CustomField>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <CustomField label="Enrollment period" helperText="Cannot be longer than 30 days" required>
+      <DatePicker placeholder="Start date"></DatePicker>
+      &ndash;
+      <DatePicker placeholder="End date"></DatePicker>
+    </CustomField>
+    // end::snippet[]
   );
 }
 

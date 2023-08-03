@@ -36,10 +36,8 @@ function Example() {
           setStatus('Acknowledged');
         }}
       >
-        {'An error occurred while exporting '}
-        <b>Report Q4</b>
-        {'. Please try again. If the problem persists, contact '}
-        <a href="mailto:support@company.com">support@company.com</a>.
+        An error occurred while exporting <b>Report Q4</b>. Please try again. If the problem
+        persists, contact <a href="mailto:support@company.com">support@company.com</a>.
       </ConfirmDialog>
       {/* end::snippet[] */}
 

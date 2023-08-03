@@ -5,15 +5,13 @@ import { Tab } from '@hilla/react-components/Tab.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Tabs>
-        <Tab>Details</Tab>
-        <Tab>Payment</Tab>
-        <Tab>Shipping</Tab>
-      </Tabs>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Tabs>
+      <Tab>Details</Tab>
+      <Tab>Payment</Tab>
+      <Tab>Shipping</Tab>
+    </Tabs>
+    // end::snippet[]
   );
 }
 

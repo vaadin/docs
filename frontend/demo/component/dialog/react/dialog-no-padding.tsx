@@ -25,24 +25,24 @@ function Example(): JSX.Element {
         header-title="Filter reports by users:"
         opened={dialogOpened}
         onOpenedChanged={({ detail }) => setDialogOpened(detail.value)}
-        renderer={() => (
-          <Grid items={people} style={{ width: '500px', maxWidth: '100%' }}>
-            <GridSelectionColumn />
-            <GridColumn header="Name">
-              {({ item }) => (
-                <>
-                  {item.firstName} {item.lastName}
-                </>
-              )}
-            </GridColumn>
-          </Grid>
-        )}
         footerRenderer={() => (
           <Button theme="primary" onClick={() => setDialogOpened(false)}>
             Filter
           </Button>
         )}
-      />
+      >
+        <Grid items={people} style={{ width: '500px', maxWidth: '100%' }}>
+          <GridSelectionColumn />
+          <GridColumn header="Name">
+            {({ item }) => (
+              <>
+                {item.firstName} {item.lastName}
+              </>
+            )}
+          </GridColumn>
+        </Grid>
+      </Dialog>
+
       {/* end::snippet[] */}
       <Button onClick={() => setDialogOpened(true)}>Show dialog</Button>
     </>

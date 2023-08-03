@@ -4,23 +4,24 @@ import { Board } from '@hilla/react-components/Board.js';
 import { BoardRow } from '@hilla/react-components/BoardRow.js';
 import ExampleIndicator from './ExampleIndicator';
 import ExampleStatistics from './ExampleStatistics';
+import boardStyles from './board-styles';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Board>
-        <BoardRow>
+    // tag::snippet[]
+    <Board className="board-nested">
+      <BoardRow>
+        <div {...{ 'board-cols': 2 }}>
           <ExampleStatistics {...{ 'board-cols': 2 }} />
-          <BoardRow {...{ 'board-cols': 1 }}>
-            <ExampleIndicator current="745" change={+33.7} title="Current users" />
-            <ExampleIndicator current="18%" change={+3.9} title="Conversion rate" />
-          </BoardRow>
+        </div>
+        <BoardRow {...{ 'board-cols': 1 }}>
+          <ExampleIndicator current="745" change={+33.7} title="Current users" />
+          <ExampleIndicator current="18%" change={+3.9} title="Conversion rate" />
         </BoardRow>
-      </Board>
-      {/* end::snippet[] */}
-    </>
+      </BoardRow>
+    </Board>
+    // end::snippet[]
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, boardStyles); // hidden-source-line

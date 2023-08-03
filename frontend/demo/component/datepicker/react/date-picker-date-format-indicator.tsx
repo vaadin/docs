@@ -4,11 +4,9 @@ import { DatePicker } from '@hilla/react-components/DatePicker.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <DatePicker label="Start date" placeholder="DD/MM/YYYY" helperText="Format: DD/MM/YYYY" />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <DatePicker label="Start date" placeholder="DD/MM/YYYY" helperText="Format: DD/MM/YYYY" />
+    // end::snippet[]
   );
 }
 

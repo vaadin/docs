@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Notification } from '@hilla/react-components/Notification.js';
+import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
@@ -24,18 +26,17 @@ function Example() {
           setNotificationOpened(event.detail.value);
         }}
       >
-        {() => (
-          <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
-            <div>
-              Your session will expire in 5 minutes due to inactivity.
-              <br />
-              Close this warning to continue working.
-            </div>
-            <Button theme="tertiary-inline" onClick={() => setNotificationOpened(false)}>
-              <i className="lumo-icon lumo-cross"></i>
-            </Button>
-          </HorizontalLayout>
-        )}
+        <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
+          <div>
+            Your session will expire in 5 minutes due to inactivity.
+            <br />
+            Close this warning to continue working.
+          </div>
+
+          <Button theme="tertiary-inline" onClick={() => setNotificationOpened(false)}>
+            <Icon icon="lumo:cross" />
+          </Button>
+        </HorizontalLayout>
       </Notification>
       {/* end::snippet[] */}
     </>

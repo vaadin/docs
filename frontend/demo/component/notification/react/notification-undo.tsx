@@ -4,6 +4,7 @@ import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import '@vaadin/icons';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
@@ -42,6 +43,7 @@ function Example() {
             >
               Undo
             </Button>
+
             <Button theme="tertiary-inline" aria-label="Close" onClick={close}>
               <Icon icon="lumo:cross" />
             </Button>

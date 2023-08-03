@@ -7,16 +7,14 @@ function Example() {
   const [richText, setRichText] = useState(templates.richTextDelta);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <RichTextEditor
-        style={{ height: '400px' }}
-        theme="no-border"
-        value={richText}
-        onValueChanged={(event) => setRichText(event.detail.value)}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <RichTextEditor
+      style={{ height: '400px' }}
+      theme="no-border"
+      value={richText}
+      onValueChanged={(event) => setRichText(event.detail.value)}
+    />
+    // end::snippet[]
   );
 }
 

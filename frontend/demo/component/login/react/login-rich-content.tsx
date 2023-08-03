@@ -1,14 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { DatePicker } from '@hilla/react-components/DatePicker.js';
+import { LoginForm } from '@hilla/react-components/LoginForm.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <DatePicker label="Select a date" />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <div className="login-rich-content">
+      <LoginForm theme="dark" no-autofocus />
+    </div>
+    // end::snippet[]
   );
 }
 

@@ -6,9 +6,7 @@ import { Notification } from '@hilla/react-components/Notification.js';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
-  const [isMac, setIsMac] = useState(
-    /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform)
-  );
+  const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
   const open = () => {
     setNotificationOpened(true);
@@ -18,6 +16,7 @@ function Example() {
     setNotificationOpened(false);
   };
 
+  // tag::snippet[]
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (notificationOpened && (event.metaKey || event.ctrlKey) && event.key === 'z') {
@@ -60,6 +59,7 @@ function Example() {
       </Notification>
     </>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

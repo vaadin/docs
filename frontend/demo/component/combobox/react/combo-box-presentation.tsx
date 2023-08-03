@@ -30,37 +30,35 @@ function Example() {
   };
 
   return (
-    <>
-      {/* tag::combobox[] */}
-      <ComboBox
-        label="Choose doctor"
-        itemLabelPath="displayName"
-        filteredItems={filteredItems}
-        style={{ '--vaadin-combo-box-overlay-width': '16em' } as React.CSSProperties}
-        onFilterChanged={filterChanged}
-        renderer={({ item: person }) => (
-          <div style={{ display: 'flex' }}>
-            <img
-              style={{ height: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
-              src={person.pictureUrl}
-              alt={`Portrait of ${person.firstName} ${person.lastName}`}
-            />
-            <div>
-              {person.firstName} {person.lastName}
-              <div
-                style={{
-                  fontSize: 'var(--lumo-font-size-s)',
-                  color: 'var(--lumo-secondary-text-color)',
-                }}
-              >
-                {person.profession}
-              </div>
+    // tag::snippet[]
+    <ComboBox
+      label="Choose doctor"
+      itemLabelPath="displayName"
+      filteredItems={filteredItems}
+      style={{ '--vaadin-combo-box-overlay-width': '16em' } as React.CSSProperties}
+      onFilterChanged={filterChanged}
+      renderer={({ item: person }) => (
+        <div style={{ display: 'flex' }}>
+          <img
+            style={{ height: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
+            src={person.pictureUrl}
+            alt={`Portrait of ${person.firstName} ${person.lastName}`}
+          />
+          <div>
+            {person.firstName} {person.lastName}
+            <div
+              style={{
+                fontSize: 'var(--lumo-font-size-s)',
+                color: 'var(--lumo-secondary-text-color)',
+              }}
+            >
+              {person.profession}
             </div>
           </div>
-        )}
-      ></ComboBox>
-      {/* end::combobox[] */}
-    </>
+        </div>
+      )}
+    ></ComboBox>
+    // end::snippet[]
   );
 }
 

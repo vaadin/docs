@@ -4,6 +4,7 @@ import { Board } from '@hilla/react-components/Board.js';
 import { BoardRow } from '@hilla/react-components/BoardRow.js';
 import ExampleIndicator from './ExampleIndicator';
 import ExampleChart from './ExampleChart';
+import boardStyles from './board-styles';
 
 function Example() {
   return (
@@ -23,4 +24,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, boardStyles); // hidden-source-line

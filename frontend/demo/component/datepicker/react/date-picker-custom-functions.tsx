@@ -9,6 +9,7 @@ import { useState } from 'react';
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
 
+// tag::snippet[]
 function formatDateIso8601(dateParts: DatePickerDate) {
   const { year, month, day } = dateParts;
   const date = new Date(year, month, day);
@@ -48,6 +49,7 @@ function Example() {
       onValueChanged={(event) => setSelectedDateValue(event.detail.value)}
     />
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

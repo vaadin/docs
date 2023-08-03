@@ -7,19 +7,17 @@ function Example() {
   const [text, setText] = useState('Great job. This is excellent!');
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <TextArea
-        label="Comment"
-        maxlength={charLimit}
-        value={text}
-        helperText={`${text.length}/${charLimit}`}
-        onValueChanged={(event) => {
-          setText(event.detail.value);
-        }}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <TextArea
+      label="Comment"
+      maxlength={charLimit}
+      value={text}
+      helperText={`${text.length}/${charLimit}`}
+      onValueChanged={(event) => {
+        setText(event.detail.value);
+      }}
+    />
+    // end::snippet[]
   );
 }
 

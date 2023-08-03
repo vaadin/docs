@@ -4,18 +4,16 @@ import { ProgressBar } from '@hilla/react-components/ProgressBar.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <div style={{ color: 'var(--lumo-secondary-text-color)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div>Processing Financials.xlsx</div>
-          <div>50%</div>
-        </div>
-
-        <ProgressBar value={0.5} />
+    // tag::snippet[]
+    <div style={{ color: 'var(--lumo-secondary-text-color)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div>Processing Financials.xlsx</div>
+        <div>50%</div>
       </div>
-      {/* end::snippet[] */}
-    </>
+
+      <ProgressBar value={0.5} />
+    </div>
+    // end::snippet[]
   );
 }
 

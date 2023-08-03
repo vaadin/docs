@@ -13,6 +13,7 @@ import {
 import { GridSortColumn } from '@hilla/react-components/GridSortColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import '@vaadin/icons';
 
 function matchesTerm(value: string, searchTerm: string) {
   return value.toLowerCase().includes(searchTerm.toLowerCase());
@@ -22,6 +23,7 @@ function compare(a: string, b: string, direction: GridSorterDirection) {
   return direction === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
 }
 
+// tag::snippet[]
 async function fetchPeople(params: {
   page: number;
   pageSize: number;
@@ -87,12 +89,14 @@ function Example() {
       >
         <Icon slot="prefix" icon="vaadin:search" />
       </TextField>
+
       <Grid dataProvider={dataProvider}>
         <GridSortColumn path="fullName" header="Name" />
         <GridSortColumn path="profession" />
       </Grid>
     </VerticalLayout>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

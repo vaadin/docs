@@ -5,6 +5,7 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 function Example() {
+  // tag::snippet[]
   const [items, setItems] = useState<Country[]>([]);
 
   useEffect(() => {
@@ -12,12 +13,15 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <MultiSelectComboBox label="Countries" itemLabelPath="name" itemIdPath="id" items={items} />
-      {/* end::snippet[] */}
-    </>
+    <MultiSelectComboBox
+      label="Countries"
+      itemLabelPath="name"
+      itemIdPath="id"
+      items={items}
+      style={{ width: '300px' }}
+    />
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

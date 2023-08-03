@@ -14,6 +14,7 @@ function Example() {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
+  // tag::snippet[]
   function handleDragStart(event: GridDragStartEvent<Person>): void {
     setDraggedItem(event.detail.draggedItems[0]);
   }
@@ -38,33 +39,30 @@ function Example() {
   }
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Grid
-        items={items}
-        draggable
-        dropMode="between"
-        onGridDragstart={handleDragStart}
-        onGridDragend={handleDragEnd}
-        onGridDrop={handleDrop}
-      >
-        <GridColumn header="Image" flexGrow={0} autoWidth>
-          {({ item: person }) => (
-            <Avatar
-              img={person.pictureUrl}
-              name={`${person.firstName} ${person.lastName}`}
-              {...{ alt: 'User avatar' }}
-            />
-          )}
-        </GridColumn>
+    <Grid
+      items={items}
+      rowsDraggable
+      dropMode="between"
+      onGridDragstart={handleDragStart}
+      onGridDragend={handleDragEnd}
+      onGridDrop={handleDrop}
+    >
+      <GridColumn header="Image" flexGrow={0} autoWidth>
+        {({ item: person }) => (
+          <Avatar
+            img={person.pictureUrl}
+            name={`${person.firstName} ${person.lastName}`}
+            {...{ alt: 'User avatar' }}
+          />
+        )}
+      </GridColumn>
 
-        <GridColumn path="firstName" />
-        <GridColumn path="lastName" />
-        <GridColumn path="email" />
-      </Grid>
-      {/* end::snippet[] */}
-    </>
+      <GridColumn path="firstName" />
+      <GridColumn path="lastName" />
+      <GridColumn path="email" />
+    </Grid>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

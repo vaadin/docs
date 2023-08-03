@@ -6,17 +6,15 @@ import { RadioButton } from '@hilla/react-components/RadioButton.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <RadioGroup label="Label" helperText="Helper text">
-        <Tooltip slot="tooltip" text="Tooltip text" />
+    // tag::snippet[]
+    <RadioGroup label="Label" helperText="Helper text">
+      <Tooltip slot="tooltip" text="Tooltip text" />
 
-        <RadioButton value="1" label="Item 1" />
-        <RadioButton value="2" label="Item 2" />
-        <RadioButton value="3" label="Item 3" />
-      </RadioGroup>
-      {/* end::snippet[] */}
-    </>
+      <RadioButton value="1" label="Item 1" />
+      <RadioButton value="2" label="Item 2" />
+      <RadioButton value="3" label="Item 3" />
+    </RadioGroup>
+    // end::snippet[]
   );
 }
 

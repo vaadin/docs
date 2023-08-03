@@ -16,20 +16,18 @@ function Example() {
   };
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Upload
-        maxFiles={1}
-        accept="application/pdf,.pdf"
-        onFileReject={fileRejectHandler}
-        onMaxFilesReachedChanged={maxFilesReachedChangedHandler}
-      >
-        <Button slot="add-button" theme="primary" disabled={maxFilesReached.current}>
-          Upload PDF...
-        </Button>
-      </Upload>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Upload
+      maxFiles={1}
+      accept="application/pdf,.pdf"
+      onFileReject={fileRejectHandler}
+      onMaxFilesReachedChanged={maxFilesReachedChangedHandler}
+    >
+      <Button slot="add-button" theme="primary" disabled={maxFilesReached.current}>
+        Upload PDF...
+      </Button>
+    </Upload>
+    // end::snippet[]
   );
 }
 

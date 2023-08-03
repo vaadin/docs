@@ -7,6 +7,7 @@ import {
 } from '@hilla/react-components/RadioGroup.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { RadioButton } from '@hilla/react-components/RadioButton.js';
+import layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   const [theme, setTheme] = useState('padding');
@@ -14,7 +15,10 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <HorizontalLayout theme={`${theme} spacing`} style={{ alignItems: 'stretch' }}>
+      <HorizontalLayout
+        theme={`${theme} spacing`}
+        style={{ alignItems: 'stretch', ...layoutExampleStyle }}
+      >
         <Button>Button 1</Button>
         <Button>Button 2</Button>
         <Button>Button 3</Button>

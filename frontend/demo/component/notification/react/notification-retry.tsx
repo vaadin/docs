@@ -4,6 +4,7 @@ import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { Notification } from '@hilla/react-components/Notification.js';
+import '@vaadin/icons';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
@@ -40,6 +41,7 @@ function Example() {
           >
             Retry
           </Button>
+
           <Button theme="tertiary-inline icon" onClick={close} aria-label="Close">
             <Icon icon="lumo:cross" />
           </Button>

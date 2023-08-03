@@ -2,20 +2,19 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <VerticalLayout theme="spacing padding" style={{ alignItems: 'start' }}>
-        <Button style={{ alignSelf: 'end' }} theme="primary">
-          Button 1
-        </Button>
-        <Button style={{ alignSelf: 'center' }}>Button 2</Button>
-        <Button>Button 3</Button>
-      </VerticalLayout>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <VerticalLayout theme="spacing padding" style={{ alignItems: 'start', ...layoutExampleStyle }}>
+      <Button style={{ alignSelf: 'end' }} theme="primary">
+        Button 1
+      </Button>
+      <Button style={{ alignSelf: 'center' }}>Button 2</Button>
+      <Button>Button 3</Button>
+    </VerticalLayout>
+    // end::snippet[]
   );
 }
 

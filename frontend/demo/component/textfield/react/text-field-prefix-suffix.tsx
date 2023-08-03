@@ -3,6 +3,7 @@ import React from 'react';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { TextField } from '@hilla/react-components/TextField.js';
+import '@vaadin/icons';
 
 function Example() {
   return (

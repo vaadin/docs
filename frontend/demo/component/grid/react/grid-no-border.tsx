@@ -14,24 +14,22 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Grid items={items} theme="no-border">
-        <GridColumn header="Image" flexGrow={0} autoWidth>
-          {({ item }) => (
-            <Avatar
-              img={item.pictureUrl}
-              name={`${item.firstName} ${item.lastName}`}
-              {...{ alt: 'User avatar' }}
-            />
-          )}
-        </GridColumn>
-        <GridColumn path="firstName" />
-        <GridColumn path="lastName" />
-        <GridColumn path="email" />
-      </Grid>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Grid items={items} theme="no-border">
+      <GridColumn header="Image" flexGrow={0} autoWidth>
+        {({ item }) => (
+          <Avatar
+            img={item.pictureUrl}
+            name={`${item.firstName} ${item.lastName}`}
+            {...{ alt: 'User avatar' }}
+          />
+        )}
+      </GridColumn>
+      <GridColumn path="firstName" />
+      <GridColumn path="lastName" />
+      <GridColumn path="email" />
+    </Grid>
+    // end::snippet[]
   );
 }
 

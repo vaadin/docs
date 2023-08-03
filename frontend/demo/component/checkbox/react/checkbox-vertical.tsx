@@ -5,19 +5,17 @@ import { CheckboxGroup } from '@hilla/react-components/CheckboxGroup.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <CheckboxGroup label="Working days" theme="vertical">
-        <Checkbox value="mon" label="Monday" />
-        <Checkbox value="tue" label="Tuesday" />
-        <Checkbox value="wed" label="Wednesday" />
-        <Checkbox value="thu" label="Thursday" />
-        <Checkbox value="fri" label="Friday" />
-        <Checkbox value="sat" label="Saturday" />
-        <Checkbox value="sun" label="Sunday" />
-      </CheckboxGroup>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <CheckboxGroup label="Working days" theme="vertical">
+      <Checkbox value="mon" label="Monday" />
+      <Checkbox value="tue" label="Tuesday" />
+      <Checkbox value="wed" label="Wednesday" />
+      <Checkbox value="thu" label="Thursday" />
+      <Checkbox value="fri" label="Friday" />
+      <Checkbox value="sat" label="Saturday" />
+      <Checkbox value="sun" label="Sunday" />
+    </CheckboxGroup>
+    // end::snippet[]
   );
 }
 

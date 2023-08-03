@@ -5,11 +5,9 @@ import { loremIpsum } from '../../../../../src/main/resources/data/templates.jso
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <TextArea label="Description" value={loremIpsum} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <TextArea label="Description" value={loremIpsum} style={{ width: '100%' }} />
+    // end::snippet[]
   );
 }
 

@@ -3,6 +3,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useState } from 'react';
 
 function Example() {
+  // tag::snippet[]
   const [selectedItem, setSelectedItem] = useState<MenuBarItem | undefined>(undefined);
 
   const items = [
@@ -26,18 +27,13 @@ function Example() {
     { text: 'Duplicate' },
   ];
 
-  const itemSelected = (event: any) => {
-    setSelectedItem(event.detail.value);
-  };
-
   return (
     <>
-      {/* tag::snippet[] */}
-      <MenuBar items={items} onItemSelected={itemSelected} />
+      <MenuBar items={items} onItemSelected={(event) => setSelectedItem(event.detail.value)} />
       <div>Clicked item: {selectedItem?.text}</div>
-      {/* end::snippet[] */}
     </>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

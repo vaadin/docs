@@ -13,7 +13,9 @@ function Example() {
     });
   }, []);
 
+  // tag::snippet[]
   return <Crud include="firstName, lastName, profession" noSort noFilter items={items} />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

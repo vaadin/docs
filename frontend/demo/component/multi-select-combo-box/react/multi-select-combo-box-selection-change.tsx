@@ -12,6 +12,7 @@ function Example() {
     getCountries().then((countries) => setItems(countries));
   }, []);
 
+  // tag::snippet[]
   const [selectedCountries, setSelectedCountries] = useState<Country[]>([]);
   const selectedCountriesText = selectedCountries.map((country) => country.name).join(', ');
 
@@ -31,6 +32,7 @@ function Example() {
       <TextArea label="Selected Countries" readonly value={selectedCountriesText} />
     </HorizontalLayout>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

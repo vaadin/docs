@@ -18,19 +18,17 @@ function Example() {
   ]);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ContextMenu items={items}>
-        <Grid allRowsVisible items={gridItems}>
-          <GridColumn path="name" />
-          <GridColumn path="size" />
-          <GridColumn width="70px" flexGrow={0}>
-            {() => <MenuBar items={items} theme="tertiary" />}
-          </GridColumn>
-        </Grid>
-      </ContextMenu>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ContextMenu items={items}>
+      <Grid allRowsVisible items={gridItems}>
+        <GridColumn path="name" />
+        <GridColumn path="size" />
+        <GridColumn width="70px" flexGrow={0}>
+          {() => <MenuBar items={items} theme="tertiary" />}
+        </GridColumn>
+      </Grid>
+    </ContextMenu>
+    // end::snippet[]
   );
 }
 

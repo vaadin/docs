@@ -9,13 +9,14 @@ import { Avatar } from '@hilla/react-components/Avatar.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { format, parseISO } from 'date-fns';
 
+// tag::snippet[]
 function employeeRenderer({ item: person }: { item: Person }) {
   return (
     <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
       <Avatar
         img={person.pictureUrl}
         name={`${person.firstName} ${person.lastName}`}
-        // alt="User avatar"
+        {...{ alt: 'User avatar' }}
       />
 
       <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>
@@ -65,5 +66,6 @@ function Example() {
     </Grid>
   );
 }
+// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

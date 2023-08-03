@@ -16,13 +16,9 @@ function Example() {
       ],
     },
   ];
-  // end::snippet[]
 
-  return (
-    // tag::snippet[]
-    <MenuBar items={items}></MenuBar>
-    // end::snippet[]
-  );
+  return <MenuBar items={items} />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

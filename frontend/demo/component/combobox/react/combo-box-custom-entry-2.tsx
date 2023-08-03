@@ -6,19 +6,17 @@ function Example() {
   const [items, setItems] = useState(['Chrome', 'Edge', 'Firefox', 'Safari']);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ComboBox
-        allowCustomValue
-        label="Browser"
-        helperText="Select or type a browser"
-        items={items}
-        onCustomValueSet={(event) => {
-          setItems([...items, event.detail]);
-        }}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ComboBox
+      allowCustomValue
+      label="Browser"
+      helperText="Select or type a browser"
+      items={items}
+      onCustomValueSet={(event) => {
+        setItems([...items, event.detail]);
+      }}
+    />
+    // end::snippet[]
   );
 }
 

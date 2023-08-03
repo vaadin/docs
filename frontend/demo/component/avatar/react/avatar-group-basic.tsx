@@ -12,15 +12,13 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <AvatarGroup
-        items={items.map((person) => ({
-          name: `${person.firstName} ${person.lastName}`,
-        }))}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <AvatarGroup
+      items={items.map((person) => ({
+        name: `${person.firstName} ${person.lastName}`,
+      }))}
+    />
+    // end::snippet[]
   );
 }
 

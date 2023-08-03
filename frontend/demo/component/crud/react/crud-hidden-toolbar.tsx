@@ -13,7 +13,7 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      {/* Adding the hiddenToolbar prop hides the toolbar */}
+      {/* Adding the noToolbar prop hides the toolbar */}
       <Crud include="firstName, lastName" items={items} onSizeChanged={() => {}} noToolbar />
       {/* end::snippet[] */}
     </>

@@ -5,17 +5,15 @@ import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Details summary="Contact information" opened>
-        <VerticalLayout>
-          <span>Sophia Williams</span>
-          <span>sophia.williams@company.com</span>
-          <span>(501) 555-9128</span>
-        </VerticalLayout>
-      </Details>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Details summary="Contact information" opened>
+      <VerticalLayout>
+        <span>Sophia Williams</span>
+        <span>sophia.williams@company.com</span>
+        <span>(501) 555-9128</span>
+      </VerticalLayout>
+    </Details>
+    // end::snippet[]
   );
 }
 

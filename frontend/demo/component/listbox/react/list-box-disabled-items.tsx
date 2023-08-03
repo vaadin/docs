@@ -5,15 +5,13 @@ import { Item } from '@hilla/react-components/Item.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ListBox selected={0}>
-        <Item>In progress (2)</Item>
-        <Item>Done (4)</Item>
-        <Item disabled>Cancelled (0)</Item>
-      </ListBox>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ListBox selected={0}>
+      <Item>In progress (2)</Item>
+      <Item>Done (4)</Item>
+      <Item disabled>Cancelled (0)</Item>
+    </ListBox>
+    // end::snippet[]
   );
 }
 

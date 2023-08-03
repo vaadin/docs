@@ -9,7 +9,6 @@ import React, { useEffect, useState } from 'react';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-// tag::snippetreact[]
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
 
@@ -17,6 +16,7 @@ function Example() {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
+  // tag::snippet[]
   const i18n = {
     newItem: 'Luo uusi',
     editItem: 'Muuta tietoja',
@@ -57,6 +57,7 @@ function Example() {
         <GridColumn path="email" header="Sähköposti" />
         <GridColumn path="profession" header="Ammatti" />
       </Grid>
+
       <div slot="form">
         <TextField {...{ path: 'firstName' }} label="Etunimi" required />
         <TextField {...{ path: 'lastName' }} label="Sukunimi" required />
@@ -69,7 +70,7 @@ function Example() {
       </div>
     </Crud>
   );
+  // end::snippet[]
 }
-// end::snippetreact[]
 
 export default reactExample(Example); // hidden-source-line

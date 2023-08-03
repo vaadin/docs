@@ -14,11 +14,9 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ComboBox label="Country" itemLabelPath="name" itemValuePath="id" items={items} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ComboBox label="Country" itemLabelPath="name" itemValuePath="id" items={items} />
+    // end::snippet[]
   );
 }
 

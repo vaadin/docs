@@ -2,9 +2,10 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useState } from 'react';
 import {
   PasswordField,
-  type PasswordFieldChangeEvent,
+  type PasswordFieldValueChangedEvent,
 } from '@hilla/react-components/PasswordField.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 type PasswordStrength = 'moderate' | 'strong' | 'weak';
 
@@ -20,9 +21,9 @@ function Example() {
 
   const pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*';
 
-  function onPasswordChanged(event: PasswordFieldChangeEvent) {
+  function onPasswordChanged(event: PasswordFieldValueChangedEvent) {
     let strength: PasswordStrength = 'weak';
-    const { value } = event.target;
+    const { value } = event.detail;
     if (value) {
       if (value.length > 9) {
         strength = 'strong';
@@ -35,25 +36,25 @@ function Example() {
   }
 
   return (
-    <>
-      <PasswordField
-        label="Password"
-        pattern={pattern}
-        errorMessage="Not a valid password"
-        onChange={onPasswordChanged}
-      >
-        <Icon
-          icon="vaadin:check"
-          slot="suffix"
-          style={{ color: StrengthColor.strong }}
-          hidden={strengthText !== 'strong'}
-        />
+    // tag::snippet[]
+    <PasswordField
+      label="Password"
+      pattern={pattern}
+      errorMessage="Not a valid password"
+      onValueChanged={onPasswordChanged}
+    >
+      <Icon
+        icon="vaadin:check"
+        slot="suffix"
+        style={{ color: StrengthColor.strong }}
+        hidden={strengthText !== 'strong'}
+      />
 
-        <div slot="helper">
-          Password strength: <span style={{ color: strengthColor }}>{strengthText}</span>
-        </div>
-      </PasswordField>
-    </>
+      <div slot="helper">
+        Password strength: <span style={{ color: strengthColor }}>{strengthText}</span>
+      </div>
+    </PasswordField>
+    // end::snippet[]
   );
 }
 

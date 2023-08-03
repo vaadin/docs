@@ -9,10 +9,12 @@ function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
 
   const handleClick = () => {
+    // tag::snippet[]
     const notification = Notification.show('New project plan available', {
       position: 'middle',
       theme: 'primary',
     });
+    // end::snippet[]
 
     setNotificationOpened(true);
 

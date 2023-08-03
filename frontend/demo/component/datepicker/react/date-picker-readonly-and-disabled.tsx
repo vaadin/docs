@@ -8,6 +8,7 @@ function Example() {
     <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
       <DatePicker readonly label="Read-only" value="2020-06-12" />
+
       <DatePicker disabled label="Disabled" />
       {/* end::snippet[] */}
     </HorizontalLayout>

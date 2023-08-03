@@ -2,10 +2,8 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect, useState } from 'react';
 import { GridPro } from '@hilla/react-components/GridPro.js';
 import { GridProEditColumn } from '@hilla/react-components/GridProEditColumn.js';
-import { DatePicker } from '@hilla/react-components/DatePicker.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { format, parseISO } from 'date-fns';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
@@ -14,18 +12,20 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <GridPro items={items} enterNextRow>
-        <GridProEditColumn path="firstName" />
+    // tag::snippet[]
+    <GridPro items={items} enterNextRow>
+      <GridProEditColumn path="firstName" />
 
-        <GridProEditColumn
-          path="membership"
-          editorType="select"
-          editorOptions={['Regular', 'Premium', 'VIP']}
-        />
+      <GridProEditColumn
+        path="membership"
+        editorType="select"
+        editorOptions={['Regular', 'Premium', 'VIP']}
+      />
 
-        <GridProEditColumn path="subscriber" editorType="checkbox" />
+      <GridProEditColumn path="subscriber" editorType="checkbox" />
+
+      {/*
+        Unfortunately custom editors don't currently work with React-based GridPro
 
         <GridProEditColumn
           path="birthday"
@@ -34,10 +34,9 @@ function Example() {
           )}
         >
           {({ item: { birthday } }) => format(parseISO(birthday), 'MM/dd/yyyy')}
-        </GridProEditColumn>
-      </GridPro>
-      {/* end::snippet[] */}
-    </>
+        </GridProEditColumn> */}
+    </GridPro>
+    // end::snippet[]
   );
 }
 

@@ -18,17 +18,15 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ComboBox
-        placeholder="Select employee"
-        label="Employee"
-        itemLabelPath="displayName"
-        itemValuePath="id"
-        items={items}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ComboBox
+      placeholder="Select employee"
+      label="Employee"
+      itemLabelPath="displayName"
+      itemValuePath="id"
+      items={items}
+    />
+    // end::snippet[]
   );
 }
 

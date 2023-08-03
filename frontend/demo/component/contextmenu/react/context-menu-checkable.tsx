@@ -7,6 +7,7 @@ import {
 } from '@hilla/react-components/ContextMenu.js';
 
 function Example() {
+  // tag::snippet[]
   const [items, setItems] = useState<ContextMenuItem[]>([
     { text: 'Abigail Lewis', checked: true },
     { text: 'Allison Torres' },
@@ -28,6 +29,7 @@ function Example() {
       </span>
     </ContextMenu>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

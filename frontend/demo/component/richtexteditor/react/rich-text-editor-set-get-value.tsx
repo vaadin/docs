@@ -27,7 +27,7 @@ function Example() {
 
   return (
     <>
-      {/* tag::htmlsnippet[] */}
+      {/* tag::snippet[] */}
       <RichTextEditor
         style={{ height: '400px' }}
         value={deltaValue}
@@ -51,7 +51,7 @@ function Example() {
         value={deltaValue}
         onChange={(e) => setDeltaValue(e.target.value)}
       />
-      {/* end::htmlsnippet[] */}
+      {/* end::snippet[] */}
     </>
   );
 }

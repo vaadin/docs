@@ -7,11 +7,10 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 function Example() {
   const [items, setItems] = useState<Country[]>([]);
   useEffect(() => {
-    getCountries().then((countries) => {
-      setItems(countries);
-    });
+    getCountries().then((countries) => setItems(countries));
   }, []);
 
+  // tag::snippet[]
   const i18n = {
     cleared: 'Alle Einträge entfernt',
     focused: ' ausgewählt. Drücke Rücktaste zum Entfernen',
@@ -21,18 +20,16 @@ function Example() {
   };
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <MultiSelectComboBox
-        label="Länder"
-        itemLabelPath="name"
-        itemIdPath="id"
-        items={items}
-        i18n={i18n}
-      />
-      {/* end::snippet[] */}
-    </>
+    <MultiSelectComboBox
+      label="Länder"
+      itemLabelPath="name"
+      itemIdPath="id"
+      items={items}
+      i18n={i18n}
+      style={{ width: '300px' }}
+    />
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

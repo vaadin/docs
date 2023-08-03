@@ -4,11 +4,9 @@ import { Checkbox } from '@hilla/react-components/Checkbox.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Checkbox label="I accept the terms and conditions" />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Checkbox label="I accept the terms and conditions" />
+    // end::snippet[]
   );
 }
 

@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Upload } from '@hilla/react-components/Upload.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 
@@ -18,6 +18,19 @@ function Example() {
     '.csv',
   ];
 
+  // tag::snippet[]
+  const uploadRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (uploadRef.current) {
+      uploadRef.current.i18n.addFiles.one = 'Upload Spreadsheet...';
+      uploadRef.current.i18n.dropFiles.one = 'Drop spreadsheet here';
+      uploadRef.current.i18n.error.incorrectFileType =
+        'Provide the file in one of the supported formats (.xls, .xlsx, .csv).';
+      uploadRef.current.i18n = { ...uploadRef.current.i18n };
+    }
+  }, []);
+
   return (
     <>
       <h4>Upload spreadsheet</h4>
@@ -26,18 +39,18 @@ function Example() {
         <br />
         Only Excel and CSV files are accepted.
       </p>
-      {/* tag::snippet[] */}
       <Upload
         maxFiles={1}
         maxFileSize={maxFileSizeInBytes}
         accept={acceptedTypes.join(',')}
+        ref={uploadRef}
         onFileReject={(event) => {
           Notification.show(event.detail.error);
         }}
       />
-      {/* end::snippet[] */}
     </>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

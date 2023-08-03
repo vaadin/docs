@@ -18,47 +18,45 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Grid items={items}>
-        <GridColumn path="report" header="Report" />
+    // tag::snippet[]
+    <Grid items={items}>
+      <GridColumn path="report" header="Report" />
 
-        <GridColumn header="Due date">
-          {({ item: report }) => <span>{dateFormatter.format(new Date(report.due))}</span>}
-        </GridColumn>
+      <GridColumn header="Due date">
+        {({ item: report }) => <span>{dateFormatter.format(new Date(report.due))}</span>}
+      </GridColumn>
 
-        <GridColumn path="assignee" header="Assignee" />
+      <GridColumn path="assignee" header="Assignee" />
 
-        <GridColumn header="Status">
-          {({ item: report }) => {
-            let title: string;
-            let theme: string;
+      <GridColumn header="Status">
+        {({ item: report }) => {
+          let title: string;
+          let theme: string;
 
-            switch (report.status) {
-              case ReportStatus.COMPLETED:
-                title = 'Completed';
-                theme = 'success';
-                break;
-              case ReportStatus.IN_PROGRESS:
-                title = 'In progress';
-                theme = '';
-                break;
-              case ReportStatus.CANCELLED:
-                title = 'Cancelled';
-                theme = 'error';
-                break;
-              default:
-                title = 'On hold';
-                theme = 'contrast';
-                break;
-            }
+          switch (report.status) {
+            case ReportStatus.COMPLETED:
+              title = 'Completed';
+              theme = 'success';
+              break;
+            case ReportStatus.IN_PROGRESS:
+              title = 'In progress';
+              theme = '';
+              break;
+            case ReportStatus.CANCELLED:
+              title = 'Cancelled';
+              theme = 'error';
+              break;
+            default:
+              title = 'On hold';
+              theme = 'contrast';
+              break;
+          }
 
-            return <span {...{ theme: `badge ${theme} primary` }}>{title}</span>;
-          }}
-        </GridColumn>
-      </Grid>
-      {/* end::snippet[] */}
-    </>
+          return <span {...{ theme: `badge ${theme} primary` }}>{title}</span>;
+        }}
+      </GridColumn>
+    </Grid>
+    // end::snippet[]
   );
 }
 

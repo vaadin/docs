@@ -5,18 +5,16 @@ import { Tooltip } from '@hilla/react-components/Tooltip.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <DateTimePicker
-        label="Label"
-        helperText="Helper text"
-        datePlaceholder="Date"
-        timePlaceholder="Time"
-      >
-        <Tooltip slot="tooltip" text="Tooltip text" />
-      </DateTimePicker>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <DateTimePicker
+      label="Label"
+      helperText="Helper text"
+      datePlaceholder="Date"
+      timePlaceholder="Time"
+    >
+      <Tooltip slot="tooltip" text="Tooltip text" />
+    </DateTimePicker>
+    // end::snippet[]
   );
 }
 

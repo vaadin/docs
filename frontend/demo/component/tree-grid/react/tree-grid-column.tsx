@@ -16,10 +16,6 @@ function Example() {
   const [managers, setManagers] = useState<Person[]>([]);
   const [expandedItems, setExpandedItems] = useState<Person[]>([]);
 
-  useEffect(() => {
-    getPeople({ count: 10 }).then(({ people }) => setManagers(people));
-  }, []);
-
   const dataProvider = async (
     params: GridDataProviderParams<Person>,
     callback: GridDataProviderCallback<Person>
@@ -30,7 +26,7 @@ function Example() {
       managerId: params.parentItem ? params.parentItem.id : null,
     });
 
-    if (!params.parentItem) {
+    if (!managers.length && !params.parentItem) {
       setManagers(people);
     }
 

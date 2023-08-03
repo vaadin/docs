@@ -7,14 +7,11 @@ import { CustomField } from '@hilla/react-components/CustomField.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 
 function Example() {
+  // tag::snippet[]
   const monthFieldRef = useRef<SelectElement>(null);
   const yearFieldRef = useRef<SelectElement>(null);
-  const [months, setMonths] = useState(
-    Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'))
-  );
-  const [years, setYears] = useState(
-    Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`)
-  );
+  const months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
+  const years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
 
   useEffect(() => {
     (monthFieldRef.current as any)?.focusElement?.setAttribute('title', 'Month');
@@ -45,6 +42,7 @@ function Example() {
       </FormItem>
     </FormLayout>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

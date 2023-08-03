@@ -10,20 +10,18 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <FormLayout responsiveSteps={layoutSteps}>
-        <div>
-          <label htmlFor="upload-drop-enabled">Drag and drop enabled</label>
-          <Upload id="upload-drop-enabled" />
-        </div>
-        <div>
-          <label htmlFor="upload-drop-disabled">Drag and drop disabled</label>
-          <Upload id="upload-drop-disabled" nodrop />
-        </div>
-      </FormLayout>
-      {/* end::snippet[] */}
-    </>
+    <FormLayout responsiveSteps={layoutSteps}>
+      <div>
+        <label htmlFor="upload-drop-enabled">Drag and drop enabled</label>
+        <Upload id="upload-drop-enabled" />
+      </div>
+      <div>
+        <label htmlFor="upload-drop-disabled">Drag and drop disabled</label>
+        {/* tag::snippet[] */}
+        <Upload id="upload-drop-disabled" nodrop />
+        {/* end::snippet[] */}
+      </div>
+    </FormLayout>
   );
 }
 

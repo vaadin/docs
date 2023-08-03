@@ -7,14 +7,12 @@ function Example() {
   const lastDayOfTheYear = lastDayOfYear(Date.now());
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <DatePicker
-        label="Q4 deadline"
-        initialPosition={formatISO(lastDayOfTheYear, { representation: 'date' })}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <DatePicker
+      label="Q4 deadline"
+      initialPosition={formatISO(lastDayOfTheYear, { representation: 'date' })}
+    />
+    // end::snippet[]
   );
 }
 

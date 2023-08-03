@@ -6,6 +6,7 @@ import { Tooltip } from '@hilla/react-components/Tooltip.js';
 import { Tabs } from '@hilla/react-components/Tabs.js';
 import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 function Example() {
   return (
@@ -14,15 +15,14 @@ function Example() {
         <Tooltip slot="tooltip" text="Expand menu" position="end" />
       </DrawerToggle>
 
+      {/* tag::snippet[] */}
       <Tabs slot="drawer" orientation="vertical">
-        {/* tag::snippet[] */}
         <Tab>
           <a tabIndex={-1}>
             <Icon icon="vaadin:home" />
           </a>
           <Tooltip slot="tooltip" text="Home" position="end" />
         </Tab>
-        {/* end::snippet[] */}
 
         <Tab>
           <a tabIndex={-1}>
@@ -38,6 +38,7 @@ function Example() {
           <Tooltip slot="tooltip" text="Reports" position="end" />
         </Tab>
       </Tabs>
+      {/* end::snippet[] */}
     </AppLayout>
   );
 }

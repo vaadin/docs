@@ -6,16 +6,14 @@ function Example() {
   const items = ['Chrome', 'Edge', 'Firefox', 'Safari'];
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ComboBox
-        allowCustomValue
-        label="Browser"
-        helperText="Select or type a browser"
-        items={items}
-      ></ComboBox>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ComboBox
+      allowCustomValue
+      label="Browser"
+      helperText="Select or type a browser"
+      items={items}
+    ></ComboBox>
+    // end::snippet[]
   );
 }
 

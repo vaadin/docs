@@ -2,9 +2,9 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Iconset } from '@hilla/react-components/Iconset.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);

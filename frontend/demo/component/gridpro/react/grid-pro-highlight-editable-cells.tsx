@@ -13,12 +13,14 @@ function Example() {
   }, []);
 
   return (
+    // tag::snippet[]
     <GridPro theme="highlight-editable-cells" items={items}>
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="membership" />
       <GridProEditColumn path="email" header="Email (Editable)" />
     </GridPro>
+    // end::snippet[]
   );
 }
 

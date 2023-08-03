@@ -18,29 +18,27 @@ function Example() {
     setEditedItem(event.detail.value);
   }
 
-  function onDblClick(e: MouseEvent) {
+  function onDblClick(e: React.MouseEvent) {
     const target = e.currentTarget as GridElement<Person>;
-    setEditedItem(target.getEventContext(e).item);
+    setEditedItem(target.getEventContext(e.nativeEvent).item);
   }
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Crud
-        include="firstName, lastName, email, profession"
-        items={items}
-        editedItem={editedItem}
-        onEditedItemChanged={onEditedItemChanged}
-      >
-        <Grid slot="grid" ondblclick={onDblClick}>
-          <GridColumn path="firstName" header="First name" />
-          <GridColumn path="lastName" header="Last name" />
-          <GridColumn path="email" header="Email" />
-          <GridColumn path="profession" header="Profession" />
-        </Grid>
-      </Crud>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Crud
+      include="firstName, lastName, email, profession"
+      items={items}
+      editedItem={editedItem}
+      onEditedItemChanged={onEditedItemChanged}
+    >
+      <Grid slot="grid" onDoubleClick={onDblClick}>
+        <GridColumn path="firstName" header="First name" />
+        <GridColumn path="lastName" header="Last name" />
+        <GridColumn path="email" header="Email" />
+        <GridColumn path="profession" header="Profession" />
+      </Grid>
+    </Crud>
+    // end::snippet[]
   );
 }
 

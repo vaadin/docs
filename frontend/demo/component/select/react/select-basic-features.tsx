@@ -3,6 +3,7 @@ import React from 'react';
 import { Select } from '@hilla/react-components/Select.js';
 import { Tooltip } from '@hilla/react-components/Tooltip.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 function Example() {
   const items = [
@@ -29,14 +30,12 @@ function Example() {
   ];
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Select label="Label" helperText="Helper text" placeholder="Placeholder" items={items}>
-        <Tooltip slot="tooltip" text="Tooltip text" />
-        <Icon slot="prefix" icon="vaadin:vaadin-h" />
-      </Select>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Select label="Label" helperText="Helper text" placeholder="Placeholder" items={items}>
+      <Tooltip slot="tooltip" text="Tooltip text" />
+      <Icon slot="prefix" icon="vaadin:vaadin-h" />
+    </Select>
+    // end::snippet[]
   );
 }
 

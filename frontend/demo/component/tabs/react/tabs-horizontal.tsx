@@ -5,17 +5,15 @@ import { Tab } from '@hilla/react-components/Tab.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Tabs style={{ maxWidth: '100%', width: '400px' }}>
-        <Tab>Analytics</Tab>
-        <Tab>Customers</Tab>
-        <Tab>Dashboards</Tab>
-        <Tab>Documents</Tab>
-        <Tab>Orders</Tab>
-      </Tabs>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Tabs style={{ maxWidth: '100%', width: '400px' }}>
+      <Tab>Analytics</Tab>
+      <Tab>Customers</Tab>
+      <Tab>Dashboards</Tab>
+      <Tab>Documents</Tab>
+      <Tab>Orders</Tab>
+    </Tabs>
+    // end::snippet[]
   );
 }
 

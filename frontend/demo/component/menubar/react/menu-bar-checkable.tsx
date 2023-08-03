@@ -7,6 +7,7 @@ import {
 } from '@hilla/react-components/MenuBar.js';
 
 function Example() {
+  // tag::snippet[]
   const [items, setItems] = useState([
     {
       text: 'Options',
@@ -20,7 +21,8 @@ function Example() {
     setItems([...items]);
   };
 
-  return <MenuBar items={items} onItemSelected={itemSelected}></MenuBar>;
+  return <MenuBar items={items} onItemSelected={itemSelected} />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

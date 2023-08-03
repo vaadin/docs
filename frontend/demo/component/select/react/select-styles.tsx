@@ -27,18 +27,16 @@ function Example() {
   ];
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Select
-        theme="align-right small helper-above-field"
-        label="Label"
-        helperText="Helper text"
-        style={{ '--vaadin-input-field-border-width': '1px' } as React.CSSProperties}
-        items={items}
-        value={items[0].value}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Select
+      theme="align-right small helper-above-field"
+      label="Label"
+      helperText="Helper text"
+      style={{ '--vaadin-input-field-border-width': '1px' } as React.CSSProperties}
+      items={items}
+      value={items[0].value}
+    />
+    // end::snippet[]
   );
 }
 

@@ -5,6 +5,7 @@ import { CheckboxGroup } from '@hilla/react-components/CheckboxGroup.js';
 import { Tooltip } from '@hilla/react-components/Tooltip.js';
 
 function Example() {
+  // tag::snippet[]
   return (
     <CheckboxGroup label="Label" helperText="Helper text">
       <Tooltip slot="tooltip" text="Tooltip text" />
@@ -14,6 +15,7 @@ function Example() {
       <Checkbox value="3" label="Item 3" />
     </CheckboxGroup>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

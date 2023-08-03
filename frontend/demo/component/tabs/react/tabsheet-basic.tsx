@@ -6,6 +6,7 @@ import { Tab } from '@hilla/react-components/Tab.js';
 
 function Example() {
   return (
+    // tag::snippet[]
     <TabSheet>
       <Tabs slot="tabs">
         <Tab id="dashboard-tab">Dashboard</Tab>
@@ -13,12 +14,11 @@ function Example() {
         <Tab id="shipping-tab">Shipping</Tab>
       </Tabs>
 
-      {/* tag::snippet[] */}
       <div {...{ tab: 'dashboard-tab' }}>This is the Dashboard tab content</div>
       <div {...{ tab: 'payment-tab' }}>This is the Payment tab content</div>
       <div {...{ tab: 'shipping-tab' }}>This is the Shipping tab content</div>
-      {/* end::snippet[] */}
     </TabSheet>
+    // end::snippet[]
   );
 }
 

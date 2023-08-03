@@ -15,11 +15,9 @@ function createFakeFiles() {
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Upload files={createFakeFiles()} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Upload files={createFakeFiles()} />
+    // end::snippet[]
   );
 }
 

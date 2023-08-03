@@ -14,19 +14,17 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Crud include="firstName, lastName, email, profession" items={items}>
-        <Grid slot="grid">
-          <CrudEditColumn />
-          <GridColumn path="firstName" header="First name" />
-          <GridColumn path="lastName" header="Last name" />
-          <GridColumn path="email" header="Email" />
-          <GridColumn path="profession" header="Profession" />
-        </Grid>
-      </Crud>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Crud include="firstName, lastName, email, profession" items={items}>
+      <Grid slot="grid">
+        <CrudEditColumn />
+        <GridColumn path="firstName" header="First name" />
+        <GridColumn path="lastName" header="Last name" />
+        <GridColumn path="email" header="Email" />
+        <GridColumn path="profession" header="Profession" />
+      </Grid>
+    </Crud>
+    // end::snippet[]
   );
 }
 

@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import { DatePicker, type DatePickerElement } from '@hilla/react-components/DatePicker.js';
 
 function Example() {
+  // tag::snippet[]
   const datePickerRef = useRef<DatePickerElement>(null);
 
   useEffect(() => {
@@ -14,13 +15,8 @@ function Example() {
     }
   }, []);
 
-  return (
-    <>
-      {/* tag::snippet[] */}
-      <DatePicker label="Vacation start date" showWeekNumbers ref={datePickerRef} />
-      {/* end::snippet[] */}
-    </>
-  );
+  return <DatePicker label="Vacation start date" showWeekNumbers ref={datePickerRef} />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

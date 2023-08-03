@@ -4,17 +4,15 @@ import { PasswordField } from '@hilla/react-components/PasswordField.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <PasswordField
-        label="Password"
-        helperText="A password must be at least 8 characters.
+    // tag::snippet[]
+    <PasswordField
+      label="Password"
+      helperText="A password must be at least 8 characters.
         It has to have at least one letter and one digit."
-        pattern="^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$"
-        errorMessage="Not a valid password"
-      />
-      {/* end::snippet[] */}
-    </>
+      pattern="^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$"
+      errorMessage="Not a valid password"
+    />
+    // end::snippet[]
   );
 }
 

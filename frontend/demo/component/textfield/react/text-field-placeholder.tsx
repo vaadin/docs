@@ -2,16 +2,15 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <TextField placeholder="Search">
-        <Icon slot="prefix" icon="vaadin:search" />
-      </TextField>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <TextField placeholder="Search">
+      <Icon slot="prefix" icon="vaadin:search" />
+    </TextField>
+    // end::snippet[]
   );
 }
 

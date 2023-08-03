@@ -9,27 +9,25 @@ function Example() {
   const [errorMessage, setErrorMessage] = useState('');
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <DatePicker
-        label="Appointment date"
-        helperText="Must be within 60 days from today"
-        min={formatISO(minDate, { representation: 'date' })}
-        max={formatISO(maxDate, { representation: 'date' })}
-        errorMessage={errorMessage}
-        onChange={({ target }) => {
-          const date = parse(target.value ?? '', 'yyyy-MM-dd', new Date());
-          if (isBefore(date, minDate)) {
-            setErrorMessage('Too early, choose another date');
-          } else if (isAfter(date, maxDate)) {
-            setErrorMessage('Too late, choose another date');
-          } else {
-            setErrorMessage('');
-          }
-        }}
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <DatePicker
+      label="Appointment date"
+      helperText="Must be within 60 days from today"
+      min={formatISO(minDate, { representation: 'date' })}
+      max={formatISO(maxDate, { representation: 'date' })}
+      errorMessage={errorMessage}
+      onChange={({ target }) => {
+        const date = parse(target.value ?? '', 'yyyy-MM-dd', new Date());
+        if (isBefore(date, minDate)) {
+          setErrorMessage('Too early, choose another date');
+        } else if (isAfter(date, maxDate)) {
+          setErrorMessage('Too late, choose another date');
+        } else {
+          setErrorMessage('');
+        }
+      }}
+    />
+    // end::snippet[]
   );
 }
 

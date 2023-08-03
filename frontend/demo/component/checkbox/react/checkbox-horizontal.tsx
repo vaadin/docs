@@ -5,15 +5,13 @@ import { CheckboxGroup } from '@hilla/react-components/CheckboxGroup.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <CheckboxGroup label="Permissions">
-        <Checkbox value="read" label="Read" />
-        <Checkbox value="edit" label="Edit" />
-        <Checkbox value="delete" label="Delete" />
-      </CheckboxGroup>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <CheckboxGroup label="Permissions">
+      <Checkbox value="read" label="Read" />
+      <Checkbox value="edit" label="Edit" />
+      <Checkbox value="delete" label="Delete" />
+    </CheckboxGroup>
+    // end::snippet[]
   );
 }
 

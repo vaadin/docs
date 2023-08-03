@@ -14,9 +14,9 @@ function Example() {
   }, []);
 
   return (
-    <>
-      <Avatar name={`${person?.firstName} ${person?.lastName}`} />
-    </>
+    // tag::snippet[]
+    <Avatar name={`${person?.firstName} ${person?.lastName}`} />
+    // end::snippet[]
   );
 }
 

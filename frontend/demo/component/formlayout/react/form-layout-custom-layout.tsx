@@ -6,9 +6,13 @@ import { TextField } from '@hilla/react-components/TextField.js';
 import { EmailField } from '@hilla/react-components/EmailField.js';
 
 function Example() {
+  // tag::snippet[]
   const responsiveSteps = [
+    // Use one column by default
     { minWidth: '0', columns: 1 },
+    // Use two columns, if the layout's width exceeds 320px
     { minWidth: '320px', columns: 2 },
+    // Use three columns, if the layout's width exceeds 500px
     { minWidth: '500px', columns: 3 },
   ];
 
@@ -22,6 +26,7 @@ function Example() {
       <div></div>
     </SplitLayout>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

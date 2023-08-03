@@ -25,23 +25,21 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Crud include="firstName, lastName, email, profession" items={items}>
-        <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps}>
-          <TextField label="First name" {...{ path: 'firstName' }} required />
-          <TextField label="Last name" {...{ path: 'lastName' }} required />
-          <EmailField {...{ colspan: 2 }} label="Email" {...{ path: 'email' }} required />
-          <ComboBox
-            {...{ colspan: 2 }}
-            label="Profession"
-            {...{ path: 'profession' }}
-            items={professions}
-          />
-        </FormLayout>
-      </Crud>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Crud include="firstName, lastName, email, profession" items={items}>
+      <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps}>
+        <TextField label="First name" {...{ path: 'firstName' }} required />
+        <TextField label="Last name" {...{ path: 'lastName' }} required />
+        <EmailField {...{ colspan: 2 }} label="Email" {...{ path: 'email' }} required />
+        <ComboBox
+          {...{ colspan: 2 }}
+          label="Profession"
+          {...{ path: 'profession' }}
+          items={professions}
+        />
+      </FormLayout>
+    </Crud>
+    // end::snippet[]
   );
 }
 

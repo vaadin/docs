@@ -5,6 +5,7 @@ import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
 import { Tabs } from '@hilla/react-components/Tabs.js';
 import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 function Example() {
   return (

@@ -4,7 +4,6 @@ import { AvatarGroup, type AvatarGroupI18n } from '@hilla/react-components/Avata
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 // tag::snippet[]
-
 const i18n: AvatarGroupI18n = {
   anonymous: 'Anonyymi',
   activeUsers: {
@@ -14,6 +13,7 @@ const i18n: AvatarGroupI18n = {
   joined: 'liittyi',
   left: 'lähti',
 };
+// end::snippet[]
 
 function Example() {
   const [items, setItems] = useState<Array<{ name: string }>>([]);
@@ -50,8 +50,9 @@ function Example() {
     });
   }, []);
 
+  // tag::snippet[]
   return <AvatarGroup i18n={i18n} items={items} />;
+  // end::snippet[]
 }
-// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

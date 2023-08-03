@@ -5,16 +5,14 @@ import { FormItem } from '@hilla/react-components/FormItem.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <FormLayout>
-        <FormItem>
-          <label slot="label">Revenue</label>
-          <input type="text" />
-        </FormItem>
-      </FormLayout>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <FormLayout>
+      <FormItem>
+        <label slot="label">Revenue</label>
+        <input type="text" />
+      </FormItem>
+    </FormLayout>
+    // end::snippet[]
   );
 }
 

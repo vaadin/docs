@@ -18,42 +18,40 @@ function Example() {
   }, []);
 
   return (
+    // tag::snippet[]
     <Select label="Assignee">
-      {() => (
-        <ListBox>
-          {people.map((person) => (
-            // tag::snippet[]
-            // Use the label attribute to display full name of the person as selected value label
-            <Item
-              value={String(person.id)}
-              key={person.id}
-              {...{ label: formatPersonFullName(person) }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <img
-                  src={person.pictureUrl}
-                  alt={`Portrait of ${person.firstName} ${person.lastName}`}
-                  style={{ width: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
-                />
+      <ListBox>
+        {people.map((person) => (
+          // Use the label attribute to display full name of the person as selected value label
+          <Item
+            value={String(person.id)}
+            key={person.id}
+            {...{ label: formatPersonFullName(person) }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img
+                src={person.pictureUrl}
+                alt={`Portrait of ${person.firstName} ${person.lastName}`}
+                style={{ width: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
+              />
 
-                <div>
-                  {person.firstName} {person.lastName}
-                  <div
-                    style={{
-                      fontSize: 'var(--lumo-font-size-s)',
-                      color: 'var(--lumo-secondary-text-color)',
-                    }}
-                  >
-                    {person.profession}
-                  </div>
+              <div>
+                {person.firstName} {person.lastName}
+                <div
+                  style={{
+                    fontSize: 'var(--lumo-font-size-s)',
+                    color: 'var(--lumo-secondary-text-color)',
+                  }}
+                >
+                  {person.profession}
                 </div>
               </div>
-            </Item>
-            // end::snippet[]
-          ))}
-        </ListBox>
-      )}
+            </div>
+          </Item>
+        ))}
+      </ListBox>
     </Select>
+    // end::snippet[]
   );
 }
 

@@ -3,23 +3,22 @@ import React from 'react';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import { Tooltip } from '@hilla/react-components/Tooltip.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ComboBox
-        label="Label"
-        helperText="Helper text"
-        placeholder="Placeholder"
-        clearButtonVisible
-        items={['Value']}
-      >
-        <Tooltip slot="tooltip" text="Tooltip text" />
-        <Icon slot="prefix" icon="vaadin:search" />
-      </ComboBox>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ComboBox
+      label="Label"
+      helperText="Helper text"
+      placeholder="Placeholder"
+      clearButtonVisible
+      items={['Value']}
+    >
+      <Tooltip slot="tooltip" text="Tooltip text" />
+      <Icon slot="prefix" icon="vaadin:search" />
+    </ComboBox>
+    // end::snippet[]
   );
 }
 

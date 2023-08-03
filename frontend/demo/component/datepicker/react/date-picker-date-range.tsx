@@ -8,26 +8,25 @@ function Example() {
   const [returnDate, setReturnDate] = useState('');
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <HorizontalLayout theme="spacing">
-        <DatePicker
-          label="Departure date"
-          max={returnDate}
-          onValueChanged={(event) => {
-            setDepartureDate(event.detail.value);
-          }}
-        />
-        <DatePicker
-          label="Return date"
-          min={departureDate}
-          onValueChanged={(event) => {
-            setReturnDate(event.detail.value);
-          }}
-        />
-      </HorizontalLayout>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <HorizontalLayout theme="spacing">
+      <DatePicker
+        label="Departure date"
+        max={returnDate}
+        onValueChanged={(event) => {
+          setDepartureDate(event.detail.value);
+        }}
+      />
+
+      <DatePicker
+        label="Return date"
+        min={departureDate}
+        onValueChanged={(event) => {
+          setReturnDate(event.detail.value);
+        }}
+      />
+    </HorizontalLayout>
+    // end::snippet[]
   );
 }
 

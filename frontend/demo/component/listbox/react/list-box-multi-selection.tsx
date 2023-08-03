@@ -14,13 +14,20 @@ function Example() {
   }, []);
 
   return (
-    <ListBox multiple selectedValues={selectedValues} style={{ height: '200px' }}>
+    // tag::snippet[]
+    <ListBox
+      multiple
+      selectedValues={selectedValues}
+      onSelectedValuesChanged={(e) => setSelectedValues(e.detail.value)}
+      style={{ height: '200px' }}
+    >
       {items.map((person, index) => (
         <Item key={index}>
           {person.firstName} {person.lastName}
         </Item>
       ))}
     </ListBox>
+    // end::snippet[]
   );
 }
 

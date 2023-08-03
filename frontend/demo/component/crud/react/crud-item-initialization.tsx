@@ -7,7 +7,6 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
-  const crudRef = useRef(null);
   const [items, setItems] = useState<Person[]>([]);
   const [editedItem, setEditedItem] = useState<Partial<Person> | undefined>(undefined);
 
@@ -24,22 +23,19 @@ function Example() {
   };
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Crud
-        include="firstName, lastName, email, profession"
-        items={items}
-        editedItem={editedItem}
-        onNew={handleNewItem}
-        ref={crudRef}
-      >
-        <GridColumn path="firstName" />
-        <GridColumn path="lastName" />
-        <GridColumn path="email">{({ item }) => <EmailField value={item.email} />}</GridColumn>
-        <GridColumn path="profession" />
-      </Crud>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Crud
+      include="firstName, lastName, email, profession"
+      items={items}
+      editedItem={editedItem}
+      onNew={handleNewItem}
+    >
+      <GridColumn path="firstName" />
+      <GridColumn path="lastName" />
+      <GridColumn path="email">{({ item }) => <EmailField value={item.email} />}</GridColumn>
+      <GridColumn path="profession" />
+    </Crud>
+    // end::snippet[]
   );
 }
 

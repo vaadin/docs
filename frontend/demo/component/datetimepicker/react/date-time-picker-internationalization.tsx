@@ -6,6 +6,7 @@ import {
 } from '@hilla/react-components/DateTimePicker.js';
 
 function Example() {
+  // tag::snippet[]
   const dateTimePickerRef = useRef<DateTimePickerElement>(null);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ function Example() {
   }, []);
 
   return <DateTimePicker ref={dateTimePickerRef} label="Sitzungsdatum" />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

@@ -5,15 +5,13 @@ import { RadioButton } from '@hilla/react-components/RadioButton.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <RadioGroup label="Status" theme="vertical">
-        <RadioButton value="pending" label="Pending" checked />
-        <RadioButton value="submitted" label="Submitted" />
-        <RadioButton value="confirmed" label="Confirmed" />
-      </RadioGroup>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <RadioGroup label="Status" theme="vertical">
+      <RadioButton value="pending" label="Pending" checked />
+      <RadioButton value="submitted" label="Submitted" />
+      <RadioButton value="confirmed" label="Confirmed" />
+    </RadioGroup>
+    // end::snippet[]
   );
 }
 

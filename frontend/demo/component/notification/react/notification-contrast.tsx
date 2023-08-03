@@ -10,10 +10,12 @@ function Example() {
   const [notificationOpened, setNotificationOpened] = useState(false);
 
   const handleClick = () => {
+    // tag::snippet[]
     const notification = Notification.show('5 tasks deleted', {
       position: 'middle',
+      theme: 'contrast',
     });
-    notification.setAttribute('theme', 'contrast');
+    // end::snippet[]
     setNotificationOpened(true);
 
     const handleOpenChanged = (e: NotificationOpenedChangedEvent) => {

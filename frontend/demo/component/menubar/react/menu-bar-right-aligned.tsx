@@ -13,11 +13,9 @@ function Example() {
   ];
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <MenuBar theme="end-aligned" items={items} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <MenuBar theme="end-aligned" items={items} />
+    // end::snippet[]
   );
 }
 

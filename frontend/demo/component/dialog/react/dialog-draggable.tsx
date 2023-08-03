@@ -52,17 +52,15 @@ function Example() {
           </>
         )}
       >
-        {() => (
-          <VerticalLayout
-            theme="spacing"
-            style={{ width: '300px', maxWidth: '100%', alignItems: 'stretch' }}
-          >
-            <VerticalLayout style={{ alignItems: 'stretch' }}>
-              <TextField label="Title" />
-              <TextArea label="Description" />
-            </VerticalLayout>
+        <VerticalLayout
+          theme="spacing"
+          style={{ width: '300px', maxWidth: '100%', alignItems: 'stretch' }}
+        >
+          <VerticalLayout style={{ alignItems: 'stretch' }}>
+            <TextField label="Title" />
+            <TextArea label="Description" />
           </VerticalLayout>
-        )}
+        </VerticalLayout>
       </Dialog>
       {/* end::snippet[] */}
       <Button onClick={open}>Show dialog</Button>

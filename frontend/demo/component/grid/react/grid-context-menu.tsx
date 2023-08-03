@@ -31,6 +31,7 @@ function Example() {
     }
   }
 
+  // tag::snippet[]
   const renderMenu = ({
     context,
   }: Readonly<{
@@ -72,6 +73,7 @@ function Example() {
       </Grid>
     </ContextMenu>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

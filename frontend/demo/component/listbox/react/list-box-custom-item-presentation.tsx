@@ -18,40 +18,38 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <ListBox
-        multiple
-        selectedValues={selectedValues}
-        onSelectedValuesChanged={(e) => setSelectedValues(e.detail.value)}
-      >
-        {items.map((person) => (
-          <Item
-            value={String(items.indexOf(person))}
-            style={{ lineHeight: 'var(--lumo-line-height-m)' }}
-            key={items.indexOf(person)}
-          >
-            <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
-              <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
-              <VerticalLayout>
-                <span>
-                  {person.firstName} {person.lastName}
-                </span>
-                <span
-                  style={{
-                    color: 'var(--lumo-secondary-text-color)',
-                    fontSize: 'var(--lumo-font-size-s)',
-                  }}
-                >
-                  {person.profession}
-                </span>
-              </VerticalLayout>
-            </HorizontalLayout>
-          </Item>
-        ))}
-      </ListBox>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <ListBox
+      multiple
+      selectedValues={selectedValues}
+      onSelectedValuesChanged={(e) => setSelectedValues(e.detail.value)}
+    >
+      {items.map((person) => (
+        <Item
+          value={String(items.indexOf(person))}
+          style={{ lineHeight: 'var(--lumo-line-height-m)' }}
+          key={items.indexOf(person)}
+        >
+          <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
+            <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+            <VerticalLayout>
+              <span>
+                {person.firstName} {person.lastName}
+              </span>
+              <span
+                style={{
+                  color: 'var(--lumo-secondary-text-color)',
+                  fontSize: 'var(--lumo-font-size-s)',
+                }}
+              >
+                {person.profession}
+              </span>
+            </VerticalLayout>
+          </HorizontalLayout>
+        </Item>
+      ))}
+    </ListBox>
+    // end::snippet[]
   );
 }
 

@@ -5,14 +5,13 @@ import { DateTimePicker } from '@hilla/react-components/DateTimePicker.js';
 
 function Example() {
   return (
-    <>
+    <VerticalLayout>
       {/* tag::snippet[] */}
-      <VerticalLayout>
-        <DateTimePicker readonly label="Read-only" value="2020-06-12T12:30" />
-        <DateTimePicker disabled label="Disabled" />
-      </VerticalLayout>
+      <DateTimePicker readonly label="Read-only" value="2020-06-12T12:30" />
+
+      <DateTimePicker disabled label="Disabled" />
       {/* end::snippet[] */}
-    </>
+    </VerticalLayout>
   );
 }
 

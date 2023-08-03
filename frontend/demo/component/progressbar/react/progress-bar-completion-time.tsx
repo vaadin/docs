@@ -4,17 +4,15 @@ import { ProgressBar } from '@hilla/react-components/ProgressBar.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <div style={{ color: 'var(--lumo-secondary-text-color)' }}>
-        <div>Generating report...</div>
-        <ProgressBar indeterminate />
-        <div style={{ fontSize: 'var(--lumo-font-size-xs)' }}>
-          Process can take upwards of 10 minutes
-        </div>
+    // tag::snippet[]
+    <div style={{ color: 'var(--lumo-secondary-text-color)' }}>
+      <div>Generating report...</div>
+      <ProgressBar indeterminate />
+      <div style={{ fontSize: 'var(--lumo-font-size-xs)' }}>
+        Process can take upwards of 10 minutes
       </div>
-      {/* end::snippet[] */}
-    </>
+    </div>
+    // end::snippet[]
   );
 }
 

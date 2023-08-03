@@ -10,6 +10,7 @@ import { GridTreeColumn } from '@hilla/react-components/GridTreeColumn.js'; // h
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
+// tag::snippet[]
 async function dataProvider(
   params: GridDataProviderParams<Person>,
   callback: GridDataProviderCallback<Person>
@@ -34,5 +35,6 @@ function Example() {
     </Grid>
   );
 }
+// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

@@ -4,6 +4,7 @@ import { GridPro } from '@hilla/react-components/GridPro.js';
 import { GridProEditColumn } from '@hilla/react-components/GridProEditColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { GridColumn } from '@hilla/react-components/GridColumn.js';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
@@ -12,22 +13,20 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <GridPro items={items} enterNextRow>
-        <GridProEditColumn
-          header="Name (read-only)"
-          renderer={({ item }) => (
-            <>
-              {item.firstName} {item.lastName}
-            </>
-          )}
-        />
+    // tag::snippet[]
+    <GridPro items={items} enterNextRow>
+      <GridColumn
+        header="Name (read-only)"
+        renderer={({ item }) => (
+          <>
+            {item.firstName} {item.lastName}
+          </>
+        )}
+      />
 
-        <GridProEditColumn header="Profession (editable)" path="profession" />
-      </GridPro>
-      {/* end::snippet[] */}
-    </>
+      <GridProEditColumn header="Profession (editable)" path="profession" />
+    </GridPro>
+    // end::snippet[]
   );
 }
 

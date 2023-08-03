@@ -13,15 +13,13 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Grid items={items} theme="compact">
-        <GridColumn path="firstName" />
-        <GridColumn path="lastName" />
-        <GridColumn path="email" />
-      </Grid>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Grid items={items} theme="compact">
+      <GridColumn path="firstName" />
+      <GridColumn path="lastName" />
+      <GridColumn path="email" />
+    </Grid>
+    // end::snippet[]
   );
 }
 

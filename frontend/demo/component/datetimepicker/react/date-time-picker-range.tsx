@@ -10,24 +10,22 @@ function Example() {
   const [endDateTime, setEndDateTime] = useState(initialEndValue);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <div>
-        <DateTimePicker
-          label="Start date and time"
-          value={startDateTime}
-          onValueChanged={(event) => setStartDateTime(event.detail.value)}
-        />
+    // tag::snippet[]
+    <div>
+      <DateTimePicker
+        label="Start date and time"
+        value={startDateTime}
+        onValueChanged={(event) => setStartDateTime(event.detail.value)}
+      />
 
-        <DateTimePicker
-          label="End date and time"
-          min={startDateTime}
-          value={endDateTime}
-          onValueChanged={(event) => setEndDateTime(event.detail.value)}
-        />
-      </div>
-      {/* end::snippet[], remove comments to play along when testing */}
-    </>
+      <DateTimePicker
+        label="End date and time"
+        min={startDateTime}
+        value={endDateTime}
+        onValueChanged={(event) => setEndDateTime(event.detail.value)}
+      />
+    </div>
+    // end::snippet[]
   );
 }
 

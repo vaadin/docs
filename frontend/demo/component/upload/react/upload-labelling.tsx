@@ -4,7 +4,12 @@ import React, { useEffect, useRef } from 'react';
 import { Upload } from '@hilla/react-components/Upload.js';
 import type { UploadFileRejectEvent } from '@hilla/react-components/Upload.js';
 
+const fileRejectHandler = (event: UploadFileRejectEvent) => {
+  Notification.show(event.detail.error);
+};
+
 function Example() {
+  // tag::snippet[]
   const uploadRef = useRef<any>(null);
 
   useEffect(() => {
@@ -17,10 +22,6 @@ function Example() {
     }
   }, []);
 
-  const fileRejectHandler = (event: UploadFileRejectEvent) => {
-    Notification.show(event.detail.error);
-  };
-
   return (
     <Upload
       maxFiles={1}
@@ -29,6 +30,7 @@ function Example() {
       onFileReject={fileRejectHandler}
     />
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

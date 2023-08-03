@@ -7,8 +7,7 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      {/* Use the action property to specify the URL that handles the file upload */}
-      {/* Pass an array of File objects to the files property */}
+      {/* Use the target attribute to specify the URL that handles the file upload */}
       <Upload
         target="/api/fileupload"
         files={createFakeFilesUploadBasic()}

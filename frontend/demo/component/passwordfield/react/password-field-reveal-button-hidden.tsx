@@ -4,11 +4,9 @@ import { PasswordField } from '@hilla/react-components/PasswordField.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <PasswordField label="Password" value="Ex@mplePassw0rd" revealButtonHidden />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <PasswordField label="Password" value="Ex@mplePassw0rd" revealButtonHidden />
+    // end::snippet[]
   );
 }
 

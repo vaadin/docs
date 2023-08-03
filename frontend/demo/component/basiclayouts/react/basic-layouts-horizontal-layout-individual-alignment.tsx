@@ -2,21 +2,26 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { TextArea } from '@hilla/react-components/TextArea.js';
+import _layoutExampleStyle from './layoutExampleStyle';
 
-// tag::snippet[]
+const layoutExampleStyle = {
+  ..._layoutExampleStyle,
+  height: 'calc(var(--lumo-size-xl) * 4)',
+};
+
 function Example() {
   return (
-    <>
-      <HorizontalLayout
-        theme="spacing padding"
-        className="height-4xl" // hidden-source-line
-        style={{ alignItems: 'stretch' }}
-      >
-        <TextArea label="Text area 1" style={{ alignSelf: 'start' }} />
-        <TextArea label="Text area 2" />
-        <TextArea label="Text area 3" style={{ alignSelf: 'end' }} />
-      </HorizontalLayout>
-    </>
+    // tag::snippet[]
+    <HorizontalLayout
+      theme="spacing padding"
+      className="height-4xl" // hidden-source-line
+      style={{ alignItems: 'stretch', ...layoutExampleStyle }}
+    >
+      <TextArea label="Text area 1" style={{ alignSelf: 'start' }} />
+      <TextArea label="Text area 2" />
+      <TextArea label="Text area 3" style={{ alignSelf: 'end' }} />
+    </HorizontalLayout>
+    // end::snippet[]
   );
 }
 // end::snippet[]

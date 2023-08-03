@@ -6,7 +6,7 @@ import { Notification } from '@vaadin/notification';
 import { GridProEditColumn } from '@hilla/react-components/GridProEditColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
-export function Example() {
+function Example() {
   const [items, setItems] = React.useState<Person[]>([]);
 
   React.useEffect(() => {
@@ -14,8 +14,7 @@ export function Example() {
   }, []);
 
   const showErrorNotification = (msg: string) => {
-    const notification = Notification.show(msg, { position: 'bottom-center' });
-    notification.setAttribute('theme', 'error');
+    Notification.show(msg, { position: 'bottom-center', theme: 'error' });
   };
 
   const itemPropertyListener = (event: GridProItemPropertyChangedEvent<Person>) => {
@@ -43,16 +42,14 @@ export function Example() {
   };
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <GridPro items={items} onItemPropertyChanged={itemPropertyListener}>
-        <GridProEditColumn path="firstName" />
-        <GridProEditColumn path="lastName" />
-        <GridProEditColumn path="email" />
-        <GridProEditColumn path="address.phone" />
-      </GridPro>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <GridPro items={items} onItemPropertyChanged={itemPropertyListener}>
+      <GridProEditColumn path="firstName" />
+      <GridProEditColumn path="lastName" />
+      <GridProEditColumn path="email" />
+      <GridProEditColumn path="address.phone" />
+    </GridPro>
+    // end::snippet[]
   );
 }
 

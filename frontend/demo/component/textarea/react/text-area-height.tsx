@@ -5,18 +5,13 @@ import { loremIpsum } from '../../../../../src/main/resources/data/templates.jso
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <style>{`
-          vaadin-text-area {
-            width: 100%;
-            min-height: 100px;
-            max-height: 150px;
-          }
-        `}</style>
-      <TextArea label="Description" value={loremIpsum} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <TextArea
+      label="Description"
+      value={loremIpsum}
+      style={{ width: '100%', minHeight: '100px', maxHeight: '150px' }}
+    />
+    // end::snippet[]
   );
 }
 

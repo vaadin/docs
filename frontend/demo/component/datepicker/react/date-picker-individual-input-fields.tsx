@@ -40,44 +40,42 @@ function Example() {
   }, [selectedYear, selectedMonth]);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <HorizontalLayout theme="spacing">
-        <ComboBox
-          label="Year"
-          style={{ width: '6em' }}
-          items={years}
-          value={String(selectedYear)}
-          onValueChanged={(e) => {
-            setSelectedYear(parseInt(e.detail.value));
-            setSelectedMonth(undefined);
-            setSelectedDay(undefined);
-          }}
-        />
+    // tag::snippet[]
+    <HorizontalLayout theme="spacing">
+      <ComboBox
+        label="Year"
+        style={{ width: '6em' }}
+        items={years}
+        value={String(selectedYear)}
+        onValueChanged={(e) => {
+          setSelectedYear(parseInt(e.detail.value));
+          setSelectedMonth(undefined);
+          setSelectedDay(undefined);
+        }}
+      />
 
-        <ComboBox
-          label="Month"
-          style={{ width: '9em' }}
-          items={months}
-          value={selectedMonth}
-          disabled={!selectedYear}
-          onValueChanged={(e) => {
-            setSelectedMonth(e.detail.value);
-            setSelectedDay(undefined);
-          }}
-        />
+      <ComboBox
+        label="Month"
+        style={{ width: '9em' }}
+        items={months}
+        value={selectedMonth}
+        disabled={!selectedYear}
+        onValueChanged={(e) => {
+          setSelectedMonth(e.detail.value);
+          setSelectedDay(undefined);
+        }}
+      />
 
-        <ComboBox
-          label="Day"
-          style={{ width: '5em' }}
-          items={selectableDays}
-          value={String(selectedDay)}
-          disabled={!selectedYear || !selectedMonth}
-          onValueChanged={(e) => setSelectedDay(parseInt(e.detail.value))}
-        />
-      </HorizontalLayout>
-      {/* end::snippet[] */}
-    </>
+      <ComboBox
+        label="Day"
+        style={{ width: '5em' }}
+        items={selectableDays}
+        value={String(selectedDay)}
+        disabled={!selectedYear || !selectedMonth}
+        onValueChanged={(e) => setSelectedDay(parseInt(e.detail.value))}
+      />
+    </HorizontalLayout>
+    // end::snippet[]
   );
 }
 

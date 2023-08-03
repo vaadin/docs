@@ -11,18 +11,17 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <MultiSelectComboBox
-        label="Countries"
-        itemLabelPath="name"
-        itemIdPath="id"
-        items={items}
-        selectedItems={items.slice(0, 4)}
-        readonly
-      />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <MultiSelectComboBox
+      label="Countries"
+      itemLabelPath="name"
+      itemIdPath="id"
+      items={items}
+      selectedItems={items.slice(0, 4)}
+      readonly
+      style={{ width: '300px' }}
+    />
+    // end::snippet[]
   );
 }
 

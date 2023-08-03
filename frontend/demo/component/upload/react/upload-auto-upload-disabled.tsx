@@ -14,7 +14,11 @@ function Example() {
     uploadRef.current.i18n = { ...uploadRef.current.i18n };
   }, []);
 
-  return <Upload noAuto ref={uploadRef} files={createFakeFilesUploadAutoUploadDisabled()}></Upload>;
+  return (
+    // tag::snippet[]
+    <Upload noAuto ref={uploadRef} files={createFakeFilesUploadAutoUploadDisabled()} />
+    // end::snippet[]
+  );
 }
 
 export default reactExample(Example); // hidden-source-line

@@ -3,6 +3,7 @@ import React from 'react';
 import { MenuBar } from '@hilla/react-components/MenuBar.js';
 
 function Example() {
+  // tag::snippet[]
   const items = [
     {
       text: 'Share',
@@ -10,22 +11,17 @@ function Example() {
         { text: 'Facebook' },
         { text: 'Twitter' },
         { text: 'Instagram' },
-        { html: <hr /> },
+        { component: 'hr' },
         { text: 'By email' },
         { text: 'Get link' },
-        { html: <hr /> },
+        { component: 'hr' },
         { text: 'Set permissions' },
       ],
     },
   ];
 
-  return (
-    <>
-      {/* tag::snippet[] */}
-      <MenuBar items={items} />
-      {/* end::snippet[] */}
-    </>
-  );
+  return <MenuBar items={items} />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

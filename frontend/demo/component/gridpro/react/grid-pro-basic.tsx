@@ -12,16 +12,14 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <GridPro items={items}>
-        <GridProEditColumn path="firstName" />
-        <GridProEditColumn path="lastName" />
-        <GridProEditColumn path="email" />
-        <GridProEditColumn path="profession" />
-      </GridPro>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <GridPro items={items}>
+      <GridProEditColumn path="firstName" />
+      <GridProEditColumn path="lastName" />
+      <GridProEditColumn path="email" />
+      <GridProEditColumn path="profession" />
+    </GridPro>
+    // end::snippet[]
   );
 }
 

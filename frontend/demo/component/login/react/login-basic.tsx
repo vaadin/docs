@@ -7,9 +7,9 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      {/* noAutofocus is used to prevent the example from stealing focus when browsing the
+      {/* no-autofocus is used to prevent the example from stealing focus when browsing the
       documentation */}
-      <LoginForm noAutofocus />
+      <LoginForm no-autofocus />
       {/* end::snippet[] */}
     </>
   );

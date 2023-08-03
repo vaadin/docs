@@ -7,11 +7,9 @@ function Example() {
   const [richText, setRichText] = useState(templates.richTextDelta);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <RichTextEditor style={{ height: '400px' }} theme="compact" value={richText} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <RichTextEditor style={{ height: '400px' }} theme="compact" value={richText} />
+    // end::snippet[]
   );
 }
 

@@ -9,6 +9,7 @@ function Example() {
 
   return (
     <>
+      {/* tag::snippet[] */}
       <h4>Upload file</h4>
       <p>Maximum file size: {maxFileSizeInMB} MB</p>
       <Upload
@@ -18,6 +19,7 @@ function Example() {
           Notification.show(event.detail.error);
         }}
       />
+      {/* end::snippet[] */}
     </>
   );
 }

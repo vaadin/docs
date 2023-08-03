@@ -19,19 +19,17 @@ function Example() {
     if (!gridRef.current) {
       return;
     }
-    const {
-      section,
-      index,
-      column,
-      item: { firstName, lastName },
-    } = gridRef.current.getEventContext(event);
+    const eventContext = gridRef.current.getEventContext(event);
+    const section = eventContext.section ?? 'Not available';
+    const row = eventContext.index != null ? eventContext.index : 'Not available';
+    const column = eventContext.column?.path ?? 'Not available';
+    const person = eventContext.item;
+    const fullName =
+      person?.firstName && person?.lastName
+        ? `${person.firstName} ${person.lastName}`
+        : 'Not available';
 
-    const summary = `Section: ${section ?? 'Not available'}
-    Row: ${index ?? 'Not available'}
-    Column: ${column?.path ?? 'Not available'}
-    Person: ${firstName && lastName ? `${firstName} ${lastName}` : 'Not available'}`;
-
-    setEventSummary(summary);
+    setEventSummary(`Section: ${section}\nRow: ${row}\nColumn: ${column}\nPerson: ${fullName}`);
   };
 
   return (
@@ -50,7 +48,12 @@ function Example() {
       </Grid>
 
       <div>
-        <TextArea label="Cell focus event information" readonly value={eventSummary} />
+        <TextArea
+          label="Cell focus event information"
+          readonly
+          value={eventSummary}
+          style={{ width: '100%' }}
+        />
       </div>
       {/* end::snippet[] */}
     </>

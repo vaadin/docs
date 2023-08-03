@@ -2,12 +2,13 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { Board } from '@hilla/react-components/Board.js';
 import { BoardRow } from '@hilla/react-components/BoardRow.js';
+import boardStyles from './board-styles';
 
 function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <Board>
+      <Board className="board-column-span">
         <BoardRow>
           <div className="cell" {...{ 'board-cols': '2' }}>
             Span 2
@@ -30,7 +31,8 @@ function Example() {
           </div>
         </BoardRow>
       </Board>
-      <Board>
+
+      <Board className="board-column-span">
         <BoardRow>
           <div className="cell" {...{ 'board-cols': '3' }}>
             Span 3
@@ -44,7 +46,8 @@ function Example() {
           </div>
         </BoardRow>
       </Board>
-      <Board>
+
+      <Board className="board-column-span">
         <BoardRow>
           <div className="cell" {...{ 'board-cols': '2' }}>
             Span 2
@@ -63,4 +66,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, boardStyles); // hidden-source-line

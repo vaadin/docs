@@ -4,18 +4,16 @@ import { Crud } from '@hilla/react-components/Crud.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-export function Example() {
+function Example() {
   const [items, setItems] = useState<Person[]>([]);
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Crud include="firstName, lastName, email, profession" items={items} />
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Crud include="firstName, lastName, email, profession" items={items} />
+    // end::snippet[]
   );
 }
 

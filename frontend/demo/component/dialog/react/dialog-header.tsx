@@ -8,6 +8,7 @@ import { EmailField } from '@hilla/react-components/EmailField.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import '@vaadin/icons';
 
 function Example() {
   const [dialogOpened, setDialogOpened] = useState(false);
@@ -27,26 +28,9 @@ function Example() {
     return `${address.street}, ${address.city}, ${address.country}`;
   };
 
-  const renderDialog = () => (
-    <VerticalLayout
-      theme="spacing"
-      style={{ width: '300px', maxWidth: '100%', alignItems: 'stretch' }}
-    >
-      <VerticalLayout style={{ alignItems: 'stretch' }}>
-        <TextField
-          label="Name"
-          value={`${user?.firstName} ${user?.lastName}`}
-          readonly
-          style={{ paddingTop: 0 }}
-        />
-        <EmailField label="Email" value={user?.email} readonly />
-        <TextField label="Address" value={addressDescription()} readonly />
-      </VerticalLayout>
-    </VerticalLayout>
-  );
-
   return (
     <>
+      {/* tag::snippet[] */}
       <Dialog
         header-title="User details"
         opened={dialogOpened}
@@ -59,9 +43,24 @@ function Example() {
           </Button>
         )}
       >
-        {renderDialog}
+        <VerticalLayout
+          theme="spacing"
+          style={{ width: '300px', maxWidth: '100%', alignItems: 'stretch' }}
+        >
+          <VerticalLayout style={{ alignItems: 'stretch' }}>
+            <TextField
+              label="Name"
+              value={`${user?.firstName} ${user?.lastName}`}
+              readonly
+              style={{ paddingTop: 0 }}
+            />
+            <EmailField label="Email" value={user?.email} readonly />
+            <TextField label="Address" value={addressDescription()} readonly />
+          </VerticalLayout>
+        </VerticalLayout>
       </Dialog>
       <Button onClick={open}>Show dialog</Button>
+      {/* end::snippet[] */}
     </>
   );
 }

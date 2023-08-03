@@ -18,28 +18,26 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <RadioGroup
-        label="Payment method"
-        theme="vertical"
-        value={value}
-        onValueChanged={(event) => setValue(event.detail.value)}
-      >
-        {items.map((card) => (
-          <RadioButton value={String(card.id)} key={card.id}>
-            <label slot="label">
-              <HorizontalLayout theme="spacing">
-                <img src={card.pictureUrl} alt={card.name} style={{ height: '1em' }} />
-                <span>{card.accountNumber}</span>
-              </HorizontalLayout>
-              <div>Expiry date:{card.expiryDate}</div>
-            </label>
-          </RadioButton>
-        ))}
-      </RadioGroup>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <RadioGroup
+      label="Payment method"
+      theme="vertical"
+      value={value}
+      onValueChanged={(event) => setValue(event.detail.value)}
+    >
+      {items.map((card) => (
+        <RadioButton value={String(card.id)} key={card.id}>
+          <label slot="label">
+            <HorizontalLayout theme="spacing">
+              <img src={card.pictureUrl} alt={card.name} style={{ height: '1em' }} />
+              <span>{card.accountNumber}</span>
+            </HorizontalLayout>
+            <div>Expiry date:{card.expiryDate}</div>
+          </label>
+        </RadioButton>
+      ))}
+    </RadioGroup>
+    // end::snippet[]
   );
 }
 

@@ -5,15 +5,13 @@ import { IntegerField } from '@hilla/react-components/IntegerField.js';
 
 function Example() {
   return (
-    <>
+    <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
-      <HorizontalLayout theme="spacing">
-        <IntegerField label="X" value="-1284" />
+      <IntegerField label="X" value="-1284" />
 
-        <IntegerField label="Y" value="3910" />
-      </HorizontalLayout>
+      <IntegerField label="Y" value="3910" />
       {/* end::snippet[] */}
-    </>
+    </HorizontalLayout>
   );
 }
 
