@@ -51,6 +51,8 @@ After you generate a pair of keys, they can be added to the `application.propert
 
 For the examples here, the property names used are `public.key`, `private.key` and `subject`.
 
+[NOTE]
+The `subject` should be given as a `url` or `mailto:` as Apple web push server requires it that way.
 
 === Web Push Dependencies
 
@@ -67,6 +69,9 @@ For web push usage, the project needs to have the `Flow WebPush` dependency.
     </dependency>
 </dependencies>
 ----
+
+[NOTE]
+WebPush is behind a feature flag so the file `./src/main/resources/vaadin-featureflags.properties` needs to contain the line `com.vaadin.experimental.webPush=true`
 
 === Generate Service Worker
 
@@ -124,16 +129,14 @@ public class WebPushService {
     WebPush webPush;
 
     /**
-     * Initialize security and push service after construction when all autowiring is done.
+     * Initialize security and push service for initial get request.
      *
      * @throws GeneralSecurityException security exception for security complications
      */
-    @PostConstruct
-    private void init() {
-        webPush = new WebPush(publicKey, privateKey, subject);
-    }
-
     public WebPush getWebPush() {
+        if(webPush == null) {
+            webPush = new WebPush(publicKey, privateKey, subject);
+        }
         return webPush;
     }
 
@@ -196,6 +199,8 @@ pass:[<!-- vale Vale.Spelling = YES -->]
 WebPush webpush = webPushService.getWebPush();
 
 Button subscribe = new Button("Subscribe");
+Button unsubscribe = new Button("UnSubscribe");
+
 subscribe.setEnabled(false);
 subscribe.addClickListener(e -> {
     webpush.subscribe(subscribe.getUI().get(), subscription -> {
@@ -205,7 +210,6 @@ subscribe.addClickListener(e -> {
     });
 });
 
-Button unsubscribe = new Button("UnSubscribe");
 unsubscribe.setEnabled(false);
 unsubscribe.addClickListener(e -> {
     webpush.unsubscribe(unsubscribe.getUI().get(), subscription -> {
@@ -222,11 +226,11 @@ In cases where there exists a subscription on the client for the application, bu
 ----
 @Override
 protected void onAttach(AttachEvent attachEvent) {
-    webpush.isWebPushRegistered(getUI().get(), registered -> {
+    pushApi.subscriptionExists(attachEvent.getUI(), registered -> {
         subscribe.setEnabled(!registered);
         unsubscribe.setEnabled(registered);
         if(registered && webPushService.isEmpty()) {
-            webpush.getExistingSubscription(getUI().get(), webPushService::store);
+            pushApi.fetchExistingSubscription(getUI().get(), webPushService::store);
         }
     });
 }
