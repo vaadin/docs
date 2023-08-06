@@ -19,7 +19,9 @@ function Example() {
         </FormLayout>
 
         <HorizontalLayout theme="spacing" style={{ width: '100%', justifyContent: 'flex-end' }}>
-          <Button theme="secondary error" style={{ marginInlineEnd: 'auto' }}>Delete</Button>
+          <Button theme="secondary error" style={{ marginInlineEnd: 'auto' }}>
+            Delete
+          </Button>
           <Button theme="secondary">Cancel</Button>
           <Button theme="primary">Create account</Button>
         </HorizontalLayout>
