@@ -1,0 +1,261 @@
+---
+title: Web Push
+order: 100
+page-title: Setting Up Web Push Notifications
+description: This article shows how to setup, subscribe and send Web Push notifications from a Vaadin Flow application.
+---
+
+= [since:com.vaadin:vaadin@V24.2]#Web Push Notifications#
+
+In this part of this tutorial, you'll learn how to get a Vaadin Flow application to utilize Web Push. You'll enable Web Push for a completed Customer Relationship Management (CRM) application so that users can receive notifications -- even when they're not in the application.
+
+
+== Understanding Web Push
+
+Web push notifications can be used to deliver real-time updates, reminders, and other important messages.
+
+When a user registers for web push notifications, their browser contacts a third party web push server hosted by the browser vendor.
+
+
+== Setting Up Web Push
+
+=== VAPID Keys
+
+The first step is to generate a public-private link:https://web.dev/push-notifications-web-push-protocol/[VAPID key] pair.
+
+This can be done by executing the following from the command-line:
+
+[source,terminal]
+----
+npx web-push generate-vapid-keys
+----
+
+That returns an output that looks something like this:
+
+.Sample Key Pair Output -- Don't Use: Not Valid.
+----
+
+=======================================
+
+Public Key:
+BO66S__WPMwVXKBXEh1OiQrM--9pSGXwxqAWQudqmcv41RcWgk1ssUeItv4_ArqkJwPBtayUR4
+
+Private Key:
+VNlfcVVFB4V50tqKO8WFHHOhx_ZrabUkZ2BYVOnNg9A
+
+=======================================
+
+----
+
+After you generate a pair of keys, they can be added to the `application.properties` file or set as environment variables.
+
+For the examples here, the property names used are `public.key`, `private.key` and `subject`.
+
+
+=== Web Push Dependencies
+
+For web push usage, the project needs to have the `Flow WebPush` dependency.
+
+.`pom.xml`
+[source,xml]
+----
+<dependencies>
+    <!-- Other application dependencies -->
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>flow-webpush</artifactId>
+    </dependency>
+</dependencies>
+----
+
+=== Generate Service Worker
+
+Using Web Push methods, Vaadin provides the `@PWA` annotations that automatically generate the required PWA resources. Add the `@PWA` annotation on [classname]`Application.java` as follows:
+
+.`Application.java`
+[source,java]
+----
+@SpringBootApplication
+@PWA(name = "Vaadin CRM", shortName = "CRM")
+public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}
+----
+
+`@PWA` enables ServiceWorker creation and web push functionality.
+
+
+=== Create WebPushService
+
+Next, you'll have to create WebPushService for initializing WebPush and storing the user subscriptions.
+
+[source, java]
+----
+import jakarta.annotation.PostConstruct;
+import nl.martijndwars.webpush.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.vaadin.flow.server.webpush.WebPush;
+import com.vaadin.flow.server.webpush.WebPushMessage;
+
+@Service
+public class WebPushService {
+
+    @Value("${public.key}")
+    private String publicKey;
+    @Value("${private.key}")
+    private String privateKey;
+    @Value("${subject}")
+    private String subject;
+
+    private final Map<String, Subscription> endpointToSubscription = new HashMap<>();
+
+    WebPush webPush;
+
+    /**
+     * Initialize security and push service after construction when all autowiring is done.
+     *
+     * @throws GeneralSecurityException security exception for security complications
+     */
+    @PostConstruct
+    private void init() {
+        webPush = new WebPush(publicKey, privateKey, subject);
+    }
+
+    public WebPush getWebPush() {
+        return webPush;
+    }
+
+    /**
+     * Send a notification to all subscriptions.
+     *
+     * @param title message title
+     * @param body message body
+     */
+    public void notifyAll(String title, String body) {
+        endpointToSubscription.values().forEach(subscription -> {
+            webPush.sendNotification(subscription, new WebPushMessage(title, body));
+        });
+    }
+
+    private Logger getLogger() {
+        return LoggerFactory.getLogger(WebPushService.class);
+    }
+
+    public void store(Subscription subscription) {
+        getLogger().info("Subscribed to {}", subscription.endpoint);
+        /*
+         * Note, in a real world app you'll want to persist these
+         * in the backend. Also, you probably want to know which
+         * subscription belongs to which user to send custom messages
+         * for different users. In this demo, we'll just use
+         * endpoint URL as key to store subscriptions in memory.
+         */
+        endpointToSubscription.put(subscription.endpoint, subscription);
+    }
+
+
+    public void remove(Subscription subscription) {
+        getLogger().info("Unsubscribed {}", subscription.endpoint);
+        endpointToSubscription.remove(subscription.endpoint);
+    }
+
+    public boolean isEmpty() {
+        return endpointToSubscription.isEmpty();
+    }
+
+}
+----
+
+// Allow 'deregistering'
+pass:[<!-- vale Vale.Spelling = NO -->]
+
+=== Adding Push Registration
+
+The last step is to add the possibility to register for the push service.
+
+Flow contains the `WebPushRegistration` class that can be used to handle registering and deregistering of web push on the client. The WebPushRegistration needs the VAPID public key on construction.
+
+The UI components for this can be two buttons: one for registering; and one for deregistering notifications.
+
+pass:[<!-- vale Vale.Spelling = YES -->]
+
+[source,java]
+----
+WebPush webpush = webPushService.getWebPush();
+
+Button subscribe = new Button("Subscribe");
+subscribe.setEnabled(false);
+subscribe.addClickListener(e -> {
+    webpush.subscribe(subscribe.getUI().get(), subscription -> {
+        webPushService.store(subscription);
+        subscribe.setEnabled(false);
+        unsubscribe.setEnabled(true);
+    });
+});
+
+Button unsubscribe = new Button("UnSubscribe");
+unsubscribe.setEnabled(false);
+unsubscribe.addClickListener(e -> {
+    webpush.unsubscribe(unsubscribe.getUI().get(), subscription -> {
+        webPushService.remove(subscription);
+        subscribe.setEnabled(true);
+        unsubscribe.setEnabled(false);
+    });
+});
+----
+
+In cases where there exists a subscription on the client for the application, but it's been lost for the server, it can be obtained from the service worker.
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    webpush.isWebPushRegistered(getUI().get(), registered -> {
+        subscribe.setEnabled(!registered);
+        unsubscribe.setEnabled(registered);
+        if(registered && webPushService.isEmpty()) {
+            webpush.getExistingSubscription(getUI().get(), webPushService::store);
+        }
+    });
+}
+----
+
+
+=== Sending Notifications
+
+The `WebPushService` had the methods `sendNotification(subscription, messageJson)` and `notifyAll(title, body)`.
+
+Sending a message to all registered subscribers using the `notifyAll()` method would look like this:
+
+[source,java]
+----
+TextField message = new TextField("Message");
+Button broadcast = new Button("Broadcast message");
+broadcast.addClickListener(e ->
+    webPushService.notifyAll("Message from administration", message.getValue())
+);
+----
+
+For using `sendNotification`, the correct user subscription is needed.
+
+.Brave Browser Support
+[CAUTION]
+====
+For the Brave browser, web push notifications may work by default, when you first install the browser. If not, notifications need to be enabled in the browser.
+
+Inform the user to open the browser privacy settings (i.e., `brave://settings/privacy`) and enable the option, "Use Google services for push messaging".
+====
+
+[discussion-id]`AA0C567E-EEC6-4CEB-95FA-D9D96666D98F`
