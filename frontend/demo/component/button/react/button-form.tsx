@@ -9,22 +9,20 @@ import { FormLayout } from '@hilla/react-components/FormLayout.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <VerticalLayout theme="spacing">
-        <FormLayout responsiveSteps={[{ columns: 2 }]}>
-          <TextField label="First name" value="John" />
-          <TextField label="Last name" value="Smith" />
-          <EmailField {...{ colspan: 2 }} label="Email address" value="john.smith@example.com" />
-        </FormLayout>
+    // tag::snippet[]
+    <VerticalLayout theme="spacing">
+      <FormLayout responsiveSteps={[{ columns: 2 }]}>
+        <TextField label="First name" value="John" />
+        <TextField label="Last name" value="Smith" />
+        <EmailField {...{ colspan: 2 }} label="Email address" value="john.smith@example.com" />
+      </FormLayout>
 
-        <HorizontalLayout theme="spacing">
-          <Button theme="primary">Create account</Button>
-          <Button theme="secondary">Cancel</Button>
-        </HorizontalLayout>
-      </VerticalLayout>
-      {/* end::snippet[] */}
-    </>
+      <HorizontalLayout theme="spacing">
+        <Button theme="primary">Create account</Button>
+        <Button theme="secondary">Cancel</Button>
+      </HorizontalLayout>
+    </VerticalLayout>
+    // end::snippet[]
   );
 }
 

@@ -4,11 +4,9 @@ import { Button } from '@hilla/react-components/Button.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Button theme="tertiary-inline">Tertiary inline</Button>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Button theme="tertiary-inline">Tertiary inline</Button>
+    // end::snippet[]
   );
 }
 
