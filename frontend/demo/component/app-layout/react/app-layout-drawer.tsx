@@ -9,23 +9,24 @@ import '@vaadin/icons';
 
 const h1Style = {
   fontSize: 'var(--lumo-font-size-l)',
-  margin: 0,
 };
 
-const iconStyle = {
+const iconStyle: React.CSSProperties = {
   marginInlineEnd: 'var(--lumo-space-m)',
-  marginInlineStart: 'var(--lumo-space-xs)',
   padding: 'var(--lumo-space-xs)',
+  boxSizing: 'border-box',
 };
 
 function Example() {
   return (
     // tag::snippet[]
-    <AppLayout>
-      <DrawerToggle slot="navbar"></DrawerToggle>
+    <AppLayout primarySection="drawer">
+      <DrawerToggle slot="navbar" />
+
       <h1 slot="navbar" style={h1Style}>
-        MyApp
+        Dashboard
       </h1>
+
       <Tabs slot="drawer" orientation="vertical">
         <Tab>
           <a tabIndex={-1}>
@@ -33,6 +34,7 @@ function Example() {
             <span>Dashboard</span>
           </a>
         </Tab>
+
         <Tab>
           <a tabIndex={-1}>
             <Icon icon="vaadin:cart" style={iconStyle} />
@@ -71,7 +73,7 @@ function Example() {
         </Tab>
       </Tabs>
     </AppLayout>
-    // end::snippet[]
+    // tag::snippet[]
   );
 }
 

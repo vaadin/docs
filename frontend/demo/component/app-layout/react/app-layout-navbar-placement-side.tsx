@@ -14,61 +14,117 @@ const h1Style = {
 
 const iconStyle = {
   marginInlineEnd: 'var(--lumo-space-m)',
-  marginInlineStart: 'var(--lumo-space-xs)',
   padding: 'var(--lumo-space-xs)',
 };
 
 function Example() {
   return (
     // tag::snippet[]
-    <AppLayout>
-      <DrawerToggle slot="navbar"></DrawerToggle>
+    <AppLayout primarySection="drawer">
+      <DrawerToggle slot="navbar" />
+
       <h1 slot="navbar" style={h1Style}>
-        MyApp
+        Dashboard
       </h1>
+
       <Tabs slot="drawer" orientation="vertical">
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:dashboard" style={iconStyle} />
+            <Icon
+              icon="vaadin:dashboard"
+              style={{
+                ...iconStyle,
+                boxSizing: 'border-box',
+              }}
+            />
+
             <span>Dashboard</span>
           </a>
         </Tab>
+
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:cart" style={iconStyle} />
+            <Icon
+              icon="vaadin:cart"
+              style={{
+                ...iconStyle,
+                boxSizing: 'border-box',
+              }}
+            />
+
             <span>Orders</span>
           </a>
         </Tab>
+        {/* end::snippet[] */}
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:user-heart" style={iconStyle} />
+            <Icon
+              icon="vaadin:user-heart"
+              style={{
+                ...iconStyle,
+                boxSizing: 'border-box',
+              }}
+            />
+
             <span>Customers</span>
           </a>
         </Tab>
+
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:package" style={iconStyle} />
+            <Icon
+              icon="vaadin:package"
+              style={{
+                ...iconStyle,
+                boxSizing: 'border-box',
+              }}
+            />
+
             <span>Products</span>
           </a>
         </Tab>
+
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:records" style={iconStyle} />
+            <Icon
+              icon="vaadin:records"
+              style={{
+                ...iconStyle,
+                boxSizing: 'border-box',
+              }}
+            />
+
             <span>Documents</span>
           </a>
         </Tab>
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:list" style={iconStyle} />
+            <Icon
+              icon="vaadin:list"
+              style={{
+                ...iconStyle,
+                boxSizing: 'border-box',
+              }}
+            />
+
             <span>Tasks</span>
           </a>
         </Tab>
+
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:chart" style={iconStyle} />
+            <Icon
+              icon="vaadin:chart"
+              style={{
+                ...iconStyle,
+                boxSizing: 'border-box',
+              }}
+            />
+
             <span>Analytics</span>
           </a>
         </Tab>
+        {/* tag::snippet[] */}
       </Tabs>
     </AppLayout>
     // end::snippet[]
