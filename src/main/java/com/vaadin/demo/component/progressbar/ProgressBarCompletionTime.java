@@ -2,26 +2,31 @@ package com.vaadin.demo.component.progressbar;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("progress-bar-completion-time")
 public class ProgressBarCompletionTime extends Div {
 
     public ProgressBarCompletionTime() {
-        getStyle().set("color", "var(--lumo-secondary-text-color)");
-
         // tag::snippet[]
         ProgressBar progressBar = new ProgressBar();
         progressBar.setIndeterminate(true);
 
-        Div progressBarLabel = new Div();
-        progressBarLabel.setText("Generating report...");
+        NativeLabel progressBarLabel = new NativeLabel("Generating report...");
+        progressBarLabel.setId("pblbl");
+        progressBarLabel.addClassName(LumoUtility.TextColor.SECONDARY);
 
-        Div progressBarSubLabel = new Div();
-        progressBarSubLabel.getStyle().set("font-size",
-                "var(--lumo-font-size-xs)");
-        progressBarSubLabel.setText("Process can take upwards of 10 minutes");
+        Span progressBarSubLabel = new Span("Process can take upwards of 10 minutes");
+        progressBarSubLabel.setId("sublbl");
+        progressBarSubLabel.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.XSMALL);
+
+        // Associates the labels with the bar programmatically, for screen readers:
+        progressBar.getElement().setAttribute("aria-labelledby", "pblbl");
+        progressBar.getElement().setAttribute("aria-describedby", "sublbl");
 
         add(progressBarLabel, progressBar, progressBarSubLabel);
         // end::snippet[]
