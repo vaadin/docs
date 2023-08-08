@@ -118,4 +118,6 @@ module.exports = async function (config) {
       ]
     }
   };
+
+  config.resolve.extensionAlias = { '.js': ['.js', '.ts'] }
 };
