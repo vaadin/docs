@@ -23,8 +23,8 @@ function Example() {
 
   return (
     <>
-      {/* tag::snippet1[] */}
       <Grid items={items} ref={gridRef}>
+        {/* tag::snippet1[] */}
         <GridColumn frozen header="Name" autoWidth flexGrow={0}>
           {({ item: person }) => (
             <>
