@@ -9,17 +9,11 @@ import com.vaadin.flow.router.Route;
 public class ProgressBarDeterminate extends Div {
 
     public ProgressBarDeterminate() {
-        getStyle().set("color", "var(--lumo-secondary-text-color)");
-
         // tag::snippet[]
         ProgressBar progressBar = new ProgressBar();
         progressBar.setValue(0.5);
-
-        Div progressBarLabel = new Div();
-        progressBarLabel.setText("Processing Financials.xlsx (50%)");
-
-        add(progressBarLabel, progressBar);
         // end::snippet[]
+        add(progressBar);
     }
 
     public static class Exporter extends DemoExporter<ProgressBarDeterminate> { // hidden-source-line
