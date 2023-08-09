@@ -9,7 +9,7 @@ function Example() {
       required
       minlength={5}
       maxlength={18}
-      pattern="^[+]?[(]?[0-9]{3}[)]?[-s.]?[0-9]{3}[-s.]?[0-9]{4,6}$"
+      pattern="^[+]?[\\(]?[0-9]{3}[\\)]?[\\-s.]?[0-9]{3}[\\-s.]?[0-9]{4,6}$"
       allowedCharPattern="[0-9()+-]"
       label="Phone number"
       helperText="Format: +(123)456-7890"
