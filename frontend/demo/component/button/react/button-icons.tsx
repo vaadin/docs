@@ -5,6 +5,7 @@ import { Tooltip } from '@hilla/react-components/Tooltip.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
+
 function Example() {
   return (
     <HorizontalLayout theme="spacing">
