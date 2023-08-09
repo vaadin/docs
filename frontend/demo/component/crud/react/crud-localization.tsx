@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { Crud } from '@hilla/react-components/Crud.js';
+import { Crud, crudPath } from '@hilla/react-components/Crud.js';
 import { Grid } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { TextField } from '@hilla/react-components/TextField.js';
@@ -59,11 +59,11 @@ function Example() {
       </Grid>
 
       <div slot="form">
-        <TextField {...{ path: 'firstName' }} label="Etunimi" required />
-        <TextField {...{ path: 'lastName' }} label="Sukunimi" required />
-        <EmailField {...{ path: 'email' }} label="Sähköposti" required />
+        <TextField {...crudPath('firstName')} label="Etunimi" required />
+        <TextField {...crudPath('lastName')} label="Sukunimi" required />
+        <EmailField {...crudPath('email')} label="Sähköposti" required />
         <ComboBox
-          {...{ path: 'profession' }}
+          {...crudPath('profession')}
           label="Ammatti"
           items={[...new Set(items.map((i) => i.profession))]}
         />

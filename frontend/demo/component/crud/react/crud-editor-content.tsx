@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Crud } from '@hilla/react-components/Crud.js';
+import { Crud, crudPath } from '@hilla/react-components/Crud.js';
 import { FormLayout, type FormLayoutResponsiveStep } from '@hilla/react-components/FormLayout.js';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { EmailField } from '@hilla/react-components/EmailField.js';
@@ -28,13 +28,13 @@ function Example() {
     // tag::snippet[]
     <Crud include="firstName, lastName, email, profession" items={items}>
       <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps}>
-        <TextField label="First name" {...{ path: 'firstName' }} required />
-        <TextField label="Last name" {...{ path: 'lastName' }} required />
-        <EmailField {...{ colspan: 2 }} label="Email" {...{ path: 'email' }} required />
+        <TextField label="First name" {...crudPath('firstName')} required />
+        <TextField label="Last name" {...crudPath('lastName')} required />
+        <EmailField {...{ colspan: 2 }} label="Email" {...crudPath('email')} required />
         <ComboBox
           {...{ colspan: 2 }}
           label="Profession"
-          {...{ path: 'profession' }}
+          {...crudPath('profession')}
           items={professions}
         />
       </FormLayout>
