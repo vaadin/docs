@@ -25,7 +25,7 @@ export class Example extends LitElement {
         </vaadin-horizontal-layout>
 
         <vaadin-progress-bar aria-labelledby="pblabel" value="0.5"></vaadin-progress-bar>
-      <!-- end::snippet[] -->
+        <!-- end::snippet[] -->
       </div>
     `;
   }

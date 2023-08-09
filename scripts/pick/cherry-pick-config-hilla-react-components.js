@@ -1,3 +1,6 @@
+// Cherry-pick config for hilla react components
+// Run with `node ./scripts/pick/cherry-pick.js -t hilla -c ./scripts/pick/cherry-pick-config-hilla-react-components.js`
+
 const config = {
   source: {
     // paths in 'latest' to copy, they should be relative to the root folder
@@ -37,6 +40,9 @@ const config = {
       // Ignore Spreadsheet
       'articles/components/spreadsheet',
 
+      // Ignore Map
+      'articles/components/map',
+
       // Regex to ignore everything but "components" under articles
       /articles\/(?!components).*/,
 
@@ -47,6 +53,7 @@ const config = {
       /frontend\/demo\/component\/(?!icons)[a-z-]+\/(?!react).*/,
 
       'frontend/demo/component/spreadsheet',
+      'frontend/demo/component/map',
       'frontend/demo/fusion',
       'frontend/demo/upgrade-tool',
       'frontend/demo/tools',
