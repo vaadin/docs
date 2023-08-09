@@ -9,12 +9,12 @@ import '@vaadin/icons';
 
 function Example() {
   return (
+    // tag::snippet[]
     <AppLayout>
       <DrawerToggle slot="navbar" />
       <h1 slot="navbar">MyApp</h1>
 
       <Tabs slot="drawer" orientation="vertical">
-        {/* tag::snippet[] */}
         <Tab>
           <a tabIndex={-1}>
             <Icon icon="vaadin:dashboard" />
@@ -27,7 +27,6 @@ function Example() {
             <span>Orders</span>
           </a>
         </Tab>
-        {/* end::snippet[] */}
         <Tab>
           <a tabIndex={-1}>
             <Icon icon="vaadin:user-heart" />
@@ -58,9 +57,9 @@ function Example() {
             <span>Analytics</span>
           </a>
         </Tab>
-        {/* tag::snippet[] */}
       </Tabs>
     </AppLayout>
+    // end::snippet[]
   );
 }
 

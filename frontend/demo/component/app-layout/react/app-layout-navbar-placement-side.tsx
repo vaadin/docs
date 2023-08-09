@@ -12,9 +12,10 @@ const h1Style = {
   margin: 0,
 };
 
-const iconStyle = {
+const iconStyle: React.CSSProperties = {
   marginInlineEnd: 'var(--lumo-space-m)',
   padding: 'var(--lumo-space-xs)',
+  boxSizing: 'border-box',
 };
 
 function Example() {
@@ -30,13 +31,7 @@ function Example() {
       <Tabs slot="drawer" orientation="vertical">
         <Tab>
           <a tabIndex={-1}>
-            <Icon
-              icon="vaadin:dashboard"
-              style={{
-                ...iconStyle,
-                boxSizing: 'border-box',
-              }}
-            />
+            <Icon icon="vaadin:dashboard" style={iconStyle} />
 
             <span>Dashboard</span>
           </a>
@@ -44,13 +39,7 @@ function Example() {
 
         <Tab>
           <a tabIndex={-1}>
-            <Icon
-              icon="vaadin:cart"
-              style={{
-                ...iconStyle,
-                boxSizing: 'border-box',
-              }}
-            />
+            <Icon icon="vaadin:cart" style={iconStyle} />
 
             <span>Orders</span>
           </a>
@@ -58,13 +47,7 @@ function Example() {
         {/* end::snippet[] */}
         <Tab>
           <a tabIndex={-1}>
-            <Icon
-              icon="vaadin:user-heart"
-              style={{
-                ...iconStyle,
-                boxSizing: 'border-box',
-              }}
-            />
+            <Icon icon="vaadin:user-heart" style={iconStyle} />
 
             <span>Customers</span>
           </a>
@@ -72,13 +55,7 @@ function Example() {
 
         <Tab>
           <a tabIndex={-1}>
-            <Icon
-              icon="vaadin:package"
-              style={{
-                ...iconStyle,
-                boxSizing: 'border-box',
-              }}
-            />
+            <Icon icon="vaadin:package" style={iconStyle} />
 
             <span>Products</span>
           </a>
@@ -86,26 +63,14 @@ function Example() {
 
         <Tab>
           <a tabIndex={-1}>
-            <Icon
-              icon="vaadin:records"
-              style={{
-                ...iconStyle,
-                boxSizing: 'border-box',
-              }}
-            />
+            <Icon icon="vaadin:records" style={iconStyle} />
 
             <span>Documents</span>
           </a>
         </Tab>
         <Tab>
           <a tabIndex={-1}>
-            <Icon
-              icon="vaadin:list"
-              style={{
-                ...iconStyle,
-                boxSizing: 'border-box',
-              }}
-            />
+            <Icon icon="vaadin:list" style={iconStyle} />
 
             <span>Tasks</span>
           </a>
@@ -113,13 +78,7 @@ function Example() {
 
         <Tab>
           <a tabIndex={-1}>
-            <Icon
-              icon="vaadin:chart"
-              style={{
-                ...iconStyle,
-                boxSizing: 'border-box',
-              }}
-            />
+            <Icon icon="vaadin:chart" style={iconStyle} />
 
             <span>Analytics</span>
           </a>
