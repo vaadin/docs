@@ -21,7 +21,7 @@ export class Example extends LitElement {
         required
         min-length="5"
         max-length="18"
-        pattern="^[+]?[(]?[0-9]{3}[)]?[-s.]?[0-9]{3}[-s.]?[0-9]{4,6}$"
+        pattern="^[+]?[\\(]?[0-9]{3}[\\)]?[\\-s.]?[0-9]{3}[\\-s.]?[0-9]{4,6}$"
         allowed-char-pattern="[0-9()+-]"
         label="Phone number"
         helper-text="Format: +(123)456-7890"
