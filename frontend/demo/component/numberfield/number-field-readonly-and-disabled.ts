@@ -19,11 +19,9 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <vaadin-number-field readonly label="Read-only" value="200">
-        </vaadin-number-field>
+        <vaadin-number-field readonly label="Read-only" value="200"></vaadin-number-field>
 
-        <vaadin-number-field disabled label="Disabled">
-        </vaadin-number-field>
+        <vaadin-number-field disabled label="Disabled"></vaadin-number-field>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
