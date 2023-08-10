@@ -1,8 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Crud, type CrudNewEvent } from '@hilla/react-components/Crud.js';
-import { EmailField } from '@hilla/react-components/EmailField.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -14,7 +12,9 @@ function Example() {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
+  // tag::snippet[]
   const handleNewItem = (event: CrudNewEvent) => {
+    // Cancel event to allow setting a custom item instance
     event.preventDefault();
     setEditedItem({
       email: '@vaadin.com',
@@ -23,20 +23,14 @@ function Example() {
   };
 
   return (
-    // tag::snippet[]
     <Crud
       include="firstName, lastName, email, profession"
       items={items}
       editedItem={editedItem}
       onNew={handleNewItem}
-    >
-      <GridColumn path="firstName" />
-      <GridColumn path="lastName" />
-      <GridColumn path="email">{({ item }) => <EmailField value={item.email} />}</GridColumn>
-      <GridColumn path="profession" />
-    </Crud>
-    // end::snippet[]
+    />
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line
