@@ -7,14 +7,12 @@ function Example() {
   const [counter, setCounter] = useState(0);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
-        <Button onClick={() => setCounter(counter + 1)}>Button</Button>
-        <p>Clicked {counter} times</p>
-      </HorizontalLayout>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
+      <Button onClick={() => setCounter(counter + 1)}>Button</Button>
+      <p>Clicked {counter} times</p>
+    </HorizontalLayout>
+    // end::snippet[]
   );
 }
 
