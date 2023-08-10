@@ -11,7 +11,7 @@ import '@vaadin/icons';
 function Example() {
   return (
     <AppLayout theme="narrow-drawer">
-      <DrawerToggle>
+      <DrawerToggle slot="navbar">
         <Tooltip slot="tooltip" text="Expand menu" position="end" />
       </DrawerToggle>
 
