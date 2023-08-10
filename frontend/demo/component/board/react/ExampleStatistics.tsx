@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
 import type ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
 
+// tag::snippet[]
 function ExampleStatistics() {
   const [serviceHealth, setServiceHealth] = useState<ServiceHealth[]>([]);
   useEffect(() => {
@@ -50,5 +51,6 @@ function ExampleStatistics() {
     </div>
   );
 }
+// end::snippet[]
 
 export default ExampleStatistics;

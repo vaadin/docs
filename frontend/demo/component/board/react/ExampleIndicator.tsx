@@ -3,6 +3,7 @@ import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
 
+// tag::snippet[]
 function ExampleIndicator({ title = 'Unknown', current = '0', change = 0 }) {
   let theme;
   let icon;
@@ -36,5 +37,6 @@ function ExampleIndicator({ title = 'Unknown', current = '0', change = 0 }) {
     </VerticalLayout>
   );
 }
+// end::snippet[]
 
 export default ExampleIndicator;
