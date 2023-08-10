@@ -7,9 +7,6 @@ import '@vaadin/vertical-layout';
 
 @customElement('basic-layouts-vertical-layout-vertical-alignment')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('basic-layouts-example');

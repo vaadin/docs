@@ -19,11 +19,9 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <vaadin-date-picker readonly label="Read-only" value="2020-06-12">
-        </vaadin-date-picker>
+        <vaadin-date-picker readonly label="Read-only" value="2020-06-12"></vaadin-date-picker>
 
-        <vaadin-date-picker disabled label="Disabled">
-        </vaadin-date-picker>
+        <vaadin-date-picker disabled label="Disabled"></vaadin-date-picker>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
