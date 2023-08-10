@@ -40,6 +40,13 @@ export class MyTextFieldStrategy implements FieldStrategy {
     }
   }
 
+  public get validity() {
+    return new ValidityState();
+  }
+
+  public checkValidity() {
+    return true;
+  }
   // tag::snippet[]
 }
 // end::snippet[]
