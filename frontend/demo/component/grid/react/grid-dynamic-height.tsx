@@ -8,6 +8,7 @@ import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import { Button } from '@hilla/react-components/Button.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 function renderNoInvitationAlert() {
   return (
