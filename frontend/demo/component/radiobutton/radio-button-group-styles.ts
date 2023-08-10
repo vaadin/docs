@@ -16,17 +16,20 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-        <!-- tag::snippet[] -->
-        <vaadin-radio-group theme="helper-above-field"
-          label="Label" helper-text="Helper text"
-          style="--vaadin-input-field-border-width: 1px;">
-          <!-- end::snippet[] -->
-          <vaadin-radio-button value="1" label="Item 1"></vaadin-radio-button>
-          <vaadin-radio-button value="2" label="Item 2"></vaadin-radio-button>
-          <vaadin-radio-button value="3" label="Item 3"></vaadin-radio-button>
-          <!-- tag::snippet[] -->
-        </vaadin-radio-group>
+      <!-- tag::snippet[] -->
+      <vaadin-radio-group
+        theme="helper-above-field"
+        label="Label"
+        helper-text="Helper text"
+        style="--vaadin-input-field-border-width: 1px;"
+      >
         <!-- end::snippet[] -->
+        <vaadin-radio-button value="1" label="Item 1"></vaadin-radio-button>
+        <vaadin-radio-button value="2" label="Item 2"></vaadin-radio-button>
+        <vaadin-radio-button value="3" label="Item 3"></vaadin-radio-button>
+        <!-- tag::snippet[] -->
+      </vaadin-radio-group>
+      <!-- end::snippet[] -->
     `;
   }
 }

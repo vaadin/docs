@@ -19,12 +19,10 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <vaadin-combo-box readonly label="Read-only"
-          .items="${['Value']}" value="Value">
+        <vaadin-combo-box readonly label="Read-only" .items="${['Value']}" value="Value">
         </vaadin-combo-box>
 
-        <vaadin-combo-box disabled label="Disabled">
-        </vaadin-combo-box>
+        <vaadin-combo-box disabled label="Disabled"></vaadin-combo-box>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
