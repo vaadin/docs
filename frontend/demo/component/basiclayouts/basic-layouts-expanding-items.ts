@@ -9,9 +9,6 @@ import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 
 @customElement('basic-layouts-expanding-items')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('basic-layouts-example');
