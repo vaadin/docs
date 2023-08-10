@@ -19,16 +19,17 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-        <!-- tag::snippet[] -->
-        <vaadin-date-picker
-          label="Label"
-          helper-text="Helper text"
-          placeholder="Placeholder"
-          clear-button-visible>
-          <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
-          <vaadin-icon slot="prefix" icon="vaadin:vaadin-h"></vaadin-icon>
-        </vaadin-date-picker>
-        <!-- end::snippet[] -->
+      <!-- tag::snippet[] -->
+      <vaadin-date-picker
+        label="Label"
+        helper-text="Helper text"
+        placeholder="Placeholder"
+        clear-button-visible
+      >
+        <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
+        <vaadin-icon slot="prefix" icon="vaadin:vaadin-h"></vaadin-icon>
+      </vaadin-date-picker>
+      <!-- end::snippet[] -->
     `;
   }
 }
