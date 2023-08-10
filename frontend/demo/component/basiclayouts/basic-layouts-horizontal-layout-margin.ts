@@ -9,9 +9,6 @@ import '@vaadin/horizontal-layout';
 
 @customElement('basic-layouts-margin')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('basic-layouts-example');
