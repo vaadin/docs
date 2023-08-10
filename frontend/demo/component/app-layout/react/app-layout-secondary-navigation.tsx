@@ -18,7 +18,8 @@ const h2Style = {
   margin: 0,
 };
 
-const iconStyle = {
+const iconStyle: React.CSSProperties = {
+  boxSizing: 'border-box',
   marginInlineEnd: 'var(--lumo-space-m)',
   padding: 'var(--lumo-space-xs)',
 };

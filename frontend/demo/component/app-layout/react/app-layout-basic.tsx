@@ -12,7 +12,8 @@ const h1Style = {
   margin: 0,
 };
 
-const iconStyle = {
+const iconStyle: React.CSSProperties = {
+  boxSizing: 'border-box',
   marginInlineEnd: 'var(--lumo-space-m)',
   marginInlineStart: 'var(--lumo-space-xs)',
   padding: 'var(--lumo-space-xs)',

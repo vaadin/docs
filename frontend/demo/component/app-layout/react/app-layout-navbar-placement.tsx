@@ -7,53 +7,67 @@ import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
 
+const h1Style = {
+  fontSize: 'var(--lumo-font-size-l)',
+  margin: 0,
+};
+
+const iconStyle: React.CSSProperties = {
+  boxSizing: 'border-box',
+  marginInlineEnd: 'var(--lumo-space-m)',
+  marginInlineStart: 'var(--lumo-space-xs)',
+  padding: 'var(--lumo-space-xs)',
+};
+
 function Example() {
   return (
     // tag::snippet[]
     <AppLayout>
       <DrawerToggle slot="navbar" />
-      <h1 slot="navbar">MyApp</h1>
+      <h1 slot="navbar" style={h1Style}>
+        MyApp
+      </h1>
 
       <Tabs slot="drawer" orientation="vertical">
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:dashboard" />
+            <Icon icon="vaadin:dashboard" style={iconStyle} />
             <span>Dashboard</span>
           </a>
         </Tab>
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:cart" />
+            <Icon icon="vaadin:cart" style={iconStyle} />
             <span>Orders</span>
           </a>
         </Tab>
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:user-heart" />
+            <Icon icon="vaadin:user-heart" style={iconStyle} />
             <span>Customers</span>
           </a>
         </Tab>
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:package" />
+            <Icon icon="vaadin:package" style={iconStyle} />
             <span>Products</span>
           </a>
         </Tab>
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:records" />
+            <Icon icon="vaadin:records" style={iconStyle} />
             <span>Documents</span>
           </a>
         </Tab>
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:list" />
+            <Icon icon="vaadin:list" style={iconStyle} />
             <span>Tasks</span>
           </a>
         </Tab>
         <Tab>
           <a tabIndex={-1}>
-            <Icon icon="vaadin:chart" />
+            <Icon icon="vaadin:chart" style={iconStyle} />
             <span>Analytics</span>
           </a>
         </Tab>
