@@ -7,7 +7,6 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 
 function Example() {
-  const [items] = useState([{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }]);
   const [gridItems, setGridItems] = useState<Person[]>([]);
   const gridRef = useRef<GridElement>(null);
 
@@ -26,8 +25,10 @@ function Example() {
     }
   }, []);
 
+  // tag::snippet[]
+  const items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
+
   return (
-    // tag::snippet[]
     <ContextMenu items={items}>
       <Grid allRowsVisible items={gridItems} ref={gridRef}>
         <GridColumn path="firstName" />
@@ -36,8 +37,8 @@ function Example() {
         <GridColumn header="Phone number" path="address.phone" />
       </Grid>
     </ContextMenu>
-    // end::snippet[]
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line
