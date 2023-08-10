@@ -22,8 +22,7 @@ export class Example extends LitElement {
         <vaadin-date-time-picker readonly label="Read-only" value="2020-06-12T12:30">
         </vaadin-date-time-picker>
 
-        <vaadin-date-time-picker disabled label="Disabled">
-        </vaadin-date-time-picker>
+        <vaadin-date-time-picker disabled label="Disabled"></vaadin-date-time-picker>
         <!-- end::snippet[] -->
       </vaadin-vertical-layout>
     `;
