@@ -6,12 +6,6 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { MenuBar } from '@hilla/react-components/MenuBar.js';
 import { createRoot } from 'react-dom/client';
 
-const menuComponent = (component: React.ReactNode) => {
-  const container = document.createElement('div');
-  createRoot(container).render(component);
-  return container;
-};
-
 function Example() {
   const [person, setPerson] = useState<Person>();
 
@@ -20,6 +14,14 @@ function Example() {
       setPerson(people[0]);
     });
   }, []);
+
+  // tag::snippet[]
+  // Workaround https://github.com/vaadin/react-components/issues/132
+  function menuComponent(component: React.ReactNode) {
+    const container = document.createElement('div');
+    createRoot(container).render(component);
+    return container;
+  }
 
   const menuBarItems = [
     {
@@ -43,11 +45,8 @@ function Example() {
     },
   ];
 
-  return (
-    // tag::snippet[]
-    <MenuBar items={menuBarItems} theme="tertiary-inline" />
-    // end::snippet[]
-  );
+  return <MenuBar items={menuBarItems} theme="tertiary-inline" />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line
