@@ -19,6 +19,7 @@ function Example() {
         <GridColumn path="firstName" resizable />
         <GridColumn path="lastName" resizable />
       </GridColumnGroup>
+
       <GridColumnGroup header="Address">
         <GridColumn path="address.street" resizable />
         <GridColumn path="address.city" resizable />
