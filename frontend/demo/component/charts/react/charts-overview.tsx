@@ -67,6 +67,27 @@ const pieValues: PointOptionsObject[] = [
   { name: 'Internet Explorer', y: 8 },
 ];
 
+const polarOptions: Options = {
+  xAxis: {
+    tickInterval: 45,
+    min: 0,
+    max: 360,
+    labels: {},
+    visible: false,
+  },
+  yAxis: { min: 0 },
+  plotOptions: {
+    series: {
+      pointStart: 0,
+      pointInterval: 45,
+    },
+    column: {
+      pointPadding: 0,
+      groupPadding: 0,
+    },
+  },
+};
+
 const seriesOptions: SeriesOptionsType = {
   pointPlacement: 'between',
   type: 'column',
@@ -121,7 +142,7 @@ function Example() {
         <ChartSeries title="Brands" values={pieValues} />
       </Chart>
 
-      <Chart theme={theme} style={chartStyle} polar>
+      <Chart theme={theme} style={chartStyle} polar additionalOptions={polarOptions}>
         <ChartSeries
           type="column"
           title="Column"
