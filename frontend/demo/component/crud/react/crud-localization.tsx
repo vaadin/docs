@@ -8,6 +8,7 @@ import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import React, { useEffect, useState } from 'react';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { CrudEditColumn } from '@hilla/react-components/CrudEditColumn.js';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
@@ -56,6 +57,7 @@ function Example() {
         <GridColumn path="lastName" header="Sukunimi" />
         <GridColumn path="email" header="Sähköposti" />
         <GridColumn path="profession" header="Ammatti" />
+        <CrudEditColumn />
       </Grid>
 
       <div slot="form">
