@@ -2,6 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useState } from 'react';
 import { Chart } from '@hilla/react-components/Chart.js';
 import { ChartSeries } from '@hilla/react-components/ChartSeries.js';
+import type { Options, PointOptionsObject, SeriesOptionsType } from 'highcharts';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -32,6 +33,45 @@ const selectStyle = {
   font: 'inherit',
 };
 
+const columnOptions: Options = { yAxis: { title: { text: '' } } };
+
+const areaOptions: Options = {
+  yAxis: { title: { text: '' } },
+  xAxis: { visible: false },
+  plotOptions: {
+    series: {
+      marker: {
+        enabled: false,
+      },
+    },
+  },
+};
+
+const pieOptions: Options = {
+  tooltip: {
+    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>',
+  },
+  plotOptions: {
+    pie: {
+      allowPointSelect: true,
+      cursor: 'pointer',
+      innerSize: '60%',
+    },
+  },
+};
+
+const pieValues: PointOptionsObject[] = [
+  { name: 'Chrome', y: 38 },
+  { name: 'Firefox', y: 24 },
+  { name: 'Edge', y: 15, sliced: true, selected: true },
+  { name: 'Internet Explorer', y: 8 },
+];
+
+const seriesOptions: SeriesOptionsType = {
+  pointPlacement: 'between',
+  type: 'column',
+};
+
 function Example() {
   const [theme, setTheme] = useState('');
 
@@ -42,13 +82,26 @@ function Example() {
   return (
     <div style={hostStyle}>
       {/* tag::snippet[] */}
-      <Chart theme={theme} style={chartStyle} type="column" categories={['Jan', 'Feb', 'Mar']}>
+      <Chart
+        theme={theme}
+        style={chartStyle}
+        type="column"
+        categories={['Jan', 'Feb', 'Mar']}
+        additionalOptions={columnOptions}
+      >
         <ChartSeries title="Tokyo" values={[49.9, 71.5, 106.4]} />
         <ChartSeries title="New York" values={[83.6, 78.8, 98.5]} />
         <ChartSeries title="London" values={[48.9, 38.8, 39.3]} />
       </Chart>
 
-      <Chart theme={theme} style={chartStyle} type="area" categories={months}>
+      <Chart
+        type="area"
+        stacking="normal"
+        theme={theme}
+        style={chartStyle}
+        categories={months}
+        additionalOptions={areaOptions}
+      >
         <ChartSeries
           title="United States dollar"
           values={[135, 125, 89, 124, 105, 81, 111, 94, 95, 129, 98, 84]}
@@ -64,8 +117,8 @@ function Example() {
         />
       </Chart>
 
-      <Chart theme={theme} style={chartStyle} type="pie" tooltip>
-        <ChartSeries title="Brands" values={[38, 24, 15, 8]} />
+      <Chart theme={theme} style={chartStyle} type="pie" tooltip additionalOptions={pieOptions}>
+        <ChartSeries title="Brands" values={pieValues} />
       </Chart>
 
       <Chart theme={theme} style={chartStyle} polar>
@@ -73,7 +126,7 @@ function Example() {
           type="column"
           title="Column"
           values={[8, 7, 6, 5, 4, 3, 2, 1]}
-          // additionalOptions={{ pointPlacement: 'between' }}
+          additionalOptions={seriesOptions}
         />
         <ChartSeries type="line" title="Line" values={[1, 2, 3, 4, 5, 6, 7, 8]} />
         <ChartSeries type="area" title="Area" values={[1, 8, 2, 7, 3, 6, 4, 5]} />
