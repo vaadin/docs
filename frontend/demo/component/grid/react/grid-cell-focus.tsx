@@ -15,6 +15,7 @@ function Example() {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
+  // tag::snippet[]
   const handleCellFocus = (event: GridCellFocusEvent<Person>) => {
     if (!gridRef.current) {
       return;
@@ -34,7 +35,6 @@ function Example() {
 
   return (
     <>
-      {/* tag::snippet[] */}
       <Grid
         className="force-focus-outline"
         items={items}
@@ -55,9 +55,9 @@ function Example() {
           style={{ width: '100%' }}
         />
       </div>
-      {/* end::snippet[] */}
     </>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

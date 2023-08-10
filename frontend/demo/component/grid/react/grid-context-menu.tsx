@@ -14,22 +14,22 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
+  const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
+
+    const grid = gridRef.current;
+    if (grid) {
+      // Workaround: Prevent opening context menu on header row.
+      // @ts-expect-error vaadin-contextmenu isn't a GridElement event.
+      grid.addEventListener('vaadin-contextmenu', (e) => {
+        if (grid.getEventContext(e).section !== 'body') {
+          e.stopPropagation();
+        }
+      });
+    }
   }, []);
-
-  const gridRef = useRef<GridElement>(null);
-
-  function onContextMenu(e: React.MouseEvent) {
-    if (!gridRef.current) {
-      return;
-    }
-    // Prevent opening context menu on header row.
-    if (gridRef.current.getEventContext(e.nativeEvent).section !== 'body') {
-      e.stopPropagation();
-    }
-  }
 
   // tag::snippet[]
   const renderMenu = ({
@@ -65,7 +65,7 @@ function Example() {
 
   return (
     <ContextMenu renderer={renderMenu}>
-      <Grid items={items} ref={gridRef} onContextMenu={onContextMenu}>
+      <Grid items={items} ref={gridRef}>
         <GridColumn path="firstName" />
         <GridColumn path="lastName" />
         <GridColumn path="email" />

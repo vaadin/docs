@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Grid, type GridDragStartEvent } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -24,7 +24,7 @@ function Example() {
   const [grid1Items, setGrid1Items] = useState<Person[]>([]);
   const [grid2Items, setGrid2Items] = useState<Person[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getPeople({ count: 10 }).then(({ people }) => {
       setGrid1Items(people.slice(0, 5));
       setGrid2Items(people.slice(5));

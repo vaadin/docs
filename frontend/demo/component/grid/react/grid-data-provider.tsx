@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { Icon } from '@hilla/react-components/Icon.js';
@@ -62,21 +62,25 @@ async function fetchPeople(params: {
 function Example() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const dataProvider = async (
-    params: GridDataProviderParams<Person>,
-    callback: GridDataProviderCallback<Person>
-  ) => {
-    const { page, pageSize, sortOrders } = params;
+  const dataProvider = useMemo(
+    () =>
+      async (
+        params: GridDataProviderParams<Person>,
+        callback: GridDataProviderCallback<Person>
+      ) => {
+        const { page, pageSize, sortOrders } = params;
 
-    const { people, count } = await fetchPeople({
-      page,
-      pageSize,
-      sortOrders,
-      searchTerm,
-    });
+        const { people, count } = await fetchPeople({
+          page,
+          pageSize,
+          sortOrders,
+          searchTerm,
+        });
 
-    callback(people, count);
-  };
+        callback(people, count);
+      },
+    [searchTerm]
+  );
 
   return (
     <VerticalLayout theme="spacing">
