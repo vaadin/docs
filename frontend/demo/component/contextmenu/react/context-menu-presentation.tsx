@@ -14,7 +14,10 @@ import '@vaadin/icons';
 
 function Item({ person }: { person: Person }) {
   return (
-    <HorizontalLayout style={{ alignItems: 'center', lineHeight: 'var(--lumo-line-height-m)' }}>
+    <HorizontalLayout
+      style={{ alignItems: 'center', lineHeight: 'var(--lumo-line-height-m)' }}
+      theme="spacing"
+    >
       <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
       <VerticalLayout>
         <span>
