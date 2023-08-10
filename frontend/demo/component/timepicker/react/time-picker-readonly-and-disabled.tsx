@@ -5,15 +5,13 @@ import { TimePicker } from '@hilla/react-components/TimePicker.js';
 
 function Example() {
   return (
-    <>
-      {/* <!-- tag::snippet[] --> */}
-      <HorizontalLayout theme="spacing">
-        <TimePicker readonly label="Read-only" value="07:00" />
+    // tag::snippet[]
+    <HorizontalLayout theme="spacing">
+      <TimePicker readonly label="Read-only" value="07:00" />
 
-        <TimePicker disabled label="Disabled" />
-      </HorizontalLayout>
-      {/* <!-- end::snippet[] --> */}
-    </>
+      <TimePicker disabled label="Disabled" />
+    </HorizontalLayout>
+    // end::snippet[]
   );
 }
 
