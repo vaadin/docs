@@ -21,8 +21,8 @@ export class Example extends LitElement {
         required
         min-length="5"
         max-length="50"
-        pattern="^[A-Z]([A-Za-z0-9,-\s])*\.$"
-        allowed-char-pattern="[A-Za-z0-9,.-\s]"
+        pattern="^[A-Z]([A-Za-z0-9,-s])*.$"
+        allowed-char-pattern="[A-Za-z0-9,.-s]"
         label="Sentence"
         helper-text="Must be one complete sentence ending in a period, between 5 and 50 characters long"
         style="width:100%"
