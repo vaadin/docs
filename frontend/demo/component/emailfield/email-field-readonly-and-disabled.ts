@@ -22,8 +22,7 @@ export class Example extends LitElement {
         <vaadin-email-field readonly label="Read-only" value="example@example.com">
         </vaadin-email-field>
 
-        <vaadin-email-field disabled label="Disabled">
-        </vaadin-email-field>
+        <vaadin-email-field disabled label="Disabled"></vaadin-email-field>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
