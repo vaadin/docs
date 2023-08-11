@@ -1,13 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   return (
     // tag::snippet[]
-    <HorizontalLayout theme="spacing padding" style={layoutExampleStyle}>
+    <HorizontalLayout theme="spacing padding">
       <Button>Button 1</Button>
       <Button>Button 2</Button>
       <Button>Button 3</Button>
@@ -16,4 +16,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, layoutExampleStyle); // hidden-source-line

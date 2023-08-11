@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import {
@@ -7,7 +8,6 @@ import {
 } from '@hilla/react-components/RadioGroup.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { RadioButton } from '@hilla/react-components/RadioButton.js';
-import layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   const [theme, setTheme] = useState('padding');
@@ -15,10 +15,7 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <HorizontalLayout
-        theme={`${theme} spacing`}
-        style={{ alignItems: 'stretch', ...layoutExampleStyle }}
-      >
+      <HorizontalLayout theme={`${theme} spacing`} style={{ alignItems: 'stretch' }}>
         <Button>Button 1</Button>
         <Button>Button 2</Button>
         <Button>Button 3</Button>
@@ -38,4 +35,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, layoutExampleStyle); // hidden-source-line

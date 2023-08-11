@@ -1,13 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React from 'react';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { TextArea } from '@hilla/react-components/TextArea.js';
-import _layoutExampleStyle from './layoutExampleStyle';
-
-const layoutExampleStyle = {
-  ..._layoutExampleStyle,
-  height: 'calc(var(--lumo-size-xl) * 4)',
-};
 
 function Example() {
   return (
@@ -26,4 +21,4 @@ function Example() {
 }
 // end::snippet[]
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, layoutExampleStyle); // hidden-source-line

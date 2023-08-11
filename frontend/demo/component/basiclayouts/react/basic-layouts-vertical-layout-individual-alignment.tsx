@@ -1,13 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   return (
     // tag::snippet[]
-    <VerticalLayout theme="spacing padding" style={{ alignItems: 'start', ...layoutExampleStyle }}>
+    <VerticalLayout theme="spacing padding" style={{ alignItems: 'start' }}>
       <Button style={{ alignSelf: 'end' }} theme="primary">
         Button 1
       </Button>
@@ -18,4 +18,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, layoutExampleStyle); // hidden-source-line

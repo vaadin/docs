@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
 import type { RadioGroupValueChangedEvent } from '@hilla/react-components/RadioGroup.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { RadioButton } from '@hilla/react-components/RadioButton.js';
-import layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   const [theme, setTheme] = useState('padding');
@@ -16,7 +16,7 @@ function Example() {
       <VerticalLayout
         theme={`${theme} spacing`}
         className="height-4xl"
-        style={{ alignItems: 'stretch', ...layoutExampleStyle }}
+        style={{ alignItems: 'stretch' }}
       >
         <Button>Button 1</Button>
         <Button>Button 2</Button>
@@ -38,4 +38,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, layoutExampleStyle); // hidden-source-line
