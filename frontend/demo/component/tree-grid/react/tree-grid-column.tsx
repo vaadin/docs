@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Grid,
   type GridDataProviderCallback,
@@ -16,22 +16,26 @@ function Example() {
   const [managers, setManagers] = useState<Person[]>([]);
   const [expandedItems, setExpandedItems] = useState<Person[]>([]);
 
-  const dataProvider = async (
-    params: GridDataProviderParams<Person>,
-    callback: GridDataProviderCallback<Person>
-  ) => {
-    const { people, hierarchyLevelSize } = await getPeople({
-      count: params.pageSize,
-      startIndex: params.page * params.pageSize,
-      managerId: params.parentItem ? params.parentItem.id : null,
-    });
+  const dataProvider = useMemo(
+    () =>
+      async (
+        params: GridDataProviderParams<Person>,
+        callback: GridDataProviderCallback<Person>
+      ) => {
+        const { people, hierarchyLevelSize } = await getPeople({
+          count: params.pageSize,
+          startIndex: params.page * params.pageSize,
+          managerId: params.parentItem ? params.parentItem.id : null,
+        });
 
-    if (!managers.length && !params.parentItem) {
-      setManagers(people);
-    }
+        if (!managers.length && !params.parentItem) {
+          setManagers(people);
+        }
 
-    callback(people, hierarchyLevelSize);
-  };
+        callback(people, hierarchyLevelSize);
+      },
+    []
+  );
 
   const expandAll = () => {
     setExpandedItems([...managers]);
