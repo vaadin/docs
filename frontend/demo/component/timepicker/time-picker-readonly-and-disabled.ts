@@ -19,11 +19,9 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <vaadin-time-picker readonly label="Read-only" value="07:00">
-        </vaadin-time-picker>
+        <vaadin-time-picker readonly label="Read-only" value="07:00"></vaadin-time-picker>
 
-        <vaadin-time-picker disabled label="Disabled">
-        </vaadin-time-picker>
+        <vaadin-time-picker disabled label="Disabled"></vaadin-time-picker>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
