@@ -19,17 +19,18 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-        <!-- tag::snippet[] -->
-        <vaadin-number-field
-          label="Label"
-          helper-text="Helper text"
-          placeholder="Placeholder"
-          clear-button-visible>
-          <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
-          <span slot="prefix">$</span>
-          <vaadin-icon slot="suffix" icon="vaadin:dollar"></vaadin-icon>
-        </vaadin-number-field>
-        <!-- end::snippet[] -->
+      <!-- tag::snippet[] -->
+      <vaadin-number-field
+        label="Label"
+        helper-text="Helper text"
+        placeholder="Placeholder"
+        clear-button-visible
+      >
+        <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
+        <span slot="prefix">$</span>
+        <vaadin-icon slot="suffix" icon="vaadin:dollar"></vaadin-icon>
+      </vaadin-number-field>
+      <!-- end::snippet[] -->
     `;
   }
 }
