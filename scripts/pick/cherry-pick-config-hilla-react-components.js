@@ -15,28 +15,6 @@ const config = {
     ],
     // paths in 'latest' to ignore (since they shouldn't be copied to 'hilla')
     ignore: [
-      /* Ignore temporarily until Vaadin version update */
-      'articles/components/map',
-      'articles/components/menubar',
-      'articles/components/notification',
-      'articles/components/sidenav',
-      'articles/components/splitlayout',
-      'articles/components/tabs',
-      'articles/components/grid',
-      'articles/components/button',
-      'articles/components/applayout',
-      'articles/components/datetimepicker',
-      'articles/components/login',
-      'articles/components/avatar',
-      'articles/components/cookieconsent',
-
-      'frontend/demo/component/datetimepicker',
-      'frontend/demo/component/login',
-      'frontend/demo/component/avatar',
-      'frontend/demo/component/grid',
-      'frontend/demo/component/cookieconsent',
-      /* END Ignore */
-
       // Ignore Spreadsheet
       'articles/components/spreadsheet',
 
