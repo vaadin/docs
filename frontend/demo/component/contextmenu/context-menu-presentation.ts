@@ -81,7 +81,7 @@ export class Example extends LitElement {
 
   createItemsArray(people: Person[]) {
     return people.map((person, index) => {
-      const item = document.createElement('vaadin-item');
+      const item = document.createElement('vaadin-context-menu-item');
       if (index === 0) {
         item.setAttribute('selected', '');
       }

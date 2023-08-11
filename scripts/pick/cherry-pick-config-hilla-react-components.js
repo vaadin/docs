@@ -1,3 +1,6 @@
+// Cherry-pick config for hilla react components
+// Run with `node ./scripts/pick/cherry-pick.js -t hilla -c ./scripts/pick/cherry-pick-config-hilla-react-components.js`
+
 const config = {
   source: {
     // paths in 'latest' to copy, they should be relative to the root folder
@@ -12,30 +15,11 @@ const config = {
     ],
     // paths in 'latest' to ignore (since they shouldn't be copied to 'hilla')
     ignore: [
-      /* Ignore temporarily until Vaadin version update */
-      'articles/components/map',
-      'articles/components/menubar',
-      'articles/components/notification',
-      'articles/components/sidenav',
-      'articles/components/splitlayout',
-      'articles/components/tabs',
-      'articles/components/grid',
-      'articles/components/button',
-      'articles/components/applayout',
-      'articles/components/datetimepicker',
-      'articles/components/login',
-      'articles/components/avatar',
-      'articles/components/cookieconsent',
-
-      'frontend/demo/component/datetimepicker',
-      'frontend/demo/component/login',
-      'frontend/demo/component/avatar',
-      'frontend/demo/component/grid',
-      'frontend/demo/component/cookieconsent',
-      /* END Ignore */
-
       // Ignore Spreadsheet
       'articles/components/spreadsheet',
+
+      // Ignore Map
+      'articles/components/map',
 
       // Regex to ignore everything but "components" under articles
       /articles\/(?!components).*/,
@@ -47,6 +31,7 @@ const config = {
       /frontend\/demo\/component\/(?!icons)[a-z-]+\/(?!react).*/,
 
       'frontend/demo/component/spreadsheet',
+      'frontend/demo/component/map',
       'frontend/demo/fusion',
       'frontend/demo/upgrade-tool',
       'frontend/demo/tools',
