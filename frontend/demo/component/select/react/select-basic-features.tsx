@@ -32,8 +32,9 @@ function Example() {
   return (
     // tag::snippet[]
     <Select label="Label" helperText="Helper text" placeholder="Placeholder" items={items}>
-      <Tooltip slot="tooltip" text="Tooltip text" />
-      <Icon slot="prefix" icon="vaadin:vaadin-h" />
+      {/* Icon and Tooltip are currently disabled due to https://github.com/vaadin/react-components/issues/131 />}
+      {/* <Tooltip slot="tooltip" text="Tooltip text" />
+      <Icon slot="prefix" icon="vaadin:vaadin-h" /> */}
     </Select>
     // end::snippet[]
   );
