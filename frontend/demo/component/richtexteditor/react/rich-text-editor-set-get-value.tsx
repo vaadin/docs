@@ -8,6 +8,7 @@ import type {
 } from '@hilla/react-components/RichTextEditor.js';
 
 function Example() {
+  // tag::snippet[]
   const [htmlValue, setHtmlValue] = useState('');
   const [deltaValue, setDeltaValue] = useState('');
 
@@ -27,7 +28,6 @@ function Example() {
 
   return (
     <>
-      {/* tag::snippet[] */}
       <RichTextEditor
         style={{ height: '400px' }}
         value={deltaValue}
@@ -51,9 +51,9 @@ function Example() {
         value={deltaValue}
         onChange={(e) => setDeltaValue(e.target.value)}
       />
-      {/* end::snippet[] */}
     </>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line
