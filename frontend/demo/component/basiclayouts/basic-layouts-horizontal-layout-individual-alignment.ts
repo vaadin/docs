@@ -7,9 +7,6 @@ import '@vaadin/text-area';
 
 @customElement('basic-layouts-horizontal-layout-individual-alignment')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('basic-layouts-example');
@@ -33,13 +30,12 @@ export class Example extends LitElement {
         <vaadin-text-area
           label="Text area 1"
           style="align-self: start"
-        >
-        </vaadin-text-area>
+        ></vaadin-text-area>
         <vaadin-text-area label="Text area 2"></vaadin-text-area>
         <vaadin-text-area
           label="Text area 3"
           style="align-self: end"
-          </vaadin-text-area>
+        ></vaadin-text-area>
       </vaadin-horizontal-layout>
 
     <!-- end::snippet[] -->

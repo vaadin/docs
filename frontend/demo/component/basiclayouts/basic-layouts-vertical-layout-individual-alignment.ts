@@ -7,9 +7,6 @@ import '@vaadin/vertical-layout';
 
 @customElement('basic-layouts-vertical-layout-individual-alignment')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('basic-layouts-example');
@@ -24,25 +21,11 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-    <!-- tag::snippet[] -->
-      <vaadin-vertical-layout
-        theme="spacing padding"
-        style="align-items: start"
-      >
-        <vaadin-button style="align-self: end"
-          theme="primary"
-        >
-          Button 1
-        </vaadin-button>
-        <vaadin-button
-          style="align-self: center"
-        >
-          Button 2
-        </vaadin-button>
-        <vaadin-button
-        >
-        Button 3
-        </vaadin-button>
+      <!-- tag::snippet[] -->
+      <vaadin-vertical-layout theme="spacing padding" style="align-items: start">
+        <vaadin-button style="align-self: end" theme="primary">Button 1</vaadin-button>
+        <vaadin-button style="align-self: center"> Button 2</vaadin-button>
+        <vaadin-button>Button 3</vaadin-button>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->
     `;
