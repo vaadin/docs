@@ -9,7 +9,7 @@ function Example() {
     // tag::snippet[]
     <HorizontalLayout
       theme="spacing padding"
-      className="height-4xl" // hidden-source-line
+      className="height-4xl"
       style={{ alignItems: 'stretch', ...layoutExampleStyle }}
     >
       <TextArea label="Text area 1" style={{ alignSelf: 'start' }} />
@@ -19,6 +19,5 @@ function Example() {
     // end::snippet[]
   );
 }
-// end::snippet[]
 
 export default reactExample(Example, layoutExampleStyle); // hidden-source-line
