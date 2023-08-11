@@ -9,9 +9,6 @@ import '@vaadin/horizontal-layout';
 
 @customElement('basic-layouts-spacing-variants')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('basic-layouts-example');
@@ -30,10 +27,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout
-        theme="${this.themeVariant} padding"
-        style="align-items: stretch"
-      >
+      <vaadin-horizontal-layout theme="${this.themeVariant} padding" style="align-items: stretch">
         <vaadin-button>Button 1</vaadin-button>
         <vaadin-button>Button 2</vaadin-button>
         <vaadin-button>Button 3</vaadin-button>
