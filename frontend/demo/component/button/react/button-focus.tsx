@@ -4,11 +4,9 @@ import { Button } from '@hilla/react-components/Button.js';
 
 function Example() {
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Button focus-ring>Keyboard focus</Button>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Button focus-ring>Keyboard focus</Button>
+    // end::snippet[]
   );
 }
 
