@@ -4,12 +4,12 @@ import { Notification } from '@hilla/react-components/Notification.js';
 import { Upload } from '@hilla/react-components/Upload.js';
 
 function Example() {
+  // tag::snippet[]
   const maxFileSizeInMB = 10;
   const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
 
   return (
     <>
-      {/* tag::snippet[] */}
       <h4>Upload file</h4>
       <p>Maximum file size: {maxFileSizeInMB} MB</p>
       <Upload
@@ -19,9 +19,9 @@ function Example() {
           Notification.show(event.detail.error);
         }}
       />
-      {/* end::snippet[] */}
     </>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

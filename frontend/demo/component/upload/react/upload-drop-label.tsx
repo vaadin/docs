@@ -10,7 +10,7 @@ function Example() {
     <Upload>
       <Icon slot="drop-label-icon" icon="vaadin:cloud-upload-o" />
       <span slot="drop-label">
-        Files will be uploaded to our cloud. See our
+        Files will be uploaded to our cloud. See our&nbsp;
         <a href="https://vaadin.com/privacy-policy" target="_blank">
           privacy policy
         </a>

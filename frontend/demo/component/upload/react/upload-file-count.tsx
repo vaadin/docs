@@ -4,11 +4,11 @@ import { Upload } from '@hilla/react-components/Upload.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 
 function Example() {
+  // tag::snippet[]
   const maxFiles = 3;
 
   return (
     <>
-      {/* tag::snippet[] */}
       <h4>Upload files</h4>
       <p>Maximum of {maxFiles} files allowed</p>
       <Upload
@@ -17,9 +17,9 @@ function Example() {
           Notification.show(event.detail.error);
         }}
       />
-      {/* end::snippet[] */}
     </>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

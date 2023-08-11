@@ -20,7 +20,7 @@ function Example() {
       {/* tag::snippet[] */}
       <Upload noAuto ref={uploadRef} files={createFakeFilesUploadAllFiles()} />
 
-      <Button theme="primary" onClick={() => uploadRef?.current?.uploadFiles()}>
+      <Button theme="primary" onClick={() => uploadRef.current?.uploadFiles()}>
         Upload All Files
       </Button>
       {/* end::snippet[] */}

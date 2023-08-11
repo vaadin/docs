@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
+import React, { useRef } from 'react';
 import { Upload } from '@hilla/react-components/Upload.js';
 import { Button } from '@hilla/react-components/Button.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 
 function Example() {
-  const maxFilesReached = React.useRef(false);
+  const maxFilesReached = useRef(false);
 
   const fileRejectHandler = (event: any) => {
     Notification.show(`Error: ${event.detail.error} '${event.detail.file.name}'`);
