@@ -19,12 +19,14 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <vaadin-select readonly
-          label="Read-only" value="${this.items[0].value}" .items="${this.items}">
-        </vaadin-select>
+        <vaadin-select
+          readonly
+          label="Read-only"
+          value="${this.items[0].value}"
+          .items="${this.items}"
+        ></vaadin-select>
 
-        <vaadin-select disabled label="Disabled">
-        </vaadin-select>
+        <vaadin-select disabled label="Disabled"></vaadin-select>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
@@ -53,5 +55,4 @@ export class Example extends LitElement {
       value: 'price-asc',
     },
   ];
-
 }

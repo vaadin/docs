@@ -56,11 +56,9 @@ function Example() {
   );
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <VirtualList items={people}>{personCardRenderer}</VirtualList>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <VirtualList items={people}>{personCardRenderer}</VirtualList>
+    // end::snippet[]
   );
 }
 
