@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Select } from '@hilla/react-components/Select.js';
 import { ListBox } from '@hilla/react-components/ListBox.js';
 import { Item } from '@hilla/react-components/Item.js';
-import '@vaadin/avatar';
-import '@vaadin/horizontal-layout';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
