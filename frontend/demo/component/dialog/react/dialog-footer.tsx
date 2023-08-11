@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { Dialog } from '@hilla/react-components/Dialog.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -9,7 +9,7 @@ function Example() {
   const [dialogOpened, setDialogOpened] = useState(false);
   const [user, setUser] = useState<Person>();
 
-  React.useEffect(() => {
+  useEffect(() => {
     getPeople({ count: 1 }).then(({ people }) => {
       setUser(people[0]);
     });
@@ -34,7 +34,6 @@ function Example() {
         }}
         footerRenderer={() => (
           <>
-            {/* The following code is the dialog footer */}
             <Button theme="primary error" onClick={close} style={{ marginRight: 'auto' }}>
               Delete
             </Button>

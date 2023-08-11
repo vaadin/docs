@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@hilla/react-components/Button.js';
 import { Dialog } from '@hilla/react-components/Dialog.js';
 import { Grid } from '@hilla/react-components/Grid.js';
@@ -13,7 +13,7 @@ function Example(): JSX.Element {
   const [dialogOpened, setDialogOpened] = useState(false);
   const [people, setPeople] = useState<Person[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getPeople({ count: 50 }).then((result) => setPeople(result.people));
   }, []);
 
