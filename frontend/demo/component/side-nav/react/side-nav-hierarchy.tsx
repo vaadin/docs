@@ -21,7 +21,7 @@ function Example() {
     <div className="side-nav-sample">
       <div>
         {/* tag::snippet[] */}
-        <SideNav style={{ width: '100%' }} id="sideNav">
+        <SideNav style={{ width: '100%' }} id="sideNav" ref={sideNavRef}>
           <SideNavItem path="/messages">
             <Icon icon="vaadin:envelope" slot="prefix" />
             Messages

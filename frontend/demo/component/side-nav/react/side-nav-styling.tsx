@@ -20,7 +20,7 @@ function Example() {
     <div className="side-nav-sample">
       <div>
         {/* tag::snippet[] */}
-        <SideNav style={{ width: '100%' }}>
+        <SideNav style={{ width: '100%' }} ref={sideNavRef}>
           <SideNavItem path="/dashboard">
             <Icon icon="vaadin:dashboard" slot="prefix" />
             Dashboard

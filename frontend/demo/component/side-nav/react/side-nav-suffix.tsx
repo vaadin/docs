@@ -20,13 +20,17 @@ function Example() {
     <div className="side-nav-sample">
       <div>
         {/* tag::snippet[] */}
-        <SideNav style={{ width: '100%' }}>
+        <SideNav style={{ width: '100%' }} ref={sideNavRef}>
           <SideNavItem path="/inbox">
             <Icon icon="vaadin:envelope" slot="prefix" />
             Inbox
-            <Icon slot="suffix" theme="badge contrast pill" aria-label="12 unread messages">
+            <span
+              {...{ theme: 'badge contrast pill' }}
+              slot="suffix"
+              aria-label="12 unread messages"
+            >
               12
-            </Icon>
+            </span>
           </SideNavItem>
           <SideNavItem path="/calendar">
             <Icon icon="vaadin:calendar" slot="prefix" />

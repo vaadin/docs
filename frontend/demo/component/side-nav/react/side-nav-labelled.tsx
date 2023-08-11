@@ -8,11 +8,13 @@ import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 
 const Example = () => {
   const sideNavRef = useRef<SideNavElement>(null);
+  const secondSideNavRef = useRef<SideNavElement>(null);
 
   useEffect(() => {
-    if (sideNavRef.current) {
+    if (sideNavRef.current && secondSideNavRef.current) {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
+      patchSideNavNavigation(secondSideNavRef.current);
     }
   }, []);
 
@@ -20,7 +22,7 @@ const Example = () => {
     <div className="side-nav-sample">
       {/* tag::snippet[] */}
       <VerticalLayout theme="spacing">
-        <SideNav style={{ width: '100%' }}>
+        <SideNav style={{ width: '100%' }} ref={sideNavRef}>
           <span slot="label">Messages</span>
           <SideNavItem path="/inbox">
             <Icon icon="vaadin:inbox" slot="prefix"></Icon>
@@ -35,7 +37,7 @@ const Example = () => {
             Trash
           </SideNavItem>
         </SideNav>
-        <SideNav style={{ width: '100%' }} collapsible>
+        <SideNav style={{ width: '100%' }} collapsible ref={secondSideNavRef}>
           <span slot="label">Admin</span>
           <SideNavItem path="/users">
             <Icon icon="vaadin:group" slot="prefix"></Icon>
