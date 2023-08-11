@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageList } from '@hilla/react-components/MessageList.js';
 import { MessageInput } from '@hilla/react-components/MessageInput.js';
 import type { MessageListItem } from '@vaadin/message-list';
@@ -8,7 +8,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 function Example() {
   const [items, setItems] = useState<MessageListItem[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getPeople({ count: 1 }).then(({ people }) => {
       const person = people[0];
       setItems([
