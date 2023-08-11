@@ -6,6 +6,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
+import '@vaadin/icons';
 
 // tag::snippet[]
 function subscriberHeaderRenderer() {
@@ -19,10 +20,6 @@ function subscriberHeaderRenderer() {
       />
     </HorizontalLayout>
   );
-}
-
-function subscriberRenderer({ item: person }: { item: Person }) {
-  return <span>{person.subscriber ? 'Yes' : 'No'}</span>;
 }
 
 function membershipHeaderRenderer() {
@@ -64,7 +61,7 @@ function Example() {
         headerRenderer={subscriberHeaderRenderer}
         footerRenderer={() => <span>102 subscribers</span>}
       >
-        {subscriberRenderer}
+        {({ item }) => <span>{item.subscriber ? 'Yes' : 'No'}</span>}
       </GridColumn>
 
       <GridColumn

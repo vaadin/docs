@@ -9,9 +9,6 @@ import '@vaadin/vertical-layout';
 
 @customElement('basic-layouts-spacing')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('basic-layouts-example');
