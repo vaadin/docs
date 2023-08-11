@@ -24,6 +24,7 @@ export class Example extends LitElement {
   @state()
   private person?: Person;
 
+  // tag::snippet[]
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
     this.person = people[0];
@@ -55,9 +56,8 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-menu-bar .items="${this.menuBarItems}" theme="tertiary-inline"></vaadin-menu-bar>
-      <!-- end::snippet[] -->
     `;
   }
+  // end::snippet[]
 }
