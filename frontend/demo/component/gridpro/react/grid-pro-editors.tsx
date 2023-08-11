@@ -26,6 +26,7 @@ function Example() {
 
       {/*
         Unfortunately custom editors don't currently work with React-based GridPro
+        See: https://github.com/vaadin/react-components/issues/135
 
         <GridProEditColumn
           path="birthday"
