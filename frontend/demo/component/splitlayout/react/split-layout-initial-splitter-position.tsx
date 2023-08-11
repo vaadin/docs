@@ -9,12 +9,8 @@ function Example() {
   return (
     // tag::snippet[]
     <SplitLayout style={{ maxHeight: '280px' }}>
-      <div style={{ width: '70%' }}>
-        <MasterContent />
-      </div>
-      <div style={{ width: '30%' }}>
-        <DetailContent />
-      </div>
+      <MasterContent style={{ width: '70%' }} />
+      <DetailContent style={{ width: '30%' }} />
     </SplitLayout>
     // end::snippet[]
   );

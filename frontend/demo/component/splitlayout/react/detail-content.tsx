@@ -1,8 +1,12 @@
 import React from 'react';
 
-function DetailContent() {
+type DetailContentProps = {
+  style?: React.CSSProperties;
+};
+
+function DetailContent({ style }: DetailContentProps) {
   return (
-    <div className="detail-content">
+    <div className="detail-content" style={style}>
       <div className="form">
         <div className="field">
           <label></label>
