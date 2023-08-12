@@ -22,8 +22,7 @@ export class Example extends LitElement {
         <vaadin-text-area readonly label="Read-only" value="Value" style="width:100%">
         </vaadin-text-area>
 
-        <vaadin-text-area disabled label="Disabled" style="width:100%">
-        </vaadin-text-area>
+        <vaadin-text-area disabled label="Disabled" style="width:100%"></vaadin-text-area>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
