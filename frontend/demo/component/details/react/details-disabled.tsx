@@ -5,7 +5,7 @@ import { Details } from '@hilla/react-components/Details.js';
 function Example() {
   return (
     // tag::snippet[]
-    <Details summary="Members (8)" disabled>
+    <Details summary="Members (8)" {...{ disabled: true }}>
       <ul>
         <li>Blake Martin</li>
         <li>Caroline Clark</li>
