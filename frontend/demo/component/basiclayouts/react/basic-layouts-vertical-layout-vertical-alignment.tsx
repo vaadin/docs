@@ -3,7 +3,6 @@ import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React from 'react';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { Button } from '@hilla/react-components/Button.js';
-import _layoutExampleStyle from './layoutExampleStyle';
 
 function Example() {
   return (
