@@ -20,12 +20,19 @@ function Example() {
 
   return (
     <SplitLayout style={{ maxHeight: '280px' }}>
-      <div style={{ overflow: 'hidden', width: `${sidebarWidthPercentage}%` }}>
+      <div
+        style={{
+          overflow: 'hidden',
+          width: `${sidebarWidthPercentage}%`,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <Button
           theme="icon tertiary"
           aria-label="Expand/collapse sidebar"
           onClick={toggleSidebar}
-          style={{ float: 'right' }}
+          style={{ alignSelf: 'flex-end' }}
         >
           <Icon icon={sidebarCollapsed ? 'vaadin:arrow-right' : 'vaadin:arrow-left'} />
         </Button>
