@@ -1,8 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import '@vaadin/button';
-import '@vaadin/horizontal-layout';
-import '@vaadin/icon';
 import '@vaadin/icons';
 import { Scroller } from '@hilla/react-components/Scroller.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
