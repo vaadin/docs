@@ -17,18 +17,16 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
+      <!-- tag::snippet[] -->
+      <vaadin-checkbox-group label="Label" helper-text="Helper text">
+        <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
         <!-- tag::snippet[] -->
-        <vaadin-checkbox-group
-          label="Label"
-          helper-text="Helper text">
-          <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
-          <!-- tag::snippet[] -->
-          <vaadin-checkbox value="1" label="Item 1"></vaadin-checkbox>
-          <vaadin-checkbox value="2" label="Item 2"></vaadin-checkbox>
-          <vaadin-checkbox value="3" label="Item 3"></vaadin-checkbox>
-          <!-- end::snippet[] -->
-        </vaadin-checkbox-group>
+        <vaadin-checkbox value="1" label="Item 1"></vaadin-checkbox>
+        <vaadin-checkbox value="2" label="Item 2"></vaadin-checkbox>
+        <vaadin-checkbox value="3" label="Item 3"></vaadin-checkbox>
         <!-- end::snippet[] -->
+      </vaadin-checkbox-group>
+      <!-- end::snippet[] -->
     `;
   }
 }
