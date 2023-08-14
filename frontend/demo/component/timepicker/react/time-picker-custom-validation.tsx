@@ -1,10 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { TimePicker } from '@hilla/react-components/TimePicker.js';
-import { Binder } from '@hilla/form';
-import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 
 function Example() {
+  // This is a placeholder file. Binder support for React is not yet implemented. See https://github.com/vaadin/hilla/issues/587
   return (
     // tag::snippet[]
     <TimePicker
