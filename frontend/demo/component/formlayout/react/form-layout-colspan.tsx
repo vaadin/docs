@@ -12,16 +12,14 @@ function Example() {
   ];
 
   return (
-    <>
-      <FormLayout responsiveSteps={responsiveSteps}>
-        {/* tag::snippet[] */}
-        <TextField label="Title" {...{ colspan: 3 }} />
-        {/* end::snippet[] */}
-        <DatePicker label="Date" />
-        <TimePicker label="From" />
-        <TimePicker label="To" />
-      </FormLayout>
-    </>
+    <FormLayout responsiveSteps={responsiveSteps}>
+      {/* tag::snippet[] */}
+      <TextField label="Title" {...{ colspan: 3 }} />
+      {/* end::snippet[] */}
+      <DatePicker label="Date" />
+      <TimePicker label="From" />
+      <TimePicker label="To" />
+    </FormLayout>
   );
 }
 
