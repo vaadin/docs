@@ -6,7 +6,7 @@ import {
   type GridDataProviderParams,
 } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { GridTreeColumn } from '@hilla/react-components/GridTreeColumn.js'; // hidden-source-line
+import { GridTreeColumn } from '@hilla/react-components/GridTreeColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
