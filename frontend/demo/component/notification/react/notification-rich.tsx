@@ -115,19 +115,19 @@ function Example() {
       {/* end::snippet[] */}
 
       <HorizontalLayout theme="spacing" style={{ justifyContent: 'center' }}>
-        <Button data-which="1" theme="success primary" onClick={() => open(0)}>
+        <Button theme="success primary" onClick={() => open(0)}>
           Try it
         </Button>
 
-        <Button data-which="2" theme="error primary" onClick={() => open(1)}>
+        <Button theme="error primary" onClick={() => open(1)}>
           Try it
         </Button>
 
-        <Button data-which="3" theme="contrast" onClick={() => open(2)}>
+        <Button theme="contrast" onClick={() => open(2)}>
           Try it
         </Button>
 
-        <Button data-which="4" theme="success" onClick={() => open(3)}>
+        <Button theme="success" onClick={() => open(3)}>
           Try it
         </Button>
       </HorizontalLayout>
