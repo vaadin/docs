@@ -22,8 +22,7 @@ export class Example extends LitElement {
         <vaadin-password-field readonly label="Read-only" value="Ex@mplePassw0rd">
         </vaadin-password-field>
 
-        <vaadin-password-field disabled label="Disabled">
-        </vaadin-password-field>
+        <vaadin-password-field disabled label="Disabled"></vaadin-password-field>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
