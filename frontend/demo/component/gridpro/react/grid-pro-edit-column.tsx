@@ -15,14 +15,13 @@ function Example() {
   return (
     // tag::snippet[]
     <GridPro items={items} enterNextRow>
-      <GridColumn
-        header="Name (read-only)"
-        renderer={({ item }) => (
+      <GridColumn header="Name (read-only)">
+        {({ item }) => (
           <>
             {item.firstName} {item.lastName}
           </>
         )}
-      />
+      </GridColumn>
 
       <GridProEditColumn header="Profession (editable)" path="profession" />
     </GridPro>
