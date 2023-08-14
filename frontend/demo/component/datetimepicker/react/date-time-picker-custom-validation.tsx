@@ -3,6 +3,7 @@ import React from 'react';
 import { DateTimePicker } from '@hilla/react-components/DateTimePicker.js';
 
 function Example() {
+  // This is a placeholder file. Binder support for React is not yet implemented. See https://github.com/vaadin/hilla/issues/587
   const errorMessage = 'The selected day of week or time is not available';
 
   return (
