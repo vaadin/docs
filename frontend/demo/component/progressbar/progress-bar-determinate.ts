@@ -17,8 +17,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <div style="color: var(--lumo-secondary-text-color);">
-        <div>Processing Financials.xlsx (50%)</div>
+      <div>
         <vaadin-progress-bar value="0.5"></vaadin-progress-bar>
       </div>
       <!-- end::snippet[] -->

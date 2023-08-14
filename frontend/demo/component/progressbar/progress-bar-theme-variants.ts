@@ -17,22 +17,11 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout theme="spacing" style="color: var(--lumo-secondary-text-color);">
+      <vaadin-vertical-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <div style="width: 100%;">
-          <div>Transferring files... (60/120)</div>
-          <vaadin-progress-bar value="0.5" theme="contrast"></vaadin-progress-bar>
-        </div>
-
-        <div style="width: 100%;">
-          <div>Tasks (15/20)</div>
-          <vaadin-progress-bar value="0.75" theme="success"></vaadin-progress-bar>
-        </div>
-
-        <div style="width: 100%;">
-          <div>Tasks (4/20)</div>
-          <vaadin-progress-bar value="0.2" theme="error"></vaadin-progress-bar>
-        </div>
+        <vaadin-progress-bar value="0.5" theme="contrast"></vaadin-progress-bar>
+        <vaadin-progress-bar value="0.75" theme="success"></vaadin-progress-bar>
+        <vaadin-progress-bar value="0.2" theme="error"></vaadin-progress-bar>
         <!-- end::snippet[] -->
       </vaadin-vertical-layout>
     `;
