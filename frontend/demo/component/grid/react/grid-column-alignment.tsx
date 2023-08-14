@@ -32,17 +32,15 @@ function Example() {
   }, []);
 
   return (
-    <>
-      {/* tag::snippet[] */}
-      <Grid items={items}>
-        <GridColumn path="displayName" header="Name" />
-        <GridColumn header="Due">{() => <span>{randomDate()}</span>}</GridColumn>
-        <GridColumn header="Amount" textAlign="end">
-          {() => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{randomAmount()}</span>}
-        </GridColumn>
-      </Grid>
-      {/* end::snippet[] */}
-    </>
+    // tag::snippet[]
+    <Grid items={items}>
+      <GridColumn path="displayName" header="Name" />
+      <GridColumn header="Due">{() => <span>{randomDate()}</span>}</GridColumn>
+      <GridColumn header="Amount" textAlign="end">
+        {() => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{randomAmount()}</span>}
+      </GridColumn>
+    </Grid>
+    // end::snippet[]
   );
 }
 
