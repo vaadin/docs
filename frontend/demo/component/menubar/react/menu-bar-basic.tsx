@@ -1,6 +1,6 @@
-import { MenuBar, type MenuBarItem } from '@hilla/react-components/MenuBar.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
+import { MenuBar, type MenuBarItem } from '@hilla/react-components/MenuBar.js';
 
 function Example() {
   // tag::snippet[]
