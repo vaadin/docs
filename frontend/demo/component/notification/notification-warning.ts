@@ -49,7 +49,7 @@ export class Example extends LitElement {
   renderer: NotificationLitRenderer = () => html`
     <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
       <div>
-        Your session will expire in 5 minutes due to inactivity.<br/>
+        Your session will expire in 5 minutes due to inactivity.<br />
         Close this warning to continue working.
       </div>
       <vaadin-button theme="tertiary-inline" @click="${this.close}" aria-label="Close">
