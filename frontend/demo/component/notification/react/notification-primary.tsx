@@ -29,11 +29,9 @@ function Example() {
   };
 
   return (
-    <>
-      <Button onClick={handleClick} disabled={notificationOpened}>
-        Try it
-      </Button>
-    </>
+    <Button onClick={handleClick} disabled={notificationOpened}>
+      Try it
+    </Button>
   );
 }
 

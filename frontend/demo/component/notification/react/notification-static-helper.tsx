@@ -13,11 +13,7 @@ function Example() {
     // end::snippet[]
   }
 
-  return (
-    <>
-      <Button onClick={handleTextNotification}>Show text notification</Button>
-    </>
-  );
+  return <Button onClick={handleTextNotification}>Show text notification</Button>;
 }
 
 export default reactExample(Example); // hidden-source-line

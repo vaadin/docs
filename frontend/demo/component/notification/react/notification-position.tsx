@@ -2,8 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import exampleStyles from './notification-position-example-styles'; // hidden-source-line
 import React from 'react';
 import { Button } from '@hilla/react-components/Button.js';
-import { Notification } from '@hilla/react-components/Notification.js';
-import type { NotificationPosition } from '@hilla/react-components/Notification';
+import { Notification, type NotificationPosition } from '@hilla/react-components/Notification.js';
 
 function Example() {
   const show = (position: NotificationPosition) => {
