@@ -33,19 +33,17 @@ const Example = () => {
   }, []);
 
   return (
-    <>
-      <FormLayout responsiveSteps={layoutSteps}>
-        <div>
-          <strong>Caution</strong>
-          <Upload ref={uploadCaution} nodrop files={createFakeFilesUploadErrorMessagesA()} />
-        </div>
+    <FormLayout responsiveSteps={layoutSteps}>
+      <div>
+        <strong>Caution</strong>
+        <Upload ref={uploadCaution} nodrop files={createFakeFilesUploadErrorMessagesA()} />
+      </div>
 
-        <div>
-          <strong>Recommended</strong>
-          <Upload ref={uploadRecommended} nodrop files={createFakeFilesUploadErrorMessagesB()} />
-        </div>
-      </FormLayout>
-    </>
+      <div>
+        <strong>Recommended</strong>
+        <Upload ref={uploadRecommended} nodrop files={createFakeFilesUploadErrorMessagesB()} />
+      </div>
+    </FormLayout>
   );
   // end::snippet[]
 };
