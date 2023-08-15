@@ -1,6 +1,18 @@
 import { createFakeUploadFiles, mockErrorXhrGenerator } from './upload-demo-helpers';
 import { Upload } from '@vaadin/upload';
 
+declare module '@vaadin/upload' {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  class Upload {
+    createFakeFilesUploadBasic(): void;
+    createFakeFilesUploadAutoUploadDisabled(): void;
+    createFakeFilesUploadAllFiles(): void;
+    createFakeFilesUploadErrorMessagesA(): void;
+    createFakeFilesUploadErrorMessagesB(): void;
+    setupMockErrorResponse(): void;
+  }
+}
+
 // Used by `upload-basic.ts`
 export function createFakeFilesUploadBasic() {
   return createFakeUploadFiles([
@@ -54,17 +66,12 @@ export function createFakeFilesUploadErrorMessagesB() {
 }
 
 // Expose functions for Java examples
-// @ts-expect-error example function
 Upload.prototype.createFakeFilesUploadBasic = createFakeFilesUploadBasic;
-// @ts-expect-error example function
 Upload.prototype.createFakeFilesUploadAutoUploadDisabled = createFakeFilesUploadAutoUploadDisabled;
-// @ts-expect-error example function
 Upload.prototype.createFakeFilesUploadAllFiles = createFakeFilesUploadAllFiles;
-// @ts-expect-error example function
 Upload.prototype.createFakeFilesUploadErrorMessagesA = createFakeFilesUploadErrorMessagesA;
-// @ts-expect-error example function
 Upload.prototype.createFakeFilesUploadErrorMessagesB = createFakeFilesUploadErrorMessagesB;
-// @ts-expect-error example function
+
 Upload.prototype.setupMockErrorResponse = function setupMockErrorResponse() {
   // Monkey-patch vaadin-upload instance to use XHRs that always return a mock error response
   (this as any)._createXhr = mockErrorXhrGenerator;

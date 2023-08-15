@@ -21,9 +21,7 @@ const Example = () => {
       return;
     }
 
-    // @ts-expect-error example function
     uploadCaution.current.setupMockErrorResponse();
-    // @ts-expect-error example function
     uploadRecommended.current.setupMockErrorResponse();
 
     uploadCaution.current.i18n.uploading.error.unexpectedServerError = 'Unexpected Server Error';
