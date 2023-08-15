@@ -24,6 +24,9 @@ const config = {
       // Ignore basic layouts
       'articles/components/basic-layouts',
 
+      // Ignore Charts (for now)
+      'articles/components/charts',
+
       // Ignore flow-specific articles
       /articles\/components\/.*\/flow.asciidoc/,
 
@@ -103,6 +106,11 @@ const config = {
         // Add :react: at the top of the file before the title ("= ").
         if (content.includes('ifdef::react[]')) {
           content = content.replace(/= .*/, ':react:\n\n$&');
+        }
+
+        // Add section-nav: flat to components index
+        if (content.includes('title: Components')) {
+          content = content.replace('title: Components', 'title: Components\nsection-nav: flat');
         }
 
         return content;
