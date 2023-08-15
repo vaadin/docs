@@ -5,7 +5,6 @@ import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import boardStyles from './board-styles';
 
-
 function Example() {
   // tag::snippet[]
   return (
