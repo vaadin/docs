@@ -21,6 +21,9 @@ const config = {
       // Ignore Map
       'articles/components/map',
 
+      // Ignore basic layouts
+      'articles/components/basic-layouts',
+
       // Regex to ignore everything but "components" under articles
       /articles\/(?!components).*/,
 
