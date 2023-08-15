@@ -56,6 +56,13 @@ const config = {
       'src/main/resources/testsheets',
       'src/main/resources/META-INF/resources/icons/icon.png',
       'src/main/resources/application.properties',
+
+
+      'frontend/demo/component/upload/react/upload-demo-mock-files.ts',
+      'frontend/demo/component/upload/react/upload-error-messages.tsx',
+      'frontend/demo/component/upload/react/upload-all-files.tsx',
+      'frontend/demo/component/upload/react/upload-auto-upload-disabled.tsx',
+      'frontend/demo/component/upload/react/upload-basic.tsx',
     ],
   },
   rename: {
