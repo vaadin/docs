@@ -24,6 +24,9 @@ const config = {
       // Ignore basic layouts
       'articles/components/basic-layouts',
 
+      // Ignore flow-specific articles
+      /articles\/components\/.*\/flow.asciidoc/,
+
       // Regex to ignore everything but "components" under articles
       /articles\/(?!components).*/,
 
