@@ -1,8 +1,10 @@
 import { Board } from '@hilla/react-components/Board.js';
+import React from 'react';
 import { BoardRow } from '@hilla/react-components/BoardRow.js';
 import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
+import boardStyles from './board-styles';
+
 
 function Example() {
   // tag::snippet[]
@@ -22,4 +24,4 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, boardStyles); // hidden-source-line
