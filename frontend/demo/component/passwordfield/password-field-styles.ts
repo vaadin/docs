@@ -16,12 +16,15 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-        <!-- tag::snippet[] -->
-        <vaadin-password-field theme="align-right small helper-above-field"
-          label="Label" helper-text="Helper text" value="Ex@mplePassw0rd"
-          style="--vaadin-input-field-border-width: 1px;">
-        </vaadin-password-field>
-        <!-- end::snippet[] -->
+      <!-- tag::snippet[] -->
+      <vaadin-password-field
+        theme="align-right small helper-above-field"
+        label="Label"
+        helper-text="Helper text"
+        value="Ex@mplePassw0rd"
+        style="--vaadin-input-field-border-width: 1px;"
+      ></vaadin-password-field>
+      <!-- end::snippet[] -->
     `;
   }
 }
