@@ -7,9 +7,6 @@ import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('board-column-wrapping')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('board-column-wrapping');
