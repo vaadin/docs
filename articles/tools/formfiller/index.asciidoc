@@ -3,157 +3,303 @@ title: AI Form Filler
 description: Fill your forms automatically from a natural language input source.
 ---
 
-= [since:com.vaadin:vaadin@V24.1]#Visual Theme Editor#
+= [since:com.vaadin:vaadin@V24.1]#AI Form Filler#
 
 //:commercial-feature: Theme Editor
 //include::{articles}/_commercial-banner.asciidoc[opts=optional]
 
-Visual Theme Editor is a tool for editing the theme of Vaadin applications in development mode. You can use it to change the web component color, font size, and more in views without editing code.
+The Form Filler Addon is an experimental feature that provides an easy way for Flow users to create forms filled automatically from natural language input sources using GPT technologies.
 
-Any changes you make are reflected in real-time, both in the live preview and in your code.
+OpenAI ChatGPT is the LLM model behind this feature but any model can be adapted using the LLMService interface. 
 
 [NOTE]
-.Free Preview
-Theme Editor is not a final product, but is currently available as a free preview.
+.Experimental Feature
+AI Form Filler is an experimental feature and it may be removed, altered, or limited to commercial subscribers in future releases.
 
-image::images/theme-editor.png[Theme Editor running in a Vaadin Application.]
+image::images/formfiller-design.png[AI FormFiller Design.]
 
 
 == Features
 
-Theme Editor has many features. The following are supported in the preview:
+Form Filler Addon has the following features in this experimental preview:
 
-*Click to Select Components*::
-Click a component you want to style. Both Vaadin and common HTML components are supported.
+*Supports most of the common input components of Flow*::
+- EmailField
+- PasswordField
+- NumberField
+- IntegerField
+- BigDecimalField
+- DatePicker
+- TimePicker
+- DateTimePicker
+- TextArea
+- Checkbox
+- CheckboxGroup
+- RadioButtonGroup
+- ComboBox
+- MultiSelectComboBox
+- Grid
 
-*Edit a Component*::
-Style individual components with the visual editor and automatically update your code to reflect changes. For example, pick a <<{articles}/components/button#,Button>> in your view and make it appear green, instead of the default blue.
+*Easy to use and works out of the box*::
+Built in prompt engineering do the job of generating a request containing the information related to the target components that works out of the box for most of the cases. Once you have defined your form only a couple of lines are required to use the Form Filler. 
 
-*Edit Multiple Components*::
-Create universal style rules by editing all components of the same type. For example, make every <<{articles}/components/button#,Button>> appear green.
+*Context instructions*::
+API to add more context instructions for the AI module (i.e.: target language, vocabulary explanation, source context, etc..). Use these instructions to provide additional information to the AI module about the context of the input source in general.
 
-*Locate Code Changes*::
-With a click, open the code in your IDE where your changes have been applied.
+*Component instructions*::
+API to add more component instructions for the AI module (i.e.: field format, field explanation, field actions, etc...). Use these instructions to provide additional information to the AI module about a specific field when the built in request/response of the form filler is not accurate enough.
 
 
 == Getting Started
 
-Start with Theme Editor by running your Vaadin application project in <<{articles}/configuration/development-mode#,Development Mode>>. Click on the Vaadin symbol *}>* at the bottom right-hand corner of your browser window to open _Development Tools_.
+Form Filler is implemented as an addon and can be used in any Flow 24.1 application. You just need to add the maven dependency to your project. 
 
-Theme Editor is available behind a <<{articles}/configuration/feature-flags#,Feature Flag>>. You can enable it in the [guilabel]`Feature Flags` tab and use it after restarting your server.
+[source,xml]
+----
+        <dependency>
+            <groupId>com.vaadin.flow.ai</groupId>
+            <artifactId>form-filler-addon</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+----
 
-Theme Editor is only compatible, though, with Lumo-based themes. <<{articles}/styling/lumo#,Lumo>> is the default theme for Vaadin applications.
+If you prefer to first test the addon with an example please check the https://github.com/vaadin/form-filler-demo[demo project]. There are also some demos and advanced example use cases included in the https://github.com/vaadin/form-filler-addon[addon project]. 
 
+In the demo project you can see an example of all the supported components with some raw text sources included. Then in the addon project you have some experiments with more advanced use cases like document inputs through OCR. New content and examples i.e.: using other LLM models than ChatGPT or improve OCR results will be included in the addon project and then added to the demo project as they become mature enough.  
 
-=== Selecting Components
-
-Start selecting components by clicking the [guibutton]*+* button in Theme Editor. You can then highlight components in the application view by hovering the mouse cursor over them. You pick a component for editing by clicking on it with your primary mouse button. You can navigate between components in the different layers of your layout with the arrow keys on your keyboard.
-
-image::images/pick-component-2.png[Pick an element to get started.]
-
-
-==== Vaadin Components
-
-Vaadin components show a list of available parts and properties that can be stylized.
-
-
-==== Common HTML Components
-
-Theme Editor allows selecting common HTML components, such as `<h1>`, `<p>`, and `<div>`, in addition to Vaadin components. You can style text, borders, and color-based properties.
+To run demos or use the addon out of the box in your application you need a valid ChatGPT API Key.
 
 
-=== Understanding the User Interface
+=== Simple example
 
-image::images/theme-editor-ui.png[The Theme Editor User Interface.]
-
-1. The button for selecting components and the name of the selected component -- and its friendly display name.
-2. Switch between Local and Global editing.
-3. Undo and Redo changes.
-4. The CSS class name for styling the component instance in Local editing mode.
-5. The name of the component properties section.
-6. The button for jumping to the CSS rule definition.
-7. List of component properties with editable values. Modified values are marked with an orange indicator.
-
-
-=== Local & Global Editing Modes
-
-image::images/local-global.png[Swith between Local And Global editing modes.]
-
-You can choose the scope for changes, either Local for only the selected component, or Global for all components of a given type.
-
-
-==== Local
-
-In Local mode, Theme Editor uses a unique class name to distinguish the selected component. Theme Editor suggests a new name if none is given.
-
-image::images/local-classname.png[Setting a local CSS class name.]
-
-When you're applying the class name in Java code, Theme Editor adds an `addClassName` call with a `<theme-editor-local-classname>` comment above it:
+To understand how the Form Filler works please take a look to this simple example. 
 
 [source,java]
 ----
-//<theme-editor-local-classname>
-textField.addClassName("my-text-field");
+@Route("test")
+public class FormTest extends Div {
+
+    public FormTest() {
+
+        TextField nameField = new TextField("Name");
+        nameField.setId("name");
+
+        TextField addressField = new TextField("Address");
+        addressField.setId("address");
+
+        FormLayout fl = new FormLayout();
+        fl.add(nameField, addressField);
+
+        FormFiller formFiller = new FormFiller(fl);
+        formFiller.fill("My name is Bart and I live at 742 Evergreen Terrace, Springfield USA");
+
+        add(fl);
+    }
+}
 ----
 
-[CAUTION]
-Don't delete the comment. If you do, Theme Editor loses track of the class name it applied.
+To enable the Form Filler there is only one requirement. You have to set meaningful IDs to the fields(Components) that you want to be filled by the Form Filler. The target can be just one component or a group of component (container). Usually you would use the Form Filler with a FormLayout but any kind of Layout can be used. 
 
+==== API Review
 
-==== Global
+===== Constructors
 
-In Global mode, Theme Editor writes CSS rules that apply to all components of a given type. Note, local rules have priority over Global rules.
+There are 6 constructors all of them based on the same one just providing default values when a parameter of the base constructor is not provided. 
 
+These parameters are:
 
-=== Styling Component Elements
+_target:_ the target component or group of components (layout) to fill. This is the only mandatory parameter without default value. 
 
-Theme Editor displays a list of stylable parts, after you've selected a component, with properties that can be modified. For example, the screenshot here shows the properties of the [guilabel]*Label* part of the <<{articles}/components/text-field#,Text Field>> component.
+_componentInstructions:_ additional instructions for the AI module related to a specific component/field (i.e.: field format, field explanation, etc...). Use these instructions to provide additional information to the AI module about a specific field when the response of the form filler is not accurate enough. By default this structure is initialized empty.
 
-image::images/single-element.png[Styling a component part,75%]
+_contextInstructions:_ additional instructions for the AI module related to the input source or all components/fields (i.e.: target language, vocabulary explanation, current time, etc..). Use these instructions to provide additional information to the AI module about the context of the input source in general. By default this structure is initialized empty.
 
+_llmService:_ the AI module service to use. By default, this service would use OpenAI ChatGPT with chat/completion end point and the "gpt-3.5-turbo-16k-0613" model. There is another built in service using also ChatGPT but with the /completion endpoint and the "text-davinci-003" model. About ChatGPT models, newest models could not be better for the specific task of the Form Filler. So far tests has not clearly identified the best model so don't hesitate to test both services and give us feedback about your results. More models and others LLM providers will be added to the addon in the future. If you want to create your own provider service you just need to extend the interface LLMService and add it as a parameter to the Form Filler. 
+ 	
+===== Methods
+[source,java]
+----
+public FormFillerResult fill(String input)
+----
 
-==== Using Color Picker
+The main method to be called when you want to fill the form fields after setting up the FormFiller object. This method fills the registered fields and returns a structure with information of the process such as the AI module request and response.  
 
-You can use the built-in color picker to choose a custom color. Theme Editor also suggests some pre-defined colors that are related to the given property.
+=== Advanced example
 
-image::images/color-picker.png[Using the color picker, 50%]
+==== Creating the form
 
-1. Color selection.
-2. Opacity slider.
-3. Suggested colors.
+[source,java]
+----
+   formLayout = new FormLayout();
 
+   TextField nameField = new TextField("Name");
+   nameField.setId("name");
+   formLayout.add(nameField);
 
-=== Slider
+   TextField addressField = new TextField("Address");
+   addressField.setId("address");
+   formLayout.add(addressField);
 
-You can change common property values, such as font size and spacing, by using the slider.
+   TextField phoneField = new TextField("Phone");
+   phoneField.setId("phone");
+   formLayout.add(phoneField);
 
-image::images/slider-1.png[Slider]
+   TextField emailField = new TextField("Email");
+   emailField.setId("email");
+   formLayout.add(emailField);
 
-You can also set custom values. When you set a custom value, the indicator on the slide turns dark and moves to the beginning.
+   DateTimePicker dateCreationField = new DateTimePicker("Creation Date");
+   dateCreationField.setId("creationDate");
+   formLayout.add(dateCreationField);
 
-image::images/slider-2.png[Slider with custom value]
+   DatePicker dueDateField = new DatePicker("Due Date");
+   dueDateField.setId("dueDate");
+   formLayout.add(dueDateField);
 
+   ComboBox<String> orderEntity = new ComboBox<>("Order Entity");
+   orderEntity.setId("orderEntity");
+   orderEntity.setItems("Person", "Company");
+   formLayout.add(orderEntity);
 
-== Code Generation
+   NumberField orderTotal = new NumberField("Order Total");
+   orderTotal.setId("orderTotal");
+   formLayout.add(orderTotal);
 
-Theme Editor saves CSS rules in a [filename]`theme-editor.css` file within your application theme directory.
+   TextArea orderDescription = new TextArea("Order Description");
+   orderDescription.setId("orderDescription");
+   formLayout.add(orderDescription);
 
-.Changing Values Manually
-[NOTE]
-You can manually change values in the [filename]`theme-editor.css` file. Theme Editor processes the changes and formats the application accordingly.
+   RadioButtonGroup<String> paymentMethod = new RadioButtonGroup<>("Payment Method");
+   paymentMethod.setItems("Credit Card", "Cash", "Paypal");
+   paymentMethod.setId("paymentMethod");
+   formLayout.add(paymentMethod);
 
+   Checkbox isFinnishCustomer = new Checkbox("Is Finnish Customer");
+   isFinnishCustomer.setId("isFinnishCustomer");
+   formLayout.add(isFinnishCustomer);
 
-== Limitations
+   CheckboxGroup<String> typeService = new CheckboxGroup<>("Type of Service");
+   typeService.setItems("Software", "Hardware", "Consultancy");
+   typeService.setId("typeService");
+   formLayout.add(typeService);
 
-The preview comes with some limitations of which you should be aware:
+   Grid<OrderItem> orderGrid = new Grid<>(OrderItem.class);
+   orderGrid.setId("orders");
 
-- You have to use the Lumo theme.
-- You can't change global Lumo theme variables.
-- Styling component states -- like hover, required, and invalid -- are not supported.
-- Adding or styling theme variants (e.g., primary buttons) is not supported.
-- Not all Vaadin components are supported.
-- While working with Theme Editor, automatic application restarts during hot deployment (i.e., JRebel, Spring DevTools, HotSwap Agent) are disabled.
+   formLayout.add(orderGrid);
+----
 
-Please use the https://github.com/vaadin/flow[Flow repository] for reporting bugs, asking questions, and proposing enhancement ideas.
+==== Filling the form:
 
-[discussion-id]`AC548300-ED41-4A1B-AD9D-80FD719CEA70`
+- common use case
+
+[source,java]
+----
+   FormFiller formFiller = new FormFiller(formLayout);
+   FormFillerResult result = formFiller.fill(input);
+----
+
+- adding extra instructions use case
+[source,java]
+----
+   FormFiller formFiller = new FormFiller(formLayout, fieldsInstructions, contextInformation);
+   FormFillerResult result = formFiller.fill(input);
+----
+
+- using a different model use case
+[source,java]
+----
+   FormFiller formFiller = new FormFiller(formLayout, new ChatGPTService());
+   FormFillerResult result = formFiller.fill(input);
+----
+
+=== Best practices & limitations
+
+To make a set of components ready to be filled by the FormFiller the only requirements are:
+
+- Target fields are descendants of the same container (layout) passed to the FormFiller. The best way is to integrate all the fields in a FormLayout but any kind of Layout can be used. Also all the descendants of the passed container are going to be included so several containers can be used inside the main container. 
+
+- Every field has an ID (Component::setId). The ID should be meaningful about the data contained by the field. Grid columns are a special case as they are not input fields, they will be inspected directly from the Bean of the GRID so use meaningful names for the Bean fields.
+
+Anyways Remember that later you can add extra information about any component to help the AI module if the Id is not enough to understand what data you are looking for. Of course you can use a sentence as an Id but for cleaner code we recommend to use Ids in combination with extra instructions but it is up to the developer to choose. For most cases a 2-3 word Id is enough for the AI module to understand the target. i.e.:
+
+[source,java]
+----
+    CheckboxGroup<String> typeService = new CheckboxGroup<>("Type of Service");
+    typeService.setItems("Software", "Hardware", "Consultancy");
+    typeService.setId("typeService");
+    formLayout.add(typeService);
+    ......
+    HashMap<Component,String> fieldInstructions = new HashMap<>();
+    fieldInstructions.put(typeService, "This field describes the type of the items of the order");
+
+    FormFiller formFiller = new FormFiller(formLayout, fieldsInstructions);
+    FormFillerResult result = formFiller.fill(input);
+----
+
+is better than 
+
+[source,java]
+----
+    CheckboxGroup<String> typeService = new CheckboxGroup<>("Type of Service");
+    typeService.setItems("Software", "Hardware", "Consultancy");
+    typeService.setId("the type of the items of the order");
+    formLayout.add(typeService);
+    ......
+    FormFiller formFiller = new FormFiller(formLayout);
+    FormFillerResult result = formFiller.fill(input);
+----
+
+These extra instructions can be used not only for understanding but also for formatting or error fixes i.e.:
+
+[source,java]
+----
+    HashMap<Component,String> fieldInstructions = new HashMap<>();
+    fieldInstructions.put(nameField, "Format this field in Uppercase");
+    fieldInstructions.put(emailField, "Format this field as a correct email");
+----
+
+There are some limitations for some fields specialy the ones containing dates the FormFiller has its own standard formatting requirement so be careful manipulating them.
+
+=== Components supported:
+
+- TextField
+- EmailField
+- PasswordField
+- NumberField
+- IntegerField
+- BigDecimalField
+- DatePicker
+- TimePicker
+- DateTimePicker
+- TextArea
+- Checkbox
+- CheckboxGroup
+- RadioButtonGroup
+- ComboBox
+- MultiSelectComboBox
+- Grid
+
+=== Types supported for Grid Columns:
+
+- Date
+- LocalDate
+- Time
+- LocalTime
+- DateTime
+- LocalDateTime
+- Boolean
+- Integer
+- Long
+- Double
+- Float
+- String
+
+=== Limitations
+
+- The size of the text that can be processed is related to the capacity of the used model. The model included as default in the addon has a limit of 16384 tokens (approx 16000 words including request and response).
+- So far parametrized components such as checkboxes or radio buttons work with basic types not custom classes.
+- Grid must be defined using a Bean type.
+
+Please use the https://github.com/vaadin/form-filler-addon[addon project] for reporting bugs, asking questions, proposing enhancement ideas or voting for roadmap priorities.
+
