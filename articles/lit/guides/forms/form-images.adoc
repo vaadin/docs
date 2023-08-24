@@ -3,6 +3,10 @@ title: Image Fields in Forms
 description: Allowing images to be uploaded in forms.
 order: 110
 ---
+:lit:
+
+:updloadbefore: upload-before
+:vaadinupload: vaadin-upload
 
 = Submitting Images in Forms
 
@@ -28,17 +32,67 @@ include::{root}/src/main/java/com/vaadin/demo/fusion/forms/ContactEndpoint.java[
 
 The following form binds the `avatarBase64` field of the instance to a `vaadin-upload` component:
 
+ifdef::react[]
+[source,typescriptjsx]
+----
+import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
+import { ContactEndpoint } from 'Frontend/generated/endpoints';
+import { useBinder } from '@hilla/react-form';
+import { useEffect } from "react";
+import { Upload } from "@hilla/react-components/Upload.js";
+import { UploadBeforeEvent } from "@vaadin/upload";
+import { readAsDataURL } from "promise-file-reader";
+import { Button } from "@hilla/react-components/Button.js";
+
+
+export default function ContactForm() {
+
+    const binder = useBinder(ContactModel, {
+      onSubmit: async (contact) => {
+        await ContactEndpoint.saveContact(contact);
+      }
+    });
+
+    useEffect(() => {
+      ContactEndpoint.loadContact().then(binder.read);
+    }, [])
+
+    return (
+      <div>
+        <img src={binder.value?.avatarBase64} alt="contact's avatar"></img>
+        <Upload capture="camera" accept="image/*" max-files="1"
+          onUploadBefore={async (e: UploadBeforeEvent) => {
+            const file = e.detail.file;
+            e.preventDefault();
+            if (binder.value) {
+              binder.value.avatarBase64 = await readAsDataURL(file);
+            }
+          }}></Upload>
+        <Button onClick={binder.submit}>Save</Button>
+      </div>
+    );
+}
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 include::{root}/frontend/demo/fusion/forms/contact-form.ts[]
 ----
+endif::[]
 
-In the above code, the custom `upload-before` listener prevents `vaadin-upload` from uploading the received file to the server.
+In the above code, the custom `{updloadbefore}` listener prevents `{vaadinupload}` from uploading the received file to the server.
 Instead, it reads the file into a Base64-encoded string and updates the form field `avatarBase64` via the [classname]`Binder`.
 The small https://www.npmjs.com/package/promise-file-reader[`promise-file-reader`] library wrapping [classname]`FileReader` inside a promise is used here to handle the result synchronously.
 
 The [classname]`Contact` instance is first submitted to the [methodname]`saveContact()` endpoint.
-This happens through the statement [methodname]`this.binder.submitTo(saveContact)` in the [methodname]`save()` method.
+This happens through the
+ifdef::react[]
+`binder.submit` that is called upon clicking the Save button which executes the provided logic for [methodname]`onSubmit` while obtaining the binder instance.
+endif::[]
+ifdef::lit[]
+statement [methodname]`this.binder.submitTo(saveContact)` in the [methodname]`save()` method.
+endif::[]
 Only then does the server-side endpoint implementation receive the image string.
 The server can then choose to recode the image for more efficient storage, if necessary.
 
