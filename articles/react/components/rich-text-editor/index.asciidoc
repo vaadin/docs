@@ -1,0 +1,605 @@
+---
+tab-title: Usage
+layout: tabbed-page
+title: Rich Text Editor
+section-nav: commercial
+---
+
+:react:
+
+= Rich Text Editor
+
+:commercial-feature: Rich Text Editor
+include::{articles}/_commercial-banner.asciidoc[opts=optional]
+
+// tag::description[]
+Rich Text Editor is an input field for entering rich text.
+// end::description[]
+It allows you to format and style your text using boldface, italics, headings, lists, images, links, etc.
+
+[.example]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-basic.ts[render,tags=snippet,indent=0,group=TypeScript]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorBasic.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/richtexteditor/react/rich-text-editor-basic.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+== Value Format
+
+Rich Text Editor supports the HTML format and the https://github.com/quilljs/delta[Quill Delta format] for reading and setting its value.
+
+.HTML format details
+[%collapsible]
+====
+
+Rich Text Editor supports values in the HTML format, with the following restrictions:
+
+- Only a subset of HTML tags are supported, which are listed in the table below.
+- Block elements, such as paragraphs, lists, or block quotes, can't be nested.
+- Unsupported tags, such as `<b>`, are replaced with an equivalent supported tag, such as `<strong>`, or with a paragraph (`<p>`).
+
+.Supported HTML tags
+|===
+|Feature|Tags
+
+| Paragraphs and line breaks
+| `<p>`, `<br>`
+
+| Headings
+| `<h1>`, `<h2>`, ..., `<h6>`
+
+| Bold, italic, underlined and strike-through text
+| `<strong>`, `<em>`, `<u>`, `<strikethrough>`
+
+| Links
+| `<a href="...">...</a>`
+
+| Text alignment via the `text-align` CSS property
+| `<p style="text-align: center">`
+
+| Ordered, unordered lists, and list items +
+(can't be nested)
+| `<ol>`, `<ul>`, `<li>`
+
+| Block quotes
+| `<blockquote>`
+
+| Pre-formatted text
+| `<pre>`
+
+| Images, using either a web URL or a Base64-encoded data URL
+| `<img src="...">`
+
+|===
+
+The following snippet contains an HTML document that is supported by the component, and demonstrates the usage of several tags. Try pasting the snippet into the `HTML Value` text area in the example below and see how the editor updates. Then try modifying the value, either by using the editor's features, or by changing the HTML value directly.
+
+[source,html]
+----
+<h2>High quality rich text editor for the web</h2>
+<p>Rich text editor handles the following formatting:</p>
+<ul>
+  <li><strong>Bold</strong></li>
+  <li><em>Italic</em></li>
+  <li><u>Underline</u></li>
+  <li><s>Strike-through</s></li>
+</ul><h3>Blockquotes</h3>
+<blockquote>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
+  dolore magna aliqua.
+</blockquote><h3>Code blocks</h3>
+<pre spellcheck='false'>&lt;body&gt;
+  &lt;vaadin-rich-text-editor&gt;&lt;/vaadin-rich-text-editor&gt;
+&lt;/body&gt;
+</pre>
+----
+
+====
+
+.Delta format details
+[%collapsible]
+====
+
+The JSON-based Delta format consists of an array of operations to apply to a document.
+Rich Text Editor specifically only uses insert operations, each operation sequentially adding content to the document.
+Operations can have attributes, such as whether to render a piece of content with a specific text style, or as a link.
+For the full specification of the format, see the https://github.com/quilljs/delta[Quill Delta GitHub repository].
+
+The following snippet contains a Delta document that demonstrates some of the format's features.
+Try pasting the snippet into the `Delta Value` text area in the example below and see how the editor updates.
+Then try modifying the value, either by using the editor's features, or by changing the Delta value directly.
+
+[source,json]
+----
+[
+  {"insert": "High quality rich text editor for the web\n", "attributes": {"header":  2}},
+  {"insert": "Rich text editor handles the following formatting:\n"},
+  {"insert": "Bold\n","attributes": { "bold": true, "list": "bullet" }},
+  {"insert": "Italic\n", "attributes": { "italic": true, "list": "bullet" }},
+  {"insert": "Underline\n", "attributes": { "underline": true, "list": "bullet" }},
+  {"insert": "Strike-through\n", "attributes": { "strike": true, "list": "bullet" }},
+  {"insert": "Blockquotes\n", "attributes": { "header": 3 }},
+  {"insert": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n", "attributes": { "blockquote": true }},
+  {"insert": "Code blocks\n", "attributes": { "header": 3 }},
+  {"insert": "<vaadin-rich-text-editor></vaadin-rich-text-editor>\n", "attributes": { "code-block": true }}
+]
+----
+
+====
+
+For the Flow component, the default is the HTML format, which is also used automatically when binding the component with `Binder`.
+
+To read, write, or bind the component's value using the Delta format, use the https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/richtexteditor/RichTextEditor.html#asDelta()[`RichTextEditor.asDelta()`] wrapper.
+
+For the web component, to read or write the value in the Delta format, use the `value` property.
+
+To read or write the value in the HTML format, use the `htmlValue` property and the `dangerouslySetHtmlValue` method.
+
+.HTML sanitization
+[NOTE]
+To prevent injecting malicious content, be sure to sanitize HTML strings before passing them to the web component using `dangerouslySetHtmlValue`. An example of this would be using a library such as https://www.npmjs.com/package/dompurify[dompurify].
+
+[.example]
+--
+
+ifdef::lit[]
+[source,typescript]
+----
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=htmlsnippet,indent=0,group=TypeScript]
+
+...
+
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-set-get-value.ts[render,tags=snippet,indent=0,group=TypeScript]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorSetGetValue.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/richtexteditor/react/rich-text-editor-set-get-value.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+== Read-Only
+
+Setting the component to read-only hides the toolbar and makes the content non-editable.
+
+[.example]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-readonly.ts[render,tags=snippet,indent=0,group=TypeScript]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorReadonly.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/richtexteditor/react/rich-text-editor-readonly.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+== Automatic Height Adjustment
+
+Unless set to a fixed height, Rich Text Area adjusts its height automatically based on its content.
+
+=== Minimum and Maximum Height
+
+The automatic resizing can be restricted to a minimum and maximum height.
+
+[.example]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-min-max-height.ts[render,tags=snippet,indent=0,group=TypeScript]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorMinMaxHeight.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/richtexteditor/react/rich-text-editor-min-max-height.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+== Theme Variants
+
+=== Compact
+
+Apply the `compact` theme to make the toolbar more compact.
+
+[.example]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-theme-compact.ts[render,tags=snippet,indent=0,group=TypeScript]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorThemeCompact.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/richtexteditor/react/rich-text-editor-theme-compact.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+=== No Border
+
+Apply the `no-border` theme variant to remove Rich Text Editor’s border. An example of this is when the component is wrapped in a container with its own borders.
+
+[.example]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/richtexteditor/rich-text-editor-theme-no-border.ts[render,tags=snippet,indent=0,group=TypeScript]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/richtexteditor/RichTextEditorThemeNoBorder.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/richtexteditor/react/rich-text-editor-theme-no-border.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+== Toolbar Actions
+
+=== History
+
+[cols="^.^1a,4,8"]
+|===
+|Button|Title|Description
+
+|image::icons/undo.svg[opts=inline, 20, 20, role=icon]
+|Undo
+|Reverses the previous action.
+
+|image::icons/redo.svg[opts=inline, 20, 20, role=icon]
+|Redo
+|Restores actions undone by `Undo`.
+
+|===
+
+=== Emphasis
+
+[cols="^.^1,4,8"]
+|===
+|Button|Title|Description
+
+|[.bold.rte-button]#B#
+|Bold
+s|Boldens text.
+
+|[.italic.rte-button]#I#
+|Italic
+e|Italicizes text.
+
+|[.underline.rte-button]#U#
+|Underline
+|[.underline]#Underlines text.#
+
+|[.strikethrough.rte-button]#T#
+|Strikethrough
+|[.strikethrough]#Strikes through text.#
+
+|===
+
+=== Headings
+
+Three different headings are available in Rich Text Editor: H1, H2, and H3.
+Use them to signify structure, as well as importance.
+
+[cols="^.^1,4,8"]
+|===
+|Button|Title|Description
+
+|[.h1.heading.rte-button]#H1#
+|H1
+|[.h1]#Heading level 1.#
+
+|[.h2.heading.rte-button]#H2#
+|H2
+|[.h2]#Heading level 2.#
+
+|[.h3.heading.rte-button]#H3#
+|H3
+|[.h3]#Heading level 3.#
+
+|===
+
+=== Subscript and Superscript
+
+[cols="^.^1,4,8"]
+|===
+|Button|Title|Description
+
+|[.subscript.rte-button]#X#
+|Subscript
+|Subscript text is positioned ~below~ the normal baseline and with a smaller font size.
+
+|[.superscript.rte-button]#X#
+|Superscript
+|Superscript text is positioned ^above^ the normal baseline and a with smaller font size.
+
+|===
+
+=== List
+
+[cols="^.^1a,4,8a"]
+|===
+|Button|Title|Description
+
+|image::icons/list-ordered.svg[opts=inline, 20, 20, role=icon]
+|Ordered list
+|. Creates a numbered list.
+
+|image::icons/list-bullet.svg[opts=inline, 20, 20, role=icon]
+|Unordered list
+|* Creates a bulleted list.
+
+|===
+
+=== Alignment
+
+[cols="^.^1a,4,8"]
+|===
+|Button|Title|Description
+
+|image::icons/align-left.svg[opts=inline, 20, 20, role=icon]
+|Left align
+<|Left-aligns text (default).
+
+|image::icons/align-center.svg[opts=inline, 20, 20, role=icon]
+|Center align
+^|Center-aligns text.
+
+|image::icons/align-right.svg[opts=inline, 20, 20, role=icon]
+|Right align
+>|Right-aligns text.
+
+|===
+
+=== Image and Link
+
+[cols="^.^1a,4,8"]
+|===
+|Button|Title|Description
+
+|image::icons/image.svg[opts=inline, 20, 20, role=icon]
+|Image
+|Uploads and inserts an image from your device.
+
+|image::icons/link.svg[opts=inline, 20, 20, role=icon]
+|Link
+a|https://vaadin.com/[Creates a hyperlink].
+
+|===
+
+=== Blocks
+
+[cols="^.^1,4,8"]
+|===
+|Button|Title|Description
+
+|[.block-quote.rte-button]#”#
+|Block quote
+|Creates a section quoted from another source.
+
+|[.code-block.rte-button]#<>#
+|Code block
+|Creates a block formatted as code.
+
+|===
+
+=== Clear
+
+[cols="^.^1a,4,8"]
+|===
+|Button|Title|Description
+
+|image::icons/clean.svg[opts=inline, 20, 20, role=icon]
+|Clear formatting
+|Removes all formatting of the selected text.
+
+|===
+
+== Related Components
+
+|===
+|Component | Usage recommendations
+
+|<<../text-field#, Text Field>>
+|Basic single-line text input.
+
+|<<../text-area#, Text Area>>
+|Basic multi-line text input.
+
+|===
+
+++++
+<style>
+  .imageblock.icon {
+    margin: 0;
+    background-color: transparent;
+  }
+
+  .icon > .content {
+    padding-bottom: calc(var(--docs-space-xs) * 2.3) !important;
+    background: var(--docs-gray-50) !important;
+  }
+
+  .icon .content svg {
+    fill: var(--docs-secondary-text-color);
+  }
+
+  .rte-button {
+    display: block;
+    width: calc(var(--docs-space-s) * 6.5);
+    margin: var(--docs-space-xs);
+    color: var(--docs-secondary-text-color);
+    background: var(--docs-gray-50);
+    border-radius: var(--docs-border-radius-m);
+    line-height: calc(var(--docs-line-height-m) * 2);
+    font-weight: 600;
+  }
+
+  .bold {
+    font-weight: 700;
+  }
+
+  .italic {
+    font-style: italic;
+  }
+
+  .underline {
+    text-decoration: underline;
+  }
+
+  .strikethrough {
+    text-decoration: line-through;
+  }
+
+  .heading {
+    letter-spacing: -0.05em;
+  }
+
+  .h1 {
+    line-height: calc(var(--docs-line-height-s) * 2.1);
+    font-size: calc(var(--docs-font-size-m) * 1.2);
+  }
+
+  .h2 {
+    line-height: calc(var(--docs-line-height-s) * 2.5);
+  }
+
+  .h3 {
+    line-height: calc(var(--docs-line-height-m) * 2.3);
+    font-size: var(--docs-font-size-s);
+  }
+
+  .subscript,
+  .superscript {
+    position: relative;
+  }
+
+  .subscript::after,
+  .superscript::after {
+    content: "2";
+    position: absolute;
+    left: 65%;
+    line-height: normal;
+    font-size: calc(var(--docs-font-size-2xs) / 1.3);
+    font-weight: 700;
+  }
+
+  sub {
+    vertical-align: sub;
+    font-size: smaller;
+  }
+
+  sup {
+    vertical-align: super;
+    font-size: smaller;
+  }
+
+  .subscript::after {
+    top: 50%;
+  }
+
+  .superscript::after {
+    top: 24%;
+  }
+
+  .block-quote,
+  .code-block {
+    padding: 0 calc(var(--docs-space-s) * 2);
+  }
+
+  .block-quote {
+    display: block;
+    padding-top: var(--docs-space-m);
+    line-height: calc(var(--docs-line-height-s) / 1.1);
+    font-size: calc(var(--docs-font-size-m) * 2);
+  }
+
+  .code-block {
+    line-height: calc(var(--docs-line-height-s) * 2.1);
+    font-size: calc(var(--docs-font-size-m) * 1.2);
+    padding-left: calc(var(--docs-space-s) * 1.7);
+  }
+</style>
+++++
+
+
+
