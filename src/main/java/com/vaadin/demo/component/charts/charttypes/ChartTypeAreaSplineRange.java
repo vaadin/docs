@@ -2,37 +2,32 @@ package com.vaadin.demo.component.charts.charttypes;
 
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
-import com.vaadin.flow.component.charts.model.AxisType;
 import com.vaadin.flow.component.charts.model.ChartType;
 import com.vaadin.flow.component.charts.model.Configuration;
-import com.vaadin.flow.component.charts.model.Crosshair;
-import com.vaadin.flow.component.charts.model.RangeSeries;
+import com.vaadin.flow.component.charts.model.DataSeries;
+import com.vaadin.flow.component.charts.model.DataSeriesItem;
 import com.vaadin.flow.component.charts.model.Tooltip;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("chart-type-area-range")
-public class ChartTypeAreaRange extends Div {
-    public ChartTypeAreaRange() {
+@Route("chart-type-area-spline-range")
+public class ChartTypeAreaSplineRange extends Div {
+    public ChartTypeAreaSplineRange() {
         // tag::snippet[]
-        Chart chart = new Chart(ChartType.AREARANGE);
+        Chart chart = new Chart(ChartType.AREASPLINERANGE);
 
-        Configuration conf = chart.getConfiguration();
+        Configuration configuration = chart.getConfiguration();
+        configuration.getTitle().setText("Temperature variation by day");
 
-        conf.setTitle("Temperature variation by day");
-
-        conf.getxAxis().setType(AxisType.DATETIME);
-        conf.getxAxis().setCrosshair(new Crosshair());
-
-        Tooltip tooltip = new Tooltip();
-        tooltip.setShared(true);
+        Tooltip tooltip = configuration.getTooltip();
         tooltip.setValueSuffix("°C");
-        conf.setTooltip(tooltip);
 
-        RangeSeries data = new RangeSeries("Temperatures", getRawData());
-
-        conf.setSeries(data);
+        DataSeries dataSeries = new DataSeries("Temperatures");
+        for (Number[] data : getRawData()) {
+            dataSeries.add(new DataSeriesItem(data[0], data[1], data[2]));
+        }
+        configuration.setSeries(dataSeries);
 
         chart.setTimeline(true);
         // end::snippet[]
@@ -273,6 +268,6 @@ public class ChartTypeAreaRange extends Div {
                 { 1262221200000d, -12.2, -6.5 } };
     }
 
-    public static class Exporter extends DemoExporter<ChartTypeAreaRange> { // hidden-source-line
+    public static class Exporter extends DemoExporter<ChartTypeAreaSplineRange> { // hidden-source-line
     } // hidden-source-line
 }
