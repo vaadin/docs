@@ -23,7 +23,6 @@ public class ChartTypeGauge extends Div {
         Chart chart = new Chart(ChartType.GAUGE);
 
         final Configuration configuration = chart.getConfiguration();
-        configuration.getChart().setType(ChartType.GAUGE);
         configuration.setTitle("Speedometer");
         configuration.getChart().setWidth(500);
 
