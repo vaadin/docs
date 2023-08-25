@@ -1,0 +1,167 @@
+---
+title: Loading pass:[&] Saving Form Data
+description: Loading data to Binder and submitting it for saving.
+order: 2
+---
+:lit:
+
+= Loading & Saving Form Data
+
+// tag::content[]
+
+Once your bindings are set up, you are ready to fill the bound UI components with data from your business objects.
+
+== Loading Data to Binder
+
+ifdef::react[]
+You can use the [methodname]`read()` method from the [classname]`BinderControl` instance to read values from a business object instance into the UI components.
+
+[source,typescriptjsx]
+----
+import { useEffect } from 'react';
+import { useBinder } from '@hilla/react-form';
+
+import { PersonEndpoint } from 'Frontend/generated/endpoints';
+import PersonModel from 'Frontend/generated/com/example/application/PersonModel';
+
+export default function PersonView() {
+  const { read } = useBinder(PersonModel);
+
+  useEffect(() => {
+    PersonEndpoint.loadPerson().then(read);
+  }, [])
+
+  // ...
+}
+----
+
+Using [methodname]`reset()` resets to the previous value, which is initially empty.
+
+[source,typescriptjsx]
+----
+import { useBinder } from '@hilla/react-form';
+
+import PersonModel from 'Frontend/generated/com/example/application/PersonModel';
+
+export default function PersonView() {
+  const { reset } = useBinder(PersonModel);
+
+  return (
+    <section>
+      // other form fields ...
+      <Button onClick={reset}>Reset</Button>
+    </section>
+  );
+
+}
+----
+
+You can use the [methodname]`clear()` method to set the form to empty.
+[source,typescriptjsx]
+----
+import { useBinder } from '@hilla/react-form';
+
+import PersonModel from 'Frontend/generated/com/example/application/PersonModel';
+
+export default function PersonView() {
+  const { clear } = useBinder(PersonModel);
+
+  return (
+    <section>
+      // other form fields ...
+      <Button onClick={clear}>Clear</Button>
+    </section>
+  );
+
+}
+----
+endif::[]
+ifdef::lit[]
+You can use the [methodname]`read()` method in the binder to read values from a business object instance into the UI components.
+
+[source,typescript]
+----
+this.binder.read(person);
+----
+
+Using [methodname]`reset()` resets to the previous value, which is initially empty.
+
+[source,typescript]
+----
+this.binder.reset();
+----
+
+You can use the [methodname]`clear()` method to set the form to empty.
+[source,typescript]
+----
+this.binder.clear();
+----
+endif::[]
+
+== Saving Data
+
+ifdef::react[]
+You can define a [methodname]`submit` callback when calling [methodname]`useBinder` to configure the [methodname]`onSubmit` behavior of the binder.
+
+The benefits of configuring such a [methodname]`submit` behavior for the binder are:
+
+* The binder can track the submission progress, such as to disable a save button when a submission is ongoing.
+
+* Submission failures are handled automatically, so there is no need to do an explicit `try-catch`.
+
+For example, you can define a [methodname]`submit` behavior to submit to an endpoint method, as follows:
+
+[source,typescriptjsx]
+----
+import { useBinder } from '@hilla/react-form';
+
+import { PersonEndpoint } from 'Frontend/generated/endpoints';
+import PersonModel from 'Frontend/generated/com/example/application/PersonModel';
+
+export default function PersonView() {
+  const { model, submit, field } = useBinder(PersonModel, {
+      onSubmit: async (person) => {
+          await PersonEndpoint.savePerson(person);
+        }
+      });
+
+  return (
+    <section>
+      <TextField label="Full name" {...field(model.fullName)}></TextField>
+      <Button onClick={submit}>Save</Button>
+    </section>
+  );
+
+}
+----
+endif::[]
+ifdef::lit[]
+You can use [methodname]`submitTo()` to submit a value to a callback.
+The [methodname]`submitTo()` method is an asynchronous function, so you can use `await` to wait for the result.
+
+The benefits of using [methodname]`submitTo()` are:
+
+* The binder can track the submission progress, such as to disable a save button when a submission is ongoing.
+
+* Submission failures are handled automatically, so there is no need to do an explicit `try-catch`.
+
+For example, you can use [methodname]`submitTo()` to submit to an endpoint method, as follows:
+
+[source,typescript]
+----
+await this.binder.submitTo(viewEndpoint.savePerson);
+----
+
+Alternatively, you can set up an [methodname]`onSubmit()` callback in a configuration object when creating [classname]`Binder`.
+Then, when submitting, you can call the [methodname]`binder.submit()` method.
+[source,typescript]
+----
+private binder = new Binder(this, PersonModel, {
+  onSubmit: viewEndpoint.savePerson
+});
+
+binder.submit();
+----
+endif::[]
+
+// end::content[]

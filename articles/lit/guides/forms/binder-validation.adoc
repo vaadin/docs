@@ -1,16 +1,20 @@
 ---
 title: Validating User Input
-description: Validating user input using Bean Validation together with Lit and the Binder API.
+description: Validating user input using Bean Validation together with the Binder API.
 order: 3
 ---
+:lit:
+:techstack: Lit
 
 = Validating User Input
+
+// tag::content[]
 
 Hilla helps you validate user input based on the back-end Java data model.
 It reads the Bean Validation (https://beanvalidation.org/2.0-jsr380/spec[JSR-380]) annotations on your Java data types and applies these constraints to the user input.
 Validation is enabled by default in all forms created with the Hilla `Binder` API.
 
-When creating forms in TypeScript with Lit and the `Binder` API, all data model constraints are automatically applied to your form fields.
+When creating forms in TypeScript with {techstack} and the `Binder` API, all data model constraints are automatically applied to your form fields.
 The `Binder` API validates most standard constraints, such as [annotationname]`@Max`, [annotationname]`@Size`, [annotationname]`@Pattern`, [annotationname]`@Email` on the client side, without a network round-trip delay
 (see the full list in the <<built-in-client-side-validators>> section later).
 When you eventually submit data to server-side endpoints, Hilla validates all constraints on the server as well.
@@ -45,6 +49,31 @@ All forms that work with the same entity type have the same set of constraints.
 
 When you create a form for an entity type, it gets the user input validation automatically.
 
+ifdef::react[]
+.Binding form fields to the data model
+[source,typescriptjsx]
+----
+import { AbstractModel } from '@hilla/form';
+import { FieldDirectiveResult, useBinder } from '@hilla/react-form';
+
+import EmployeeModel from 'Frontend/generated/com/example/application/EmployeeModel';
+// other imports
+
+export default function EmployeeView() {
+  const { model, field } = useBinder(EmployeeModel);
+
+  return (
+    <>
+      <TextField label="Username" {...field(model.username)}></TextField>
+      <TextField label="Title" {...field(model.title)}></TextField>
+      <EmailField label="Email" {...field(model.email)}></EmailField>
+    </>
+  );
+
+}
+----
+endif::[]
+ifdef::lit[]
 .Binding form fields to the data model
 [source,typescript]
 ----
@@ -74,6 +103,7 @@ render() {
   `;
 }
 ----
+endif::[]
 
 .The validation errors
 image::images/bean-validation-errors.gif[A form showing three fields where some of the fields are showing a validation error message]
@@ -151,6 +181,36 @@ public class Employee {
 No additional steps are needed to start using the new validation rules in forms.
 The `field()` directive applies all server-side constraints automatically.
 
+ifdef::react[]
+.`ProfileView.tsx`
+[source,typescriptjsx]
+----
+import { useBinder } from '@hilla/react-form';
+
+import EmployeeModel from 'Frontend/generated/com/example/application/EmployeeModel';
+import { EmployeeEndpoint } from 'Frontend/generated/endpoints';
+
+import { Button } from "@hilla/react-components/Button.js";
+import { PasswordField } from "@hilla/react-components/PasswordField.js";
+
+export default function ProfileView() {
+  const { model, submit, field } = useBinder(EmployeeModel, {
+      onSubmit: async (e) => {
+          await EmployeeEndpoint.saveEmployee(e);
+        }
+      });
+
+  return (
+    <>
+      <PasswordField label="Password" {...field(model.password)}></PasswordField>
+      <Button onClick={submit}>Submit</Button>
+    </>
+  );
+
+}
+----
+endif::[]
+ifdef::lit[]
 .`profile-view.ts`
 [source,typescript]
 ----
@@ -169,6 +229,7 @@ render() {
   `;
 }
 ----
+endif::[]
 
 However, in this example, validation happens only after the form is submitted.
 To validate user input immediately, as the user types, you would need to define a validator in TypeScript, as well.
@@ -193,6 +254,35 @@ This is the case with the custom [annotationname]`@StrongPassword` constraint ex
 .Custom Field Validation Error
 image::images/custom-validation-errors-ts.gif[A form where a field is showing a customized validation error message]
 
+ifdef::react[]
+.`ProfileView.tsx`
+[source,typescriptjsx]
+----
+import { useBinder, useBinderNode } from '@hilla/react-form';
+import * as owasp from 'owasp-password-strength-test';
+
+import { useEffect } from 'react'
+
+export default function ProfileView() {
+  const { model } = useBinder(EmployeeModel);
+
+  const passwordBinderNode = useBinderNode(model.password);
+  // use effect to make it run only once
+  useEffect(() => {
+    passwordBinderNode.addValidator({
+      message: 'Please enter a strong password',
+      validate: (password: string) => {
+        return owasp.test(password);
+      },
+    });
+  }, []);
+
+  // ...
+
+}
+----
+endif::[]
+ifdef::lit[]
 .`profile-view.ts`
 [source,typescript]
 ----
@@ -211,6 +301,7 @@ this.binder.for(model.password).addValidator({
   },
 });
 ----
+endif::[]
 
 In this example, we use a third-party library to measure password strength in order to implement the custom validator.
 Add a dependency to your [filename]`package.json`:
@@ -229,6 +320,38 @@ A typical example where this would be needed is checking that a password is repe
 .Custom Field Validation Error
 image::images/cross-field-validation-error.png[A form where a field is showing a customized validation error message]
 
+ifdef::react[]
+[source,typescriptjsx]
+----
+import { useBinder } from '@hilla/react-form';
+import { useEffect } from 'react'
+
+export default function ProfileView() {
+
+  const { model, field, addValidator } = useBinder(EmployeeModel);
+
+  useEffect(() => {
+    addValidator({
+      message: 'Please check that the password is repeated correctly',
+        validate: (value: Employee) => {
+        if (value.password != value.repeatPassword) {
+          return [{ property: model.repeatPassword }];
+        }
+        return [];
+      }
+    })
+  });
+
+  return (
+      <>
+        <PasswordField label="Password" {...field(model.password)}></PasswordField>
+        <PasswordField label="Repeat password" {...field(model.repeatPassword)}></PasswordField>
+      </>
+    );
+}
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 private binder = new Binder(this, EmployeeModel);
@@ -255,8 +378,8 @@ protected firstUpdated() {
     }
   });
 }
-
 ----
+endif::[]
 
 When record-level validation fails, there are cases when you want to mark several fields as invalid.
 To do this with the `@hilla/form` validator APIs, you can return an _array_ of `{ property, message }` records from the [methodname]`validate()` callback.
@@ -269,7 +392,7 @@ If you need to indicate a validation failure without marking any particular fiel
 To mark a form field as 'required', you can add a [annotationname]`@NotNull` or [annotationname]`@NotEmpty` constraint to the corresponding property in the Java type.
 [annotationname]`@Size` with a `min` value greater than 0 also causes a field to be required.
 
-Alternatively, you can set the [propertyname]`impliesRequired` property when adding a custom validator in TypeScript, as shown earlier, in the <<binder-validation#single-field-ts-validators>> section.
+Alternatively, you can set the [propertyname]`impliesRequired` property when adding a custom validator in TypeScript, as shown earlier, in the <<binder-validation.adoc#single-field-ts-validators>> section.
 
 The fields marked as _required_ have their [propertyname]`required` property set by the `field()` directive.
 Hence, validation fails if they are left empty.
@@ -310,7 +433,14 @@ The `@hilla/form` package provides the client-side validators for the following 
 - Additional options: `{ regexp: RegExp | string }`
 
 These are usually used automatically.
-However, you could also add them to selected fields manually with [methodname]`binder.for(myFieldModel).addValidator(validator)`; for example, [methodname]`addValidator(new Size({max: 10, message: 'Must be 10 characters or less'}))`.
+However, you could also add them to selected fields manually
+ifdef::react[]
+by obtaining the [classname]`BinderNodeControls` instance and using the [methodname]`addValidator`;
+endif::[]
+ifdef::lit[]
+with [methodname]`binder.for(myFieldModel).addValidator(validator)`;
+endif::[]
+for example, [methodname]`addValidator(new Size({max: 10, message: 'Must be 10 characters or less'}))`.
 
 All the built-in validators take one constructor parameter, which is usually an optional `options` object with a [propertyname]`message?: string` property (which defaults to `'invalid'`).
 However, some validators have additional options or support other argument types, instead of the `options` object.
@@ -319,6 +449,55 @@ For example, the `Min` validator requires a `value: number | string` option.
 This can be given as part of the `options` object.
 Alternatively, you can pass just the minimum value itself, instead of the `options` object (if you don't want to set `message` and leave it as the default `'invalid'`).
 
+ifdef::react[]
+[source,typescriptjsx]
+----
+import { Email, Min, NotEmpty, Size } from '@hilla/form';
+import { useBinder, useBinderNode } from '@hilla/react-form';
+
+export default function ProfileView() {
+
+  const { model, field, addValidator } = useBinder(PersonModel);
+
+  const nameBinderNode = useBinderNode(model.password);
+  const usernameBinderNode = useBinderNode(model.username);
+  const ageBinderNode = useBinderNode(model.age);
+  const emailBinderNode = useBinderNode(model.email);
+
+  useEffect(() => {
+    nameBinderNode.addValidator(
+      new NotEmpty({
+        message: 'Please enter a name'
+      }));
+
+    usernameBinderNode.addValidator(
+      new Size({
+        message: 'Please pick a username 3 to 15 symbols long',
+        min: 3,
+        max: 15
+      }));
+
+    ageBinderNode.addValidator(
+      new Min({
+        message: 'Please enter an age of 18 or above',
+        value: 18
+      }));
+
+    emailBinderNode.addValidator(new Email());
+  });
+
+  return (
+      <>
+        <TextField label="Name" {...field(model.name)}></TextField>
+        <TextField label="Username" {...field(model.username)}></TextField>
+        <IntegerField label="Age" {...field(model.age)}></IntegerField>
+        <EmailField label="Email" {...field(model.email)}></EmailField>
+      </>
+    );
+}
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import { Binder, field, NotEmpty, Min, Size, Email } from '@hilla/form';
@@ -368,8 +547,9 @@ export class MyDemoView extends LitElement {
   }
 }
 ----
+endif::[]
 
-
+ifdef::lit[]
 == Validation Message Interpolation
 
 You can use the low-level [methodname]`interpolateMessageCallback()` API to customize the validation messages on the client side before they are displayed to the user.
@@ -465,3 +645,6 @@ Sample translations for all error messages of built-in validators.
   }
 }
 ----
+endif::[]
+
+// end::content[]

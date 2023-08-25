@@ -1,10 +1,13 @@
 ---
 title: Binding Data to Forms
-description: Binding data to UI components in TypeScript forms.
+description: Binding data to UI components in forms.
 order: 1
 ---
+:lit:
 
 = Binding Data to Forms
+
+// tag::content[]
 
 Hilla provides a way for binding input fields to a data model.
 
@@ -12,11 +15,20 @@ The client-side [classname]`Binder` supports Java back-end endpoints for loading
 
 == API Basics
 
+ifdef::react[]
+The form binding API consists of three key concepts:
+
+- The [methodname]`field()` directive to bind the field components in form views
+- The generated TypeScript models for POJO classes used in endpoints, which are used as field references and provide the necessary metadata
+- The [methodname]`useBinder` React Hook returns a [classname]`BinderControls` object that is responsible for keeping track of the form state, the default and current values, and validation of the data.
+endif::[]
+ifdef::lit[]
 The form binding API consists of three key concepts:
 
 - The [methodname]`field()` directive to bind the field components in Lit form view templates
 - The generated TypeScript models for POJO classes used in endpoints, which are used as field references and provide the necessary metadata
 - The client-side [classname]`Binder` TypeScript class, which is responsible for keeping track of the form state, the default and current values, and validation of the data.
+endif::[]
 
 NOTE: See the <<reference#, Form Binding Reference>> for more details.
 
@@ -49,8 +61,66 @@ public class PersonEndpoint {
 }
 ----
 
-To bind data to a form, follow these steps in your [filename]`frontend/views/person/person-view.ts` client-side [classname]`LitElement` view:
+To bind data to a form, follow these steps in your
+ifdef::react[]
+[filename]`frontend/views/person/PersonView.tsx` client-side [classname]`React` view:
+endif::[]
+ifdef::lit[]
+[filename]`frontend/views/person/person-view.ts` client-side [classname]`LitElement` view:
+endif::[]
 
+ifdef::react[]
+. Import the [methodname]`useBinder` hook from the `@hilla/react-form` package.
+Import your [classname]`PersonEndpoint` data endpoint and the generated [classname]`PersonModel` from the `frontend/generated` folder:
++
+[source,typescriptjsx]
+----
+import { useBinder } from '@hilla/react-form';
+
+import { PersonEndpoint } from 'Frontend/generated/PersonEndpoint';
+import PersonModel from 'Frontend/generated/com/example/application/PersonModel';
+----
+
+. Acquire a [classname]`BinderControls` instance for your view by calling the [methodname]`useBinder`:
++
+[source,typescriptjsx]
+----
+export default function PersonView() {
+  // ...
+
+  const { model, field } = useBinder(PersonModel);
+
+  // ...
+}
+----
++
+The [classname]`PersonModel` here is generated alongside a [interfacename]`Person` TypeScript data interface from the [classname]`Person.java` bean.
+This describes the structure of the data and the validation-related metadata for the form binding.
+
+. Bind the UI components in the template using the `{...field()}` syntax:
++
+[source,typescriptjsx]
+----
+export default function PersonView() {
+  // ...
+
+  const { model, field } = useBinder(PersonModel);
+
+  return (
+    <TextField label="Full name" {...field(model.fullName)}></TextField>
+  );
+
+}
+----
++
+In this example, `model` is an instance of [classname]`PersonModel`.
++
+[NOTE]
+Models don't contain any actual data.
+To access the actual current or default value of the form, you can acquire their respective reference by destructing the [classname]`BinderControls` instance as `const { value, defaultValue, ... } = useBinder(...)` when calling the [methodname]`useBinder` hook.
+
+endif::[]
+ifdef::lit[]
 . Import the [classname]`Binder` class and the [methodname]`field()` template directive from the `@hilla/form` package.
 Import your [classname]`PersonEndpoint` data endpoint and the generated [classname]`PersonModel` from the `frontend/generated` folder:
 +
@@ -103,25 +173,6 @@ In this example, `this.binder.model` is an instance of [classname]`PersonModel`.
 Models don't contain any actual data.
 Use `this.binder.value` or `this.binder.defaultValue` to access the actual current or default value of the form respectively.
 
-== Form Binding in Dialogs
+endif::[]
 
-Although binding works as expected inside a Dialog, its content isn't re-rendered when the validation status changes.
-This can be fixed by explicitly requesting a content update in the `binder` declaration:
-
-[.example]
---
-[source,typescript]
-----
-include::{root}/frontend/demo/fusion/forms/dialogs/newsletter-dialog.ts[render,tags=snippet,indent=0,group=TypeScript]
-----
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/fusion/forms/dialogs/NewsletterEndpoint.java[tags=snippet,indent=0,group=Java]
-----
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/fusion/forms/dialogs/NewsletterSubscription.java[tags=snippet,indent=0,group=Java]
-----
---
+// end::content[]
