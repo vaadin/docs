@@ -12,6 +12,7 @@ import com.vaadin.flow.component.charts.model.TreeMapLayoutAlgorithm;
 import com.vaadin.flow.component.charts.model.TreeSeries;
 import com.vaadin.flow.component.charts.model.TreeSeriesItem;
 import com.vaadin.flow.component.charts.model.VerticalAlign;
+import com.vaadin.flow.component.charts.model.style.SolidColor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
@@ -57,13 +58,13 @@ public class ChartTypeTreeMap extends Div {
         TreeSeries series = new TreeSeries();
 
         TreeSeriesItem apples = new TreeSeriesItem("A", "Apples");
-        apples.setColorIndex(0);
+        apples.setColor(new SolidColor("#EC2500"));
 
         TreeSeriesItem bananas = new TreeSeriesItem("B", "Bananas");
-        bananas.setColorIndex(2);
+        bananas.setColor(new SolidColor("#ECE100"));
 
         TreeSeriesItem oranges = new TreeSeriesItem("O", "Oranges");
-        oranges.setColorIndex(3);
+        oranges.setColor(new SolidColor("#EC9800"));
 
         TreeSeriesItem anneA = new TreeSeriesItem("Anne", apples, 5);
         TreeSeriesItem rickA = new TreeSeriesItem("Rick", apples, 3);
@@ -79,7 +80,7 @@ public class ChartTypeTreeMap extends Div {
 
         TreeSeriesItem susanne = new TreeSeriesItem("Susanne", 2);
         susanne.setParent("Kiwi");
-        susanne.setColorIndex(4);
+        susanne.setColor(new SolidColor("#9EDE00"));
 
         series.addAll(apples, bananas, oranges, anneA, rickA, peterA, anneB,
                 rickB, peterB, anneO, rickO, peterO, susanne);
