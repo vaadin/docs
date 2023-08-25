@@ -47,10 +47,12 @@ public class ChartTypeBubble extends Div {
         DataSeries dataSeries2 = new DataSeries("Negative bubbles hidden");
         dataSeries2.add(new DataSeriesItem3d(13, 30, 10));
         dataSeries2.add(new DataSeriesItem3d(23, 20, -10));
-        dataSeries2.add(new DataSeriesItem3d(23, 40, 10));
+        dataSeries2.add(new DataSeriesItem3d(53, 40, 10));
+
         opts = new PlotOptionsBubble();
         opts.setDisplayNegative(false);
         dataSeries2.setPlotOptions(opts);
+
         conf.addSeries(dataSeries2);
         // end::snippet[]
 
