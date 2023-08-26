@@ -46,23 +46,23 @@ export class Example extends LitElement {
       <vaadin-app-layout style="--vaadin-app-layout-touch-optimized: true">
         <h1 slot="navbar">MyApp</h1>
         <vaadin-tabs slot="navbar touch-optimized" theme="minimal equal-width-tabs">
-          <vaadin-tab>
+          <vaadin-tab aria-label="Dashboard">
             <a tabindex="-1">
               <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
             </a>
           </vaadin-tab>
-          <vaadin-tab>
+          <vaadin-tab aria-label="Orders">
             <a tabindex="-1">
               <vaadin-icon icon="vaadin:cart"></vaadin-icon>
             </a>
           </vaadin-tab>
           <!-- end::snippet[] -->
-          <vaadin-tab>
+          <vaadin-tab aria-label="Customers">
             <a tabindex="-1">
               <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
             </a>
           </vaadin-tab>
-          <vaadin-tab>
+          <vaadin-tab aria-label="Products">
             <a tabindex="-1">
               <vaadin-icon icon="vaadin:package"></vaadin-icon>
             </a>

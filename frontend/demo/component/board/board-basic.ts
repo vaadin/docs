@@ -8,9 +8,6 @@ import './example-chart';
 
 @customElement('board-basic')
 export class Example extends LitElement {
-  constructor() {
-    super();
-  }
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('basic-board');

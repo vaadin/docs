@@ -93,13 +93,12 @@ public class CrudToolbar extends Div {
             crud.edit(new Person(), Crud.EditMode.NEW_ITEM);
         });
         button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        crud.setNewButton(button);
 
-        HorizontalLayout toolbar = new HorizontalLayout(total, button);
+        HorizontalLayout toolbar = new HorizontalLayout(total);
         toolbar.setAlignItems(FlexComponent.Alignment.CENTER);
         toolbar.setFlexGrow(1, toolbar);
-        toolbar.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         toolbar.setSpacing(false);
-
         crud.setToolbar(toolbar);
         // end::snippet[]
     }
