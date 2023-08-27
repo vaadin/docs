@@ -41,7 +41,7 @@ export class Example extends LitElement {
       today: 'Heute',
       cancel: 'Abbrechen',
       dateLabel: 'datum',
-      timeLabel: 'zeit'
+      timeLabel: 'zeit',
     };
   }
 
