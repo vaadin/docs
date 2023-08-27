@@ -1,5 +1,6 @@
 ---
 title: Upgrading Guide
+description: How to change an application to upgrade from Vaadin 23 to the latest version.
 order: 900
 ---
 
@@ -14,13 +15,13 @@ Use the link:/docs/v23/upgrading/essential-steps[Upgrade Guide Generator] if you
 
 Many of the breaking changes are needed because of fundamental changes in the Java platform and the major dependencies on which Vaadin relies. This includes the following:
 
-*Servlet 6*::
+Servlet 6::
 Vaadin 24 is based on Servlet 6 specifications. It's compatible with Jakarta EE 10. Vaadin encapsulates the usage of the classes from `javax` and `jakarta` packages. Therefore, application code doesn't need to use servlets, directly. Nevertheless, this is still needed in various cases -- like accessing cookies, setting servlet parameters, etc.
 
-*Spring Boot 3*::
+Spring Boot 3::
 Vaadin 24 uses the latest Spring Boot 3 and Spring Framework 6 versions. This leads to making breaking changes in Spring-based features, compared to earlier Spring-boot 2 and Spring Framework 5 versions.
 
-*Java 17*::
+Java 17::
 Vaadin 24 requires Java 17 or later. This is dictated by Spring Framework and newer versions of application servers.
 
 
@@ -122,7 +123,7 @@ To browse a full list of changes, see the https://github.com/spring-projects/spr
 
 Below is a general overview of the changes needed for Spring-based Vaadin applications:
 
-*Upgrade Spring to Latest*
+=== Upgrade Spring to Latest
 
 You'll need to upgrade Spring to the latest versions, including the starter parent dependency:
 
@@ -136,7 +137,7 @@ You'll need to upgrade Spring to the latest versions, including the starter pare
 </parent>
 ----
 
-*Deprecation*
+=== Deprecation
 
 The deprecated `VaadinWebSecurityConfigurerAdapter` class was removed since Spring no longer has the `WebSecurityConfigurerAdapter` class. Use instead the `VaadinWebSecurity` base class for your security configuration. Below is an example of this:
 
@@ -207,7 +208,6 @@ public class SecurityConfig extends VaadinWebSecurity {
 ----
 
 In this example, `AuthenticationManagerBuilder` -- used in Spring Boot 2 -- is replaced by `UserDetailsService`. Also, `http.authorizeRequests().antMatchers()` is replaced with `http.authorizeHttpRequests().requestMatchers()`.
-
 
 
 == Java Version
@@ -584,34 +584,22 @@ Vaadin 24 introduces several major changes in field component validation, addres
 
 Every field component provides its own set of constraints, such as `required`, `minlength`, `pattern`, etc.
 
-*Before:*
+*Before:* When using Binder, component constraints were ignored in earlier versions. They could still affect the client-side invalid state without reflecting this to the server.
 
-When using Binder, component constraints were ignored in earlier versions. They could still affect the client-side invalid state without reflecting this to the server.
+*After:* In the new version, component constraints are integrated into Binder validation. Binder checks the value against constraints before custom validators. The only exception is the required constraint. It doesn't participate in Binder validation since Binder provides its own `asRequired` validator.
 
-*After:*
-
-In the new version, component constraints are integrated into Binder validation. Binder checks the value against constraints before custom validators. The only exception is the required constraint. It doesn't participate in Binder validation since Binder provides its own `asRequired` validator.
-
-*Known Issues:*
-
-It's currently not possible to configure custom error messages for constraints (https://github.com/vaadin/flow-components/issues/4618[flow-components#4618]).
+*Known Issues:* It's currently not possible to configure custom error messages for constraints (https://github.com/vaadin/flow-components/issues/4618[flow-components#4618]).
 
 Also, it's currently not possible to revert Binder's behavior to ignore constraints as before, except by removing the constraints from the component, entirely (https://github.com/vaadin/flow/issues/17178[flow#17178]).
 
 
 === Blur Triggers Server-Side Validation
 
-*Before:*
+*Before:* Both constraint and Binder validation were previously only triggered on `ValueChangeEvent`, while client-side validation was completely disregarded.
 
-Both constraint and Binder validation were previously only triggered on `ValueChangeEvent`, while client-side validation was completely disregarded.
+*After:* The server-side validation timing is now aligned with client-side validation, meaning that whenever the web component validation occurs, it triggers the corresponding validation in the Flow component. In practice, this means that the server-side validation also is performed on blur (i.e., when the component loses focus).
 
-*After:*
-
-The server-side validation timing is now aligned with client-side validation, meaning that whenever the web component validation occurs, it triggers the corresponding validation in the Flow component. In practice, this means that the server-side validation also is performed on blur (i.e., when the component loses focus).
-
-*Known Issues:*
-
-The component validates on blur even when the user leaves it without typing anything. This behavior results from the web component, which validates on blur to detect possible bad input (https://github.com/vaadin/web-components/issues/6146[web-components#6146]).
+*Known Issues:* The component validates on blur even when the user leaves it without typing anything. This behavior results from the web component, which validates on blur to detect possible bad input (https://github.com/vaadin/web-components/issues/6146[web-components#6146]).
 
 The server-side validation can be triggered more frequently than necessary. For example, if you edit a Text Field and then blur, both value-changed and blur events can fire at the same time, resulting in double validation in a single round-trip (https://github.com/vaadin/flow-components/issues/4390[flow-components#4390]).
 
@@ -620,13 +608,9 @@ The server-side validation can be triggered more frequently than necessary. For 
 
 Date Picker, Integer Field, and some other similar components only accept user input that can be parsed as a `LocalDate`, `Integer`, etc. Otherwise, the value on the server falls back to `null`.
 
-*Before:*
+*Before:* Previously, entering bad input didn't invalidate the component because the server treated this case as an empty value.
 
-Previously, entering bad input didn't invalidate the component because the server treated this case as an empty value.
-
-*After:*
-
-The server is now aware if the user has entered any input. When the input cannot be parsed, it's considered bad input, causing constraint validation to fail once the user presses Enter or removes focus from the component.
+*After:* The server is now aware if the user has entered any input. When the input cannot be parsed, it's considered bad input, causing constraint validation to fail once the user presses Enter or removes focus from the component.
 
 
 [role="since:com.vaadin:vaadin@V24.2"]
@@ -649,6 +633,7 @@ textField.addValueChangeListener(event -> {
     }
 });
 ----
+
 
 == Removed Deprecations
 
