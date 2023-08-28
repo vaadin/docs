@@ -47,6 +47,8 @@ export class MyTextFieldStrategy implements FieldStrategy {
   public checkValidity() {
     return true;
   }
+
+  public removeEventListeners() {}
   // tag::snippet[]
 }
 // end::snippet[]
