@@ -8,7 +8,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
@@ -53,7 +53,7 @@ public class GridColumnFiltering extends Div {
     // tag::snippet2[]
     private static Component createFilterHeader(String labelText,
             Consumer<String> filterChangeConsumer) {
-        Label label = new Label(labelText);
+            NativeLabel label = new NativeLabel(labelText);
         label.getStyle().set("padding-top", "var(--lumo-space-m)")
                 .set("font-size", "var(--lumo-font-size-xs)");
         TextField textField = new TextField();
