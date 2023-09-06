@@ -4,7 +4,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
@@ -21,7 +21,7 @@ public class IconsInside extends Div {
         // Wrap the icon inside a composition
         HorizontalLayout helper = new HorizontalLayout();
         helper.add(new Icon("vaadin", "info-circle-o"));
-        helper.add(new Label("Here be help"));
+        helper.add(new NativeLabel("Here be help"));
         field.setHelperComponent(helper);
 
         add(field);
