@@ -3,7 +3,7 @@ package com.vaadin.demo.component.upload;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
@@ -33,7 +33,7 @@ public class UploadErrorMessages extends Div {
                 .setUnexpectedServerError("Unexpected Server Error");
         upload.setI18n(i18N);
 
-        Label label = new Label("Caution");
+        NativeLabel label = new NativeLabel("Caution");
         label.getStyle().set("font-weight", "600");
         upload.setId("upload-caution");
         label.setFor(upload.getId().get());
@@ -56,7 +56,7 @@ public class UploadErrorMessages extends Div {
         upload.setI18n(i18N);
         // end::snippet[]
 
-        Label label = new Label("Recommended");
+        NativeLabel label = new NativeLabel("Recommended");
         label.getStyle().set("font-weight", "600");
         upload.setId("upload-recommended");
         label.setFor(upload.getId().get());
