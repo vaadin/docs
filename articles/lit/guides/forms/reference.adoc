@@ -2,14 +2,20 @@
 title: Form Binding
 description: Understanding form binding.
 ---
+:lit:
 
 = Form Binding Reference
+
+// tag::content[]
 
 The key concepts behind form binding are: the [methodname]`field()` directive, the [classname]`Model`, the [classname]`Binder` and binder nodes.
 
 == The Field Directive
 
+
+ifdef::lit[]
 Form binding in Hilla works together with the Lit web component library and its underlying template rendering library, `lit-html`.
+endif::[]
 
 The [methodname]`field()` directive does the main job of binding the form field components in the template, namely:
 
@@ -18,6 +24,20 @@ The [methodname]`field()` directive does the main job of binding the form field 
 - sets the `required` (boolean) state,
 - sets the `invalid` (boolean) state and the `errorMessage` (string) when the current value is invalid.
 
+ifdef::react[]
+.Using the field directive
+[source,tsx]
+----
+import {TextField} from "@hilla/react-components/TextField.js";
+...
+const { model, field } = useForm(PersonModel);
+...
+return (
+  <TextField label="Full name" {...field(model.fullName)} />
+);
+----
+endif::[]
+ifdef::lit[]
 .Using the field directive
 [source,html]
 ----
@@ -26,17 +46,58 @@ The [methodname]`field()` directive does the main job of binding the form field 
   ${field(model.fullName)}
 ></vaadin-text-field>
 ----
+endif::[]
 
 Depending on the type of the bound component, the field directive selects a strategy that defines exactly how the states above are applied on the component, for example which attributes and properties of the element are used.
 
+ifdef::lit[]
 [NOTE]
 You can find more information on field strategy customization in the <<{articles}/lit/guides/forms/web-component-field-strategy#, Using a Web Component Field>> article.
+endif::[]
 
 The field directive supports Vaadin components and HTML input elements.
 Vaadin components have support for all the states.
 However, for HTML input elements, the `invalid`, `required` and `errorMessage` states aren't displayed in the bound component.
 As a workaround, you can bind these manually in the template:
 
+ifdef::react[]
+[source,tsx]
+----
+import { useForm, useFormPart } from '@hilla/react-form';
+import {StringModel} from "@hilla/form";
+...
+interface FullNameProps {
+    fullNameModel: StringModel;
+}
+
+function FullNameComponent({ fullNameModel }: FullNameProps) {
+
+  const { model, field, required, errors, invalid } = useFormPart(fullNameModel);
+
+  return (
+    <>
+      <label htmlFor="fullName">
+        Full name
+        {required ? '*' : ''}
+      </label>
+      <input id="fullName" {...field(model)}></input>
+      <br/>
+      <span className="label" style={{visibility: invalid ? 'visible' : 'hidden'}}>
+          <strong>
+           {errors[0]?.message}
+          </strong>
+        </span>
+    </>
+  );
+}
+
+export default function Main() {
+  const { model } = useForm(PersonModel);
+  return <FullNameComponent fullNameModel={model.fullName} />;
+}
+----
+endif::[]
+ifdef::lit[]
 [source,html]
 ----
 <label for="fullName">
@@ -53,6 +114,7 @@ ${
     : ''
 }
 ----
+endif::[]
 
 [NOTE]
 See also: <<{articles}/lit/guides/forms/vaadin-components#, Binding Data to Hilla Components>>
@@ -62,7 +124,11 @@ See also: <<{articles}/lit/guides/forms/vaadin-components#, Binding Data to Hill
 A form model describes the structure of the form.
 It allows individual fields to be referenced in a type-safe way, and is an alternative to strings such as `'person.firstName'`.
 
-Typically, a model is used as an argument for the [methodname]`field()` directive or the [methodname]`binder.for()` method to specify the target form property to create a binding or to access the state.
+Typically, a model is used as an argument for the [methodname]`field()` directive
+ifdef::lit[]
+or the [methodname]`binder.for()` method
+endif::[]
+to specify the target form property to create a binding or to access the state.
 In contrast to string names such as `'person.firstName'`, typed form models allow autocompletion and static type checking, which makes creating forms faster and safer.
 
 Hilla automatically generates Model classes for server-side endpoints from Java beans.
@@ -200,6 +266,35 @@ The item model is instantiated for every array entry, as necessary.
 Array models are iterable.
 Iterating yields binder nodes for entries:
 
+ifdef::react[]
+[source,tsx]
+----
+import {TextField} from "@hilla/react-components/TextField.js";
+
+interface PersonProps {
+  model: PersonModel;
+}
+
+function Person({ model }: PersonProps) {
+  const {field, model, value} = useFormPart(model);
+
+  return (
+    <div>
+      <TextField label="Full name" {...field(model.fullName)} />
+      <strong>Full name:</strong>
+      {value.fullName}
+    </div>
+  );
+}
+...
+return (
+  <>
+    {model.people.map(person => <Person model={person} />)}
+  </>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,html]
 ----
 ${repeat(this.binder.model.people, personBinder => html`
@@ -213,6 +308,7 @@ ${repeat(this.binder.model.people, personBinder => html`
   </div>
 `)}
 ----
+endif::[]
 
 The array entries aren't available for indexing with bracket notation (`[]`).
 
@@ -222,7 +318,7 @@ All models subclass from the [classname]`AbstractModel<T>` TypeScript class, whe
 
 ==== The Empty Value Definition
 
-Model classes define an empty value, which is used to initialize the `binder.defaultValue` and `binder.value` properties, and also for [methodname]`binder.clear()`.
+Model classes define an empty value, which is used to initialize the `defaultValue` and `value` properties, and also for [methodname]`clear()`.
 
 For this purpose, [classname]`AbstractModel<T>`, as well as every subclass, has a method [methodname]`static createEmptyValue(): T`, which returns the empty value of the subject model type.
 
@@ -234,10 +330,44 @@ console.log(emptyPerson); // {"fullName": ""}
 
 ==== Models in Expressions
 
-As with any JavaScript object, [classname]`AbstractModel<T>` has [methodname]`toString(): string` and [methodname]`valueOf(): T` instance methods, which are handy for template expressions.
+As with any JavaScript object, [classname]`AbstractModel<T>` has [methodname]`toString(): string` and [methodname]`valueOf(): T` instance methods,
+ifdef::react[]
+but, as we know that the model is just metadata, they cannot return any values.
+Then, those instance methods must be called on the `value` property obtained from calling [classname]`useForm` instead:
+endif::[]
+ifdef::lit[]
+which are handy for template expressions.
 
 For [classname]`StringModel` in string expressions, the following are equivalent:
+endif::[]
 
+ifdef::react[]
+[source,tsx]
+----
+const { model, value } = useForm(PersonModel);
+...
+return (
+  <>
+    {value.name.toString()}
+    {value.name.valueOf()}
+    {value.name}
+  </>
+)
+----
+
+Then, it is possible to use the values in formulas using either of the followings:
+
+[source,tsx]
+----
+return (
+  <>
+    Cost: {value.quantity.valueOf() * value.price.valueOf()}
+    Cost: {value.quantity * value.price}
+  </>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 html`
@@ -255,6 +385,7 @@ html`
   Cost: ${model.quantity.valueOf() * model.price.valueOf()}
 `;
 ----
+endif::[]
 
 == The Binder [[binder]]
 
@@ -263,15 +394,21 @@ It's typically used to get and set the form value, access the form model, valida
 
 The [classname]`Binder` constructor arguments are:
 
+ifdef::lit[]
 `context: Element`::
 The form view component instance to update;
+endif::[]
+
 `Model: ModelConstructor<T, M>`::
 The constructor (class reference) of the form model.
 The [classname]`Binder` instantiates the top-level model; and
 `config?: BinderConfiguration<T>`::
 The options object.
   `onChange?: (oldValue?: T) => void`:::
-  The callback that updates the form view; by default, it uses [methodname]`context.requestUpdate()`.
+  The callback that updates the form view;
+ifdef::lit[]
+  by default, it uses [methodname]`context.requestUpdate()`.
+endif::[]
   `onSubmit?: (value: T) => Promise<T | void>`:::
   The endpoint to submit the form data to.
 
@@ -309,9 +446,9 @@ Structurally, model instances form a tree in which the object and array models h
 
 Every model instance has a one-to-one mapping to a corresponding [classname]`BinderNode` instance.
 The [classname]`Binder` itself is a [classname]`BinderNode` for the top-level form model.
-
+ifdef::lit[]
 Use the [methodname]`binderNode.for()` method to obtain the binder node related to the model.
-
+endif::[]
 The binder nodes have the following properties:
 
 `model: M`::
@@ -363,3 +500,5 @@ A helper method for array modes, similar to [methodname]`appendItem()`, but prep
 `removeSelf(): void`::
 A helper method for array item models.
 If the node's **parent model** is an [classname]`ArrayModel<T>`, removes the item the array; otherwise throws an exception.
+
+// end::content[]

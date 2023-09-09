@@ -3,9 +3,28 @@ title: Binding Data to Input Fields
 description: Implementing data binding, type mapping and error messages when binding data with Hilla components.
 order: 100
 ---
+:lit:
 
+:vaadin-custom-field: vaadin-custom-field
+:vaadin-text-field: vaadin-text-field
+:vaadin-number-field: vaadin-number-field
+:vaadin-password-field: vaadin-password-field
+:vaadin-text-area: vaadin-text-area
+:vaadin-checkbox: vaadin-checkbox
+:vaadin-radio-button: vaadin-radio-button
+:vaadin-select: vaadin-select
+:vaadin-combo-box: vaadin-combo-box
+:vaadin-radio-group: vaadin-radio-group
+:vaadin-list-box: vaadin-list-box
+:vaadin-checkbox-group: vaadin-checkbox-group
+:vaadin-multi-select-combo-box: vaadin-multi-select-combo-box
+:vaadin-date-picker: vaadin-date-picker
+:vaadin-time-picker: vaadin-time-picker
+:vaadin-date-time-picker: vaadin-date-time-picker
 
 = Binding Data to Input Fields
+
+// tag::content[]
 
 Client <<binder#,Form binder>> supports out of the box the set of form elements present in Hilla components.
 This means that data binding, type mapping, required flag, and validation messages will function without any extra work.
@@ -66,6 +85,20 @@ You also need to perform the endpoint call to get the entity value, as explained
 
 For this article, these are the significant lines needed in the view:
 
+ifdef::react[]
+[source,tsx]
+----
+import { MyEndpoint } from 'Frontend/generated/MyEndpoint';
+import MyEntityModel from 'Frontend/generated/com/example/MyEntityModel';
+...
+const form = useForm(MyEntityModel);
+...
+useEffect(() => {
+  MyEndpoint.getMyEntity().then(form.read);
+}, []);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import { MyEndpoint } from 'Frontend/generated/MyEndpoint';
@@ -78,11 +111,52 @@ async firstUpdated(arg: any) {
   this.binder.read(await MyEndpoint.getMyEntity());
 }
 ----
+endif::[]
 
 === Binding Data to Text & Number Fields
 
-No extra action is needed to configure the Vaadin components present in the `vaadin-text-field` package.
+No extra action is needed to configure the Vaadin components that represent Text & Number values.
 
+ifdef::react[]
+[source,tsx]
+----
+import {TextField} from "@hilla/react-components/TextField.js";
+import {PasswordField} from "@hilla/react-components/PasswordField.js";
+import {IntegerField} from "@hilla/react-components/IntegerField";
+import {NumberField} from "@hilla/react-components/NumberField.js";
+import {EmailField} from "@hilla/react-components/EmailField.js";
+import {TextArea} from "@hilla/react-components/TextArea.js";
+
+...
+const { model, field } = useForm(MyEntityModel);
+...
+return (
+  <>
+    <TextField label="string"
+        {...field(model.myTextField)}>
+    </TextField>
+    <PasswordField label="password"
+        {...field(model.myPasswordField)}>
+    </PasswordField>
+    <IntegerField label="integer"
+        {...field(model.myIntegerField)}
+        stepButtonsVisible>
+    </IntegerField>
+    <NumberField label="number"
+        {...field(model.myDoubleField)}
+        stepButtonsVisible>
+    </NumberField>
+    <EmailField label="email"
+        {...field(model.myEmailField)}>
+    </EmailField>
+    <TextArea label="textarea"
+        {...field(model.myTextField)}>
+    </TextArea>
+  </>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import '@vaadin/text-field';
@@ -100,12 +174,12 @@ render() {
     <vaadin-integer-field
       ${field(this.binder.model.myIntegerField)}
       label="integer"
-      has-controls
+      stepButtonsVisible
     ></vaadin-integer-field>
     <vaadin-number-field
       ${field(this.binder.model.myDoubleField)}
       label="number"
-      has-controls
+      stepButtonsVisible
     ></vaadin-number-field>
     <vaadin-email-field
       ${field(this.binder.model.myEmailField)}
@@ -118,15 +192,47 @@ render() {
   `;
 }
 ----
+endif::[]
 
 === Binding Data to Boolean Fields
 
-There are three elements in Hilla to deal with booleans: `vaadin-checkbox`, `vaadin-radio-button`, and `vaadin-select`.
+In Hilla, three components are available for handling booleans: `{vaadin-checkbox}`, `{vaadin-radio-button}`, and `{vaadin-select}`.
 
-`vaadin-checkbox` and `vaadin-radio-button` work fine with form binders, but neither of them has validation and failure styling.
+`{vaadin-checkbox}` and `{vaadin-radio-button}` work fine with form binders, but neither of them has validation and failure styling.
 Hence, you need to do some extra work to give error feedback.
 In the following snippet, the background color is changed on validation error.
 
+ifdef::react[]
+[source, css]
+.my-styles.module.css
+----
+vaadin-checkbox[invalid], vaadin-radio-button[invalid] {
+  background: var(--lumo-error-color-10pct);
+}
+----
+
+[source,tsx]
+----
+import {Checkbox} from "@hilla/react-components/Checkbox.js";
+import {RadioButton} from "@hilla/react-components/RadioButton.js";
+
+import './my-styles.module.css';
+...
+const { model, field } = useForm(MyEntityModel);
+...
+return (
+  <>
+    <Checkbox label="checkbox"
+        {...field(model.myBooleanField)}>
+    </Checkbox>
+    <RadioButton label="radio-button"
+        {...field(model.myBooleanField)}>
+    </RadioButton>
+  </>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import '@vaadin/checkbox';
@@ -153,9 +259,27 @@ render() {
   `;
 }
 ----
+endif::[]
 
-`vaadin-select` can be bound to a boolean, as in the following snippet:
+`{vaadin-select}` can be bound to a boolean, as in the following snippet:
 
+ifdef::react[]
+[source,tsx]
+----
+import {Select} from "@hilla/react-components/Select.js";
+...
+const { model, field } = useForm(MyEntityModel);
+const selectItems = [{label: "True", value: "true"}, {label: "False", value: "false"}];
+...
+return (
+  <Select label="select"
+          {...field(model.myBooleanField)}
+          items={selectItems}>
+  </Select>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import { selectRenderer } from '@vaadin/select/lit';
@@ -176,6 +300,7 @@ import '@vaadin/item';
   )}
 ></vaadin-select>
 ----
+endif::[]
 
 === Binding Data to List Fields
 
@@ -185,11 +310,37 @@ Hence, there are various ways to set their values and options.
 ==== Configuring the Options for Selection
 
 Options for these components can be set by calling a server-side service that provides the list of strings.
-Since the call to the endpoint is asynchronous, one easy way is to combine the [methodname]`until()` and [methodname]`repeat()` methods from the Lit library.
+Since the call to the endpoint is asynchronous, one easy way is to
+ifdef::react[]
+use the Typescript [mathodname]`map` on the list received from the endpoints.
+endif::[]
+ifdef::lit[]
+combine the [methodname]`until()` and [methodname]`repeat()` methods from the Lit library.
+endif::[]
 
 As reference, the following snippet demonstrates how to repeat a pattern, given an asynchronous method that returns a list of items.
 The same pattern will be used in the code blocks for each component that follow.
 
+ifdef::react[]
+[source,tsx]
+----
+const [options, setOptions] = useState(Array<Entity>());
+...
+// using effects to execute only once
+useEffect(() => {
+  MyEndpoint.getMyOptions().then(entities => setOptions(options))
+}, []);
+...
+return (
+  <>
+    {options.map(opt => (
+      <div>{JSON.stringify(opt)}</div>
+    ))}
+  </>
+)
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import { until } from 'lit/directives/until.js';
@@ -205,12 +356,57 @@ render() {
   `;
 }
 ----
+endif::[]
 
 ==== Single Selection Using Item Value
 
-For a single selection, you should use `vaadin-combo-box`, `vaadin-radio-group` or `vaadin-list-box`.
+For a single selection, you should use `{vaadin-combo-box}`, `{vaadin-radio-group}` or `{vaadin-list-box}`.
 They can all take the selected item value as a string.
 
+ifdef::react[]
+[source,tsx]
+----
+import {ComboBox} from "@hilla/react-components/ComboBox.js";
+import {useEffect} from "react";
+import {RadioGroup} from "@hilla/react-components/RadioGroup.js";
+import {RadioButton} from "@hilla/react-components/RadioButton.js";
+import {ListBox} from "@hilla/react-components/ListBox.js";
+import {Item} from "@hilla/react-components/Item.js";
+...
+const { model, field } = useForm(MyEntityModel);
+const [myOptions, setMyOptions] = useState(Array<MyEntity>());
+...
+useEffect(() => {
+  MyEndpoint.getMyOptions().then(myEntities => setMyOptions(myEntities));
+}, []);
+...
+return (
+  <>
+    <ComboBox label="combo-box"
+        {...field(model.mySingleSelectionField)}
+        items={myOptions}>
+    </ComboBox>
+    <RadioGroup label="radio-group"
+                {...field(model.mySingleSelectionField)}>
+      {myOptions.map(option => (
+         <RadioButton value={option}
+                      label={option}>
+         </RadioButton>
+      ))}
+    </RadioGroup>
+    <ListBox label="list-box"
+             {...field(model.mySingleSelectionField)}>
+      {myOptions.map(option => (
+         <Item value={option}
+               label={option}>
+         </Item>
+      ))}
+    </ListBox>
+  </>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import '@vaadin/combo-box';
@@ -254,13 +450,40 @@ render() {
   `;
 }
 ----
+endif::[]
 
 ==== Single Selection Using Index
 
-To select items by index, you should use the `vaadin-select` component.
+To select items by index, you should use the `{vaadin-select}` component.
 This accepts an integer for the index value.
 Because this component is configurable via the `template` tag, it's not possible to set the options with an asynchronous call.
 
+ifdef::react[]
+[source,tsx]
+----
+import {useEffect} from "react";
+import {Select} from "@hilla/react-components/Select.js";
+...
+const { model, field } = useForm(MyEntityModel);
+const [myOptions, setMyOptions] = useState(Array<MyEntity>());
+...
+useEffect(() => {
+  MyEndpoint.getMyOptions().then(myEntities => setMyOptions(myEntities));
+}, []);
+...
+return (
+  <Select label="select"
+          {...field(model.mySelectField)}>
+     {myOptions.map(option => (
+        <Item value={option}
+              label={option}>
+        </Item>
+     ))}
+  </Select>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import '@vaadin/select';
@@ -286,12 +509,46 @@ render() {
 ----
 
 The inline [methodname]`.renderer()` function is encapsulated by the https://lit.dev/docs/templates/directives/#guard[`guard` directive] for performance reasons.
+endif::[]
+
 
 ==== Multiple Selection
 
-The Vaadin components for multiple selection are `vaadin-checkbox-group` and `vaadin-multi-select-combo-box`.
+The Vaadin components for multiple selection are `{vaadin-checkbox-group}` and `{vaadin-multi-select-combo-box}`.
 Both of them accept an array of strings.
 
+ifdef::react[]
+[source,tsx]
+----
+import {CheckboxGroup} from "@hilla/react-components/CheckboxGroup.js";
+import {Checkbox} from "@hilla/react-components/Checkbox.js";
+import {MultiSelectComboBox} from "@hilla/react-components/MultiSelectComboBox.js";
+...
+const { model, field } = useForm(MyEntityModel);
+const [myOptions, setMyOptions] = useState(Array<MyEntity>());
+...
+useEffect(() => {
+  MyEndpoint.getMyOptions().then(myEntities => setMyOptions(myEntities));
+}, []);
+...
+return (
+  <>
+    <CheckboxGroup label="check-group"
+                   {...field(model.myListField)}>
+      {myOptions.map(option => (
+           <Checkbox value={option}
+                 label={option}>
+           </Checkbox>
+        ))}
+    </CheckboxGroup>
+    <MultiSelectComboBox label=""
+                         items={myOptions}>
+    </MultiSelectComboBox>
+  </>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import '@vaadin/checkbox-group';
@@ -317,12 +574,35 @@ render() {
     </vaadin-multi-select-combo-box>
 }
 ----
-
+endif::[]
 
 === Binding Data to Date & Time Fields
 
-Use `vaadin-date-picker` to bind to Java [classname]`LocalDate`, `vaadin-time-picker` for [classname]`LocalTime`, and `vaadin-date-time-picker` for [classname]`LocalDateTime`.
+Use `{vaadin-date-picker}` to bind to Java [classname]`LocalDate`, `{vaadin-time-picker}` for [classname]`LocalTime`, and `{vaadin-date-time-picker}` for [classname]`LocalDateTime`.
 
+ifdef::react[]
+[source,tsx]
+----
+import { DatePicker } from "@hilla/react-components/DatePicker.js";
+import { TimePicker } from "@hilla/react-components/TimePicker.js";
+import {DateTimePicker} from "@hilla/react-components/DateTimePicker.js";
+...
+return (
+  <>
+    <DatePicker label="date"
+                {...field(model.mySelectField)}>
+    </DatePicker>
+    <TimePicker label="time"
+                {...field(model.mySelectField)}>
+    </TimePicker>
+    <DateTimePicker label="date-time"
+                    {...field(model.mySelectField)}>
+    </DateTimePicker>
+  </>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import '@vaadin/date-picker';
@@ -340,21 +620,38 @@ render() {
   `;
 }
 ----
+endif::[]
 
 === Wrapping Components in Custom Fields
 
-Hilla provides the `vaadin-custom-field`, which can be used to wrap one or multiple Vaadin fields.
+Hilla provides the `{vaadin-custom-field}`, which can be used to wrap one or multiple Vaadin fields.
 This works with the following components:
 
-  - `vaadin-text-field`
-  - `vaadin-number-field`
-  - `vaadin-password-field`
-  - `vaadin-text-area`
-  - `vaadin-select`
-  - `vaadin-combo-box`
-  - `vaadin-date-picker`
-  - `vaadin-time-picker`
+  - `{vaadin-text-field}`
+  - `{vaadin-number-field}`
+  - `{vaadin-password-field}`
+  - `{vaadin-text-area}`
+  - `{vaadin-select}`
+  - `{vaadin-combo-box}`
+  - `{vaadin-date-picker}`
+  - `{vaadin-time-picker}`
 
+ifdef::react[]
+[source,tsx]
+----
+import {CustomField} from "@hilla/react-components/CustomField.js";
+import {TextField} from "@hilla/react-components/TextField.js";
+
+...
+return (
+  <CustomField {...field(model.myTextField)}>
+    <TextField label="custom-field">
+    </TextField>
+  </CustomField>
+);
+----
+endif::[]
+ifdef::lit[]
 [source,typescript]
 ----
 import '@vaadin/custom-field';
@@ -368,8 +665,11 @@ render() {
   `;
 }
 ----
+endif::[]
 
 NOTE: There are limitations when using `vaadin-custom-field` with other elements previously listed:
 
  - the value of the custom field should be provided as a string;
  - children should have the `value` property in their API.
+
+// end::content[]

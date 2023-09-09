@@ -302,18 +302,6 @@ endif::[]
 
 Next, you create a view for adding and viewing to-do items. You can choose to build it step by step, learning some concepts along the way, or to copy the complete view implementation if you are in a hurry. When you're ready, you can learn more about <<{articles}/lit/components/create#,creating components>>.
 
-ifdef::react[]
-In this example we'll use Formik to create our form, so we need to add it to the project:
-
-[source,terminal]
-----
-npm install formik --save
-----
-endif::[]
-
-
-
-
 .Build the View Step-by-Step
 [%collapsible]
 ====
@@ -509,7 +497,7 @@ Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with t
 ----
 import type Todo from 'Frontend/generated/com/example/application/Todo'; // <1>
 import { useEffect, useState } from 'react';
-import { FormikErrors, useFormik } from 'formik';
+import { useForm } from '@hilla/react-form';
 import { Button } from '@hilla/react-components/Button.js';
 import { Checkbox } from '@hilla/react-components/Checkbox.js';
 import { TextField } from '@hilla/react-components/TextField.js';
@@ -532,7 +520,6 @@ Inside the `TodoView` function, define the view state as follows:
 .`TodoView.tsx`
 [source,typescript]
 ----
-const empty: Todo = { task: '', done: false };
 const [todos, setTodos] = useState(Array<Todo>()); // <1>
 ----
 <1> The list of `Todo` items is stored using a React Hook.
@@ -544,28 +531,12 @@ const [todos, setTodos] = useState(Array<Todo>()); // <1>
 
 [source,typescript]
 ----
-const formik = useFormik({
-  initialValues: empty,
-  onSubmit: async (value: Todo, { setSubmitting, setErrors }) => {
-    try {
-      const saved = await TodoEndpoint.save(value) ?? value;
-      setTodos([...todos, saved]);
-      formik.resetForm();
-    } catch (e: unknown) {
-      if (e instanceof EndpointValidationError) {
-        const errors: FormikErrors<Todo> = {}
-        for (const error of e.validationErrorData) {
-          if (typeof error.parameterName === 'string' && error.parameterName in empty) {
-            const key = error.parameterName as (string & keyof Todo);
-            errors[key] = error.message;
-          }
-        }
-        setErrors(errors);
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  },
+const { model, field, submit, reset, invalid } = useForm(TodoModel, {
+  onSubmit: async (todo: Todo) => {
+    const saved = await TodoEndpoint.save(todo) ?? todo;
+    setTodos([...todos, saved]);
+    reset();
+  }
 });
 ----
 
@@ -580,16 +551,13 @@ Add the following code inside the `return` statement:
 <>
   <div className="m-m flex items-baseline gap-m">
     <TextField
-      name='task'
       label="Task"
-      value={formik.values.task}
-      onChange={formik.handleChange}
-      onBlur={formik.handleChange}
+      {...field(model.task)}
     />
     <Button
       theme="primary"
-      disabled={formik.isSubmitting}
-      onClick={formik.submitForm}
+      disabled={invalid}
+      onClick={submit}
     >Add</Button>
   </div>
 </>
@@ -617,11 +585,7 @@ Before the `return` method, add a React effect to load the initial values.
 [source,typescript]
 ----
 useEffect(() => {
-  (async () => {
-    setTodos(await TodoEndpoint.findAll());
-  })();
-
-  return () => { };
+  TodoEndpoint.findAll().then(setTodos);
 }, []);
 ----
 
@@ -723,73 +687,47 @@ Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with t
 .`TodoView.tsx`
 [source,typescript]
 ----
-import type Todo from 'Frontend/generated/com/example/application/Todo';
+import Todo from 'Frontend/generated/com/example/application/Todo';
+import TodoModel from "Frontend/generated/com/example/application/data/TodoModel";
 import { useEffect, useState } from 'react';
-import { FormikErrors, useFormik } from 'formik';
+import { useForm } from '@hilla/react-form';
 import { Button } from '@hilla/react-components/Button.js';
 import { Checkbox } from '@hilla/react-components/Checkbox.js';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { TodoEndpoint } from 'Frontend/generated/endpoints';
-import { EndpointValidationError } from '@hilla/frontend';
 
 export default function TodoView() {
-  const empty: Todo = { task: '', done: false };
   const [todos, setTodos] = useState(Array<Todo>());
 
   useEffect(() => {
-    (async () => {
-      setTodos(await TodoEndpoint.findAll());
-    })();
-
-    return () => { };
+    TodoEndpoint.findAll().then(setTodos);
   }, []);
 
-  const formik = useFormik({
-    initialValues: empty,
-    onSubmit: async (value: Todo, { setSubmitting, setErrors }) => {
-      try {
-        const saved = (await TodoEndpoint.save(value)) ?? value;
-        setTodos([...todos, saved]);
-        formik.resetForm();
-      } catch (e: unknown) {
-        if (e instanceof EndpointValidationError) {
-          const errors: FormikErrors<Todo> = {};
-          for (const error of e.validationErrorData) {
-            if (typeof error.parameterName === 'string' && !(error.parameterName in empty)) {
-              const key = error.parameterName as string & keyof Todo;              
-              errors[key] = error.message.substring(error.message.indexOf("validation error:"));
-            }
-          }
-          setErrors(errors);
-        }
-      } finally {
-        setSubmitting(false);
-      }
-    },
+  const { model, field, submit, reset, invalid } = useForm(TodoModel, {
+    onSubmit: async (todo: Todo) => {
+      const saved = await TodoEndpoint.save(todo) ?? todo;
+      setTodos([...todos, saved]);
+      reset();
+    }
   });
 
-async function changeStatus(todo: Todo, done: boolean) {
-  const newTodo = { ...todo, done: done };
-  const saved = await TodoEndpoint.save(newTodo) ?? newTodo;
-  setTodos(todos.map(item => item.id === todo.id ? saved : item));
-}
+  async function changeStatus(todo: Todo, done: boolean) {
+    const newTodo = { ...todo, done: done };
+    const saved = await TodoEndpoint.save(newTodo) ?? newTodo;
+    setTodos(todos.map(item => item.id === todo.id ? saved : item));
+  }
 
   return (
     <>
       <div className="m-m flex items-baseline gap-m">
         <TextField
-          name="task"
           label="Task"
-          value={formik.values.task}
-          onChange={formik.handleChange}
-          onBlur={formik.handleChange}
-          errorMessage={formik.errors.task}
-          invalid={formik.errors.task? true : false}
+          {...field(model.task)}
         ></TextField>
         <Button
           theme="primary"
-          disabled={formik.isSubmitting}
-          onClick={formik.submitForm}
+          disabled={invalid}
+          onClick={submit}
         >Add</Button>
       </div>
 

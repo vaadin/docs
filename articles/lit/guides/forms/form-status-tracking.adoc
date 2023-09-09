@@ -3,28 +3,73 @@ title: Reacting to Form State Changes
 description: How to recognize different states of fields and forms and react accordingly.
 order: 5
 ---
+:lit:
 
 = Reacting to Form State Changes
+
+// tag::content[]
 
 You can display some parts of the form differently, depending on the form state.
 For example, you can disable the [guibutton]#Submit# button when the form has validation errors, or show an _'operation in progress'_ spinner while an async form submission is in progress.
 
+ifdef::react[]
+[source,tsx]
+----
+export default function ProfileView() {
+
+    const form = useForm(EntityModel);
+
+    return (
+      <>
+        ...
+        <Button disabled={form.invalid}>submit</Button>
+      </>
+    );
+}
+----
+endif::[]
+ifdef::lit[]
 [source,html]
 ----
 <vaadin-button ?disabled=${this.binder.invalid}>
   Submit
 </vaadin-button>
 ----
+endif::[]
 
 The following properties are available both for the form as a whole, and for each field independently.
 They are a part of the <<reference#binder-node,`BinderNode`>> interface.
-You can access these properties either for a single field, for example `binder.for(model.firstname).dirty`, or for the entire form, for example `binder.dirty`.
+ifdef::react[]
+You can access form status properties for the whole form from the [classname]`UseFormResult` instance returned from [methodname]`useForm`:
+[source,tsx]
+----
+const form = useForm(EntityModel);
 
-- `dirty`: true if the current value is different from the value it was initialized with
-- `visited`: true if the field has gained focus
-- `invalid`: true if the field or the form has validation errors
-- `required`: true if the field is required
-- `errors`: a list of all validation errors for a field and its sub-fields or for the form
+const invalid = form.invalid;
+const dirty = form.dirty;
+const errors = form.errors;
+...
+----
+To access form status properties for individual fields, use the [classname]`UseFormPartResult` instance returned from [methodname]`useFormPart`:
+[source,tsx]
+----
+const form = useForm(EntityModel);
+const nameField = useFormPart(form.model.name);
+
+const invalid = nameField.invalid;
+const dirty = nameField.dirty;
+const errors = nameField.errors;
+----
+endif::[]
+ifdef::lit[]
+You can access these properties either for a single field, for example `binder.for(model.firstname).dirty`, or for the entire form, for example `binder.dirty`.
+endif::[]
+
+- `dirty`: true if the value of the form or field has been modified by the user
+- `visited`: true if the form or field has been focused by the user
+- `invalid`: true if the form or field has validation errors
+- `required`: true if the form or field is required
+- `errors`: a list of all validation errors for a form or field and its sub-fields
 - `ownErrors`: a list of all the validation errors for a field (without sub-fields) or for the form (not specific to any field)
 
 
@@ -44,6 +89,34 @@ With the TypeScript `Binder` API, this can be done using the `submitting` proper
 In the following example, `binder.submitting` is bound to the `disabled` property of the [guibutton]#Submit# button to disable repeating form submissions.
 It's also used as a condition to render an additional 'submitting' message.
 
+ifdef::react[]
+[source,tsx]
+----
+export default function ProfileView() {
+
+    const {model, submit, field, invalid, submitting} = useForm(PersonModel, {
+        onSubmit: async (e) => {
+          await PersonEndpoint.sendEntity(e);
+        }
+      });
+
+    return (
+      <>
+        <VerticalLayout theme="spacing padding">
+          <TextField label="First name" {...field(model.firstName)}></TextField>
+          <TextField label="Last name" {...field(model.lastName)}></TextField>
+        </VerticalLayout>
+        <HorizontalLayout theme="spacing padding">
+          <Button theme="primary" onClick={submit} disabled={invalid || submitting}>Save</Button>
+          <span className="label" style={{visibility: submitting ? 'visible' : 'hidden' }}>submitting</span>
+          <div className="spinner" style={{visibility: submitting ? 'visible' : 'hidden' }}></div>
+          </HorizontalLayout>
+      </>
+    );
+}
+----
+endif::[]
+ifdef::lit[]
 [source,html]
 ----
 <vaadin-form-layout>
@@ -68,6 +141,7 @@ It's also used as a condition to render an additional 'submitting' message.
     : nothing}
 </vaadin-horizontal-layout>
 ----
+endif::[]
 
 image:images/example-show-submitting-status.gif[Disable the form while submission is in progress]
 
@@ -77,16 +151,33 @@ Sometimes you may want to list all validation errors in one place.
 This is convenient especially in large forms, where it can be difficult to find _that one field_ that failed the validation.
 
 With the TypeScript `Binder` API, this can be done using the `errors` property.
-In the following example, the form template iterates over the `binder.errors` list and renders the full list under the form.
+In the following example, the form template iterates over the `form.errors` list and renders the full list under the form.
 
-[source,html]
+ifdef::react[]
+[source,tsx]
 ----
 <dl>
+  {form.errors.map(error => (
+      <>
+        <dt>{error.property as string}</dt>
+        <dt>{error.message as string}</dt>
+      </>
+  ))}
+</dl>
+----
+endif::[]
+ifdef::lit[]
+[source,html]
+----
+(<dl>
   ${this.binder.errors.map(error => html`
     <dt>${error.property}</dt>
     <dd>${error.message}</dd>
   `)}
-</dl>
+</dl>)
 ----
+endif::[]
 
 image:images/example-list-all-validation-errors.gif[Disable the form while submission is in progress]
+
+// end::content[]
