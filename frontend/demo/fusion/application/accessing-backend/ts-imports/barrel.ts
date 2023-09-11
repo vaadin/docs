@@ -1,3 +1,3 @@
-import { CounterEndpoint } from 'Frontend/generated/endpoints';
+import { CounterService } from 'Frontend/generated/endpoints.js';
 
-CounterEndpoint.addOne(1).then((result) => console.log(result));
+CounterService.addOne(1).then((result: number) => console.log(result));

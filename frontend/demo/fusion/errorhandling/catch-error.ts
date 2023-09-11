@@ -1,10 +1,10 @@
 import { EndpointError } from '@hilla/frontend';
 
-import { DataEndpoint } from 'Frontend/generated/endpoints';
+import { DataService } from 'Frontend/generated/endpoints';
 
 export async function callEndpoint() {
   try {
-    await DataEndpoint.getViewData();
+    await DataService.getViewData();
   } catch (error) {
     if (error instanceof EndpointError) {
       console.warn((error as EndpointError).message); // "Not implemented"

@@ -1,12 +1,12 @@
 import { EndpointError } from '@hilla/frontend';
 
 // Import the remote endpoint
-import { DataEndpoint } from 'Frontend/generated/endpoints';
+import { DataService } from 'Frontend/generated/endpoints';
 
 // Wrap endpoint calls to return fallback data when offline
 export async function getViewData() {
   try {
-    return await DataEndpoint.getViewData();
+    return await DataService.getViewData();
   } catch (e) {
     if (!(e instanceof EndpointError)) {
       // Network failure: return fallback data

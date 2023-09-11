@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { Binder, field, ObjectModel } from '@hilla/form';
 import NewsletterSubscriptionModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/dialogs/NewsletterSubscriptionModel';
-import { NewsletterEndpoint } from 'Frontend/generated/endpoints';
+import { NewsletterService } from 'Frontend/generated/endpoints';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/button';
@@ -80,7 +80,7 @@ export class NewsletterDialog extends LitElement {
   }
 
   private async subscribe() {
-    Notification.show(await this.binder.submitTo(NewsletterEndpoint.subscribe), {
+    Notification.show(await this.binder.submitTo(NewsletterService.subscribe), {
       theme: 'success',
     });
     this.close();

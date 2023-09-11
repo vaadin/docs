@@ -1,11 +1,11 @@
 import { EndpointValidationError } from '@hilla/frontend';
 
-import { DateEndpoint } from 'Frontend/generated/endpoints';
+import { DateService } from 'Frontend/generated/endpoints';
 
 export async function callEndpoint() {
   try {
     // pass an illegal date
-    const tomorrow = await DateEndpoint.getTomorrow('2021-02-29');
+    const tomorrow = await DateService.getTomorrow('2021-02-29');
     console.log(tomorrow);
     // handle result...
   } catch (error) {
