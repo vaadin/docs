@@ -24,11 +24,11 @@ It assumes a server-side bean where the image is stored as a Base64-encoded stri
 include::{root}/src/main/java/com/vaadin/demo/fusion/forms/Contact.java[]
 ----
 
-It also assumes that the server exposes an endpoint for saving updated `Contact` instances:
+It also assumes that the server exposes a browser-callable service for saving updated `Contact` instances:
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/forms/ContactEndpoint.java[]
+include::{root}/src/main/java/com/vaadin/demo/fusion/forms/ContactService.java[]
 ----
 
 
@@ -38,7 +38,7 @@ ifdef::react[]
 [source,tsx]
 ----
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
-import { ContactEndpoint } from 'Frontend/generated/endpoints';
+import { ContactService } from 'Frontend/generated/endpoints';
 import { useForm } from '@hilla/react-form';
 import { useEffect } from "react";
 import { Upload } from "@hilla/react-components/Upload.js";
@@ -51,12 +51,12 @@ export default function ContactForm() {
 
     const form = useForm(ContactModel, {
       onSubmit: async (contact) => {
-        await ContactEndpoint.saveContact(contact);
+        await ContactService.saveContact(contact);
       }
     });
 
     useEffect(() => {
-      ContactEndpoint.loadContact().then(form.read);
+      ContactService.loadContact().then(form.read);
     }, [])
 
     return (
@@ -87,7 +87,7 @@ In the above code, the custom `{updloadbefore}` listener prevents `{vaadinupload
 Instead, it reads the file into a Base64-encoded string and updates the form field `avatarBase64` via the [classname]`Binder`.
 The small https://www.npmjs.com/package/promise-file-reader[`promise-file-reader`] library wrapping [classname]`FileReader` inside a promise is used here to handle the result synchronously.
 
-The [classname]`Contact` instance is first submitted to the [methodname]`saveContact()` endpoint.
+The [classname]`Contact` instance is first submitted to the [methodname]`saveContact()` service.
 This happens through the
 ifdef::react[]
 `binder.submit` that is called upon clicking the Save button which executes the provided logic for [methodname]`onSubmit` while obtaining the binder instance.
@@ -95,10 +95,10 @@ endif::[]
 ifdef::lit[]
 statement [methodname]`this.binder.submitTo(saveContact)` in the [methodname]`save()` method.
 endif::[]
-Only then does the server-side endpoint implementation receive the image string.
+Only then does the server-side service implementation receive the image string.
 The server can then choose to recode the image for more efficient storage, if necessary.
 
-The advantage of using the string type is simplicity; you can use the built-in serialization mechanism of Hilla's form binder and endpoints.
+The advantage of using the string type is simplicity; you can use the built-in serialization mechanism of Hilla's form binder and services.
 This approach isn't suitable for larger files.
 A streamed upload may be more appropriate.
 

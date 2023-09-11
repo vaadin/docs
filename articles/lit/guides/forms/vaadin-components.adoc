@@ -30,11 +30,11 @@ Client <<binder#,Form binder>> supports out of the box the set of form elements 
 This means that data binding, type mapping, required flag, and validation messages will function without any extra work.
 
 
-== Configuring Server Data & Endpoint
+== Configuring Server Data & Browser-callable Service
 
 When defining Bean objects in Java, apart from the type, you can define validation and error messages.
 
-For this article, the code on the client side is based on the data and endpoints defined in the following Java classes:
+For this article, the code on the client side is based on the data and services defined in the following Java classes:
 
 [source,java]
 ----
@@ -66,8 +66,8 @@ public class MyEntity {
     Integer mySelectField = 1;
 }
 
-@Endpoint
-public class MyEndpoint {
+@BrowserCallable
+public class MyService {
     public MyEntity getMyEntity() {
         return new MyEntity();
     }
@@ -81,34 +81,34 @@ public class MyEndpoint {
 == Configuring Client Fields
 
 Before using form binders, you need to import your entity models and instantiate the binder.
-You also need to perform the endpoint call to get the entity value, as explained in the tutorials <<binder#,Binding Data to Forms>> and <<binder-load#,Loading from and Saving to Business Objects>>.
+You also need to perform the service call to get the entity value, as explained in the tutorials <<binder#,Binding Data to Forms>> and <<binder-load#,Loading from and Saving to Business Objects>>.
 
 For this article, these are the significant lines needed in the view:
 
 ifdef::react[]
 [source,tsx]
 ----
-import { MyEndpoint } from 'Frontend/generated/MyEndpoint';
+import { MyService } from 'Frontend/generated/MyService';
 import MyEntityModel from 'Frontend/generated/com/example/MyEntityModel';
 ...
 const form = useForm(MyEntityModel);
 ...
 useEffect(() => {
-  MyEndpoint.getMyEntity().then(form.read);
+  MyService.getMyEntity().then(form.read);
 }, []);
 ----
 endif::[]
 ifdef::lit[]
 [source,typescript]
 ----
-import { MyEndpoint } from 'Frontend/generated/MyEndpoint';
+import { MyService } from 'Frontend/generated/MyService';
 import MyEntityModel from 'Frontend/generated/com/example/MyEntityModel';
 ...
 const binder = new Binder(this, MyEntityModel);
 ...
 async firstUpdated(arg: any) {
   super.firstUpdated(arg);
-  this.binder.read(await MyEndpoint.getMyEntity());
+  this.binder.read(await MyService.getMyEntity());
 }
 ----
 endif::[]
@@ -310,9 +310,9 @@ Hence, there are various ways to set their values and options.
 ==== Configuring the Options for Selection
 
 Options for these components can be set by calling a server-side service that provides the list of strings.
-Since the call to the endpoint is asynchronous, one easy way is to
+Since the call to the service is asynchronous, one easy way is to
 ifdef::react[]
-use the Typescript [mathodname]`map` on the list received from the endpoints.
+use the Typescript [mathodname]`map` on the list received from the services.
 endif::[]
 ifdef::lit[]
 combine the [methodname]`until()` and [methodname]`repeat()` methods from the Lit library.
@@ -328,7 +328,7 @@ const [options, setOptions] = useState(Array<Entity>());
 ...
 // using effects to execute only once
 useEffect(() => {
-  MyEndpoint.getMyOptions().then(entities => setOptions(options))
+  MyService.getMyOptions().then(entities => setOptions(options))
 }, []);
 ...
 return (
@@ -349,7 +349,7 @@ import { repeat } from 'lit/directives/repeat.js';
 render() {
   return html`
   ...
-    ${until(MyEndpoint.getMyOptions().then(opts => repeat(opts, (item) => html`
+    ${until(MyService.getMyOptions().then(opts => repeat(opts, (item) => html`
       <div>${item}</div>
     `)))}
   ...
@@ -377,7 +377,7 @@ const { model, field } = useForm(MyEntityModel);
 const [myOptions, setMyOptions] = useState(Array<MyEntity>());
 ...
 useEffect(() => {
-  MyEndpoint.getMyOptions().then(myEntities => setMyOptions(myEntities));
+  MyService.getMyOptions().then(myEntities => setMyOptions(myEntities));
 }, []);
 ...
 return (
@@ -418,7 +418,7 @@ render() {
     <vaadin-combo-box
       label="combo-box"
       ${field(this.binder.model.mySingleSelectionField)}
-      .items="${until(MyEndpoint.getMyOptions())}"
+      .items="${until(MyService.getMyOptions())}"
     ></vaadin-combo-box>
 
     <vaadin-radio-group
@@ -426,7 +426,7 @@ render() {
       ${field(this.binder.model.mySingleSelectionField)}
     >
       ${until(
-        MyEndpoint.getMyOptions().then((opts) =>
+        MyService.getMyOptions().then((opts) =>
           repeat(
             opts,
             (item) => html`
@@ -442,7 +442,7 @@ render() {
       ${field(this.binder.model.mySingleSelectionField)}
     >
       ${until(
-        MyEndpoint.getMyOptions().then((opts) =>
+        MyService.getMyOptions().then((opts) =>
           repeat(opts, (item) => html`<vaadin-item>${item}</vaadin-item>`)
         )
       )}
@@ -468,7 +468,7 @@ const { model, field } = useForm(MyEntityModel);
 const [myOptions, setMyOptions] = useState(Array<MyEntity>());
 ...
 useEffect(() => {
-  MyEndpoint.getMyOptions().then(myEntities => setMyOptions(myEntities));
+  MyService.getMyOptions().then(myEntities => setMyOptions(myEntities));
 }, []);
 ...
 return (
@@ -528,7 +528,7 @@ const { model, field } = useForm(MyEntityModel);
 const [myOptions, setMyOptions] = useState(Array<MyEntity>());
 ...
 useEffect(() => {
-  MyEndpoint.getMyOptions().then(myEntities => setMyOptions(myEntities));
+  MyService.getMyOptions().then(myEntities => setMyOptions(myEntities));
 }, []);
 ...
 return (
@@ -557,7 +557,7 @@ render() {
   return html`
     <vaadin-checkbox-group label="check-group" ${field(this.binder.model.myListField)}>
       ${until(
-        MyEndpoint.getMyOptions().then((opts) =>
+        MyService.getMyOptions().then((opts) =>
           repeat(
             opts,
             (item) => html`<vaadin-checkbox value="${item}" label="${item}"></vaadin-checkbox>`
@@ -569,7 +569,7 @@ render() {
 
     <vaadin-multi-select-combo-box
       label="multi-select"
-      .items=${until(MyEndpoint.getMyOptions())}
+      .items=${until(MyService.getMyOptions())}
     >
     </vaadin-multi-select-combo-box>
 }
