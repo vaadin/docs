@@ -1,44 +1,48 @@
 ---
-title: Endpoints
-description: A server-side Java endpoint is a back-end method that's exposed so to call it from client-side TypeScript code.
+title: Browser-callable Services
+description: A browser-callable service is a Java class that its public methods are exposed so to call it from client-side TypeScript code.
 order: 30
 ---
 :lit:
 // tag::content[]
 
-= Endpoints for Accessing Java Backend
+= Browser-callable services for Accessing Java Backend
 
-An _endpoint_ in Hilla is a class that defines one or more public methods, and is annotated with the `@Endpoint` annotation.
+A _browser-callable service_ in Hilla is a class that defines one or more public methods, and is annotated with the `@BrowserCallable` annotation.
 
-Hilla bridges Java backend endpoints and a TypeScript frontend. It generates TypeScript clients to call the Java backend in a type-checkable way. The <<../reference/endpoint-generator#,Endpoint generator>> reference page contains details about the generator itself.
+Hilla bridges Java backend services and a TypeScript frontend. It generates TypeScript clients to call the Java backend in a type-safe way. The <<../reference/endpoint-generator#,Browser-callable service generator>> reference page contains details about the generator itself.
 
-.Hilla endpoints depend on Spring Boot auto-configuration.
+.Hilla browser-callable services depend on Spring Boot auto-configuration.
 [IMPORTANT]
-Hilla endpoints don't work if auto-configuration is disabled, such as when you use `@EnableWebMvc`. As a workaround, remove the `@EnableWebMvc` annotation, as described in the link:https://docs.spring.io/spring-boot/docs/2.3.4.RELEASE/reference/html/spring-boot-features.html#boot-features-spring-mvc-auto-configuration[Spring Boot documentation]. If you have a suggestion as to how to make it more useful, please share your idea on link:https://github.com/vaadin/hilla/issues/new/[GitHub].
+Hilla browser-callable services don't work if auto-configuration is disabled, such as when you use `@EnableWebMvc`. As a workaround, remove the `@EnableWebMvc` annotation, as described in the link:https://docs.spring.io/spring-boot/docs/2.3.4.RELEASE/reference/html/spring-boot-features.html#boot-features-spring-mvc-auto-configuration[Spring Boot documentation]. If you have a suggestion as to how to make it more useful, please share your idea on link:https://github.com/vaadin/hilla/issues/new/[GitHub].
 
 
 [[creating]]
-== Creating an Endpoint
+== Creating a browser-callable service
 
-An endpoint is a Java class annotated with `@Endpoint`:
+A browser-callable service is a Java class annotated with `@BrowserCallable`:
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CounterEndpoint.java[tags=snippet]
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CounterService.java[tags=snippet]
 ----
 
-When the application starts, Hilla scans the classpath for `@Endpoint`-annotated classes. For each request to access a public method in a Hilla endpoint, a permission check is carried out. `@AnonymousAllowed` means that Hilla permits anyone to call the method from the client side.
+When the application starts, Hilla scans the classpath for `@BrowserCallable`-annotated classes. For each request to access a public method in a Hilla browser-callable service, a permission check is carried out. `@AnonymousAllowed` means that Hilla permits anyone to call the method from the client side.
 
-Refer to the <<security#, Security>> article for details of configuring endpoint access.
+Refer to the <<security#, Security>> article for details of configuring browser-callable service access.
+
+.Browser-callable Service and Service terms are used interchangeably
+[NOTE]
+For brevity, in the rest of this article, the terms _browser-callable service_ and _Service_ are used interchangeably. The same applies to the terms _browser-callable service method_ and _service method_. The term _browser-callable service class_ is used to refer to the Java class annotated with `@BrowserCallable`.
 
 
-== Modules Generated from Hilla Endpoints
+== Modules Generated from Hilla Browser-callable services
 
-Hilla generates a TypeScript module for every Hilla endpoint on the backend. Each such module exports all of the methods in the endpoint.
+Hilla generates a TypeScript module for every Hilla browser-callable service of the backend. Each such module exports all the public methods from the respective service class.
 
-You can import an entire module from the https://basarat.gitbook.io/typescript/main-1/barrel[barrel] file, import all methods as a module from the endpoint file, or select individual endpoint methods. For example, the [filename]`CounterEndpoint.ts` could be used as in the following snippets:
+You can import an entire module from the https://basarat.gitbook.io/typescript/main-1/barrel[barrel] file, import all methods as a module from the service file, or select individual service methods. For example, the [filename]`CounterService.ts` could be used as in the following snippets:
 
-.`index.ts` (import the whole endpoint module object from the barrel file)
+.`index.ts` (import the whole service module object from the barrel file)
 [[index.ts]]
 [source,typescript]
 ----
@@ -46,15 +50,15 @@ include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/ba
 ----
 
 [NOTE]
-The barrel file exports all of the endpoints at once. Therefore, you can import multiple endpoints using a single import.
+The barrel file exports all the services at once. Therefore, you can import multiple services using a single import.
 
-.`index.ts` (import all imports as an endpoint object)
+.`index.ts` (import all imports as a service object)
 [source,typescript]
 ----
 include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/asterisk.ts[]
 ----
 
-.`index.ts` (import a single endpoint method)
+.`index.ts` (import a single service method)
 [source,typescript]
 ----
 include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/method.ts[]
@@ -83,24 +87,24 @@ Hilla handles conversion between Java and TypeScript types. For more information
 
 == TypeScript Module Content Example
 
-The generated TypeScript module for the Java endpoint defined in <<creating,`CounterEndpoint.java`>>, for example, would look as follows:
+The generated TypeScript module for the Java browser-callable service defined in <<creating,`CounterService.java`>>, for example, would look as follows:
 
-.`CounterEndpoint.ts`
+.`CounterService.ts`
 [source,typescript]
 ----
-include::{root}/frontend/generated/CounterEndpoint.ts[]
+include::{root}/frontend/generated/CounterService.ts[]
 ----
 
 
 == Objects
 
-An endpoint method can return or receive a parameter as an object (i.e., a non-primitive type). In this case, the generator also creates a TypeScript interface for the object.
+A browser-callable service method can return or receive a parameter as an object (i.e., a non-primitive type). In this case, the generator also creates a TypeScript interface for the object.
 
 An object can be defined in the following ways:
 
 - In a separate class that belongs to the project.
 - In a class that belongs to the project dependency.
-- In an inner class of an endpoint or any other class.
+- In an inner class of a browser-callable service or any other class.
 
 .`City.java`
 [source,java]
@@ -108,10 +112,10 @@ An object can be defined in the following ways:
 include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/City.java[]
 ----
 
-.`CountryEndpoint.java`
+.`CountryService.java`
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CountryEndpoint.java[]
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CountryService.java[]
 ----
 
 The TypeScript output is the following:
@@ -125,13 +129,13 @@ include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/City.
 .`Query.ts`
 [source,typescript]
 ----
-include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/CountryEndpoint/Query.ts[]
+include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/CountryService/Query.ts[]
 ----
 
-.`CountryEndpoint.ts`
+.`CountryService.ts`
 [source,typescript]
 ----
-include::{root}/frontend/generated/CountryEndpoint.ts[]
+include::{root}/frontend/generated/CountryService.ts[]
 ----
 
 
@@ -144,13 +148,13 @@ ifndef::react[]
 // TODO adapt to React
 [[cancelling-requests]]
 [role="since:dev.hilla:hilla@v1.2"]
-== Cancelling Endpoint Requests
+== Cancelling Requests to Browser-callable Services
 
 Sometimes it can be useful to cancel programmatically some requests. For example, when a request is taking too long or is waiting in a queue despite no longer being needed. Hilla allows developers to cancel requests using standard https://developer.mozilla.org/en-US/docs/Web/API/AbortController[AbortController].
 
-All endpoint requests support an optional parameter that can be used to pass an `AbortSignal` which allows them to be cancelled. It's worth remembering, though, that a single `AbortController` can be used to cancel multiple requests by passing its `signal` to all of them.
+All browser-callable service requests support an optional parameter that can be used to pass an `AbortSignal` which allows them to be cancelled. It's worth remembering, though, that a single `AbortController` can be used to cancel multiple requests by passing its `signal` to all of them.
 
-The following example creates two buttons: one that makes requests to a slow endpoint method, and another that triggers the cancellation of previously created requests. If a request is subject to cancellation, errors must be handled as the endpoint method throws `AbortError`.
+The following example creates two buttons: one that makes requests to a slow service method, and another that triggers the cancellation of previously created requests. If a request is subject to cancellation, errors must be handled as the service method throws `AbortError`.
 
 [source,typescript]
 ----
@@ -169,7 +173,7 @@ async makeRequest() {
   console.log("Making request");
 
   try {
-    const serverResponse = await HelloWorldEndpoint.slow({ signal: this.abortController.signal });
+    const serverResponse = await HelloWorldService.slow({ signal: this.abortController.signal });
     Notification.show(serverResponse);
   } catch (error: any) {
     if (error.name === 'AbortError') {
@@ -189,26 +193,26 @@ cancelRequest() {
 endif::[]
 
 
-== Endpoint URLs
+== Browser-callable Service URLs
 
-Hilla automatically generates endpoint URLs and wraps them in the generated TypeScript API so the developer doesn't have to worry about them.
+Hilla automatically generates backend service URLs and wraps them in the generated TypeScript API so the developer doesn't have to worry about them.
 
-Even though you can access any public method in any Hilla endpoint with the `\http://${base_url}/${prefix}/${endpoint_name}/${method_name}` URL format, don't use those URLs directly. Instead use the TypeScript methods.
+Even though you can access any public method in any Hilla browser-callable service with the `\http://${base_url}/${prefix}/${service_class_name}/${method_name}` URL format, don't use those URLs directly. Instead, use the TypeScript methods.
 
 . The `${base_url}` is the base URL of the application, depending on the framework used. For instance, for the Spring framework the default URL, if the application is started locally, is `http://localhost:8080`. If the application is started with a context, it should be added to the end: such as, `\http://localhost:8080/my-app`.
 
-. The `${prefix}` is the URL common part that every exposed endpoint contains. By default, `connect` is used, but this can be configured in the application properties.
+. The `${prefix}` is the URL common part that every exposed browser-callable service contains. By default, `connect` is used, but this can be configured in the application properties.
 
-. The `${endpoint_name}` is by default the corresponding Java class name which exposes methods, although this can be changed in the `@Endpoint` annotation value.
+. The `${service_class_name}` is the corresponding Java class name annotated by `@BrowserCallable`.
 
 . The `${method_name}` is the public method name from the Java class.
 
-For an application started locally with the [classname]`CounterEndpoint` endpoint defined as shown, the endpoint URL is: `\http://localhost:8080/connect/counterendpoint/addone`
+For an application started locally with the [classname]`CounterService` service defined as shown, the URL is: `\http://localhost:8080/connect/counterservice/addone`
 
 [source,java]
 ----
-@Endpoint
-public class CounterEndpoint {
+@BrowserCallable
+public class CounterService {
 
     public int addOne(int number) {
         return number + 1;
@@ -216,32 +220,23 @@ public class CounterEndpoint {
 }
 ----
 
-.Endpoint URLs Aren't Case-Sensitive
+.Browser-callable service URLs Aren't Case-Sensitive
 [NOTE]
-The endpoint name and the method name aren't case-sensitive in Hilla. Therefore, the URL shown is the same as `\http://localhost:8080/connect/CounterEndpoint/addOne` or `\http://localhost:8080/connect/COUNTERENDPOINT/ADDONE`, or any other case combination for the endpoint and method name.
+The browser-callable service name and the method name aren't case-sensitive in Hilla. Therefore, the URL shown is the same as `\http://localhost:8080/connect/CounterService/addOne` or `\http://localhost:8080/connect/COUNTERSERVICE/ADDONE`, or any other case combination for the browser-callable service and method name.
 
 
-=== Configuring Endpoint URLs
+=== Configuring Browser-callable Service URLs
 
-You can configure the following parts of the URL:
+You can configure the `${prefix}` part of the URL. The default value is `connect`. To change it to some other value, provide an [filename]`application.properties` file in the project resources ([filename]`src/main/resources/application.properties`) and set the `vaadin.endpoint.prefix` property to the new value.
 
-// TODO list these in the configuration reference and include here
+== Browser-callable Service Method Validation
 
-`${prefix}`::
-The default value is `connect`. To change it to some other value, provide an [filename]`application.properties` file in the project resources ([filename]`src/main/resources/application.properties`) and set the `vaadin.endpoint.prefix` property to the new value.
-
-`${endpoint_name}`::
-By default, the simple name of the Java class is taken. It's possible to specify a value in the `@Endpoint` annotation to override the default one (`@Endpoint("customName")`). In this case, the `customName` value is used as an `${endpoint_name}` to accept incoming requests. It's also case-insensitive.
-
-
-== Endpoint Method Validation
-
-The parameters of an endpoint method are automatically validated and, if validation fails, a corresponding response is sent back to the browser.
+The parameters of a service method are automatically validated and, if validation fails, a corresponding response is sent back to the browser.
 
 // Skipping JSR
 pass:[<!-- vale Vaadin.Abbr = NO -->]
 
-Whenever an endpoint method is invoked, its parameters are automatically validated using the https://beanvalidation.org/2.0/[JSR 380] Bean validation specification after they're deserialized from the endpoint request body.
+Whenever a service method is invoked, its parameters are automatically validated using the https://beanvalidation.org/2.0/[JSR 380] Bean validation specification after they're deserialized from the request body.
 
 pass:[<!-- vale Vaadin.Abbr = YES -->]
 
@@ -282,7 +277,7 @@ See the https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_s
 
 === Manual Validation
 
-Since all of the dependencies needed for validating beans and methods are present, you can reuse them in any part of your project -- not only in the endpoint methods. For example:
+Since all the dependencies needed for validating beans and methods are present, you can reuse them in any part of your project -- not only in the browser-callable service methods. For example:
 
 [source,java]
 ----
@@ -297,43 +292,42 @@ ExecutableValidator executableValidator = validator.forExecutables();
 Set<ConstraintViolation<Object>> violations = executableValidator.validateReturnValue(object, method, returnValue);
 ----
 
-If required, you can throw an [classname]`EndpointValidationException` from an endpoint method. This exception is caught by TypeScript and the corresponding [classname]`EndpointValidationError` is raised.
+If required, you can throw an [classname]`EndpointValidationException` from a service method. This exception is caught by TypeScript and the corresponding [classname]`EndpointValidationError` is raised.
 
 See the official documentation for more details on https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/#section-validating-bean-constraints[validating bean constraints] and https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/#section-validating-executable-constraints[validating method constraints].
 
 
 === Hilla Validation Implementation Details
 
-Hilla validates only the beans and method parameters that are used in the endpoint classes (i.e., classes with the `@Endpoint` annotation). No other types are validated, even if they have constraint annotations.
+Hilla validates only the beans and method parameters that are used in the browser-callable service classes (i.e., classes with the `@BrowserCallable` annotation). No other types are validated, even if they have constraint annotations.
 
-If any validation errors occur, a non-`200` response is sent back, which is interpreted in TypeScript as a reason to throw an [classname]`EndpointValidationError`. A similar effect is achieved if an [classname]`EndpointValidationException` is thrown by any of the Java endpoint methods.
-
+If any validation errors occur, a non-`200` response is sent back, which is interpreted in TypeScript as a reason to throw an [classname]`EndpointValidationError`. A similar effect is achieved if an [classname]`EndpointValidationException` is thrown by any of the Java browser-callable service methods.
 
 
 [[error-handling]]
 == Error Handling
 
-A robust client implementation should be able to handle invalid endpoint calls, errors on the server side, and network outages.
+A robust client implementation should be able to handle invalid service calls, errors on the server side, and network outages.
 
-Hilla determines the success of an endpoint call by inspecting the HTTP status code. The server returns the https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200[200 OK] code when it's able successfully to process the request, deserialize the method body, find and execute the particular method in the endpoint, and serialize its return value into a response.
+Hilla determines the success of a service call by inspecting the HTTP status code. The server returns the https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200[200 OK] code when it's able successfully to process the request, deserialize the method body, find and execute the particular method in the service, and serialize its return value into a response.
 
 If the status code of the response isn't `200 OK`, Hilla throws an error on the client side. The available parameters in the error and the specific class of the thrown error depend on the failure mode. The most common ones are described in the next sub-sections.
 
 
-=== Missing Endpoint
+=== Missing Browser-callable Service
 
-If the request addresses an endpoint or a method name not present on the backend, the server responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404[404 Not Found] and Hilla raises an error of type `EndpointError`.
+If the request addresses a service or a method name not present on the backend, the server responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404[404 Not Found] and Hilla raises an error of type `EndpointError`.
 
 
 === Parameter Validation Error
 
-If the method called in the request exists on the backend, but the parameter count and types don't match the endpoint method, the server responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400[400 Bad Request] and Hilla raises an error of type [classname]`EndpointValidationException`. The error instance contains a field `validationErrorData` holding validation error information for each invalid parameter. See <<../reference/type-conversion#,Type conversion between JavaScript and Java>> for more details about the type conversion rules.
+If the method called in the request exists on the backend, but the parameter count and types don't match the service method, the server responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400[400 Bad Request] and Hilla raises an error of type [classname]`EndpointValidationException`. The error instance contains a field `validationErrorData` holding validation error information for each invalid parameter. See <<../reference/type-conversion#,Type conversion between JavaScript and Java>> for more details about the type conversion rules.
 
-For example, the following endpoint expects a `java.time.LocalDate` parameter:
+For example, the following service method expects a `java.time.LocalDate` parameter:
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/errorhandling/DateEndpoint.java[]
+include::{root}/src/main/java/com/vaadin/demo/fusion/errorhandling/DateService.java[]
 ----
 
 A call with an illegal data parameter raises an [classname]`EndpointValidationException` with information about which parameters failed validation:
@@ -350,17 +344,17 @@ endif::lit[]
 
 === Server-Side Errors
 
-If the endpoint exists and its parameters could be passed, but its execution raises a Java runtime exception, the server responds with
+If the service exists and its parameters could be passed, but its execution raises a Java runtime exception, the server responds with
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500[500 Internal Server Error]. When this happens, Hilla raises an error of type [classname]`EndpointError`. As a special case, if the server-side exception is an instance of [classname]`dev.hilla.exception.EndpointException` or a subclass, the server instead responds with https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400[400 Bad Request]. Then the exception type and message passed to the [classname]`EndpointException` in Java are available in the [classname]`EndpointError` instance via the `type` and `message` attributes.
 
-The following endpoint implementation is an example of this:
+The following service implementation is an example of this:
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/pwa/offline/DataEndpoint.java[]
+include::{root}/src/main/java/com/vaadin/demo/pwa/offline/DataService.java[]
 ----
 
-The following client-side call to the endpoint method logs the error message and exception type:
+The following client-side call to the service method logs the error message and exception type:
 
 [source,typescript]
 ----
@@ -370,14 +364,14 @@ include::{root}/frontend/demo/fusion/errorhandling/catch-error.ts[]
 
 === Network Errors
 
-When the server isn't reachable due to outage or network disruption, an endpoint call results in a low-level network error, different from [classname]`EndpointError`. Applications that support offline mode can wrap endpoint calls with exception-handling code returning a fallback value, by distinguishing between the error classes as follows:
+When the server isn't reachable due to outage or network disruption, a service call results in a low-level network error, different from [classname]`EndpointError`. Applications that support offline mode can wrap service calls with exception-handling code returning a fallback value, by distinguishing between the error classes as follows:
 
 [source,typescript]
 ----
 include::{root}/frontend/demo/pwa/offline/ts-view-with-endpoint.ts[]
 ----
 
-See the documentation about <<client-caching#,caching endpoint data in local storage>> using a generic wrapper.
+See the documentation about <<client-caching#,caching service data in local storage>> using a generic wrapper.
 
 
 === Unexpected Response Contents
@@ -390,13 +384,13 @@ ifndef::react[]
 [role="since:dev.hilla:hilla@v1.2"]
 === Cancelled Requests
 
-When a request is cancelled programmatically, the endpoint call promise resolves with an `AbortError`. This happens only when you explicitly cancel a request, as explained in <<cancelling-requests>>.
+When a request is cancelled programmatically, the service call promise resolves with an `AbortError`. This happens only when you explicitly cancel a request, as explained in <<cancelling-requests>>.
 endif::[]
 
 
 == Code Completion in IDEs
 
-As you can see in the earlier [filename]`CounterEndpoint.ts` example, the Javadoc for the `@Endpoint` class is copied to the generated TypeScript file, and the type definitions are maintained. This helps code completion to work -- at least in Visual Studio Code and IntelliJ IDEA Ultimate Edition.
+As you can see in the earlier [filename]`CounterService.ts` example, the Javadoc for the `@BrowserCallable` class is copied to the generated TypeScript file, and the type definitions are maintained. This helps code completion to work -- at least in Visual Studio Code and IntelliJ IDEA Ultimate Edition.
 
 .Code Completion in Visual Studio Code
 [.subtle]
