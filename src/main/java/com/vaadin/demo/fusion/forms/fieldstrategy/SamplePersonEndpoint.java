@@ -1,10 +1,10 @@
 package com.vaadin.demo.fusion.forms.fieldstrategy;
 
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 
-@Endpoint
+@BrowserCallable
 public class SamplePersonEndpoint {
-  // other endpoint methods: read, delete, ...
+  // other browser-callable methods: read, delete, ...
 
   public void savePerson(SamplePerson person) {
     // persistently store the contact

@@ -4,17 +4,17 @@ import java.time.Duration;
 import java.util.Date;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 import dev.hilla.EndpointSubscription;
 import dev.hilla.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
-@Endpoint
-public class ReactiveEndpoint {
+@BrowserCallable
+public class ReactiveService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveEndpoint.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveService.class);
 
     // tag::snippet[]
     @AnonymousAllowed

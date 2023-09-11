@@ -1,10 +1,10 @@
 package com.vaadin.demo.pwa.offline;
 
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 import dev.hilla.exception.EndpointException;
 
-@Endpoint
-public class DataEndpoint {
+@BrowserCallable
+public class DataService {
 
     public String getViewData() {
         throw new EndpointException("Not implemented");

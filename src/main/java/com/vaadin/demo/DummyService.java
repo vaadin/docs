@@ -1,10 +1,10 @@
 package com.vaadin.demo;
 
 import com.vaadin.demo.domain.*;
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 
-@Endpoint
-public class DummyEndpoint {
+@BrowserCallable
+public class DummyService {
 
     public void savePerson(Person person) {
 

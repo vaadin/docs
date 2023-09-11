@@ -1,15 +1,15 @@
 package com.vaadin.demo.fusion.accessingbackend;
 
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 // tag::snippet[]
 /**
- * An endpoint that counts numbers.
+ * A service that counts numbers.
  */
-@Endpoint
+@BrowserCallable
 @AnonymousAllowed
-public class CounterEndpoint {
+public class CounterService {
     /**
      * A method that adds one to the argument.
      */

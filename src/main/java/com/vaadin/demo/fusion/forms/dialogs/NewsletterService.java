@@ -2,12 +2,12 @@ package com.vaadin.demo.fusion.forms.dialogs;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 import dev.hilla.Nonnull;
 
-@Endpoint
+@BrowserCallable
 @AnonymousAllowed
-public class NewsletterEndpoint {
+public class NewsletterService {
     // tag::snippet[]
     @Nonnull
     public String subscribe(@Nonnull NewsletterSubscription subscription) {

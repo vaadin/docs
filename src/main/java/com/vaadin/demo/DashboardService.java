@@ -1,14 +1,14 @@
 package com.vaadin.demo;
 
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 /**
  * The endpoint for the client-side Form View.
  */
-@Endpoint
+@BrowserCallable
 @AnonymousAllowed
-public class DashboardEndpoint {
+public class DashboardService {
 
     public String saveEmployee() {
         return "Great success";

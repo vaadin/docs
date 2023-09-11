@@ -2,11 +2,11 @@ package com.vaadin.demo.fusion.errorhandling;
 
 import java.time.LocalDate;
 
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
-@Endpoint
-public class DateEndpoint {
+@BrowserCallable
+public class DateService {
 
     @AnonymousAllowed
     public LocalDate getTomorrow(LocalDate date) {
