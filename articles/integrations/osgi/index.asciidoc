@@ -22,24 +22,22 @@ An OSGi application typically consists of multiple bundles that can be deployed 
 
 To deploy Vaadin applications as OSGi bundles, static resources must be published using the appropriate APIs.
 
-The application is typically packaged as a `JAR` file, and needs to have a valid OSGi bundle manifest, which can be created, for example, by the `bnd-maven-plugin` or Apache Felix `maven-bundle-plugin`.
-All the dependencies of the application should be available as OSGi bundles.
+The application is typically packaged as a `JAR` file, and needs to have a valid OSGi bundle manifest, which can be created, for example, by the `bnd-maven-plugin` or Apache Felix `maven-bundle-plugin`. All the dependencies of the application should be available as OSGi bundles.
+
 
 == Minimal Vaadin Project for OSGi
 
-A Vaadin application for OSGi should be a valid bundle.
-That is, it should be packaged as a `JAR` file, and should have a proper OSGi manifest inside.
-The easiest way to convert a regular Maven-based Vaadin application into a valid OSGi bundle consists of five steps:
+A Vaadin application for OSGi should be a valid bundle. That is, it should be packaged as a `JAR` file, and should have a proper OSGi manifest inside. The easiest way to convert a regular Maven-based Vaadin application into a valid OSGi bundle consists of five steps.
 
-. Change the packaging type to `jar` in your [filename]`pom.xml`:
-+
+First, change the packaging type to `jar` in your [filename]`pom.xml`:
+
 [source,xml]
 ----
     <packaging>jar</packaging>
 ----
-+
-. Change the scope for all Vaadin dependencies from default to `provided`, like this:
-+
+
+Second, change the scope for all Vaadin dependencies from default to `provided`, like this:
+
 [source,xml]
 ----
     <dependency>
@@ -48,9 +46,9 @@ The easiest way to convert a regular Maven-based Vaadin application into a valid
         <scope>provided</scope>
     </dependency>
 ----
-+
-. Add OSGi-related dependencies to the project
-+
+
+Next, add OSGi-related dependencies to the project
+
 [source,xml]
 ----
     <dependency>
@@ -71,14 +69,12 @@ The easiest way to convert a regular Maven-based Vaadin application into a valid
         <scope>provided</scope>
     </dependency>
 ----
-+
+
 [NOTE]
-====
 The `flow-osgi` version is defined in `vaadin-bom`, which comes from the `com.vaadin:vaadin` dependency.
-====
-+
-. Set up the necessary plugins for building the project:
-+
+
+Then, set up the necessary plugins for building the project:
+
 [source,xml]
 ----
  <build>
@@ -109,9 +105,9 @@ The `flow-osgi` version is defined in `vaadin-bom`, which comes from the `com.va
     </plugins>
 </build>
 ----
-+
-. Add the bundle script (`bnd.bnd`) into the project root folder:
-+
+
+Now, add the bundle script (`bnd.bnd`) into the project root folder:
+
 [source]
 ----
 Bundle-Name: ${project.name}
@@ -121,7 +117,7 @@ Export-Package: com.example.osgi.myapplication
 Import-Package: *
 Vaadin-OSGi-Extender: true
 ----
-+
+
 The last line in the manifest tells Vaadin OSGi integration to scan all classes in the bundle and discover routes.
 
 Make a production build of the project (see <<{articles}/production#,Deploying to Production>>), which means that front-end resources are compiled into a bundle (using the `build-frontend` Vaadin Maven plugin goal) and packaged together with Java code into the resulting project `JAR`.
@@ -130,11 +126,11 @@ Make a production build of the project (see <<{articles}/production#,Deploying t
 Currently, a Vaadin web application may be used only with bundled front-end resources.
 `vite` development mode isn't supported.
 
+
 [[osgi.servlet]]
 == Publishing a Servlet with OSGi
 
-It's the developer's responsibility to register a `VaadinServlet` in the servlet container, inside the OSGi container.
-One way to do this is to use the HTTP Whiteboard specification.
+It's the developer's responsibility to register a `VaadinServlet` in the servlet container, inside the OSGi container. One way to do this is to use the HTTP Whiteboard specification.
 
 [source,java]
 ----
@@ -163,24 +159,17 @@ public class FixedVaadinServlet extends VaadinServlet {
 ----
 
 [NOTE]
-The [classname]`FixedVaadinServlet` class is used here as a workaround for the
-https://github.com/vaadin/flow/issues/4367[class loader bug].
+The [classname]`FixedVaadinServlet` class is used here as a workaround for the https://github.com/vaadin/flow/issues/4367[class loader bug].
 
-When you have more than one bundle created by Vaadin, you shouldn't have multiple `VaadinServlet` registrations with the same servlet pattern.
-You should either use a unique pattern for each bundle or create `VaadinServlet` in only one bundle.
-In this case, keep in mind that for the other bundles to work, it's required that the bundle containing the servlet should be active.
+When you have more than one bundle created by Vaadin, you shouldn't have multiple `VaadinServlet` registrations with the same servlet pattern. You should either use a unique pattern for each bundle or create `VaadinServlet` in only one bundle. In this case, keep in mind that for the other bundles to work, it's required that the bundle containing the servlet should be active.
+
 
 [[osgi.vaadin.extender]]
 == Class Discovery
 
-Vaadin discovers many classes to delegate some functionality to them.
-For example, classes annotated with `@Route` are used in the routing functionality (see <<{articles}/routing#,Defining Routes with @Route>>).
-Many other classes require discovery, as well (see also <<{articles}/routing/exceptions#,Router Exception Handling>>, <<{articles}/configuration/pwa#,PWA Configuration>>).
-It doesn't happen out of the box for every bundle in the OSGi container.
+Vaadin discovers many classes to delegate some functionality to them. For example, classes annotated with `@Route` are used in the routing functionality (see <<{articles}/routing#,Defining Routes with @Route>>). Many other classes require discovery, as well (see also <<{articles}/routing/exceptions#,Router Exception Handling>>, <<{articles}/configuration/pwa#,PWA Configuration>>). It doesn't happen out of the box for every bundle in the OSGi container.
 
-To avoid scanning all classes in all bundles, Vaadin uses the `Vaadin-OSGi-Extender` manifest header as a marker for those bundles that need to be scanned.
-If you have a bundle which contains routes, or other classes whose functionality relies on inheritance or the presence of an annotation, you should mark this bundle using the `Vaadin-OSGi-Extender` manifest header.
-Every Vaadin application bundle should have this manifest header, otherwise routes declared in the bundle aren't discovered:
+To avoid scanning all classes in all bundles, Vaadin uses the `Vaadin-OSGi-Extender` manifest header as a marker for those bundles that need to be scanned. If you have a bundle which contains routes, or other classes whose functionality relies on inheritance or the presence of an annotation, you should mark this bundle using the `Vaadin-OSGi-Extender` manifest header. Every Vaadin application bundle should have this manifest header, otherwise routes declared in the bundle aren't discovered:
 
 [source]
 ----
@@ -191,87 +180,71 @@ Vaadin-OSGi-Extender: true
 …
 ----
 
+
 [[osgi.deploy]]
 == Deployment to OSGi Container
 
-To have your application running under OSGi container, you need to have Vaadin Flow bundles deployed.
-The application bundle can then be deployed and started.
-Many transitive dependencies also need to be deployed.
-The bundle isn't activated unless all its dependencies are deployed and activated.
-Some OSGi containers might deploy transitive dependencies along with the bundle deployment.
+To have your application running under OSGi container, you need to have Vaadin Flow bundles deployed. The application bundle can then be deployed and started. Many transitive dependencies also need to be deployed. The bundle isn't activated unless all its dependencies are deployed and activated. Some OSGi containers might deploy transitive dependencies along with the bundle deployment.
 
 Here is a minimal list of the required Vaadin Flow bundles:
 
-* `flow-server-X.Y.Z.jar`
-* `flow-client-X.Y.Z.jar`
-* `flow-html-components-X.Y.Z.jar`
-* `flow-data-X.Y.Z.jar`
-* `flow-osgi-X.Y.Z.jar`
+- `flow-server-X.Y.Z.jar`
+- `flow-client-X.Y.Z.jar`
+- `flow-html-components-X.Y.Z.jar`
+- `flow-data-X.Y.Z.jar`
+- `flow-osgi-X.Y.Z.jar`
 
-This isn't a full list of all the required bundles.
-The full list is too long and may vary due to transitive dependencies.
-Here are some required external dependencies (the versions are omitted):
+This isn't a full list of all the required bundles. The full list is too long and may vary due to transitive dependencies. Here are some required external dependencies (the versions are omitted):
 
-* `jsoup`
-* `gentyref-x.y.z.vaadin1.jar`
-* `gwt-elemental-x.y.z.vaadin2.jar`
-* `ph-css`
-* …
+- `jsoup`
+- `gentyref-x.y.z.vaadin1.jar`
+- `gwt-elemental-x.y.z.vaadin2.jar`
+- `ph-css`
+- &hellip;
 
 Some dependencies are repackaged by Vaadin because the original `JARs` aren't OSGi-compatible (such as `gwt-elemental`).
 
-Other dependencies require some OSGi features that need to be deployed at runtime, but they don't depend on them during compilation.
-This is the case with the `ph-css` bundle.
-It depends on `ph-commons` (which should also be deployed) but this bundle requires the `ServiceLoader` OSGi implementation.
-You need to deploy the bundle which contains the appropriate implementation for your OSGi container.
+Other dependencies require some OSGi features that need to be deployed at runtime, but they don't depend on them during compilation. This is the case with the `ph-css` bundle. It depends on `ph-commons` (which should also be deployed) but this bundle requires the `ServiceLoader` OSGi implementation. You need to deploy the bundle which contains the appropriate implementation for your OSGi container.
 
-Vaadin OSGi support uses the OSGi Compendium API, which allows you to register an OSGi service using declarative services annotations.
-If your OSGi container doesn't have it out of the box, you need to deploy an implementation bundle to support the Compendium API.
+Vaadin OSGi support uses the OSGi Compendium API, which allows you to register an OSGi service using declarative services annotations. If your OSGi container doesn't have it out of the box, you need to deploy an implementation bundle to support the Compendium API.
 
 If you want to use some ready-made Vaadin components, such as Vaadin Button, you should deploy the `vaadin-button-flow` bundle as a dependency.
+
 
 [[osgi.base.starter]]
 == OSGi Base Starter
 
-An OSGi base starter project is available at https://github.com/vaadin/base-starter-flow-osgi.
-This project consists of two modules: `starter` and `app`.
+An OSGi base starter project is available at https://github.com/vaadin/base-starter-flow-osgi. This project consists of two modules: `starter` and `app`.
 
 The `starter` project is a Vaadin web application bundle project that's packaged as a `JAR` and may be deployed to any OSGi container.
 
-The `app` project contains a configuration that allows you to run the `starter` project in an OSGi container.
-See the https://github.com/vaadin/base-starter-flow-osgi/blob/feature/osgi-bnd/README.md[README.md] file in the project for details.
+The `app` project contains a configuration that allows you to run the `starter` project in an OSGi container. See the https://github.com/vaadin/base-starter-flow-osgi/blob/feature/osgi-bnd/README.md[README.md] file in the project for details.
+
 
 [[osgi.vaadin.components]]
 == Vaadin Component Version Updates
 
-A Vaadin application contains dependencies on other bundles, for example, Vaadin components such as `Button`,
-`TextField`, etc.
+A Vaadin application contains dependencies on other bundles, for example, Vaadin components such as `Button`, `TextField`, etc.
 
-Every Vaadin component is based on a Web Component which is represented by front-end resources.
-All front-end resources get built into a bundle along with the Vaadin `WAB`.
-As a result:
+Every Vaadin component is based on a Web Component which is represented by front-end resources. All front-end resources get built into a bundle along with the Vaadin `WAB`. As a result:
 
-* Any Vaadin component bundle update is possible only within the same minor version, so that the Web Component version stays the same (and only the Java code is updated).
+- Any Vaadin component bundle update is possible only within the same minor version, so that the Web Component version stays the same (and only the Java code is updated).
 +
 Avoid updating any version greater than a minor for Flow or the web component Flow integrations (even though this isn't currently prevented).
 
-* Updating any bundle that has front-end resources requires running the front-end build goal `build-frontend`, and the `WAB` is redeployed to cause the static front-end bundle to be updated.
+- Updating any bundle that has front-end resources requires running the front-end build goal `build-frontend`, and the `WAB` is redeployed to cause the static front-end bundle to be updated.
+
 
 [[osgi.vaadin.limitations]]
 == Limitations
 
-* `npm` development mode: it's only possible to run a Vaadin web application in production mode (with front-end resources bundled into the `JAR`)
+- `npm` development mode: it's only possible to run a Vaadin web application in production mode (with front-end resources bundled into the `JAR`)
 
-* You can't use OSGi declarative services with Vaadin components.
-You can't inject a service declaratively in Vaadin classes (using annotations), because UI objects aren't managed by OSGi.
-However, you can still call OSGi services programmatically.
+- You can't use OSGi declarative services with Vaadin components. You can't inject a service declaratively in Vaadin classes (using annotations), because UI objects aren't managed by OSGi. However, you can still call OSGi services programmatically.
 
-* Automatic servlet registration is unavailable.
-The web application bundle needs to register the servlet itself.
+- Automatic servlet registration is unavailable. The web application bundle needs to register the servlet itself.
 
-* Push doesn't work with WebSockets.
-It isn't clear how to enable WebSockets for a pure OSGi container.
-It works on hybrid OSGi containers that allow you to deploy `WARs` (such as Karaf), but this is the same as for plain web servers.
+- Push doesn't work with WebSockets. It isn't clear how to enable WebSockets for a pure OSGi container. It works on hybrid OSGi containers that allow you to deploy `WARs` (such as Karaf), but this is the same as for plain web servers.
 
 ++++
 <style>
