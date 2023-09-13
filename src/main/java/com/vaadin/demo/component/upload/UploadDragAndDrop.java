@@ -3,7 +3,7 @@ package com.vaadin.demo.component.upload;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
@@ -23,12 +23,12 @@ public class UploadDragAndDrop extends Div {
         dropDisabledUpload.setDropAllowed(false);
         // end::snippet[]
 
-        Label dropEnabledLabel = new Label("Drag and drop enabled");
+        NativeLabel dropEnabledLabel = new NativeLabel("Drag and drop enabled");
         dropEnabledLabel.getStyle().set("font-weight", "600");
         dropEnabledUpload.setId("upload-drop-enabled");
         dropEnabledLabel.setFor(dropEnabledUpload.getId().get());
 
-        Label dropDisabledLabel = new Label("Drag and drop disabled");
+        NativeLabel dropDisabledLabel = new NativeLabel("Drag and drop disabled");
         dropDisabledLabel.getStyle().set("font-weight", "600");
         dropDisabledUpload.setId("upload-drop-disabled");
         dropDisabledLabel.setFor(dropDisabledUpload.getId().get());
