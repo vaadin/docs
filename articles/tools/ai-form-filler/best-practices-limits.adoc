@@ -9,48 +9,52 @@ order: 50
 
 To make a set of components ready to be filled by the FormFiller the only requirements are:
 
-- Target fields are descendants of the same container (layout) passed to the FormFiller. The best way is to integrate all the fields in a Form Layout, but any kind of Layout can be used. Also, all the descendants of the passed container are going to be included so several containers can be used inside the main container. 
+- Target fields are descendants of the same container (layout) passed to the FormFiller. The best way is to integrate all the fields in a Form Layout, but any kind of Layout can be used. Also, all the descendants of the passed container are going to be included so several containers can be used inside the main container.
 
-- Every field has an ID (Component::setId). The ID should be meaningful about the data contained by the field. Grid columns are a special case as they are not input fields. They are inspected directly from the Bean of the Grid so use meaningful names for the Bean fields.
+- Every field has an ID (`Component::setId`). The ID should be meaningful about the data contained by the field. Grid columns are a special case as they are not input fields. They are inspected directly from the Bean of the Grid so use meaningful names for the Bean fields.
 
-Always remember that later you can add extra information about any component to help the AI module if the Id is not enough to understand what data you are looking for. Of course, you can use a sentence as an Id, but for cleaner code, it is recommended to use Ids in combination with extra instructions, but it is up to the developer to choose. 
+Always remember that later you can add extra information about any component to help the AI module if the ID is not enough to understand what data you are looking for. Of course, you can use a sentence as an ID, but for cleaner code, it is recommended to use IDs in combination with extra instructions, but it is up to the developer to choose.
 
-For most cases, a 2/3 word Id is enough for the AI module to understand the target. Below is an example of this:
+For most cases, a 2–3 word ID is enough for the AI module to understand the target. Below is an example of this:
 
 [source,java]
 ----
-    CheckboxGroup<String> typeService = new CheckboxGroup<>("Type of Service");
-    typeService.setItems("Software", "Hardware", "Consultancy");
-    typeService.setId("typeService");
-    formLayout.add(typeService);
-    ......
-    HashMap<Component,String> fieldInstructions = new HashMap<>();
-    fieldInstructions.put(typeService, "This field describes the type of the items of the order");
+CheckboxGroup<String> typeService = new CheckboxGroup<>("Type of Service");
+typeService.setItems("Software", "Hardware", "Consultancy");
+typeService.setId("typeService");
+formLayout.add(typeService);
 
-    FormFiller formFiller = new FormFiller(formLayout, fieldsInstructions);
-    FormFillerResult result = formFiller.fill(input);
+// ...
+
+HashMap<Component,String> fieldInstructions = new HashMap<>();
+fieldInstructions.put(typeService, "This field describes the type of the items of the order");
+
+FormFiller formFiller = new FormFiller(formLayout, fieldsInstructions);
+FormFillerResult result = formFiller.fill(input);
 ----
 
 That's better than this:
 
 [source,java]
 ----
-    CheckboxGroup<String> typeService = new CheckboxGroup<>("Type of Service");
-    typeService.setItems("Software", "Hardware", "Consultancy");
-    typeService.setId("the type of the items of the order");
-    formLayout.add(typeService);
-    ......
-    FormFiller formFiller = new FormFiller(formLayout);
-    FormFillerResult result = formFiller.fill(input);
+CheckboxGroup<String> typeService = new CheckboxGroup<>("Type of Service");
+typeService.setItems("Software", "Hardware", "Consultancy");
+typeService.setId("the type of the items of the order");
+formLayout.add(typeService);
+
+// ...
+
+FormFiller formFiller = new FormFiller(formLayout);
+FormFillerResult result = formFiller.fill(input);
 ----
 
 These extra instructions can be used not only for understanding. but also for formatting or error fixes. Here's an example of this:
 
 [source,java]
 ----
-    HashMap<Component,String> fieldInstructions = new HashMap<>();
-    fieldInstructions.put(nameField, "Format this field in Uppercase");
-    fieldInstructions.put(emailField, "Format this field as a correct email");
+HashMap<Component,String> fieldInstructions = new HashMap<>();
+fieldInstructions.put(nameField, "Format this field in Uppercase");
+fieldInstructions.put(emailField, "Format this field as a correct email");
 ----
 
 Some limitations exist for some fields especially the ones containing dates the FormFiller has its own standard formatting requirement so be careful manipulating them.
@@ -60,27 +64,27 @@ Some limitations exist for some fields especially the ones containing dates the 
 
 The size of the text that can be processed is related to the capacity of the used model. The model included as default in the addon has a limit of 16384 tokens (approx 16000 words including request and response).
 
-At this point, parametrized components such as checkboxes or radio buttons work with basic types not custom classes.
+At this point, parametrized components such as checkboxes or radio buttons work with basic types, not custom classes.
 
 Grid must be defined using a Bean type.
 
-Please use the https://github.com/vaadin/form-filler-addon[addon project] for reporting bugs, asking questions, proposing enhancement ideas or voting for roadmap priorities.
+Please use the https://github.com/vaadin/form-filler-addon[addon project] for reporting bugs, asking questions, proposing enhancement ideas, or voting for roadmap priorities.
 
 
 == Debug
 
-The [methodname]`FormFiller::fill` method returns a `FormFillerResult` that contains the request sent and the response received by the AI module. The request is a prompt in natural language containing all the instructions, including the target JSON object and the target types. The response has to be a valid JSON object with components' Ids as keys and values. Through the FormFiller object, you can access the internal structures used for mapping. 
+The [methodname]`FormFiller::fill` method returns a `FormFillerResult` that contains the request sent and the response received by the AI module. The request is a prompt in natural language containing all the instructions, including the target JSON object and the target types. The response has to be a valid JSON object with components' IDs as keys and values. Through the FormFiller object, you can access the internal structures used for mapping.
 
 You can visualize all these structures like this example from the add-on demo:
 
 [source,java]
 ----
-        FormFiller formFiller = new FormFiller(formLayout, fieldsInstructions, contextInformation);
-        FormFillerResult result = formFiller.fill(input);
-        debugTool.getDebugPrompt().setValue(result.getRequest());
-        debugTool.getDebugJsonTarget().setValue(String.format("%s", formFiller.getMapping().componentsJSONMap()));
-        debugTool.getDebugTypesTarget().setValue(String.format("%s", formFiller.getMapping().componentsTypesJSONMap()));
-        debugTool.getDebugResponse().setValue(result.getResponse());
+FormFiller formFiller = new FormFiller(formLayout, fieldsInstructions, contextInformation);
+FormFillerResult result = formFiller.fill(input);
+debugTool.getDebugPrompt().setValue(result.getRequest());
+debugTool.getDebugJsonTarget().setValue(String.format("%s", formFiller.getMapping().componentsJSONMap()));
+debugTool.getDebugTypesTarget().setValue(String.format("%s", formFiller.getMapping().componentsTypesJSONMap()));
+debugTool.getDebugResponse().setValue(result.getResponse());
 ----
 
 Below is an example of a valid response:
