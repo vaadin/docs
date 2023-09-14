@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import codeBranchIcon from '../../../../../src/main/resources/icons/code-branch.svg';
-import '@vaadin/icon';
 import { Icon } from '@hilla/react-components/Icon.js';
 
 function Example() {
