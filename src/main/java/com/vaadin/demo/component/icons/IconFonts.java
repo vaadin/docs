@@ -15,11 +15,10 @@ public class IconFonts extends Div {
     layout.addClassName("items-center");
 
     // tag::snippet[]
-    FontIcon homeIcon = new FontIcon("icomoon", "icomoon-home");
-    FontIcon userIcon = new FontIcon("icomoon", "icomoon-user");
-    FontIcon cogIcon = new FontIcon("icomoon", "icomoon-cog");
+    FontIcon homeIcon = new FontIcon("fa", "fa-code-branch");
+    FontIcon userIcon = new FontIcon("fa", "fa-user");
 
-    layout.add(homeIcon, userIcon, cogIcon);
+    layout.add(homeIcon, userIcon);
     // end::snippet[]
     add(layout);
   }
