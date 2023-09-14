@@ -1,11 +1,20 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
+
+import '@vaadin/icons';
+import '@vaadin/horizontal-layout'
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { Icon } from '@hilla/react-components/Icon.js';
+import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import spriteIcons from '../../../../../src/main/resources/icons/solid.svg';
 
 function Example() {
   return (
-    // tag::snippet[]
-    <p>placeholder</p>
-    // end::snippet[]
+    <HorizontalLayout theme="spacing" className="items-center">
+      {/* tag::snippet[] */}
+      <Icon src={spriteIcons} symbol="code-branch" />
+      <Icon src={spriteIcons} symbol="user" />
+      {/* end::snippet[] */}
+    </HorizontalLayout>
   );
 }
 
