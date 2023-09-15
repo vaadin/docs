@@ -1,0 +1,250 @@
+---
+title: Routing
+description: How to implement routing in Hilla React applications.
+order: 60
+---
+
+= Routing
+
+The routing system in Hilla is built on top of https://reactrouter.com/en/main[React Router], a popular routing library for React applications. This documentation can guide you through the basics of setting up and using routing in your application.
+
+Routes are managed through a configuration file called, [filename]`routes.tsx`. This file defines the application's routes, including the components associated with each. The routing configuration is located in the project's `frontend` directory.
+
+Here's an example of how the configuration looks typically in a starter application:
+
+[source,tsx]
+----
+export const routes: RouteObject[] = [
+  {
+    element: <MainLayout />,
+    children: [
+      { path: '/', element: <HelloReactView /> },
+      { path: '/about', element: <AboutView /> },
+    ],
+  },
+];
+
+export default createBrowserRouter(routes);
+----
+
+In this example, two routes are defined: the root path `/` and the `/about` path. These routes are associated with different components. The `<MainLayout />` component acts as the layout template for the entire application. The last line creates and exports the router instance.
+
+The router instance is then used in the [filename]`App.tsx` file to render the application:
+
+[source,tsx]
+----
+import router from 'Frontend/routes';
+import { RouterProvider } from 'react-router-dom';
+
+export default function App() {
+  return <RouterProvider router={router} />;
+}
+----
+
+In the next section are the details of how to work with routing in Hilla.
+
+
+== Adding Routes
+
+To add a new route to an application, first create a new component that should be displayed when the route is active. For example, create a file called [filename]`MyView.tsx` in the `views` folder with the following content:
+
+[source,tsx]
+----
+export default function MyView() {
+  return <div>My first view</div>;
+}
+----
+
+Second, open the [filename]`routes.tsx` file and import the component you created in the previous step:
+
+[source,tsx]
+----
+import MyView from 'Frontend/views/MyView';
+----
+
+Next, inside the `routes` array, add a new route object to the `children` array of the main layout:
+
+[source,tsx]
+----
+{
+  path: '/my-route',
+  element: <MyView />,
+}
+----
+
+Now, after saving the file, you should be able to navigate to `http://localhost:8080/my-route` and see the new component rendered in the browser.
+
+To add a navigation link that points to your new route, use the `<NavLink>` component from `react-router-dom`:
+
+[source,tsx]
+----
+import { NavLink } from 'react-router-dom';
+
+<NavLink to="/my-route">My View</NavLink>
+----
+
+This creates a clickable link in your application that navigates to the specified route.
+
+
+== Adding Routes with Parameters
+
+Sometimes, you may need to create routes that accept dynamic parameters, such as product IDs or names. This can be done by defining a route path with parameters. For example, the following route takes a product ID as a parameter:
+
+[source,tsx]
+----
+{
+  path: '/products/:productId',
+  element: <ProductDetailView />
+}
+----
+
+In this example, `:productId` acts as a placeholder for the actual product ID. To link to this route with a specific `productId`, you can use the `to` property of `NavLink` like this:
+
+[source,tsx]
+----
+<NavLink to="/products/123">Show product details</NavLink>
+----
+
+To access the route parameter, you can use the `useParams` hook from `react-router-dom` in your component. The following example outlines a detailed view that fetches product data for the product ID in the route:
+
+[source,tsx]
+----
+import { useParams } from 'react-router-dom';
+
+export default function ProductDetailView() {
+  const { productId } = useParams();
+
+  // Fetch product details for the given ID
+  const { product, setProduct } = useState<Product>();
+
+  useEffect(() => {
+    ProductEndpoint.getProduct(productId).then(setProduct);
+  }, [productId]);
+}
+----
+
+
+== Adding Custom Metadata
+
+You may want to add custom metadata to your routes, which could include page titles, icons, or any other data relevant to your application's structure and layout.
+
+To add custom metadata to a route, you can use the `handle` property of the route object:
+
+[source,tsx]
+----
+{ path: '/about', element: <AboutView />, handle: { title: 'About us' } },
+----
+
+In this example, a page title is added to the `/about` route.
+
+To access this metadata from within a component, you can use the `useMatches` hook from `react-router-dom`. In the following example, the page title is used to display it in the header of the main layout:
+
+[source,tsx]
+----
+import { useMatches } from "react-router-dom";
+
+export default function MainLayout() {
+  const matches = useMatches();
+  const currentHandle = matches[matches.length - 1]?.handle as any;
+  const pageTitle = currentHandle?.title ?? 'My App';
+
+  return (
+    <AppLayout primarySection="drawer">
+      <header slot="drawer">
+        <h1 className="text-l m-0">{pageTitle}</h1>
+        ...
+      </header>
+      ...
+    </AppLayout>
+  );
+}
+----
+
+Now, when the `/about` route is active, the title `About us` is displayed in the header.
+
+.Helper hook
+[NOTE]
+====
+Hilla starter applications provide a helper hook that simplifies accessing route metadata:
+
+[source,ts]
+----
+import { useRouteMetadata } from "Frontend/util/routing";
+
+const metadata = useRouteMetadata();
+----
+====
+
+== Programmatic Navigation
+
+In some cases, you may need to navigate programmatically between routes. For example, this may be needed in response to user interactions or application logic. For this you can use the `useNavigate` hook from `react-router-dom`. It provides a function that allows you to navigate to a specific route when called. Additionally, it offers options to control the navigation behavior, such as pushing to the history stack or replacing the current entry.
+
+For example, after saving a product, you might want to navigate back to the product list:
+
+[source,tsx]
+----
+import { useNavigate } from 'react-router-dom';
+
+function ProductDetailView() {
+  const navigate = useNavigate();
+
+  const handleSave = async () => {
+    await ProductEndpoint.save(product);
+    navigate('/products');
+  };
+
+  return (
+    <div>
+      ...
+      <button onClick={handleSave}>Save</button>
+    </div>
+  );
+}
+----
+
+By default, this pushes a new entry to the browser's navigation history. If you want to replace the current entry instead, you can pass `{ replace: true }` as the second argument like so:
+
+[source,tsx]
+----
+navigate('/products', { replace: true });
+----
+
+
+== Adding an Error Page
+
+Adding a custom error page to an application is essential for handling situations in which no other route matches the requested URL. This allows you to provide helpful feedback to the user, for example, by communicating the problem or providing links to other pages.
+
+To add an error page, first create a new component for your error page (e.g., `ErrorView.tsx`). This component is displayed when no other route matches:
+
+[source,tsx]
+----
+export default function ErrorView() {
+  return <div>Page not found</div>;
+}
+----
+
+Next, in the `routes.tsx` file, add a wildcard route at the end of the `routes` array. This route matches any unknown routes and display the error page.
+
+[source,tsx]
+----
+{ path: '*', element: <ErrorView /> }
+----
+
+Then customize the `ErrorView` component to provide helpful information to the user.
+
+Now, your application is equipped with an error page that'll be shown when no other route matches a requested URL.
+
+
+== Further Information
+
+For more information about using React Router, refer to the official documentation:
+
+- https://reactrouter.com/en/main[Homepage]
+- https://reactrouter.com/en/main/start/tutorial[Tutorials]
+- https://reactrouter.com/en/main/start/examples[Examples]
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
