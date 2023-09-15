@@ -16,8 +16,7 @@ public class IconFonts extends Div {
 
     // tag::snippet[]
     FontIcon codeBranchIcon = new FontIcon("fa", "fa-code-branch");
-    // Optional: Create a custom enum to facilitate the use of icons in the application.
-    FontIcon userIcon = MyFontIcons.USER.create();
+    FontIcon userIcon =  new FontIcon("fa", "fa-user");
 
     layout.add(codeBranchIcon, userIcon);
     // end::snippet[]
