@@ -57,7 +57,7 @@ export class Example extends LitElement {
         <vaadin-button
           theme="primary"
           @click="${() => {
-            const person = this.items.find((p) => p.id === parseInt(this.selectedValue));
+            const person = this.items.find((p) => String(p.id) === this.selectedValue);
             const isInvited = person && this.invitedPeople.some((p) => p.id === person.id);
             if (person && !isInvited) {
               this.invitedPeople = [...this.invitedPeople, person];
