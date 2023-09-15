@@ -23,7 +23,7 @@ export class Example extends LitElement {
         <vaadin-icon icon="lumo:photo"></vaadin-icon>
         <vaadin-icon icon="lumo:calendar"></vaadin-icon>
         <vaadin-icon icon="lumo:clock"></vaadin-icon>
-        <vaadin-button>
+        <vaadin-button theme="icon">
           <vaadin-icon icon="lumo:bell"></vaadin-icon>
         </vaadin-button>
         <!-- end::snippet[] -->

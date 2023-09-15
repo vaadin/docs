@@ -11,7 +11,7 @@ function Example() {
       <Icon icon="vaadin:phone" />
       <Icon icon="vaadin:calendar" />
       <Icon icon="vaadin:alarm" />
-      <Button>
+      <Button theme="icon">
         <Icon icon="vaadin:bell" />
       </Button>
       {/* // end::snippet[] */}

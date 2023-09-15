@@ -12,7 +12,7 @@ function Example() {
       <Icon icon="lumo:photo" />
       <Icon icon="lumo:calendar" />
       <Icon icon="lumo:clock" />
-      <Button>
+      <Button theme="icon">
         <Icon icon="lumo:bell" />
       </Button>
       {/* // end::snippet[] */}

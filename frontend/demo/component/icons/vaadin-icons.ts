@@ -24,7 +24,7 @@ export class Example extends LitElement {
         <vaadin-icon icon="vaadin:phone"></vaadin-icon>
         <vaadin-icon icon="vaadin:calendar"></vaadin-icon>
         <vaadin-icon icon="vaadin:alarm"></vaadin-icon>
-        <vaadin-button>
+        <vaadin-button theme="icon">
           <vaadin-icon icon="vaadin:bell"></vaadin-icon>
         </vaadin-button>
         <!-- end::snippet[] -->
