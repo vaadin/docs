@@ -13,11 +13,11 @@ public class IconsSizing extends Div {
   public IconsSizing() {
     HorizontalLayout layout = new HorizontalLayout();
     layout.setSpacing(true);
-    layout.addClassName("items-center");
+    layout.addClassName("items-end");
 
-    // tag::snippet[]
     StreamResource codeBranch = new StreamResource("svg-branch.svg",
         () -> getClass().getResourceAsStream("/icons/code-branch.svg"));
+    // tag::snippet[]
     SvgIcon iconDefaultSize = new SvgIcon(codeBranch);
 
     SvgIcon iconLumoSize = new SvgIcon(codeBranch);

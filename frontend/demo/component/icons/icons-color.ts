@@ -21,7 +21,7 @@ export class Example extends LitElement {
       <vaadin-horizontal-layout theme="spacing" class="items-center">
         <!-- tag::snippet[] -->
         <vaadin-icon src="${codeBranch}" style="color: red"></vaadin-icon>
-        <vaadin-icon font="icomoon icomoon-user" style="color: red"></vaadin-icon>
+        <vaadin-icon icon-class="fa fa-user" style="color: red"></vaadin-icon>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;

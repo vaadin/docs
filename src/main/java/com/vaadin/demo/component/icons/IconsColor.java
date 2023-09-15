@@ -22,7 +22,7 @@ public class IconsColor extends Div {
     SvgIcon svgIcon = new SvgIcon(codeBranch);
     svgIcon.setColor("red");
 
-    FontIcon fontIcon = new FontIcon("icomoon", "icomoon-home");
+    FontIcon fontIcon = new FontIcon("fa", "fa-user");
     fontIcon.setColor("red");
 
     layout.add(svgIcon, fontIcon);
