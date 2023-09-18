@@ -2,12 +2,13 @@ package com.vaadin.demo.component.icons;
 
 import com.vaadin.flow.component.icon.FontIcon;
 
-public enum MyFontIcons {
+// tag::snippet[]
+public enum FontAwesomeIcons {
     CODE_BRANCH("fa-code-branch"), USER("fa-user");
 
     private String iconClass;
 
-    MyFontIcons(String iconClass) {
+    FontAwesomeIcons(String iconClass) {
         this.iconClass = iconClass;
     }
 
@@ -15,3 +16,4 @@ public enum MyFontIcons {
         return new FontIcon("fa", iconClass);
     }
 }
+// end::snippet[]
