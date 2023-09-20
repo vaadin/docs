@@ -49,17 +49,6 @@ export class IconsPreview extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     this.classList.add('icons-preview');
-
-    const search = this.querySelector('input');
-    console.log(search);
-    search?.addEventListener('input', () => {
-      this.querySelectorAll('.docs-icon-preview').forEach((icon) => {
-        icon.classList.toggle(
-          'hidden',
-          !icon.className.toLowerCase().includes(search.value.toLowerCase())
-        );
-      });
-    });
   }
 
   protected override render() {
