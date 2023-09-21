@@ -8,11 +8,13 @@ description: Understanding conversion of data types from Java to TypeScript and 
 = Type Conversion between Java & TypeScript
 :toclevels: 2
 
+When converting data types from Java to TypeScript and vice versa, there are certain particulars to understand so you won't have problems. They're explained on this page.
+
 
 [[typescript-values-in-java]]
 == Receiving TypeScript Values in Java
 
-When calling a Java endpoint method from TypeScript, [classname]`ConnectClient` serializes TypeScript call parameters to JSON and sends them to the Java backend. There they are deserialized into Java types using the https://github.com/FasterXML/jackson[Jackson] JSON processing library. The return value of the Java endpoint method is sent back to TypeScript through the same pipeline in the opposite direction.
+When calling a Java endpoint method from TypeScript, [classname]`ConnectClient` serializes TypeScript call parameters to JSON and sends them to the Java backend. There they're deserialized into Java types using the https://github.com/FasterXML/jackson[Jackson] JSON processing library. The return value of the Java endpoint method is sent back to TypeScript through the same pipeline in the opposite direction.
 
 
 === JSON Object Mapper
@@ -30,6 +32,7 @@ The default [classname]`ObjectMapper` always converts TypeScript values to a JSO
 === Default Conversion Rules
 
 The default conversion rules are summarized in the following table. Incidentally, TypeScript-compliant values are converted to the corresponding values, otherwise the backend returns an error message.
+
 
 === Primitive Types
 
@@ -72,9 +75,7 @@ The default conversion rules are summarized in the following table. Incidentally
 | An integer or decimal number: `100` and `100.0` -> `100.0`, `100.9` -> `100.9`.
 | Any value which isn't a number in TypeScript.
 | Overflow and underflow numbers are converted to `Infinity` and `-Infinity`, respectively.
-
 |===
-
 
 
 === Boxed Primitive Types
@@ -95,25 +96,25 @@ The conversion works in the same way as primitive types.
 | Type | Compliant values | Non-compliant values
 
 | `java.util.Date`
-| A string that represents an epoch timestamp in milliseconds: `'1546300800000'` is converted to a `java.util.Date` instance that contains the value of the date `2019-01-01T00:00:00.000+0000`.
+| A string that represents a timestamp in epoch, ISO-8601, or RFC-1123 format is converted to a `java.util.Date` instance. 
 
-  Or a string that follows either ISO-8601 or RFC-1123 format (e.g. `2018-10-21T12:16:24.000+00:00` for ISO-8601, `Sun, 21 Oct 2018 12:16:24 GMT` for RFC-1123).
-| A non-number string that does not conform neither to ISO-8601 nor to RFC-1123 format, for example `'foo'`.
+That is to say, an epoch timestamp in milliseconds (e.g., `'1571660184000'`), or an 
+ISO-8601 formatted date (e.g. `2019-10-21T12:16:24.000+00:00`), or a RFC-1123 date (e.g., `Sun, 21 Oct 2019 12:16:24 GMT`) are each converted to the same value and format (e.g., `2019-10-21:12:16.24.000+0000`).
+| A non-number string that does not conform neither to ISO-8601 nor to RFC-1123 format (e.g., `'foo'`).
 
 | `java.time.Instant`
-| A string that represents an epoch timestamp in seconds: `'1546300800'` is converted to a `java.time.Instant` instance that contains the value of `2019-01-01T00:00:00Z`.
+| A string that represents an epoch timestamp in seconds. For example, `'1546300800'` is converted to a `java.time.Instant` instance that contains the value of `2019-01-01T00:00:00Z`.
 
-  Or a string that follows the `java.time.format.DateTimeFormatter#ISO_INSTANT` format `yyyy-MM-dd'T'HH:mm:ss.SSS'Z'` (e.g. `'2011-12-03T10:15:30Z'`).
-| A non-number string that does not conform to `ISO_INSTANT` format, for example `'foo'`.
+Also, a string that follows the `java.time.format.DateTimeFormatter#ISO_INSTANT` format (i.e., `yyyy-MM-dd'T'HH:mm:ss.SSS'Z'`) is converted the same way.
+| A non-number string that does not conform to `ISO_INSTANT` format (e.g., `'foo'`).
 
 | `java.time.LocalDate`
 | A string that follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE` format `yyyy-MM-dd` (e.g., `'2018-12-16'`, `'2019-01-01'`).
-| An incorrect-format string, for example `'foo'`.
+| An incorrect-format string (e.g., `'foo'`).
 
 | `java.time.LocalDateTime`
 | A string that follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE_TIME` format: with full time, `'2019-01-01T12:34:56'`; without seconds, `'2019-01-01T12:34'`; with full time and milliseconds, `'2019-01-01T12:34:56.78'`.
-| An incorrect-format string, for example `'foo'`.
-
+| An incorrect-format string (e.g., `'foo'`).
 |===
 
 
@@ -323,16 +324,14 @@ Type Conversion can be customized by using annotations on the object to serializ
 
 === Number Type
 
-// Skipping "There is..." and "IEEE"
+// Skipping "There is..."
 pass:[<!-- vale Vaadin.ThereIs = NO -->]
-pass:[<!-- vale Vaadin.Abbr = NO -->] 
 
 All Java types that extend [classname]`java.lang.Number` are deserialized to `number` in TypeScript. There are a few exceptions with extremely large or extremely small numbers. The safe integer range is from `-(2^53^ &minus; 1)` to `2^53^ &minus; 1`. This means that only numbers in this range can be represented exactly and compared correctly. See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger[more information about safe integers].
 
 In fact, not all `long` numbers in Java can be converted correctly to TypeScript, since its range is `-2^63^` to `2^63^ &minus; 1`. Unsafe numbers are rounded using the rules defined in the https://en.wikipedia.org/wiki/IEEE_754#Rounding_rules[IEEE-754 standard].
 
 pass:[<!-- vale Vaadin.ThereIs = YES -->]
-pass:[<!-- vale Vaadin.Abbr = YES -->]
 
 Special values such as `NaN`, `POSITIVE_INFINITY` and `NEGATIVE_INFINITY` are converted into `string` when sent to TypeScript.
 
@@ -366,19 +365,18 @@ All types that inherit from [classname]`java.lang.Map` become objects in TypeScr
 
 By default, the [classname]`ObjectMapper` converts Java's date time to a string in TypeScript, with the following formats:
 
-* `java.util.Date` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00.000+0000'`
+- `java.util.Date` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00.000+0000'`
 
-* `java.time.Instant` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00Z'`
+- `java.time.Instant` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00Z'`
 
-* `java.time.LocalDate` of `00:00:00 January 1st, 2019` => `'2019-01-01'`
+- `java.time.LocalDate` of `00:00:00 January 1st, 2019` => `'2019-01-01'`
 
-* `java.time.LocalDateTime` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00'`
+- `java.time.LocalDateTime` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00'`
 
 
 === Null
 
 Returning `null` from Java throws a validation exception in TypeScript, unless the return type is `Optional` or the endpoint method is annotated with `@Nullable` (`jakarta.annotation.Nullable`).
-
 
 
 [[custom-type-conversion]]
@@ -469,6 +467,7 @@ In addition to the properties passed as the annotation value, the `@JsonIgnorePr
 // Ignoring these section headings
 pass:[<!-- vale Vale.Spelling = NO -->]
 
+
 ==== allowSetters
 
 For ignored properties, `allowSetters` allows you to set properties when deserializing, but doesn't list them in serialization.
@@ -511,7 +510,7 @@ During deserializing, `ignoreUnknown` prevents an error caused by the presence o
 
 This is a corner case, and shouldn't be necessary in Hilla, since the TypeScript-generated API shouldn't pass unknown properties.
 
-pass:[<!-- vale Vale.Spelling = NO -->]
+pass:[<!-- vale Vale.Spelling = YES -->]
 
 === The `@JsonIgnoreType` Annotation
 
@@ -539,3 +538,9 @@ public class Sale {
 ----
 
 // end::content[]
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
