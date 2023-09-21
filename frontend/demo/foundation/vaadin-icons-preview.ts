@@ -1,4 +1,4 @@
-import './icons-preview.ts';
+import './icons-preview.js';
 
 export class VaadinIconsPreview extends HTMLElement {
   connectedCallback() {
