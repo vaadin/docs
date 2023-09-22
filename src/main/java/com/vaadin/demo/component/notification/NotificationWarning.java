@@ -58,6 +58,8 @@ public class NotificationWarning extends Div {
         notification.open();
         // end::snippet[]
 
+        notification.setPosition(Notification.Position.MIDDLE);
+
         return notification;
     }
 
