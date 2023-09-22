@@ -7,32 +7,15 @@ import {
 } from '@hilla/react-components/Notification.js';
 
 function Example() {
-  const [notificationOpened, setNotificationOpened] = useState(false);
+  // tag::snippet[]
+  const notification = Notification.show('5 tasks deleted', {
+    position: 'middle',
+    duration: 0,
+    theme: 'contrast',
+  });
+  // end::snippet[]
 
-  const handleClick = () => {
-    // tag::snippet[]
-    const notification = Notification.show('5 tasks deleted', {
-      position: 'middle',
-      theme: 'contrast',
-    });
-    // end::snippet[]
-    setNotificationOpened(true);
-
-    const handleOpenChanged = (e: NotificationOpenedChangedEvent) => {
-      if (!e.detail.value) {
-        setNotificationOpened(false);
-        notification.removeEventListener('opened-changed', handleOpenChanged);
-      }
-    };
-
-    notification.addEventListener('opened-changed', handleOpenChanged);
-  };
-
-  return (
-    <Button onClick={handleClick} disabled={notificationOpened}>
-      Try it
-    </Button>
-  );
+  return <></>;
 }
 
 export default reactExample(Example); // hidden-source-line
