@@ -5,7 +5,7 @@ import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 
 function Example() {
-  const [notificationOpened, setNotificationOpened] = useState(false);
+  const [notificationOpened, setNotificationOpened] = useState(true);
   const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
   const open = () => {
@@ -45,7 +45,7 @@ function Example() {
   return (
     <>
       <Button disabled={notificationOpened} onClick={open}>
-        Try it
+        Show notification
       </Button>
 
       <Notification
