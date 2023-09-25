@@ -84,6 +84,8 @@ const config = {
       "dspublisher/theme",
       
       "PULL_REQUEST_TEMPLATE.md",
+
+      ".gitattributes",
     ],
   },
   rename: {
