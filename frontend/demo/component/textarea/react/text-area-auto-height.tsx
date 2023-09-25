@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { TextArea } from '@hilla/react-components/TextArea.js';
-import { loremIpsum } from '../../../../../src/main/resources/data/templates.json';
+import templates from '../../../../../src/main/resources/data/templates.json';
 
 function Example() {
   return (
     // tag::snippet[]
-    <TextArea label="Description" value={loremIpsum} style={{ width: '100%' }} />
+    <TextArea label="Description" value={templates.loremIpsum} style={{ width: '100%' }} />
     // end::snippet[]
   );
 }

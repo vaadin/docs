@@ -17,7 +17,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationRetry extends Div {
 
     public NotificationRetry() {
-        Button button = new Button("Try it");
+        Button button = new Button("Show notification");
         button.addClickListener(clickEvent -> {
             button.setEnabled(false);
 
@@ -27,6 +27,7 @@ public class NotificationRetry extends Div {
         });
 
         add(button);
+        show();
     }
 
     private Notification show() {

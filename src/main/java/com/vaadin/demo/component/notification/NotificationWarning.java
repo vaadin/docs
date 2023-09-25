@@ -17,7 +17,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationWarning extends Div {
 
     public NotificationWarning() {
-        Button button = new Button("Try it");
+        Button button = new Button("Show notification");
         button.addClickListener(clickEvent -> {
             button.setEnabled(false);
 
@@ -27,6 +27,7 @@ public class NotificationWarning extends Div {
         });
 
         add(button);
+        show();
     }
 
     public Notification show() {
@@ -57,7 +58,7 @@ public class NotificationWarning extends Div {
         notification.open();
         // end::snippet[]
 
-        notification.setPosition(Notification.Position.TOP_CENTER);
+        notification.setPosition(Notification.Position.MIDDLE);
 
         return notification;
     }

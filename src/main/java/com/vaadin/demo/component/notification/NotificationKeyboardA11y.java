@@ -16,7 +16,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationKeyboardA11y extends Div {
 
     public NotificationKeyboardA11y() {
-        Button button = new Button("Try it");
+        Button button = new Button("Show notification");
         button.addClickListener(clickEvent -> {
             button.setEnabled(false);
 
@@ -27,6 +27,7 @@ public class NotificationKeyboardA11y extends Div {
         });
 
         add(button);
+        show();
     }
 
     // tag::snippet[]
