@@ -4,10 +4,10 @@ import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import '@vaadin/icons';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 
 function Example() {
-  const [notificationOpened, setNotificationOpened] = useState(false);
+  const [notificationOpened, setNotificationOpened] = useState(true);
 
   function open() {
     setNotificationOpened(true);
@@ -20,7 +20,7 @@ function Example() {
   return (
     <>
       <Button disabled={notificationOpened} onClick={open}>
-        Try it
+        Show notification
       </Button>
 
       {/* tag::snippet[] */}
