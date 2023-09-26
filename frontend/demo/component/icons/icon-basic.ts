@@ -1,10 +1,14 @@
 import 'Frontend/demo/init'; // hidden-source-line
+
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import './login-overlay-mockup';
+import '@vaadin/horizontal-layout';
+import '@vaadin/icon';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
+import '@vaadin/icons';
 
-@customElement('login-validation')
+@customElement('icon-basic')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -14,6 +18,13 @@ export class Example extends LitElement {
   }
 
   protected override render() {
-    return html`<login-overlay-mockup error></login-overlay-mockup>`;
+    return html`
+      <vaadin-horizontal-layout theme="spacing" class="items-center">
+        <!-- tag::snippet[] -->
+        <vaadin-icon icon="lumo:photo"></vaadin-icon>
+        <vaadin-icon icon="vaadin:phone"></vaadin-icon>
+        <!-- end::snippet[] -->
+      </vaadin-horizontal-layout>
+    `;
   }
 }
