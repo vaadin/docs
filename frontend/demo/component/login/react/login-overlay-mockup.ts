@@ -121,6 +121,18 @@ export class LoginOverlayMockupElement extends LitElement {
           </div>
         </section>
       </div>
+      <div hidden>
+        <slot name="custom-form-area" @slotchange="${this._onSlotChange}"></slot>
+        <slot name="footer" @slotchange="${this._onSlotChange}"></slot>
+      </div>
     `;
+  }
+
+  private _onSlotChange(event: Event) {
+    const wrapper = this.renderRoot.querySelector('vaadin-login-form-wrapper');
+    const slot = event.target as HTMLSlotElement;
+    [...slot.assignedElements()].forEach((el) => {
+      wrapper?.appendChild(el);
+    });
   }
 }

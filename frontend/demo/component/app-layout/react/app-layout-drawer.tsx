@@ -73,7 +73,7 @@ function Example() {
         </Tab>
       </Tabs>
     </AppLayout>
-    // tag::snippet[]
+    // end::snippet[]
   );
 }
 
