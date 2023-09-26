@@ -17,7 +17,7 @@ const cmd = program
     .option('-t, --branchTarget <target>', 'target branch', 'dsp')
     .option('-c, --config <config>', 'config file', cfgDefault)
     .option('-r, --repo <repository>', 'repository', 'git@github.com:vaadin/docs.git')
-    .parse();
+    .parse()._optionValues;
 
 function log(...args) {
   console.log(...args);
