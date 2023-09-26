@@ -54,7 +54,6 @@ const config = {
       'src/main/java/com/vaadin/demo/sso',
       'src/main/java/com/vaadin/demo/collaboration',
       'src/main/java/com/vaadin/demo/observability',
-      'frontend/themes',
       'src/main/java/com/vaadin/demo/DemoExporter.java',
       'src/main/resources/testsheets',
       'src/main/resources/META-INF/resources/icons/icon.png',
