@@ -60,7 +60,7 @@ function Example() {
         }}
       >
         <GridColumn header="Full name">
-          {({ item: person }) => `${person.firstName} ${person.lastName}`}
+          {({ item: person }) => <>{`${person.firstName} ${person.lastName}`}</>}
         </GridColumn>
 
         <GridColumn path="profession" />
@@ -84,7 +84,7 @@ function Example() {
         }}
       >
         <GridColumn header="Full name">
-          {({ item: person }) => `${person.firstName} ${person.lastName}`}
+          {({ item: person }) => <>{`${person.firstName} ${person.lastName}`}</>}
         </GridColumn>
 
         <GridColumn path="profession" />
