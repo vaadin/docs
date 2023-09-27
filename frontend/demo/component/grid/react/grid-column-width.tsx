@@ -11,14 +11,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
   useEffect(() => {
-    getPeople().then(({ people }) =>
-      setItems(
-        people.map((person) => ({
-          ...person,
-          displayName: `${person.firstName} ${person.lastName}`,
-        }))
-      )
-    );
+    getPeople().then(({ people }) => setItems(people));
   }, []);
 
   return (
@@ -29,7 +22,7 @@ function Example() {
         <GridColumn path="profession" autoWidth flexGrow={0} />
         <GridColumn path="email" />
         <GridColumn width="6em" flexGrow={0} header="Has Sub">
-          {({ item }) => (item.subscriber ? 'Yes' : 'No')}
+          {({ item }) => <>{item.subscriber ? 'Yes' : 'No'}</>}
         </GridColumn>
       </Grid>
       <div></div>

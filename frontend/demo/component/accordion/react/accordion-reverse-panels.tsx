@@ -35,6 +35,5 @@ function Example() {
     // end::snippet[]
   );
 }
-// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

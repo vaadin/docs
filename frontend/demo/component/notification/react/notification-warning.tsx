@@ -4,15 +4,15 @@ import { Button } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Notification } from '@hilla/react-components/Notification.js';
 import { Icon } from '@hilla/react-components/Icon.js';
-import '@vaadin/icons';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 
 function Example() {
-  const [notificationOpened, setNotificationOpened] = useState(false);
+  const [notificationOpened, setNotificationOpened] = useState(true);
 
   return (
     <>
       <Button disabled={notificationOpened} onClick={() => setNotificationOpened(true)}>
-        Try it
+        Show notification
       </Button>
 
       {/* tag::snippet[] */}
@@ -20,7 +20,7 @@ function Example() {
       <Notification
         theme="warning"
         duration={0}
-        position="top-center"
+        position="middle"
         opened={notificationOpened}
         onOpenedChanged={(event) => {
           setNotificationOpened(event.detail.value);
