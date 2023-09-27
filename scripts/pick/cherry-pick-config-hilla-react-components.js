@@ -111,9 +111,9 @@ const config = {
           content = content.replace(/= .*/, ':react:\n\n$&');
         }
 
-        // Add section-nav: flat to components index
+        // Add section-nav: flat components to components index
         if (content.includes('title: Components')) {
-          content = content.replace('title: Components', 'title: Components\nsection-nav: flat');
+          content = content.replace('title: Components', 'title: Components\nsection-nav: flat components');
         }
 
         return content;
