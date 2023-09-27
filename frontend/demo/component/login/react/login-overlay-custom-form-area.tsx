@@ -7,7 +7,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 function Example() {
   return (
     // tag::snippet[]
-    <LoginOverlay>
+    <LoginOverlay opened>
       <IntegerField slot="custom-form-area" name="code" label="One-time code" />
     </LoginOverlay>
     // end::snippet[]

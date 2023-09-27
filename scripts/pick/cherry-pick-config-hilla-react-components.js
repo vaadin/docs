@@ -54,7 +54,6 @@ const config = {
       'src/main/java/com/vaadin/demo/sso',
       'src/main/java/com/vaadin/demo/collaboration',
       'src/main/java/com/vaadin/demo/observability',
-      'frontend/themes',
       'src/main/java/com/vaadin/demo/DemoExporter.java',
       'src/main/resources/testsheets',
       'src/main/resources/META-INF/resources/icons/icon.png',
@@ -89,6 +88,10 @@ const config = {
       callback: (content) => {
         // replace all instances of "{articles}/components" with "{articles}/react/components"
         content = content.replace(/{articles}\/components/g, '{articles}/react/components');
+
+        // replace all instances of "{articles}/styling/lumo" and "/styling/lumo" with "https://vaadin.com/docs/styling/lumo"
+        content = content.replace(/{articles}\/styling\/lumo/g, 'https://vaadin.com/docs/styling/lumo');
+        content = content.replace(/\/styling\/lumo/g, 'https://vaadin.com/docs/styling/lumo');
 
         // Remove discussion ids
         content = content.replace(/\[discussion-id\].*/g, '');
