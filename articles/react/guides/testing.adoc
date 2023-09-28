@@ -1,0 +1,302 @@
+---
+title: Testing
+description: How to test views in Hilla applications.
+order: 105
+---
+
+
+= Testing
+
+This guide explains the basics of testing views in Hilla. It uses the https://vitest.dev/[Vitest] library for testing and setting up a configuration that runs tests in a browser to produce accurate results. It also uses the https://testing-library.com/docs/react-testing-library/intro/[React Testing Library] to render and interact with React components during tests.
+
+
+== Setting Up a Test Environment
+
+Before starting to test, make sure your Hilla project is initialized, and the default Vite configuration exists. You can do this by starting the application once by running the default Maven goal:
+
+[source,shell]
+----
+mvn
+----
+
+Now, install the necessary testing libraries like so:
+
+[source,shell]
+----
+npm install -D vitest @vitest/browser webdriverio pretty-format @testing-library/react @testing-library/user-event
+----
+
+Next, create a test configuration file named, [filename]`vitest.config.ts` in the project root with the following content:
+
+[source,typescript]
+----
+import type { UserConfigFn } from 'vite';
+import { overrideVaadinConfig } from './vite.generated';
+
+const customConfig: UserConfigFn = (env) => ({
+  plugins: [],
+  test: {
+    include: ['./tests/**/*.{test,spec}.ts?(x)'],
+    globals: true,
+    browser: {
+      enabled: true,
+      name: 'chrome',
+    }
+  },
+});
+
+export default overrideVaadinConfig(customConfig);
+----
+
+Finally, add an `npm` script to [filename]`package.json` to run the tests and open the Vitest UI:
+
+[source,json]
+----
+"scripts": {
+  "test": "vitest"
+}
+----
+
+You can now run the tests by executing the following from the command-line:
+
+[source,shell]
+----
+npm test
+----
+
+At this point, this command fails because there aren't any tests, yet. That's covered in the next section.
+
+
+== Writing Tests
+
+As an example, to see how to test views in Hilla, use a simple Todo view. To start, create a basic view in [filename]`frontend/views/TodoView.tsx` like this:
+
+[source,tsx]
+----
+export function TodoView() {
+  return (
+    <div>
+      <h2>My Todos</h2>
+    </div>
+  );
+}
+----
+
+Now, create a basic test for this view in a file named, [filename]`frontend/tests/TodoView.test.tsx` and copy the following into it:
+
+[source,tsx]
+----
+import { describe, it, expect } from "vitest";
+import { TodoView } from "Frontend/views/TodoView";
+import { render, screen } from "@testing-library/react";
+
+describe("TodoView", () => {
+  it("should render", () => {
+    render(<TodoView />);
+    expect(screen.getByText("My Todos")).to.exist;
+  });
+});
+----
+
+This test file contains a single test that renders the view and verifies that the `My Todos` text is present in the DOM.
+
+Start the test by executing the following again from the command-line:
+
+[source,shell]
+----
+npm test
+----
+
+This opens a browser window and displays the Vitest UI, which can be used for running and monitoring tests. It should run the newly added test and report that it passed.
+
+
+== Testing User Interaction
+
+Now you can explore how to add a feature to the view and test it with user interactions. To do this, add an input field and a button to enter new tasks to do, along with a list to render them. Here's the updated `TodoView` component:
+
+[source,tsx]
+----
+import { Button } from "@hilla/react-components/Button.js";
+import {
+  TextField,
+  TextFieldValueChangedEvent,
+} from "@hilla/react-components/TextField.js";
+import { useState } from "react";
+
+export function TodoView() {
+  const [newTodo, setNewTodo] = useState("");
+  const [todos, setTodos] = useState<Array<string>>([]);
+
+  return (
+    <div className="p-m">
+      <h2>My Todos</h2>
+      <div className="flex gap-s items-baseline">
+        <TextField
+          label="New todo"
+          value={newTodo}
+          onValueChanged={(e: TextFieldValueChangedEvent) =>
+            setNewTodo(e.detail.value)
+          }
+        />
+        <Button
+          onClick={() => {
+            setTodos([...todos, newTodo]);
+            setNewTodo("");
+          }}
+        >
+          Add todo
+        </Button>
+      </div>
+      <ul>
+        {todos.map((todo, idx) => (
+          <li key={idx}>{todo}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+----
+
+Next, add a test that interacts with the view. For testing interactions, import `userEvent` from `@testing-library/user-event` like so:
+
+[source,tsx]
+----
+import { userEvent } from "@testing-library/user-event";
+
+describe("TodoView", () => {
+  ...
+
+  it("should add a todo", async () => {
+    render(<TodoView />);
+
+    // Change the value of the text field
+    const textField = screen.getByLabelText("New todo");
+    await userEvent.click(textField);
+    await userEvent.type(textField, "Read testing guide");
+
+    // Click the add todo button
+    const button = screen.getByText("Add todo");
+    await userEvent.click(button);
+
+    // Rerender and check that the todo is shown
+    expect(screen.getByText("Read testing guide")).to.exist;
+  });
+});
+----
+
+This new test first finds the text field and changes its value using `userEvent.type`. Next, it finds the button and clicks it using `userEvent.click`. Finally, it verifies that the new todo is rendered in the list.
+
+Save the test so Vitest can run it in the browser, verifying that the interaction works as expected.
+
+
+== Testing Backend Calls
+
+Views often need to interact with back-end services, which should be tested, as well. In this section, you'll create a back-end service to store todos and then verify that it's called correctly from the view. First, create a dummy service called, [filename]`TodoService.java` next to [filename]`Application.java`:
+
+[source,java]
+----
+package com.example.application;
+
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import dev.hilla.BrowserCallable;
+
+@BrowserCallable
+@AnonymousAllowed
+public class TodoService {
+    public void addTodo(String todo) {
+        System.out.println("addTodo: " + todo);
+    }
+}
+----
+
+The service has a single method, `addTodo` that only prints the given todo to the console.
+
+From the CLI, run the following command to generate the TypeScript client for the service:
+
+[source,shell]
+----
+mvn clean compile hilla:generate
+----
+
+Now, update the click handler of the button in `TodoView` to call the service:
+
+[source,tsx]
+----
+/* Add new import for generated service client */
+import { TodoService } from "Frontend/generated/endpoints";
+
+...
+
+<Button
+  onClick={() => {
+    TodoService.addTodo(newTodo);
+    setTodos([...todos, newTodo]);
+    setNewTodo("");
+  }}
+>
+  Add todo
+</Button>
+----
+
+Next, add a test to verify that the service is called correctly. Set up a test environment that stubs the service to prevent actual backend calls and allows you to monitor calls:
+
+[source,tsx]
+----
+/* Update imports from vitest */
+import { afterEach, beforeEach, describe, expect, it, type SpyInstance, vi } from "vitest";
+
+/* Add new import for generated service client */
+import { TodoService } from "Frontend/generated/endpoints";
+
+describe("TodoView", () => {
+  /* Add test setup and teardown */
+  let addTodoSpy: SpyInstance;
+
+  beforeEach(() => {
+    addTodoSpy = vi.spyOn(TodoService, "addTodo");
+    addTodoSpy.mockReturnValue(Promise.resolve());
+  });
+
+  afterEach(() => {
+    addTodoSpy.mockRestore();
+  });
+
+  ...
+
+  it("should call service when adding todo", async () => {
+    render(<TodoView />);
+
+    const textField = screen.getByLabelText("New todo");
+    await userEvent.click(textField);
+    await userEvent.type(textField, "Read testing guide");
+
+    const button = screen.getByText("Add todo");
+    await userEvent.click(button);
+
+    expect(addTodoSpy).toHaveBeenCalledWith("Read testing guide");
+  });
+});
+
+----
+
+In the `beforeEach` hook, this test first creates a spy for the `addTodo` method of the service. Then, this stubs the spy to return a resolved promise to prevent the actual backend call. Finally, it restores the original method in the `afterEach` hook to prevent the stub from leaking to other tests.
+
+The actual test does the same user interaction as before, but this time it's verifying that the service is called with the correct argument. 
+
+Save the test so Vitest can run it in the browser, verifying that the service is called correctly.
+
+
+== Further Information
+
+For more information about Vitest and React Testing Library, refer to the official documentation:
+
+- https://vitest.dev/guide/[Vitest Documentation]
+- https://vitest.dev/api/[Vitest API Documentation]
+- https://testing-library.com/docs/react-testing-library/intro/[React Testing Library Documentation]
+- https://testing-library.com/docs/react-testing-library/api/[React Testing Library API Documentation]
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
