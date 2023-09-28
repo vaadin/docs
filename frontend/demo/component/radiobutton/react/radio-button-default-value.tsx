@@ -5,12 +5,14 @@ import { RadioButton } from '@hilla/react-components/RadioButton.js';
 
 function Example() {
   return (
+    // tag::snippet[]
     <RadioGroup label="Repeat" theme="vertical" value="none">
       <RadioButton value="none" label="None" checked />
       <RadioButton value="daily" label="Daily" />
       <RadioButton value="weekly" label="Weekly" />
       <RadioButton value="monthly" label="Monthly" />
     </RadioGroup>
+    // end::snippet[]
   );
 }
 
