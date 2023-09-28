@@ -7,7 +7,7 @@ import jakarta.persistence.Id;
 
 import java.time.LocalDate;
 
-
+//tag::snippet[]
 @Entity
 public class Product {
     @Id
@@ -17,6 +17,9 @@ public class Product {
     private String category;
     private double price;
     private LocalDate dateAdded;
+
+    // getters and setters omitted for brevity
+    //end::snippet[]
 
     public Long getId() {
         return id;
@@ -57,4 +60,6 @@ public class Product {
     public void setDateAdded(LocalDate dateAdded) {
         this.dateAdded = dateAdded;
     }
+//tag::snippet[]
 }
+//end::snippet[]
