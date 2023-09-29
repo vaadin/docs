@@ -21,7 +21,7 @@ function Example() {
   }, [filterValue]);
 
   return (
-    <div className="flex flex-col items-start gap-m p-l">
+    <div className="flex flex-col items-start gap-m">
       <TextField
         value={filterValue}
         onValueChanged={(e) => setFilterValue(e.detail.value)}
