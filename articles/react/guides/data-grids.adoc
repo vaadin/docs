@@ -1,0 +1,198 @@
+---
+title: Data Grids
+description: "Learn how to quickly prototype data grids using the Auto Grid feature."
+order: 71
+---
+
+= Data Grids
+
+Auto Grid is a powerful feature that makes it easy to show data from your database in a data grid. It is a great way to quickly prototype your application so that you have something to show. It works by connecting a JPA repository to a grid component with minimal effort. The grid automatically shows columns for all properties of the entity and loads data in a lazy-loaded manner. It can also automatically provide sorting and filtering.
+
+This tutorial shows how to set up a JPA entity and repository in the backend, how to expose that repository with a service, and how to connect that service to an Auto Grid in the frontend. If you don't have a Hilla project yet, you can quickly create one by running the following command from the CLI:
+
+[source,shell]
+----
+npx @hilla/cli init my-hilla-app
+----
+
+== Setting up the Backend
+
+First, create a JPA entity class in the backend. For this tutorial, you are using a simple entity that represents a product. Create a [filename]`Product.java` file next to `Application.java` with the following contents:
+
+[source,java]
+----
+package com.example.application;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+import java.time.LocalDate;
+
+@Entity
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String category;
+    private double price;
+    private LocalDate dateAdded;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public LocalDate getDateAdded() {
+        return dateAdded;
+    }
+
+    public void setDateAdded(LocalDate dateAdded) {
+        this.dateAdded = dateAdded;
+    }
+}
+----
+
+Next, create a Spring JPA repository for the entity. Create a [filename]`ProductRepository.java` file next to `Product.java` with the following contents:
+
+[source,java]
+----
+package com.example.application;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+}
+----
+
+Finally, create a service to expose the repository to the frontend. Create a [filename]`ProductService.java` file next to `ProductRepository.java` with the following contents:
+
+[source,java]
+----
+package com.example.application;
+
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import dev.hilla.BrowserCallable;
+import dev.hilla.crud.CrudRepositoryService;
+
+@BrowserCallable
+@AnonymousAllowed
+public class ProductService extends CrudRepositoryService<Product, Long> {
+    public ProductService(ProductRepository productRepository) {
+        super(Product.class, productRepository);
+    }
+}
+----
+
+This service is annotated with `@BrowserCallable` to allow it to be called from the frontend. It extends `CrudRepositoryService` which provides a default implementation for fetching paginated, sorted and filtered data. By default, all services exposed to the frontend are secured and require authentication. To simplify the tutorial, the service has the `@AnonymousAllowed` annotation to allow unauthenticated access to the service.
+
+== Setting Up the Database
+
+To make the application work, you need to configure a database. For this tutorial, you can use an in-memory H2 database. To configure the database, add the following properties to the `src/main/resources/application.properties` file:
+
+[source]
+----
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.hibernate.ddl-auto=update
+----
+
+In order to have some example data, download this SQL script and put it in the `src/main/resources` folder:
+++++
+<p>
+<a
+class="button primary water"
+href="https://hilla.dev/docs/connect/_download?file=product-data.sql"
+style="color:#FFFFFF"
+ >Download product data</a>
+</p>
+++++
+
+== Creating the View
+
+Now that the backend is set up, you can implement the frontend part. Start by running the application, using the default Maven goal:
+
+[source,shell]
+----
+mvn
+----
+
+This takes a while to install all necessary dependencies, but once it is done, you should see the app in your browser.
+
+Next, create a view that renders the product data. Create a [filename]`ProductsView.tsx` file in the [filename]`frontend/views` folder with the following contents:
+
+[source,tsx]
+----
+import React from 'react';
+import { AutoGrid } from '@hilla/react-grid';
+import { ProductService } from 'Frontend/generated/endpoints';
+import ProductModel from 'Frontend/generated/com/example/application/ProductModel';
+
+export function ProductsView() {
+  return (
+    <div className='p-l'>
+      <AutoGrid service={ProductService} model={ProductModel} headerFilters={true}/>
+    </div>
+  );
+}
+----
+
+This view renders an Auto Grid component, configured to load data from the `ProductService` and using the `ProductModel` to define the columns. The `ProductModel` is generated from the `Product` entity in the backend that you created earlier. It also has the `headerFilters` property set to `true` to enable filtering.
+
+To be able to see that view you also need to register a route for it. Open `frontend/routes.tsx`, and add the following route to routes array:
+
+[source,tsx]
+----
+/* Import the products view */
+import { ProductsView } from 'Frontend/views/ProductsView';
+
+...
+
+export const routes = [
+  ...
+  { path: "/products", element: <ProductsView /> }
+];
+----
+
+Save the file and open the following URL in your browser: http://localhost:8080/products. You should see a grid like the following, showing product data from the database:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/auto-grid/react/auto-grid-basic.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+== Further Information
+
+For more information about the Auto Grid feature, see the <<../components/auto-grid#,Auto Grid>> documentation.
