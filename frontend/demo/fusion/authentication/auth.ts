@@ -3,7 +3,7 @@
 import { login as loginImpl, LoginResult, logout as logoutImpl } from '@hilla/frontend';
 // end::impl[]
 // tag::userinfo[]
-import { UserInfoEndpoint } from 'Frontend/generated/endpoints';
+import { UserInfoService } from 'Frontend/generated/endpoints';
 import UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
 // end::userinfo[]
 // tag::basic[]
@@ -71,7 +71,7 @@ export async function login(username: string, password: string): Promise<LoginRe
   if (!result.error) {
     // tag::userinfo[]
     // Get user info from endpoint
-    const user = await UserInfoEndpoint.getUserInfo();
+    const user = await UserInfoService.getUserInfo();
     // end::userinfo[]
     authentication = {
       // tag::userinfo[]

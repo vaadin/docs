@@ -8,8 +8,7 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
-
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * An example code for demoing the Spring Security configuration, shouldn't affect
@@ -38,7 +37,7 @@ public class SecurityConfigDemo extends VaadinWebSecurity {
   @Override
   public void configure(WebSecurity web) throws Exception {
       super.configure(web);
-      web.ignoring().requestMatchers(antMatcher("/images/**")); 
+      web.ignoring().requestMatchers(new AntPathRequestMatcher("/images/**")); 
   }
   // end::public-resources[]
 }

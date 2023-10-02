@@ -3,6 +3,7 @@ title: Authentication with Spring Security
 description: How to configure authentication with Spring Security.
 order: 90
 ---
+:lit:
 // tag::content[]
 
 = Authentication with Spring Security
@@ -28,9 +29,9 @@ When you add `logging.level.org.springframework.security = DEBUG` to the [filena
 
 == Server Configuration
 
-To implement your own security configuration, create a new configuration class that extends the [classname]`HillaWebSecurityConfigurerAdapter` class, and annotate it to enable security.
-[classname]`HillaWebSecurityConfigurerAdapter` is a helper which extends from the link:https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/api/org/springframework/security/config/annotation/web/configuration/WebSecurityConfigurerAdapter.html[WebSecurityConfigurerAdapter] class.
-It takes care of the configuration for Hilla requests, so that you can concentrate on your application-specific configuration.
+To implement your own security configuration, create a new configuration class that extends the [classname]`VaadinWebSecurity` class, and annotate it to enable security.
+[classname]`VaadinWebSecurity` is a helper which provides default bean implementations for link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/SecurityFilterChain.html[SecurityFilterChain] and link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/configuration/WebSecurityCustomizer.html[WebSecurityCustomizer].
+It takes care of the basic configuration for requests, so that you can concentrate on your application-specific configuration.
 
 .`SecurityConfig.java`
 [source,java]
@@ -45,7 +46,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     // denies all other
     super.configure(http);
     // use a form based login
-    http.formLogin();
+    http.formLogin(Customizer.withDefaults());
   }
 
   @Bean
@@ -72,7 +73,9 @@ For example:
 ----
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.authorizeRequests().requestMatchers("/public-view").permitAll(); // custom matcher
+    http.authorizeHttpRequests(registry -> {
+        registry.requestMatchers(new AntPathRequestMatcher("/public-view")).permitAll(); // custom matcher
+    });
     super.configure(http);
   }
 ----
@@ -84,6 +87,8 @@ Public resources can be added by overriding [methodname]`configure(WebSecurity w
 ----
 include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/SecurityConfigDemo.java[tags=public-resources]
 ----
+
+ifdef::lit[]
 
 == Create a Login View
 
@@ -218,6 +223,99 @@ For example, you can do the following:
 ----
 <vaadin-button @click="${() => logout()}">Logout</vaadin-button>
 ----
+
+endif::[]
+ifdef::react[]
+
+[role="since:dev.hilla:hilla@v2.3"]
+== Implement client-side security
+
+The implementation of client-side security in React is greatly simplified by the `react-auth` package. It can use any `@BrowserCallable` service which provides user authentication information, like the one in this example:
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfoService.java[tags=snippet]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=snippet]
+----
+--
+
+You can instruct Hilla to use this service as the source for authentication information. The service is expected to return no user if not authenticated, or an object providing information about the current user.
+
+The easiest way to configure authentication to use this service is to create an `auth.ts` file:
+
+.`frontend/auth.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/auth/auth.ts[]
+----
+
+The exported `AuthProvider` must wrap the root component of your application to be able to apply security to it:
+
+`frontend/App.tsx`
+[source,tsx]
+----
+include::{root}/frontend/demo/auth/App.tsx[tags=snippet]
+----
+
+The `useAuth` hook provides four items:
+
+- `state` contains the authentication state, which allows to access the user object and other information like authentication status (loading, errors);
+- the `login` and `logout` function to perform the corresponding actions;
+- the `hasAccess` function that is used to verify if the current user has access to a path.
+
+=== Create a Login View
+
+Use the `<LoginOverlay>` component to create the following login view, so that the autocomplete and password features of the browser are used.
+
+.`frontend/views/LoginView.tsx`
+[source,typescript]
+----
+include::{root}/frontend/demo/auth/LoginView.tsx[tags=snippet]
+----
+
+=== How to Protect a Hilla View
+
+After the login view is defined, you should define a route for it in the [filename]`routes.tsx` file. You can wrap the routes definition with the `protectRoutes` function that will filter out views having authentication requirements not fulfilled by the current authentication state.
+
+.`frontend/routes.tsx`
+[source,typescript]
+----
+include::{root}/frontend/demo/auth/routes.tsx[tags=snippet]
+----
+
+=== Role-based Protection
+
+Hilla supports role-based security out of the box, provided that the user object returned by your service has a `roles` property which returns an array or collection of strings. In that case, you can configure a route to allow access to one or more specific roles:
+
+.`frontend/routes.tsx`
+[source,typescript]
+----
+{
+  path: '/',
+  element: <AdminView />,
+  handle: { title: 'Administration Page', rolesAllowed: ['ADMIN'] },
+}
+----
+
+If roles are exposed differently in your user object, you can still tell Hilla how to find them by amending your authentication configuration on the client:
+
+.`frontend/auth.ts`
+[source,typescript]
+----
+const auth = configureAuth(UserInfoService.getUserInfo, {
+  getRoles: (user) => user.customRoles,
+});
+----
+
+The `getRoles` function is still expected to return an array of strings, so you might need to `map` your roles to strings if necessary.
+
+endif::[]
 
 === Alternatives to Using the Configuration Helper
 

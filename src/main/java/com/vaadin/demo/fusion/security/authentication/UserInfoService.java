@@ -9,14 +9,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import dev.hilla.Endpoint;
+import dev.hilla.BrowserCallable;
 
 /**
  * Provides information about the current user.
  */
 // tag::snippet[]
-@Endpoint
-public class UserInfoEndpoint {
+@BrowserCallable
+public class UserInfoService {
 
     @PermitAll
     @Nonnull
