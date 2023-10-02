@@ -17,10 +17,10 @@ public class VaadinIcons extends Div {
     layout.addClassName("items-center");
 
     // tag::snippet[]
-    Icon phoneIcon = new Icon(VaadinIcon.PHONE);
-    Icon calendarIcon = new Icon(VaadinIcon.CALENDAR);
-    Icon alarmIcon = new Icon(VaadinIcon.ALARM);
-    Button button = new Button(new Icon(VaadinIcon.BELL));
+    Icon phoneIcon = VaadinIcon.PHONE.create();
+    Icon calendarIcon = VaadinIcon.CALENDAR.create();
+    Icon alarmIcon = VaadinIcon.ALARM.create();
+    Button button = new Button(VaadinIcon.BELL.create());
 
     layout.add(phoneIcon, calendarIcon, alarmIcon, button);
     // end::snippet[]
