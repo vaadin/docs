@@ -6,6 +6,7 @@ import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
 
@@ -35,21 +36,25 @@ public class NotificationPopup extends Div {
 
     public class MessagesButton extends Button {
 
-        private final Span numberOfNotifications;
+        private final Element numberOfNotifications;
 
         public MessagesButton() {
             super(VaadinIcon.BELL_O.create());
-            numberOfNotifications = new Span();
+            numberOfNotifications = new Element("span");
             numberOfNotifications.getStyle()
                     .setPosition(Style.Position.ABSOLUTE)
                     .setTransform("translate(-40%, -85%)");
-            numberOfNotifications.getElement().getThemeList().addAll(
+            numberOfNotifications.getThemeList().addAll(
                     Arrays.asList("badge", "error", "primary", "small", "pill"));
-            getElement().appendChild(numberOfNotifications.getElement());
         }
 
         public void setUnreadMessages(int unread) {
             numberOfNotifications.setText(unread + "");
+            if(unread > 0 && numberOfNotifications.getParent() == null) {
+                getElement().appendChild(numberOfNotifications);
+            } else if(numberOfNotifications.getNode().isAttached()) {
+                numberOfNotifications.removeFromParent();
+            }
         }
 
     }
