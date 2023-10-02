@@ -27,13 +27,13 @@ public class NotificationPopup extends Div {
         bellBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         bellBtn.getElement().appendChild(numberOfNotifications.getElement());
 
-        Div sampleNotification = new Div(new Text("Show notifications here"));
-        sampleNotification.getStyle().set("padding", "var(--lumo-space-l)");
-
         ContextMenu menu = new ContextMenu();
         menu.setOpenOnClick(true);
         menu.setTarget(bellBtn);
-        menu.add(sampleNotification);
+        menu.addItem("This is ContextMenu");
+        menu.addItem("Consider Using");
+        menu.addItem("ContextMenu");
+        menu.addItem("Instead of Notifications");
         // end::snippet[]
 
         add(bellBtn);
