@@ -36,34 +36,42 @@ public class NotificationUndo extends Div {
         notification.setDuration(10000);
         notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
 
-        Div statusText = new Div(new Text("5 tasks deleted"));
-
-        Button undoButton = new Button("Undo");
-        undoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        undoButton.getElement().getStyle().set("margin-left",
-                "var(--lumo-space-xl)");
+        Button undoButton = new UndoButton();
         undoButton.addClickListener(event -> {
+            // In this example we just close the Notification
             notification.close();
         });
 
-        Button closeButton = new Button(new Icon("lumo", "cross"));
-        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        closeButton.setAriaLabel("Close");
-        closeButton.addClickListener(event -> {
-            notification.close();
-        });
-
-        HorizontalLayout layout = new HorizontalLayout(statusText, undoButton,
-                closeButton);
+        var layout = new HorizontalLayout(new Text("5 tasks deleted"), undoButton,
+                new CloseButton());
         layout.setAlignItems(Alignment.CENTER);
-
         notification.add(layout);
+
         notification.open();
         // end::snippet[]
 
         notification.setPosition(Notification.Position.MIDDLE);
 
         return notification;
+    }
+
+    public class UndoButton extends Button {
+        public UndoButton() {
+            super("Undo");
+            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            setAriaLabel("Close");
+            getElement().getStyle().set("margin-left",
+                    "var(--lumo-space-xl)");
+        }
+    }
+
+    public class CloseButton extends Button {
+        public CloseButton() {
+            super(new Icon("lumo", "cross"));
+            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            setAriaLabel("Close");
+            addClickListener(e -> findAncestor(Notification.class).close());
+        }
     }
 
     public static class Exporter extends DemoExporter<NotificationUndo> { // hidden-source-line
