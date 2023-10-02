@@ -5,6 +5,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.theme.lumo.LumoIcon;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("icon-basic")
@@ -16,8 +17,8 @@ public class IconBasic extends Div {
     layout.addClassName("items-center");
 
     // tag::snippet[]
-    Icon lumoIcon = new Icon("lumo", "photo");
-    Icon vaadinIcon = new Icon(VaadinIcon.PHONE);
+    Icon lumoIcon = LumoIcon.PHOTO.create();
+    Icon vaadinIcon = VaadinIcon.PHONE.create();
 
     layout.add(lumoIcon, vaadinIcon);
     // end::snippet[]
