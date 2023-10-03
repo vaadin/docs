@@ -31,6 +31,7 @@ function Example() {
         service={ProductService}
         model={ProductModel}
         filter={nameFilter}
+        noHeaderFilters={true}
       />
     </div>
   );

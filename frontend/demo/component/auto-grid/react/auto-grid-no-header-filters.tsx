@@ -10,7 +10,7 @@ function Example() {
     <AutoGrid
       service={ProductService}
       model={ProductModel}
-      headerFilters={true}
+      noHeaderFilters={true}
     />
     // end::snippet[]
   );

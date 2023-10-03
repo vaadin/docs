@@ -16,7 +16,7 @@
         <vaadin.version>24.2.0.alpha11</vaadin.version>
         <!-- end::vaadin-version[] -->
         <!-- tag::hilla-version[] -->
-        <hilla.version>2.3.0.alpha5</hilla.version>
+        <hilla.version>2.3.0.alpha8</hilla.version>
         <!-- end::hilla-version[] -->
 
         <drivers.dir>${project.basedir}/drivers</drivers.dir>
@@ -255,11 +255,28 @@
                         </goals>
                         <configuration>
                             <source>
+                                // "dev.hilla:hilla" provides WC npm dependencies, and
+                                // "dev.hilla:hilla-react" provides React ones, and they
+                                // don't combine. But we need both in the docs project.
+                                // Since this project depends on "dev.hilla:hilla",
+                                // the following workaround adds the Hilla React npm
+                                // packages.
+                                def hillaReactNpmPackages = [
+                                        '@hilla/react-auth',
+                                        '@hilla/react-form',
+                                        '@hilla/react-grid',
+                                ]
                                 def hillaVersion = project.properties.getProperty('hilla.version')
                                 def hillaVersionNpm = hillaVersion.replaceAll(~/(\d+\.\d+\.\d+)\.(\w+)/, '$1-$2')
                                 def packageJsonFile = new File(project.file.getParentFile(), 'package.json')
                                 def packageJson = new groovy.json.JsonSlurper().parse(packageJsonFile)
-                                println(groovy.json.JsonOutput.toJson(packageJson))
+                                for (npmPackage in hillaReactNpmPackages) {
+                                    packageJson.get('dependencies').put(npmPackage, hillaVersionNpm)
+                                }
+                                def outputPackageJson = groovy.json.JsonOutput.toJson(packageJson)
+                                outputPackageJson = groovy.json.JsonOutput.prettyPrint(outputPackageJson)
+                                outputPackageJson = outputPackageJson.replaceAll(~/(?m:^|\G)    /, '  ')
+                                packageJsonFile.write(outputPackageJson)
                             </source>
                         </configuration>
                     </execution>
