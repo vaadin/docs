@@ -4,7 +4,7 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/text-area';
 import type { TextAreaValueChangedEvent } from '@vaadin/text-area';
-import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
+import templates from '../../../../src/main/resources/data/templates.json';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-helper-2')
@@ -26,7 +26,7 @@ export class Example extends LitElement {
   private charLimit = 600;
 
   @state()
-  private text = loremIpsum;
+  private text = templates.loremIpsum;
 
   protected override render() {
     return html`

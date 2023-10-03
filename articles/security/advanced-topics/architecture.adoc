@@ -1,53 +1,35 @@
 ---
 title: Security Architecture
-description: Gives an introduction to Vaadin Flow's security architecture and how it works in practice.
+description: An introduction to Vaadin Flow's security architecture and how it works in practice.
 order: 10
 ---
 
 = Security Architecture
 
-Vaadin Flow is a server-side framework, in which all your application state, business, and UI logic stay on the server.
-Unlike client-driven frameworks, a Flow application never exposes its internals to the browser, where vulnerabilities could be abused by an attacker.
+Vaadin Flow is a server-side framework, in which all your application state, business, and UI logic stay on the server. Unlike client-driven frameworks, a Flow application never exposes its internals to the browser, where vulnerabilities could be abused by an attacker.
 
-Flow automates the communication between server and client through a single, secure endpoint.
-This endpoint has multiple built-in security features, which the following chapters describe.
+Flow automates the communication between server and client through a single, secure endpoint. This endpoint has multiple built-in security features, which the following chapters describe.
 
-The following is an example in which sensitive user data is fetched from the database.
-However, it doesn't expose anything on the client that isn't required:
+The following is an example in which sensitive user data is fetched from the database. However, it doesn't expose anything on the client that isn't required:
 
-1. User clicks a button in the UI to edit their own data, such as their name.
-2. This click is caught with framework JavaScript and translated into these two entities that are sent to the server:
-.. the unique ID of the `Button` instance (previously assigned sequentially by the framework);
-.. what was done with the button, in this case a click, with associated mouse details (what type of click it was, and the associated cursor position).
-3. The data is sent to the server using the single server endpoint.
-The application server uses standard Servlet Session methods to locate the correct user session, which is then given to Vaadin along with the request payload.
-4. Vaadin double-checks the session info and checks that a `Button` with the given ID exists.
-If it does, the server-side click handler for the button is invoked and given the event details.
-5. The server-side code fetches the user details from storage.
-This data doesn't need to be filtered at this point, but the developer can choose to do this, if necessary.
-6. The developer chooses which parts of the data to show the user by setting it as the content for any components.
-+
-For example: [methodname]`nameTextField.setValue(user.getName())`
-7. After the handler code has executed, Vaadin doesn't store any reference to the fetched data.
-Any data that isn't specifically set to be displayed is therefore discarded, such as user ID or hashed passwords or salts.
-8. Only the user name string is sent to the client to be displayed, not the full user object.
-The client isn't even aware that there is a user object on the server side.
-9. After the user has modified the name, the new value is sent back to the server.
-On the server, the developer can load the user object again, set the new name, and store the object.
+- User clicks a button in the UI to edit their own data, such as their name.
+- This click is caught with framework JavaScript and translated into two entities that are sent to the server: the unique ID of the `Button` instance -- previously assigned sequentially by the framework; what was done with the button, in this case a click, with associated mouse details -- what type of click it was, and the associated cursor position.
+- The data is sent to the server using the single server endpoint. The application server uses standard Servlet Session methods to locate the correct user session, which is then given to Vaadin along with the request payload.
+- Vaadin double-checks the session info and checks that a `Button` with the given ID exists. If it does, the server-side click handler for the button is invoked and given the event details.
+- The server-side code fetches the user details from storage. This data doesn't need to be filtered at this point, but the developer can choose to do this, if necessary.
+- The developer chooses which parts of the data to show the user by setting it as the content for any components. For example: [methodname]`nameTextField.setValue(user.getName())`
+- After the handler code has executed, Vaadin doesn't store any reference to the fetched data. Any data that isn't specifically set to be displayed is therefore discarded, such as user ID or hashed passwords or salts.
+- Only the user name string is sent to the client to be displayed, not the full user object. The client isn't even aware that there is a user object on the server side.
+- After the user has modified the name, the new value is sent back to the server. On the server, the developer can load the user object again, set the new name, and store the object.
 
-As the example shows, the developer can safely handle confidential data in their code, even when dealing with UI code.
-The framework only stores data that the developer gives it explicitly.
-Only data that should be visible on the client is actually sent there.
+As the example shows, the developer can safely handle confidential data in their code, even when dealing with UI code. The framework only stores data that the developer gives it explicitly. Only data that should be visible on the client is actually sent there.
+
 
 == Application State
 
-In a Vaadin Flow application, the server is always aware of your application's state.
-This means that, like client-side applications, the server is aware of what's currently visible on the end user's screen.
-Hence, Vaadin denies actions to components that aren't currently visible on the screen, or those that have been disabled on the server.
+In a Vaadin Flow application, the server is always aware of your application's state. This means that, like client-side applications, the server is aware of what's currently visible on the end user's screen. Hence, Vaadin denies actions to components that aren't currently visible on the screen, or those that have been disabled on the server.
 
-For instance, if the developer sets a component to be disabled, this effect is set on both the server and the client.
-On the client, an attacker can circumvent this, since attackers have full control over anything in the browser.
-However, the server blocks any interaction with the component and a warning is printed to the server logs.
+For instance, if the developer sets a component to be disabled, this effect is set on both the server and the client. On the client, an attacker can circumvent this, since attackers have full control over anything in the browser. However, the server blocks any interaction with the component and a warning is printed to the server logs.
 
 [source,java]
 ----
@@ -59,35 +41,34 @@ button.addClickListener(e -> {
 });
 ----
 
+
 // tag::data-validation[]
 == Data Validation
 
-In a Vaadin application, the data binding API supports data validation on the server, which can't be bypassed by client-side attacks.
-Vaadin components do support client-side validation to increase the responsiveness of the application, but the developer should be aware that these should be used purely for convenience, since they can be circumvented in the browser.
+In a Vaadin application, the data binding API supports data validation on the server, which can't be bypassed by client-side attacks. Vaadin components do support client-side validation to increase the responsiveness of the application, but the developer should be aware that these should be used purely for convenience, since they can be circumvented in the browser.
 
-As with other web applications, all data coming from the client should always be validated once it reaches the server.
-It isn't safe to rely only on client-side validation.
-Vaadin provides a set of pre-created server-side validators for this purpose.
-In addition, the developer is free to use any Java API for validating the data, including connecting to external services.
-Vaadin also has a built-in integration with Java's Bean Validation (Java Specification Requests (JSR) 303) standard.
+As with other web applications, all data coming from the client should always be validated once it reaches the server. It isn't safe to rely only on client-side validation. Vaadin provides a set of pre-created server-side validators for this purpose. In addition, the developer is free to use any Java API for validating the data, including connecting to external services. Vaadin also has a built-in integration with Java's Bean Validation (Java Specification Requests (JSR) 303) standard.
 
-Data coming from a data store (such as a database) and inserted as HTML into DOM elements (for example, setting `innerHTML` for elements or using HTML mode in component captions) should also be escaped.
-See the chapter on Cross-Site Scripting (XSS) for more information.
+Data coming from a data store (such as a database) and inserted as HTML into DOM elements (for example, setting `innerHTML` for elements or using HTML mode in component captions) should also be escaped. See the chapter on Cross-Site Scripting (XSS) for more information.
 // end::data-validation[]
+
 
 == Web Services
 
-No public Web Services are necessary in Vaadin applications.
-All communication in Vaadin goes through a single HTTP request handler used for Remote Procedure Calls (RPC) requests using the standard Servlet Java API.
-With Vaadin, you never open up your business logic as Web Services and thus there are fewer attack entry points to your Vaadin application.
+No public Web Services are necessary in Vaadin applications. All communication in Vaadin goes through a single HTTP request handler used for Remote Procedure Calls (RPC) requests using the standard Servlet Java API. With Vaadin, you never open up your business logic as Web Services and thus there are fewer attack entry points to your Vaadin application.
+
 
 // tag::ssl-https[]
 == SSL and HTTPS
 
-Vaadin always recommends developers to set up secure server endpoints and run all communication exclusively under HTTPS.
-Vaadin works out of the box with HTTPS, and there is nothing for the developer to configure in their application code.
-See the documentation of your servlet container for details on how to set up HTTPS on your server.
+Vaadin always recommends developers to set up secure server endpoints and run all communication exclusively under HTTPS. Vaadin works out of the box with HTTPS, and there is nothing for the developer to configure in their application code. See the documentation of your servlet container for details on how to set up HTTPS on your server.
 // end::ssl-https[]
 
 
 [discussion-id]`D23C116F-2ABD-425F-A604-7F2F69A52616`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
