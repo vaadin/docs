@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
 import React from 'react';
 import { AutoGrid } from '@hilla/react-grid';
 import { ProductService } from 'Frontend/generated/endpoints';
@@ -16,4 +17,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, autoGridHostStyles); // hidden-source-line
