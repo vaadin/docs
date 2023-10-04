@@ -13,11 +13,11 @@ function Example() {
   const [items, setItems] = useState<Person[]>([]);
 
   const [contextMenuItems, setContextMenuItems] = useState([
-    { text: 'First name', checked: true, key: 'firstName' },
-    { text: 'Last name', checked: true, key: 'lastName' },
-    { text: 'Email', checked: true, key: 'email' },
-    { text: 'Phone', checked: true, key: 'address.phone' },
-    { text: 'Profession', checked: true, key: 'profession' },
+    { text: 'First name', checked: true, key: 'firstName', keepOpen: true },
+    { text: 'Last name', checked: true, key: 'lastName', keepOpen: true },
+    { text: 'Email', checked: true, key: 'email', keepOpen: true },
+    { text: 'Phone', checked: true, key: 'address.phone', keepOpen: true },
+    { text: 'Profession', checked: true, key: 'profession', keepOpen: true },
   ]);
 
   useEffect(() => {
@@ -32,12 +32,9 @@ function Example() {
           openOn="click"
           items={contextMenuItems}
           onItemSelected={(e: CustomEvent) => {
-            const value = e.detail.value;
-            setContextMenuItems(
-              contextMenuItems.map((item) =>
-                item.key === value.key ? { ...item, checked: !value.checked } : item
-              )
-            );
+            const item = e.detail.value;
+            item.checked = !item.checked;
+            setContextMenuItems([...contextMenuItems]);
           }}
         >
           <Button theme="tertiary">Show/Hide Columns</Button>

@@ -10,7 +10,8 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class SvgStandalone extends Div {
 
   public SvgStandalone() {
-
+    // As an alternative to using a StreamResource, you can use any relative or absolute URL.
+    // For example, if you have the icons in your "myapp" application theme, you could use "/themes/myapp/code-branch.svg"
     // tag::snippet[]
     StreamResource iconResource = new StreamResource("code-branch.svg",
         () -> getClass().getResourceAsStream("/icons/code-branch.svg"));
@@ -21,5 +22,5 @@ public class SvgStandalone extends Div {
   }
 
   public static class Exporter extends DemoExporter<SvgStandalone> { // hidden-source-line
-  }
+  } // hidden-source-line
 }
