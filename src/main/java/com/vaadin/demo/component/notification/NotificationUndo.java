@@ -59,7 +59,6 @@ public class NotificationUndo extends Div {
         public UndoButton() {
             super("Undo");
             addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            setAriaLabel("Close");
             getElement().getStyle().set("margin-left",
                     "var(--lumo-space-xl)");
         }
