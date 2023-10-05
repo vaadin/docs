@@ -8,11 +8,7 @@ import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product
 function Example() {
   return (
     // tag::snippet[]
-    <AutoGrid
-      service={ProductService}
-      model={ProductModel}
-      noHeaderFilters
-    />
+    <AutoGrid service={ProductService} model={ProductModel} noHeaderFilters />
     // end::snippet[]
   );
 }
