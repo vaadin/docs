@@ -1,13 +1,13 @@
 import { Binder, StringModel } from '@hilla/form';
-import type { AbstractModel, FieldStrategy, ModelConstructor } from '@hilla/form';
+import type { AbstractModel, DetachedModelConstructor, FieldStrategy } from '@hilla/form';
 import { MyTextFieldStrategy } from './my-text-field-strategy';
 
-export class MyBinder<T, M extends AbstractModel<T>> extends Binder<T, M> {
-  constructor(context: Element, model: ModelConstructor<T, M>) {
+export class MyBinder<M extends AbstractModel> extends Binder<M> {
+  constructor(context: Element, model: DetachedModelConstructor<M>) {
     super(context, model);
   }
 
-  override getFieldStrategy<T>(element: any, model?: AbstractModel<T>): FieldStrategy {
+  override getFieldStrategy(element: any, model?: AbstractModel): FieldStrategy {
     if (element.localName === 'my-text-field' && model instanceof StringModel) {
       return new MyTextFieldStrategy(element);
     }
