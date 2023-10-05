@@ -7,31 +7,69 @@ import React, {
 import { AutoGrid } from '@hilla/react-grid';
 import { ProductService } from 'Frontend/generated/endpoints';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
-import {TextField} from "@hilla/react-components/TextField.js";
+import Matcher
+  from 'Frontend/generated/dev/hilla/crud/filter/PropertyStringFilter/Matcher';
+import {TextField} from '@hilla/react-components/TextField.js';
+import {Select, SelectItem} from '@hilla/react-components/Select.js';
+import {
+  ca
+} from "date-fns/locale";
+
+const categories: SelectItem[] = [
+  {label: 'All', value: 'All'},
+  {label: 'Fruit', value: 'Fruit'},
+  {label: 'Vegetable', value: 'Vegetable'}
+];
 
 function Example() {
   // tag::snippet[]
-  const [filterValue, setFilterValue] = useState("");
-  const nameFilter = useMemo(() => {
-    return {
-      t: "propertyString",
-      propertyId: "name",
-      matcher: "CONTAINS",
-      filterValue,
+  const [categoryFilterValue, setCategoryFilterValue] = useState(categories[0].value!);
+  const [nameFilterValue, setNameFilterValue] = useState("");
+  const filter = useMemo(() => {
+    const categoryFilter = {
+      t: 'propertyString',
+      propertyId: 'category',
+      matcher: Matcher.EQUALS,
+      filterValue: categoryFilterValue
     };
-  }, [filterValue]);
+
+    const nameFilter = {
+      t: 'propertyString',
+      propertyId: 'name',
+      matcher: Matcher.CONTAINS,
+      filterValue: nameFilterValue
+    };
+
+    return categoryFilterValue == 'All'
+      ? nameFilter
+      : {
+        t: 'and',
+        children: [
+          nameFilter,
+          categoryFilter
+        ],
+      };
+  }, [categoryFilterValue, nameFilterValue]);
 
   return (
     <div className="flex flex-col items-start gap-m">
-      <TextField
-        value={filterValue}
-        onValueChanged={(e) => setFilterValue(e.detail.value)}
-        label="Filter by name"
-      />
+      <div className="flex items-baseline gap-m">
+        <Select
+          label="Filter by category"
+          items={categories}
+          value={categoryFilterValue}
+          onValueChanged={(e) => setCategoryFilterValue(e.detail.value)}
+        />
+        <TextField
+          label="Filter by name"
+          value={nameFilterValue}
+          onValueChanged={(e) => setNameFilterValue(e.detail.value)}
+        />
+      </div>
       <AutoGrid
         service={ProductService}
         model={ProductModel}
-        filter={nameFilter}
+        filter={filter}
         noHeaderFilters={true}
       />
     </div>
