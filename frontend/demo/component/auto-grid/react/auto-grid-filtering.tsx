@@ -67,7 +67,7 @@ function Example() {
         service={ProductService}
         model={ProductModel}
         filter={filter}
-        noHeaderFilters={true}
+        noHeaderFilters
       />
     </div>
   );
