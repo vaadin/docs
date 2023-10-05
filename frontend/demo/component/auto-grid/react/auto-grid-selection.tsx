@@ -6,8 +6,6 @@ import React, {
 import { AutoGrid } from '@hilla/react-grid';
 import { ProductService } from 'Frontend/generated/endpoints';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
-import Person
-  from "Frontend/generated/com/vaadin/demo/domain/Person";
 import Product
   from "Frontend/generated/com/vaadin/demo/fusion/crud/Product";
 

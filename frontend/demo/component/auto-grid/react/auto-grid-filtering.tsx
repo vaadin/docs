@@ -11,9 +11,6 @@ import Matcher
   from 'Frontend/generated/dev/hilla/crud/filter/PropertyStringFilter/Matcher';
 import {TextField} from '@hilla/react-components/TextField.js';
 import {Select, SelectItem} from '@hilla/react-components/Select.js';
-import {
-  ca
-} from "date-fns/locale";
 
 const categories: SelectItem[] = [
   {label: 'All', value: 'All'},
