@@ -1,14 +1,14 @@
 package com.vaadin.demo.component.notification;
 
-import com.vaadin.flow.component.Text;
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.dom.Element;
+import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 import java.util.Arrays;
 
@@ -17,27 +17,48 @@ public class NotificationPopup extends Div {
 
     public NotificationPopup() {
         // tag::snippet[]
-        Span numberOfNotifications = new Span("4");
-        numberOfNotifications.getElement().getThemeList().addAll(
-                Arrays.asList("badge", "error", "primary", "small", "pill"));
-        numberOfNotifications.getStyle().set("position", "absolute")
-                .set("transform", "translate(-40%, -85%)");
-
-        Button bellBtn = new Button(VaadinIcon.BELL_O.create());
-        bellBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        bellBtn.getElement().appendChild(numberOfNotifications.getElement());
-
-        Div sampleNotification = new Div(new Text("Show notifications here"));
-        sampleNotification.getStyle().set("padding", "var(--lumo-space-l)");
+        var bellBtn = new MessagesButton();
+        bellBtn.setUnreadMessages(4);
 
         ContextMenu menu = new ContextMenu();
         menu.setOpenOnClick(true);
         menu.setTarget(bellBtn);
-        menu.add(sampleNotification);
+        menu.addItem("This is ContextMenu");
+        menu.addItem("Consider Using");
+        menu.addItem("ContextMenu");
+        menu.addItem("Instead of Notifications");
         // end::snippet[]
 
         add(bellBtn);
     }
+
+    // tag::messagesBtn[]
+
+    public class MessagesButton extends Button {
+
+        private final Element numberOfNotifications;
+
+        public MessagesButton() {
+            super(VaadinIcon.BELL_O.create());
+            numberOfNotifications = new Element("span");
+            numberOfNotifications.getStyle()
+                    .setPosition(Style.Position.ABSOLUTE)
+                    .setTransform("translate(-40%, -85%)");
+            numberOfNotifications.getThemeList().addAll(
+                    Arrays.asList("badge", "error", "primary", "small", "pill"));
+        }
+
+        public void setUnreadMessages(int unread) {
+            numberOfNotifications.setText(unread + "");
+            if(unread > 0 && numberOfNotifications.getParent() == null) {
+                getElement().appendChild(numberOfNotifications);
+            } else if(numberOfNotifications.getNode().isAttached()) {
+                numberOfNotifications.removeFromParent();
+            }
+        }
+
+    }
+    // end::messagesBtn[]
 
     public static class Exporter extends DemoExporter<NotificationPopup> { // hidden-source-line
     } // hidden-source-line

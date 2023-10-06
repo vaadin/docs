@@ -32,40 +32,46 @@ public class NotificationRetry extends Div {
 
     private Notification show() {
         // tag::snippet[]
-        // When creating a notification using the constructor,
-        // the duration is 0-sec by default which means that
-        // the notification does not close automatically.
         Notification notification = new Notification();
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        Div statusText = new Div(new Text("Failed to generate report"));
+        // this is the default, 0 or negative means the Notificaiton
+        // is not closed automatically
+        notification.setDuration(0);
 
-        Button retryButton = new Button("Retry");
-        retryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        retryButton.getElement().getStyle().set("margin-left",
-                "var(--lumo-space-xl)");
-        retryButton.addClickListener(event -> {
-            notification.close();
-        });
+        // Now we can compose the content from components
+        Button retryButton = new RetryButton();
+        Button closeButton = new CloseButton();
 
-        Button closeButton = new Button(new Icon("lumo", "cross"));
-        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        closeButton.getElement().setAttribute("aria-label", "Close");
-        closeButton.addClickListener(event -> {
-            notification.close();
-        });
-
-        HorizontalLayout layout = new HorizontalLayout(statusText, retryButton,
+        var layout = new HorizontalLayout(new Text("Failed to generate report"), retryButton,
                 closeButton);
-        layout.setAlignItems(Alignment.CENTER);
-
         notification.add(layout);
+
         notification.open();
         // end::snippet[]
 
         notification.setPosition(Notification.Position.MIDDLE);
 
         return notification;
+    }
+
+    public class RetryButton extends Button {
+        public RetryButton() {
+            super("Retry");
+            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            getElement().getStyle().set("margin-left",
+                    "var(--lumo-space-xl)");
+            addClickListener(e -> findAncestor(Notification.class).close());
+        }
+    }
+
+    public class CloseButton extends Button {
+        public CloseButton() {
+            super(new Icon("lumo", "cross"));
+            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            setAriaLabel("Close");
+            addClickListener(e -> findAncestor(Notification.class).close());
+        }
     }
 
     public static class Exporter extends DemoExporter<NotificationRetry> { // hidden-source-line
