@@ -1,4 +1,4 @@
-// TODO: replace with real @hilla/react-grid styles
+// TODO: replace with real @hilla/react-crud styles
 import { css } from 'lit';
 
 export const autoGridHostStyles = css`
