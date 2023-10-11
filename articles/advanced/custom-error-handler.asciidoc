@@ -42,6 +42,40 @@ VaadinSession.getCurrent().setErrorHandler(new CustomErrorHandler());
 To apply the custom error handler to all user sessions, you can use a [classname]`SessionInitListener`, which receives an event each time a new [classname]`VaadinSession` is initialized.
 See the <<session-and-ui-init-listener#,Session and UI Listeners>> article to learn how to create a [classname]`SessionInitListener`.
 
+[role="since:com.vaadin:vaadin@V24.3"]
+== Showing Error Parameter Views For Non Navigation Exceptions
+
+In the [classname]`DefaultErrorHandler` there is the possibility to enable transitioning to an [interfacename]`HasErrorParameter<T extends Exception>` error view on exceptions by setting the `enableErrorHandlerRedirect` parameter to `true`.
+
+For more information on the [interfacename]`HasErrorParameter` see <<{articles}/routing/exceptions#, Error Resolving>>.
+
+For a customized error handler the same can be done by using the [classname]`ErrorHandlerUtil` method [methodname]`handleErrorByRedirectingToErrorView`
+
+[source,java]
+----
+public class CustomErrorHandler implements ErrorHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomErrorHandler.class);
+
+    @Override
+    public void error(ErrorEvent errorEvent) {
+        boolean redirected = ErrorHandlerUtil
+            .handleErrorByRedirectingToErrorView(event.getThrowable());
+        if (!redirected) {
+            // We did not have a matching error view, logging and showing notification.
+            logger.error("Something wrong happened", errorEvent.getThrowable());
+            if(UI.getCurrent() != null) {
+                UI.getCurrent().access(() -> {
+                    Notification.show("An internal error has occurred." +
+                            "Contact support for assistance.");
+                });
+            }
+        }
+    }
+}
+----
+
+Calling [methodname]`handleErrorByRedirectingToErrorView` will show the error view with the exact matching exception, so for [classname]`AccountingException` only the exact match `MyAccountingException implements HasErrorParameter<AccountingException>` will be accepted and rendered.
 
 [discussion-id]`98746DB3-C9AC-42AD-A43D-D79F09B2155E`
 
