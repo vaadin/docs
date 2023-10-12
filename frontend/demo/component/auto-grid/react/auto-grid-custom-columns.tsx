@@ -10,9 +10,9 @@ import Product from "Frontend/generated/com/vaadin/demo/fusion/crud/Product";
 function Example() {
 
   // tag::snippet[]
-  function ManufacturerRenderer({ item }: { item: Product }) {
-    const { manufacturer } = item;
-    return <span>{manufacturer?.name} - {manufacturer?.headquarterCity}</span>;
+  function SupplierRenderer({ item }: { item: Product }) {
+    const { supplier } = item;
+    return <span>{supplier?.supplierName} - {supplier?.headquarterCity}</span>;
   }
 
   return (
@@ -21,10 +21,10 @@ function Example() {
       model={ProductModel}
       visibleColumns={['category', 'name']}
       customColumns={[
-        <GridColumn key={1}
+        <GridColumn key={'supplier-column'}
                     autoWidth
-                    renderer={ManufacturerRenderer}
-                    header='Manufacturer' />]}
+                    renderer={SupplierRenderer}
+                    header='Supplier' />]}
     />
   );
   // end::snippet[]

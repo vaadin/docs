@@ -19,7 +19,7 @@ public class Product {
     private double price;
     private LocalDate dateAdded;
     @OneToOne
-    private Manufacturer manufacturer;
+    private Supplier supplier;
 
     // getters and setters omitted for brevity
     //end::snippet[]
@@ -64,12 +64,12 @@ public class Product {
         this.dateAdded = dateAdded;
     }
 
-    public Manufacturer getManufacturer() {
-        return manufacturer;
+    public Supplier getSupplier() {
+        return supplier;
     }
 
-    public void setManufacturer(Manufacturer manufacturer) {
-        this.manufacturer = manufacturer;
+    public void setSupplier(Supplier supplier) {
+        this.supplier = supplier;
     }
 
     //tag::snippet[]

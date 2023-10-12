@@ -7,11 +7,11 @@ import jakarta.persistence.Id;
 
 //tag::snippet[]
 @Entity
-public class Manufacturer {
+public class Supplier {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+    private String supplierName;
     private String headquarterCity;
 
     // getters and setters omitted for brevity
@@ -25,12 +25,12 @@ public class Manufacturer {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getSupplierName() {
+        return supplierName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setSupplierName(String name) {
+        this.supplierName = name;
     }
 
     public String getHeadquarterCity() {

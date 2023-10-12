@@ -11,7 +11,7 @@ function Example() {
     <AutoGrid
       service={ProductService}
       model={ProductModel}
-      visibleColumns={['category', 'name', 'manufacturer.name', 'price']}
+      visibleColumns={['category', 'name', 'supplier.supplierName', 'price']}
     />
     // end::snippet[]
   );
