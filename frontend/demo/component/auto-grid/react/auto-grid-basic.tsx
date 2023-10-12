@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 // tag::snippet[]
-import { AutoGrid } from '@hilla/react-grid';
+import { AutoGrid } from '@hilla/react-crud';
 // tag::apply-backend[]
 import { ProductService } from 'Frontend/generated/endpoints';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
