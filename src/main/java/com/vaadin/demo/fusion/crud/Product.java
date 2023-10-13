@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 
 import java.time.LocalDate;
 
@@ -17,6 +18,8 @@ public class Product {
     private String category;
     private double price;
     private LocalDate dateAdded;
+    @OneToOne
+    private Supplier supplier;
 
     // getters and setters omitted for brevity
     //end::snippet[]
@@ -60,6 +63,15 @@ public class Product {
     public void setDateAdded(LocalDate dateAdded) {
         this.dateAdded = dateAdded;
     }
-//tag::snippet[]
+
+    public Supplier getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(Supplier supplier) {
+        this.supplier = supplier;
+    }
+
+    //tag::snippet[]
 }
 //end::snippet[]
