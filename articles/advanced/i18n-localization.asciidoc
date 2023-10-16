@@ -7,9 +7,59 @@ order: 20
 
 = Localization
 
-To use localization and translation strings, the application only needs to implement [interfacename]`I18NProvider` and define the fully qualified class name in the property `i18n.provider`.
+To use localization and translation strings, the application only needs to have the translation properties available on the classpath under the directory `vaadin-i18n` with the filename prefix `translations` e.g. `src/main/resources/vaadin-i18n/translations.properties`.
 
-== Defining the I18n Provider Property
+When <<Using Localization in the Application, calling for translation>>, or the I18NProvider is gotten for the first time, the folder resource `vaadin-i18n` will be checked if it contains any `translations.properties` or `translation_[langcode].properties` files.
+Any lang codes will be collected from the available properties files and added automatically as provided locales in the [classname]`DefaultI18NProvider`.
+
+The file `translations.properties` is a default translation file that will be used for any [classname]`Locale` that doesn't have a specific translations file.
+Locale translation files are made as [filename]`translations_fi_FI.properties` or [filename]`translations_en_GB.properties`
+
+== Locale Selection for New Session
+The initial locale is decided by matching the locales provided by the [classname]`I18NProvider` against the `Accept-Language` header in the initial response from the client.
+
+If an exact match (language + country) is found, that is used.
+Otherwise, it tries to match on only language.
+If neither is found, the locale is set to the first 'supported' locale from [methodname]`I18NProvider.getProvidedLocales()`.
+If that's empty, [methodname]`Locale.getDefault()` is used.
+
+=== Using Localization in the Application
+
+Implementing internationalization in the application is a combination of using `I18NProvider` and updating the translations on locale change.
+
+To make this simple, the application classes that control the captions and texts that are localized can implement [interfacename]`LocaleChangeObserver` to receive events related to locale change.
+
+This observer is also notified on navigation when the component is attached, but before [methodname]`onAttach()` is called.
+Any URL parameters from the navigation are set, so that they can be used to determine the state.
+
+[source,java]
+----
+public class LocaleObserver extends Div implements LocaleChangeObserver {
+
+    @Override
+    public void localeChange(LocaleChangeEvent event) {
+        setText(getTranslation("my.translation", getUserId()));
+    }
+}
+----
+
+==== Using Localization without Using LocaleChangeObserver
+
+.I18NProvider without [interfacename]`LocaleChangeObserver`
+[source,java]
+----
+public class MyLocale extends Div {
+
+    public MyLocale() {
+        setText(getTranslation("my.translation", getUserId()));
+    }
+}
+----
+
+== Defining Your Own I18n Provider Property
+
+
+To use a custom I18N provider with more features than provided by the default provider, the application only needs to implement [interfacename]`I18NProvider` and define the fully qualified class name in the property `i18n.provider`.
 
 The `i18n.provider` property can be set from the command line as a system property, as a Servlet init parameter in the [filename]`web.xml`, or using the `@WebServlet` annotation.
 
@@ -65,14 +115,6 @@ In this case, you only need to annotate your implementation with `@Component`, s
 The Spring add-on automatically uses it if it's available.
 See the class https://github.com/vaadin/flow-spring-tutorial/blob/master/src/main/java/org/vaadin/spring/tutorial/SimpleI18NProvider.java[SimpleI18NProvider.java] implemented in the tutorial project as an example.
 
-== Locale Selection for New Session
-The initial locale is decided by matching the locales provided by the [classname]`I18NProvider` against the `Accept-Language` header in the initial response from the client.
-
-If an exact match (language + country) is found, that is used.
-Otherwise, it tries to match on only language.
-If neither is found, the locale is set to the first 'supported' locale from [methodname]`I18NProvider.getProvidedLocales()`.
-If that's empty, [methodname]`Locale.getDefault()` is used.
-
 [[provider-sample-for-translation]]
 == Example of Using I18NProvider for Translation
 
@@ -124,39 +166,6 @@ public class TranslationProvider implements I18NProvider {
             value = MessageFormat.format(value, params);
         }
         return value;
-    }
-}
-----
-
-=== Using Localization in the Application
-
-Implementing internationalization in the application is a combination of using `I18NProvider` and updating the translations on locale change.
-
-To make this simple, the application classes that control the captions and texts that are localized can implement [interfacename]`LocaleChangeObserver` to receive events related to locale change.
-
-This observer is also notified on navigation when the component is attached, but before [methodname]`onAttach()` is called.
-Any URL parameters from the navigation are set, so that they can be used to determine the state.
-
-[source,java]
-----
-public class LocaleObserver extends Div implements LocaleChangeObserver {
-
-    @Override
-    public void localeChange(LocaleChangeEvent event) {
-        setText(getTranslation("my.translation", getUserId()));
-    }
-}
-----
-
-==== Using Localization without Using LocaleChangeObserver
-
-.I18NProvider without [interfacename]`LocaleChangeObserver`
-[source,java]
-----
-public class MyLocale extends Div {
-
-    public MyLocale() {
-        setText(getTranslation("my.translation", getUserId()));
     }
 }
 ----
