@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
 import React, { useMemo, useState } from 'react';
 import { AutoGrid } from '@hilla/react-crud';
-import { ProductService } from 'Frontend/generated/endpoints';
+import ProductService from 'Frontend/demo/services/ProductService';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
 import Matcher from 'Frontend/generated/dev/hilla/crud/filter/PropertyStringFilter/Matcher';
 import { TextField } from '@hilla/react-components/TextField.js';
@@ -56,7 +56,12 @@ function Example() {
           onValueChanged={(e) => setNameFilterValue(e.detail.value)}
         />
       </div>
-      <AutoGrid service={ProductService} model={ProductModel} experimentalFilter={filter} noHeaderFilters />
+      <AutoGrid
+        service={ProductService}
+        model={ProductModel}
+        experimentalFilter={filter}
+        noHeaderFilters
+      />
     </div>
   );
   // end::snippet[]
