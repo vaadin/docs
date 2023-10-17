@@ -6,6 +6,7 @@ import dev.hilla.crud.ListRepositoryService;
 //tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
-public class ProductService extends ListRepositoryService<Product, Long, ProductRepository> {
+public class ProductService
+        extends ListRepositoryService<Product, Long, ProductRepository> {
 }
 //end::snippet[]
