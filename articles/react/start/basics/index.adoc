@@ -1,8 +1,390 @@
 ---
 title: Basics Tutorial
-page-title: "Hilla basics tutorial using React"
-description: "Learn the basics of Hilla application development: creating a project, defining and accessing endpoints, and building views."
+page-title: Spring Boot & React Full-Stack Development Tutorial
+description: Hilla is a faster way to build full-stack React and Spring Boot applications. This tutorial shows you how to build a full-stack CRM application in 15 minutes.
 order: 30
 ---
-:react:
-include::{root}/articles/lit/start/basics/index.adoc[tag=content]
+
+
+= Spring Boot & React Full-Stack Development
+
+Hilla is a full-stack web framework for Java. It can help you build better business applications faster by combining a Spring Boot backend with a React frontend. Plus, it has more than forty UI components that you can utilize for a more professional application. 
+
+In this tutorial, you'll learn the basics of Hilla development by building a full-stack CRM application. The code snippets are optimized so you may _copy and paste_ them to have a working application up and running quickly.
+
+image::images/list-and-form.png[The completed application has a data grid and a form]
+
+== Requirements
+
+There are only a few requirements:
+
+- Java 17 or later;
+- Node 18 or later;
+- An IDE that supports Java and TypeScript -- IntelliJ Ultimate and VS Code are good choices; and
+- Intermediate Java skills.
+
+
+== Download Project Starter
+
+To begin, you'll need to download the Project Starter by clicking on the button here.
+
+++++
+<p>
+<a 
+class="button primary water"
+href="https://start.vaadin.com/dl?preset=hilla-crm-tutorial&projectName=hilla-crm" 
+style="color:#FFFFFF"
+ >Download project starter zip</a>
+</p>
+++++
+
+You can also use the Hilla CLI to create a new project:
+
+----
+npx @hilla/cli init --preset=hilla-crm-tutorial hilla-crm
+----
+
+
+== Project Structure
+
+The Starter is a standard Hilla project with a test database, and repositories for accessing it. Here's a quick overview of the relevant parts of the project:
+
+* `frontend` contains the React frontend
+** `views`
+*** `MainLayout.tsx` is the parent layout that includes the navigation bar
+*** `contacts`
+**** `ContactsView.tsx` is the view we are implementing
+** `routes.tsx` is routing setup for the app
+* `src` is the Spring Boot backend
+** `com.example.application`
+*** `Application.java` is the main Spring Boot application class
+*** `data` contains all the database-access-related code
+**** `Contact.java` and `Company.java` are the JPA entities
+**** `ContactRepository.java` and `CompanyRepository.java` are repositories for accessing the database
+**** `DataInitializer.java` populates the database with example data 
+*** `services` is where we will create a backend service for the application
+
+
+== Run the Hilla Application
+
+There are two ways to run the application: you can use your IDE to run `Application.java` -- this is recommended since it supports debugging; or you can run the default Maven goal from the command-line (i.e., `mvn`).
+
+Hilla will automatically reload changes to frontend and backend code when saving. IntelliJ requires you manually to build the project after making changes to Java code, while VS Code will  build automatically the project on save.
+
+
+== Create a Browser-Callable Java Service
+
+Hilla makes it possible to call Java classes from TypeScript with the `@BrowserCallable` annotation. To do this, create a `CRMService.java` class in the `com.example.application.services` package. The service handles both listing and saving Contacts. Add the following code to the class:
+
+[source,java]
+----
+package com.example.application.services;
+
+import com.example.application.data.Company;
+import com.example.application.data.CompanyRepository;
+import com.example.application.data.Contact;
+import com.example.application.data.ContactRepository;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import dev.hilla.BrowserCallable;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
+
+
+@AnonymousAllowed
+@BrowserCallable
+public class CRMService {
+    
+    private final CompanyRepository companyRepository;
+    private final ContactRepository contactRepository;
+
+    public CRMService(CompanyRepository companyRepository, ContactRepository contactRepository) {
+        this.companyRepository = companyRepository;
+        this.contactRepository = contactRepository;
+    }
+
+    public record ContactRecord(
+            Long id,
+            @NotNull
+            @Size(min = 1, max = 50)
+            String firstName,
+            @NotNull
+            @Size(min = 1, max = 50)
+            String lastName,
+            @NotNull
+            @Email
+            String email,
+            @NotNull
+            CompanyRecord company
+    ) {
+    }
+
+    public record CompanyRecord(
+            @NotNull
+            Long id,
+            String name
+    ) {
+    }
+
+
+    private ContactRecord toContactRecord(Contact c) {
+        return new ContactRecord(
+                c.getId(),
+                c.getFirstName(),
+                c.getLastName(),
+                c.getEmail(),
+                new CompanyRecord(
+                        c.getCompany().getId(),
+                        c.getCompany().getName()
+                )
+        );
+    }
+
+    private CompanyRecord toCompanyRecord(Company c) {
+        return new CompanyRecord(
+                c.getId(),
+                c.getName()
+        );
+    }
+
+    public List<CompanyRecord> findAllCompanies() {
+        return companyRepository.findAll().stream()
+                .map(this::toCompanyRecord).toList();
+    }
+
+    public List<ContactRecord> findAllContacts() {
+        List<Contact> all = contactRepository.findAllWithCompany();
+        return all.stream()
+                .map(this::toContactRecord).toList();
+    }
+
+    public ContactRecord save(ContactRecord contact) {
+        var dbContact = contactRepository.findById(contact.id).orElseThrow();
+        var company = companyRepository.findById(contact.company.id).orElseThrow();
+
+        dbContact.setFirstName(contact.firstName);
+        dbContact.setLastName(contact.lastName);
+        dbContact.setEmail(contact.email);
+        dbContact.setCompany(company);
+
+        var saved = contactRepository.save(dbContact);
+
+        return toContactRecord(saved);
+    }
+
+}
+----
+
+- The `@BrowserCallable` annotation makes all public methods in the service available to call from TypeScript. 
+- `@AnonymousAllowed` turns off access control for this service. Check out the security section to learn how Hilla uses Spring Security to secure server access.
+- The service injects `ContactRepository` and `CompanyRepository` in the constructor for database access.
+- This defines DTOs for the view as Java Records, including validation annotations that you want to enforce, both in the UI and the service.
+- The service defines the CRUD methods needed for the CRM. 
+
+Now, you'll have to build the application. Hilla will generate the needed TypeScript for accessing the service.
+
+
+== Listing Contacts in a Data Grid
+
+With the backend completed, you can start building the UI. Change the contents of `Frontend/views/contacts/ContactsView.tsx` to the following: 
+
+[source,ts]
+----
+import ContactRecord from 'Frontend/generated/com/example/application/services/CRMService/ContactRecord';
+import {useEffect, useState} from 'react';
+import {CRMService} from "Frontend/generated/endpoints";
+import {Grid} from "@hilla/react-components/Grid";
+import {GridColumn} from "@hilla/react-components/GridColumn";
+
+export default function ContactsView() {
+    const [contacts, setContacts] = useState<ContactRecord[]>([]);
+    const [selected, setSelected] = useState<ContactRecord | null | undefined>();
+
+    useEffect(() => {
+        CRMService.findAllContacts().then(setContacts);
+    }, []);
+
+    return (
+        <div className="p-m flex gap-m">
+            <Grid
+                items={contacts}
+                onActiveItemChanged={e => setSelected(e.detail.value)}
+                selectedItems={[selected]}>
+
+                <GridColumn path="firstName"/>
+                <GridColumn path="lastName"/>
+                <GridColumn path="email" autoWidth/>
+                <GridColumn path="company.name" header="Company name"/>
+            </Grid>
+        </div>
+    );
+}
+----
+
+- This calls `CRMService.findAllContacts` in a React `useEffect`. It ensures the call only happens once by passing an empty dependency array. When the async call finishes, the contacts are updated into the contacts state.
+- The contacts are bound to a `<Grid>` component that defines columns for each property you want to display in the grid.
+- The selected grid row is stored in the selected state variable. In the next step, you'll bind the selected contact to a form for editing.
+
+Reload your browser, and you should now see a data grid displaying all of the contacts created by `DataInitializer.java`. 
+
+
+== Create a Form for Editing Contacts
+
+For a complete CRM, users need to be able to edit contacts. Create a new component `ContactForm.tsx` in `frontend/views/contacts`:
+
+[source,ts]
+----
+import {TextField} from "@hilla/react-components/TextField";
+import {EmailField} from "@hilla/react-components/EmailField";
+import {Select, SelectItem} from "@hilla/react-components/Select";
+import {Button} from "@hilla/react-components/Button";
+import {useForm} from "@hilla/react-form";
+import ContactRecordModel from "Frontend/generated/com/example/application/services/CRMService/ContactRecordModel";
+import {CRMService} from "Frontend/generated/endpoints";
+import {useEffect, useState} from "react";
+import ContactRecord from "Frontend/generated/com/example/application/services/CRMService/ContactRecord";
+
+interface ContactFormProps {
+    contact?: ContactRecord | null;
+    onSubmit?: (contact: ContactRecord) => Promise<void>;
+}
+
+export default function ContactForm({contact, onSubmit}: ContactFormProps) {
+
+    const [companies, setCompanies] = useState<SelectItem[]>([]);
+
+    const {field, model, submit, reset, read} = useForm(ContactRecordModel, { onSubmit } );
+    
+    useEffect(() => {
+        read(contact);
+    }, [contact]);
+
+    useEffect(() => {
+        getCompanies();
+    }, []);
+
+    async function getCompanies() {
+        const companies = await CRMService.findAllCompanies();
+        const companyItems = companies.map(company => {
+            return {
+                label: company.name,
+                value: company.id + ""
+            };
+        });
+        setCompanies(companyItems);
+    }
+
+    return (
+        <div className="flex flex-col gap-s items-start">
+
+            <TextField label="First name" {...field(model.firstName)} />
+            <TextField label="Last name" {...field(model.lastName)} />
+            <EmailField label="Email" {...field(model.email)} />
+            <Select label="Company" items={companies} {...field(model.company.id)} />
+
+            <div className="flex gap-m">
+                <Button onClick={submit} theme="primary">Save</Button>
+                <Button onClick={reset}>Reset</Button>
+            </div>
+        </div>
+    )
+}
+----
+
+- The form component takes in a contact and `onSubmit` callback method as properties.
+- The Hilla `useForm` hook uses the automatically generated `ContactRecordModel` to configure a  form based on the validation rules you defined in Java.
+- The UI fields are bound to the form with `{...field(model.property)}`. Hilla will manage the form value and validations.
+- Use an effect to read the passed-in contact into the form any time it changes.
+- Use an effect to fetch all companies from `CRMService` and convert them to objects with label-value pairs for the select component.
+
+Change `ContactsView.tsx` with the following content:
+
+[source,ts]
+----
+import ContactRecord from 'Frontend/generated/com/example/application/services/CRMService/ContactRecord';
+import {useEffect, useState} from 'react';
+import {CRMService} from "Frontend/generated/endpoints";
+import {Grid} from "@hilla/react-components/Grid";
+import {GridColumn} from "@hilla/react-components/GridColumn";
+import ContactForm from "Frontend/views/contacts/ContactForm";
+
+export default function ContactsView() {
+    const [contacts, setContacts] = useState<ContactRecord[]>([]);
+    const [selected, setSelected] = useState<ContactRecord | null | undefined>();
+
+    useEffect(() => {
+        CRMService.findAllContacts().then(setContacts);
+    }, []);
+
+    async function onContactSaved(contact: ContactRecord) {
+        const saved = await CRMService.save(contact)
+        if (contact.id) {
+            setContacts(contacts => contacts.map(current => current.id === saved.id ? saved : current));
+        } else {
+            setContacts(contacts => [...contacts, saved]);
+        }
+        setSelected(saved);
+    }
+
+    return (
+        <div className="p-m flex gap-m">
+            <Grid
+                items={contacts}
+                onActiveItemChanged={e => setSelected(e.detail.value)}
+                selectedItems={[selected]}>
+
+                <GridColumn path="firstName"/>
+                <GridColumn path="lastName"/>
+                <GridColumn path="email"/>
+                <GridColumn path="company.name" header="Company name"/>
+            </Grid>
+
+            {selected &&
+                <ContactForm contact={selected} onSubmit={onContactSaved}/>
+            }
+        </div>
+    );
+}
+----
+
+- The form is conditionally rendered if there is a selected item.
+- On submission, the updated contact is saved to `CRMService`.
+- If the saved contact had an id (i.e., an existing contact), update the contacts state by swapping the updated contact.
+- If the contact is new, create a new contacts array and append the new contact.
+- Finally, select the newly saved item.
+
+Refresh your browser, and try the application. You should now have a fully functional, full-stack application for listing and editing contacts. Verify that the changes are persisted in the database by refreshing your browser after making a change. 
+
+
+== Build for Production
+
+If you want to share your application with others, you'll need to create a production build. It'll create an optimized build and turn off development-time debugging.
+
+[NOTE]
+Your application has an in-memory database populated with demo data on each start. Remove the data initializer and change the database to a persistent database like PostgreSQL, MySQL, MariaDB, or something similar for a real production application.
+
+Create a production-ready JAR in the target folder with the following Maven command:
+
+[source,shell]
+----
+mvn package -Pproduction
+----
+
+The resulting JAR file is a standard Spring Boot application that you can run or deploy anywhere Java applications are supported.
+
+Alternatively, you can use Spring Boot's built-in https://buildpacks.io/[buildpacks] support to create a Docker image: 
+
+[source,shell]
+----
+mvn spring-boot:build-image -Pproduction
+----
+
+Hilla also supports <<{articles}/react/guides/production/native#,compiling GraalVM native images>> to optimize startup time or memory consumption further.
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
