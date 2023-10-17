@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
 import React, { useMemo, useState } from 'react';
 import { AutoGrid } from '@hilla/react-crud';
-import ProductService from 'Frontend/demo/services/ProductService';
+import { ProductService } from 'Frontend/generated/endpoints';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
 import Matcher from 'Frontend/generated/dev/hilla/crud/filter/PropertyStringFilter/Matcher';
 import { TextField } from '@hilla/react-components/TextField.js';

@@ -4,7 +4,7 @@ import React from 'react'; // hidden-source-line
 // tag::snippet[]
 import { AutoGrid } from '@hilla/react-crud';
 // tag::apply-backend[]
-import ProductService from 'Frontend/demo/services/ProductService';
+import { ProductService } from 'Frontend/generated/endpoints';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
 
 function Example() {
