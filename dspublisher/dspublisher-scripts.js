@@ -222,6 +222,13 @@ const SCRIPTS = {
             path.resolve(__dirname, '..', 'target', jarFile),
             path.resolve(__dirname, 'out', 'docs.jar')
           );
+
+          // Copy other static resources
+          fs.mkdirSync(path.resolve(__dirname, 'out', 'public', 'static', 'product-data'));
+          fs.copyFileSync(
+            path.resolve(__dirname, '..', 'src', 'main', 'resources', 'files', 'product-data.sql'),
+            path.resolve(__dirname, 'out', 'public', 'static', 'product-data', 'data.sql')
+          );
         },
         phases: [
           {
