@@ -56,7 +56,12 @@ function Example() {
           onValueChanged={(e) => setNameFilterValue(e.detail.value)}
         />
       </div>
-      <AutoGrid service={ProductService} model={ProductModel} experimentalFilter={filter} noHeaderFilters />
+      <AutoGrid
+        service={ProductService}
+        model={ProductModel}
+        experimentalFilter={filter}
+        noHeaderFilters
+      />
     </div>
   );
   // end::snippet[]
