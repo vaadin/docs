@@ -3,15 +3,18 @@ title: Authentication with Spring Security
 description: How to configure authentication with Spring Security.
 order: 90
 ---
+:lit:
 // tag::content[]
+
 
 = Authentication with Spring Security
 
-As the downloaded application is a link:https://spring.io/projects/spring-boot[Spring Boot] project, the easiest way to enable authentication is by adding link:https://spring.io/projects/spring-security[Spring Security].
+Authentication may be configured to use Spring Security. Since the downloaded application is a link:https://spring.io/projects/spring-boot[Spring Boot] project, the easiest way to enable authentication is by adding link:https://spring.io/projects/spring-security[Spring Security].
+
 
 == Dependencies
 
-Add the following dependency to the project Maven file.
+Add the following dependency to the project Maven file;
 
 .`pom.xml`
 [source,xml]
@@ -22,15 +25,14 @@ Add the following dependency to the project Maven file.
 </dependency>
 ----
 
-The application is now protected by a default Spring login view, just by adding the Spring Security dependency.
-By default it has a single user (with username 'user') and a random password.
-When you add `logging.level.org.springframework.security = DEBUG` to the [filename]`application.properties` file, the username and password are shown in the console when the application starts up.
+After doing this, the application is protected with a default Spring login view, by adding the Spring Security dependency. By default, it has a single user -- with username, 'user' -- and a random password. When you add `logging.level.org.springframework.security = DEBUG` to the [filename]`application.properties` file, the username and password are shown in the console when the application starts up.
+
 
 == Server Configuration
 
-To implement your own security configuration, create a new configuration class that extends the [classname]`HillaWebSecurityConfigurerAdapter` class, and annotate it to enable security.
-[classname]`HillaWebSecurityConfigurerAdapter` is a helper which extends from the link:https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/api/org/springframework/security/config/annotation/web/configuration/WebSecurityConfigurerAdapter.html[WebSecurityConfigurerAdapter] class.
-It takes care of the configuration for Hilla requests, so that you can concentrate on your application-specific configuration.
+To implement your own security configuration, create a new configuration class that extends the [classname]`VaadinWebSecurity` class, and annotate it to enable security. 
+
+[classname]`VaadinWebSecurity` is a helper which provides default bean implementations for link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/SecurityFilterChain.html[SecurityFilterChain] and link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/configuration/WebSecurityCustomizer.html[WebSecurityCustomizer]. It takes care of the basic configuration for requests, so that you can concentrate on your application-specific configuration.
 
 .`SecurityConfig.java`
 [source,java]
@@ -45,7 +47,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     // denies all other
     super.configure(http);
     // use a form based login
-    http.formLogin();
+    http.formLogin(Customizer.withDefaults());
   }
 
   @Bean
@@ -62,28 +64,33 @@ public class SecurityConfig extends VaadinWebSecurity {
 
 include::{articles}/lit/start/in-depth/login-and-authentication.adoc[tag=warning-hard-coded-credentials]
 
+
 === Adding Public Views & Resources
 
-Public views need to be added to the configuration before calling [methodname]`super.configure()`.
-For example:
+Public views need to be added to the configuration before calling [methodname]`super.configure()`. Here's an example of this:
 
 .`SecurityConfig.java`
 [source,java]
 ----
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.authorizeRequests().requestMatchers("/public-view").permitAll(); // custom matcher
+    http.authorizeHttpRequests(registry -> {
+        registry.requestMatchers(new AntPathRequestMatcher("/public-view")).permitAll(); // custom matcher
+    });
     super.configure(http);
   }
 ----
 
-Public resources can be added by overriding [methodname]`configure(WebSecurity web)`:
+Public resources can be added by overriding [methodname]`configure(WebSecurity web)` like so:
 
 .`SecurityConfig.java`
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/SecurityConfigDemo.java[tags=public-resources]
 ----
+
+ifdef::lit[]
+
 
 == Create a Login View
 
@@ -95,8 +102,7 @@ Use the `<vaadin-login-overlay>` component to create the following login view, s
 include::{root}/frontend/demo/fusion/authentication/login-view.ts[]
 ----
 
-The authentication helper methods in the code examples are grouped in a separate TypeScript file, as shown in the following.
-It utilizes a Hilla [methodname]`login()` helper method for authentication based on Spring Security.
+The authentication helper methods in the code examples are grouped in a separate TypeScript file, as shown in the following. It utilizes a Hilla [methodname]`login()` helper method for authentication based on Spring Security.
 
 [.example]
 --
@@ -112,8 +118,7 @@ include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/Use
 ----
 --
 
-After the login view is defined, you should define a route for it in the [filename]`routes.ts` file.
-Don't forget to import the `login-view` component, otherwise the login view isn't visible.
+After the login view is defined, you should define a route for it in the [filename]`routes.ts` file. Don't forget to import the `login-view` component, otherwise the login view won't be visible.
 
 .`frontend/routes.ts`
 [source,typescript]
@@ -130,6 +135,7 @@ const routes = [
 ----
 
 Update the [classname]`SecurityConfig` to use the [methodname]`setLogin()` helper, which sets up everything needed for a Hilla-based login view:
+
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/SecurityConfigDemo.java[tags=login]
@@ -137,15 +143,16 @@ include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/Sec
 
 Note, the `path` for the login view in [filename]`routes.ts` must match the one defined in [classname]`SecurityConfig`.
 
-== How to Protect a Hilla View
 
-Access control for Hilla views cannot be based on URL filtering.
-The Hilla view templates are always in the bundle and can be accessed by anybody, so it's important not to store any sensitive data in the view template.
-The data should go to endpoints, and the endpoints should be protected instead.
-Read <<./configuring#, Configuring Security>> on how to protect endpoints.
-However, you can still achieve a better user experience by redirecting unauthenticated requests to the login view with the route action.
+== Protecting a Hilla View
 
-An example of using the route action:
+Access control for Hilla views cannot be based on URL filtering. The Hilla view templates are always in the bundle and can be accessed by anybody, so it's important not to store any sensitive data in the view template.
+
+The data should go to endpoints, and the endpoints should be protected instead. Read <<./configuring#, Configuring Security>> on protecting endpoints to learn more about this.
+
+You can still achieve a better user experience by redirecting unauthenticated requests to the login view with the route action.
+
+Below is an example using the route action:
 
 .`frontend/routes.ts`
 [source,typescript]
@@ -168,8 +175,8 @@ const routes = [
   // ...
 ]
 ----
-You can also add the route action to the parent layout, so that all the child views are protected.
-In this case, the login component should be outside of the main layout, that is, not a child of the main layout in the route configuration.
+
+You can also add the route action to the parent layout, so that all child views are protected. In this case, the login component should be outside of the main layout -- that is, not a child of the main layout in the route configuration.
 
 .`frontend/routes.ts`
 [source,typescript]
@@ -200,31 +207,123 @@ const routes = [
 ]
 ----
 
-The [methodname]`isLoggedIn()` method in these code examples uses a `lastLoginTimestamp` variable stored in the
-https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage[localStorage] to check if the user is logged in.
-The `lastLoginTimestamp` variable needs to be reset when logging out.
+The [methodname]`isLoggedIn()` method in these code examples uses a `lastLoginTimestamp` variable stored in the https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage[localStorage] to check if the user is logged in. The `lastLoginTimestamp` variable needs to be reset when logging out.
 
-Using `localStorage` permits navigation to sub-views without having to check authentication from the backend on every navigation.
-In this way, the authentication check can also work offline.
+Using `localStorage` permits navigation to sub-views without having to check authentication from the backend on every navigation. In this way, the authentication check can work offline.
+
 
 == Logout
 
-To handle logging out, you can use the [methodname]`logout()` helper defined earlier in [filename]`auth.ts`.
-You typically want to use a button to handle logout, instead of navigation and a route.
-This is to avoid timing issues between rendering views and logging out.
-For example, you can do the following:
+To handle logging out, you can use the [methodname]`logout()` helper defined earlier in [filename]`auth.ts`. You typically would want to use a button to handle logout, instead of navigation and a route. This is to avoid timing issues between rendering views and logging out. For example, you can do the following:
 
 [source,html]
 ----
 <vaadin-button @click="${() => logout()}">Logout</vaadin-button>
 ----
 
-=== Alternatives to Using the Configuration Helper
+endif::[]
+ifdef::react[]
 
-[methodname]`HillaWebSecurityConfigurerAdapter.configure(http)` configures HTTP security to bypass framework internal resources.
-If you prefer to roll your own configuration instead of using the helper, the matcher for these resources can be retrieved with [methodname]`HillaWebSecurityConfigurerAdapter.getDefaultHttpSecurityPermitMatcher()`.
-For example, [methodname]`HillaWebSecurityConfigurerAdapter.configure(http)` requires all requests to be authenticated, except the Hilla internal ones.
-If you want to allow public access to certain views, you can configure it as follows:
+
+[role="since:dev.hilla:hilla@v2.3"]
+== Implement Client-Side Security
+
+The implementation of client-side security in React is greatly simplified by the `react-auth` package. It can use any `@BrowserCallable` service which provides user authentication information, like the one in this example:
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfoService.java[tags=snippet]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=snippet]
+----
+--
+
+You can instruct Hilla to use this service as the source for authentication information. The service is expected to return no user if not authenticated, or an object providing information about the current user.
+
+The easiest way to configure authentication to use this service is to create an [filename]`auth.ts` file:
+
+.`frontend/auth.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/auth/auth.ts[]
+----
+
+The exported `AuthProvider` must wrap the root component of your application to be able to apply security to it:
+
+`frontend/App.tsx`
+[source,tsx]
+----
+include::{root}/frontend/demo/auth/App.tsx[tags=snippet]
+----
+
+The `useAuth` hook provides four items:
+
+- `state`, which contains the authentication state that allows access to the user object and other information like authentication status (i.e., loading, errors);
+- `login` and `logout`, which are functions used to perform the corresponding actions; and
+- `hasAccess`, another function which is used to verify if the current user has access to a path.
+
+
+=== Create a Login View
+
+Use the `<LoginOverlay>` component to create the following login view, so that the autocomplete and password features of the browser are used:
+
+.`frontend/views/LoginView.tsx`
+[source,typescript]
+----
+include::{root}/frontend/demo/auth/LoginView.tsx[tags=snippet]
+----
+
+
+=== Protecting a Hilla View
+
+After the login view is defined, you should define a route for it in the [filename]`routes.tsx` file. You can wrap the routes definition with the `protectRoutes` function that will filter out views having authentication requirements not fulfilled by the current authentication state.
+
+.`frontend/routes.tsx`
+[source,typescript]
+----
+include::{root}/frontend/demo/auth/routes.tsx[tags=snippet]
+----
+
+
+=== Role-based Protection
+
+Hilla supports role-based security out-of-the-box, provided that the user object returned by your service has a `roles` property which returns an array or collection of strings. In that case, you can configure a route to allow access to one or more specific roles:
+
+.`frontend/routes.tsx`
+[source,typescript]
+----
+{
+  path: '/',
+  element: <AdminView />,
+  handle: { title: 'Administration Page', rolesAllowed: ['ADMIN'] },
+}
+----
+
+If roles are exposed differently in your user object, you can still tell Hilla how to find them by amending your authentication configuration on the client:
+
+.`frontend/auth.ts`
+[source,typescript]
+----
+const auth = configureAuth(UserInfoService.getUserInfo, {
+  getRoles: (user) => user.customRoles,
+});
+----
+
+The `getRoles` function is still expected to return an array of strings. As a result, you might need to `map` your roles to strings.
+
+endif::[]
+
+
+=== Configuration Helper Alternatives
+
+[methodname]`HillaWebSecurityConfigurerAdapter.configure(http)` configures HTTP security to bypass framework internal resources. If you prefer to roll your own configuration, instead of using the helper, the matcher for these resources can be retrieved with [methodname]`HillaWebSecurityConfigurerAdapter.getDefaultHttpSecurityPermitMatcher()`.
+
+For example, [methodname]`HillaWebSecurityConfigurerAdapter.configure(http)` requires all requests to be authenticated, except the Hilla internal ones. If you want to allow public access to certain views, you can configure it as follows:
 
 .`SecurityConfig.java`
 [source,java]
@@ -254,10 +353,11 @@ public static void configure(WebSecurity web) throws Exception {
 }
 ----
 
+
 == Appendix: Production Data Sources
 
-The example given here of managing users in memory is valid for test applications.
-However, Spring Security offers other implementations for production scenarios.
+The example given here of managing users in memory is valid for test applications. However, Spring Security offers other implementations for production scenarios.
+
 
 === SQL Authentication
 
@@ -288,9 +388,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ----
 
+
 === LDAP Authentication
 
-The following example shows how to configure authentication by using an LDAP repository.
+This next example shows how to configure authentication by using an LDAP repository:
 
 .`SecurityConfig.java`
 [source,java]
@@ -316,7 +417,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ----
 
-Don't forget to add the corresponding LDAP client dependency to the project:
+Remember to add the corresponding LDAP client dependency to the project:
 
 .`pom.xml`
 [source,xml]
@@ -329,3 +430,10 @@ Don't forget to add the corresponding LDAP client dependency to the project:
 ----
 
 // end::content[]
+
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

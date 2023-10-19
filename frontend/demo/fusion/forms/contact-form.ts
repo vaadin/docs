@@ -23,7 +23,7 @@ export class ContactForm extends LitElement {
   }
   render() {
     return html`
-      <img src="${this.binder.model.avatarBase64}" alt="contact's avatar" />
+      <img src="${this.binder.model.avatarBase64.valueOf()}" alt="contact's avatar" />
 
       <vaadin-upload
         capture="camera"
