@@ -11,6 +11,7 @@ In addition to standard CDI contexts, the https://vaadin.com/directory/component
 
 Vaadin CDI contexts are conceptually similar to <<../spring/tutorial-spring-scopes#,Vaadin Spring scopes>>.
 
+
 == Normal Scopes
 
 In CDI, most scopes are normal scopes. This means that most calls to managed beans are delegated by a client proxy to the active instance. The active instance is provided by the context. 
@@ -20,6 +21,7 @@ The https://vaadin.com/directory/component/vaadin-cdi/[Vaadin CDI] add-on introd
 [NOTE]
 The Vaadin component hierarchy does not work properly with CDI client proxies. As a precaution, the `vaadin-cdi` add-on does not deploy if managed beans are found. 
 
+
 == Pseudo Scopes
 
 Any scope that is not a normal scope is called a pseudo scope. The standard `@Dependent` and `@Singleton` are pseudo scopes.  
@@ -28,8 +30,9 @@ The Vaadin add-on additionally introduces the `@UIScoped` and `@RouteScoped` pse
 
 Injection of a pseudo-scoped bean creates a direct reference to the object, but there are some limitations when not using proxies: 
 
-** Circular referencing, for example injecting A to B and B to A, does not work. 
-** Injecting into a larger scope binds the instance from the currently active smaller scope, and ignores changes in the smaller scope. For example, a `@UIScoped` bean after being injected into a session scope will point to the same instance (even its `UI` is closed) regardless of current `UI`.
+- Circular referencing, for example injecting A to B and B to A, does not work. 
+- Injecting into a larger scope binds the instance from the currently active smaller scope, and ignores changes in the smaller scope. For example, a `@UIScoped` bean after being injected into a session scope will point to the same instance (even its `UI` is closed) regardless of current `UI`.
+
 
 === Using Push
 
@@ -41,11 +44,13 @@ Background-thread contexts that depend on HTTP requests are not active, regardle
 
 See <<../../advanced/tutorial-push-access#asynchronous-updates,Asynchronous Updates>> for more about using push.
 
+
 === `@VaadinServiceScoped` Context
 
 The `@VaadinServiceScoped` context manages the beans during the Vaadin service lifecycle. The lifecycle of the service is the same as the lifecycle of its Vaadin servlet. See <<../../advanced/tutorial-application-lifecycle#vaadin-servlet-and-service,Vaadin Servlet and Service>> for more about the Vaadin service.
 
 For beans that are automatically picked up by `VaadinService`, you need to use the `@VaadinServiceEnabled` annotation, together with the `@VaadinServiceScoped` annotation. See <<tutorial-cdi-service-beans#,Vaadin Service Interfaces as CDI Beans>> for more.
+
 
 === `@VaadinSessionScoped` Context
 
@@ -83,8 +88,8 @@ public class SessionService {
 }
 ----
 
-* Because it is session scoped, the same instance of `SessionService` is used if the application is accessed from the same Vaadin session. 
-* If you open the root target in one tab and the `editor` target in another, the text in both is the same. This is because the session is the same even though the tabs (and `UI` instances) are different.
+Because it is session scoped, the same instance of `SessionService` is used if the application is accessed from the same Vaadin session. If you open the root target in one tab and the `editor` target in another, the text in both is the same. This is because the session is the same even though the tabs (and `UI` instances) are different.
+
 
 == `@UIScoped` and `@NormalUIScoped` Contexts
 
@@ -121,12 +126,10 @@ public class UIService {
     }
 }
 ----
-* Because it is UI scoped, the same `UIService` is used while in the same `UI`. 
-* If you open the root target in one tab and the `"editor"` target in another, the text is different because the `UI` instances are different. 
-* If you navigate to the `editor` instance via the router (or the `UI` instance which delegates navigation to the router) the text is the same.
-+
+Because it is UI scoped, the same `UIService` is used while in the same `UI`. If you open the root target in one tab and the `"editor"` target in another, the text is different because the `UI` instances are different. If you navigate to the `editor` instance via the router (or the `UI` instance which delegates navigation to the router) the text is the same.
+
 *Example*: Navigating to the `"editor"` target.
-+
+
 [source,java]
 ----
 public void edit() {
@@ -134,9 +137,14 @@ public void edit() {
 }
 ----
 
-* In the same `UI` instance, the same bean instance is used with both `@UIScoped` and `@NormalUIScoped`.
+In the same `UI` instance, the same bean instance is used with both `@UIScoped` and `@NormalUIScoped`.
 
-== `@RouteScoped` and `@NormalRouteScoped` Contexts
+.Preserving UIScope Beans
+[NOTE]
+Unlike with earlier versions of Vaadin (i.e., versions 7 and 8), the `UI`, and thus the `UIScoped` and `NormalUIScoped` beans, aren't preserved when the `@PreserveOnRefresh` annotation is used and the browser is then refreshed. To preserve the beans on refresh, you need to use instead `@RouteScoped`, as described <<routescope.preserve, later on this page>>.
+
+
+== `@RouteScoped` & `@NormalRouteScoped` Contexts
 
 The `@RouteScoped` and `@NormalRouteScoped` manage the beans during the `Route` lifecycle. Use `@RouteScoped` for components and `@NormalRouteScoped` for other beans.
 
@@ -190,10 +198,11 @@ public class RouteService {
 }
 ----
 
-* `ParentView`, `ChildAView`, and `ChildBView` (paths: `/parent`, `/parent/child-a`, and `/parent/child-b`) use the same `RouteService` instance while you navigate between them. After navigating away from `ParentView`, the `RouteService` is also destroyed.
-* Even though `@RouteScopeOwner` is redundant because it is a CDI qualifier, you need to define it on both the bean and on the injection point.
+`ParentView`, `ChildAView`, and `ChildBView` (paths: `/parent`, `/parent/child-a`, and `/parent/child-b`) use the same `RouteService` instance while you navigate between them. After navigating away from `ParentView`, the `RouteService` is also destroyed.
 
-Route components can also be `@RouteScoped`. In this case, `@RouteScopeOwner` should point to a parent layout. If you omit it, the owner itself becomes the class.
+Even though `@RouteScopeOwner` is redundant because it is a CDI qualifier, you need to define it on both the bean and on the injection point.
+
+Route components can also be `@RouteScoped`. In this case, `@RouteScopeOwner` should point to a parent layout. If `@RouteScopeOwner` is omitted, the `@RouteScoped` annotated component -- or in case of a nested routing hierarchy, the leaf route component -- becomes the owner.
 
 *Example*: Using the `@RouteScoped` annotation on an `@Route` component. 
 
@@ -209,7 +218,56 @@ public class ScopedView extends Div {
     }
 }
 ----
-* The message is delivered to the `ScopedView` instance that was already navigated to. If on another view, there is no instance of this bean and the message is not delivered to it.
+
+The message is delivered to the `ScopedView` instance that was already navigated to. If on another view, there is no instance of this bean and the message is not delivered to it.
+
+
+[[routescope.preserve]]
+=== Preserving Beans during Browser Refresh
+
+By default, when the user refreshes the page, all routing components are recreated. This applies to `@UIScoped` and `@RouteScoped` beans, too. New bean instances are created and injected to the new routing components. It's possible to tell the framework to preserve the routing components during refresh with the `@PreserveOnRefresh` annotation. See the <<../../advanced/tutorial-preserving-state-on-refresh.asciidoc#,Preserving the State on Refresh>> documentation page for more information.
+
+When the `@PreserveOnRefresh` annotation is used on a routing component that has `@RouteScoped` beans injected into it, the beans are preserved too.
+
+The example that follows shows beans being preserved with `@RouteScopeOwner` targeting a component with `@PreserveOnRefresh`:
+
+[source,java]
+----
+@RouteScoped
+@RouteScopeOwner(MainLayout.class)
+public class PreservedBean {
+    private String uuid = UUID.randomUUID().toString();
+
+    public String getText() {
+        return uuid;
+    }
+}
+
+@Route("") // optional, could use a subview with @Route instead
+@PreserveOnRefresh
+public class MainLayout extends VerticalLayout implements RouterLayout {
+
+    @Inject
+    @RouteScopeOwner(MainLayout.class)
+    private PreservedBean bean;
+
+    @PostConstruct
+    public void init() {
+        add(new Span("UUID:" + bean.getText()));
+    }
+}
+----
+
+In this example, both the [classname]`MainLayout` component and the [classname]`PreservedBean` injected bean are preserved after browser refresh. The text stays the same.
+
+If the `@PreserveOnRefresh` annotation is removed from the layout, both the component and the bean are recreated after browser refresh. The text would change.
+
+
+==== UIScoped Beans Aren't Preserved
+
+Injected beans aren't preserved when they're `UIScoped`, but only when they're `RouteScoped`, regardless of whether `@PreserveOnRefresh` is used. However, any currently active routing components are preserved, even if they're `UIScoped`. This is due to the nature of the `@PreserveOnRefresh` feature implementation.
+
+The `UI` instance itself isn't preserved, but routing components are. Any bean tied to the `UI` instance with `UIScoped` is recreated, and the preserved routing components are moved to the new `UI`. To preserve beans during a browser refresh, you need to use `@RouteScoped`, as shown earlier.
 
 
 [discussion-id]`BEFF17CB-B9C4-448C-BF9B-DCB31CF45642`
