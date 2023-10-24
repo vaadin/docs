@@ -236,4 +236,47 @@ public class ScopedView extends Div {
 If on another view, there is no instance of this bean and the message isn't delivered to it.
 
 
+=== Preserving Beans during Browser Refresh
+
+By default, when the user refreshes the page, all routing components are recreated. This applies to `@UIScoped` and `@RouteScoped` beans, too. New bean instances are created and injected to the new routing components. It's possible to tell the framework to preserve the routing components during refresh with the `@PreserveOnRefresh` annotation. See the <<../../advanced/preserving-state-on-refresh.asciidoc#,Preserving the State on Refresh>> documentation page for more information.
+
+When the `@PreserveOnRefresh` annotation is used on a routing component that has `@RouteScoped` beans injected into it, the beans are preserved too.
+
+The example that follows shows beans being preserved with `@RouteScopeOwner` targeting a component with `@PreserveOnRefresh`:
+
+[source,java]
+----
+@RouteScoped
+@RouteScopeOwner(MainLayout.class)
+public class PreservedBean {
+    private String uuid = UUID.randomUUID().toString();
+    public String getText() {
+        return uuid;
+    }
+}
+@Route("") // optional, could use a subview with @Route instead
+@PreserveOnRefresh
+public class MainLayout extends VerticalLayout implements RouterLayout {
+    @Inject
+    @RouteScopeOwner(MainLayout.class)
+    private PreservedBean bean;
+    @PostConstruct
+    public void init() {
+        add(new Span("UUID:" + bean.getText()));
+    }
+}
+----
+
+In this example, both the [classname]`MainLayout` component and the [classname]`PreservedBean` injected bean are preserved after browser refresh. The text stays the same.
+
+If the `@PreserveOnRefresh` annotation is removed from the layout, both the component and the bean are recreated after browser refresh. The text would change.
+
+
+==== UIScoped Beans Aren't Preserved
+
+Injected beans aren't preserved when they're `UIScoped`, but only when they're `RouteScoped`, regardless of whether `@PreserveOnRefresh` is used. However, any currently active routing components are preserved, even if they're `UIScoped`. This is due to the nature of the `@PreserveOnRefresh` feature implementation.
+
+The `UI` instance itself isn't preserved, but routing components are. Any bean tied to the `UI` instance with `UIScoped` is recreated, and the preserved routing components are moved to the new `UI`. To preserve beans during a browser refresh, you need to use `@RouteScoped`, as shown earlier.
+
+
 [discussion-id]`4AAFA7A1-CF85-42D6-A7F2-E0CB0DB70FD1`
