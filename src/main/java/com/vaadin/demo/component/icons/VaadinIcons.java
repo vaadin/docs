@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.icons;
 
-import com.vaadin.demo.flow.routing.Route;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
