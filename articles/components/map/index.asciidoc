@@ -1,0 +1,462 @@
+---
+title: Map
+page-links:
+  - 'API: https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/Map.html[Java]'
+  - 'Source: https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-map-flow-parent[Java]'
+---
+
+= Map
+
+// tag::description[]
+Map is a component for displaying geographical maps from various sources.
+// end::description[]
+It supports multiple layers, tiled and full-image sources, adding markers, and interaction through events.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-basic.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapBasic.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+--
+
+.Breaking Changes Since 23.1
+[IMPORTANT]
+====
+This documentation has already been updated to Vaadin 23.2.
+See the <<#breaking-changes-since-23-1, breaking changes to the default coordinate system>> and how they relate to this documentation.
+====
+
+.Map Data Subscription Not Included
+[IMPORTANT]
+====
+The Map component uses OpenStreetMap as its default map data provider for testing and development purposes.
+The https://operations.osmfoundation.org/policies/tiles/[tile usage policy for OpenStreetMap] only allows for light usage. This means it should not be used for production.
+A commercial map data service, or a self-hosted solution, should be arranged for production use.
+See the <<Map Sources>> section for a list of supported map data formats.
+====
+
+
+== Viewport
+
+Map provides interactions, controls, and APIs to control the viewport.
+This includes setting the center, the zoom level, and the rotation.
+
+By default, map coordinates such as the view's center are specified in EPSG:4326 projection -- also known as latitude and longitude -- unless a custom user projection is configured.
+See <<#coordinate-systems, Coordinate Systems>> for more information.
+
+The zoom level is a decimal number that starts at `0` as the most zoomed-out level, and then progressively increases to zoom further in.
+By default, the maximum zoom level is currently restricted to `28`.
+In practical terms, the level of detail of the map data that a map service provides will determine the usefulness of higher zoom levels.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-viewport.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapViewport.java[render,tags=snippet1,indent=0,group=Java]
+
+...
+
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapViewport.java[render,tags=snippet2,indent=0,group=Java]
+----
+endif::[]
+--
+
+== Map Sources
+
+Web maps can be roughly categorized as being based on tiled images, full images or vector data.
+Each category comes with its own set of standards and formats that define how the map data is structured and how it should be used.
+Map services are applications -- typically servers or cloud services -- that provide map data in one or more of these formats.
+
+The Map component provides various sources for loading map data in a specific format from a map service.
+Each source requires the use of a specific type of layer that can render data from that source.
+
+The following table lists the sources that can be used with Map.
+An example usage of each source can be found in the demo that follows:
+
+// Allow OSM, WMS, XYZ
+
+[cols="1,1,4"]
+|===
+| Source | Requires | Description
+
+| https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/configuration/source/OSMSource.html[OSM]
+| https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/configuration/layer/TileLayer.html[Tile layer]
+| Loads image tiles from the OpenStreetMap service.
+This source is configured as the default.
+It doesn't require further configuration, as it contains presets for URL and attributions.
+This source should be used only for development purposes.
+For applications in production, you should use a commercial map service or a self-hosted solution.
+Read and respect the https://operations.osmfoundation.org/policies/tiles/[OpenStreetMap tile usage policy].
+
+| https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/configuration/source/XYZSource.html[XYZ]
+| https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/configuration/layer/TileLayer.html[Tile layer]
+| Loads image tiles from a map service that supports the https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames[Slippy Map tile numbering scheme], also known as XYZ format.
+This source requires you to configure a URL pattern that contains placeholders for the `x` and `y` tile coordinates, as well as the `z` placeholder for the zoom level. For an example, see `https://my-map-service.com/my-tileset/{z}/{x}/{y}.png`.
+For the specific URL, consult the documentation of the map service that you intend to use.
+
+| https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/configuration/source/TileWMSSource.html[Tile WMS]
+| https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/configuration/layer/TileLayer.html[Tile layer]
+| Loads image tiles from a https://www.ogc.org/standards/wms[Web Map Service] (WMS).
+This source requires you to configure the URL to the WMS, as well as the request parameters.
+At a minimum, the `LAYERS` request parameter must be configured.
+For other required parameters and available values, consult the documentation of the service itself.
+
+|===
+
+
+// TODO: Image WMS isn't in a release yet, also demo needs to be extended
+////
+| Image WMS
+| Image layer
+| Loads a full image for the viewport from a https://www.ogc.org/standards/wms[Web Map Service] (WMS).
+This source requires configuring the URL to the WMS, as well as the request parameters.
+At least the `LAYERS` request parameter must be configured. For other required parameters and available values, consult the documentation of the service itself.
+////
+
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-sources.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapSources.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+--
+
+== Layers
+
+The map component is preconfigured with a background layer showing a map from the OpenStreetMap service by default, as well as a feature layer for quickly adding geographical features, such as markers.
+The default background layer can be replaced, and additional layers added on top of it, such as to display overlays.
+
+By default, layers are rendered in the order that they were added to the map, with the first-added layer rendered first, and the last-added layer rendered last.
+For finer-grain control of the layer rendering order, a `z-index` can be defined for each layer.
+Layers with a higher z-index are rendered on top of layers with a lower z-index.
+The exceptions are the background layer, which is always rendered first, and the feature layer, which is rendered with a z-index of `100`, by default.
+
+The visibility of layers can be toggled, which can be an alternative to adding and removing them, dynamically.
+For map overlays, a layer can be configured with a lowered opacity so that the background layer is still semi-visible below the overlay.
+Some map services may provide map data with a lowered opacity by default.
+
+The following example demonstrates how to replace the background layer, how to add several overlays to the map, and how to control their visibility:
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-layers.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapLayers.java[render,tags=snippet1,indent=0,group=Java]
+
+...
+
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapLayers.java[render,tags=snippet2,indent=0,group=Java]
+
+...
+
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapLayers.java[render,tags=snippet3,indent=0,group=Java]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/LayerOption.java[group=Java]
+----
+endif::[]
+--
+
+== Markers
+
+Markers can be displayed on top of a map to show points of interest, such as addresses, buildings, vehicles, or any other entity.
+A marker is defined by a coordinate and an icon.
+Icons can be configured as either a URL or a https://vaadin.com/docs/advanced/dynamic-content#using-streamresource[StreamResource].
+If no custom icon is provided, the marker uses a default icon.
+
+By default, map coordinates such as a marker's location are specified in EPSG:4326 projection, also known as latitude and longitude, unless a custom user projection is configured.
+See <<#coordinate-systems, Coordinate Systems>> for more information.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-markers.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapMarkers.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+--
+
+.Performance considerations
+[NOTE]
+====
+When using custom icons, ensure that you create only one icon instance per custom image that you want to use.
+For example, when adding multiple markers that use the same image, it's sufficient to create one icon instance and use that for all markers.
+Creating a separate icon instance for each marker can increase memory usage and degrade performance in the browser.
+====
+
+[role="since:com.vaadin:vaadin@V24.1"]
+=== Marker Text
+
+Markers can be configured to show text, which is displayed below the marker icon by default.
+You can customize the position and style of the text by setting a custom text style for the marker.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-marker-text.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapMarkerText.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+--
+
+[role="since:com.vaadin:vaadin@V24.1"]
+=== Marker Drag & Drop
+
+Markers can be configured to be draggable, allowing users to pick them up and move them around the map.
+Use `MapFeatureDropEvent` to show a notification when a marker is dragged to a new location. The notification shows which marker was moved along with its start and end coordinates.
+The coordinates are automatically updated for the marker.
+
+The following example demonstrates how you can drag a marker on the map and get notified when dropping it into place:
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-marker-drag-drop.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapMarkerDragDrop.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+--
+
+== Events
+
+The Map component provides several events that can be used to make a map interactive.
+Currently, the following events are supported:
+
+[cols="1,4"]
+|===
+| Event | Description
+
+|https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/events/MapViewMoveEndEvent.html[View Move End]
+|Triggered after the user has changed the viewport, regardless of the input method.
+The event is triggered only after the user has finished manipulating the viewport. For example, it's triggered after letting go of the mouse button after a mouse drag action.
+
+The event contains details about the current viewport, such as the center, the zoom level, and the current bounding box, the extent of the viewport.
+
+|https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/events/MapClickEvent.html[Map Click]
+|Triggered when the user clicks on the map.
+The event contains information about the clicked coordinates and other details of the mouse event.
+It also contains a list of all markers at that location to distinguish whether the click occurred on the map itself, or on a marker.
+
+|https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/map/events/MapFeatureClickEvent.html[Feature Click]
+|Triggered when the user clicks on a marker.
+The event contains information about the clicked marker and other details of the mouse event.
+If there are overlapping markers, the event is fired only for the top-level marker at that location.
+
+The term _feature_ refers to geographical features in a general sense.
+For now, Map only supports markers as geographical features, so these are equivalent.
+
+|===
+
+The following example demonstrates how to make use of the events:
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-events.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapEvents.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+--
+
+[role="since:com.vaadin:vaadin@V23.2"]
+== Coordinate Systems
+
+The default coordinate system, or projection, for all coordinates passed to or received from the component is EPSG:4326, also referred to as GPS coordinates or latitude and longitude.
+This is called the user projection as it affects all of the coordinates that the user of the component, in this case the developer, is working with.
+That means when setting coordinates, such as for the viewport or for a marker, coordinates must be specified in EPSG:4326 by default. Coordinates received from events are guaranteed to be in that projection.
+
+Internally, the component converts all of the coordinates into the projection that's used by the map's view. This is called the view projection.
+The default view projection is EPSG:3857, also known as https://en.wikipedia.org/wiki/Web_Mercator_projection[Web Mercator Projection].
+
+=== Changing the User Projection
+
+The user projection can be changed, for example when working with coordinates that aren't in the EPSG:4326 projection.
+Out of the box, the component only has support for the EPSG:4326 and EPSG:3857 projections. However, the component allows <<#defining-custom-projections, defining custom projections>>.
+As mentioned above, changing the user projection affects all coordinates. Using coordinates with different projections isn't supported.
+
+.Example for setting a different user projection
+[.example]
+--
+[source,Java]
+----
+// Set user projection to EPSG:3857
+Map.setUserProjection("EPSG:3857");
+
+// Create a map, center viewport on New York using
+// coordinates in EPSG:3857 projection
+Map map = new Map();
+map.setCenter(new Coordinate(-8235375.352932, 4967773.457877));
+map.setZoom(10);
+----
+--
+
+.User Projection Scope
+[NOTE]
+====
+The user projection setting is valid for the lifetime of the current browser page. This means it stays defined when navigating using the router, but not when doing a hard location change, or reloading the page.
+In practice, it's advisable to set the user projection on every page where it's used.
+
+The user projection affects all maps on the browser page, and should be set before creating any maps.
+====
+
+=== Defining Custom Projections
+
+Custom projections can be defined when working with coordinates that are in neither EPSG:4326 nor EPSG:3857 projection.
+Defining a custom projection requires a name, which can later be referenced, as well as a projection definition in the https://www.iso.org/standard/76496.html[Well Known Text] (WKT) format.
+https://epsg.io[epsg.io] is a handy resource for looking up WKT definitions of projections, as well as converting coordinates between specific projections. After a custom projection has been defined, it can be used as either user projection or view projection.
+
+.Example for defining a custom projection
+[.example]
+--
+[source,Java]
+----
+// Define EPSG:3067, which is a projection specifically for use in Finland
+String wkt = ""
+    + "PROJCS[\"ETRS89 / TM35FIN(E,N)\",\n"
+    + "    GEOGCS[\"ETRS89\",\n"
+    + "        DATUM[\"European_Terrestrial_Reference_System_1989\",\n"
+    + "            SPHEROID[\"GRS 1980\",6378137,298.257222101,\n"
+    + "                AUTHORITY[\"EPSG\",\"7019\"]],\n"
+    + "            TOWGS84[0,0,0,0,0,0,0],\n"
+    + "            AUTHORITY[\"EPSG\",\"6258\"]],\n"
+    + "        PRIMEM[\"Greenwich\",0,\n"
+    + "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+    + "        UNIT[\"degree\",0.0174532925199433,\n"
+    + "            AUTHORITY[\"EPSG\",\"9122\"]],\n"
+    + "        AUTHORITY[\"EPSG\",\"4258\"]],\n"
+    + "    PROJECTION[\"Transverse_Mercator\"],\n"
+    + "    PARAMETER[\"latitude_of_origin\",0],\n"
+    + "    PARAMETER[\"central_meridian\",27],\n"
+    + "    PARAMETER[\"scale_factor\",0.9996],\n"
+    + "    PARAMETER[\"false_easting\",500000],\n"
+    + "    PARAMETER[\"false_northing\",0],\n"
+    + "    UNIT[\"metre\",1,\n"
+    + "        AUTHORITY[\"EPSG\",\"9001\"]],\n"
+    + "    AXIS[\"Easting\",EAST],\n"
+    + "    AXIS[\"Northing\",NORTH],\n"
+    + "    AUTHORITY[\"EPSG\",\"3067\"]]";
+Map.defineProjection("EPSG:3067", wkt);
+
+// Set user projection to EPSG:3067
+Map.setUserProjection("EPSG:3067");
+
+// Create a map, change view projection to EPSG:3067 as well
+Map map = new Map();
+map.setView(new View("EPSG:3067"));
+
+// Center viewport on Helsinki using
+// coordinates in EPSG:3067 projection
+map.setCenter(new Coordinate(385725.63, 6671616.89));
+map.setZoom(10);
+----
+--
+
+.Custom projection scope
+[NOTE]
+====
+Custom projections are valid for the lifetime of the current browser page. This means they stay defined when navigating using the router, but not when doing a hard location change, or reloading the page.
+In practice, it's advisable to define projections on every page where they are used.
+
+Custom projections must be defined before using them as either user projection or view projection.
+====
+
+=== Breaking Changes since 23.1
+
+In Vaadin 23.2, the default coordinate system has been changed to EPSG:4326, also referred to as GPS coordinates, or latitude and longitude.
+Since this documentation has already been updated to 23.2, all documentation sections refer to the new coordinate system. Examples have been adapted to create coordinates using latitude and longitude.
+
+If you are still using Vaadin 23.1, the default coordinate system is EPSG:3857. All coordinates provided to the map must be in that projection.
+If you want to create coordinates from latitude and longitude in 23.1, use the static [methodname]`Coordinate.fromLonLat(longitude, latitude)` helper.
+You can adapt the examples from this documentation to work with 23.1 by changing code that constructs coordinates:
+
+[source,java,role="before"]
+----
+new Coordinate(longitude, latitude)
+----
+
+[source,java,role="after"]
+----
+Coordinate.fromLonLat(longitude, latitude)
+----
+
+== Theme Variants
+
+=== Borderless
+
+By default, Map has a visible, rounded border.
+The border can be removed by using the `borderless` theme variant.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/map/map-theme-borderless.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/map/MapThemeBorderless.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+--
+
+== Usage with Vaadin 23.0 and 23.1
+
+To use Map with Vaadin 23.0 or 23.1, you must enable with the `mapComponent` feature flag.
+
+See https://vaadin.com/docs/configuration/feature-flags#[Feature Flags] for more information.
