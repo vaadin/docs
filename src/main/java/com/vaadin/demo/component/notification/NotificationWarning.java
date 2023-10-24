@@ -17,7 +17,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationWarning extends Div {
 
     public NotificationWarning() {
-        Button button = new Button("Try it");
+        Button button = new Button("Show notification");
         button.addClickListener(clickEvent -> {
             button.setEnabled(false);
 
@@ -27,6 +27,7 @@ public class NotificationWarning extends Div {
         });
 
         add(button);
+        show();
     }
 
     public Notification show() {
@@ -45,7 +46,7 @@ public class NotificationWarning extends Div {
 
         Button closeButton = new Button(new Icon("lumo", "cross"));
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        closeButton.getElement().setAttribute("aria-label", "Close");
+        closeButton.setAriaLabel("Close");
         closeButton.addClickListener(event -> {
             notification.close();
         });
@@ -57,7 +58,7 @@ public class NotificationWarning extends Div {
         notification.open();
         // end::snippet[]
 
-        notification.setPosition(Notification.Position.TOP_CENTER);
+        notification.setPosition(Notification.Position.MIDDLE);
 
         return notification;
     }

@@ -1,23 +1,24 @@
 ---
 title: Router Exception Handling
 order: 70
+description: Exception handling by the Router class.
 ---
+
 
 = Router Exception Handling
 
-[classname]`Router` provides special support for navigation target exceptions.
-When an unhandled exception is thrown during navigation, an error view is shown.
+[classname]`Router` provides special support for navigation target exceptions. When an unhandled exception is thrown during navigation, an error view is shown.
 
-Exception targets work in the same way as regular navigation targets, except that they don't typically have a specific `@Route`, because they are shown for arbitrary URLs.
+Exception targets work in the same way as regular navigation targets, but they don't typically have a specific `@Route` because they're shown for arbitrary URLs.
+
 
 == Error Resolving
 
 Errors in navigation are resolved to a target that's based on the exception type thrown during navigation.
 
-At startup, all classes implementing the [interfacename]`HasErrorParameter<T extends Exception>` interface are collected for use as exception targets during navigation.
-An example of such a class is [classname]`RouteNotFoundError`, which is included by default in the framework and is used to resolve errors related to the router's `NotFoundException`.
+At startup, all classes implementing the [interfacename]`HasErrorParameter<T extends Exception>` interface are collected for use as exception targets during navigation. An example of such a class is [classname]`RouteNotFoundError`. It's included by default in the framework and is used to resolve errors related to the router's `NotFoundException`.
 
-*Example*: [classname]`RouteNotFoundError` defines the default target for the [classname]`NotFoundException` that's shown when there is no target for the given URL.
+In the example here, [classname]`RouteNotFoundError` defines the default target for the [classname]`NotFoundException` that's shown when there is no target for the given URL:
 
 [source,java]
 ----
@@ -36,21 +37,23 @@ public class RouteNotFoundError extends Component
 }
 ----
 
-* This returns a `404` HTTP response and displays the text specified in the parameter to [methodname]`setText()`.
+This returns a `404` HTTP response and displays the text specified in the parameter to [methodname]`setText()`.
 
-Exceptions are matched in the order below:
+Exceptions are matched first by exception cause, then by exception super type.
 
-. By exception cause.
-. By exception super type.
+The `404` [classname]`RouteNotFoundError` for [classname]`NotFoundException`, and `500` [classname]`InternalServerError` for [classname]`java.lang.Exception` are implemented by default.
 
-The `404` [classname]`RouteNotFoundError` (for [classname]`NotFoundException`), and `500` [classname]`InternalServerError` (for [classname]`java.lang.Exception`) are implemented by default.
+Also by default, the initial request first loads the client-side bootstrapping with an HTTP 200 response. An error page is rendered later in another request which returns an initial JSON data fragment, including the error page. The HTTP 404 response from [classname]`RouteNotFoundError` is only processed in the server side. It isn't returned to the browser as an HTTP code of the response.
+
+If you enable the <<{articles}/configuration/properties/#properties,`eagerServerLoad` property>>, the initial JSON data fragment is part of the first request's response. It includes the [classname]`RouteNotFoundError` page with an HTTP 404 response.
 
 
 == Custom Exception Handlers
 
 You can override the default exception handlers by extending them.
 
-*Example*: Custom "route not found" handler that uses a custom application layout
+The example here shows a custom "route not found" handler that uses a custom application layout:
+
 [source,java]
 ----
 @ParentLayout(MainLayout.class)
@@ -67,20 +70,15 @@ public class CustomNotFoundTarget
 }
 ----
 
-Note:
+[NOTE]
+Only extending instances are allowed. Exception targets may define [classname]`ParentLayouts`. [classname]`BeforeNavigationEvent` and [classname]`AfterNavigationEvent` are still sent, as in normal navigation. One exception may only have one exception handler.
 
-* Only extending instances are allowed.
-* Exception targets may define [classname]`ParentLayouts`.
-[classname]`BeforeNavigationEvent` and [classname]`AfterNavigationEvent` are still sent, as in normal navigation.
-
-* One exception may only have one exception handler.
 
 === Advanced Exception Handling Example
 
-The following example assumes an application `Dashboard` that collects and shows widgets to users.
-Only authenticated users are allowed to see protected widgets.
+The following example assumes an application `Dashboard` that collects and shows widgets to users. Only authenticated users are allowed to see protected widgets.
 
-If the collection instantiates a [classname]`ProtectedWidget` in error, the widget itself checks authentication on creation and throw an [classname]`AccessDeniedException`.
+If the collection instantiates a [classname]`ProtectedWidget` in error, the widget itself checks authentication on creation and throws an [classname]`AccessDeniedException`.
 
 The unhandled exception propagates during navigation and is handled by the [classname]`AccessDeniedExceptionHandler` that keeps the `MainLayout` with its menu bar, but displays information that an exception has occurred.
 
@@ -146,14 +144,15 @@ public class AccessDeniedExceptionHandler
 }
 ----
 
-== Rerouting to an Error View
+
+== Rerouting to Error View
 
 It's possible to reroute from the [classname]`BeforeEnterEvent` and [classname]`BeforeLeaveEvent` to an error view registered for an exception.
 
-You can use one of the [methodname]`rerouteToError()` method overloads.
-All you need to add is the exception class to target, and a custom error message, where necessary.
+You can use one of the [methodname]`rerouteToError()` method overloads. You need only to add the exception class to the target, and a custom error message, where necessary.
 
-*Example*: Reroute to error view
+This example shows how to reroute to an error view:
+
 [source,java]
 ----
 public class AuthenticationHandler
@@ -177,7 +176,7 @@ public class AuthenticationHandler
 
 If the rerouting method catches an exception, you can use the [methodname]`rerouteToError(Exception, String)` method to set a custom message.
 
-*Example*: Blog sample error view with a custom message
+This next example shows a blog sample error view with a custom message:
 
 [source,java]
 ----
@@ -236,4 +235,19 @@ public class FaultyBlogPostHandler extends Component
 ----
 
 
+[role="since:com.vaadin:vaadin@V24.3"]
+== Showing Error View for Exception during RPC Call
+
+To use registered error views outside routing and rerouting, the application can set the `enableErrorHandlerRedirect` parameter to `true`.
+
+This enables updating the current view content to a registered [interfacename]`HasErrorParameter<T extends Exception>` that handles the exact exception thrown for RPC events.
+
+If you're using a custom [interfacename]`ErrorHandler`, see the  <<{articles}/advanced/custom-error-handler#, Showing Error Parameter Views For Non Navigation Exceptions>> page on this feature.
+
 [discussion-id]`F4039D66-C9C5-4CEE-B49A-F1224B46C5E8`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

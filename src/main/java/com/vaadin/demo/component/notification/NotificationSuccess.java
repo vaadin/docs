@@ -11,22 +11,13 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NotificationSuccess extends Div {
 
     public NotificationSuccess() {
-        Button button = new Button("Try it");
-        button.addClickListener(clickEvent -> {
-            button.setEnabled(false);
-
-            // tag::snippet[]
-            Notification notification = Notification
-                    .show("Application submitted!");
-            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            // end::snippet[]
-            notification.setPosition(Notification.Position.MIDDLE);
-
-            notification
-                    .addDetachListener(detachEvent -> button.setEnabled(true));
-        });
-
-        add(button);
+        // tag::snippet[]
+        Notification notification = Notification
+                .show("Application submitted!");
+        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        // end::snippet[]
+        notification.setPosition(Notification.Position.MIDDLE);
+        notification.setDuration(0);
     }
 
     public static class Exporter extends DemoExporter<NotificationSuccess> { // hidden-source-line

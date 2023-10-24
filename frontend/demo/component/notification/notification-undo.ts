@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('notification-undo')
 export class Example extends LitElement {
   @state()
-  private notificationOpened = false;
+  private notificationOpened = true;
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -26,7 +26,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">
-        Try it
+        Show notification
       </vaadin-button>
 
       <!-- tag::snippet[] -->

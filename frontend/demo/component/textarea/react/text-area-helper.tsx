@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { TextArea } from '@hilla/react-components/TextArea.js';
-import { loremIpsum } from '../../../../../src/main/resources/data/templates.json';
+import templates from '../../../../../src/main/resources/data/templates.json';
 
 function Example() {
   const charLimit = 600;
-  const [text, setText] = useState(loremIpsum);
+  const [text, setText] = useState(templates.loremIpsum);
 
   return (
     // tag::snippet[]
