@@ -27,6 +27,7 @@ const config = {
       /(^|\/)\..+/, // hidden files
 
       "articles/guide",
+      "articles/kb",
       "articles/advanced",
       "articles/configuration",
       "articles/tutorial",
@@ -67,7 +68,12 @@ const config = {
       "articles/styling/lumo/design-tokens/styling-using-design-tokens.adoc",
       "articles/styling/lumo/design-tokens/_images",
       "articles/styling/lumo/design-tokens/index.adoc",
-
+      "articles/styling/legacy",
+      "articles/styling/styling-components",
+      "articles/styling/application-theme.adoc",
+      "articles/styling/styling-other-elements.adoc",
+      "articles/components/index.asciiidoc",
+      "articles/compatibility.adoc",
 
       "frontend/demo/fusion",
       "frontend/demo/upgrade-tool",
@@ -80,36 +86,49 @@ const config = {
       "src/main/java/com/vaadin/demo/sso",
       "src/main/java/com/vaadin/demo/collaboration",
       "src/main/java/com/vaadin/demo/observability",
+      "src/main/java/com/vaadin/demo/ui/webcomponents/MwcSlider.java",
 
       "dspublisher/theme",
+      "dspublisher/config/default.json",
+      "dspublisher/config/production.json",
       
       "PULL_REQUEST_TEMPLATE.md",
 
       ".gitattributes",
+
+      "frontend/demo/component/upload/upload-demo-mock-files.ts",
+      "frontend/demo/react-example.ts",
+      "frontend/demo/render-banner.ts",
+
+      // Ignore all React examples
+      /frontend\/demo\/component\/.*\/react.*/,
     ],
   },
   rename: {
     // paths in 'latest' to copy to different paths in 'dsp'
-    "articles/components": "articles/ds/components",
-    "articles/styling/lumo": "articles/ds/foundation",
     "articles/styling/lumo/design-tokens": "articles/ds/foundation",
+    "articles/styling/lumo": "articles/lumo",
   },
   target: {
     // paths in 'dsp' to keep (since they shouldn't be removed, even if they don't exist in latest)
     "keep": [
-      "articles/ds/foundation",
-      "articles/ds/_images",
-      "articles/ds/404.asciidoc",
-      "articles/ds/figma.asciidoc",
-      "articles/ds/index.asciidoc",
+      "articles/foundation",
+      "articles/_images",
+      "articles/404.adoc",
+      "articles/figma.asciidoc",
+      "articles/index.adoc",
+      "articles/components/index.adoc",
+      "articles/lumo/index.adoc",
       "dspublisher/.env",
       "dspublisher/docs-theme",
+      "dspublisher/config/default.json",
+      "frontend/demo/component/upload/upload-demo-mock-files.ts",
     ]
   },
   // callbacks for changing the content of certain files
   callback: [
     {
-      path: 'articles/ds/components/grid/flow.asciidoc',
+      path: 'articles/components/grid/flow.asciidoc',
       callback: content => content.replace(/.*_items-identities.adoc.*/, '')
     },
     {
@@ -119,6 +138,16 @@ const config = {
     {
       path: 'package.json',
       callback: content => content.replace(/.*@opentelemetry\/.*\n/g, '').replace(/,(\s*?})/sg, '$1')
+    },
+    {
+      path: /articles\/.*\.[asciidoc|adoc]/,
+      callback: (content) => {
+
+        // Remove discussion ids
+        content = content.replace(/\[discussion-id\].*/g, '');
+
+        return content;
+      },
     }
   ]
 }
