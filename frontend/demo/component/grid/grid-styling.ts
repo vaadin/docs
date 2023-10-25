@@ -39,7 +39,11 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-grid .items="${this.items}" .cellPartNameGenerator="${this.cellPartNameGenerator}">
+      <vaadin-grid
+        .items="${this.items}"
+        .cellPartNameGenerator="${this.cellPartNameGenerator}"
+        class="styling"
+      >
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>

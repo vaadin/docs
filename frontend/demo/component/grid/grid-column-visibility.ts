@@ -26,11 +26,11 @@ export class Example extends LitElement {
 
   @state()
   private contextMenuItems: Array<ContextMenuItem & { key: string }> = [
-    { text: 'First name', checked: true, key: 'firstName' },
-    { text: 'Last name', checked: true, key: 'lastName' },
-    { text: 'Email', checked: true, key: 'email' },
-    { text: 'Phone', checked: true, key: 'phone' },
-    { text: 'Profession', checked: true, key: 'profession' },
+    { text: 'First name', checked: true, key: 'firstName', keepOpen: true },
+    { text: 'Last name', checked: true, key: 'lastName', keepOpen: true },
+    { text: 'Email', checked: true, key: 'email', keepOpen: true },
+    { text: 'Phone', checked: true, key: 'phone', keepOpen: true },
+    { text: 'Profession', checked: true, key: 'profession', keepOpen: true },
   ];
 
   protected override async firstUpdated() {
@@ -46,10 +46,9 @@ export class Example extends LitElement {
           open-on="click"
           .items="${this.contextMenuItems}"
           @item-selected="${(e: ContextMenuItemSelectedEvent) => {
-            const value = e.detail.value as ContextMenuItem & { key: string };
-            this.contextMenuItems = this.contextMenuItems.map((item) =>
-              item.key === value.key ? { ...item, checked: !value.checked } : item
-            );
+            const item = e.detail.value;
+            item.checked = !item.checked;
+            this.contextMenuItems = [...this.contextMenuItems];
           }}"
         >
           <vaadin-button theme="tertiary">Show/Hide Columns</vaadin-button>
