@@ -76,6 +76,7 @@ const config = {
       'src/main/java/com/vaadin/demo/DemoExporter.java',
       'src/main/resources/application.properties',
       'frontend/demo/fusion',
+      'frontend/demo/component/auto-grid',
       'frontend/themes',
       'frontend/demo/init.ts',
     ],
