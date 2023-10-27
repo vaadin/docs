@@ -1,59 +1,50 @@
 ---
 title: Scopes
+description: Understanding contexts and scopes in Vaadin and Spring.
 order: 50
 ---
+
 
 = Vaadin Spring Scopes
 
 == Contexts and Scopes in Spring
 
-* *Contexts* in Spring are services that manage the lifecycle of objects and handle their injection.
-A context refers to a situation in which an instance is used with a unique identity.
-These objects are essentially "singletons" in the context.
+_Contexts_ in Spring are services that manage the lifecycle of objects and handle their injection. A context refers to a situation in which an instance is used with a unique identity. These objects are essentially "singletons" in the context.
 
-* *Scopes* are narrower than contexts.
-While conventional singletons are application-wide, objects managed by a Spring container are "singletons" in a narrower scope.
-Examples include a user session, a particular UI instance associated with the session, or even a single request.
-A scope defines the lifecycle of the object, that is, its creation, use, and destruction.
+_Scopes_ are narrower than contexts. While conventional singletons are application-wide, objects managed by a Spring container are "singletons" in a narrower scope. Examples include a user session, a particular UI instance associated with the session, or even a single request. A scope defines the lifecycle of the object, that is, its creation, use, and destruction.
 
 Read more about https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-definition[beans and scopes in Spring].
 
-== Using Scopes with Vaadin and Spring
 
-In most programming languages, a variable name refers to a unique object within the scope of the variable.
-In Spring, an object has a unique identity within a scope but, instead of identifying the object by its variable name, it's identified by its type (object class) and qualifiers, if any.
+== Using Scopes with Vaadin & Spring
 
-With Spring Boot, you need to mark your Vaadin-related bean classes with the https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Component.html[`@Component`] annotation to allow them to be picked up as managed beans.
-Because there is also a [classname]`Component` class in Vaadin, you can use the `@SpringComponent` annotation from the Vaadin Spring add-on to avoid having to use fully qualified names.
-If no scope is specified in addition to the `@SpringComponent` / `@Component` annotation, the component is in https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-factory-scopes-singleton[singleton scope].
+In most programming languages, a variable name refers to a unique object within the scope of the variable. In Spring, an object has a unique identity within a scope but, instead of identifying the object by its variable name, it's identified by its type (object class) and qualifiers, if any.
+
+With Spring Boot, you need to mark your Vaadin-related bean classes with the https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Component.html[`@Component`] annotation to allow them to be picked up as managed beans. Because there is also a [classname]`Component` class in Vaadin, you can use the `@SpringComponent` annotation from the Vaadin Spring add-on to avoid having to use fully qualified names. If no scope is specified in addition to the `@SpringComponent` / `@Component` annotation, the component is in https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-factory-scopes-singleton[singleton scope].
 
 In addition to standard Spring scopes, the https://vaadin.com/directory/component/vaadin-spring/overview[Vaadin Spring add-on] introduces three additional scopes:
 
-** `VaadinSessionScope` to target beans to a user's session
-** `UIScope` to target beans to a browser window or tab opened by the user
-** `RouteScope` to target beans to certain routing components pointed to by the `RouteScopeOwner` qualifier
+- `VaadinSessionScope` to target beans to a user's session
+- `UIScope` to target beans to a browser window or tab opened by the user
+- `RouteScope` to target beans to certain routing components pointed to by the `RouteScopeOwner` qualifier
 
-.Overview of how Vaadin-specific scopes relate to each other when used in navigation targets
+.Overview of how Vaadin-specific scopes relate to each other when used in navigation targets.
 image::images/spring-scopes.png["Overview of Vaadin specific scopes for bean classes (including navigation targets) and their binding to app, session, window/tab and path"]
 
-.Routing components are Spring-initialized beans
+.Routing Components are Spring-Initialized Beans
 [IMPORTANT]
-All Flow routing components (`@Route`, `RouterLayout` or `HasErrorParameter`) are initialized by Spring, even without explicitly adding the `@SpringComponent` annotation.
-Without any annotations, the components act like a bean in _prototype_ scope.
-You can inject other beans to the components, but while `@PostConstruct` methods work, `@PreDestroy` methods don't.
-When you want to use another scope for the components, **you need to remember to add the `@SpringComponent` annotation to get the scope applied.**
+All Flow routing components (`@Route`, `RouterLayout` or `HasErrorParameter`) are initialized by Spring, even without explicitly adding the `@SpringComponent` annotation. Without any annotations, the components act like a bean in _prototype_ scope. You can inject other beans to the components, but while `@PostConstruct` methods work, `@PreDestroy` methods don't. When you want to use another scope for the components, **you need to remember to add the `@SpringComponent` annotation to get the scope applied.**
 
-.Changes in scopes need server restart
+.Changes in Scopes Need Server Restart
 [NOTE]
-When changing the scope annotations, the application server needs to be restarted to apply the new scopes.
-Restart is required even when live reload is enabled.
+When changing the scope annotations, the application server needs to be restarted to apply the new scopes. Restart is required even when live reload is enabled.
+
 
 === VaadinSessionScope
 
-The `@VaadinSessionScope` annotation maps the Spring beans to the Vaadin session lifecycle.
-It ensures that the same bean instance is used during the whole Vaadin session.
+The `@VaadinSessionScope` annotation maps the Spring beans to the Vaadin session lifecycle. It ensures that the same bean instance is used during the whole Vaadin session.
 
-*Example*: using the `@VaadinSessionScope` annotation
+This example is using the `@VaadinSessionScope` annotation:
 [source,java]
 ----
 @Route("")
@@ -80,18 +71,19 @@ public class SessionService {
     }
 }
 ----
-** Provided you access the application from the same Vaadin session, the same instance of [classname]`SessionService` is used.
-This is because it's session-scoped.
-** If you open the root target in one browser tab, and the `editor` target in another, the text in both is the same.
-This happens because the session is the same, even though the tabs (and `UI` instances) are different.
+
+Provided you access the application from the same Vaadin session, the same instance of [classname]`SessionService` is used. This is because it's session-scoped.
+
+If you open the root target in one browser tab, and the `editor` target in another, the text in both is the same. This happens because the session is the same, even though the tabs (and `UI` instances) are different.
 
 See <<../../advanced/application-lifecycle#application.lifecycle.session,Application Lifecycle > User Session>> for more information on session handling.
+
 
 === UIScope
 
 The `@UIScope` annotation manages the Spring beans during the `UI` lifecycle.
 
-*Example*: using the `@UIScope` annotation.
+This example is using the `@UIScope` annotation:
 [source,java]
 ----
 @Route("")
@@ -120,28 +112,30 @@ public class UIService {
     }
 }
 ----
-** The `UIService` bean instance is the same inside the same `UI`.
-** If you open the `MainLayout` view in one browser tab or window, and the `Editor` view in another, the text in each is different, because the `UI` instances are different.
-** When navigating inside the same browser tab between the `MainLayout` and `Editor`, the text stays the same, since the service is the same.
+
+The `UIService` bean instance is the same inside the same `UI`. If you open the `MainLayout` view in one browser tab or window, and the `Editor` view in another, the text in each is different, because the `UI` instances are different.
+
+When navigating inside the same browser tab between the `MainLayout` and `Editor`, the text stays the same, since the service is the same.
 
 See <<../../advanced/application-lifecycle#application.lifecycle.ui,Application Lifecycle > Loading a UI>> for more information on UIs.
 
-.Preserving UIScope beans
-NOTE: Unlike with earlier Vaadin versions 7 and 8, the `UI` and thus the `UIScope` beans aren't preserved when the `@PreserveOnRefresh` annotation is used and the browser is refreshed.
-To preserve the beans on refresh, you need to use `@RouteScope` instead (available since V21), as described in <<routescope.preserve, the next chapter>>.
+.Preserving UIScope Beans
+[NOTE]
+Unlike with earlier Vaadin versions 7 and 8, the `UI` and thus the `UIScope` beans aren't preserved when the `@PreserveOnRefresh` annotation is used and the browser is refreshed. To preserve the beans on refresh, you need to use `@RouteScope` instead (available since V21), as described in <<routescope.preserve, the next chapter>>.
 
-=== RouteScope and RouteScopeOwner
 
-The `@RouteScope` annotation ties the beans to the lifecycle of Vaadin Flow routing components (`@Route`, `RouterLayout`, `HasErrorParameter`).
-Since there can be multiple nested levels of routing components present at once, an additional `@RouteScopeOwner` _qualifier_ annotation can be used to specify the _owner_ routing component.
-Without the owner qualifier, the owner is the currently active routing component at the time of injection.
-As long as the owner routing component is part of the active view chain, all beans owned by it remain in the scope.
+=== RouteScope & RouteScopeOwner
+
+The `@RouteScope` annotation ties the beans to the lifecycle of Vaadin Flow routing components (`@Route`, `RouterLayout`, `HasErrorParameter`). Since there can be multiple nested levels of routing components present at once, an additional `@RouteScopeOwner` _qualifier_ annotation can be used to specify the _owner_ routing component.
+
+Without the owner qualifier, the owner is the currently active routing component at the time of injection. As long as the owner routing component is part of the active view chain, all beans owned by it remain in the scope.
 
 Any routing component can be a `@RouteScope` bean itself, and the owner can be any parent `RouterLayout` in the route chain hierarchy.
 
 See <<../../routing#,Defining Routes With @Route>> and <<../../routing/layout#,Router Layouts and Nested Router Targets>> for more about route targets, route layouts, and the active route chain.
 
-*Example*: sharing a bean between two child views with the same parent layout
+The example here is sharing a bean between two child views with the same parent layout:
+
 [source,java]
 ----
 @SpringComponent
@@ -200,33 +194,32 @@ public class SiblingView extends VerticalLayout {
     }
 }
 ----
-** The injected [classname]`RouteService` bean instance is the same while the [classname]`ParentView` is attached, such as when navigating between the child views.
-** When navigating to the [classname]`SiblingView`, the [classname]`ParentView` is detached. When navigating back to the [classname]`ParentView` (or child views), a new [classname]`RouteService` bean is created.
 
-.Injecting to wider scope
-CAUTION: Injecting a "narrower" [classname]`RouteScope` bean into "wider" scope, like parent layout's `RouteScope` or `UIScope`, can cause problems.
-For example, if you store a `RouteScope` bean into a `UIScope` bean, the bean might become stale after navigation.
+The injected [classname]`RouteService` bean instance is the same while the [classname]`ParentView` is attached, such as when navigating between the child views.
 
-The `@RouteScopeOwner` qualifier has to be placed both on top of the bean class and on the injection point of the bean.
-The annotation can be omitted in the injection point when the bean implementation can be resolved unambiguously by Spring (as it could be in the previous example).
-However, it's recommended to have it there for better code readability.
+When navigating to the [classname]`SiblingView`, the [classname]`ParentView` is detached. When navigating back to the [classname]`ParentView` (or child views), a new [classname]`RouteService` bean is created.
 
-Having an owner view class as a value in the `@RouteScopeOwner` for a model/business logic bean class ties the application's view layer to a model/business layer.
-It can be decoupled, for example, by splitting the bean class into an interface and its implementation class, and then using the interface in the view class and marking the concrete bean implementation class with `@RouteScopeOwner`.
+.Injecting to Wider Scope
+[CAUTION] 
+Injecting a "narrower" [classname]`RouteScope` bean into "wider" scope, like parent layout's `RouteScope` or `UIScope`, can cause problems. For example, if you store a `RouteScope` bean into a `UIScope` bean, the bean might become stale after navigation.
+
+The `@RouteScopeOwner` qualifier has to be placed both on top of the bean class and on the injection point of the bean. The annotation can be omitted in the injection point when the bean implementation can be resolved unambiguously by Spring (as it could be in the previous example). However, it's recommended to have it there for better code readability.
+
+Having an owner view class as a value in the `@RouteScopeOwner` for a model/business logic bean class ties the application's view layer to a model/business layer. It can be decoupled, for example, by splitting the bean class into an interface and its implementation class, and then using the interface in the view class and marking the concrete bean implementation class with `@RouteScopeOwner`.
+
 
 ==== @RouteScope without @RouteScopeOwner to Replace @ViewScope from Vaadin 7 / 8
 
-When the `@RouteScopeOwner` annotation is omitted, the owner is the currently active route target.
-In nested routing hierarchies, the owner is the "leaf" / "bottom-most" routing component, that is, navigation target.
-The bean remains in scope for as long as the navigation target stays active (attached to the UI).
-Compared to a `@Scope("prototype")` bean injected to the routing component, the `@RouteScope` bean without an owner has its `@PreDestroy` method called when the routing component is no longer active.
-Using `@RouteScope` without specifying an owner is a replacement for the `@ViewScope` from Vaadin 7 or 8.
+When the `@RouteScopeOwner` annotation is omitted, the owner is the currently active route target. In nested routing hierarchies, the owner is the "leaf" / "bottom-most" routing component, that is, navigation target. The bean remains in scope for as long as the navigation target stays active (attached to the UI).
+
+Compared to a `@Scope("prototype")` bean injected to the routing component, the `@RouteScope` bean without an owner has its `@PreDestroy` method called when the routing component is no longer active. Using `@RouteScope` without specifying an owner is a replacement for the `@ViewScope` from Vaadin 7 or 8.
 
 .Model-View-Presenter
-NOTE: The following example is based on the _model-view-presenter_ design pattern, for the sake of demonstration. **It isn't a best-practice example.**
-It allows splitting different logical parts of the application, but adds a lot of boilerplate code.
+[NOTE]
+The following example is based on the _model-view-presenter_ design pattern, for the sake of demonstration. It isn't a best-practice example. It allows splitting different logical parts of the application, but adds a lot of boilerplate code.
 
-*Example*: `@RouteScope` without owner behaves like the legacy Vaadin `@ViewScope`
+This example shows `@RouteScope` without owner behaves like the legacy Vaadin `@ViewScope`:
+
 [source,java]
 ----
 /*
@@ -303,19 +296,19 @@ public class User {
 }
 
 ----
-** In this example, a new [classname]`UserProfilePresenter` bean is created every time the [classname]`UserProfileView` view is opened.
-** The presenter bean stays the same during the time the view is attached to the UI.
+
+In this example, a new [classname]`UserProfilePresenter` bean is created every time the [classname]`UserProfileView` view is opened. The presenter bean stays the same during the time the view is attached to the UI.
+
 
 [[routescope.preserve]]
 === Preserving Beans during Browser Refresh
 
-By default, when the user refreshes the page, all routing components are recreated.
-This applies to `@UIScope` and `@RouteScope` beans too; new bean instances are created and injected to the new routing components.
-It's possible to tell the framework to preserve the routing components during refresh with the `@PreserveOnRefresh` annotation (<<../../advanced/preserving-state-on-refresh.asciidoc#,see here>> for more information).
+By default, when the user refreshes the page, all routing components are recreated. This applies to `@UIScope` and `@RouteScope` beans too; new bean instances are created and injected to the new routing components. It's possible to tell the framework to preserve the routing components during refresh with the `@PreserveOnRefresh` annotation (<<../../advanced/preserving-state-on-refresh.asciidoc#,see here>> for more information).
 
 When the `@PreserveOnRefresh` annotation is used on a routing component that has `@RouteScope` beans injected to it, the beans are preserved too.
 
-*Example*: preserving beans with `@RouteScopeOwner` targeting a component with `@PreserveOnRefresh`
+This example is preserving beans with `@RouteScopeOwner` targeting a component with `@PreserveOnRefresh`:
+
 [source,java]
 ----
 @SpringComponent
@@ -341,18 +334,23 @@ public class MainLayout extends VerticalLayout
     }
 }
 ----
-** In this example, both the [classname]`MainLayout` component and the [classname]`PreservedBean` injected bean are preserved after browser refresh.
-The text stays the same.
-** If the `@PreserveOnRefresh` annotation is removed from the layout, both the component and the bean are recreated after browser refresh.
-The text would change.
+
+In this example, both the [classname]`MainLayout` component and the [classname]`PreservedBean` injected bean are preserved after browser refresh. The text stays the same.
+
+If the `@PreserveOnRefresh` annotation is removed from the layout, both the component and the bean are recreated after browser refresh. The text would change.
+
 
 ==== Beans in UIScope Aren't Preserved
-Injected beans aren't preserved when they are in `UIScope`, but only in `RouteScope`, regardless of whether `@PreserveOnRefresh` is used.
-However, any currently active routing components are preserved, even if they are in `UIScope`.
-This is due to the nature of the `@PreserveOnRefresh` feature implementation.
-The `UI` instance itself isn't preserved, but routing components are.
-Any bean tied to the `UI` instance with `UIScope` is recreated, and the preserved routing components are moved to the new `UI`.
-To preserve beans during a browser refresh, you need to use `@RouteScope`, as shown earlier.
+
+Injected beans aren't preserved when they are in `UIScope`, but only in `RouteScope`, regardless of whether `@PreserveOnRefresh` is used. However, any currently active routing components are preserved, even if they are in `UIScope`. This is due to the nature of the `@PreserveOnRefresh` feature implementation.
+
+The `UI` instance itself isn't preserved, but routing components are. Any bean tied to the `UI` instance with `UIScope` is recreated, and the preserved routing components are moved to the new `UI`. To preserve beans during a browser refresh, you need to use `@RouteScope`, as shown earlier.
 
 
 [discussion-id]`23B703EE-D5C7-44CE-971A-A64EE4D89B7D`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

@@ -1,5 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('notification-warning')
 export class Example extends LitElement {
   @state()
-  private notificationOpened = false;
+  private notificationOpened = true;
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -23,10 +23,19 @@ export class Example extends LitElement {
     return root;
   }
 
+  static override styles = css`
+    :host {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: calc(100vh - var(--docs-space-l) * 2);
+    }
+  `;
+
   protected override render() {
     return html`
       <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">
-        Try it
+        Show notification
       </vaadin-button>
 
       <!-- tag::snippet[] -->
@@ -34,7 +43,7 @@ export class Example extends LitElement {
       <vaadin-notification
         theme="warning"
         duration="0"
-        position="top-center"
+        position="middle"
         .opened="${this.notificationOpened}"
         @opened-changed="${(e: NotificationOpenedChangedEvent) => {
           this.notificationOpened = e.detail.value;

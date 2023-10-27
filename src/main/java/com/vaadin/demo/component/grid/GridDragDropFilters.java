@@ -61,8 +61,7 @@ public class GridDragDropFilters extends Div {
                 return;
 
             draggedItem.setManagerId(newManager.getId());
-            treeData.removeItem(draggedItem);
-            treeData.addItem(newManager, draggedItem);
+            treeData.setParent(draggedItem, newManager);
 
             treeDataProvider.refreshAll();
         });

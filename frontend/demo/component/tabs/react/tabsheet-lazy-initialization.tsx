@@ -29,7 +29,7 @@ function Example() {
       )}
     </TabSheet>
   );
-  // tag::snippet[]
+  // end::snippet[]
 }
 
 export default reactExample(Example);
