@@ -5,21 +5,70 @@ order: 20
 ---
 
 
+[since:com.vaadin:vaadin@V24.3]
 = Localization
 
-To use localization and translation strings, the application only needs to implement [interfacename]`I18NProvider` and define the fully qualified class name in the property `i18n.provider`.
+To use localization and translation strings, the application needs only to have the translation properties available on the classpath under the directory, `vaadin-i18n` with the filename prefix, `translations` (e.g., `src/main/resources/vaadin-i18n/translations.properties`).
 
-== Defining the I18n Provider Property
+When using localization in an application, calling for a translation, or when the I18NProvider is used for the first time, the folder resource, `vaadin-i18n` is checked if it contains any `translations.properties` or `translations_[langcode].properties` files. Any language codes are collected from the available property files and added as provided locales in the [classname]`DefaultI18NProvider`.
 
-The `i18n.provider` property can be set from the command line as a system property, as a Servlet init parameter in the [filename]`web.xml`, or using the `@WebServlet` annotation.
+The file `translations.properties` is a default translation file that'll be used for any [classname]`Locale` that doesn't have a specific translations file. Locale translation files are named as [filename]`translations_fi_FI.properties` or [filename]`translations_de.properties`. The automatic [classname]`Locale` creation supports from one to three parts (e.g., `translations_language_country_variant.properties`).
 
-As a system property, the parameter needs the `vaadin` prefix, for example:
+
+== Locale Selection for New Session
+
+The initial locale is determined by matching the locales provided by the [classname]`I18NProvider` against the `Accept-Language` header in the initial response from the client.
+
+If an exact match (i.e., language and country) is found, it'll be used. Otherwise, it tries to match only on language. If neither is found, the locale is set to the first 'supported' locale from [methodname]`I18NProvider.getProvidedLocales()`. If that's empty, [methodname]`Locale.getDefault()` is used.
+
+
+=== Using Localization in Application
+
+Implementing internationalization in an application is a combination of using `I18NProvider` and updating the translations on locale change.
+
+To make this simple, the application classes that control the captions and texts that are localized can implement [interfacename]`LocaleChangeObserver` to receive events related to locale change. This observer is also notified on navigation when the component is attached, but before [methodname]`onAttach()` is called. Any URL parameters from the navigation are set so that they can be used to determine the state.
+
+[source,java]
+----
+public class LocaleObserver extends Div implements LocaleChangeObserver {
+
+    @Override
+    public void localeChange(LocaleChangeEvent event) {
+        setText(getTranslation("my.translation", getUserId()));
+    }
+}
+----
+
+
+==== Using Localization without LocaleChangeObserver
+
+.I18NProvider without [interfacename]`LocaleChangeObserver`
+[source,java]
+----
+public class MyLocale extends Div {
+
+    public MyLocale() {
+        setText(getTranslation("my.translation", getUserId()));
+    }
+}
+----
+
+
+== Defining I18n Provider Property
+
+To use a custom I18N provider with more features than available by the default one, the application needs only to implement [interfacename]`I18NProvider` and define the fully qualified class name in the property, `i18n.provider`.
+
+The `i18n.provider` property can be set from the command-line as a system property, as a Servlet initial parameter in the [filename]`web.xml` file, or using the `@WebServlet` annotation.
+
+As a system property, the parameter needs the `vaadin` prefix like this:
+
 [source,terminal]
 ----
 mvn jetty:run -Dvaadin.i18n.provider=com.vaadin.example.ui.TranslationProvider
 ----
 
-When using the annotation, you could have the servlet class as:
+When using the annotation, you could have the servlet class as something such as this:
+
 [source,java]
 ----
 @WebServlet(urlPatterns = "/*", name = "slot", asyncSupported = true, loadOnStartup = 1,
@@ -28,7 +77,7 @@ public class ApplicationServlet extends VaadinServlet {
 }
 ----
 
-Or, using the [filename]`web.xml` file:
+Or, if you prefer to use the [filename]`web.xml` file, you might set it as this:
 
 [source,xml]
 ----
@@ -60,31 +109,17 @@ Or, using the [filename]`web.xml` file:
 </web-app>
 ----
 
-You can provide an [interfacename]`I18NProvider` as a bean if you are using Spring.
-In this case, you only need to annotate your implementation with `@Component`, so that it becomes available as a Spring bean.
-The Spring add-on automatically uses it if it's available.
-See the class https://github.com/vaadin/flow-spring-tutorial/blob/master/src/main/java/org/vaadin/spring/tutorial/SimpleI18NProvider.java[SimpleI18NProvider.java] implemented in the tutorial project as an example.
+You can provide an [interfacename]`I18NProvider` as a bean if you're using Spring. In that case, you need only annotate your implementation with `@Component`, so that it's available as a Spring bean. The Spring add-on uses it if it's available. See the class https://github.com/vaadin/flow-spring-tutorial/blob/master/src/main/java/org/vaadin/spring/tutorial/SimpleI18NProvider.java[`SimpleI18NProvider.java`] implemented in the tutorial project as an example.
 
-== Locale Selection for New Session
-The initial locale is decided by matching the locales provided by the [classname]`I18NProvider` against the `Accept-Language` header in the initial response from the client.
-
-If an exact match (language + country) is found, that is used.
-Otherwise, it tries to match on only language.
-If neither is found, the locale is set to the first 'supported' locale from [methodname]`I18NProvider.getProvidedLocales()`.
-If that's empty, [methodname]`Locale.getDefault()` is used.
 
 [[provider-sample-for-translation]]
 == Example of Using I18NProvider for Translation
 
-For this example, you enable the use of Finnish and English, with Finnish being the *"default"* that's used if the user client doesn't specify English as an accepted language.
+For this example, the use of Finnish and English is enabled, with Finnish being the default that's used if the user client doesn't specify English as an accepted language. The language [filename]`.properties` files start with "translate": for example, [filename]`translate.properties` for the default, as well as [filename]`translate_fi_FI.properties`, and [filename]`translate_en_GB.properties`.
 
-In this sample, the language [filename]`.properties` files start with *"translate"*; for example, [filename]`translate.properties` (for the default), [filename]`translate_fi_FI.properties` and [filename]`translate_en_GB.properties`.
+In this example, the translation properties files are loaded using the class loader. Hence, they should be located on the classpath, for example in the resources folder. For a default Maven setup, this would be `src/main/resources`.
 
-In the example, the translation properties files are loaded using the class loader.
-Hence, they should be located on the classpath, for example in the resources folder.
-For a default Maven setup, this would be `src/main/resources`.
-
-.Sample I18NProvider implementation
+.Sample I18NProvider Implementation
 [source,java]
 ----
 public class TranslationProvider implements I18NProvider {
@@ -128,46 +163,12 @@ public class TranslationProvider implements I18NProvider {
 }
 ----
 
-=== Using Localization in the Application
-
-Implementing internationalization in the application is a combination of using `I18NProvider` and updating the translations on locale change.
-
-To make this simple, the application classes that control the captions and texts that are localized can implement [interfacename]`LocaleChangeObserver` to receive events related to locale change.
-
-This observer is also notified on navigation when the component is attached, but before [methodname]`onAttach()` is called.
-Any URL parameters from the navigation are set, so that they can be used to determine the state.
-
-[source,java]
-----
-public class LocaleObserver extends Div implements LocaleChangeObserver {
-
-    @Override
-    public void localeChange(LocaleChangeEvent event) {
-        setText(getTranslation("my.translation", getUserId()));
-    }
-}
-----
-
-==== Using Localization without Using LocaleChangeObserver
-
-.I18NProvider without [interfacename]`LocaleChangeObserver`
-[source,java]
-----
-public class MyLocale extends Div {
-
-    public MyLocale() {
-        setText(getTranslation("my.translation", getUserId()));
-    }
-}
-----
 
 == Supporting Right-to-Left Mode
 
-Vaadin components have support for right-to-left languages.
-The components work out of the box in this mode, but to allow your application to support both left-to-right and right-to-left modes, you need to make a few changes.
+Vaadin components have support for right-to-left languages. The components work out-of-the-box in this mode. However, to allow your application to support both left-to-right and right-to-left modes, you'll need to make a few changes.
 
-Continuing from the previous examples, imagine that your application has now also been translated into a right-to-left Language, such as Arabic.
-As well as <<provider-sample-for-translation,following the I18NProvider example>>, in your main layout you can add code such as the following:
+Continuing from the previous examples, suppose that your application now has also been translated into a right-to-left Language, such as Arabic. As well as <<provider-sample-for-translation,following the I18NProvider example>>, in your main layout you can add code such as the following:
 
 [source,java]
 ----
@@ -183,9 +184,7 @@ public class MainLayout extends VerticalLayout {
 }
 ----
 
-This works if the change of locale is based only on the `Accept-Language` coming from the client.
-However, if the user can specify their language, for instance, on your application's settings page, you can have your main layout implement the [interfacename]`LocaleChangeObserver` interface.
-In this way, it receives changes of locale, so you can then set the text direction based on the specified locale:
+This works if the change of locale is based only on the `Accept-Language` coming from the client. However, if the user can specify their language, for instance, on your application's settings page, you can have your main layout implement the [interfacename]`LocaleChangeObserver` interface. In this way, it receives changes of locale, so you can then set the text direction based on the specified locale:
 
 [source,java]
 ----
@@ -202,18 +201,18 @@ public class MainLayout extends VerticalLayout implements LocaleChangeObserver {
 }
 ----
 
-== Front-End Projects
 
-For front-end applications only, to set right-to-left mode, you can specify `document.dir = 'rtl'`.
+== Frontend Projects
 
-== Adding Right-to-Left Support to Your Custom Elements or Application
+For frontend applications only, to set right-to-left mode, you can specify, `document.dir = 'rtl'`.
 
-If you have your own custom elements, or if your application has custom styles, there are a few steps needed to add right-to-left support to them:
 
-. If your element extends Vaadin's [classname]`ElementMixin`, no changes are needed.
-Otherwise, you can have the element extend it or [classname]`DirMixin` only ([classname]`DirMixin` is part of the `@vaadin/component-base` package).
+== Adding Right-to-Left Support
 
-+
+If you have custom elements, or if your application has custom styles, there are a few steps needed to add right-to-left support to them.
+
+First, if your element extends Vaadin's [classname]`ElementMixin`, no changes are needed. Otherwise, you can have the element extend it or [classname]`DirMixin` only (i.e., [classname]`DirMixin` is part of the `@vaadin/component-base` package).
+
 [source,javascript]
 ----
 import { PolymerElement } from '@polymer/polymer/polymer-element.js';
@@ -222,15 +221,10 @@ import { DirMixin } from '@vaadin/component-base/src/dir-mixin.js';
 class MyElement extends DirMixin(PolymerElement) {}
 ----
 
-+
-The [classname]`DirMixin` registers the element to respond to changes in the `dir` attribute at the document level and keeps it in sync with the element's `dir` attribute.
-This is helpful to adjust to the text-direction status in both CSS and JS code.
+The [classname]`DirMixin` registers the element to respond to changes in the `dir` attribute at the document level and keeps it synchronized with the element's `dir` attribute. This is helpful to adjust to the text-direction status in both CSS and JS code.
 
-. Make sure your styles are adjusted for right-to-left mode.
-+
-For example, if you define values for the padding on the `:host`, as follows:
+Second, make sure your styles are adjusted for right-to-left mode. For example, if you define values for the padding on the `:host`, as follows:
 
-+
 [source,css]
 ----
 :host {
@@ -238,9 +232,9 @@ For example, if you define values for the padding on the `:host`, as follows:
     padding-left: 2em;
 }
 ----
-+
-you may want to define the style for right-to-left, as follows:
-+
+
+You may want to define the style for right-to-left, as follows:
+
 [source,css]
 ----
 :host([dir="rtl"]) {
@@ -248,20 +242,15 @@ you may want to define the style for right-to-left, as follows:
     padding-left: 1em;
 }
 ----
-+
-You should also pay attention to settings such as `padding`, `margin`, `text-align`, `float` and `transform` in your styles.
-If your custom element doesn't need to support old browsers, you can replace some properties with *CSS Logical Properties*.
-The https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties[MDN web documentation] has a full list of CSS Logical Properties and the available values, along with browser support for each property.
-Flex and Grid containers are usually handled well by the browser and don't require any extra work.
-You can find more information in this https://rtlstyling.com/posts/rtl-styling/[comprehensive right-to-left styling guide].
-+
-For help with adjusting styles for right-to-left mode, you can go to the https://rtlcss.com/playground/#[RTLCSS] page.
-There, you can paste in your original styles and it generates code that you can use for your element.
 
-. If your element uses icons or Unicode symbols to define direction (for instance, for a "back" button) you may need to use the right icons or symbols for right-to-left mode.
+Third, you should also pay attention to settings such as `padding`, `margin`, `text-align`, `float` and `transform` in your styles. If your custom element doesn't need to support old browsers, you can replace some properties with *CSS Logical Properties*. The https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties[MDN web documentation] has a full list of CSS Logical Properties and the available values, along with browser support for each property. Flex and Grid containers are usually handled well by the browser and don't require any extra work. You can find more information in this https://rtlstyling.com/posts/rtl-styling/[comprehensive right-to-left styling guide].
 
-. If keyboard interactions are used, for example, to navigate between items with arrow keys, define the direction of the movement based on the `dir` attribute:
-+
+For help with adjusting styles for right-to-left mode, you can use the tools available on the https://rtlcss.com/playground/#[RTLCSS] page. There, you can paste in your original styles and it'll generate code that you can use for your element.
+
+If your element uses icons or Unicode symbols to define direction (e.g., for a _Back_ button), you may need to use the right icons or symbols for right-to-left mode.
+
+If keyboard interactions are used -- for example, to navigate between items with arrow keys -- define the direction of the movement based on the `dir` attribute like so:
+
 [source,javascript]
 ----
 // somewhere in your code
@@ -279,11 +268,9 @@ switch (event.key) {
 }
 ----
 
-. Custom element that rely on JavaScript calculations for sizing,
-position, and/or horizontal scroll, may need some adjustments for right-to-left.
+Custom elements that rely on JavaScript calculations for sizing, position, or horizontal scroll, may need some adjustments for right-to-left.
 
-. If you have visual tests, you may want to add or update the current ones to also run in right-to-left mode.
-
+If you have visual tests, you may want to add or update the current ones to also run in right-to-left mode.
 
 [discussion-id]`722E7AE4-191E-4DE8-90F1-CAE8AE6CD3DF`
 

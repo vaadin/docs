@@ -1,0 +1,278 @@
+---
+title: Development Tools Plugin Support
+description: Creating and adding plugins for the Development Tools pop-up.
+order: 100
+---
+
+
+= [since:com.vaadin:vaadin@V24.2]#Development Tools Plugin Support#
+
+Development Tools pop-up supports adding custom tabs to the pop-up window through developer created plugins. Adding a custom tab with a plugin requires a client side element implementing `MessageHandler` and a Java class implementing `DevToolsMessageHandler`.
+
+Data between the client and server is sent as command messages through the supplied message handler API.
+
+
+== Creating Client Side Element
+
+The client side element is rendered inside its own tab in the Development Tools window. To start create an element that implements `MessageHandler`, do something like this:
+
+.`my-tool.ts`
+[source,typescript]
+----
+@customElement('my-tool')
+export class MyTool extends LitElement implements MessageHandler {
+
+  render() {
+    return html`<div>This will be rendered in the tab</div>`;
+  }
+}
+----
+
+Then register the created element as a plugin and add a tab for it like so:
+
+[source,typescript]
+----
+let devTools: DevToolsInterface;
+
+...
+export class MyTool extends LitElement implements MessageHandler {
+    ...
+}
+
+const plugin: DevToolsPlugin = {
+  init: function (devToolsInterface: DevToolsInterface): void {
+    devTools = devToolsInterface;
+    devTools.addTab('My Tool Tab', 'my-tool');
+  }
+};
+
+(window as any).Vaadin.devToolsPlugins.push(plugin);
+----
+
+`DevToolsInterface` reference is stored so that it can be used later for messaging the server. `MyTool` can now be extended with functionality, as necessary for the plugin functionality.
+
+If the client plugin implements the methods [methodname]`activate()` or [methodname]`deactivate()`, these are called when the plugin tab is shown as `activate` or another tab is selected as `deactivate`.
+
+[NOTE]
+The plugin script file should be located under `./frontend/`, if it's only used inside the project, and under `./src/main/resources/META-INF/frontend/` for add-on packaged development plugins.
+
+
+== Creating Java Component
+
+For the server part, the plugin needs to bring in the TS file and be defined for Java Service Provider to load the plugin. The client module should be set as a `developmentOnly` module. This can be done like so:
+
+[source,java]
+----
+package com.my.app;
+
+@JsModule(value = "./my-tool.ts", developmentOnly = true)
+public class MyToolPlugin implements DevToolsMessageHandler {
+}
+----
+
+The Java service provider needs to have the fully qualified name for the plugin, `.src/main/resources/META-INF/services/com.vaadin.base.devserver.DevToolsMessageHandler`.
+
+----
+com.my.app.MyToolPlugin
+----
+
+
+== Server to Client Communication
+
+For communication with the client, the server interface [classname]`DevToolsMessageHandler` contains the two methods: [methodname]`handleConnect(DevToolsInterface devToolsInterface)` and [methodname]`handleMessage(String command, JsonObject data,DevToolsInterface devToolsInterface)`.
+
+[methodname]`handleConnect` is called when the Development Tools window is created in the browser. This gives `DevToolsInterface`, which is used to interact with the Development Tools.
+
+To send data to the client, there's the method [methodname]`send(String command, JsonObject data)`. The `command` is an identifier that's known by the client plugin code. The `data` content is something understood by the consumer of the command.
+
+Sending a command on the Development Tools window could look like:
+
+[source,java]
+----
+@JsModule(value = "./my-tool.ts", developmentOnly = true)
+public class MyToolPlugin implements DevToolsMessageHandler {
+    @Override
+    public void handleConnect(DevToolsInterface devToolsInterface) {
+        devToolsInterface.send("myplugin-init", null);
+    }
+}
+----
+
+Related to this, the client handling might be the following:
+
+[source,typescript]
+----
+export class MyTool extends LitElement implements MessageHandler {
+  handleMessage(message: ServerMessage): boolean {
+    if (message.command === 'myplugin-init') {
+        // Do something
+        return true; // Mark the message as handled
+    }
+    return false; // The message was not handled
+  }
+}
+----
+
+There is no namespace separation for the plugins. All plugins can listen to every message. Because of this, the command name should not be generic (e.g., `init`). It's advisable to prefix the command with something unique for the plugin.
+
+The [methodname]`handleMessage` should return `true` when the message is handled. This is so it isn't sent to other plugins and `false` if not handled, so other plugins have the possibility to receive the message.
+
+
+== Client to Server Communication
+
+For communication from the client to the server, the client interface [classname]`DevToolsInterface` contains the method [methodname]`send(command: string, data: any): void`.
+
+To send a message to the server for a button click, the template could look like:
+
+[source,typescript]
+----
+let devTools: DevToolsInterface;
+
+export class MyTool extends LitElement implements MessageHandler {
+   render() {
+     return html`<button @click=${this.informServer}>Click this for magic</button>`;
+   }
+
+   informServer() {
+     devTools.send("myplugin-inform", {text: 'Hello'});
+   }
+
+}
+----
+
+The message would then be handled on the server as this:
+
+[source,java]
+----
+public class MyToolPlugin implements DevToolsMessageHandler {
+    @Override
+    public boolean handleDevToolsMessage(String command, JsonObject data, DevToolsInterface devToolsInterface) {
+        if (command.equals("myplugin-inform")) {
+            System.out.println("The information text is " + data.getString("text"));
+
+            return true;
+        }
+        return false;
+    }
+}
+----
+
+[NOTE]
+The [methodname]`handleDevToolsMessage` should return `true` when the message is handled so it doesn't get sent to other plugins and `false` if not handled, so that other plugins have the possibility to get the message.
+
+
+== Full Plugin Example
+
+All of these example excerpts may be confusing. Below is a full plugin example to rectify that:
+
+.`MyTool.java`
+[source,java]
+----
+package com.my.app.MyToolPlugin;
+
+import com.vaadin.base.devserver.DevToolsInterface;
+import com.vaadin.base.devserver.DevToolsMessageHandler;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.server.VaadinSession;
+
+import elemental.json.Json;
+import elemental.json.JsonObject;
+
+@JsModule(value = "./my-tool.ts", developmentOnly = true)
+public class MyTool implements DevToolsMessageHandler {
+
+    @Override
+    public void handleConnect(DevToolsInterface devToolsInterface) {
+        devToolsInterface.send("myplugin-init", null);
+    }
+
+    @Override
+    public boolean handleMessage(String command, JsonObject data,
+            DevToolsInterface devToolsInterface) {
+        if (command.equals("myplugin-query")) {
+            String text = data.getString("text");
+
+            JsonObject responseData = Json.createObject();
+            responseData.put("text", "Response for " + text);
+            devToolsInterface.send("myplugin-response", responseData);
+
+            System.out.println(text);
+
+            return true;
+        }
+        return false;
+    }
+
+}
+----
+
+.`my-tool.ts`
+[source,typescript]
+----
+import type {
+DevToolsInterface,
+DevToolsPlugin,
+MessageHandler,
+ServerMessage
+} from 'Frontend/generated/jar-resources/vaadin-dev-tools/vaadin-dev-tools';
+import { LitElement, html } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+
+let devTools: DevToolsInterface;
+
+@customElement('my-tool')
+export class MyTool extends LitElement implements MessageHandler {
+@property({ type: Array })
+messages: string[] = [];
+
+  render() {
+    return html`<div>
+      <button @click=${this.messageServer}>Tell server to output message</button>
+      ${this.messages.map((msg) => html`<div class="plugin-log">${msg}</div>`)}
+    </div>`;
+  }
+
+  handleMessage(message: ServerMessage): boolean {
+    if (message.command === 'myplugin-init') {
+      this.messages.push('plugin-init');
+      this.requestUpdate();
+      return true;
+    } else if (message.command === 'myplugin-response') {
+      this.messages.push(message.data.text);
+      this.requestUpdate();
+      return true;
+    }
+    return false;
+  }
+
+  private messageServer() {
+    devTools.send('myplugin-query', {
+      text: 'Hello from dev tools plugin'
+    });
+  }
+}
+
+const plugin: DevToolsPlugin = {
+  init: function (devToolsInterface: DevToolsInterface): void {
+   devTools = devToolsInterface;
+   devTools.addTab('Hello', 'my-tool');
+  }
+};
+
+(window as any).Vaadin.devToolsPlugins.push(plugin);
+----
+
+`.src/main/resources/META-INF/services/com.vaadin.base.devserver.DevToolsMessageHandler`
+----
+com.my.app.MyToolPlugin
+----
+
+[discussion-id]`EC658130-3E3C-4F45-BD44-F9ECB1300595`
+
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

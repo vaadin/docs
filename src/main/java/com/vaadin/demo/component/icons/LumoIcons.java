@@ -1,10 +1,11 @@
 package com.vaadin.demo.component.icons;
 
-import com.vaadin.demo.flow.routing.Route;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.theme.lumo.LumoIcon;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("lumo-icons")
@@ -16,10 +17,10 @@ public class LumoIcons extends Div {
     layout.addClassName("items-center");
 
     // tag::snippet[]
-    Icon phoneIcon = new Icon("lumo", "photo");
-    Icon calendarIcon = new Icon("lumo", "calendar");
-    Icon alarmIcon = new Icon("lumo", "clock");
-    Button button = new Button(new Icon("lumo", "bell"));
+    Icon phoneIcon = LumoIcon.PHOTO.create();
+    Icon calendarIcon = LumoIcon.CALENDAR.create();
+    Icon alarmIcon = LumoIcon.CLOCK.create();
+    Button button = new Button(LumoIcon.BELL.create());
 
     layout.add(phoneIcon, calendarIcon, alarmIcon, button);
     // end::snippet[]
