@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private visitedTabs = new Set<number>();
+  private accessor visitedTabs = new Set<number>();
 
   private selectedTabChanged(event: TabSheetSelectedChangedEvent) {
     this.visitedTabs = new Set([...this.visitedTabs, event.detail.value]);
