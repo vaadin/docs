@@ -112,114 +112,62 @@ As you can see in the above example, the `responsiveSteps` property is used to d
 [NOTE]
 You can use the `responsiveSteps` property when defining the template as `string[][]` as well. In this case, make sure the number of fields in the template rows are logically aligned with the total number of columns defined via `responsiveSteps`.
 
-=== Using a Custom Renderer
+=== Using Custom Renderer
 
-While customizing the layout using either of the template options mentioned in the above enables you to cover a wide range of use cases, you can also use a custom renderer to define the layout. This is useful when you need to define a layout that is not possible to achieve using the template options.
+While customizing the Auto Form's layout using either of the template options mentioned in the above enables you to cover a wide range of use cases, you can also use a custom renderer to define any arbitrary layout. This is useful when you need to define a layout that is not possible to achieve using the template options.
 
+To use a custom renderer, define a function that takes the `AutoFormLayoutRendererProps` as a parameter and returns any React element. The `AutoFormLayoutRendererProps` contains the following properties:
 
+- children: the readonly list of bound fields
+- form: the form binder instance
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-custom-renderer.tsx[tags=snippet,indent=0,group=React]
+----
+
+The above example uses a custom renderer to render the fields in a Vertical Layout:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-custom-renderer.tsx[render,tags=snippet,indent=0,group=React]
+----
 
 == Customizing Field's Properties
 
-
+You can customize the properties of the fields rendered by Auto Form by using the `fieldOptions` property.
 
 === Customizing Visibility & Order
 
-To choose which of the data properties should be displayed as columns in Auto Grid, and to specify the column order, set the property names to the `visibleColumns` property.
+To choose which of the data properties should be displayed as fields in Auto Form, or to specify the order of appearance in the Auto Form, use the `customLayoutRenderer` property and specify the name of desired properties in the `template`.
 
-The following example uses only the `category`, `name`, `supplier.supplierName`, and `price` properties, in this order:
+When Auto Form is used without any template defined for `customLayoutRenderer` property, it will render all the properties of the entity except those that are annotated with `@Id` or `@Version` annotations. You can make them visible by adding their names to the `customLayoutRenderer`'s template:
 
 [source,tsx]
-.Auto Grid with Chosen Columns
 ----
-include::{root}/frontend/demo/component/auto-grid/react/auto-grid-visible-columns.tsx[render,tags=snippet,indent=0,group=React]
+include::{root}/frontend/demo/component/auto-form/react/auto-form-template-id-version.tsx[tags=snippet,indent=0,group=React]
+----
+
+The above example uses a template to hide `team` and `manager` properties, and to display the `id` and `version` properties in the desired order and placement:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-template-id-version.tsx[render,tags=snippet,indent=0,group=React]
 ----
 
 .Use Dot Notation to Access Nested Properties
 [NOTE]
 When trying to access nested properties, use the Dot Notation, as shown in the example above. To access the `supplierName` of the `supplier` property, for example, you might use `supplier.supplierName`.
 
-
 .Don't Expose Sensitive Data on Client-Side
 [CAUTION]
-When using Auto Grid, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using the `visibleColumns` property won't prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
+When using Auto Form, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using the `visibleColumns` property won't prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
 
 
-=== Customizing Column Options
-
-Individual columns can be customized using the `columnOptions` property. This takes an object in which each key is the name of a data property, and the value is a property's object that is passed when rendering the column for that property.
-
-The following example uses column options to define a custom renderer for the price column that highlights prices in different colors, depending on their value:
-
-[source,tsx]
-.Auto Grid with Customized Prize Column
-----
-include::{root}/frontend/demo/component/auto-grid/react/auto-grid-column-options.tsx[render,tags=snippet,indent=0,group=React]
-----
-
-You can pass the same options as when rendering a column in a regular grid. See the <<../grid/#,Grid>> documentation page for more information and examples.
+=== Customizing Field's Options
 
 
-=== Adding Custom Columns
 
-If you need to add a custom column, by joining the value of two or more properties and displaying them in a single column, this can be done by using the `customColumns` property. The `customColumns` property takes an array of `GridColumn` instances and renders them after the auto columns. Refer to the <<../grid/#,Grid>> documentation page for more information on the `GridColumn` type.
+=== Adding Custom Fields
 
-The following example uses the `customColumns` property to render a custom column that concatenates and displays the product's supplier `name` and `headquarterCity` properties in the same column:
-
-[source,tsx]
-.Auto Grid with Custom Supplier Column
-----
-include::{root}/frontend/demo/component/auto-grid/react/auto-grid-custom-columns.tsx[render,tags=snippet,indent=0,group=React]
-----
-
-.Customizing vs. Adding Columns
-[NOTE]
-In general, when it comes to customizing the automatically rendered columns, you can use the `columnOptions` property. As for adding or customizing the custom columns, use `customColumns`.
-
-
-== Filtering
-
-Auto Grid has column-based filtering enabled by default. You can disable the built-in column filters by setting the `noHeaderFilters` flag.
-
-[source,tsx]
-.Auto Grid using `noHeaderFilters={true}`
-----
-include::{root}/frontend/demo/component/auto-grid/react/auto-grid-no-header-filters.tsx[render,tags=snippet,indent=0,group=React]
-----
-
-Auto Grid supports external filtering by using the criteria specified by the `experimentalFilter` property.
-
-.Experimental Feature
-[WARNING]
-External Auto Grid filtering is an experimental feature. The `experimentalFilter` property API may be changed or removed in future releases.
-
-In the example below, the data in Auto Grid is filtered using the _contains_ matcher for the `name` property, combined with the _equals_ matcher for `category` when a specific category is selected:
-
-[source,tsx]
-.Auto Grid with a Filter
-----
-
-++++
-<style>
-[class^=PageHeader-module--descriptionContainer] {display: none;}
-</style>
-++++
-
-include::{root}/frontend/demo/component/auto-grid/react/auto-grid-filtering.tsx[render,tags=snippet,indent=0,group=React]
-----
-
-You can combine several filtering criteria by using the `{t: 'and' | 'or', children: []}` composite filter type.
-
-
-== Grid Properties
-
-You can also customize the underlying Grid component properties in Auto Grid.
-
-The example here enables single-row selection in the Auto Grid by using a combination of the `onActiveItemChanged` event listener with the `selectedItems` property. Both are supported by the Grid component that Auto Grid uses internally.
-
-[source,tsx]
-.Auto Grid with a Filter
-----
-include::{root}/frontend/demo/component/auto-grid/react/auto-grid-selection.tsx[render,tags=snippet,indent=0,group=React]
-----
-
-You can read more on the properties, and use cases supported, on the <<../grid#,Grid component>> documentation page.
+In the <<#using-custom-renderer,Using Custom Renderer>> section, we saw how to use a custom renderer to define any arbitrary layout. You can also use a custom renderer to add custom fields to the form. As the `form` property of the `AutoFormLayoutRendererProps` is a `FormBinder`, you can use the `field` directive to bind any custom field to the form as well.
