@@ -1,0 +1,225 @@
+---
+title: Auto Form
+order: 10
+description: Used for auto populating form fields and actions based on a Java backend service.
+---
+
+:experimental:
+
+:react:
+
+= [since:dev.hilla:hilla@v2.4]#Auto Form#
+
+// tag::description[]
+Auto Form is a component for populating form fields and actions based on a Java backend service.
+// end::description[]
+
+== Basic Usage
+
+Auto Form requires a Java service that implements the `CrudService<T, ID>` interface. In the example here, the `EmployeeService` class extends `CrudRepositoryService<T, ID, R>`, which in turn implements the `CrudService<T, ID>`:
+
+[.example]
+--
+[source,java]
+.ProductService.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/form/EmployeeService.java[tags=snippet,indent=0]
+----
+[source,java]
+.Product.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/form/Employee.java[tags=snippet,indent=0]
+----
+[source,java]
+.ProductRepository.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/form/EmployeeRepository.java[tags=snippet,indent=0]
+----
+--
+
+Hilla generates TypeScript objects for each `@BrowserCallable` service implementing the `CrudService<T, ID>` interface. These TypeScript objects have callable methods that execute the corresponding Java service methods, enabling the Add, Update, and Delete operations as well as lazy data loading with sorting and filtering.
+
+For the `EmployeeService` example, you can import the generated TypeScript object in your React view, and use it as a value for the `<AutoForm service={}/>` property to display the data.
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-basic.tsx[tags=snippet,indent=0,group=React]
+----
+
+The Auto Form component renders a form with editor components for all properties of the `Employee` entity along with a Save button that associates with the respective `save` method of the `CrudService<T, ID>`, and a Discard button that calls the form binder's `reset` operation, and it is only visible when the form has some changes.
+
+Here's what the rendered grid looks like:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-basic.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+== Customizing the Form's Layout
+
+As you can see in the example above, the Auto Form component by default renders the fields in a FormLayout with a two-column layout. You can customize the layout by using the `customLayoutRenderer` property, in either of the following ways:
+
+=== Defining a Template
+
+There are two ways to define a template for arranging the fields in the form layout:
+
+- Defining the template as `string[][]`:
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-template-string.tsx[tags=snippet,indent=0,group=React]
+----
+
+The number of columns for the FormLayout is calculated based on the number of fields in each row of the template. Thus, this will create a six column FormLayout and renders the fields in five rows according to the order of their appearance in the template:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-template-string.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+As you can see in the above example, each row's space is divided equally between the fields. You can define the `colSpan` for each field to control how the space is divided between the fields:
+
+- Defining the template as `{ property: string, colSpan: number }[][]`:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-template-fieldcolspan.tsx[tags=snippet,indent=0,group=React]
+----
+
+Again, this will create a six column FormLayout and renders the fields in five rows according to the order of their appearance in the template, but this time the `colSpan` property is used to define how the space is divided between the fields:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-template-fieldcolspan.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+The number of columns for the FormLayout is always calculated based on the number of fields in each row of the template, unless you explicitly define the `responsiveSteps` property:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-template-fieldcolspan-responsive.tsx[tags=snippet,indent=0,group=React]
+----
+
+This will create a three column FormLayout and renders the fields in five rows according to the order of their appearance in the template and the respective `colSpan` property of each field:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-template-fieldcolspan-responsive.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+As you can see in the above example, the `responsiveSteps` property is used to define the number of columns for the FormLayout, and the `colSpan` property for each field is aligned accordingly.
+
+.Defining the `responsiveSteps` Property and `string[][]` Template Together
+[NOTE]
+You can use the `responsiveSteps` property when defining the template as `string[][]` as well. In this case, make sure the number of fields in the template rows are logically aligned with the total number of columns defined via `responsiveSteps`.
+
+=== Using a Custom Renderer
+
+While customizing the layout using either of the template options mentioned in the above enables you to cover a wide range of use cases, you can also use a custom renderer to define the layout. This is useful when you need to define a layout that is not possible to achieve using the template options.
+
+
+
+== Customizing Field's Properties
+
+
+
+=== Customizing Visibility & Order
+
+To choose which of the data properties should be displayed as columns in Auto Grid, and to specify the column order, set the property names to the `visibleColumns` property.
+
+The following example uses only the `category`, `name`, `supplier.supplierName`, and `price` properties, in this order:
+
+[source,tsx]
+.Auto Grid with Chosen Columns
+----
+include::{root}/frontend/demo/component/auto-grid/react/auto-grid-visible-columns.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+.Use Dot Notation to Access Nested Properties
+[NOTE]
+When trying to access nested properties, use the Dot Notation, as shown in the example above. To access the `supplierName` of the `supplier` property, for example, you might use `supplier.supplierName`.
+
+
+.Don't Expose Sensitive Data on Client-Side
+[CAUTION]
+When using Auto Grid, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using the `visibleColumns` property won't prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
+
+
+=== Customizing Column Options
+
+Individual columns can be customized using the `columnOptions` property. This takes an object in which each key is the name of a data property, and the value is a property's object that is passed when rendering the column for that property.
+
+The following example uses column options to define a custom renderer for the price column that highlights prices in different colors, depending on their value:
+
+[source,tsx]
+.Auto Grid with Customized Prize Column
+----
+include::{root}/frontend/demo/component/auto-grid/react/auto-grid-column-options.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+You can pass the same options as when rendering a column in a regular grid. See the <<../grid/#,Grid>> documentation page for more information and examples.
+
+
+=== Adding Custom Columns
+
+If you need to add a custom column, by joining the value of two or more properties and displaying them in a single column, this can be done by using the `customColumns` property. The `customColumns` property takes an array of `GridColumn` instances and renders them after the auto columns. Refer to the <<../grid/#,Grid>> documentation page for more information on the `GridColumn` type.
+
+The following example uses the `customColumns` property to render a custom column that concatenates and displays the product's supplier `name` and `headquarterCity` properties in the same column:
+
+[source,tsx]
+.Auto Grid with Custom Supplier Column
+----
+include::{root}/frontend/demo/component/auto-grid/react/auto-grid-custom-columns.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+.Customizing vs. Adding Columns
+[NOTE]
+In general, when it comes to customizing the automatically rendered columns, you can use the `columnOptions` property. As for adding or customizing the custom columns, use `customColumns`.
+
+
+== Filtering
+
+Auto Grid has column-based filtering enabled by default. You can disable the built-in column filters by setting the `noHeaderFilters` flag.
+
+[source,tsx]
+.Auto Grid using `noHeaderFilters={true}`
+----
+include::{root}/frontend/demo/component/auto-grid/react/auto-grid-no-header-filters.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+Auto Grid supports external filtering by using the criteria specified by the `experimentalFilter` property.
+
+.Experimental Feature
+[WARNING]
+External Auto Grid filtering is an experimental feature. The `experimentalFilter` property API may be changed or removed in future releases.
+
+In the example below, the data in Auto Grid is filtered using the _contains_ matcher for the `name` property, combined with the _equals_ matcher for `category` when a specific category is selected:
+
+[source,tsx]
+.Auto Grid with a Filter
+----
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
+
+include::{root}/frontend/demo/component/auto-grid/react/auto-grid-filtering.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+You can combine several filtering criteria by using the `{t: 'and' | 'or', children: []}` composite filter type.
+
+
+== Grid Properties
+
+You can also customize the underlying Grid component properties in Auto Grid.
+
+The example here enables single-row selection in the Auto Grid by using a combination of the `onActiveItemChanged` event listener with the `selectedItems` property. Both are supported by the Grid component that Auto Grid uses internally.
+
+[source,tsx]
+.Auto Grid with a Filter
+----
+include::{root}/frontend/demo/component/auto-grid/react/auto-grid-selection.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+You can read more on the properties, and use cases supported, on the <<../grid#,Grid component>> documentation page.
