@@ -1,29 +1,6 @@
+import FilterUnion from 'Frontend/generated/dev/hilla/crud/filter/FilterUnion';
 import Matcher from 'Frontend/generated/dev/hilla/crud/filter/PropertyStringFilter/Matcher';
 import Pageable from 'Frontend/generated/dev/hilla/mappedtypes/Pageable';
-
-// Use inline definitions of filters as the generated ones are broken at the moment
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface Filter {}
-
-export interface AndFilter extends Filter {
-  children: Array<Filter>;
-  t: 'and';
-}
-
-export interface OrFilter extends Filter {
-  children: Array<Filter>;
-  t: 'or';
-}
-
-export interface PropertyStringFilter extends Filter {
-  propertyId: string;
-  filterValue: string;
-  matcher: Matcher;
-  t: 'propertyString';
-}
-
-export type FilterUnion = OrFilter | AndFilter | PropertyStringFilter;
 
 /**
  * Returns the value of a property in an object recursively.
@@ -78,11 +55,11 @@ function compare(val1: string, val2: string): Matcher[] {
  * Applies a filter recursively to an object.
  */
 function applyFilter<T>(item: T, filter: FilterUnion): boolean {
-  if (filter.t === 'and') {
+  if (filter['@type'] === 'and') {
     return filter.children.every((child) => {
       return applyFilter(item, child as FilterUnion);
     });
-  } else if (filter.t === 'or') {
+  } else if (filter['@type'] === 'or') {
     return filter.children.some((child) => {
       return applyFilter(item, child as FilterUnion);
     });
