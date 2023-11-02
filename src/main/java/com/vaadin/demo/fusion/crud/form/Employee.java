@@ -1,9 +1,11 @@
 package com.vaadin.demo.fusion.crud.form;
 
+import dev.hilla.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -50,6 +52,10 @@ public class Employee {
     private boolean active;
 
     private String description;
+
+    @Version
+    @Nullable
+    private long version;
 
     // getters and setters omitted for brevity
     //end::snippet[]
@@ -151,6 +157,14 @@ public class Employee {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
     }
 
     //tag::snippet[]

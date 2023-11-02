@@ -7,6 +7,8 @@ import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product
 import Matcher from 'Frontend/generated/dev/hilla/crud/filter/PropertyStringFilter/Matcher';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { Select, SelectItem } from '@hilla/react-components/Select.js';
+import PropertyStringFilter from '@hilla/react-crud/types/dev/hilla/crud/filter/PropertyStringFilter';
+import FilterUnion from '@hilla/react-crud/types/dev/hilla/crud/filter/FilterUnion';
 
 const categories: SelectItem[] = [
   { label: 'All', value: 'All' },
@@ -18,25 +20,25 @@ function Example() {
   // tag::snippet[]
   const [categoryFilterValue, setCategoryFilterValue] = useState(categories[0].value!);
   const [nameFilterValue, setNameFilterValue] = useState('');
-  const filter = useMemo(() => {
-    const categoryFilter = {
-      t: 'propertyString',
+  const filter: FilterUnion = useMemo(() => {
+    const categoryFilter: PropertyStringFilter = {
       propertyId: 'category',
-      matcher: Matcher.EQUALS,
       filterValue: categoryFilterValue,
+      matcher: Matcher.EQUALS,
+      '@type': 'propertyString',
     };
 
-    const nameFilter = {
-      t: 'propertyString',
+    const nameFilter: PropertyStringFilter = {
       propertyId: 'name',
-      matcher: Matcher.CONTAINS,
       filterValue: nameFilterValue,
+      matcher: Matcher.CONTAINS,
+      '@type': 'propertyString',
     };
 
     return categoryFilterValue == 'All'
       ? nameFilter
       : {
-          t: 'and',
+          '@type': 'and',
           children: [nameFilter, categoryFilter],
         };
   }, [categoryFilterValue, nameFilterValue]);
