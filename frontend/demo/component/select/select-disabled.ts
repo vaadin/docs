@@ -16,7 +16,7 @@ export class Example extends LitElement {
 
   @state()
   // tag::snippet[]
-  private items = [
+  private accessor items = [
     {
       label: 'XS (out of stock)',
       value: 'xs',

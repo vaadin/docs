@@ -25,10 +25,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private gridItems: Person[] = [];
+  private accessor gridItems: Person[] = [];
 
   @state()
-  private items?: ContextMenuItem[];
+  private accessor items: ContextMenuItem[] | undefined;
 
   // tag::snippet[]
   protected override async firstUpdated() {

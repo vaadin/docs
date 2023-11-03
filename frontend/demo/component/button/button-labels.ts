@@ -25,10 +25,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private primaryEmail = 'foo@example.com';
+  private accessor primaryEmail = 'foo@example.com';
 
   @state()
-  private secondaryEmail = 'bar@example.com';
+  private accessor secondaryEmail = 'bar@example.com';
 
   protected override render() {
     return html`
