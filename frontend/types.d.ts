@@ -14,3 +14,4 @@ declare module '*.svg' {
 }
 
 declare module 'Frontend/generated/theme';
+declare module 'Frontend/generated/jar-resources/dev-tools-database.js';
