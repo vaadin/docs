@@ -35,7 +35,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private dialogOpened = true;
+  private accessor dialogOpened = true;
 
   protected override render() {
     return html`

@@ -24,11 +24,11 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
+  private accessor items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
   // end::snippet[]
 
   @state()
-  private gridItems: FileItem[] = [
+  private accessor gridItems: FileItem[] = [
     { name: 'Annual Report.docx', size: '24 MB' },
     { name: 'Financials.xlsx', size: '42 MB' },
   ];

@@ -16,7 +16,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private counter = 0;
+  private accessor counter = 0;
 
   protected override render() {
     return html`
