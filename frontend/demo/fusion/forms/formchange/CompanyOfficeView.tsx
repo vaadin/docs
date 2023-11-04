@@ -25,7 +25,7 @@ export default function CompanyOfficeView() {
 
   useEffect(() => {
     if (form.value.country && form.value.country.name) {
-      OfficeService.loadCity(form.value.country).then((cities) => {
+      OfficeService.loadCities(form.value.country.name).then((cities) => {
         setCities(cities);
         form.value.city = cities[0];
       });
