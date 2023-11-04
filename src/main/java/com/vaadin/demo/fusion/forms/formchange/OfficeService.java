@@ -50,13 +50,13 @@ public class OfficeService {
         return countries;
     }
 
-    public List<City> loadCity(Country country) {
+    public List<City> loadCities(String countryName) {
         // Find the cities by country
-        Country country1 = countries.stream()
-                .filter(country2 -> country2.getName().equals(country.getName()))
+        return countries.stream()
+                .filter(country -> country.getName().equals(countryName))
                 .findFirst()
+                .map(Country::getCities)
                 .orElseThrow(() -> new IllegalArgumentException("No such country"));
-        return country1.getCities();
     }
 
 }
