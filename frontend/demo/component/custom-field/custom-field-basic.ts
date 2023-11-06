@@ -19,10 +19,10 @@ export class Example extends LitElement {
   }
 
   @query('#start')
-  private start!: DatePicker;
+  private accessor start!: DatePicker;
 
   @query('#end')
-  private end!: DatePicker;
+  private accessor end!: DatePicker;
 
   private binder = new Binder(this, AppointmentModel);
 

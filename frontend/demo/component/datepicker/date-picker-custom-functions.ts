@@ -18,10 +18,10 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-date-picker')
-  private datePicker!: DatePicker;
+  private accessor datePicker!: DatePicker;
 
   @state()
-  private selectedDateValue: string = dateFnsFormat(new Date(), 'yyyy-MM-dd');
+  private accessor selectedDateValue: string = dateFnsFormat(new Date(), 'yyyy-MM-dd');
 
   // tag::snippet[]
   protected override firstUpdated() {

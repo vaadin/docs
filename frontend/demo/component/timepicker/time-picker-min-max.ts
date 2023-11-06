@@ -9,7 +9,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('time-picker-min-max')
 export class Example extends LitElement {
   @state()
-  protected errorMessage = '';
+  protected accessor errorMessage = '';
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
