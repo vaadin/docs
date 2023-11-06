@@ -17,7 +17,7 @@ function Example() {
                      },
                    }}
           />;
-  // tag::snippet[]
+  // end::snippet[]
 }
 // end::apply-backend[]
 

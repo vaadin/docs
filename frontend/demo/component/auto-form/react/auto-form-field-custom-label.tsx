@@ -15,7 +15,7 @@ function Example() {
                      lastName: { label: 'Employee Last name' },
                    }}
           />;
-
+  // end::snippet[]
 }
 // end::apply-backend[]
 
