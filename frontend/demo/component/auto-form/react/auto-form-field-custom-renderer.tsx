@@ -8,16 +8,21 @@ import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/form/E
 import { TextArea } from '@hilla/react-components/TextArea.js';
 
 function Example() {
-  return
-  // tag::snippet[]
-          <AutoForm service={EmployeeService} model={EmployeeModel}
-                   fieldOptions={{
-                     description: {
-                       renderer: ({ field }) => <TextArea key={field.name} {...field} label='Full description' />
-                     },
-                   }}
-          />;
-  // end::snippet[]
+  return (
+    // tag::snippet[]
+    <AutoForm
+      service={EmployeeService}
+      model={EmployeeModel}
+      fieldOptions={{
+        description: {
+          renderer: ({ field }) => (
+            <TextArea key={field.name} {...field} label="Full description" />
+          ),
+        },
+      }}
+    />
+    // end::snippet[]
+  );
 }
 // end::apply-backend[]
 
