@@ -1,4 +1,4 @@
-package com.vaadin.demo.fusion.crud.form;
+package com.vaadin.demo.fusion.crud;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

@@ -3,8 +3,10 @@ import React from 'react'; // hidden-source-line
 // tag::snippet[]
 import { ExperimentalAutoForm as AutoForm } from '@hilla/react-crud';
 // tag::apply-backend[]
-import { EmployeeService } from 'Frontend/generated/endpoints';
-import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/form/EmployeeModel';
+//import * as EmployeeService from 'Frontend/generated/EmployeeService.js';
+
+import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
+import { EmployeeService } from 'Frontend/generated/endpoints.js';
 
 function Example() {
   return <AutoForm service={EmployeeService} model={EmployeeModel} />;

@@ -1,4 +1,4 @@
-package com.vaadin.demo.fusion.crud.form;
+package com.vaadin.demo.fusion.crud;
 
 //tag::snippet[]
 import com.vaadin.flow.server.auth.AnonymousAllowed;

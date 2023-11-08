@@ -1,4 +1,4 @@
-package com.vaadin.demo.fusion.crud.form;
+package com.vaadin.demo.fusion.crud;
 
 import dev.hilla.Nullable;
 import jakarta.persistence.Entity;

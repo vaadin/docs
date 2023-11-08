@@ -6,9 +6,9 @@ import {
   ExperimentalAutoForm as AutoForm,
 } from '@hilla/react-crud';
 // tag::apply-backend[]
-import { EmployeeService } from 'Frontend/generated/endpoints';
+import { EmployeeService } from 'Frontend/generated/endpoints.js';
 
-import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/form/EmployeeModel';
+import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 
 function VerticalLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<EmployeeModel>) {

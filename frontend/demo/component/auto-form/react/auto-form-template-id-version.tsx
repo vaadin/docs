@@ -2,8 +2,8 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react'; // hidden-source-line
 import { ExperimentalAutoForm as AutoForm } from '@hilla/react-crud';
 // tag::apply-backend[]
-import { EmployeeService } from 'Frontend/generated/endpoints';
-import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/form/EmployeeModel';
+import { EmployeeService } from 'Frontend/generated/endpoints.js';
+import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 
 function Example() {
   return (
