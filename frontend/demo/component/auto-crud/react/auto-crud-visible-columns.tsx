@@ -7,8 +7,13 @@ import { EmployeeService } from 'Frontend/generated/endpoints.js';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 
 function Example() {
-  return <AutoCrud service={EmployeeService} model={EmployeeModel}
-                   gridProps={{ visibleColumns: [''] }} />;
+  return (
+    <AutoCrud
+      service={EmployeeService}
+      model={EmployeeModel}
+      gridProps={{ visibleColumns: ['firstName', 'lastName', 'active', 'team', 'manager'] }}
+    />
+  );
 }
 // end::apply-backend[]
 // end::snippet[]
