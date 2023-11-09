@@ -53,7 +53,45 @@ In addition to <<getting-started#,the TestBench dependency>>, make sure you add 
 
 == Set Up View Access Control
 
-To apply view access control, Vaadin requires a [classname]`ViewAccessChecker` to be registered as a [classname]`BeforeEnterListener` for the UI. For [annotationname]`@SpringBootTest` annotated tests, the checker is automatically created and configured. However, when testing with a restricted ApplicationContext, you may want to perform the setup yourself in a [classname]`Configuration` class by providing a [classname]`VaadinServiceInitListener` that executes this step.
+To apply view access control, Vaadin requires a [classname]`NavigationAccessControl` to be registered as a [classname]`BeforeEnterListener` for the UI. For [annotationname]`@SpringBootTest` annotated tests, the checker is automatically created and configured. However, when testing with a restricted ApplicationContext, you may want to perform the setup yourself in a [classname]`Configuration` class by providing a [classname]`VaadinServiceInitListener` that executes this step.
+
+.Set Up NavigationAccessControl for Plain Spring Project
+[source,java]
+----
+@Configuration
+class TestViewSecurityConfig {
+
+    @Bean
+    VaadinServiceInitListener setupViewSecurityScenario() {
+        SpringNavigationAccessControl accessControl = new SpringNavigationAccessControl();
+        accessControl.setLoginView(LoginView.class);
+        return event -> {
+            event.getSource().addUIInitListener(uiEvent -> {
+                uiEvent.getUI().addBeforeEnterListener(accessControl);
+            });
+        };
+    }
+}
+----
+
+If you are using the Vaadin Spring Add-On, you can instead import the out-of-the-box [classname]`NavigationAccessControlInitializer`, which only requires you to define a [classname]`NavigationAccessControl` bean.
+
+.Set Up NavigationAccessControl with Vaadin Spring Add-On
+[source,java]
+----
+@Configuration
+@Import({NavigationAccessControlInitializer.class})
+class TestViewSecurityConfig {
+
+    @Bean
+    NavigationAccessControl navigationAccessControl() {
+        return new SpringNavigationAccessControl());
+    }
+}
+----
+
+[classname]`NavigationAccessControl` has been introduce in Vaadin 24.3.
+In project base on earlier Vaadin version, view security can be configured in the same way but using the [classname]`ViewAccessChecker` and  [classname]`ViewAccessCheckerInitializer` components:
 
 
 .Set Up ViewAccessChecker for Plain Spring Project
@@ -74,8 +112,6 @@ class TestViewSecurityConfig {
     }
 }
 ----
-
-If you are using the Vaadin Spring Add-On, you can instead import the out-of-the-box [classname]`ViewAccessCheckerInitializer`, which only requires you to define a [classname]`ViewAccessChecker` bean.
 
 .Set Up ViewAccessChecker with Vaadin Spring Add-On
 [source,java]
