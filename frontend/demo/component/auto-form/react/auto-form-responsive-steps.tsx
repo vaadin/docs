@@ -12,14 +12,15 @@ function Example() {
     <AutoForm
       service={EmployeeService}
       model={EmployeeModel}
-      customLayoutRenderer={{
-        template: [
-          ['firstName', 'lastName', 'gender'],
-          ['dateOfBirth', 'email'],
-          ['startDate', 'endDate', 'active'],
-          ['team', 'manager'],
-          ['description'],
+      formLayoutProps={{
+        responsiveSteps: [
+          { minWidth: '0', columns: 1 },
+          { minWidth: '800px', columns: 2 },
+          { minWidth: '1200px', columns: 3 },
         ],
+      }}
+      fieldOptions={{
+        description: { colspan: 3 },
       }}
     />
     // end::snippet[]

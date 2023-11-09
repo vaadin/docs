@@ -12,7 +12,9 @@ function Example() {
     <AutoCrud
       service={EmployeeService}
       model={EmployeeModel}
-      gridProps={{ visibleColumns: ['firstName', 'lastName', 'active', 'team', 'manager'] }}
+      gridProps={{
+        visibleColumns: ['firstName', 'lastName', 'active', 'startDate', 'gender', 'version'],
+      }}
     />
   );
 }

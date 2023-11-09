@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 //tag::snippet[]
 @Entity
@@ -29,25 +30,13 @@ public class Employee {
     @NotBlank
     private String lastName;
 
-    @NotBlank
-    private String email;
-
-    @NotNull
-    private LocalDate dateOfBirth;
-
     @NotNull
     private Gender gender;
 
     @NotNull
     private LocalDate startDate;
 
-    private LocalDate endDate;
-
-    @NotBlank
-    private String team;
-
-    @NotBlank
-    private String manager;
+    private LocalTime shiftStartsAt;
 
     private boolean active;
 
@@ -87,22 +76,6 @@ public class Employee {
         this.lastName = lastName;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
     public Gender getGender() {
         return gender;
     }
@@ -127,28 +100,12 @@ public class Employee {
         this.startDate = startDate;
     }
 
-    public LocalDate getEndDate() {
-        return endDate;
+    public LocalTime getShiftStartsAt() {
+        return shiftStartsAt;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public String getTeam() {
-        return team;
-    }
-
-    public void setTeam(String team) {
-        this.team = team;
-    }
-
-    public String getManager() {
-        return manager;
-    }
-
-    public void setManager(String manager) {
-        this.manager = manager;
+    public void setShiftStartsAt(LocalTime shiftStartAt) {
+        this.shiftStartsAt = shiftStartAt;
     }
 
     public String getDescription() {

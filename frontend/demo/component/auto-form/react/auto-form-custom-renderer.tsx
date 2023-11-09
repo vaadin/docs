@@ -10,10 +10,52 @@ import {
 import { EmployeeService } from 'Frontend/generated/endpoints.js';
 
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
+import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
+// end::snippet[]
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import { TextField } from '@hilla/react-components/TextField.js';
+import { Select } from '@hilla/react-components/Select.js';
+import { DatePicker } from '@hilla/react-components/DatePicker.js';
+import { TimePicker } from '@hilla/react-components/TimePicker.js';
+import { Checkbox } from '@hilla/react-components/Checkbox.js';
+import { TextArea } from '@hilla/react-components/TextArea.js';
+import { AutoFormFieldProps } from '@hilla/react-crud/autoform-field';
 
-function VerticalLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<EmployeeModel>) {
-  return <VerticalLayout>{children}</VerticalLayout>;
+// tag::snippet[]
+function GroupingLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<EmployeeModel>) {
+  const { field, model } = form;
+  const fieldsByPropertyName = new Map<string, AutoFormFieldProps>();
+  children.forEach((field) => fieldsByPropertyName.set(field.props.propertyInfo.name, field.props));
+  return (
+    <VerticalLayout theme="spacing">
+      <h4>Personal Information:</h4>
+      <HorizontalLayout theme="spacing padding-bottom">
+        <TextField label="First Name" {...field(model.firstName)} />
+        <TextField label="Last Name" {...field(model.lastName)} />
+        <Select
+          label="Gender"
+          {...field(model.gender)}
+          items={[
+            { label: 'Female', value: Gender.FEMALE },
+            { label: 'Male', value: Gender.MALE },
+            { label: 'Non-Binary', value: Gender.NON_BINARY },
+            { label: 'Prefer not to say', value: Gender.OTHER },
+          ]}
+        />
+      </HorizontalLayout>
+      <h4>Employment Information:</h4>
+      <HorizontalLayout theme="spacing padding" style={{ alignItems: 'end' }}>
+        <DatePicker label="Start Date" {...field(model.startDate)} />
+        <TimePicker label="Shift Starts At" {...field(model.shiftStartsAt)} />
+        <Checkbox label="Active" {...field(model.active)} />
+      </HorizontalLayout>
+      <h4>Other:</h4>
+      <HorizontalLayout theme="spacing padding">
+        <TextArea label="Description" {...field(model.description)} style={{ flexGrow: 1 }} />
+      </HorizontalLayout>
+    </VerticalLayout>
+  );
 }
 
 function Example() {
@@ -21,7 +63,7 @@ function Example() {
     <AutoForm
       service={EmployeeService}
       model={EmployeeModel}
-      customLayoutRenderer={VerticalLayoutRenderer}
+      layoutRenderer={GroupingLayoutRenderer}
     />
   );
 }

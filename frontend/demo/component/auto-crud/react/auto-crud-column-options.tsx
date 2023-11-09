@@ -10,8 +10,8 @@ import Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
 
 function ActiveRenderer({ item }: { item: Employee }) {
   const { active } = item;
-  const color = active ? 'red' : 'green';
-  return <span style={{ fontWeight: 'bold', color }}>{active}</span>;
+  const color = active ? 'green' : 'red';
+  return <span style={{ fontWeight: 'bold', color }}>{active ? 'Yes' : 'No'}</span>;
 }
 
 function Example() {

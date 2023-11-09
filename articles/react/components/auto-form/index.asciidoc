@@ -38,16 +38,9 @@ include::{root}/src/main/java/com/vaadin/demo/fusion/crud/EmployeeRepository.jav
 ----
 --
 
-Hilla generates TypeScript objects for each `@BrowserCallable` service implementing the `CrudService<T, ID>` interface. These TypeScript objects have callable methods that execute the corresponding Java service methods, enabling the Add, Update, and Delete operations as well as lazy data loading with sorting and filtering.
+Hilla generates TypeScript objects for each `@BrowserCallable` service implementing the `CrudService<T, ID>` interface.These TypeScript objects have callable methods that execute the corresponding Java service methods, enabling the Add, Update, and Delete operations as well as lazy data loading with sorting and filtering.
 
-For the `EmployeeService` example, you can import the generated TypeScript object in your React view, and use it as a value for the `<AutoForm service={}/>` property to display the fields:
-
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-basic.tsx[tags=snippet,indent=0]
-----
-
-The Auto Form component renders a form with editor components for all properties of the `Employee` entity along with a Save button that associates with the respective `save` method of the `CrudService<T, ID>`, and an initially hidden Discard button that calls the form binder's `reset` operation, and it is only visible when the form has some changes.
+For the `EmployeeService` example, you can import the generated TypeScript object in your React view, and use it as a value for the `<AutoForm service={EmployeeService} />` property to display the fields.
 
 Here's what the rendered form looks like:
 
@@ -59,157 +52,41 @@ include::{root}/frontend/demo/component/auto-form/react/auto-form-basic.tsx[rend
 ----
 --
 
-.Default Responsive Breakpoints
-[NOTE]
-When the Auto Form component is rendered based on its default settings similar to the example above, it uses the <<../form-layout#,Form Layout component>>'s  default responsive breakpoints.
-
-== Customizing the Form's Layout
-
-As you can see in the example above, the Auto Form component by default renders the fields in a Form Layout with a two-column layout. You can customize the layout by using the `customLayoutRenderer` property, in either of the following ways:
-
-=== Defining a Template
-
-You can define a template for arranging the fields in the form's layout in two ways:
-
-- Defining the template as `string[][]`:
-
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-template-string.tsx[tags=snippet,indent=0]
-----
-
-The number of columns for the Form Layout is calculated based on the number of fields in each row of the template. Thus, this creates a six column Form Layout and renders the fields in five rows according to the order of their appearance in the template:
-
-[.example.desktop]
---
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-template-string.tsx[render,frame,tags=snippet,indent=0]
-----
---
-
-As you can see in the above example, each row's space is divided equally between the fields.
+As you can see in the above example, Auto Form component renders a form with input components for all properties of the `Employee` entity along with a Save button that associates with the respective `save` method of the `CrudService<T, ID>`, and an initially hidden Discard button that calls the form binder's `reset` operation, and it is only visible when the form has some changes.
 
 .Default Responsive Breakpoints
 [NOTE]
-When the Auto Form component is rendered based on `string[][]` template similar to the example above, it uses the following responsive breakpoints:
-`[
-    { minWidth: '0', columns: 1 },
-    { minWidth: '800px', columns: minNeededColumns },
-]`
-where `minNeededColumns` is calculated based on the _Least Common Multiple_ for the number of fields listed in each row of the template. You can override this default behavior by using the `responsiveSteps` property, but make sure the number of fields in the template rows are logically aligned with the total number of columns defined via `responsiveSteps`.
+When the Auto Form component is rendered based on its default settings similar to the example above, it uses the <<../form-layout#,Form Layout component>>'s  default responsive breakpoints. If you want to customize the responsive breakpoints, you can see how it is done in the <<customizing-form-layout,Customizing Form Layout>> section.
 
+== Customizing Visibility & Order
 
-You can define the `colSpan` for each field to control how the space is divided between the fields:
-
-- Defining the template as `{ property: string, colSpan: number }[][]`:
-
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-template-fieldcolspan.tsx[tags=snippet,indent=0]
-----
-
-Again, this creates a six column Form Layout and renders the fields in five rows according to the order of their appearance in the template, but this time the `colSpan` property is used to define how the space is divided between the fields:
+As you can see in the example above, the Auto Form component by default renders input components for all the data properties in a Form Layout with a two-column layout, except for the fields annotated by `@Id` and `@Version`. You can customize the visibility and order of the fields using `visibleFields` property:
 
 [.example.desktop]
 --
 [source,tsx]
 ----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-template-fieldcolspan.tsx[render,frame,tags=snippet,indent=0]
+include::{root}/frontend/demo/component/auto-form/react/auto-form-field-visibility.tsx[render,frame,tags=snippet,indent=0]
 ----
 --
 
-The number of columns for the Form Layout is always calculated based on the number of fields in each row of the template, unless you explicitly define the `responsiveSteps` property:
-
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-template-fieldcolspan-responsive.tsx[tags=snippet,indent=0]
-----
-
-This creates a three column Form Layout and renders the fields in five rows according to the order of their appearance in the template and the respective `colSpan` property of each field:
-
-[.example.desktop]
---
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-template-fieldcolspan-responsive.tsx[render,frame,tags=snippet,indent=0]
-----
---
-
-As you can see in the above example, the `responsiveSteps` property is used to define the number of columns for the Form Layout, and the `colSpan` property for each field is aligned accordingly.
-
-.Defining the `responsiveSteps` Property and `string[][]` Template Together
-[NOTE]
-You can use the `responsiveSteps` property when defining the template as `string[][]` as well. In this case, make sure the number of fields in the template rows are logically aligned with the total number of columns defined via `responsiveSteps`.
-
-=== Using Custom Renderer
-
-While customizing the Auto Form's layout using either of the template options mentioned in the above enables you to cover a wide range of use cases, you can also use a custom renderer to define any arbitrary layout. This is useful when you need to define a layout that is not possible to achieve using the template options.
-
-To use a custom renderer, define a function that takes the `AutoFormLayoutRendererProps` as a parameter and returns any React element. The `AutoFormLayoutRendererProps` contains the following properties:
-
-- children: the read-only list of bound fields
-- form: the form binder instance
-
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-custom-renderer.tsx[tags=snippet,indent=0]
-----
-
-The above example uses a custom renderer to render the fields in a Vertical Layout:
-
-[.example.desktop]
---
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-custom-renderer.tsx[render,frame,tags=snippet,indent=0]
-----
---
-
-== Customizing Field's Properties
-
-You can customize the properties of the fields rendered by Auto Form by using the `fieldOptions` property.
-
-=== Customizing Visibility & Order
-
-To choose which of the data properties should be displayed as fields in Auto Form, or to specify the order of appearance in the Auto Form, use the `customLayoutRenderer` property and specify the name of desired properties in the `template`.
-
-When Auto Form is used without any template defined for `customLayoutRenderer` property, it renders all the properties of the entity except those that are annotated with `@Id` or `@Version` annotations. You can make them visible by adding their names to the `customLayoutRenderer`'s template:
-
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-template-id-version.tsx[tags=snippet,indent=0]
-----
-
-The above example uses a template to hide `team` and `manager` properties, and to display the `id` and `version` properties in the desired order and placement:
-
-[.example.desktop]
---
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-template-id-version.tsx[render,frame,tags=snippet,indent=0]
-----
---
+As you can see in the above example, the `visibleFields` property is used to define the fields that should be displayed in the form as well as their order of appearance.
 
 .Don't Expose Sensitive Data on Client-Side
 [CAUTION]
 When using Auto Form, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using either of the `template` versions won't prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
 
+== Customizing Field's Properties
+
+You can customize the properties of the fields rendered by Auto Form by using the `fieldOptions` property.
 
 === Overriding Field's Options
 
 You can customize some options of the automatically rendered fields by Auto Form by using the `fieldOptions` property.
 
-==== Customizing the Label
+==== Customizing Field's Label
 
 To customize the label of a field, use the `label` property of the `fieldOptions` property as follows:
-
-[source,tsx]
-----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-field-custom-label.tsx[tags=snippet,indent=0]
-----
-
-The above example shows how to customize the label of the `firstName` and `lastName` fields:
 
 [.example.desktop]
 --
@@ -219,16 +96,23 @@ include::{root}/frontend/demo/component/auto-form/react/auto-form-field-custom-l
 ----
 --
 
-==== Customizing the Editor
+The above example shows how to customize the label of the `firstName` and `lastName` fields.
 
-You can use the `renderer` property of the `fieldOptions` to override the rendered field by Auto Form:
+==== Customizing Field's ColSpan
 
+As Auto Form component uses the Form Layout component as the layout, you can customize the `colSpan` property of the fields rendered by Auto Form by using the `fieldOptions` property as follows:
+
+[.example.desktop]
+--
 [source,tsx]
 ----
-include::{root}/frontend/demo/component/auto-form/react/auto-form-field-custom-renderer.tsx[tags=snippet,indent=0]
+include::{root}/frontend/demo/component/auto-form/react/auto-form-field-colspan.tsx[render,frame,tags=snippet,indent=0]
 ----
+--
 
-The above example shows how to render a Text Area component for the description field:
+==== Customizing Input Component
+
+You can use the `renderer` property of the `fieldOptions` to override the rendered field by Auto Form:
 
 [.example.desktop]
 --
@@ -238,5 +122,45 @@ include::{root}/frontend/demo/component/auto-form/react/auto-form-field-custom-r
 ----
 --
 
-Another way of achieving the same result is by providing a custom form renderer for whole form. In the <<#using-custom-renderer,Using Custom Renderer>> section, you can see how to use a custom renderer to define any arbitrary layout for the form. You can also use a custom form renderer to add custom fields to the form, or to render any desired editor component for any fields. As the `form` property of the `AutoFormLayoutRendererProps` is a form binder instance, you can use the `field` directive to bind any custom field to the form as well. See <<../../guides/forms/binder.adoc#,Binding Data to Forms>> for more information about the form binding and `field` directive usage.
+The above example shows how to render a Text Area component for the description field.
 
+=== Customizing Form Layout
+
+You can customize the Form Layout component used by Auto Form by using the `formLayoutProps` property. For example, you can set the `responsiveSteps` property to customize the responsive breakpoints of the Form Layout component:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-responsive-steps.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+== Using Custom Renderer
+
+In case you want to render field in completely different layout, You can use a custom renderer to define any arbitrary layout using the `layoutRenderer` property.
+
+To use a custom renderer, define a function that takes the `AutoFormLayoutRendererProps` as a parameter and returns any React element. The `AutoFormLayoutRendererProps` contains the following properties:
+
+- children: the read-only list of bound fields
+- form: the form binder instance
+
+As the children property is a read-only list of bound fields, you can use them right away in your custom renderer. The following example shows how to use the `children` property to render the fields in a two-column layout:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-custom-renderer-alt.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+Alternatively, you can create input fields as needed, and use the `form` binder instance to take control over the bindings. The following example uses a custom renderer and manually does the form binding for the fields:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-custom-renderer.tsx[render,frame,tags=snippet,indent=0]
+----
+--
