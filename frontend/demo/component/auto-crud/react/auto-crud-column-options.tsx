@@ -3,7 +3,7 @@ import React from 'react'; // hidden-source-line
 // tag::snippet[]
 import { ExperimentalAutoCrud as AutoCrud } from '@hilla/react-crud';
 // tag::apply-backend[]
-import { EmployeeService } from 'Frontend/generated/endpoints.js';
+import { EmployeeService } from 'Frontend/generated/endpoints';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
 

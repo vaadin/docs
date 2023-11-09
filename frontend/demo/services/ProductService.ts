@@ -1,8 +1,6 @@
-import FilterUnion from 'Frontend/generated/dev/hilla/crud/filter/FilterUnion.js';
 import type Product from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product.js';
-import type Pageable from 'Frontend/generated/dev/hilla/mappedtypes/Pageable.js';
 import Supplier from 'Frontend/generated/com/vaadin/demo/fusion/crud/Supplier.js';
-import { listItems } from './CrudService.js';
+import { CrudMockService } from './CrudService.js';
 
 const productData: Product[] = [
   { name: 'Apple', category: 'Fruit', price: 1.99, dateAdded: '2019-01-01' },
@@ -74,8 +72,4 @@ const products = productData.map((product) => ({
   id: ++id,
 }));
 
-async function list(pageable: Pageable, filter: FilterUnion | undefined): Promise<Array<Product>> {
-  return Promise.resolve(listItems(products, pageable, filter));
-}
-
-export default { list };
+export default new CrudMockService(products);
