@@ -12,29 +12,7 @@ function Example() {
     <AutoForm
       service={EmployeeService}
       model={EmployeeModel}
-      customLayoutRenderer={{
-        template: [
-          [
-            { property: 'firstName', colSpan: 2 },
-            { property: 'lastName', colSpan: 2 },
-            { property: 'gender', colSpan: 2 },
-          ],
-          [
-            { property: 'dateOfBirth', colSpan: 2 },
-            { property: 'email', colSpan: 4 },
-          ],
-          [
-            { property: 'startDate', colSpan: 2 },
-            { property: 'endDate', colSpan: 2 },
-            { property: 'active', colSpan: 2 },
-          ],
-          [
-            { property: 'team', colSpan: 4 },
-            { property: 'manager', colSpan: 2 },
-          ],
-          [{ property: 'description', colSpan: 6 }],
-        ],
-      }}
+      visibleFields={['firstName', 'lastName', 'startDate', 'shiftStartsAt', 'gender', 'version']}
     />
     // end::snippet[]
   );
