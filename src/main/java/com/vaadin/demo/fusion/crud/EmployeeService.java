@@ -8,6 +8,6 @@ import dev.hilla.crud.CrudRepositoryService;
 @BrowserCallable
 @AnonymousAllowed
 public class EmployeeService
-        extends CrudRepositoryService<Employee, Long, EmployeeRepository> {
+       extends CrudRepositoryService<Employee, Long, EmployeeRepository> {
 }
 //end::snippet[]
