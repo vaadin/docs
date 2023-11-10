@@ -4,8 +4,6 @@ import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto
 // tag::snippet[]
 import { ExperimentalAutoForm as AutoForm } from '@hilla/react-crud';
 // tag::apply-backend[]
-//import * as EmployeeService from 'Frontend/generated/EmployeeService.js';
-
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import { EmployeeService } from 'Frontend/generated/endpoints.js';
 
