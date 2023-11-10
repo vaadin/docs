@@ -1,17 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
-// tag::snippet[]
 import {
   type AutoFormLayoutRendererProps,
   ExperimentalAutoForm as AutoForm,
 } from '@hilla/react-crud';
-// tag::apply-backend[]
 import { EmployeeService } from 'Frontend/generated/endpoints.js';
-
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
-// end::snippet[]
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { TextField } from '@hilla/react-components/TextField.js';
@@ -57,17 +53,19 @@ function GroupingLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<
     </VerticalLayout>
   );
 }
+// end::snippet[]
 
 function Example() {
   return (
+    // tag::snippet[]
     <AutoForm
       service={EmployeeService}
       model={EmployeeModel}
       layoutRenderer={GroupingLayoutRenderer}
     />
+    // end::snippet[]
   );
 }
-// end::apply-backend[]
-// end::snippet[]
+
 
 export default reactExample(Example, autoGridHostStyles); // hidden-source-line

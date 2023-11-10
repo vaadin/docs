@@ -1,10 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react'; // hidden-source-line
 import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
-
 import { ExperimentalAutoForm as AutoForm } from '@hilla/react-crud';
-// tag::apply-backend[]
-
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import { EmployeeService } from 'Frontend/generated/endpoints.js';
 import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
@@ -13,8 +10,9 @@ import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { Button } from '@hilla/react-components/Button.js';
 import { Notification } from '@hilla/react-components/Notification.js';
-// tag::snippet[]
+
 function Example() {
+  // tag::snippet[]
   const existingItem: Employee = {
     firstName: 'Jennifer',
     lastName: 'Smith',
@@ -59,8 +57,7 @@ function Example() {
       />
     </VerticalLayout>
   );
+  // end::snippet[]
 }
-// end::apply-backend[]
-// end::snippet[]
 
 export default reactExample(Example, autoGridHostStyles); // hidden-source-line
