@@ -19,7 +19,7 @@ public class VotingNavigationAccessChecker implements NavigationAccessChecker {
                         .orElseGet(() -> context.deny("Voting closed"));
             } else {
                 // Critical error, the navigation does not carry a required
-                // information. Probably a misconfigured route annotaion or
+                // information. Probably a misconfigured route annotation or
                 // a broken link in another view
                 result = context.reject("Event identifier not provided");
             }

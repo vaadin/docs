@@ -64,6 +64,24 @@ For example, a navigation access check implementation that allows access to a vo
 include::{root}/src/main/java/com/vaadin/demo/flow/auth/VotingNavigationAccessChecker.java[tags=snippet]
 ----
 
+==== Navigation Error Handling Phase
+
+When implementing a custom [classname]`NavigationAccessChecker`, it is important to know that the checker is called also when the navigation is rerouted to an error handler view.
+The [classname]`NavigationContext` class provides the [methodname]`isErrorHandling()` method to verify if the call happens during a navigation error handling phase.
+In this case, a custom checker would probably abstain from taking a decision for the internal navigation, by returning a `NEUTRAL` result.
+
+.Neutral Result On Error Handling Phase
+[source,java]
+----
+@Override
+public AccessCheckResult check(NavigationContext context) {
+    if (context.isErrorHandling()) {
+        return context.neutral();
+    }
+    ....
+}
+----
+
 === Decision Resolver
 
 The [interfacename]`DecisionResolver` component is responsible to analyze the results provided by the navigation access checkers and compute the final decision to grant or deny access to a view.
@@ -129,13 +147,30 @@ NavigationAccessControlConfigurer navigationAccessControlConfigurerCustomizer() 
             .withAvailableNavigationAccessCheckers(checker -> 
                 checker instanceof VotingNavigationAccessChecker  // <3>
             )
-            .withDecisionResolver(new CustomDecisionResolver()) // <4>
+            .withDecisionResolver(new CustomDecisionResolver()); // <4>
 }
 ----
 <1> Activates the route path access checker. The implementation is provided out-of-the-box by the Vaadin Spring module and exposed as a bean.
 <2> Adds a custom navigation access checker, by creating a new instance.
 <3> Activates all registered navigation access checker bean, that match the predicate.
 <4> Sets a custom decision resolver.
+
+[IMPORTANT]
+If you add the bean definition method in a configuration class extending [classname]`VaadinWebSecurity`, the method must be declared `static`, to prevent bootstrap errors because of circular dependencies in bean definitions.
+
+.Define NavigationAccessControlConfigurer Bean in VaadinWebSecurity Subclass 
+[source,java]
+----
+class SecurityConfig extends VaadinWebSecurity {
+    @Bean
+    static NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
+        new NavigationAccessControlConfigurer() 
+            .withRoutePathAccessChecker()
+            .withDecisionResolver(new CustomDecisionResolver());
+    }
+}
+----
+
 
 Consult the [classname]`NavigationAccessControlConfigurer` Javadoc for further information on how navigation access control can be customized.
 
