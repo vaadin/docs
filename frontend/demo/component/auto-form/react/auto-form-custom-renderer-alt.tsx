@@ -17,21 +17,21 @@ function GroupingLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<
   const fieldsMapping = new Map<string, JSX.Element>();
   children.forEach((field) => fieldsMapping.set(field.props?.propertyInfo?.name, field));
   return (
-    <VerticalLayout theme="spacing">
+    <VerticalLayout>
       <h4>Personal Information:</h4>
-      <HorizontalLayout theme="spacing padding-bottom">
+      <HorizontalLayout theme="spacing" className="pb-l">
         {fieldsMapping.get('firstName')}
         {fieldsMapping.get('lastName')}
         {fieldsMapping.get('gender')}
       </HorizontalLayout>
       <h4>Employment Information:</h4>
-      <HorizontalLayout theme="spacing padding" style={{ alignItems: 'end' }}>
+      <HorizontalLayout theme="spacing" className="pb-l items-baseline">
         {fieldsMapping.get('startDate')}
         {fieldsMapping.get('shiftStartsAt')}
         {fieldsMapping.get('active')}
       </HorizontalLayout>
       <h4>Other:</h4>
-      <HorizontalLayout theme="spacing padding">
+      <HorizontalLayout theme="spacing">
         {fieldsMapping.get('description')}
       </HorizontalLayout>
     </VerticalLayout>

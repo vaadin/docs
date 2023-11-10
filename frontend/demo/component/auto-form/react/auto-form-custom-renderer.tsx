@@ -28,9 +28,9 @@ function GroupingLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<
   const fieldsByPropertyName = new Map<string, AutoFormFieldProps>();
   children.forEach((field) => fieldsByPropertyName.set(field.props.propertyInfo.name, field.props));
   return (
-    <VerticalLayout theme="spacing">
+    <VerticalLayout>
       <h4>Personal Information:</h4>
-      <HorizontalLayout theme="spacing padding-bottom">
+      <HorizontalLayout theme="spacing" className="pb-l">
         <TextField label="First Name" {...field(model.firstName)} />
         <TextField label="Last Name" {...field(model.lastName)} />
         <Select
@@ -45,13 +45,13 @@ function GroupingLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<
         />
       </HorizontalLayout>
       <h4>Employment Information:</h4>
-      <HorizontalLayout theme="spacing padding" style={{ alignItems: 'end' }}>
+      <HorizontalLayout theme="spacing" className="pb-l items-baseline">
         <DatePicker label="Start Date" {...field(model.startDate)} />
         <TimePicker label="Shift Starts At" {...field(model.shiftStartsAt)} />
         <Checkbox label="Active" {...field(model.active)} />
       </HorizontalLayout>
       <h4>Other:</h4>
-      <HorizontalLayout theme="spacing padding">
+      <HorizontalLayout theme="spacing">
         <TextArea label="Description" {...field(model.description)} style={{ flexGrow: 1 }} />
       </HorizontalLayout>
     </VerticalLayout>
