@@ -20,7 +20,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private people: Person[] = [];
+  private accessor people: Person[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 4 });

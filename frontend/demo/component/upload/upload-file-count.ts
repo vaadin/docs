@@ -27,7 +27,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private upload!: Upload;
+  private accessor upload!: Upload;
 
   protected override firstUpdated() {
     this.upload.i18n.error.tooManyFiles = 'You may only upload a maximum of three files at once.';

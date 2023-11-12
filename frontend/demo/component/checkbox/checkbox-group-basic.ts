@@ -17,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private value = ['0', '2'];
+  private accessor value = ['0', '2'];
 
   protected override render() {
     return html`

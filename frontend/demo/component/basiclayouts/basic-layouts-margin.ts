@@ -23,7 +23,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private theme = 'margin';
+  private accessor theme = 'margin';
 
   protected override render() {
     return html`

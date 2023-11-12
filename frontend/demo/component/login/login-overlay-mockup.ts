@@ -76,16 +76,16 @@ export class LoginOverlayMockupElement extends LitElement {
   }
 
   @property({ type: String })
-  headerTitle: string | undefined = 'App name';
+  accessor headerTitle: string | undefined = 'App name';
 
   @property({ type: String })
-  description: string | undefined = 'Application description';
+  accessor description: string | undefined = 'Application description';
 
   @property({ type: Boolean })
-  error = false;
+  accessor error = false;
 
   @property({ type: Object })
-  i18n: LoginI18n = {
+  accessor i18n: LoginI18n = {
     form: {
       title: 'Log in',
       username: 'Username',
