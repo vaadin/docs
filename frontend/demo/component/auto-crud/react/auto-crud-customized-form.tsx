@@ -4,6 +4,7 @@ import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto
 import { ExperimentalAutoCrud as AutoCrud } from '@hilla/react-crud';
 import { EmployeeService } from 'Frontend/generated/endpoints';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
+import { TextArea } from '@hilla/react-components/TextArea';
 
 function Example() {
   return (
@@ -12,7 +13,15 @@ function Example() {
       service={EmployeeService}
       model={EmployeeModel}
       formProps={{
-        visibleFields: ['firstName', 'lastName', 'active', 'startDate', 'gender', 'version'],
+        visibleFields: ['firstName', 'lastName', 'active', 'version', 'description'],
+        fieldOptions: {
+          firstName: { label: 'Name' },
+          description: {
+            renderer: ({ field }) => (
+              <TextArea key={field.name} {...field} label="Full description" />
+            ),
+          },
+        },
       }}
     />
     // end::snippet[]
