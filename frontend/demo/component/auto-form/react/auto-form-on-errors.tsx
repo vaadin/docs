@@ -31,7 +31,6 @@ function Example() {
   };
 
   return (
-    // tag::snippet[]
     <AutoForm
       service={EmployeeService}
       model={EmployeeModel}
@@ -40,8 +39,8 @@ function Example() {
       onSubmitError={handleOnSubmitError}
       onDeleteError={handleOnDeleteError}
     />
-    // end::snippet[]
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example, autoGridHostStyles); // hidden-source-line
