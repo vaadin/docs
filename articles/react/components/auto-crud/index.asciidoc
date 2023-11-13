@@ -1,0 +1,127 @@
+---
+title: Auto CRUD
+order: 10
+description: Used for automatically populating CRUD views and actions based on a Java backend service.
+---
+
+
+= [since:dev.hilla:hilla@v2.4]#Auto CRUD#
+
+// tag::description[]
+Auto CRUD is a component that provides CRUD functionality (i.e., Create, Read, Update, Delete) based on a Java backend service. It includes a sortable, filterable and lazy-loaded grid, as well as a form for creating, updating and deleting items.
+// end::description[]
+
+include::{articles}/react/components/_shared.asciidoc[tag=scaled-examples]
+include::{articles}/react/components/_shared.asciidoc[tag=scaled-examples-responsive]
+
+
+== Basic Usage
+
+Auto CRUD requires a Java service that implements the `CrudService<T, ID>` interface. In the example here, the `EmployeeService` class extends `CrudRepositoryService<T, ID, R>`, which in turn implements the `CrudService<T, ID>`:
+
+[.example]
+--
+[source,java]
+.EmployeeService.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/EmployeeService.java[tags=snippet,indent=0]
+----
+[source,java]
+.Employee.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Employee.java[tags=snippet,indent=0]
+----
+[source,java]
+.EmployeeRepository.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/EmployeeRepository.java[tags=snippet,indent=0]
+----
+--
+
+Hilla generates TypeScript objects for each `@BrowserCallable` service implementing the `CrudService<T, ID>` interface. These TypeScript objects have callable methods that execute the corresponding Java service methods, enabling the Add, Update, and Delete operations as well as lazy data loading with sorting and filtering.
+
+For the `EmployeeService` example, you can import the generated TypeScript object in your React view, and use it as a value for the `service` property to render automatically grid columns and form fields. Here's what the rendered component looks like:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-crud/react/auto-crud-basic.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+As you can see in the previous example, Auto CRUD renders a grid with columns for all properties of the `Employee` entity, next to a form with fields for editing those properties. Selecting an entity in the grid populates the form with data from that entity. The new button allows one to create a new entity. When submitting the form, the data is automatically submitted to the `save` method of the configured `CrudService`, and the row in the grid is updated. When an existing entity is selected, the form also shows a delete button. Clicking the button calls the `delete` method of the configured `CrudService`, clears the form and removes the row in the grid.
+
+== Component Composition
+
+Auto CRUD is a composition of the following components:
+
+- <<../auto-grid/index.asciidoc#,Auto Grid>>
+- <<../auto-form/index.asciidoc#,Auto Form>>
+
+Each of the these components offer some customization options, which are described in the following sections.
+
+
+== Customizing the Grid
+
+As you probably saw in the previous example, the Auto CRUD component by default rendered the grid with all the properties of the entity, with default filtering and sorting options.
+
+The underlying Auto Grid offers a number of properties that allows you to customize the grid and its columns:
+
+- `visibleColumns`: an array of strings that specifies the names and also the order of appearance for the properties to be displayed as columns in the grid.
+
+- `columnOptions`: an object that specifies the options for each column.
+
+- `customColumns`: an array of `<GridColumn />` components that specifies the custom columns to be added to the grid.
+
+- `noHeaderFilters`: Auto Grid has column-based filtering enabled by default. You can disable the built-in column filters by setting the `noHeaderFilters` flag.
+
+- Grid Props: As the Auto CRUD component is composed of the Auto Grid component, and it's using the <<../grid#,Grid component>> internally, you can use all the properties of the Grid component to customize the grid. The way to pass the properties to the Auto CRUD component is by using the `gridProps` property.
+
+You can customize the grid by providing any of these options to the `gridProps` property. The following example shows how to provide the `visibleColumns` property to the `gridProps` to set the visibility and order of the columns. In addition, it shows how to provide the `columnOptions` property to the `gridProps` to change the default header title of `firstName` column, and to provide a custom renderer for the `active` column:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-crud/react/auto-crud-customized-grid.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+.Don't Expose Sensitive Data on Client-Side
+[CAUTION]
+When using Auto CRUD, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using the `visibleColumns` property won't prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
+
+For more detailed examples of customizing the underlying grid, please refer to the <<../auto-grid/index.asciidoc#,Auto Grid>> component documentation.
+
+== Customizing the Form
+
+As you probably saw in the previous examples, Auto CRUD component by default renders a form with input components for all properties of the `Employee` entity along with a Save button that associates with the respective `save` method of the provided `CrudService<Employee, Long>`, and an initially hidden Discard button that calls the form binder's `reset` operation, which is only visible when there are changes. It also renders a Delete button when a row is selected in the Grid, and the Form is in edit mode.
+
+The underlying Auto Form offers a number of properties that allows you to customize the form and its fields:
+
+- `visibleFields`: Auto Form component by default renders fields for all the data properties in a Form Layout, except for the fields annotated by `@Id` and `@Version`. Using `visibleFields`, you can choose which fields to render in the form and in what order.
+
+- `fieldOptions`: an object that specifies the options for each field.
+
+- `colspan`: in case you want to render the form in a two or more column layout, you can set the `colspan` property for each field through `fieldOption` props to make it span over more than one column.
+
+- `formLayoutProps`: an object that specifies the options for the Form Layout.
+
+- `layoutRenderer`: a function that takes the `AutoFormLayoutRendererProps` as a parameter and returns any React element. The `AutoFormLayoutRendererProps` contains a _read-only list of bound fields_ called `children`, and _the form binder instance_ called `form`. You can use this function to achieve any custom layout, and also to have more control over binding and validations.
+
+You can customize the form rendered by Auto CRUD by providing any of these options the `formProps` property. The following example shows how to provide the `visibleFields` property to the `formProps` to set the visibility and the order of the fields. In addition, it shows how to provide the `fieldOptions` property to the `formProps` to change the default label of `firstName` field, and to render a Text Area for the `description` field:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-crud/react/auto-crud-customized-form.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+.Don't Expose Sensitive Data on Client-Side
+[CAUTION]
+When using Auto CRUD, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using `visibleFields` does not prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
+
+For more detailed examples of customizing the underlying form, please refer to the <<../auto-form/index.asciidoc#,Auto Form>> component documentation.

@@ -1,0 +1,224 @@
+---
+title: Auto Form
+order: 15
+description: Auto Form is a component that automatically renders a form for editing, updating and deleting items from a backend service.
+---
+
+
+= [since:dev.hilla:hilla@v2.4]#Auto Form#
+
+// tag::description[]
+Auto Form is a component that automatically renders a form for editing, updating and deleting items from a backend service.
+// end::description[]
+
+include::{articles}/react/components/_shared.asciidoc[tag=scaled-examples]
+include::{articles}/react/components/_shared.asciidoc[tag=scaled-examples-responsive]
+
+
+== Basic Usage
+
+Auto Form requires a Java service that implements the `CrudService<T, ID>` interface. In the example here, the `EmployeeService` class extends `CrudRepositoryService<T, ID, R>`, which in turn implements the `CrudService<T, ID>`:
+
+[.example]
+--
+[source,java]
+.EmployeeService.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/EmployeeService.java[tags=snippet,indent=0]
+----
+[source,java]
+.Employee.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Employee.java[tags=snippet,indent=0]
+----
+[source,java]
+.EmployeeRepository.java
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/EmployeeRepository.java[tags=snippet,indent=0]
+----
+--
+
+Hilla generates TypeScript objects for each `@BrowserCallable` service implementing the `CrudService<T, ID>` interface. These TypeScript objects have callable methods that execute the corresponding Java service methods, enabling the Add, Update, and Delete operations as well as lazy data loading with sorting and filtering.
+
+For the `EmployeeService` example, you can import the generated TypeScript object in your React view, and use it as a value for the `<AutoForm service={EmployeeService} />` property to render the form.
+
+Here's what the rendered form looks like:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-basic.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+As you can see, Auto Form component renders a form with fields for all properties of the `Employee` entity. When submitting the form, the data is automatically submitted to the `save` method of the configured `CrudService`.
+
+.Default Responsive Breakpoints
+[NOTE]
+Auto Form uses the <<../form-layout#,Form Layout component>>'s  default responsive breakpoints. To customize them, see the <<customizing-form-layout,Customizing Form Layout>> section.
+
+
+== Customizing Visibility & Order
+
+Auto Form by default renders input fields for all properties of the entity in a Form Layout with a two-column layout, except for the properties annotated by `@Id` and `@Version`. You can customize the visibility and order of fields using `visibleFields` property:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-field-visibility.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+.Don't Expose Sensitive Data on Client-Side
+[CAUTION]
+When using Auto Form, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using `visibleFields` does not prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
+
+
+== Customizing Field Properties
+
+You can customize the properties of the fields rendered by Auto Form by using the `fieldOptions` property.
+
+
+=== Overriding Field Options
+
+You can customize some options of the automatically rendered fields by Auto Form by using the `fieldOptions` property.
+
+
+==== Customizing Field Label
+
+To customize the label of a field, use the `label` property of the `fieldOptions` property as follows:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-field-custom-label.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+The previous example shows how to customize the label of the `firstName` and `lastName` fields.
+
+
+==== Customizing Field Column Span
+
+As Auto Form component uses the Form Layout component as the layout, you can customize the `colspan` property of the fields rendered by Auto Form by using the `fieldOptions` property as follows:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-field-colspan.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+
+==== Customizing Input Component
+
+You can use the `renderer` property of the `fieldOptions` to override the rendered field by Auto Form. The following example shows how to render a Text Area component for the description field:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-field-custom-renderer.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+
+== Customizing Form Layout
+
+You can customize the Form Layout component used by Auto Form, with the `formLayoutProps` property. For example, you can set the `responsiveSteps` property to customize the responsive breakpoints of the Form Layout component:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-responsive-steps.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+
+== Using Custom Renderer
+
+To render a form in a completely different layout, you can use a custom renderer to define any arbitrary layout using the `layoutRenderer` property.
+
+To use a custom renderer, define a function that takes the `AutoFormLayoutRendererProps` as a parameter and returns any React element. The `AutoFormLayoutRendererProps` contains the following properties:
+
+- `children`: the read-only list of bound fields
+- `form`: the form binder instance
+
+As the children property is a read-only list of bound fields, you can use them right away in your custom renderer. The following example shows how to use the `children` property to render the fields in separate sub-form sections using the Vertical and Horizontal layouts:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-custom-renderer-alt.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+Alternatively, you can manually create input fields, and use the `form` instance to connect them to the form.
+
+The following example shows how to render fields, manually:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-custom-renderer.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+
+== Managing Form State
+
+Auto Form component enables you to manage the form state in different scenarios. For instance, you can edit an item versus by creating a new one, handling after submission events, and so on.
+
+The following properties are available for managing the form state or reacting to form events:
+
+- `item`: the item to be edited. If the item is `null`, the form is in _new_ mode, otherwise it is in _edit_ mode.
+- `disabled`: disables the whole form.
+- `afterSubmit`: a callback function that is called after the form is submitted successfully.
+
+The following example shows how to use the `item` property to manage switching between _new_ and _edit_ modes, and `afterSubmit` for informing the user about the form submission success. In addition, it uses `disabled` property is also used to toggle the form's disabled state:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-edit-new-modes.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+Auto Form component supports Deletion functionality out-of-the-box, which is associated with calling the `delete` method from the `CrudService` introduced to the Auto Form. The following properties are associated with managing this functionality:
+
+- `deleteButtonVisible`: whether to show the delete button in the form which is hidden by default. If enabled, the delete button is only shown when editing an existing item, that means that `item` property is not null.
+- `afterDelete`: a callback function that is called after the item is deleted successfully.
+
+The following example shows how to use the `deleteButtonVisible` property to show the Delete button, and uses the `afterDelete` property to inform the user about the deletion success. You can toggle between the _edit_ and _new_ modes to see its effect on the visibility of the Delete button in action:
+
+[.example.desktop]
+--
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-delete-after-delete.tsx[render,frame,tags=snippet,indent=0]
+----
+--
+
+The following properties are associated with managing the form actions error handling:
+
+- `onSubmitError`: a callback that is called if an unexpected error occurs while submitting the form. The callback receives the error as a parameter.
+- `onDeleteError`: a callback that is called if an unexpected error occurs while deleting the item. The callback receives the error as a parameter.
+
+The following example shows how to use the `onSubmitError` and `onDeleteError` callbacks to inform the user about the respective error:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/auto-form/react/auto-form-on-errors.tsx[tags=snippet,indent=0]
+----
+
+.On Submit Error Not Called
+[NOTE]
+Note that `onSubmitError` callback is not be called for form validation errors, which are handled automatically.

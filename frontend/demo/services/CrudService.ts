@@ -1,29 +1,9 @@
+import FilterUnion from 'Frontend/generated/dev/hilla/crud/filter/FilterUnion';
 import Matcher from 'Frontend/generated/dev/hilla/crud/filter/PropertyStringFilter/Matcher';
 import Pageable from 'Frontend/generated/dev/hilla/mappedtypes/Pageable';
+import { CrudService } from '@hilla/react-crud';
 
-// Use inline definitions of filters as the generated ones are broken at the moment
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface Filter {}
-
-export interface AndFilter extends Filter {
-  children: Array<Filter>;
-  t: 'and';
-}
-
-export interface OrFilter extends Filter {
-  children: Array<Filter>;
-  t: 'or';
-}
-
-export interface PropertyStringFilter extends Filter {
-  propertyId: string;
-  filterValue: string;
-  matcher: Matcher;
-  t: 'propertyString';
-}
-
-export type FilterUnion = OrFilter | AndFilter | PropertyStringFilter;
+type AbstractEntity = { id?: any };
 
 /**
  * Returns the value of a property in an object recursively.
@@ -78,11 +58,11 @@ function compare(val1: string, val2: string): Matcher[] {
  * Applies a filter recursively to an object.
  */
 function applyFilter<T>(item: T, filter: FilterUnion): boolean {
-  if (filter.t === 'and') {
+  if (filter['@type'] === 'and') {
     return filter.children.every((child) => {
       return applyFilter(item, child as FilterUnion);
     });
-  } else if (filter.t === 'or') {
+  } else if (filter['@type'] === 'or') {
     return filter.children.some((child) => {
       return applyFilter(item, child as FilterUnion);
     });
@@ -93,44 +73,66 @@ function applyFilter<T>(item: T, filter: FilterUnion): boolean {
   }
 }
 
-/**
- * List all items that match the given filter and pageable, like in Spring Data.
- */
-export function listItems<T>(
-  items: T[],
-  pageable: Pageable,
-  filter: FilterUnion | undefined
-): Array<T> {
-  const filtered = items.filter((item) => !filter || applyFilter(item, filter));
-  pageable.sort.orders.forEach((order) => {
-    if (order) {
-      filtered.sort((a, b) => {
-        const aValue = getPropertyValue(a, order.property) ?? '';
-        const bValue = getPropertyValue(b, order.property) ?? '';
-        const matchers = compare(aValue.toString(), bValue.toString());
+export class CrudMockService<T extends AbstractEntity> implements CrudService<T> {
+  private items: T[];
 
-        if (order.direction === 'ASC') {
-          if (matchers.includes(Matcher.GREATER_THAN)) {
-            return 1;
-          } else if (matchers.includes(Matcher.LESS_THAN)) {
-            return -1;
+  constructor(items: T[]) {
+    this.items = items;
+  }
+
+  /**
+   * List all items that match the given filter and pageable, like in Spring Data.
+   */
+  list(pageable: Pageable, filter: FilterUnion | undefined): Promise<Array<T>> {
+    const filtered = this.items.filter((item) => !filter || applyFilter(item, filter));
+    pageable.sort.orders.forEach((order) => {
+      if (order) {
+        filtered.sort((a, b) => {
+          const aValue = getPropertyValue(a, order.property) ?? '';
+          const bValue = getPropertyValue(b, order.property) ?? '';
+          const matchers = compare(aValue.toString(), bValue.toString());
+
+          if (order.direction === 'ASC') {
+            if (matchers.includes(Matcher.GREATER_THAN)) {
+              return 1;
+            } else if (matchers.includes(Matcher.LESS_THAN)) {
+              return -1;
+            } else {
+              return 0;
+            }
           } else {
-            return 0;
+            if (matchers.includes(Matcher.GREATER_THAN)) {
+              return -1;
+            } else if (matchers.includes(Matcher.LESS_THAN)) {
+              return 1;
+            } else {
+              return 0;
+            }
           }
-        } else {
-          if (matchers.includes(Matcher.GREATER_THAN)) {
-            return -1;
-          } else if (matchers.includes(Matcher.LESS_THAN)) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }
-      });
+        });
+      }
+    });
+
+    const start = pageable.pageNumber * pageable.pageSize;
+    const end = start + pageable.pageSize;
+    return Promise.resolve(filtered.slice(start, end));
+  }
+
+  save(item: T): Promise<T> {
+    const existingIndex = this.items.findIndex((i) => i.id === item.id);
+    if (existingIndex >= 0) {
+      this.items[existingIndex] = item;
+    } else {
+      this.items.push(item);
     }
-  });
+    return Promise.resolve(item);
+  }
 
-  const start = pageable.pageNumber * pageable.pageSize;
-  const end = start + pageable.pageSize;
-  return filtered.slice(start, end);
+  delete(id: any): Promise<void> {
+    const existingIndex = this.items.findIndex((i) => i.id === id);
+    if (existingIndex >= 0) {
+      this.items.splice(existingIndex, 1);
+    }
+    return Promise.resolve();
+  }
 }
