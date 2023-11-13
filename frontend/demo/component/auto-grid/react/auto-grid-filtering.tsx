@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AutoGrid } from '@hilla/react-crud';
 import { ProductService } from 'Frontend/generated/endpoints';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
