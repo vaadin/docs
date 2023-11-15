@@ -16,13 +16,10 @@ import { DatePicker } from '@hilla/react-components/DatePicker.js';
 import { TimePicker } from '@hilla/react-components/TimePicker.js';
 import { Checkbox } from '@hilla/react-components/Checkbox.js';
 import { TextArea } from '@hilla/react-components/TextArea.js';
-import { AutoFormFieldProps } from '@hilla/react-crud/autoform-field';
 
 // tag::snippet[]
 function GroupingLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<EmployeeModel>) {
   const { field, model } = form;
-  const fieldsByPropertyName = new Map<string, AutoFormFieldProps>();
-  children.forEach((field) => fieldsByPropertyName.set(field.props.propertyInfo.name, field.props));
   return (
     <VerticalLayout>
       <h4>Personal Information:</h4>
