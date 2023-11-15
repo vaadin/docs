@@ -1,10 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
-import {
-  type AutoFormLayoutRendererProps,
-  ExperimentalAutoForm as AutoForm,
-} from '@hilla/react-crud';
+import { type AutoFormLayoutRendererProps, AutoForm } from '@hilla/react-crud';
 import { EmployeeService } from 'Frontend/generated/endpoints.js';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
@@ -16,13 +13,10 @@ import { DatePicker } from '@hilla/react-components/DatePicker.js';
 import { TimePicker } from '@hilla/react-components/TimePicker.js';
 import { Checkbox } from '@hilla/react-components/Checkbox.js';
 import { TextArea } from '@hilla/react-components/TextArea.js';
-import { AutoFormFieldProps } from '@hilla/react-crud/autoform-field';
 
 // tag::snippet[]
 function GroupingLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<EmployeeModel>) {
   const { field, model } = form;
-  const fieldsByPropertyName = new Map<string, AutoFormFieldProps>();
-  children.forEach((field) => fieldsByPropertyName.set(field.props.propertyInfo.name, field.props));
   return (
     <VerticalLayout>
       <h4>Personal Information:</h4>
@@ -66,6 +60,5 @@ function Example() {
     // end::snippet[]
   );
 }
-
 
 export default reactExample(Example, autoGridHostStyles); // hidden-source-line
