@@ -17,9 +17,7 @@ function Example() {
         fieldOptions: {
           firstName: { label: 'Name' },
           description: {
-            renderer: ({ field }) => (
-              <TextArea key={field.name} {...field} label="Full description" />
-            ),
+            renderer: ({ field }) => <TextArea {...field} label="Full description" />,
           },
         },
       }}

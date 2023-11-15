@@ -14,9 +14,7 @@ function Example() {
       model={EmployeeModel}
       fieldOptions={{
         description: {
-          renderer: ({ field }) => (
-            <TextArea key={field.name} {...field} label="Full description" />
-          ),
+          renderer: ({ field }) => <TextArea {...field} label="Full description" />,
         },
       }}
     />
