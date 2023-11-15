@@ -3,7 +3,7 @@ import React from 'react'; // hidden-source-line
 import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
 import {
   type AutoFormLayoutRendererProps,
-  ExperimentalAutoForm as AutoForm,
+  AutoForm,
 } from '@hilla/react-crud';
 import { EmployeeService } from 'Frontend/generated/endpoints.js';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
