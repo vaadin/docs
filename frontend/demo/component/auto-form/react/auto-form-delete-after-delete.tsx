@@ -36,7 +36,7 @@ function Example() {
     setShowDeleteButton(!showDeleteButton);
   };
 
-  const handleAfterDelete = ({ item }: { item: Employee }) => {
+  const handleDeleteSuccess = ({ item }: { item: Employee }) => {
     const json = JSON.stringify(item);
     Notification.show('Item deleted: ' + json);
   };
@@ -55,7 +55,7 @@ function Example() {
         model={EmployeeModel}
         item={editedItem}
         deleteButtonVisible={showDeleteButton}
-        afterDelete={handleAfterDelete}
+        onDeleteSuccess={handleDeleteSuccess}
       />
     </VerticalLayout>
   );

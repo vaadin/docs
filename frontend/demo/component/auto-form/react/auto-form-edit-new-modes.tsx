@@ -36,7 +36,7 @@ function Example() {
     setDisabled(!disabled);
   };
 
-  const handleAfterSubmit = ({ item }: { item: Employee }) => {
+  const handleSubmitSuccess = ({ item }: { item: Employee }) => {
     const json = JSON.stringify(item);
     Notification.show('Form was submitted: ' + json);
   };
@@ -53,7 +53,7 @@ function Example() {
         model={EmployeeModel}
         item={editedItem}
         disabled={disabled}
-        afterSubmit={handleAfterSubmit}
+        onSubmitSuccess={handleSubmitSuccess}
       />
     </VerticalLayout>
   );
