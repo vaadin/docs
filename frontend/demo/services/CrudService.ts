@@ -123,7 +123,7 @@ export class CrudMockService<T extends AbstractEntity> implements CrudService<T>
     if (existingIndex >= 0) {
       this.items[existingIndex] = item;
     } else {
-      this.items.push({ ...item, id: this.items.length + 1 });
+      this.items.push({ ...item, id: this.items.map(item => item.id).reduce((a, b) => Math.max(a, b), 0) + 1 });
     }
     return Promise.resolve(item);
   }
