@@ -30,6 +30,7 @@ export class Example extends LitElement {
         label="Countries"
         item-label-path="name"
         item-id-path="id"
+        item-value-path="id"
         .items="${this.items}"
         .selectedItems="${this.items.slice(20, 23)}"
         selected-items-on-top

@@ -17,6 +17,7 @@ function Example() {
       label="Countries"
       itemLabelPath="name"
       itemIdPath="id"
+      itemValuePath="id"
       items={items}
       selectedItemsOnTop
       selectedItems={items.slice(20, 23)}
