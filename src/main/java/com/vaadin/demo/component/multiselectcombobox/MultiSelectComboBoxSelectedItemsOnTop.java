@@ -23,7 +23,6 @@ public class MultiSelectComboBoxSelectedItemsOnTop extends Div {
         comboBox.setSelectedItemsOnTop(true);
         add(comboBox);
         // end::snippet[]
-        comboBox.setWidth("300px");
     }
 
     public static class Exporter extends // hidden-source-line
