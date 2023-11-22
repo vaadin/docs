@@ -7,6 +7,8 @@ import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
+import java.util.List;
+
 @Route("multi-select-combo-box-selected-items-on-top")
 public class MultiSelectComboBoxSelectedItemsOnTop extends Div {
 

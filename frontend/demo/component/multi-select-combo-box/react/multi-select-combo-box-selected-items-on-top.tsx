@@ -18,7 +18,7 @@ function Example() {
       itemLabelPath="name"
       itemIdPath="id"
       items={items}
-      groupSelectedItems
+      selectedItemsOnTop
       selectedItems={items.slice(20, 23)}
     />
   );

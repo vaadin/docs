@@ -8,6 +8,8 @@ import com.vaadin.flow.component.combobox.MultiSelectComboBox.AutoExpandMode;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
+import java.util.List;
+
 @Route("multi-select-combo-box-auto-expand")
 public class MultiSelectComboBoxAutoExpand extends Div {
 
