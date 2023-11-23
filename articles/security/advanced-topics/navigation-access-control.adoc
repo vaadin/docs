@@ -39,6 +39,42 @@ Vaadin Flow provides two implementations of [interfacename]`NavigationAccessChec
 
 The Vaadin spring add-on offers an [interfacename]`AccessPathChecker` implementation based on Spring Security configuration. The path used to navigate to the target view is evaluated using the Spring [interfacename]`WebInvocationPrivilegeEvaluator` component, that applies the rules defined by the request matchers configured for Spring Security.
 
+This means that to protect a Flow route, you can configure a Spring request matchers matching the route path, and use the authorization helpers to define the access grants, as in the following example.
+
+[source,java]
+----
+@Route("admin")
+public class AdminView extends Div { }   
+
+@Route("protected/profile")
+public class ProfileView extends Div { }   
+
+@Route("special/preview-feature")
+public class ProfileView extends Div { }   
+
+@Route("")
+public class HomeView extends Div { }   
+
+public class SecurityConfig extends VaadinWebSecurity {
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(antMatchers("/admin")).hasAnyRole(ROLE_ADMIN)
+                .requestMatchers(antMatchers("/protected/**")).authenticated()
+                .requestMatchers(antMatchers("/special/**"))
+                    .access((authentication, object) -> {
+                        // Custom authorization logic
+                        return new AuthorizationDecision(isPremiumUser(authentication));
+                    })
+                .requestMatchers(antMatchers("/"))
+                .permitAll()
+        );
+    }
+}
+----
+
+
 Integration with other security frameworks can be accomplished similarly by providing a specific [interfacename]`AccessPathChecker` implementation.
 
 If the above checkers aren't enough to fulfill the project requirements, a custom [classname]`NavigationAccessChecker` can be implemented. [classname]`NavigationAccessChecker` has a single method that takes a [classname]`NavigationContext` as input and produces an [classname]`AccessCheckResult` as output.
