@@ -2,6 +2,7 @@ package com.vaadin.demo.flow.auth;
 
 import java.util.List;
 
+import com.vaadin.flow.server.auth.AccessCheckResult;
 import com.vaadin.flow.server.auth.NavigationAccessChecker;
 
 // tag::snippet[]
@@ -13,9 +14,9 @@ public class CustomDecisionResolver
             NavigationAccessChecker.NavigationContext context) {
         if (results.stream().anyMatch(
                 r -> r.decision() == NavigationAccessChecker.Decision.ALLOW)) {
-            return context.allow();
+            return AccessCheckResult.allow();
         }
-        return context.deny("Access denied");
+        return AccessCheckResult.deny("Access denied");
     }
 }
 // end::snippet[]

@@ -15,18 +15,18 @@ public class VotingNavigationAccessChecker implements NavigationAccessChecker {
                 // its vote is actually open for voting, otherwise deny it.
                 result = context.getParameters().getInteger("eventId")
                         .filter(this::isVotingOpen)
-                        .map(unused -> context.allow())
-                        .orElseGet(() -> context.deny("Voting closed"));
+                        .map(unused -> AccessCheckResult.allow())
+                        .orElseGet(() -> AccessCheckResult.deny("Voting closed"));
             } else {
                 // Critical error, the navigation does not carry a required
                 // information. Probably a misconfigured route annotation or
                 // a broken link in another view
-                result = context.reject("Event identifier not provided");
+                result = AccessCheckResult.reject("Event identifier not provided");
             }
         } else {
             // Not a navigation to voting view, let other checkers take the
             // decision
-            result = context.neutral();
+            result = AccessCheckResult.neutral();
         }
         return result;
     }
