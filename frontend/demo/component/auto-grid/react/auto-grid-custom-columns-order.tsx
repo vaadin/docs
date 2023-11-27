@@ -8,7 +8,6 @@ import { GridColumn } from '@hilla/react-components/GridColumn';
 import Product from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product';
 
 function Example() {
-  // tag::snippet[]
   function SupplierRenderer({ item }: { item: Product }) {
     const { supplier } = item;
     return (
@@ -19,15 +18,17 @@ function Example() {
   }
 
   return (
+    // tag::snippet[]
     <AutoGrid
       service={ProductService}
       model={ProductModel}
+      visibleColumns={['name', 'supplierInfo', 'category']}
       customColumns={[
         <GridColumn key="supplierInfo" renderer={SupplierRenderer} header="Supplier" autoWidth />,
       ]}
     />
+    // end::snippet[]
   );
-  // end::snippet[]
 }
 
 export default reactExample(Example, autoGridHostStyles); // hidden-source-line
