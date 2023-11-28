@@ -17,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private richText = templates.richTextDelta;
+  private accessor richText = templates.richTextDelta;
 
   protected override render() {
     return html`

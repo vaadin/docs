@@ -19,7 +19,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-date-time-picker')
-  private dateTimePicker!: DateTimePicker;
+  private accessor dateTimePicker!: DateTimePicker;
 
   protected override firstUpdated() {
     const _formatDate = (dateParts: DatePickerDate): string => {

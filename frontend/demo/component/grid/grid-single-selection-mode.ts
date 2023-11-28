@@ -19,10 +19,10 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items: Person[] = [];
+  private accessor items: Person[] = [];
 
   @state()
-  private selectedItems: Person[] = [];
+  private accessor selectedItems: Person[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople();

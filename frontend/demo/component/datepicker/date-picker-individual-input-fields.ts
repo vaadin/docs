@@ -36,16 +36,16 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  selectedYear?: number;
+  accessor selectedYear: number | undefined;
 
   @state()
-  selectedMonth?: string;
+  accessor selectedMonth: string | undefined;
 
   @state()
-  selectedDay?: number;
+  accessor selectedDay: number | undefined;
 
   @state()
-  selectableDays: number[] = [];
+  accessor selectableDays: number[] = [];
 
   private handleYearChange(e: ComboBoxSelectedItemChangedEvent<number>) {
     this.selectedYear = e.detail.value!;
