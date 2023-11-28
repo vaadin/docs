@@ -183,8 +183,6 @@ import dev.hilla.crud.filter.Filter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.List;
-
 @BrowserCallable
 @AnonymousAllowed
 public class ProductDtoListService implements ListService<ProductDto> {
@@ -222,7 +220,7 @@ When using a custom data source you are responsible for converting the paging, s
 
 When using the default header filters in `AutoGrid`, the filter is always an `AndFilter` with a list of `PropertyStringFilter` instances. The `PropertyStringFilter` instances are created based on the filter values entered by the user in the header filters. When using an external filter, the filter can be of any structure.
 
-The following snippet shows how to convert the parameters into a query string that is then used to call an imaginary REST API to retrieve a list of paginated, sorted and filtered products:
+The following snippet shows how to convert the parameters into a query params that could then be used to call an external REST API to retrieve a list of paginated, sorted and filtered products:
 [source,java]
 ----
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -231,19 +229,41 @@ import dev.hilla.crud.ListService;
 import dev.hilla.crud.filter.Filter;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 @BrowserCallable
 @AnonymousAllowed
 public class ProductListService implements ListService<Product> {
-    private final ProductApiClient productApiClient;
+    public List<Product> list(Pageable pageable, Filter filter) {
+        Map<String, String> queryParams = new HashMap<>();
 
-    public ProductDtoService(ProductApiClient productApiClient) {
-        this.productApiClient = productApiClient;
+        // Pagination
+        queryParams.put("offset", String.valueOf(pageable.getPageNumber()));
+        queryParams.put("limit", String.valueOf(pageable.getPageSize()));
+
+        // Sorting
+        pageable.getSort().stream()
+            .findFirst()
+            .ifPresent(sortOrder -> {
+                queryParams.put("sort", sortOrder.getProperty());
+                queryParams.put("direction", sortOrder.getDirection().name());
+            });
+
+        // Filtering
+        if (filter != null && filter instanceof AndFilter andFilter) {
+            // Add a query param for each property filter
+            // To keep the example simple, only support the equals matcher
+            andFilter.getChildren().stream()
+                .filter(f -> f instanceof PropertyStringFilter)
+                .map(f -> (PropertyStringFilter)f)
+                .filter(f -> f.getMatcher() == PropertyStringFilter.Matcher.EQUALS)
+                .forEach(f -> queryParams.put(f.getPropertyId(), f.getFilterValue()));
+        }
+
+        // Execute request with query params
+        return makeRequest(queryParams);
     }
 
-    public List<Product> list(Pageable pageable, Filter filter) {
-        ...
+    private List<Product> makeRequest(Map<String, String> queryParams) {
+        // Encode params into URL, call external API, map response...
     }
 }
 ----
