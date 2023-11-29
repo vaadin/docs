@@ -1,6 +1,8 @@
 package com.vaadin.demo.flow.auth;
 
+import com.vaadin.flow.server.auth.AccessCheckResult;
 import com.vaadin.flow.server.auth.NavigationAccessChecker;
+import com.vaadin.flow.server.auth.NavigationContext;
 
 // tag::snippet[]
 public class VotingNavigationAccessChecker implements NavigationAccessChecker {
