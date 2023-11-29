@@ -21,8 +21,8 @@ public class MultiSelectComboBoxSelectedItemsOnTop extends Div {
         comboBox.select(countries.subList(20, 23));
         // tag::snippet[]
         comboBox.setSelectedItemsOnTop(true);
-        add(comboBox);
         // end::snippet[]
+        add(comboBox);
     }
 
     public static class Exporter extends // hidden-source-line
