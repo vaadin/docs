@@ -22,8 +22,8 @@ public class MultiSelectComboBoxAutoExpand extends Div {
         comboBox.select(countries.subList(0, 4));
         // tag::snippet[]
         comboBox.setAutoExpand(AutoExpandMode.BOTH);
-        add(comboBox);
         // end::snippet[]
+        add(comboBox);
     }
 
     public static class Exporter extends // hidden-source-line
