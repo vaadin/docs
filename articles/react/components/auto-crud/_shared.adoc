@@ -1,0 +1,78 @@
+// tag::custom-crud-service[]
+To use plain Java classes, you need to provide a custom implementation of the `CrudService<T>` interface, as the `CrudRepositoryService<T>` base class only works with JPA entities. The following methods need to be implemented:
+
+* `List<T> list(Pageable pageable, Filter filter)`: Returns a list of paginated, sorted and filtered items.
+* `T get(ID id)`: Returns the item with the given ID. If the item does not exist, returns `null`.
+* `T save(T value)`: Either creates a new item or updates an existing one, depending on whether the item has an ID or not. Returns the saved item.
+* `void delete(ID id)`: Deletes the item with the given ID.
+
+ifdef::auto-form[]
+[NOTE]
+`CrudService` is a common interface shared with other components such as <<../auto-crud#,Auto CRUD>> and as such requires implementing a `list` method for fetching items. If you intend to use the service only with the Auto Form component, you can create a fake implementation of that method, for example by throwing an exception.
+
+endif::[]
+
+The following example shows a basic implementation of a custom `CrudService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTOs and JPA entities internally. It also reuses the Hilla `JpaFilterConverter` for the filter implementation.
+
+[.example]
+--
+.ProductDtoCrudService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDtoCrudService.java[tags=snippet,indent=0]
+----
+.ProductDto.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDto.java[tags=snippet,indent=0]
+----
+.Product.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Product.java[tags=snippet,indent=0]
+----
+.ProductRepository.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductRepository.java[tags=snippet,indent=0]
+----
+--
+
+// end::custom-crud-service[]
+
+// tag::advanced-list-service[]
+When implementing the `list` method using a custom data source you are responsible for converting the paging, sorting and filter parameters provided to the service into some data structure that your data source understands. The service receives a `org.springframework.data.domain.Pageable` and `dev.hilla.crud.filter.Filter` instances as parameters, which can be used to extract the following information:
+
+* `Pageable.getOffset`: The offset of the first item to fetch
+* `Pageable.getPageSize`: The maximum number of items to fetch
+* `Pageable.getSort`: The sort order of the items. Each sort order contains the property to sort by (`Sort.Order.getProperty()`), and the direction (`Sort.Order.getDirection()`)
+* `Filter`: The filter to apply to the items. The filter is a tree structure of `Filter` instances, where each `Filter` instance is either an `AndFilter`, an `OrFilter`, or a `PropertyStringFilter`:
+** `AndFilter` contains a list of nested filters (`AndFilter.getChildren()`) that should all match.
+** `OrFilter` contains a list of nested filters (`AndFilter.getChildren()`) of which at least one should match.
+** `PropertyStringFilter` filters an individual property against a value. It contains the name of the property to filter (`PropertyStringFilter.getPropertyId()`), the value to filter against (`PropertyStringFilter.getFilterValue()`), and the matcher to use (`PropertyStringFilter.getMatcher()`). The filter value is always a string and needs to be converted into a respective type or format that works with the type of the property. The matcher specifies the type of filter operation, such as `EQUALS`, `CONTAINS`, `GREATER_THAN`, etc.
+
+When using the default header filters, the filter is always an `AndFilter` with a list of `PropertyStringFilter` instances. The `PropertyStringFilter` instances are created based on the filter values entered by the user in the header filters. When using an external filter, the filter can be of any structure.
+
+The following example outlines a custom service implementation that fetches data from a fictional REST API. It extracts the paging, sorting and filtering parameters from the `Pageable` and `Filter` instances, and converts them into a custom data structure before passing them to an external API.
+
+ifdef::auto-crud[]
+[NOTE]
+The following example contains an implementation of the `ListService` interface. The `list` method between `ListService` and `CrudService` are the same, so the example is also applicable to Auto CRUD. Implementations of the `get`, `save` and `delete` methods are not shown.
+
+endif::[]
+
+[.example]
+--
+.ProductApiListService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductApiListService.java[tags=snippet,indent=0]
+----
+.ProductDto.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDto.java[tags=snippet,indent=0]
+----
+--
+
+// end::advanced-list-service[]

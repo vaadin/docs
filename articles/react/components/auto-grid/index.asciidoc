@@ -167,106 +167,43 @@ You can read more on the properties, and use cases supported, on the <<../grid#,
 
 Auto Grid supports working with plain, non-JPA beans. This can be useful, for example if you want to use the Data Transfer Object (DTO) pattern to decouple your domain from your presentation logic, or want to avoid serializing your JPA entities to the client-side due to performance concerns.
 
-To use Auto Grid with plain Java classes, you need to provide a custom implementation of the `ListService<T>` interface, as the `ListRepositoryService<T>` base class only works with JPA entities. The implementation must handle pagination, sorting, and filtering of the data.
+=== Implementing a Custom Service
 
-=== Creating a Service Backed by JPA
+To use plain Java classes, you need to provide a custom implementation of the `ListService<T>` interface, as the `ListRepositoryService<T>` base class only works with JPA entities. The following method needs to be implemented:
 
-In case you are using JPA as data layer, and only want to map JPA entities to another bean class before passing them to the client-side, it is possible to reuse existing functionality of the `ListRepositoryService` to implement pagination, sorting and filtering. The following example demonstrates how to do this:
+* `List<T> list(Pageable pageable, Filter filter)`: Returns a list of paginated, sorted and filtered items.
 
+The following example shows a basic implementation of a custom `ListService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTOs and JPA entities internally. It also reuses the Hilla `JpaFilterConverter` for the filter implementation.
+
+[.example]
+--
+.ProductDtoListService.java
 [source,java]
 ----
-import com.vaadin.flow.server.auth.AnonymousAllowed;
-import dev.hilla.BrowserCallable;
-import dev.hilla.crud.ListService;
-import dev.hilla.crud.JpaFilterConverter;
-import dev.hilla.crud.filter.Filter;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-
-@BrowserCallable
-@AnonymousAllowed
-public class ProductDtoListService implements ListService<ProductDto> {
-    private final ProductRepository productRepository;
-    private final JpaFilterConverter jpaFilterConverter;
-
-    public ProductDtoService(ProductRepository productRepository, JpaFilterConverter jpaFilterConverter) {
-        this.productRepository = productRepository;
-        this.jpaFilterConverter = jpaFilterConverter;
-    }
-
-    @Override
-    public List<ProductDto> list(Pageable pageable, Filter filter) {
-        // Use the Hilla JpaFilterConverter to create a JPA specification from the filter
-        Specification<Product> spec = jpaFilterConverter.toSpec(filter, Product.class);
-        // Query the JPA repository
-        Page<Product> products = productRepository.findAll(spec, pageable);
-        // Map entities to DTOs and return result
-        return products.stream().map(ProductDto::fromEntity).toList();
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDtoListService.java[tags=snippet,indent=0]
 ----
-
-=== Creating a Service Backed by a Custom Data Source
-
-When using a custom data source you are responsible for converting the paging, sorting and filter parameters provided to the service into some data structure that your data source understands. The service receives a `org.springframework.data.domain.Pageable` and `dev.hilla.crud.filter.Filter` instances as parameters, which can be used to extract the following information:
-
-* `Pageable.getOffset`: The offset of the first item to fetch
-* `Pageable.getPageSize`: The maximum number of items to fetch
-* `Pageable.getSort`: The sort order of the items. Each sort order contains the property to sort by (`Sort.Order.getProperty()`), and the direction (`Sort.Order.getDirection()`)
-* `Filter`: The filter to apply to the items. The filter is a tree structure of `Filter` instances, where each `Filter` instance is either an `AndFilter`, an `OrFilter`, or a `PropertyStringFilter`:
-** `AndFilter` contains a list of nested filters (`AndFilter.getChildren()`) that should all match.
-** `OrFilter` contains a list of nested filters (`AndFilter.getChildren()`) of which at least one should match.
-** `PropertyStringFilter` filters an individual property against a value. It contains the name of the property to filter (`PropertyStringFilter.getPropertyId()`), the value to filter against (`PropertyStringFilter.getFilterValue()`), and the matcher to use (`PropertyStringFilter.getMatcher()`). The filter value is always a string and needs to be converted into a respective type or format that works with the type of the property. The matcher specifies the type of filter operation, such as `EQUALS`, `CONTAINS`, `GREATER_THAN`, etc.
-
-When using the default header filters in `AutoGrid`, the filter is always an `AndFilter` with a list of `PropertyStringFilter` instances. The `PropertyStringFilter` instances are created based on the filter values entered by the user in the header filters. When using an external filter, the filter can be of any structure.
-
-The following snippet shows how to convert the parameters into a query params that could then be used to call an external REST API to retrieve a list of paginated, sorted and filtered products:
+.ProductDto.java
 [source,java]
 ----
-import com.vaadin.flow.server.auth.AnonymousAllowed;
-import dev.hilla.BrowserCallable;
-import dev.hilla.crud.ListService;
-import dev.hilla.crud.filter.Filter;
-import org.springframework.data.domain.Pageable;
-
-@BrowserCallable
-@AnonymousAllowed
-public class ProductListService implements ListService<Product> {
-    public List<Product> list(Pageable pageable, Filter filter) {
-        Map<String, String> queryParams = new HashMap<>();
-
-        // Pagination
-        queryParams.put("offset", String.valueOf(pageable.getPageNumber()));
-        queryParams.put("limit", String.valueOf(pageable.getPageSize()));
-
-        // Sorting
-        pageable.getSort().stream()
-            .findFirst()
-            .ifPresent(sortOrder -> {
-                queryParams.put("sort", sortOrder.getProperty());
-                queryParams.put("direction", sortOrder.getDirection().name());
-            });
-
-        // Filtering
-        if (filter != null && filter instanceof AndFilter andFilter) {
-            // Add a query param for each property filter
-            // To keep the example simple, only support the equals matcher
-            andFilter.getChildren().stream()
-                .filter(f -> f instanceof PropertyStringFilter)
-                .map(f -> (PropertyStringFilter)f)
-                .filter(f -> f.getMatcher() == PropertyStringFilter.Matcher.EQUALS)
-                .forEach(f -> queryParams.put(f.getPropertyId(), f.getFilterValue()));
-        }
-
-        // Execute request with query params
-        return makeRequest(queryParams);
-    }
-
-    private List<Product> makeRequest(Map<String, String> queryParams) {
-        // Encode params into URL, call external API, map response...
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDto.java[tags=snippet,indent=0]
 ----
+.Product.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Product.java[tags=snippet,indent=0]
+----
+.ProductRepository.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductRepository.java[tags=snippet,indent=0]
+----
+--
+
+==== Advanced Implementations
+
+Implementing a service that is not based on JPA requires more work than the example above.
+
+include::../auto-crud/_shared.adoc[tag=advanced-list-service]
 
 
 ++++
