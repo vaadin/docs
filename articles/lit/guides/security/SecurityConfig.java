@@ -1,5 +1,6 @@
 package com.vaadin.demo.fusion.security.stateless;
-
+// TODO: move this file to the correct package when the following issue is fixed:
+// https://github.com/spring-projects/spring-framework/issues/31704
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 

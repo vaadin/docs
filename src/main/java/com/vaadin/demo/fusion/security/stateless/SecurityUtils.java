@@ -2,6 +2,7 @@ package com.vaadin.demo.fusion.security.stateless;
 
 import java.util.Optional;
 
+import com.vaadin.demo.ExcludeDemoSpringComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 // tag::user-details[]
 @Component
+@ExcludeDemoSpringComponent // hidden-source-line
 public class SecurityUtils {
 
     @Autowired
