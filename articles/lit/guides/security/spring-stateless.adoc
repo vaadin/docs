@@ -7,10 +7,10 @@ order: 100
 
 = Stateless Authentication with Spring Security
 
-After a user logs in, the web application has to persist the authentication data over server requests, so that the user isn't asked to log in again for every single action.
-Stateless authentication presents a way to persist the authentication data on the client side between requests.
+After a user logs in, the web application has to persist the authentication data over server requests, so that the user isn't asked to log in again for every single action. Stateless authentication presents a way to persist the authentication data on the client side between requests.
 
 Unlike server-side authentication storage solutions, which commonly rely on sessions, stateless authentication doesn't require you to keep track of sessions on the server.
+
 
 == When Useful
 
@@ -25,14 +25,15 @@ Backend servers can be restarted without logging users out, and without the need
 **Offline logout for client-side applications**::
 Users can log off and have their authentication data destroyed on the client without requesting a logout from the server.
 
-Hilla provides stateless authentication support in applications using Spring Security.
-Under the hood, it uses a signed JSON Web Token (JWT) stored in a cookie pair: the token content in the JS-accessible cookie, and the signature in the HTTP-only cookie.
+Hilla provides stateless authentication support in applications using Spring Security. Under the hood, it uses a signed JSON Web Token (JWT) stored in a cookie pair: the token content in the JS-accessible cookie, and the signature in the HTTP-only cookie.
+
 
 == Enabling Stateless Authentication
 
-The following examples describe the steps to enable stateless authentication in a Hilla application that uses Spring Security.
+The following examples describe the steps to enable stateless authentication in a Hilla application that uses Spring Security. They involve adding dependencies, configuring Spring Security, handling the JWT authentication principal, and verification.
 
-=== Step 1: Dependencies
+
+=== Dependencies
 
 Add the following dependencies to the project's [filename]`pom.xml`:
 
@@ -49,7 +50,8 @@ Add the following dependencies to the project's [filename]`pom.xml`:
 </dependency>
 ----
 
-=== Step 2: Configure Spring Security
+
+=== Configure Spring Security
 
 Modify the Spring Security configuration and use the [methodname]`HillaWebSecurityConfigurerAdapter.setStatelessAuthentication()` method to set up stateless authentication, as follows:
 
@@ -65,17 +67,12 @@ For example, the HS256 algorithm used here requires a 32-byte secret key.
 <3> Sets the issuer JWT claim &ndash; a string or a URL that identifies your application.
 
 [CAUTION]
-.Secret-key considerations
+.Secret-Key Considerations
 ====
-* The secret key must be unique to your application.
-
-* Use different keys in the development, staging, and production environments.
-
-* Don't commit the secret key into the repository.
+The secret key must be unique to your application. Use different keys in the development, staging, and production environments. Don't commit the secret key into the repository.
 ====
 
-The security configuration given here gets the secret key from the Base64-encoded `my.app.auth.secret` string property.
-You should configure the property value in your environment accordingly.
+The security configuration given here gets the secret key from the Base64-encoded `my.app.auth.secret` string property. You should configure the property value in your environment accordingly.
 
 To avoid hard-coding the value and committing it into the repository, you can create a separate [filename]`application.properties` file in the `config/local/` subdirectory and instruct Git to ignore the directory.
 
@@ -92,21 +89,16 @@ config/local/" >> .gitignore
 echo "my.app.auth.secret=$(openssl rand -base64 32)" > config/local/application.properties
 ----
 
-Spring Boot supports many ways of configuring properties.
-See the link:https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config[Externalized Configuration] feature section in the Spring Boot Reference.
+Spring Boot supports many ways of configuring properties. See the link:https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config[Externalized Configuration] feature section in the Spring Boot Reference.
 
-=== Step 3: Handle the JWT Authentication Principal
 
-[NOTE]
-.The authentication principal is a JWT
-====
+=== Handle the JWT Authentication Principal
+
 When using stateless authentication, the [methodname]`SecurityContext.getAuthentication().getPrincipal()` call returns a `Jwt` instance that contains only the username and roles.
-====
 
 In your application, you need to verify that the reference returned by [methodname]`Authentication.getPrincipal()` is a `Jwt` instance.
 
-In applications that use username-and-password authentication, you may need to access the full [classname]`UserDetails` instance for the current user.
-You can use the [classname]`UserDetailsService` to load the user details via the username from the JWT:
+In applications that use username-and-password authentication, you may need to access the full [classname]`UserDetails` instance for the current user. You can use the [classname]`UserDetailsService` to load the user details via the username from the JWT:
 
 .`SecurityUtils.java`
 [source,java]
@@ -114,22 +106,15 @@ You can use the [classname]`UserDetailsService` to load the user details via the
 include::{root}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityUtils.java[tags="user-details"]
 ----
 
-==== Step 4: Verify
 
-After the step 3, your application should be using stateless authentication.
+==== Verification
 
-To verify this:
+After the previous step, your application should be using stateless authentication. To verify this, start the development server. From there, open your application and log in.  Then restart the development server. You should remain logged in after the restart.
 
-. start the development server and open your application
-. log in
-. restart the development server
-
-You should remain logged in after the restart.
 
 == JWT expiration
 
-By default, the JWT and cookies expire 30 minutes after the last server request.
-You can customize the expiration period by using an additional duration argument for the configuration method.
+By default, the JWT and cookies expire 30 minutes after the last server request. You can customize the expiration period by using an additional duration argument for the configuration method.
 
 For example:
 
@@ -153,3 +138,9 @@ public class SecurityConfig extends HillaWebSecurityConfigurerAdapter {
 ----
 
 // end::content[]
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
