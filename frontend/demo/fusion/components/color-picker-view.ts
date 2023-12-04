@@ -9,7 +9,7 @@ import 'vanilla-colorful';
 @customElement('color-picker-view')
 export class ColorPickerView extends LitElement {
   @query('#hex')
-  hex!: TextField;
+  accessor hex!: TextField;
 
   render() {
     return html`

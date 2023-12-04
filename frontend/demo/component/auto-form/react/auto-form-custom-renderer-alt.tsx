@@ -26,9 +26,7 @@ function GroupingLayoutRenderer({ children, form }: AutoFormLayoutRendererProps<
         {fieldsMapping.get('active')}
       </HorizontalLayout>
       <h4>Other:</h4>
-      <HorizontalLayout theme="spacing">
-        {fieldsMapping.get('description')}
-      </HorizontalLayout>
+      <HorizontalLayout theme="spacing">{fieldsMapping.get('description')}</HorizontalLayout>
     </VerticalLayout>
   );
 }

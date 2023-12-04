@@ -8,7 +8,7 @@ import '@vaadin/login';
 @customElement('login-view')
 export class LoginView extends LitElement implements AfterEnterObserver {
   @state()
-  private error = false;
+  private accessor error = false;
 
   // the url to redirect to after a successful login
   private returnUrl?: string;

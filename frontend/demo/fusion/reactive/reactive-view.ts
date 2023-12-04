@@ -8,8 +8,7 @@ import { customElement, property } from 'lit/decorators.js';
 
 @customElement('reactive-view')
 export class ReactiveView extends LitElement {
-  @property()
-  serverTime = '';
+  @property() accessor serverTime = '';
 
   subscription: Subscription<string> | undefined;
 

@@ -3,10 +3,10 @@ import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('data-binding-view')
 class DataBindingView extends LitElement {
-  @property() message = '';
-  @property() name = '';
+  @property() accessor message = '';
+  @property() accessor name = '';
 
-  @state() active = false;
+  @state() accessor active = false;
 
   render(): TemplateResult {
     return html`
