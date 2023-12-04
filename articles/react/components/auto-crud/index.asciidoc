@@ -135,17 +135,49 @@ For more detailed examples of customizing the underlying form, please refer to t
 
 == Working with Plain Java Beans
 
-Auto CRUD supports working with plain, non-JPA beans. This can be useful, for example if you want to use the Data Transfer Object (DTO) pattern to decouple your domain from your presentation logic, or want to avoid serializing your JPA entities to the client-side due to performance concerns.
+Auto CRUD supports working with plain, non-JPA beans. This can be useful, for example if you want to use the Data Transfer Object (DTO) pattern to decouple your domain from your presentation logic, or want to avoid serializing your JPA entities to the client due to performance concerns.
 
 === Implementing a Custom Service
-:auto-crud:
 
-include::./_shared.adoc[tag=custom-crud-service]
+// tag::custom-crud-service[]
+To use plain Java classes, you need to provide a custom implementation of the `CrudService<T>` interface, as the `CrudRepositoryService<T>` base class only works with JPA entities. The following methods need to be implemented:
 
-==== Advanced Implementations
+* `List<T> list(Pageable pageable, Filter filter)`: Returns a list of paginated, sorted and filtered items.
+* `T save(T value)`: Either creates a new item or updates an existing one, depending on whether the item has an ID or not. Returns the saved item.
+* `void delete(ID id)`: Deletes the item with the given ID.
 
-Implementing a service that is not based on JPA requires more work than the example above.
+ifdef::auto-form[]
+[NOTE]
+`CrudService` is a common interface shared with other components such as <<../auto-crud#,Auto CRUD>> and as such requires implementing a `list` method for fetching items. If you intend to use the service only with the Auto Form component, you can create a fake implementation of that method, for example by throwing an exception.
 
-The `get`, `save` and `delete` method implementations should be straight-forward to adapt.
+endif::[]
 
-include::../auto-crud/_shared.adoc[tag=advanced-list-service]
+The following example shows a basic implementation of a custom `CrudService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTOs and JPA entities internally.
+
+[.example]
+--
+.ProductDtoCrudService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDtoCrudService.java[tags=snippet,indent=0]
+----
+.ProductDto.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDto.java[tags=snippet,indent=0]
+----
+.Product.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Product.java[tags=snippet,indent=0]
+----
+.ProductRepository.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductRepository.java[tags=snippet,indent=0]
+----
+--
+
+// end::custom-crud-service[]
+
+The example above only has a very basic implementation of the `list` method that does not support sorting and filtering. For a proper implementation of that method, see the corresponding section in the <<../auto-grid#implementing-a-custom-service,Auto Grid>> documentation. It shows how to implement a `ListService`, in which the `list` method has the same signature as for `CrudService`.

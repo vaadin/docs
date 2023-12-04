@@ -26,16 +26,17 @@ public class ProductDtoCrudService implements CrudService<ProductDto, Long> {
 
     @Override
     public List<ProductDto> list(Pageable pageable, Filter filter) {
-        Specification<Product> spec = jpaFilterConverter.toSpec(filter, Product.class);
-        Page<Product> products = productRepository.findAll(spec, pageable);
+        // Basic list implementation that only covers pagination,
+        // but not sorting or filtering
+        Page<Product> products = productRepository.findAll(pageable);
         return products.stream().map(ProductDto::fromEntity).toList();
     }
 
-    @Override
-    public ProductDto get(Long id) {
-        return productRepository.findById(id).map(ProductDto::fromEntity).orElse(null);
-    }
-
+    @Override // hidden-source-line
+    public ProductDto get(Long id) { // hidden-source-line
+        return productRepository.findById(id).map(ProductDto::fromEntity).orElse(null); // hidden-source-line
+    } // hidden-source-line
+    // hidden-source-line
     @Override
     public @Nullable ProductDto save(ProductDto value) {
         Product product = value.id() != null && value.id() > 0
@@ -44,9 +45,8 @@ public class ProductDtoCrudService implements CrudService<ProductDto, Long> {
         product.setName(value.name());
         product.setCategory(value.category());
         product.setPrice(value.price());
-        productRepository.save(product);
 
-        return ProductDto.fromEntity(product);
+        return ProductDto.fromEntity(productRepository.save(product));
     }
 
     @Override

@@ -165,7 +165,7 @@ You can read more on the properties, and use cases supported, on the <<../grid#,
 
 == Working with Plain Java Beans
 
-Auto Grid supports working with plain, non-JPA beans. This can be useful, for example if you want to use the Data Transfer Object (DTO) pattern to decouple your domain from your presentation logic, or want to avoid serializing your JPA entities to the client-side due to performance concerns.
+Auto Grid supports working with plain, non-JPA beans. This can be useful, for example if you want to use the Data Transfer Object (DTO) pattern to decouple your domain from your presentation logic, or want to avoid serializing your JPA entities to the client due to performance concerns.
 
 === Implementing a Custom Service
 
@@ -173,7 +173,7 @@ To use plain Java classes, you need to provide a custom implementation of the `L
 
 * `List<T> list(Pageable pageable, Filter filter)`: Returns a list of paginated, sorted and filtered items.
 
-The following example shows a basic implementation of a custom `ListService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTOs and JPA entities internally. It also reuses the Hilla `JpaFilterConverter` for the filter implementation.
+The following example shows a basic implementation of a custom `ListService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTOs and JPA entities internally. It also reuses the Hilla `JpaFilterConverter` for the filter implementation. In order for sorting and filtering to work, the DTO class and the JPA entity class have the same structure, which means all properties that are sorted and filtered by have the same name and are at the same path in the data structure.
 
 [.example]
 --
@@ -201,10 +201,49 @@ include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductRepository.java
 
 ==== Advanced Implementations
 
-Implementing a service that is not based on JPA requires more work than the example above.
+The example above works for an ideal case, where the DTO class structure maps one-to-one to the JPA entity class structure. In practice, however, this is often not the case. For example, you might want to flatten nested properties, use different property names or create computed properties that are not present in the JPA entity. Alternatively, you might want to use a different data source than JPA.
 
-include::../auto-crud/_shared.adoc[tag=advanced-list-service]
+For these cases you need to implement pagination, sorting and filtering manually using the parameters provided to the `list` method. The method receives a `org.springframework.data.domain.Pageable` and `dev.hilla.crud.filter.Filter` instances as parameters, which can be used to extract the following information:
 
+* `Pageable.getOffset`: The offset of the first item to fetch
+* `Pageable.getPageSize`: The maximum number of items to fetch
+* `Pageable.getSort`: The sort order of the items. Each sort order contains the property to sort by (`Sort.Order.getProperty()`), and the direction (`Sort.Order.getDirection()`)
+* `Filter`: The filter to apply to the items. The filter is a tree structure of `Filter` instances, where each `Filter` instance is either an `AndFilter`, an `OrFilter`, or a `PropertyStringFilter`:
+** `AndFilter` contains a list of nested filters (`AndFilter.getChildren()`) that should all match.
+** `OrFilter` contains a list of nested filters (`OrFilter.getChildren()`) of which at least one should match.
+** `PropertyStringFilter` filters an individual property against a value. It contains the name of the property to filter (`PropertyStringFilter.getPropertyId()`), the value to filter against (`PropertyStringFilter.getFilterValue()`), and the matcher to use (`PropertyStringFilter.getMatcher()`). The filter value is always a string and needs to be converted into a respective type or format that works with the type of the property. The matcher specifies the type of filter operation, such as `EQUALS`, `CONTAINS`, `GREATER_THAN`, etc.
+
+When using the default header filters, the filter is always an `AndFilter` with a list of `PropertyStringFilter` instances. The `PropertyStringFilter` instances are created based on the filter values entered by the user in the header filters. When using an external filter, the filter can be of any structure.
+
+The following example shows a more complex use-case:
+
+* The DTO class uses different property names than the JPA entity class and flattens nested properties. It also adds a computed property that is not present in the JPA entity.
+* The sort implementation maps the DTO property names to the JPA entity class structure.
+* The filter implementation creates JPA filter specifications based on the filter values entered by the user in the header filters. As part of that it demonstrates how to handle different types of matchers, and how to filter for computed properties.
+
+[.example]
+--
+.ProductAdvancedDtoListService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductAdvancedDtoListService.java[tags=snippet,indent=0]
+----
+.ProductAdvancedDto.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductAdvancedDto.java[tags=snippet,indent=0]
+----
+.Product.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Product.java[tags=snippet,indent=0]
+----
+.ProductRepository.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductRepository.java[tags=snippet,indent=0]
+----
+--
 
 ++++
 <style>
