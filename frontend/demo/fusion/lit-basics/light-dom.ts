@@ -7,7 +7,7 @@ class MyComponent extends LitElement {
     return html`<h1>My Component</h1>`;
   }
 
-  protected createRenderRoot(): Element | ShadowRoot {
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this;
   }
 }
