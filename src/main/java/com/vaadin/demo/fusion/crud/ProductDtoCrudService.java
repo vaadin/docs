@@ -25,7 +25,7 @@ public class ProductDtoCrudService implements CrudService<ProductDto, Long> {
     }
 
     @Override
-    public List<ProductDto> list(Pageable pageable, Filter filter) {
+    public List<ProductDto> list(Pageable pageable, @Nullable Filter filter) {
         // Basic list implementation that only covers pagination,
         // but not sorting or filtering
         Page<Product> products = productRepository.findAll(pageable);
