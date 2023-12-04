@@ -13,7 +13,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('badge-icons-only-table')
 export class Example extends LitElement {
   @state()
-  private items: readonly UserPermissions[] = [];
+  private accessor items: readonly UserPermissions[] = [];
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
