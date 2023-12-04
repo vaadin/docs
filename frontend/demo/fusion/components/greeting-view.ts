@@ -8,13 +8,13 @@ import type { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
 @customElement('greeting-view')
 export class GreetingView extends LitElement {
   @state()
-  private greetings = ['Hi', 'Hello', 'Dear'];
+  private accessor greetings = ['Hi', 'Hello', 'Dear'];
 
   @state()
-  private allowCustomGreeting = false;
+  private accessor allowCustomGreeting = false;
 
   @state()
-  private greeting = 'Hi';
+  private accessor greeting = 'Hi';
 
   render() {
     return html`

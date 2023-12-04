@@ -175,10 +175,10 @@ export class IconsetGenerator extends LitElement {
   `;
 
   @query('.output')
-  private output!: HTMLElement;
+  private accessor output!: HTMLElement;
 
   @query('.name')
-  private nameInput!: HTMLInputElement;
+  private accessor nameInput!: HTMLInputElement;
 
   protected override render() {
     return html`
