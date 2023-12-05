@@ -14,7 +14,7 @@ Auto Grid is a component for displaying tabular data based on a Java backend ser
 
 == Basic Usage
 
-Auto Grid requires a Java service that implements the `ListService<T>` interface. In the example here, the `ProductService` class extends `ListRepositoryService<T, ID, R>`, which in turn implements the `ListService<T>`:
+Auto Grid requires a Java service that implements the `ListService<T>` interface. In this example, the `ProductService` class extends `ListRepositoryService<T, ID, R>`, which in turn implements the `ListService<T>`:
 
 [.example]
 --
@@ -58,19 +58,19 @@ Here's what the rendered grid looks like:
 include::{root}/frontend/demo/component/auto-grid/react/auto-grid-basic.tsx[render,tags=snippet,indent=0,group=React]
 ----
 
-As you can see, Auto Grid automatically expands properties of `@OneToOne` relationships -- in this case the properties of the `supplier` -- and it displays them as columns in the grid. However, properties annotated with `@Id` or `@Version` are excluded by default. If you want to show them, though, you can use the `visibleColumns` property to specify which columns should be displayed. See <<#customizing-columns,Customizing Columns>> for more information.
+As you can see, Auto Grid automatically expands properties of `@OneToOne` relationships -- in this case the properties of the `supplier` -- and it displays them as columns in the grid. However, properties annotated with `@Id` or `@Version` are excluded by default. To show them, though, you can use the `visibleColumns` property to specify which columns to display. You can find more information on this in the next section.
 
 
 == Customizing Columns
 
-It's possible to customize the columns displayed by Auto Grid. How this is done is covered in the sections here.
+It's possible to customize the columns displayed by Auto Grid. How this is done is covered in the sub-sections here.
 
 
-=== Customizing Visibility & Order
+=== Visibility & Order
 
 To choose which of the data properties should be displayed as columns in Auto Grid, and to specify the column order, set the property names to the `visibleColumns` property.
 
-The following example uses only the `category`, `name`, `supplier.supplierName`, and `price` properties, in this order:
+The following example uses only the `category`, `name`, `supplier.supplierName`, and `price` properties -- in that order:
 
 .Auto Grid with Chosen Columns
 [source,tsx]
@@ -85,12 +85,12 @@ When trying to access nested properties, use the Dot Notation, as shown in the e
 
 .Don't Expose Sensitive Data on Client-Side
 [CAUTION]
-When using Auto Grid, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using the `visibleColumns` property won't prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
+When using Auto Grid, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using the `visibleColumns` property won't prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You can do this, for example, by using a `@JsonIgnore` annotation on the property.
 
 
-=== Customizing Column Options
+=== Column Options
 
-Individual columns can be customized using the `columnOptions` property. This takes an object in which each key is the name of a data property, and the value is a property's object that is passed when rendering the column for that property.
+Individual columns can be customized using the `columnOptions` property. It takes an object in which each key is the name of a data property, and the value is a property's object that is passed when rendering the column for that property.
 
 The following example uses column options to define a custom renderer for the price column that highlights prices in different colors, depending on their value:
 
@@ -106,7 +106,7 @@ You can pass the same options as when rendering a column in a regular grid. See 
 
 === Adding Custom Columns
 
-If you need to add a custom column, by joining the value of two or more properties and displaying them in a single column, this can be done by using the `customColumns` property. The `customColumns` property takes an array of `GridColumn` instances and renders them after the auto columns. Refer to the <<../grid/#,Grid>> documentation page for more information on the `GridColumn` type.
+To add a custom column that, for example, joins the values of multiple properties and displays them in a single column, use the `customColumns` property. This property takes an array of `GridColumn` instances and renders them after the auto columns. Refer to the <<../grid/#,Grid>> documentation page for more information on the `GridColumn` type.
 
 The following example uses the `customColumns` property to render a custom column that concatenates and displays the product's supplier `name` and `headquarterCity` properties in the same column:
 
@@ -120,6 +120,32 @@ include::{root}/frontend/demo/component/auto-grid/react/auto-grid-custom-columns
 [NOTE]
 In general, when it comes to customizing the automatically rendered columns, you can use the `columnOptions` property. As for adding or customizing the custom columns, use `customColumns`.
 
+==== [since:dev.hilla:hilla@v2.5]#Custom Columns Order#
+
+By default, custom columns are added after the automatically rendered columns. You can also define the order of appearance for custom columns by using the `visibleColumns` property. Custom columns can be freely placed before, in between, or after other columns. To do this, you'll need to provide the `key` property of the custom column in the `visibleColumns` property.
+
+The following example shows a custom column with `supplierInfo` as the `key` placed between two automatically rendered columns:
+
+.Auto Grid Custom Column's Order
+[source,tsx]
+----
+<AutoGrid
+  service={ProductService}
+  model={ProductModel}
+  visibleColumns={['name', 'supplierInfo', 'category']}
+  customColumns={[
+    <GridColumn key="supplierInfo"
+                renderer={SupplierRenderer}
+                header="Supplier"
+                autoWidth
+    />
+  ]}
+/>
+----
+
+.Custom Columns Visibility
+[NOTE]
+If the `visibleColumns` property is present, only the custom columns for which their keys are mentioned in the `visibleColumns` are rendered according to the specified order.
 
 == Filtering
 
@@ -147,6 +173,26 @@ include::{root}/frontend/demo/component/auto-grid/react/auto-grid-filtering.tsx[
 
 You can combine several filtering criteria by using the `{t: 'and' | 'or', children: []}` composite filter type.
 
+== [since:dev.hilla:hilla@v2.5]#Refreshing Data#
+
+Auto Grid supports refreshing the data by providing a reference to a `refresh` function that can be called from the parent component. The `refresh` function can be obtained by providing a reference of the type `React.MutableRefObject<AutoGridRef>` to the Auto Grid. The `AutoGridRef` type provides a `refresh` function that refreshes the data by calling the backend service. The following example shows how to use the `refresh` function to refresh the data in Auto Grid:
+
+.Refresh Auto Grid Data
+[source,tsx]
+----
+const autoGridRef = React.useRef<AutoGridRef>(null);
+
+function refreshGrid() {
+  autoGridRef.current?.refresh();
+}
+
+return (
+  <VerticalLayout>
+    <Button onClick={() => { refreshGrid() }}>Refresh Data</Button>
+    <AutoGrid service={EmployeeService} model={EmployeeModel} ref={autoGridRef} />
+  </VerticalLayout>
+);
+----
 
 == Grid Properties
 
@@ -161,8 +207,6 @@ include::{root}/frontend/demo/component/auto-grid/react/auto-grid-selection.tsx[
 ----
 
 You can read more on the properties, and use cases supported, on the <<../grid#,Grid component>> documentation page.
-
-
 
 ++++
 <style>

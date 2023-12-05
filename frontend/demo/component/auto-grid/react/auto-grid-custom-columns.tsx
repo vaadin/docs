@@ -22,14 +22,8 @@ function Example() {
     <AutoGrid
       service={ProductService}
       model={ProductModel}
-      visibleColumns={['category', 'name']}
       customColumns={[
-        <GridColumn
-          key={'supplier-column'}
-          autoWidth
-          renderer={SupplierRenderer}
-          header="Supplier"
-        />,
+        <GridColumn key="supplierInfo" renderer={SupplierRenderer} header="Supplier" autoWidth />,
       ]}
     />
   );
