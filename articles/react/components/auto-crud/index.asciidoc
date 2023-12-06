@@ -59,6 +59,8 @@ include::{root}/frontend/demo/component/auto-crud/react/auto-crud-basic.tsx[rend
 
 As you can see in the previous example, Auto CRUD renders a grid with columns for all properties of the `Employee` entity, next to a form with fields for editing those properties. Selecting an entity in the grid populates the form with data from that entity. The new button allows one to create a new entity. When submitting the form, the data is automatically submitted to the `save` method of the configured `CrudService`, and the row in the grid is updated. When an existing entity is selected, the form also shows a delete button. Clicking the button calls the `delete` method of the configured `CrudService`, clears the form and removes the row in the grid.
 
+Auto CRUD supports working with plain, non-JPA classes, which can be useful, for example, if you want to use the Data Transfer Object (DTO) pattern. See the <<working-with-plain-java-classes, Working with Plain Java Classes>> section.
+
 == Component Composition
 
 Auto CRUD is a composition of the following components:
@@ -132,3 +134,52 @@ include::{root}/frontend/demo/component/auto-crud/react/auto-crud-customized-for
 When using Auto CRUD, it's important to check that you don't expose sensitive data to the client-side. For example, if you have a `password` property in your entity, hiding it using `visibleFields` does not prevent the data from being sent to the client-side. Make sure your service implementation doesn't expose sensitive data to the client-side. You could do this, for example, by using a `@JsonIgnore` annotation on the property.
 
 For more detailed examples of customizing the underlying form, please refer to the <<../auto-form/index.asciidoc#,Auto Form>> component documentation.
+
+== Working with Plain Java Classes
+
+Auto CRUD supports working with plain, non-JPA Java classes. This can be useful, for example if you want to use the Data Transfer Object (DTO) pattern to decouple your domain from your presentation logic, or want to avoid serializing your JPA entities to the client due to performance concerns.
+
+=== Implementing a Custom Service
+
+// tag::custom-crud-service[]
+To use plain Java classes, you need to provide a custom implementation of the `CrudService<T>` interface, as the `CrudRepositoryService<T>` base class only works with JPA entities. The following methods need to be implemented:
+
+* `List<T> list(Pageable pageable, Filter filter)`: Returns a list of paginated, sorted and filtered items.
+* `T save(T value)`: Either creates a new item or updates an existing one, depending on whether the item has an ID or not. Returns the saved item.
+* `void delete(ID id)`: Deletes the item with the given ID.
+
+ifdef::auto-form[]
+[NOTE]
+`CrudService` is a common interface shared with other components such as <<../auto-crud#,Auto CRUD>> and as such requires implementing a `list` method for fetching items. If you intend to use the service only with the Auto Form component, you can create a fake implementation of that method, for example by throwing an exception.
+
+endif::[]
+
+The following example shows a basic implementation of a custom `CrudService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTO instances and JPA entities internally.
+
+[.example]
+--
+.ProductDtoCrudService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDtoCrudService.java[tags=snippet,indent=0]
+----
+.ProductDto.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDto.java[tags=snippet,indent=0]
+----
+.Product.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Product.java[tags=snippet,indent=0]
+----
+.ProductRepository.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductRepository.java[tags=snippet,indent=0]
+----
+--
+
+// end::custom-crud-service[]
+
+The example above only has a very basic implementation of the `list` method that does not support sorting and filtering. For a proper implementation of that method, see the corresponding section in the <<../auto-grid#implementing-a-custom-service,Auto Grid>> documentation. It shows how to implement a `ListService`, in which the `list` method has the same signature as for `CrudService`.
