@@ -8,7 +8,7 @@ import '@vaadin/text-field';
 @customElement('value-changed-view')
 export class ValueChangedView extends LitElement {
   @state()
-  private accessor name = '';
+  private name = '';
 
   render() {
     return html`

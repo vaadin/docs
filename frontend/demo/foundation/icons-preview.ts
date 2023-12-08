@@ -20,13 +20,13 @@ export type IconSetType = 'lumo' | 'vaadin';
 @customElement('icons-preview')
 export class IconsPreview extends LitElement {
   @state()
-  accessor iconNames: string[] | undefined;
+  iconNames: string[] | undefined;
 
   @property({ type: String, attribute: 'iconset-type' })
-  accessor iconsetType: IconSetType = 'vaadin';
+  iconsetType: IconSetType = 'vaadin';
 
   @query('input')
-  private accessor search!: HTMLInputElement;
+  private search!: HTMLInputElement;
 
   protected override createRenderRoot() {
     return this;

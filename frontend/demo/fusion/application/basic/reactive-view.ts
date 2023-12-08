@@ -9,7 +9,7 @@ import '@vaadin/button';
 export class ReactiveView extends LitElement {
   // The data
   @property({ type: Number })
-  accessor count = 0;
+  count = 0;
 
   // Called whenever the data changes
   render() {

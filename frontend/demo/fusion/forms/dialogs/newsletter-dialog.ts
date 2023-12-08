@@ -31,10 +31,10 @@ export class NewsletterDialog extends LitElement {
   // end::snippet[]
 
   @state()
-  private accessor dialogOpened = false;
+  private dialogOpened = false;
 
   @query('vaadin-dialog')
-  private accessor dialog: Dialog | null = null;
+  private dialog: Dialog | null = null;
 
   connectedCallback() {
     super.connectedCallback();

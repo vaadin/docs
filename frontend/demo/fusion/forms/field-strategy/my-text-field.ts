@@ -7,13 +7,13 @@ import type { CustomFieldValueChangedEvent } from '@vaadin/custom-field';
 // tag::snippet[]
 @customElement('my-text-field')
 export class MyTextField extends LitElement {
-  @property({ type: String }) accessor label = '';
-  @property({ type: String }) accessor value = '';
+  @property({ type: String }) label = '';
+  @property({ type: String }) value = '';
 
   // custom properties that do not work with the default Binder
-  @property({ type: Boolean }) accessor mandatory = false;
-  @property({ type: Boolean }) accessor hasError = false;
-  @property({ type: String }) accessor error = '';
+  @property({ type: Boolean }) mandatory = false;
+  @property({ type: Boolean }) hasError = false;
+  @property({ type: String }) error = '';
 
   //...
   // end::snippet[]
