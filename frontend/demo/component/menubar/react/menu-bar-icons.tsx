@@ -26,7 +26,7 @@ function createItem(iconName: string, text: string, isChild = false) {
 
   return menuComponent(
     <>
-      <Icon icon={`vaadin:${iconName}`} style={iconStyle} ariaLabel={ariaLabel} />
+      <Icon icon={`vaadin:${iconName}`} style={iconStyle} aria-label={ariaLabel} />
       {text}
     </>
   );
