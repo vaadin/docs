@@ -1,0 +1,126 @@
+---
+title: Use React library
+description: How to create a hybrid Vaadin applications using React
+order: 200
+---
+
+[role="since:com.vaadin:vaadin@V24.3"]
+= Vaadin Hybrid Applications With React
+
+Vaadin allows to develop a hybrid application that leverages Vaadin Flow, React, and the https://hilla.dev/docs/react[Hilla framework].
+This gives an opportunity to combine Vaadin Flow components and routes with the ones written in React in one single application.
+
+This section demonstrates how to create a hybrid application from the https://github.com/vaadin/skeleton-starter-hilla-react[React+Hilla application].
+
+== Add Vaadin And Hilla Dependencies
+
+Open your `pom.xml` file and add the necessary dependencies for Vaadin Flow:
+
+.Vaadin and Hilla versions
+[source,xml]
+----
+<properties>
+    <java.version>17</java.version>
+    <vaadin.version>24.3.0</vaadin.version>
+    <hilla.version>2.4.0</hilla.version>
+</properties>
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <version>${vaadin.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.hilla</groupId>
+            <artifactId>hilla-bom</artifactId>
+            <version>${hilla.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- Other pom imports -->
+    </dependencies>
+</dependencyManagement>
+----
+
+Add the `vaadin-core` / `vaadin` dependency:
+
+.Vaadin and Hilla dependencies
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <!-- Replace artifactId with vaadin-core to use only free components -->
+    <artifactId>vaadin</artifactId>
+</dependency>
+----
+
+== Enable Feature Flag
+
+React integration for Vaadin Flow is under development, and thus it is behind a feature flag at the moment.
+
+Enable it by adding the following parameter into [filename]`src/main/resources/vaadin-featureflags.properties`:
+
+.`vaadin-featureflags.properties`
+[source,properties]
+----
+com.vaadin.experimental.reactRouter=true
+----
+
+== Add the server-side routes entry
+
+In the [filename]`frontend/routes.tsx` file, import and include the `serverSideRoutes` object:
+
+.Import server-side routes
+[source,javascript]
+----
+import {serverSideRoutes} from "Frontend/generated/flow/Flow";
+
+// ...
+export const routes = [
+    // Hilla routes definitions
+    ...serverSideRoutes
+]
+----
+
+.Import server-side routes for CRM tutorial
+[source,javascript]
+----
+import { serverSideRoutes } from "Frontend/generated/flow/Flow";
+import MainLayout from 'Frontend/views/MainLayout';
+import ContactsView from 'Frontend/views/ContactsView';
+import AboutView from 'Frontend/views/AboutView';
+import { RouteObject } from 'react-router-dom';
+
+export const routes: RouteObject[] = [
+    {
+        element: <MainLayout />,
+        handle: { title: 'Hilla CRM' },
+        children: [
+            { path: '/', element: <ContactsView />, handle: { title: 'Contacts' } },
+            { path: '/about', element: <AboutView />, handle: { title: 'About' } },
+            ...serverSideRoutes
+        ],
+    },
+];
+----
+
+Adding `serverSideRoutes` is crucial to let React Router navigate to server-side (Vaadin Flow) routes from React routes.
+If this configuration is missed and the feature flag is enabled, Vaadin throws a runtime exception in build time.
+
+.Route configuration and React dependencies
+[NOTE]
+Vaadin creates [filename]`frontend/App.tsx` and [filename]`frontend/routes.tsx` files automatically, if they are missing, as well as internal `Frontend/generated/flow/Flow.tsx` file and adds React front-end dependencies, such as `react`, `react-dom` and `react-router-dom`.
+
+== Add Vaadin Flow routes
+
+Add Vaadin Flow routes, as described in https://vaadin.com/docs/latest/routing/route[Routing & Navigation].
+
+++++
+<style>
+[class^=PageHeader-module-descriptionContainer] {display: none;}
+</style>
+++++
