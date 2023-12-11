@@ -28,7 +28,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private expandedItems: Person[] = [];
+  private accessor expandedItems: Person[] = [];
 
   async dataProvider(
     params: GridDataProviderParams<Person>,

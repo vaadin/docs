@@ -19,13 +19,13 @@ export class Example extends LitElement {
   }
 
   @query('#amount')
-  private amount!: TextField;
+  private accessor amount!: TextField;
 
   @query('#currency')
-  private currency!: Select;
+  private accessor currency!: Select;
 
   @state()
-  private currencies = [
+  private accessor currencies = [
     { label: 'AUD', value: 'aud' },
     { label: 'CAD', value: 'cad' },
     { label: 'CHF', value: 'chf' },

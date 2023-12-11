@@ -18,7 +18,7 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 @customElement('badge-highlight')
 export class Example extends LitElement {
   @state()
-  private items: readonly Report[] = [];
+  private accessor items: readonly Report[] = [];
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

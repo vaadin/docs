@@ -29,7 +29,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private filteredItems: PersonEnhanced[] = [];
+  private accessor filteredItems: PersonEnhanced[] = [];
 
   private items: PersonEnhanced[] = [];
 

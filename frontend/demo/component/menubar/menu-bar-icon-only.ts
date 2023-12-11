@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items = [
+  private accessor items = [
     { component: this.createItem('eye', 'View') },
     { component: this.createItem('pencil', 'Edit') },
     {
