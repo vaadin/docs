@@ -12,19 +12,19 @@ As described on the <<{articles}/security/enabling-security#, enabling security>
 This page describes how to use Vaadin Flow's built-in security helpers in a _plain_ Java project.
 
 [NOTE]
-====
 Separate instructions are available for Spring Boot and Spring Security. If your project is a Spring Boot project, follow the instructions provided on the <<{articles}/security/enabling-security#, enabling security>> documentation page.
-====
 
 Vaadin built-in helpers enable a view-based access control mechanism that uses the [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, and [annotationname]`@DenyAll` annotations on view classes to define the access control rules.
 
-By default, any view without an annotation is secured; it acts as if it has the [annotationname]`@DenyAll` annotation. To enable and use this mechanism, the following should be added to a plain-Java Flow application, if they aren't already included:
+By default, any view without an annotation is secured; it acts as if it has the [annotationname]`@DenyAll` annotation. To enable and use this mechanism, the following should be added to a plain Java Flow application, if they aren't already included:
 
 - Security realm;
 - Log-in view and log-out capability;
-- [interfacename]`VaadinServiceInitListener` that adds [classname]`ViewAccessChecker` as the [classname]`BeforeEnterListener` of all UIs; and a
+- [interfacename]`VaadinServiceInitListener` that adds [classname]`NavigationAccessControl` as the [classname]`BeforeEnterListener` of all UIs; and a
 - Service Provider under `META-INF/services` to load above the custom [classname]`ServiceInitListener` via the Java Service Provider Interface (SPI) loading mechanism.
 
+[NOTE]
+The former [classname]`ViewAccessChecker` has been replaced as the default security mechanism by [classname]`NavigationAccessControl` as of Vaadin version 24.3. [classname]`ViewAccessChecker` can still be transparently used in place of [classname]`NavigationAccessControl`, but it's deprecated and it'll be removed in a future version. It's recommended not to mix both the access control mechanism and the checker in the same project.
 
 
 == Configuring a Security Realm
@@ -32,15 +32,15 @@ By default, any view without an annotation is secured; it acts as if it has the 
 A _security realm_ is a mechanism for storing and mapping users to their passwords and roles. Configuring a security realm depends on the application server you're using to run the Vaadin application. For example, if you use Apache Tomcat or TomEE, follow link:https://tomcat.apache.org/tomcat-10.0-doc/realm-howto.html[Tomcat Realm Configuration] instructions.
 
 
-== Handling User Log In and Out
+== Handling User Log In & Out
 
-You can handle log-in and log-out in many ways. The same applies to getting the authenticated user for a request. The view-based access control implementation in Vaadin uses [methodname]`getUserPrincipal()` and [methodname]`isUserInRole(String)` in [classname]`HttpServletRequest` to check whether the currently authenticated user has access to the view. You need a way to provide the user information in the request.
+You can handle log-in and log-out in many ways. The same applies to getting the authenticated user for a request. The view-based access control implementation in Vaadin uses [methodname]`getUserPrincipal()` and [methodname]`isUserInRole(String)` in [classname]`HttpServletRequest` to check whether the currently authenticated user has access to the view. However, you need a way to provide the user information in the request.
 
 The following example uses the currently active Vaadin servlet request. It shows how to check whether the user is currently authenticated to the application. The request isn't available in background threads, so the [methodname]`isAuthenticated()` method shows authentication state only in Vaadin request processing threads. Otherwise, it always returns `false`.
 
 The example below also shows how to authenticate the user with the given credentials. The [methodname]`authenticate()` method fails if it's called from a background thread. Session ID is changed once the user logs in. This protects the application from Session Fixation vulnerabilities. As an alternative, the old session can be invalidated and re-created.
 
-Finally, the example demonstrates how to log out the user by invalidating the HTTP session and redirecting to the home page.
+Finally, the example demonstrates how to log out the user by invalidating the HTTP session and redirecting to the home page:
 
 .[filename]`SecurityUtils.java`
 [source,java]
@@ -164,9 +164,47 @@ public class MainLayout extends AppLayout {
 ----
 
 
-== Adding VaadinServiceInitListener
+== Adding `VaadinServiceInitListener`
 
-To restrict access to views, a [classname]`BeforeEnterListener` must be registered for the [classname]`VaadinService` to initialize and enable the [classname]`ViewAccessChecker`:
+To restrict access to views, a [classname]`VaadinServiceInitListener` must be registered for the [classname]`VaadinService` to initialize and enable the [since:com.vaadin:vaadin@V24.3][classname]`NavigationAccessControl` for all UIs:
+
+.[filename]`NavigationControlAccessCheckerInitializer.java`
+[source,java]
+----
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.VaadinServiceInitListener;
+import com.vaadin.flow.server.auth.NavigationAccessControl;
+import org.vaadin.example.views.login.LoginView;
+
+public class NavigationAccessCheckerInitializer implements VaadinServiceInitListener {
+
+    private NavigationAccessControl accessControl;
+
+    public NavigationControlAccessCheckerInitializer() {
+        accessControl = new NavigationAccessControl(); // <1>
+        accessControl.setLoginView(LoginView.class); // <2>
+    }
+
+    @Override
+    public void serviceInit(ServiceInitEvent serviceInitEvent) {
+        serviceInitEvent.getSource().addUIInitListener(uiInitEvent -> {
+            uiInitEvent.getUI().addBeforeEnterListener(accessControl); // <3>
+        });
+    }
+}
+----
+
+This code contains some notable components of the view-based access control mechanism:
+
+<1> [classname]`NavigationAccessControl`, which is at the core of this access control mechanism, is instantiated. It's enabled by default.
+<2> The [classname]`LoginView` class is set to the `accessControl` instance. Now it knows where to redirect unauthenticated users.
+<3> The `accessControl` instance is set as the [classname]`BeforeEnterListener` in the overridden [methodname]`serviceInit()` method. Now it's ready to intercept attempts to enter all views.
+
+For more information about navigation access control consult the <<{articles}/security/advanced-topics/navigation-access-control#, related documentation>>.
+
+This class still needs to be loaded, so you should follow the instructions in the next section.
+
+[classname]`NavigationAccessControl` was introduce in Vaadin 24.3. In projects based on earlier Vaadin versions, view security can be configured in the same way, but using the [classname]`ViewAccessChecker` component:
 
 .[filename]`ViewAccessCheckerInitializer.java`
 [source,java]
@@ -194,24 +232,18 @@ public class ViewAccessCheckerInitializer implements VaadinServiceInitListener {
 }
 ----
 
-This code contains some notable components of the view-based access control mechanism:
-
-<1> [classname]`ViewAccessChecker`, which is at the core of this access control mechanism, is instantiated. It's enabled by default.
-<2> The [classname]`LoginView` class is set to the `viewAccessChecker` instance. Now it knows where to redirect unauthenticated users.
-<3> The `viewAccessChecker` instance is set as the [classname]`BeforeEnterListener` in the overridden [methodname]`serviceInit()` method. Now it's ready to intercept attempts to enter all views.
-
-This class still needs to be loaded, so you should follow the instructions in the next section.
-
 
 == Enable Loading of VaadinServiceInitListener
 
-To enable the Java SPI loading mechanism to load the [classname]`ViewAccessCheckerInitializer` as the [classname]`VaadinServiceInitListener`, there are a few things to do.
+To enable the Java SPI loading mechanism to load the [classname]`NavigationControlAccessCheckerInitializer` as the [classname]`VaadinServiceInitListener`, there are a few things to do.
 
 First, under the `resources/META-INF/services` directory, create a file named exactly `com.vaadin.flow.server.VaadinServiceInitListener`.
 
-Next, put the fully qualified name of the [classname]`ViewAccessCheckerInitializer` into this newly created file. For example, if the [classname]`ViewAccessCheckerInitializer` class is in the `org.vaadin.example.security` package, the following value should be in the file `org.vaadin.example.security.ViewAccessCheckerInitializer`.
+Next, put the fully qualified name of the [classname]`NavigationControlAccessCheckerInitializer` into this newly created file. For example, if the [classname]`NavigationControlAccessCheckerInitializer` class is in the `org.vaadin.example.security` package, the following value should be in the file, `org.vaadin.example.security.NavigationControlAccessCheckerInitializer`.
 
-This Service Provider configuration file triggers the Java SPI loading mechanism to load [classname]`ViewAccessCheckerInitializer` during application startup. For more information on this, see <<{articles}/advanced/service-init-listener#,VaadinServiceInitListener>>.
+This Service Provider configuration file triggers the Java SPI loading mechanism to load [classname]`NavigationControlAccessCheckerInitializer` during application startup. For more information on this, see <<{articles}/advanced/service-init-listener#,VaadinServiceInitListener>>.
+
+The same instructions apply to [classname]`ViewAccessCheckerInitializer`, if using the deprecated [classname]`ViewAccessChecker`.
 
 
 == Access Annotations
@@ -290,10 +322,9 @@ Annotating a child class overrides any inherited annotations. Interfaces aren't 
 
 - `DenyAll` overrides other annotations;
 - `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`; and
-- `RolesAllowed` overrides `PermitAll`
+- `RolesAllowed` overrides `PermitAll`.
 
-However, you shouldn't specify more than one of the above access annotations on a view class. It's confusing and probably has no logical purpose.
-
+You shouldn't specify more than one of the above access annotations on a view class. It's confusing and probably has no logical purpose.
 
 [discussion-id]`5D3E1BB8-9D7C-4FAD-9381-8DBB3C65F6A8`
 
