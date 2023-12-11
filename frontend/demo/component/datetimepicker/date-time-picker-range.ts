@@ -19,10 +19,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private startDateTime = initialStartValue;
+  private accessor startDateTime = initialStartValue;
 
   @state()
-  private endDateTime = initialEndValue;
+  private accessor endDateTime = initialEndValue;
 
   protected override render() {
     return html`

@@ -22,13 +22,13 @@ export class Example extends LitElement {
   }
 
   @state()
-  private htmlValue = '';
+  private accessor htmlValue = '';
 
   @state()
-  private deltaValue = '';
+  private accessor deltaValue = '';
 
   @query('vaadin-rich-text-editor')
-  private richTextEditor!: RichTextEditor;
+  private accessor richTextEditor!: RichTextEditor;
 
   protected override render() {
     return html`

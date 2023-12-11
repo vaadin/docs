@@ -18,7 +18,7 @@ export class Example extends LitElement {
   private charLimit = 140;
 
   @state()
-  private text = 'Great job. This is excellent!';
+  private accessor text = 'Great job. This is excellent!';
 
   protected override render() {
     return html`

@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('notification-error')
 export class Example extends LitElement {
   @state()
-  private notificationOpened = true;
+  private accessor notificationOpened = true;
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
