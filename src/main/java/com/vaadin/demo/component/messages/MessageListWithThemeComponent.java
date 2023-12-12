@@ -33,7 +33,7 @@ public class MessageListWithThemeComponent extends Div {
         MessageListItem message2 = new MessageListItem("All good. Ship it.",
                 fiftyMinsAgo, "Linsey Listy", person.getPictureUrl());
         message2.setUserColorIndex(2);
-        // Add custom theme name
+        // Add custom class name
         message2.addClassNames("current-user");
 
         list.setItems(Arrays.asList(message1, message2));
