@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('menu-bar-custom-theme')
+@customElement('menu-bar-custom-styling')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,11 +17,11 @@ export class Example extends LitElement {
   // tag::snippet[]
   @state()
   private accessor items = [
-    { text: 'View', theme: 'custom-theme' },
+    { text: 'View', className: 'custom-classname' },
     { text: 'Edit' },
     {
       text: 'Share',
-      children: [{ text: 'By email', theme: 'custom-theme' }, { text: 'Get link' }],
+      children: [{ text: 'By email', className: 'custom-classname' }, { text: 'Get link' }],
     },
   ];
 
