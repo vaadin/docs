@@ -30,7 +30,7 @@ function Example() {
           userName: 'Linsey Listy',
           userColorIndex: 2,
           userImg: person?.pictureUrl,
-          theme: 'current-user',
+          className: 'current-user',
         },
       ]}
     />
