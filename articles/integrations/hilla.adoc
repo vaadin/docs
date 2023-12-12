@@ -7,23 +7,155 @@ order: 10
 [role="since:com.vaadin:vaadin@V24.3"]
 = Flow-Hilla Hybrid Applications
 
-https://hilla.dev/docs/react[Hilla] is a framework by Vaadin for building reactive web applications on Java backends. It seamlessly integrates a [React](https://reactjs.org/) TypeScript frontend with a [Spring Boot](https://spring.io/projects/spring-boot) backend.
+https://hilla.dev/docs/react[Hilla] is a framework by Vaadin for building reactive web applications on Java backends. It seamlessly integrates a https://reactjs.org/[React] TypeScript frontend with a https://spring.io/projects/spring-boot[Spring Boot] backend.
 
-You can develop hybrid applications that leverage Vaadin Flow and Hilla. This allows you to combine Vaadin Flow components and routes with the ones written in React in one single application.
+You can develop hybrid applications that leverage Vaadin Flow and Hilla. This allows you to combine Vaadin Flow routes written in pure Java with the Hilla ones written in React in one single application.
 
-This section demonstrates how to create a hybrid application from the https://github.com/vaadin/skeleton-starter-hilla-react[React+Hilla application].
+This guide demonstrates how to
 
-== Add Vaadin And Hilla Dependencies
+- <<#add-hilla-to-vaadin-flow-applications, Add Hilla to an existing Vaadin Flow application>>, or
+- <<#add-vaadin-flow-to-hilla-applications, Add Vaadin Flow to an existing Hilla application>>.
 
-Open your `pom.xml` file and add the necessary dependencies for Vaadin Flow:
+== Add Hilla to Vaadin Flow Applications
 
-.Added Vaadin bom
+Start with a Spring Boot-based Vaadin Flow application (for example, this https://github.com/vaadin/skeleton-starter-flow-spring[project starter]), you can add Hilla to the project using the following steps.
+
+=== Adjust the `pom.xml` file
+
+Open your `pom.xml` file and perform the following changes:
+
+- Add `hilla.version` property to the `<properties>` section.
+
+.pom.xml
+[source,xml]
+----
+<properties>
+    ...
+    <hilla.version>2.3.3</hilla.version>
+</properties>
+----
+
+- Add the `hilla-bom` dependency to the `<dependencyManagement>` section.
+
+.pom.xml
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        ...
+        <dependency>
+            <groupId>dev.hilla</groupId>
+            <artifactId>hilla-bom</artifactId>
+            <version>${hilla.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+
+- Add the `hilla-react` dependency and replace the `vaadin-spring-boot-starter` dependency with the `hilla-spring-boot-starter` one.
+
+.pom.xml
+[source,xml]
+----
+<dependencies>
+    ...
+    <!-- REPLACE vaadin-spring-boot-starter with hilla starter
+        <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-spring-boot-starter</artifactId>
+    </dependency>-->
+    <dependency>
+        <groupId>dev.hilla</groupId>
+        <artifactId>hilla-react-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>dev.hilla</groupId>
+        <artifactId>hilla-react</artifactId>
+    </dependency>
+    ...
+</dependencies>
+----
+
+- Replace all `vaadin-maven-plugin` instances with `hilla-maven-plugin`.
+
+.pom.xml
+[source,xml]
+----
+    <plugin>
+        <!-- REPLACE vaadin-maven-plugin with hilla-maven-plugin
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-maven-plugin</artifactId>
+        <version>${vaadin.version}</version>
+        -->
+        <groupId>dev.hilla</groupId>
+        <artifactId>hilla-maven-plugin</artifactId>
+        <version>${hilla.version}</version>
+        <executions>
+            <execution>
+                <goals>
+    ...
+----
+
+=== Enable the React Router Feature Flag
+
+React integration for Vaadin Flow is under development, and thus it is behind a feature flag at the moment. Enable the React router feature flag by adding the following parameter into [filename]`src/main/resources/vaadin-featureflags.properties` file (create the file if it does not exist):
+
+.`vaadin-featureflags.properties`
+[source,properties]
+----
+com.vaadin.experimental.reactRouter=true
+----
+
+=== Add Hilla Frontend Files
+
+- Run `mvn hilla:init-app` from the command line to generate Hilla-specific files:
+
+*  `package.json`
+*  `package-lock.json`
+* `frontend/`
+** `App.tsx`
+** `routes.tsx`
+** `index.ts`
+** `views/MainView.tsx`
+
+- In `frontend/routes.tsx`, add the `serverSideRoutes` object to the `routes` array:
+
+.routes.tsx
+[source,tsx]
+----
+import {serverSideRoutes} from "Frontend/generated/flow/Flow";
+
+...
+export const routes = [
+// Hilla definitions
+...serverSideRoutes
+]
+----
+
+Adding `serverSideRoutes` is required for React Router to be able to navigate to server-side (Vaadin Flow) routes.
+If this configuration is missed and the feature flag is enabled, Vaadin throws a runtime exception in build time.
+
+=== Run the Application
+
+Run the application using `mvn spring-boot:run` and open http://localhost:8080 in your browser.
+
+== Add Vaadin Flow to Hilla Applications
+
+Alternatively, if you have a Hilla application, you can add Vaadin Flow to it. For example, starting from this Hilla https://github.com/vaadin/skeleton-starter-hilla-react[project starter]), you can add Vaadin Flow to the project using the following steps.
+
+=== Adjust the `pom.xml` file
+
+- Open your `pom.xml` file and add the necessary dependencies for Vaadin Flow:
+
+.pom.xml
 [source,xml]
 ----
 <properties>
     <java.version>17</java.version>
     <vaadin.version>24.3.0</vaadin.version>
-    <hilla.version>2.4.0</hilla.version>
+    ...
 </properties>
 
 <dependencyManagement>
@@ -47,7 +179,7 @@ Open your `pom.xml` file and add the necessary dependencies for Vaadin Flow:
 </dependencyManagement>
 ----
 
-Add the `vaadin-core` / `vaadin` dependency:
+- Add the `vaadin-core` (or `vaadin`) dependency:
 
 .Vaadin dependency
 [source,xml]
@@ -59,11 +191,9 @@ Add the `vaadin-core` / `vaadin` dependency:
 </dependency>
 ----
 
-== Enable Feature Flag
+=== Enable Feature Flag
 
-React integration for Vaadin Flow is under development, and thus it is behind a feature flag at the moment.
-
-Enable it by adding the following parameter into [filename]`src/main/resources/vaadin-featureflags.properties`:
+Enable the React router feature flag by adding the following parameter into [filename]`src/main/resources/vaadin-featureflags.properties`:
 
 .`vaadin-featureflags.properties`
 [source,properties]
@@ -71,11 +201,11 @@ Enable it by adding the following parameter into [filename]`src/main/resources/v
 com.vaadin.experimental.reactRouter=true
 ----
 
-== Add Server-Side Routes Target
+=== Add Server-Side Routes Target
 
 In the [filename]`frontend/routes.tsx` file, import and include the `serverSideRoutes` object:
 
-.Import server-side routes
+.routes.tsx
 [source,javascript]
 ----
 import {serverSideRoutes} from "Frontend/generated/flow/Flow";
@@ -116,11 +246,8 @@ If this configuration is missed and the feature flag is enabled, Vaadin throws a
 [NOTE]
 Vaadin creates [filename]`frontend/App.tsx` and [filename]`frontend/routes.tsx` files automatically, if they are missing, as well as the internal `Frontend/generated/flow/Flow.tsx` file. Also React dependencies, such as `react`, `react-dom` and `react-router-dom`, are added to the `package.json` file and installed.
 
-== Add Vaadin Flow Routes
 
-Add Vaadin Flow routes, as described in <<{articles}/routing/route#, Defining Routes>>.
-
-[discussion-id]`3633d698-98cb-11ee-b9d1-0242ac120002`
+[discussion-id]`9da82521-5074-42b6-82a5-88fc207987d0`
 
 ++++
 <style>
