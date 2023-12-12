@@ -34,7 +34,7 @@ public class MessageListWithThemeComponent extends Div {
                 fiftyMinsAgo, "Linsey Listy", person.getPictureUrl());
         message2.setUserColorIndex(2);
         // Add custom theme name
-        message2.addThemeNames("current-user");
+        message2.addClassNames("current-user");
 
         list.setItems(Arrays.asList(message1, message2));
         add(list);
