@@ -1,8 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import '@vaadin/button';
 import '@vaadin/context-menu';
-import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
+import type { ContextMenuItem } from '@vaadin/context-menu';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('context-menu-classname')
@@ -17,26 +18,17 @@ export class Example extends LitElement {
   // tag::snippet[]
   @state()
   private accessor items: ContextMenuItem[] = [
-    { text: 'Success', className: 'text-success' },
-    { text: 'Warning', className: 'text-warning' },
-    { text: 'Error', className: 'text-error' },
+    { text: 'Share' },
+    { text: 'Duplicate' },
+    { text: 'Delete', className: 'text-error' },
   ];
   // end::snippet[]
 
   protected override render() {
-    const selectedItem = this.items.find((item) => item.checked);
-
     return html`
-      <vaadin-context-menu .items="${this.items}" @item-selected="${this.itemSelected}">
-        <span>Status: <b class="${selectedItem?.className || ''}">${selectedItem?.text}</b></span>
+      <vaadin-context-menu .items="${this.items}" open-on="click">
+        <vaadin-button>Actions</vaadin-button>
       </vaadin-context-menu>
     `;
-  }
-
-  itemSelected(e: ContextMenuItemSelectedEvent) {
-    this.items.forEach((item) => {
-      item.checked = item === e.detail.value;
-    });
-    this.items = [...this.items];
   }
 }
