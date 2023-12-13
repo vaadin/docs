@@ -16,7 +16,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor customFieldValue = '';
+  private customFieldValue = '';
 
   protected override render() {
     return html`

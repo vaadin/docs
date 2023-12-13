@@ -27,10 +27,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor dialogOpened = false;
+  private dialogOpened = false;
 
   @state()
-  private accessor user: Person | undefined;
+  private user: Person | undefined;
 
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 1 });

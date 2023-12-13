@@ -22,16 +22,16 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('#month-field')
-  private accessor monthField!: Select;
+  private monthField!: Select;
 
   @query('#year-field')
-  private accessor yearField!: Select;
+  private yearField!: Select;
 
   @state()
-  private accessor months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
+  private months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
 
   @state()
-  private accessor years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
+  private years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
 
   protected override firstUpdated() {
     // Set title for screen readers

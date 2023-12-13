@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor items = [
+  private items = [
     { text: 'Save' },
     {
       component: this.createItem(),

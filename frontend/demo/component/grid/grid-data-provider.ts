@@ -76,10 +76,10 @@ export class Example extends LitElement {
 
   // tag::snippet2[]
   @state()
-  private accessor searchTerm = '';
+  private searchTerm = '';
 
   @query('#grid')
-  private accessor grid!: Grid;
+  private grid!: Grid;
 
   private dataProvider = async (
     params: GridDataProviderParams<Person>,

@@ -18,7 +18,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor gridItems: Person[] = [];
+  private gridItems: Person[] = [];
 
   protected override async firstUpdated() {
     this.gridItems = (await getPeople({ count: 5 })).people;

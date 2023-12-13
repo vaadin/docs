@@ -12,10 +12,10 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('notification-keyboard-a11y')
 export class Example extends LitElement {
   @state()
-  private accessor notificationOpened = true;
+  private notificationOpened = true;
 
   @state()
-  private accessor isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
+  private isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

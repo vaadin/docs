@@ -25,7 +25,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: PersonWithRating[] = [];
+  private items: PersonWithRating[] = [];
 
   private ratingFormatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,

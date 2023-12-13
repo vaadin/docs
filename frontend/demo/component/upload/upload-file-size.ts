@@ -27,7 +27,7 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-upload')
-  private accessor upload!: Upload;
+  private upload!: Upload;
 
   protected override firstUpdated() {
     this.upload.i18n.error.fileIsTooBig = 'The file exceeds the maximum allowed size of 10MB.';

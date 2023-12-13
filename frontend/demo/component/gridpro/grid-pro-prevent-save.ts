@@ -19,7 +19,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   private showErrorNotification(msg: string) {
     const notification = Notification.show(msg, { position: 'bottom-center' });

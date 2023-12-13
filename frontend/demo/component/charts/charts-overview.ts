@@ -44,7 +44,7 @@ export class Example extends LitElement {
   `;
 
   @state()
-  private accessor areaOptions: Options = {
+  private areaOptions: Options = {
     yAxis: { title: { text: '' } },
     xAxis: { visible: false },
     plotOptions: {
@@ -57,10 +57,10 @@ export class Example extends LitElement {
   };
 
   @state()
-  private accessor columnOptions: Options = { yAxis: { title: { text: '' } } };
+  private columnOptions: Options = { yAxis: { title: { text: '' } } };
 
   @state()
-  private accessor months = [
+  private months = [
     'Jan',
     'Feb',
     'Mar',
@@ -76,7 +76,7 @@ export class Example extends LitElement {
   ];
 
   @state()
-  private accessor pieOptions: Options = {
+  private pieOptions: Options = {
     tooltip: {
       pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>',
     },
@@ -90,7 +90,7 @@ export class Example extends LitElement {
   };
 
   @state()
-  private accessor pieValues: PointOptionsObject[] = [
+  private pieValues: PointOptionsObject[] = [
     { name: 'Chrome', y: 38 },
     { name: 'Firefox', y: 24 },
     { name: 'Edge', y: 15, sliced: true, selected: true },
@@ -98,7 +98,7 @@ export class Example extends LitElement {
   ];
 
   @state()
-  private accessor polarOptions: Options = {
+  private polarOptions: Options = {
     xAxis: {
       tickInterval: 45,
       min: 0,

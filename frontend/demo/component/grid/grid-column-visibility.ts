@@ -22,10 +22,10 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   @state()
-  private accessor contextMenuItems: Array<ContextMenuItem & { key: string }> = [
+  private contextMenuItems: Array<ContextMenuItem & { key: string }> = [
     { text: 'First name', checked: true, key: 'firstName', keepOpen: true },
     { text: 'Last name', checked: true, key: 'lastName', keepOpen: true },
     { text: 'Email', checked: true, key: 'email', keepOpen: true },

@@ -27,14 +27,14 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
 @customElement('accordion-summary')
 export class Example extends LitElement {
   @state()
-  private accessor countries: Country[] = [];
+  private countries: Country[] = [];
 
   private readonly personBinder = new Binder(this, PersonModel);
 
   private readonly cardBinder = new Binder(this, CardModel);
 
   @state()
-  private accessor openedPanelIndex: number | null = 0;
+  private openedPanelIndex: number | null = 0;
 
   protected override async firstUpdated() {
     this.countries = await getCountries();

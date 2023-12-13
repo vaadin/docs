@@ -36,7 +36,7 @@ export class Example extends LitElement {
   `;
 
   @state()
-  private accessor events: ViewEvent[] = [];
+  private events: ViewEvent[] = [];
 
   protected override async firstUpdated() {
     this.events = await getViewEvents();

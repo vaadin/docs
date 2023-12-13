@@ -20,11 +20,11 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
+  private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
   // end::snippet[]
 
   @state()
-  private accessor gridItems: Person[] = [];
+  private gridItems: Person[] = [];
 
   private contextMenuOpened?: boolean;
 

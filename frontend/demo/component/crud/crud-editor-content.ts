@@ -21,13 +21,13 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   @state()
-  private accessor professions: string[] = [];
+  private professions: string[] = [];
 
   @state()
-  private accessor responsiveSteps: FormLayoutResponsiveStep[] = [];
+  private responsiveSteps: FormLayoutResponsiveStep[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople();

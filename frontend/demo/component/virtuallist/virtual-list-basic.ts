@@ -32,7 +32,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor people: Person[] | undefined;
+  private people: Person[] | undefined;
 
   private expandedPeople = new Set<Person>();
 

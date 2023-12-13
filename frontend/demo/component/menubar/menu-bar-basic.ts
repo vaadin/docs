@@ -17,7 +17,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor items = [
+  private items = [
     { text: 'View' },
     { text: 'Edit' },
     {
@@ -39,7 +39,7 @@ export class Example extends LitElement {
   ];
 
   @state()
-  private accessor selectedItem: MenuBarItem | undefined;
+  private selectedItem: MenuBarItem | undefined;
   // end::snippet[]
 
   protected override render() {

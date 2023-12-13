@@ -25,13 +25,13 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private accessor grid!: Grid<Person>;
+  private grid!: Grid<Person>;
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   @state()
-  private accessor eventSummary = '';
+  private eventSummary = '';
 
   protected override async firstUpdated() {
     const { people } = await getPeople();

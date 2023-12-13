@@ -18,10 +18,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor value: string | undefined;
+  private value: string | undefined;
 
   @state()
-  private accessor items: Card[] = [];
+  private items: Card[] = [];
 
   protected override async firstUpdated() {
     this.items = await getCards();
