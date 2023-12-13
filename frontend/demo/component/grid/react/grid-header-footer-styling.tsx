@@ -16,7 +16,7 @@ const ratingFormatter = new Intl.NumberFormat('en-US', {
 });
 
 const ratingRenderer = (person: PersonWithRating) => (
-  <span>${ratingFormatter.format(person.customerRating)}</span>
+  <span>{ratingFormatter.format(person.customerRating)}</span>
 );
 
 function Example() {
@@ -33,13 +33,13 @@ function Example() {
 
   return (
     <Grid items={items} className="styling-header-footer">
-      <GridColumn path="firstName" header-part-name="header-bold"/>
-      <GridColumn path="lastName" header-part-name="header-bold"/>
-      <GridColumn path="profession" header-part-name="header-bold"/>
+      <GridColumn path="firstName" />
+      <GridColumn path="lastName" />
+      <GridColumn path="profession" />
       <GridColumn
         header="Customer rating (0-10)"
-        header-part-name="header-bold"
-        footer-part-name="footer-light-green"
+        header-part-name="rating-header"
+        footer-part-name="rating-footer"
         footerRenderer={() => <span>Avg rating: 5.32</span>}
       >{({ item }) => ratingRenderer(item)}</GridColumn>
     </Grid>

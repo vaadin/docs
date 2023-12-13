@@ -39,13 +39,13 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-grid .items="${this.items}" class="styling-header-footer">
-        <vaadin-grid-column path="firstName" header-part-name="header-bold"></vaadin-grid-column>
-        <vaadin-grid-column path="lastName" header-part-name="header-bold"></vaadin-grid-column>
-        <vaadin-grid-column path="profession" header-part-name="header-bold"></vaadin-grid-column>
+        <vaadin-grid-column path="firstName"></vaadin-grid-column>
+        <vaadin-grid-column path="lastName"></vaadin-grid-column>
+        <vaadin-grid-column path="profession"></vaadin-grid-column>
         <vaadin-grid-column
           header="Customer rating (0-10)"
-          header-part-name="header-bold"
-          footer-part-name="footer-light-green"
+          header-part-name="rating-header"
+          footer-part-name="rating-footer"
           ${columnFooterRenderer(() => html`<span>Avg rating: 5.32</span>`, [])}
           ${columnBodyRenderer(this.ratingRenderer, [])}
         ></vaadin-grid-column>

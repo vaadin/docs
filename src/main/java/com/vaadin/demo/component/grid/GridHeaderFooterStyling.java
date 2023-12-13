@@ -14,23 +14,18 @@ public class GridHeaderFooterStyling extends Div {
 
     public GridHeaderFooterStyling() {
         List<PersonWithRating> people = createDataSet();
-        double avgRating = people.stream()
-                .mapToDouble(PersonWithRating::getRating).average().orElse(0.0);
 
         // tag::snippet[]
         Grid<PersonWithRating> grid = new Grid<>(PersonWithRating.class, false);
         grid.addClassName("styling-header-footer");
-        grid.addColumn(PersonWithRating::getFirstName).setHeader("First name")
-                .setHeaderPartName("header-bold");
-        grid.addColumn(PersonWithRating::getLastName).setHeader("Last name")
-                .setHeaderPartName("header-bold");
-        grid.addColumn(PersonWithRating::getProfession).setHeader("Profession")
-                .setHeaderPartName("header-bold");
+        grid.addColumn(PersonWithRating::getFirstName).setHeader("First name");
+        grid.addColumn(PersonWithRating::getLastName).setHeader("Last name");
+        grid.addColumn(PersonWithRating::getProfession).setHeader("Profession");
         grid.addColumn(PersonWithRating::getFormattedRating)
                 .setHeader("Customer rating (0-10)")
-                .setHeaderPartName("header-bold")
-                .setFooter(String.format("Avg rating: %.2f", avgRating))
-                .setFooterPartName("footer-light-green");
+                .setHeaderPartName("rating-header")
+                .setFooter("Avg rating: 5.32")
+                .setFooterPartName("rating-footer");
         // end::snippet[]
 
         grid.setItems(people);
