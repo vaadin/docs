@@ -7,31 +7,26 @@ order: 100
 
 = Session Replication
 
-For a Vaadin application to reach the goals of High Availability and Down Scaling, it's fundamental that the HTTP session is correctly distributed between multiple servers.
+For a Vaadin Flow application to reach the goals of High Availability and Down Scaling, it's fundamental that the HTTP session is correctly distributed among multiple servers.
 
-If the server processing user requests becomes unavailable, it should be transparently replaced by another, in a way that the user should be able to continue using the application without any disruption.
+If the server processing user requests becomes unavailable, it should be transparently replaced by another, in a way that allows the user to continue using the application without any disruption.
 
-An offline notification or the loading indicator may appear for an instant, but the browser page is not reloaded. Therefore, work can continue without losing any data.
-
-This means that attributes must be constantly stored in a shared or distributed storage so that newly created HTTP sessions may be filled with the most recent user data.
+An offline notification or the loading indicator may appear for an instant, but the browser page is not reloaded. Therefore, work can continue without losing any data. This requires that attributes are stored in a shared or distributed storage so that newly created HTTP sessions may be filled with the most recent user data, for session replication.
 
 
 == Kubernetes Kit Session Replication
 
 Kubernetes Kit helps with session replication by transferring HTTP session data via a backend session storage (e.g., Hazelcast or Redis) for every request. When a server becomes unavailable, the one taking its place loads user data from the session storage and fills the new server-side HTTP session object.
 
-To transfer information to the session storage, the HTTP session attributes are encoded in a binary format, using https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/index.html[Java serialization^].
+To transfer information to the session storage, the HTTP session attributes are encoded in a binary format, using https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/index.html[Java serialization].
 
-This means that to have session replication working, the application code should be written in a way that all objects stored in the HTTP session are eligible for Java serialization. This means they must implement a special marker interface, [classname]`java.io.Serializable`. Objects that can't be serializable (e.g., third party classes) must be defined `transient`. As a result, they're skipped by the serialization process. After deserialization, transient fields are null.
+To get session replication working, the application code should be written in a way that all objects stored in the HTTP session are eligible for Java serialization. They must implement a special marker interface, [classname]`java.io.Serializable`. Objects that can't be serializable (e.g., third party classes) must be defined `transient`. As a result, they're skipped by the serialization process. After deserialization, transient fields are null.
 
 For Spring applications, Kubernetes Kit is also able to overcome this limitation. Transient fields referencing Spring beans are detected during serialization and metadata is stored along with the session attributes. On deserialization, transient fields matching metadata are injected with the corresponding Spring bean.
 
 Transient field inspection and injection is performed using Java reflection. For performance reasons, and to avoid potential issues with reflection access checks, restrict the inspection to only application classes.
 
-Restrictions can be imposed by configuring `vaadin.serialization.transients.include-packages` and `vaadin.serialization.transients.exclude-packages` properties to limit the inspection to classes whose packages match the configured rules.
-
-[NOTE]
-You may want to exclude packages not involved in the session.
+Restrictions can be imposed by configuring `vaadin.serialization.transients.include-packages` and `vaadin.serialization.transients.exclude-packages` properties to limit the inspection to classes whose packages match the configured rules. You may want to exclude packages not involved in the session.
 
 .Setting Transient Inspection Restrictions
 [source,text]
@@ -45,21 +40,24 @@ vaadin.serialization.transients.exclude-packages=com.example.app.ui.utils
 
 A Vaadin application consists of UI objects that act as root nodes of graphs of components that represent the web page with which the user interacts through the browser. UIs are collected into a [classname]`VaadinSession` that is stored in the HTTP session, to preserve the server-side state across requests. For this reason, application code should be carefully written to be serializable for session replication to succeed.
 
-For more information on serialization process, consult https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/index.html[Java documentation^] website.
+For more information on serialization process, consult https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/index.html[Java documentation].
 
 
 == Session Replication Tips
 
 The following sections contain best practices on how to code a fully serializable Vaadin application.
 
+=== Collaboration Kit
 
-=== Use Serializable Object as UI Components Members
+If you're using Collaboration Kit in an application, you may need to follow some <<{articles}/tools/collaboration/advanced/serialization#,specific serialization instructions>>.
+
+=== Serializable Object as UI Component Members
 
 When writing a component, make sure that all of its non-transient members implement [classname]`Serializable`.
 
-All Vaadin UI components and listeners are already marked as serializable. As a result, if a class extends or implements one of them, it's not necessary to add explicitly the `Serializable` implementation statement. However, it's necessary to do so on non-UI components that may be referenced in the UI graph.
+All Vaadin UI components and listeners are already marked as serializable. As a result, if a class extends or implements one of them, it's not necessary to add explicitly the `Serializable` implementation statement. However, it is necessary to do so on non-UI components that may be referenced in the UI graph.
 
-For example, if a view is holding a reference to a data transfer object or a configuration object, it must be marked as serializable, and all its members must be serializable.
+For example, if a view is holding a reference to a data transfer object or a configuration object, it must be marked as serializable, and all its members must be serializable:
 
 [source,java]
 ----
@@ -87,11 +85,8 @@ class Category implements Serializable { // <5>
 
 === Transient Fields for Non-Serializable Objects
 
-If a UI component needs to store a reference to an instance of a unserializable class, it must be defined as `transient`.
+If a UI component needs to store a reference to an instance of an unserializable class, it must be defined as `transient`. In Spring projects, Kubernetes Kit is able to detect these fields and re-inject them after deserialization.
 
-In Spring projects, Kubernetes Kit is able to detect these fields and re-inject them after deserialization.
-
-[NOTE]
 In non Spring project, transient fields should be handled manually either by implementing Java serialization hooks (i.e., https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/output.html#the-writeobject-method[`writeObject`], https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/output.html#the-writereplace-method[`writeReplace`], https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/input.html#the-readobject-method[`readObject`], https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/input.html#the-readresolve-method[`readResolve`], etc.).
 
 [source,java]
@@ -115,9 +110,7 @@ class ContactService {
 
 === Use Serializable Variants of Functional Interfaces
 
-A component may use Java functional interfaces to allow client code to provide executable code blocks in the form of lambda expressions or method references.
-
-For example, a form view may accept a callback to be executed after data is saved to the database. The callback may be represented by a [classname]`Consumer<T>`, and stored in the [fieldname]`onSuccess` field.
+A component may use Java functional interfaces to allow client code to provide executable code blocks in the form of lambda expressions or method references. For example, a form view may accept a callback to be executed after data is saved to the database. The callback may be represented by a [classname]`Consumer<T>`, and stored in the [fieldname]`onSuccess` field:
 
 [source,java]
 ----
@@ -128,9 +121,9 @@ class ProductForm extends VerticalLayout {
 }
 ----
 
-This breaks serialization process, because [classname]`Consumer` interface is not [classname]`Serializable`. The [fieldname]`onSuccess` field must be replaced by a serializable friendly type.
+This breaks serialization process because [classname]`Consumer` interface is not [classname]`Serializable`. The [fieldname]`onSuccess` field must be replaced by a serializable friendly type.
 
-To make serialization of [classname]`ProductForm` work, the class can be refactored using a [classname]`SerializableConsumer<T>`
+To make serialization of [classname]`ProductForm` work, the class can be refactored using a [classname]`SerializableConsumer<T>`:
 
 [source,java]
 ----
@@ -145,7 +138,7 @@ class ProductForm extends VerticalLayout {
 
 Vaadin offers a serializable-ready version of the most used Java functional interfaces in the [packagename]`com.vaadin.flow.function` package.
 
-Make sure when writing utility classes that you use functional interfaces as input parameters or return types.
+Make sure when writing utility classes that you use functional interfaces as input parameters or return types. 
 
 The following class breaks serialization if methods are used:
 
@@ -178,7 +171,7 @@ class OrderEditor {
 ----
 <1> Takes a reference to non-serializable functional interfaces.
 <2> Takes a reference to a non-serializable interface.
-<3> It captures it into the returned lambda expression.
+<3> Captures it into the returned lambda expression.
 <4> Stores the [classname]`ItemLabelGenerator` lambda expression in the serializable [classname]`ComboBox` component.
 
 The above utility class must be refactored as follows to use serializable functional interfaces:
@@ -200,11 +193,9 @@ public class DataProviderUtil {
 
 === Unserializable Objects in Lambdas
 
-When coding component listeners or setting properties that accepts functional interfaces, it's common to use a lambda expression.
+When coding component listeners or setting properties that accept functional interfaces, it's common to use a lambda expression. Lambdas can be serialized if the target interface is [classname]`Serializable`, but they must not capture any unserializable objects.
 
-Lambdas can be serialized if the target interface is [classname]`Serializable`, but they must not capture any unserializable objects.
-
-For example, the following code fails during serialization because [classname]`OrderService` is not [classname]`Serializable`.
+The following code fails during serialization because [classname]`OrderService` is not [classname]`Serializable`:
 
 [source,java]
 ----
@@ -220,9 +211,9 @@ class OrderEditor {
 }
 ----
 
-In this case, probably a solution may store the `service` reference as [classname]`OrderEditor` transient field, accessing the instance in the lambda with a method call (e.g., a `getter`), and implement Java deserialization hooks to somehow inject the service instance.
+In this case, a solution might be to store the `service` reference as [classname]`OrderEditor` transient field, accessing the instance in the lambda with a method call (e.g., a `getter`), and implement Java deserialization hooks to somehow inject the service instance.
 
-In Spring projects using Kubernetes Kit, you can rely on transient field handling, and add the field for the service instance.
+In Spring projects using Kubernetes Kit, you can rely on transient field handling, and add the field for the service instance:
 
 [source,java]
 ----
@@ -244,7 +235,7 @@ class OrderEditor {
 }
 ----
 
-Another way to avoid adding the transient field to the main class is to reference the non-serializable object in a serializable proxy that exposes only the required methods.
+Another way to avoid adding the transient field to the main class is to reference the non-serializable object in a serializable proxy that exposes only the required methods:
 
 [source,java]
 ----
@@ -288,14 +279,18 @@ Common issues with serialization and deserialization are presented in the follow
 
 === SerializedLambda ClassCastException
 
-A common Vaadin application extensively uses lambda expression for components listeners, binder, etc.
+A common Vaadin application extensively uses lambda expression for components listeners, binder, etc. When serializing and deserializing lambda expressions, it may happen to face [classname]`ClassCastException` with cryptic messages. For instance, `SerializedLambda cannot be cast to class <className>` on serialization, nor can `SerializedLambda be assigned to field <fieldName> of type <className>` on deserialization.
 
-When serializing and deserializing lambda expressions, it may happen to face [classname]`ClassCastException` with cryptic messages. For instance, `SerializedLambda cannot be cast to class <className>` -- on serialization -- nor can `SerializedLambda be assigned to field <fieldName> of type <className>` -- on deserialization.
+Usually, the cause is a "self reference". The lambda expression captures an object instance, but the expression is itself a member of the object graph of the captured object.
 
-Usually, the cause is a "self reference". That is to say, the lambda expression captures an object instance, but the expression is itself a member of the object graph of the captured object.
-
-Detecting the cause of the issues in not easy. In most cases, it requires the developer to intercept the [classname]`ClassCastException` in the IDE debugger and to analyze the call stack to identify the class defining the lambda expression.
+Detecting the cause of the issues is not easy. In most cases, it requires the developer to intercept the [classname]`ClassCastException` in the IDE debugger and to analyze the call stack to identify the class defining the lambda expression.
 
 Once the lambda expression has been identified, replacing it with an anonymous class may be the solution.
 
 To help make HTTP sessions fully serializable and deserializable, Kubernetes Kit offers a <<session-replication-debug-tool#, tool>> whose aim is to discover main issues during development.
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
