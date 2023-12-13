@@ -33,7 +33,7 @@ const ratingFormatter = new Intl.NumberFormat('en-US', {
 });
 
 const ratingRenderer = (person: PersonWithRating) => (
-  <span>${ratingFormatter.format(person.customerRating)}</span>
+  <span>{ratingFormatter.format(person.customerRating)}</span>
 );
 
 function Example() {
