@@ -16,7 +16,7 @@ function Example() {
   const items = [
     { text: 'Save' },
     {
-      component: menuComponent(<Icon icon="vaadin:chevron-down" ariaLabel="Other save options" />),
+      component: menuComponent(<Icon icon="vaadin:chevron-down" aria-label="Other save options" />),
       children: [{ text: 'Save as draft' }, { text: 'Save as copy' }, { text: 'Save and publish' }],
     },
   ];
