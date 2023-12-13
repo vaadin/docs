@@ -1,6 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Details } from '@hilla/react-components/Details.js';
+import { DetailsSummary } from '@hilla/react-components/DetailsSummary.js';
 import { FormLayout, type FormLayoutResponsiveStep } from '@hilla/react-components/FormLayout.js';
 import { TextField } from '@hilla/react-components/TextField.js';
 import { ComboBox } from '@hilla/react-components/ComboBox.js';
@@ -25,8 +26,7 @@ function Example() {
   return (
     // tag::snippet[]
     <Details opened>
-      {/* @ts-expect-error Summary not yet available as a React component */}
-      <vaadin-details-summary slot="summary">
+      <DetailsSummary slot="summary">
         <HorizontalLayout style={{ justifyContent: 'space-between', width: '100%' }}>
           <span>Contact information</span>
 
@@ -44,8 +44,7 @@ function Example() {
             <span>2 errors</span>
           </HorizontalLayout>
         </HorizontalLayout>
-        {/* @ts-expect-error Summary not yet available as a React component */}
-      </vaadin-details-summary>
+      </DetailsSummary>
 
       <FormLayout responsiveSteps={responsiveSteps}>
         <TextField label="Address" value="4027 Amber Lake Canyon" {...{ colspan: 2 }} />

@@ -12,7 +12,7 @@ function menuComponent(component: React.ReactNode) {
 }
 
 function createItem(iconName: string, ariaLabel: string) {
-  return menuComponent(<Icon icon={`vaadin:${iconName}`} ariaLabel={ariaLabel} />);
+  return menuComponent(<Icon icon={`vaadin:${iconName}`} aria-label={ariaLabel} />);
 }
 
 function Example() {
