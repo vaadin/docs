@@ -5,11 +5,14 @@ import { MenuBar } from '@hilla/react-components/MenuBar.js';
 function Example() {
   // tag::snippet[]
   const items = [
-    { text: 'View', className: 'custom-classname' },
+    { text: 'View', className: 'bg-primary text-primary-contrast' },
     { text: 'Edit' },
     {
       text: 'Share',
-      children: [{ text: 'By email', className: 'custom-classname' }, { text: 'Get link' }],
+      children: [
+        { text: 'By email', className: 'bg-primary text-primary-contrast' },
+        { text: 'Get link' },
+      ],
     },
   ];
 

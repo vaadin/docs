@@ -17,11 +17,14 @@ export class Example extends LitElement {
   // tag::snippet[]
   @state()
   private accessor items = [
-    { text: 'View', className: 'custom-classname' },
+    { text: 'View', className: 'bg-primary text-primary-contrast' },
     { text: 'Edit' },
     {
       text: 'Share',
-      children: [{ text: 'By email', className: 'custom-classname' }, { text: 'Get link' }],
+      children: [
+        { text: 'By email', className: 'bg-primary text-primary-contrast' },
+        { text: 'Get link' },
+      ],
     },
   ];
 
