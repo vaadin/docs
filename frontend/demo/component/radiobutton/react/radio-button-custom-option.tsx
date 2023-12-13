@@ -36,7 +36,7 @@ function Example() {
             <label slot="label">
               <HorizontalLayout theme="spacing">
                 <img src={card.pictureUrl} alt={card.name} style={{ height: '1em' }} />
-                <span>${card.accountNumber}</span>
+                <span>{card.accountNumber}</span>
               </HorizontalLayout>
             </label>
           </RadioButton>
