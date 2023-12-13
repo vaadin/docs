@@ -12,7 +12,7 @@ function Example() {
 
   return (
     // tag::snippet[]
-    <ComboBox label="Country" item-label-path="name" item-value-path="id" items={items} />
+    <ComboBox label="Country" itemLabelPath="name" itemValuePath="id" items={items} />
     // end::snippet[]
   );
 }
