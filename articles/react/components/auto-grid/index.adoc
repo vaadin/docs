@@ -60,6 +60,7 @@ include::{root}/frontend/demo/component/auto-grid/react/auto-grid-basic.tsx[rend
 
 As you can see, Auto Grid automatically expands properties of `@OneToOne` relationships -- in this case the properties of the `supplier` -- and it displays them as columns in the grid. However, properties annotated with `@Id` or `@Version` are excluded by default. To show them, though, you can use the `visibleColumns` property to specify which columns to display. You can find more information on this in the next section.
 
+Auto Grid supports working with plain, non-JPA classes, which can be useful, for example, if you want to use the Data Transfer Object (DTO) pattern. See the <<working-with-plain-java-classes, Working with Plain Java Classes>> section.
 
 == Customizing Columns
 
@@ -133,22 +134,67 @@ include::{root}/frontend/demo/component/auto-grid/react/auto-grid-custom-columns
 [NOTE]
 If the `visibleColumns` property is present, only the custom columns for which their keys are mentioned in the `visibleColumns` are rendered according to the specified order.
 
+==== [since:dev.hilla:hilla@v2.5]#Custom Columns Order#
 
-== Filtering
+By default, custom columns are added after the automatically rendered columns. You can also define the order of appearance for custom columns by using the `visibleColumns` property. Custom columns can be freely placed before, in between, or after other columns. To do this, you'll need to provide the `key` property of the custom column in the `visibleColumns` property.
 
-Auto Grid has column-based filtering enabled by default. You can disable the built-in column filters by setting the `noHeaderFilters` flag.
+The following example shows a custom column with `supplierInfo` as the `key` placed between two automatically rendered columns:
 
-.Auto Grid using `noHeaderFilters={true}`
+.Auto Grid Custom Column's Order
 [source,tsx]
 ----
-include::{root}/frontend/demo/component/auto-grid/react/auto-grid-no-header-filters.tsx[render,tags=snippet,indent=0,group=React]
+<AutoGrid
+  service={ProductService}
+  model={ProductModel}
+  visibleColumns={['name', 'supplierInfo', 'category']}
+  customColumns={[
+    <GridColumn key="supplierInfo"
+                renderer={SupplierRenderer}
+                header="Supplier"
+                autoWidth
+    />
+  ]}
+/>
 ----
 
-Auto Grid supports external filtering by using the criteria specified by the `experimentalFilter` property.
+.Custom Columns Visibility
+[NOTE]
+If the `visibleColumns` property is present, only the custom columns for which their keys are mentioned in the `visibleColumns` are rendered according to the specified order.
 
-.Experimental Feature
-[WARNING]
-External Auto Grid filtering is an experimental feature. The `experimentalFilter` property API may be changed or removed in future releases.
+== Sorting and Filtering
+
+Auto Grid has sorting and filtering enabled by default for all columns with a supported Java type. That includes all primitive types, like strings, numbers, booleans, as well as some complex types like enums, `java.time.LocalDate` and `java.time.LocalTime`. It automatically sorts by the first column, and shows a filter field in the header of each column.
+
+You can disable sorting and filtering for individual columns by configuring the `sortable` and `filterable` properties of the column in the `columnOptions` object. This can be useful, for example for columns that show a computed property for which no sorting and filtering is implemented in the `ListService`, or if there simply isn't any meaningful way to sort or filter.
+
+.Auto Grid with sorting and filtering disabled for the `displayName` column
+[source,tsx]
+----
+<AutoGrid
+  service={ProductService}
+  model={ProductModel}
+  columnOptions={{
+    displayName: {
+      filterable: false,
+      sortable: false,
+    },
+  }}
+/>
+----
+
+Alternatively, you can disable all header filters by setting the `noHeaderFilters` property.
+
+.Auto Grid with all header filters disabled
+[source,tsx]
+----
+<AutoGrid
+  service={ProductService}
+  model={ProductModel}
+  noHeaderFilters
+/>
+----
+
+As an alternative to the built-in header filters, Auto Grid supports external filtering by passing a custom filter definition to the `experimentalFilter` property.
 
 In the example below, the data in Auto Grid is filtered using the _contains_ matcher for the `name` property, combined with the _equals_ matcher for `category` when a specific category is selected:
 
@@ -156,6 +202,33 @@ In the example below, the data in Auto Grid is filtered using the _contains_ mat
 [source,tsx]
 ----
 include::{root}/frontend/demo/component/auto-grid/react/auto-grid-filtering.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+You can combine several filtering criteria by using the `{'@type': 'and' | 'or', children: []}` composite filter type.
+
+.Experimental Feature
+[WARNING]
+External Auto Grid filtering is an experimental feature. The `experimentalFilter` property API may be changed or removed in future releases.
+
+== [since:dev.hilla:hilla@v2.5]#Refreshing Data#
+
+Auto Grid supports refreshing the data by providing a reference to a `refresh` function that can be called from the parent component. The `refresh` function can be obtained by providing a reference of the type `React.MutableRefObject<AutoGridRef>` to the Auto Grid. The `AutoGridRef` type provides a `refresh` function that refreshes the data by calling the backend service. The following example shows how to use the `refresh` function to refresh the data in Auto Grid:
+
+.Refresh Auto Grid Data
+[source,tsx]
+----
+const autoGridRef = React.useRef<AutoGridRef>(null);
+
+function refreshGrid() {
+  autoGridRef.current?.refresh();
+}
+
+return (
+  <VerticalLayout>
+    <Button onClick={() => { refreshGrid() }}>Refresh Data</Button>
+    <AutoGrid service={EmployeeService} model={EmployeeModel} ref={autoGridRef} />
+  </VerticalLayout>
+);
 ----
 
 You can combine several filtering criteria by using the `{t: 'and' | 'or', children: []}` composite filter type.
@@ -184,7 +257,87 @@ The example here enables single-row selection in the Auto Grid by using a combin
 include::{root}/frontend/demo/component/auto-grid/react/auto-grid-selection.tsx[render,tags=snippet,indent=0,group=React]
 ----
 
-You can read more about the properties, and use cases supported, on the <<../grid#,Grid component>> documentation page.
+You can read more about the properties, and use cases supported, on the <<../grid#,Grid component>> documentation page.== Working with Plain Java Classes
+
+Auto Grid supports working with plain, non-JPA Java classes. This can be useful, for example if you want to use the Data Transfer Object (DTO) pattern to decouple your domain from your presentation logic, or want to avoid serializing your JPA entities to the client due to performance concerns.
+
+=== Implementing a Custom Service
+
+To use plain Java classes, you need to provide a custom implementation of the `ListService<T>` interface, as the `ListRepositoryService<T>` base class only works with JPA entities. The following method needs to be implemented:
+
+* `List<T> list(Pageable pageable, Filter filter)`: Returns a list of paginated, sorted and filtered items.
+
+The following example shows a basic implementation of a custom `ListService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTO instances and JPA entities internally. It also reuses the Hilla `JpaFilterConverter` for the filter implementation. In order for sorting and filtering to work, the DTO class and the JPA entity class must have the same structure, which means all properties that are sorted and filtered-by should have the same name and are at the same path in the data structure.
+
+[.example]
+--
+.ProductDtoListService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDtoListService.java[tags=snippet,indent=0]
+----
+.ProductDto.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductDto.java[tags=snippet,indent=0]
+----
+.Product.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Product.java[tags=snippet,indent=0]
+----
+.ProductRepository.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductRepository.java[tags=snippet,indent=0]
+----
+--
+
+==== Advanced Implementations
+
+The example above works for an ideal case, where the DTO class structure maps one-to-one to the JPA entity class structure. In practice, however, this is often not the case. For example, you might want to flatten nested properties, use different property names or create computed properties that are not present in the JPA entity. Alternatively, you might want to use a different data source than JPA.
+
+For these cases you need to implement pagination, sorting and filtering manually using the parameters provided to the `list` method. The method receives a `org.springframework.data.domain.Pageable` and `dev.hilla.crud.filter.Filter` instances as parameters, which can be used to extract the following information:
+
+* `Pageable.getOffset`: The offset of the first item to fetch
+* `Pageable.getPageSize`: The maximum number of items to fetch
+* `Pageable.getSort`: The sort order of the items. Each sort order contains the property to sort by (`Sort.Order.getProperty()`), and the direction (`Sort.Order.getDirection()`)
+* `Filter`: The filter to apply to the items. The filter is a tree structure of `Filter` instances, where each `Filter` instance is either an `AndFilter`, an `OrFilter`, or a `PropertyStringFilter`:
+** `AndFilter` contains a list of nested filters (`AndFilter.getChildren()`) that should all match.
+** `OrFilter` contains a list of nested filters (`OrFilter.getChildren()`) of which at least one should match.
+** `PropertyStringFilter` filters an individual property against a value. It contains the name of the property to filter (`PropertyStringFilter.getPropertyId()`), the value to filter against (`PropertyStringFilter.getFilterValue()`), and the matcher to use (`PropertyStringFilter.getMatcher()`). The filter value is always a string and needs to be converted into a respective type or format that works with the type of the property. The matcher specifies the type of filter operation, such as `EQUALS`, `CONTAINS`, `GREATER_THAN`, etc.
+
+When using the default header filters, the filter is always an `AndFilter` with a list of `PropertyStringFilter` instances. The `PropertyStringFilter` instances are created based on the filter values entered by the user in the header filters. When using an external filter, the filter can be of any structure.
+
+The following example shows a more complex use case:
+
+* The DTO class uses different property names than the JPA entity class and flattens nested properties. It also adds a computed property that is not present in the JPA entity.
+* The sort implementation maps the DTO property names to the JPA entity class structure.
+* The filter implementation creates JPA filter specifications based on the filter values entered by the user in the header filters. As part of that it demonstrates how to handle different matcher types, and how to filter for computed properties.
+
+[.example]
+--
+.ProductAdvancedDtoListService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductAdvancedDtoListService.java[tags=snippet,indent=0]
+----
+.ProductAdvancedDto.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductAdvancedDto.java[tags=snippet,indent=0]
+----
+.Product.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/Product.java[tags=snippet,indent=0]
+----
+.ProductRepository.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/crud/ProductRepository.java[tags=snippet,indent=0]
+----
+--
 
 ++++
 <style>
