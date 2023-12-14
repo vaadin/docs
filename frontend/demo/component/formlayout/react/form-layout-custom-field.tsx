@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { FormLayout } from '@hilla/react-components/FormLayout.js';
 import { FormItem } from '@hilla/react-components/FormItem.js';
 import { Select, type SelectElement } from '@hilla/react-components/Select.js';
@@ -14,8 +14,8 @@ function Example() {
   const years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
 
   useEffect(() => {
-    (monthFieldRef.current as any)?.focusElement?.setAttribute('title', 'Month');
-    (yearFieldRef.current as any)?.focusElement?.setAttribute('title', 'Year');
+    monthFieldRef.current?.focusElement?.setAttribute('title', 'Month');
+    yearFieldRef.current?.focusElement?.setAttribute('title', 'Year');
   }, []);
 
   return (
