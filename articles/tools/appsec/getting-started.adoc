@@ -70,7 +70,7 @@ To generate the SBOM file from Maven dependencies, you'll need to add the link:h
 </plugin>
 ----
 
-The SBOM file, [filename]`bom.json` should be generated in the `/resources` sub-directory in the project's output directory. The plugin is configured to do this.
+Before starting the application, make sure to run the `maven install` command. Then, the SBOM file, [filename]`bom.json` should be generated in the `/resources` sub-directory in the project's output directory. The plugin is configured to do this.
 
 
 === npm Dependencies
@@ -81,6 +81,8 @@ To generate the SBOM file from npm dependencies defined in the [filename]`packag
 ----
 npx --package @cyclonedx/cyclonedx-npm --call exit
 ----
+
+The `@cyclonedx/cyclonedx-npm` plugin requires `node >= 14` and `npm >= 6` versions, also, the [filename]`package-lock.json` file and the [filename]`node_modules` folder should be present in order to successfully run.
 
 To add it to the plugins, you would use the `exec-maven-plugin` in your [filename]`pom.xml` file like this:
 
@@ -113,7 +115,25 @@ To add it to the plugins, you would use the `exec-maven-plugin` in your [filenam
 </plugin>
 ----
 
-The SBOM file, [filename]`bom-npm.json` should be generated in the `/resources` sub-directory in the project's output directory. The plugin is configured to do this. AppSec Kit scans this SBOM file for vulnerabilities, if it's available.
+Before starting the application, make sure to run the `npm install` and `mvn install` commands. Then, the SBOM file, [filename]`bom-npm.json` should be generated in the `/resources` sub-directory in the project's output directory. The plugin is configured to do this. AppSec Kit scans this SBOM file for vulnerabilities, if it's available.
+
+
+=== External APIs
+
+AppSec Kit calls external APIs to get vulnerabilities and vulnerability analysis for Vaadin dependencies. These calls are required for a normal operation thus they need to be accessible.
+
+[source,text]
+----
+OSV (Open Source Vulnerability) API:
+https://api.osv.dev/v1/querybatch
+https://api.osv.dev/v1/vulns/
+
+GitHub API:
+https://api.github.com/repos/vaadin/flow/releases
+
+Vaadin vulnerability analysis:
+https://raw.githubusercontent.com/vaadin/vulnerability-analysis/main/analysis.json
+----
 
 
 == Start the Application
@@ -123,7 +143,7 @@ AppSec Kit isn't enabled in production mode. Therefore, you'll need to start you
 
 === Notification Dialog
 
-After the application has started, AppSec Kit analyzes the dependencies, collects any vulnerabilities, and displays a notification dialog. See screenshot. There you'll see a link, labeled _Open AppSec Kit_, that you can click on to open the UI in a new tab.
+After the application has started, AppSec Kit analyzes the dependencies, collects new vulnerabilities, and displays a notification dialog. A vulnerability is considered as a new if a developer analysis has not been added to it yet. Therefore, vulnerabilities with developer analysis are not counted in the found vulnerabilities number. See screenshot. There you'll see a link, labeled _Open AppSec Kit_, that you can click on to open the UI in a new tab.
 
 [[notification-dialog]]
 .AppSec Kit Notification Dialog
@@ -131,15 +151,7 @@ image::images/notification-dialog.png[]
 
 You can also navigate to the UI using the `vaadin-appsec-kit` route. For example, on your localhost, enter something like this in your browser: link:http://localhost:8080/vaadin-appsec-kit[http://localhost:8080/vaadin-appsec-kit].
 
-You should configure link:/docs/v23/advanced/server-push[server push] for a `UI` so you'll be notified when new vulnerabilities are found. You can do this by adding the `@Push` annotation to a UI class like so:
-
-[source,java]
-----
-@Push
-public class ExampleUI extends UI {
-    // ...
-}
-----
+AppSec Kit automatically activates <<{articles}/advanced/server-push#, server push>> if neither push nor polling is active for a UI where AppSec Kit is used so you'll be notified when new vulnerabilities are found. You can disable this functionality by overriding the default AppSec Kit <<{articles}/tools/appsec/advanced-topics#appsec-kit-configuration, configuration>>.
 
 
 == AppSec Kit UI
