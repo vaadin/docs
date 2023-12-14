@@ -8,7 +8,6 @@ import dev.hilla.crud.JpaFilterConverter;
 import dev.hilla.crud.filter.Filter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -32,11 +31,6 @@ public class ProductDtoCrudService implements CrudService<ProductDto, Long> {
         return products.stream().map(ProductDto::fromEntity).toList();
     }
 
-    @Override // hidden-source-line
-    public ProductDto get(Long id) { // hidden-source-line
-        return productRepository.findById(id).map(ProductDto::fromEntity).orElse(null); // hidden-source-line
-    } // hidden-source-line
-    // hidden-source-line
     @Override
     public @Nullable ProductDto save(ProductDto value) {
         Product product = value.id() != null && value.id() > 0

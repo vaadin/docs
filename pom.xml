@@ -15,7 +15,7 @@
         <!-- tag::vaadin-version[] -->
         <vaadin.version>24.3.0</vaadin.version>
         <!-- end::vaadin-version[] -->
-        <hilla.version>2.5.0.rc1</hilla.version>
+        <hilla.version>2.5.1</hilla.version>
 
         <drivers.dir>${project.basedir}/drivers</drivers.dir>
         <drivers.downloader.phase>pre-integration-test</drivers.downloader.phase>
@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0-RC1</version>
+        <version>3.1.2</version>
     </parent>
     <!-- end::spring-version[] -->
 
@@ -58,14 +58,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <!-- Remove this after SB 3.2 is stable -->
-        <repository>
-            <id>spring-milestones</id>
-            <url>https://repo.spring.io/milestone/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
     </repositories>
 
     <pluginRepositories>
@@ -86,14 +78,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </pluginRepository>
-        <!-- Remove this after SB 3.2 is stable -->
-        <pluginRepository>
-            <id>spring-milestones</id>
-            <url>https://repo.spring.io/milestone/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
     </pluginRepositories>
 
     <dependencyManagement>
@@ -102,6 +86,13 @@
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-bom</artifactId>
                 <version>${vaadin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>dev.hilla</groupId>
+                <artifactId>hilla-bom</artifactId>
+                <version>${hilla.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -116,26 +107,18 @@
         </dependency>
         <dependency>
             <groupId>dev.hilla</groupId>
-            <artifactId>endpoint</artifactId>
-            <version>${hilla.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.hilla</groupId>
-            <artifactId>engine-runtime</artifactId>
-            <version>${hilla.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>sso-kit-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>observability-kit-starter</artifactId>
-            <version>2.1.0</version>
+            <artifactId>hilla</artifactId>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-spring-boot-starter</artifactId>
+            <exclusions>
+                <!-- Excluding so that webjars are not included. -->
+                <exclusion>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -158,6 +141,20 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-resource-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>3.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -198,6 +195,19 @@
                 It also creates webpack.config.js if not exists yet.
             -->
             <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-frontend</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>dev.hilla</groupId>
                 <artifactId>hilla-maven-plugin</artifactId>
                 <version>${hilla.version}</version>
@@ -211,14 +221,44 @@
             </plugin>
 
             <plugin>
-                <groupId>net.revelc.code.formatter</groupId>
-                <artifactId>formatter-maven-plugin</artifactId>
-                <version>2.20.0</version>
-                <configuration>
-                    <configFile>https://raw.githubusercontent.com/vaadin/flow/master/eclipse/VaadinJavaConventions.xml</configFile>
-                    <skipHtmlFormatting>true</skipHtmlFormatting>
-                    <lineEnding>LF</lineEnding>
-                </configuration>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>groovy-maven-plugin</artifactId>
+                <version>2.1.1</version>
+                <executions>
+                    <execution>
+                        <id>update-hilla-react-dependencies</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <source>
+                                // "dev.hilla:hilla" provides WC npm dependencies, and
+                                // "dev.hilla:hilla-react" provides React ones, and they
+                                // don't combine. But we need both in the docs project.
+                                // Since this project depends on "dev.hilla:hilla",
+                                // the following workaround adds the Hilla React npm
+                                // packages.
+                                def hillaReactNpmPackages = [
+                                        '@hilla/react-auth',
+                                        '@hilla/react-form',
+                                        '@hilla/react-crud',
+                                ]
+                                def hillaVersion = project.properties.getProperty('hilla.version')
+                                def hillaVersionNpm = hillaVersion.replaceAll(~/(\d+\.\d+\.\d+)\.(\w+)/, '$1-$2')
+                                def packageJsonFile = new File(project.file.getParentFile(), 'package.json')
+                                def packageJson = new groovy.json.JsonSlurper().parse(packageJsonFile)
+                                for (npmPackage in hillaReactNpmPackages) {
+                                    packageJson.get('dependencies').put(npmPackage, hillaVersionNpm)
+                                }
+                                def outputPackageJson = groovy.json.JsonOutput.toJson(packageJson)
+                                outputPackageJson = groovy.json.JsonOutput.prettyPrint(outputPackageJson)
+                                outputPackageJson = outputPackageJson.replaceAll(~/(?m:^|\G)    /, '  ')
+                                packageJsonFile.write(outputPackageJson)
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
