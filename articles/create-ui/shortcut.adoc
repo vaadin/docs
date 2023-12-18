@@ -30,9 +30,6 @@ login.addClickShortcut(Key.ENTER);
 
 Instead of clicking the button, the user can use the kbd:[Enter] key to perform the action tied to the button click.
 
-[NOTE]
-Since Vaadin 24.3, click shortcut resets client-side focus on an active element (e.g., `<input>`, by default) before executing the shortcut action. For example, it might submit properly the input's value when it's focused and the shortcut is triggered. This behavior can be disabled by calling https://vaadin.com/api/platform/com/vaadin/flow/component/ShortcutRegistration.html[[methodname]`setResetFocusOnActiveElement(boolean)`] on the shortcut registration.
-
 
 == Adding Focus Shortcuts
 
@@ -206,7 +203,7 @@ UI.getCurrent().addShortcutListener(listener,
         Key.KEY_J, KeyModifier.ALT);
 ----
 
-The `listener` handles events triggered by multiple shortcuts; both kbd:[Alt+G] and kbd:[Alt+J] invoke the listener. The [classname]`ShortcutEvent` provides the [methodname]`matches(Key, KeyModifier...)` method to determine which shortcut triggered the event. 
+The `listener` handles events triggered by multiple shortcuts; both kbd:[Alt+G] and kbd:[Alt+J] invoke the listener. The [classname]`ShortcutEvent` provides the [methodname]`matches(Key, KeyModifier...)` method to determine which shortcut triggered the event.
 
 For additional comparisons, you can use [methodname]`getSource()`, which returns the `listenOn` component. You can also use [methodname]`getLifecycleOwner()`, which returns the `lifecycleOwner` component.
 
@@ -275,6 +272,24 @@ Shortcuts.addShortcutListener(this,
 Once the "Name" field has focus and the shortcut is activated, the event is propagated higher in the component hierarchy and caught by the view component.
 
 
+== Submitting Change Events Before Shortcut Activation
+
+[classname]`ShortcutRegistration` has a [methodname]`resetFocusOnActiveElement()` and [methodname]`setResetFocusOnActiveElement(boolean)` to make the active focused element lose focus (i.e., it's blurred) and receive focus again before a shortcut is triggered. This ensures any pending input value change events for that focused element are submitted before a shortcut is activated.
+
+The following example adds a keyboard shortcut for the [guilabel]*Save* button. The `resetFocusOnActiveElement()` method is used to ensure that any changes made to the `description` field are submitted to the server before the keyboard shortcut is handled.
+
+[source,java]
+----
+TextField description = new TextField("Description");
+// ON_CHANGE is the default mode, but we explicitly set it here for clarity
+description.setValueChangeMode(ValueChangeMode.ON_CHANGE);
+
+Button save = new Button("Save");
+save.addClickListener(event -> this.save());
+save.addClickShortcut(Key.ENTER, KeyModifier.CONTROL).resetFocusOnActiveElement();
+----
+
+
 == Checking Shortcut States
 
 [classname]`ShortcutRegistration` offers a variety of methods to check the internal state of a shortcut, as well as all configurable values that have corresponding getter methods.
@@ -286,6 +301,6 @@ Additionally, you can use the boolean [methodname]`isShortcutActive()` method to
 
 ++++
 <style>
-[class^=PageHeader-module-descriptionContainer] {display: none;}
+[class^=PageHeader-module--descriptionContainer] {display: none;}
 </style>
 ++++
