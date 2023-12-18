@@ -2,9 +2,12 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect, useRef } from 'react';
 import { AppLayout, type AppLayoutElement } from '@hilla/react-components/AppLayout.js';
 import { Icon } from '@hilla/react-components/Icon.js';
-import { Tab } from '@hilla/react-components/Tab.js';
-import { Tabs } from '@hilla/react-components/Tabs.js';
 import '@vaadin/icons';
+import {
+  HorizontalLayout,
+  type HorizontalLayoutElement,
+} from '@hilla/react-components/HorizontalLayout.js';
+import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {
   fontSize: 'var(--lumo-font-size-l)',
@@ -23,12 +26,17 @@ const tabsStyle = {
 
 function Example() {
   const appLayoutRef = useRef<AppLayoutElement>(null);
+  const horizontalLayoutRef = useRef<HorizontalLayoutElement>(null);
   useEffect(() => {
     const appLayout = appLayoutRef.current;
     if (appLayout) {
       // --vaadin-app-layout-touch-optimized is only enforced as part of this example
       appLayout.style.setProperty('--vaadin-app-layout-touch-optimized', 'true');
       (appLayout as any)._updateTouchOptimizedMode();
+    }
+    const horizontalLayout = horizontalLayoutRef.current;
+    if (horizontalLayout) {
+      patchAppLayoutNavigation(horizontalLayout);
     }
   }, []);
 
@@ -39,28 +47,24 @@ function Example() {
         MyApp
       </h1>
 
-      <Tabs slot="navbar touch-optimized" theme="minimal equal-width-tabs" style={tabsStyle}>
-        <Tab aria-label="Dashboard">
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:dashboard" style={iconStyle} />
-          </a>
-        </Tab>
-        <Tab aria-label="Orders">
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:cart" style={iconStyle} />
-          </a>
-        </Tab>
-        <Tab aria-label="Customers">
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:user-heart" style={iconStyle} />
-          </a>
-        </Tab>
-        <Tab aria-label="Products">
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:package" style={iconStyle} />
-          </a>
-        </Tab>
-      </Tabs>
+      <HorizontalLayout
+        slot="navbar touch-optimized"
+        className="navigation"
+        ref={horizontalLayoutRef}
+      >
+        <a href="/dashboard" aria-label="Dashboard">
+          <Icon icon="vaadin:dashboard" style={iconStyle} />
+        </a>
+        <a href="/orders" aria-label="Orders">
+          <Icon icon="vaadin:cart" style={iconStyle} />
+        </a>
+        <a href="/customers" aria-label="Customers">
+          <Icon icon="vaadin:user-heart" style={iconStyle} />
+        </a>
+        <a href="/products" aria-label="Products">
+          <Icon icon="vaadin:package" style={iconStyle} />
+        </a>
+      </HorizontalLayout>
 
       <div className="content">
         <h2>View title</h2>

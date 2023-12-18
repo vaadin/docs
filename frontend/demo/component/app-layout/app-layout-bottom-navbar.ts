@@ -5,8 +5,9 @@ import '@vaadin/app-layout';
 import '@vaadin/app-layout/vaadin-drawer-toggle';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import '@vaadin/tabs';
+import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
+import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source-line
 
 @customElement('app-layout-bottom-navbar')
 export class Example extends LitElement {
@@ -16,21 +17,15 @@ export class Example extends LitElement {
       margin: var(--lumo-space-m) var(--lumo-space-l);
     }
 
-    vaadin-icon {
-      height: var(--lumo-icon-size-s);
-      margin: auto;
-      width: var(--lumo-icon-size-s);
-    }
-
-    vaadin-tabs {
-      width: 100%;
-    }
-
     /* hidden-source-line: the bottom navbar is forced on in the example */
     vaadin-app-layout /* hidden-source-line */ {
       --vaadin-app-layout-touch-optimized: true; /* hidden-source-line */
     } /* hidden-source-line */
   `;
+
+  /* prettier-ignore */ protected firstUpdated() { /* hidden-source-line */
+    patchAppLayoutNavigation(this.shadowRoot!.querySelector('.navigation')!); /* hidden-source-line */
+  } /* hidden-source-line */
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -45,30 +40,22 @@ export class Example extends LitElement {
       <!-- --vaadin-app-layout-touch-optimized is only enforced as part of this example -->
       <vaadin-app-layout style="--vaadin-app-layout-touch-optimized: true">
         <h1 slot="navbar">MyApp</h1>
-        <vaadin-tabs slot="navbar touch-optimized" theme="minimal equal-width-tabs">
-          <vaadin-tab aria-label="Dashboard">
-            <a tabindex="-1">
-              <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
-            </a>
-          </vaadin-tab>
-          <vaadin-tab aria-label="Orders">
-            <a tabindex="-1">
-              <vaadin-icon icon="vaadin:cart"></vaadin-icon>
-            </a>
-          </vaadin-tab>
+        <vaadin-horizontal-layout slot="navbar touch-optimized" class="navigation">
+          <a href="/dashboard" aria-label="Dashboard">
+            <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
+          </a>
+          <a href="/orders" aria-label="Orders">
+            <vaadin-icon icon="vaadin:cart"></vaadin-icon>
+          </a>
           <!-- end::snippet[] -->
-          <vaadin-tab aria-label="Customers">
-            <a tabindex="-1">
-              <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
-            </a>
-          </vaadin-tab>
-          <vaadin-tab aria-label="Products">
-            <a tabindex="-1">
-              <vaadin-icon icon="vaadin:package"></vaadin-icon>
-            </a>
-          </vaadin-tab>
+          <a href="/customers" aria-label="Customers">
+            <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
+          </a>
+          <a href="/products" aria-label="Products">
+            <vaadin-icon icon="vaadin:package"></vaadin-icon>
+          </a>
           <!-- tag::snippet[] -->
-        </vaadin-tabs>
+        </vaadin-horizontal-layout>
         <div class="content">
           <h2>View title</h2>
           <p>View content</p>
