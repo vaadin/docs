@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef, useState } from 'react';
-import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
+import React, { useEffect, useState } from 'react';
+import { Grid } from '@hilla/react-components/Grid.js';
 import { GridColumn, type GridColumnElement } from '@hilla/react-components/GridColumn.js';
 import { getUserPermissions } from 'Frontend/demo/domain/DataService';
 import { Icon } from '@hilla/react-components/Icon.js';
@@ -9,16 +9,9 @@ import '@vaadin/icons';
 
 function Example() {
   const [items, setItems] = useState<UserPermissions[]>([]);
-  const gridRef = useRef<GridElement<UserPermissions>>(null);
 
   useEffect(() => {
     getUserPermissions().then((data) => setItems([...data]));
-
-    // Workaround for https://github.com/vaadin/web-components/issues/6301
-    setTimeout(() => {
-      const icons = gridRef.current?.querySelectorAll('vaadin-icon');
-      icons?.forEach((icon) => icon.setAttribute('icon', icon.icon ?? ''));
-    }, 100);
   }, []);
 
   // tag::snippet[]
@@ -55,7 +48,7 @@ function Example() {
   };
 
   return (
-    <Grid items={items} ref={gridRef}>
+    <Grid items={items}>
       <GridColumn path="name" header="Name" />
       <GridColumn id="view" header="View">
         {renderBoolean}
