@@ -5,19 +5,19 @@ import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile; // hidden-source-line
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.JwsAlgorithms;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import com.vaadin.demo.ExcludeDemoSpringComponent; // hidden-source-line
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 
 // tag::stateless-configure[]
 @EnableWebSecurity
 @Configuration
-@ExcludeDemoSpringComponent // hidden-source-line
+@Profile("this-is-just-a-demo-class") // hidden-source-line
 public class SecurityConfig extends VaadinWebSecurity {
 
     @Value("${my.app.auth.secret}")
