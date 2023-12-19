@@ -2,32 +2,17 @@ package com.vaadin.demo.fusion.crud;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import dev.hilla.BrowserCallable;
-import dev.hilla.Nonnull;
 import dev.hilla.Nullable;
-import dev.hilla.crud.CrudService;
-import dev.hilla.crud.filter.Filter;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import java.util.List;
+import dev.hilla.crud.FormService;
 
 //tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
-public class ProductDtoCrudService implements CrudService<ProductDto, Long> {
+public class ProductDtoFormService implements FormService<ProductDto, Long> {
     private final ProductRepository productRepository;
 
-    public ProductDtoCrudService(ProductRepository productRepository) {
+    public ProductDtoFormService(ProductRepository productRepository) {
         this.productRepository = productRepository;
-    }
-
-    @Override
-    @Nonnull
-    public List<@Nonnull ProductDto> list(Pageable pageable, @Nullable Filter filter) {
-        // Basic list implementation that only covers pagination,
-        // but not sorting or filtering
-        Page<Product> products = productRepository.findAll(pageable);
-        return products.stream().map(ProductDto::fromEntity).toList();
     }
 
     @Override
