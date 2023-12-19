@@ -337,6 +337,7 @@ public class AdminView extends VerticalLayout {
 }
 ----
 
+
 === Annotation Inheritance & Overrides
 
 As shown in the example here, the security annotations are inherited from the closest parent class that has them. Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes.
@@ -362,6 +363,46 @@ By design, the annotations aren't read from parent layouts or parent views. This
 - `RolesAllowed` overrides `PermitAll`.
 
 Specifying more than one of the above access annotations on a view class isn't recommended. Besides the fact that there's probably no logical reason to do so, it would be confusing.
+
+
+== Authenticated User Information
+
+To access the authenticated user's information (e.g., name, email and roles), Vaadin Flow provides the [classname]`AuthenticationContext` class that can be used to retrieve this information. [classname]`AuthenticationContext` is a Spring bean that can be injected as a view constructor argument. And [classname]`AuthenticationContext` can be useful for rendering the UI differently based on the user’s roles. 
+
+The following example shows how to use [classname]`AuthenticationContext` to retrieve the authenticated user's information and render a button only if the user has the `ADMIN` role:
+
+[source,java]
+----
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.H2;;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+import org.springframework.security.core.userdetails.UserDetails;
+
+@Route(value = "my-view")
+@AnonymousAllowed
+public class MyView extends VerticalLayout {
+
+    public MyView(AuthenticationContext authContext) {
+
+        add(new H2("Everyone can see this"));
+
+        // Ensure that the class used by getAuthenticatedUser() matches the object type created
+        // by the authentication providers used in Spring Security.
+        authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
+            boolean isAdmin = user.getAuthorities().stream()
+                    .anyMatch(grantedAuthority -> "ROLE_ADMIN".equals(grantedAuthority.getAuthority()));
+            if (isAdmin) {
+                add(new Button("Admin button"));
+            } else {
+                add(new H2("You are not an admin"));
+            }
+        });
+    }
+}
+----
 
 
 == Error Messages for Unauthorized Views

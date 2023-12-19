@@ -1,6 +1,6 @@
 ---
 title: Router Exception Handling
-description: How to handle router exceptions.
+description: Handling router exceptions with the Router class.
 order: 70
 ---
 
@@ -37,7 +37,7 @@ public class RouteNotFoundError extends Component
 }
 ----
 
-This returns a `404` HTTP response and displays the text specified in the parameter to [methodname]`setText()`. Exceptions are matched first by an exception cause, then by an exception super type.
+This returns a `404` HTTP response, and displays the text specified in the parameter to [methodname]`setText()`. Exceptions are matched first by an exception cause, then by an exception super type.
 
 The `404` [classname]`RouteNotFoundError` for [classname]`NotFoundException`, and `500` [classname]`InternalServerError` for [classname]`java.lang.Exception` are implemented by default.
 
@@ -66,7 +66,7 @@ public class CustomNotFoundTarget
 }
 ----
 
-Only extending instances are allowed. Exception targets may define [classname]`ParentLayouts`. [classname]`BeforeNavigationEvent` and [classname]`AfterNavigationEvent` are still sent, as in normal navigation. One exception may only have one exception handler.
+Only extending instances are allowed. Exception targets may define [classname]`ParentLayouts`. [classname]`BeforeNavigationEvent` and [classname]`AfterNavigationEvent` are still sent, as with normal navigation. One exception may only have one exception handler.
 
 The following example assumes an application `Dashboard` that collects and shows widgets to users. Only authenticated users are allowed to see protected widgets. If the collection instantiates a [classname]`ProtectedWidget` in error, the widget itself checks authentication on creation and throws an [classname]`CustomAccessDeniedException.`
 
@@ -117,6 +117,7 @@ public abstract class Widget extends Component {
 
 @Tag(Tag.DIV)
 @ParentLayout(MainLayout.class)
+@PermitAll
 public class AccessDeniedExceptionHandler
      extends Component
      implements HasErrorParameter<CustomAccessDeniedException>
@@ -137,12 +138,12 @@ public class CustomAccessDeniedException extends RuntimeException {
 }
 ----
 
+The example above uses [annotationname]`@PermitAll`, but [annotationname]`@RolesAllowed` can also be used. [annotationname]`@AnonymousAllowed` isn't recommended for error views handling access denied exceptions, as it exposes information about access restrictions to the anonymous users.
+
 
 == Rerouting to Error View
 
-It's possible to reroute from the [classname]`BeforeEnterEvent` and [classname]`BeforeLeaveEvent` to an error view registered for an exception.
-
-You can use one of the [methodname]`rerouteToError()` method overloads. You need only to add the exception class to the target, and a custom error message, where necessary.
+It's possible to reroute from the [classname]`BeforeEnterEvent` and [classname]`BeforeLeaveEvent` to an error view registered for an exception. You can use one of the [methodname]`rerouteToError()` method overloads. You need only to add the exception class to the target, and a custom error message, where necessary.
 
 This example shows how to reroute to an error view:
 
@@ -168,6 +169,7 @@ public class AuthenticationHandler
 ----
 
 If the rerouting method catches an exception, you can use the [methodname]`rerouteToError(Exception, String)` method to set a custom message.
+Re-routing to a custom access denial view is also possible with annotation [annotationname]`@AccessDeniedErrorRouter`. See <<{articles}/advanced/custom-error-handler#, Customizing Error Messages for Unauthorized Views>> for more on this.
 
 This next example shows a blog sample error view with a custom message:
 
@@ -210,6 +212,7 @@ public class BlogPost extends Component
 }
 
 @Tag(Tag.DIV)
+@AnonymousAllowed
 public class FaultyBlogPostHandler extends Component
   implements HasErrorParameter<IllegalArgumentException>
 {
@@ -227,11 +230,12 @@ public class FaultyBlogPostHandler extends Component
 }
 ----
 
+[interfacename]`HasErrorParameter` error view needs an access control annotation so that Vaadin Flow allows navigation to it. The example above uses [annotationname]`@AnonymousAllowed`, but [annotationname]`@PermitAll` or [annotationname]`@RolesAllowed` can also be used.
 
 [role="since:com.vaadin:vaadin@V24.3"]
 == Error View for Exception during RPC Call
 
-Vaadin Flow shows the registered error views if an exception occurs outside routing and rerouting. An example of this is when a button-click event is fired during a remote procedure call (i.e., RPC) on a server. 
+Vaadin Flow shows the registered error views if an exception occurs outside routing and rerouting. An example of this is when a button-click event is fired during a remote procedure call (i.e., RPC) on a server.
 
 This enables updating the current view content to a registered [interfacename]`HasErrorParameter<T extends Exception>` that handles the exact exception thrown for RPC events.
 

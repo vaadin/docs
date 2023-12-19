@@ -1,9 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  VerticalLayout,
-  type VerticalLayoutElement,
-} from '@hilla/react-components/VerticalLayout.js';
+import React, { useEffect, useState } from 'react';
+import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { ComboBox, type ComboBoxChangeEvent } from '@hilla/react-components/ComboBox.js';
 import { Button, type ButtonElement } from '@hilla/react-components/Button.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
@@ -17,7 +14,6 @@ type Profession = string;
 function Example() {
   const [items, setItems] = useState<Profession[]>([]);
   const [selectedProfessions, setSelectedProfessions] = useState<Profession[]>([]);
-  const layoutRef = useRef<VerticalLayoutElement>(null);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -25,15 +21,6 @@ function Example() {
       setItems(professions);
     });
   }, []);
-
-  useEffect(() => {
-    if (!layoutRef.current) {
-      return;
-    }
-    // Workaround for https://github.com/vaadin/web-components/issues/6301
-    const icons = layoutRef.current.querySelectorAll('vaadin-icon');
-    icons.forEach((icon) => icon.setAttribute('icon', icon.icon ?? ''));
-  }, [selectedProfessions]);
 
   const onChange = (event: ComboBoxChangeEvent<Profession>) => {
     const { value } = event.target;
@@ -55,7 +42,7 @@ function Example() {
 
   // tag::snippet[]
   return (
-    <VerticalLayout theme="spacing" ref={layoutRef}>
+    <VerticalLayout theme="spacing">
       <ComboBox label="Profession" items={items} onChange={onChange} />
 
       <HorizontalLayout style={{ flexWrap: 'wrap' }} theme="spacing">
