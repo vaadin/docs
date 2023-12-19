@@ -6,6 +6,7 @@ import { Tabs } from '@hilla/react-components/Tabs.js';
 import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
+import { Scroller } from '@hilla/react-components/Scroller.js';
 import { SideNav, type SideNavElement } from '@hilla/react-components/SideNav.js';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 import { SideNavItem } from '@hilla/react-components/SideNavItem.js';
@@ -21,12 +22,6 @@ const h2Style = {
   margin: 0,
 };
 
-const iconStyle: React.CSSProperties = {
-  boxSizing: 'border-box',
-  marginInlineEnd: 'var(--lumo-space-m)',
-  padding: 'var(--lumo-space-xs)',
-};
-
 function Example() {
   const sideNavRef = useRef<SideNavElement>(null);
 
@@ -39,45 +34,44 @@ function Example() {
   return (
     // tag::snippet[]
     <AppLayout primarySection="drawer">
-      <h1 slot="drawer" style={h1Style}>
+      <h1 style={h1Style} slot="drawer">
         MyApp
       </h1>
+      <Scroller slot="drawer" className="p-s">
+        <SideNav ref={sideNavRef}>
+          <SideNavItem>
+            <Icon icon="vaadin:dashboard" slot="prefix" />
+            Dashboard
+          </SideNavItem>
 
-      <SideNav slot="drawer" ref={sideNavRef}>
-        <SideNavItem>
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:dashboard" style={iconStyle} />
-            <span>Dashboard</span>
-          </a>
-        </SideNavItem>
-
-        <SideNavItem path="/orders">
-          <Icon icon="vaadin:cart" style={iconStyle} />
-          <span>Orders</span>
-        </SideNavItem>
-        {/* end::snippet[] */}
-        <SideNavItem path="/customers">
-          <Icon icon="vaadin:user-heart" style={iconStyle} />
-          <span>Customers</span>
-        </SideNavItem>
-        <SideNavItem path="/products">
-          <Icon icon="vaadin:package" style={iconStyle} />
-          <span>Products</span>
-        </SideNavItem>
-        <SideNavItem path="/documents">
-          <Icon icon="vaadin:records" style={iconStyle} />
-          <span>Documents</span>
-        </SideNavItem>
-        <SideNavItem path="/tasks">
-          <Icon icon="vaadin:list" style={iconStyle} />
-          <span>Tasks</span>
-        </SideNavItem>
-        <SideNavItem path="/analytics">
-          <Icon icon="vaadin:chart" style={iconStyle} />
-          <span>Analytics</span>
-        </SideNavItem>
-        {/* tag::snippet[] */}
-      </SideNav>
+          <SideNavItem path="/orders">
+            <Icon icon="vaadin:cart" slot="prefix" />
+            Orders
+          </SideNavItem>
+          {/* end::snippet[] */}
+          <SideNavItem path="/customers">
+            <Icon icon="vaadin:user-heart" slot="prefix" />
+            Customers
+          </SideNavItem>
+          <SideNavItem path="/products">
+            <Icon icon="vaadin:package" slot="prefix" />
+            Products
+          </SideNavItem>
+          <SideNavItem path="/documents">
+            <Icon icon="vaadin:records" slot="prefix" />
+            Documents
+          </SideNavItem>
+          <SideNavItem path="/tasks">
+            <Icon icon="vaadin:list" slot="prefix" />
+            Tasks
+          </SideNavItem>
+          <SideNavItem path="/analytics">
+            <Icon icon="vaadin:chart" slot="prefix" />
+            Analytics
+          </SideNavItem>
+          {/* tag::snippet[] */}
+        </SideNav>
+      </Scroller>
 
       <div slot="navbar">
         <div style={{ display: 'flex', alignItems: 'center' }}>

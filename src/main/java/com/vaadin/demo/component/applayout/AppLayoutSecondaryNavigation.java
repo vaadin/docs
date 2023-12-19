@@ -8,12 +8,15 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.Lumo;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-secondary-navigation")
 // tag::snippet[]
@@ -27,6 +30,9 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
 
         SideNav views = getPrimaryNavigation();
         views.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
+
+        Scroller scroller = new Scroller(views);
+        scroller.setClassName(LumoUtility.Padding.SMALL);
 
         DrawerToggle toggle = new DrawerToggle();
 
@@ -44,7 +50,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         viewHeader.setPadding(false);
         viewHeader.setSpacing(false);
 
-        addToDrawer(appTitle, views);
+        addToDrawer(appTitle, scroller);
         addToNavbar(viewHeader);
 
         setPrimarySection(Section.DRAWER);

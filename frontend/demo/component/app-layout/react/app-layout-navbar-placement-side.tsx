@@ -4,6 +4,7 @@ import { AppLayout } from '@hilla/react-components/AppLayout.js';
 import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
+import { Scroller } from '@hilla/react-components/Scroller.js';
 import { SideNav, type SideNavElement } from '@hilla/react-components/SideNav.js';
 import { SideNavItem } from '@hilla/react-components/SideNavItem.js';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
@@ -11,12 +12,6 @@ import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 const h1Style = {
   fontSize: 'var(--lumo-font-size-l)',
   margin: 0,
-};
-
-const iconStyle: React.CSSProperties = {
-  marginInlineEnd: 'var(--lumo-space-m)',
-  padding: 'var(--lumo-space-xs)',
-  boxSizing: 'border-box',
 };
 
 function Example() {
@@ -38,42 +33,44 @@ function Example() {
         Dashboard
       </h1>
 
-      <SideNav slot="drawer" ref={sideNavRef}>
-        <SideNavItem path="/dashboard">
-          <Icon icon="vaadin:dashboard" style={iconStyle} />
-          <span>Dashboard</span>
-        </SideNavItem>
+      <Scroller slot="drawer" className="p-s">
+        <SideNav ref={sideNavRef}>
+          <SideNavItem path="/dashboard">
+            <Icon icon="vaadin:dashboard" slot="prefix" />
+            Dashboard
+          </SideNavItem>
 
-        <SideNavItem path="/orders">
-          <Icon icon="vaadin:cart" style={iconStyle} />
-          <span>Orders</span>
-        </SideNavItem>
-        {/* end::snippet[] */}
-        <SideNavItem path="/customers">
-          <Icon icon="vaadin:user-heart" style={iconStyle} />
-          <span>Customers</span>
-        </SideNavItem>
+          <SideNavItem path="/orders">
+            <Icon icon="vaadin:cart" slot="prefix" />
+            Orders
+          </SideNavItem>
+          {/* end::snippet[] */}
+          <SideNavItem path="/customers">
+            <Icon icon="vaadin:user-heart" slot="prefix" />
+            Customers
+          </SideNavItem>
 
-        <SideNavItem path="/products">
-          <Icon icon="vaadin:package" style={iconStyle} />
-          <span>Products</span>
-        </SideNavItem>
+          <SideNavItem path="/products">
+            <Icon icon="vaadin:package" slot="prefix" />
+            Products
+          </SideNavItem>
 
-        <SideNavItem path="/documents">
-          <Icon icon="vaadin:records" style={iconStyle} />
-          <span>Documents</span>
-        </SideNavItem>
-        <SideNavItem path="/tasks">
-          <Icon icon="vaadin:list" style={iconStyle} />
-          <span>Tasks</span>
-        </SideNavItem>
+          <SideNavItem path="/documents">
+            <Icon icon="vaadin:records" slot="prefix" />
+            Documents
+          </SideNavItem>
+          <SideNavItem path="/tasks">
+            <Icon icon="vaadin:list" slot="prefix" />
+            Tasks
+          </SideNavItem>
 
-        <SideNavItem path="/analytics">
-          <Icon icon="vaadin:chart" style={iconStyle} />
-          <span>Analytics</span>
-        </SideNavItem>
-        {/* tag::snippet[] */}
-      </SideNav>
+          <SideNavItem path="/analytics">
+            <Icon icon="vaadin:chart" slot="prefix" />
+            Analytics
+          </SideNavItem>
+          {/* tag::snippet[] */}
+        </SideNav>
+      </Scroller>
     </AppLayout>
     // end::snippet[]
   );

@@ -4,9 +4,11 @@ import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("app-layout-basic")
@@ -23,7 +25,10 @@ public class AppLayoutBasic extends AppLayout {
         SideNav nav = getSideNav();
         nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
 
-        addToDrawer(nav);
+        Scroller scroller = new Scroller(nav);
+        scroller.setClassName(LumoUtility.Padding.SMALL);
+
+        addToDrawer(scroller);
         addToNavbar(toggle, title);
     }
     // end::snippet[]

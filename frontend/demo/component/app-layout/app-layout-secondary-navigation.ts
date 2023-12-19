@@ -7,6 +7,7 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/tabs';
+import '@vaadin/scroller';
 import '@vaadin/side-nav';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -24,12 +25,6 @@ export class Example extends LitElement {
     h2 {
       font-size: var(--lumo-font-size-l);
       margin: 0;
-    }
-
-    vaadin-icon {
-      box-sizing: border-box;
-      margin-inline-end: var(--lumo-space-m);
-      padding: var(--lumo-space-xs);
     }
   `;
 
@@ -49,38 +44,40 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-app-layout primary-section="drawer">
         <h1 slot="drawer">MyApp</h1>
-        <vaadin-side-nav slot="drawer" selected="1">
-          <vaadin-side-nav-item path="/dashboard">
-            <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
-            <span>Dashboard</span>
-          </vaadin-side-nav-item>
-          <vaadin-side-nav-item path="/orders">
-            <vaadin-icon icon="vaadin:cart"></vaadin-icon>
-            <span>Orders</span>
-          </vaadin-side-nav-item>
-          <!-- end::snippet[] -->
-          <vaadin-side-nav-item path="/customers">
-            <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
-            <span>Customers</span>
-          </vaadin-side-nav-item>
-          <vaadin-side-nav-item path="/products">
-            <vaadin-icon icon="vaadin:package"></vaadin-icon>
-            <span>Products</span>
-          </vaadin-side-nav-item>
-          <vaadin-side-nav-item path="/documents">
-            <vaadin-icon icon="vaadin:records"></vaadin-icon>
-            <span>Documents</span>
-          </vaadin-side-nav-item>
-          <vaadin-side-nav-item path="/tasks">
-            <vaadin-icon icon="vaadin:list"></vaadin-icon>
-            <span>Tasks</span>
-          </vaadin-side-nav-item>
-          <vaadin-side-nav-item path="/analytics">
-            <vaadin-icon icon="vaadin:chart"></vaadin-icon>
-            <span>Analytics</span>
-          </vaadin-side-nav-item>
-          <!-- tag::snippet[] -->
-        </vaadin-side-nav>
+        <vaadin-scroller slot="drawer" class="p-s">
+          <vaadin-side-nav>
+            <vaadin-side-nav-item path="/dashboard">
+              <vaadin-icon icon="vaadin:dashboard" slot="prefix"></vaadin-icon>
+              Dashboard
+            </vaadin-side-nav-item>
+            <vaadin-side-nav-item path="/orders">
+              <vaadin-icon icon="vaadin:cart" slot="prefix"></vaadin-icon>
+              Orders
+            </vaadin-side-nav-item>
+            <!-- end::snippet[] -->
+            <vaadin-side-nav-item path="/customers">
+              <vaadin-icon icon="vaadin:user-heart" slot="prefix"></vaadin-icon>
+              Customers
+            </vaadin-side-nav-item>
+            <vaadin-side-nav-item path="/products">
+              <vaadin-icon icon="vaadin:package" slot="prefix"></vaadin-icon>
+              Products
+            </vaadin-side-nav-item>
+            <vaadin-side-nav-item path="/documents">
+              <vaadin-icon icon="vaadin:records" slot="prefix"></vaadin-icon>
+              Documents
+            </vaadin-side-nav-item>
+            <vaadin-side-nav-item path="/tasks">
+              <vaadin-icon icon="vaadin:list" slot="prefix"></vaadin-icon>
+              Tasks
+            </vaadin-side-nav-item>
+            <vaadin-side-nav-item path="/analytics">
+              <vaadin-icon icon="vaadin:chart" slot="prefix"></vaadin-icon>
+              Analytics
+            </vaadin-side-nav-item>
+            <!-- tag::snippet[] -->
+          </vaadin-side-nav>
+        </vaadin-scroller>
         <vaadin-vertical-layout slot="navbar">
           <vaadin-horizontal-layout style="align-items: center;">
             <vaadin-drawer-toggle></vaadin-drawer-toggle>
