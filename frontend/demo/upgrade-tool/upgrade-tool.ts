@@ -14,7 +14,7 @@ import { selectRenderer } from '@vaadin/select/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const VAADIN_VERSIONS: Record<string, string> = {
-  14: '14.10.12',
+  14: '14.11.0',
   15: '15.0.6',
   16: '16.0.5',
   17: '17.0.11',
