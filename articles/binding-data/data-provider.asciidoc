@@ -325,6 +325,39 @@ A count callback has to be provided to get a similar user experience to that of 
 dataView.setItemCountCallback(q -> getPersonService().getPersonCount());
 ----
 
+=== Callback for an item index
+
+When using lazy data binding, the component can't know the index of the item in the data set, if it's not loaded yet. Index is needed for example when you want to scroll to item's position in the component. [methodname]`setItemIndexProvider(ItemIndexProvider)` method in [classname]`LazyDataView` is used to provide a callback to get the index of the item in the data set.
+
+Example below sets item index provider that uses a service that uses Spring Data repository to fetch all persons and finds the index of the matching item in the list. This is not optimal solution with a large data set, but it shows how to implement the callback. Callback should always make sure that the data set used to find the item index matches the component's data set with same sorting and filtering:
+
+[source,java]
+----
+dataView.setItemIndexProvider((item, query) -> {
+  if(item == null) {
+    return null;
+  }
+  AtomicInteger index = new AtomicInteger();
+  return getPersonService().list(
+                  PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+          .stream()
+          .peek(v -> index.incrementAndGet())
+          .anyMatch(item::equals) ?
+          index.get() - 1 : null;
+});
+----
+
+Callback gives parameters of the target item and the [classname]`Query` object to fetch the index. Query is prepared for fetching all items, including filter and sorting. The returned index is the index of the item in the filtered and sorted data set. If the item is not found, null is expected as a return value.
+
+There will be inconsistent index if the data set for the returned index is different from the component's data set. Changing the data set of either side during this call may cause inconsistent index as a result.
+
+Index of an item is retrieved with [methodname]`getItemIndex(Object)` method in [classname]`DataView`. It works with lazy data binding only when item index provider is set. Otherwise, it throws [classname]`UnsupportedOperationException`.
+
+Example of a call that scrolls to the item's position in the component:
+[source,java]
+----
+grid.scrollToIndex(dataView.getItemIndex(item));
+----
 
 == Accessing Currently Shown Items
 
