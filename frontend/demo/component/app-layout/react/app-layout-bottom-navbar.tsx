@@ -20,10 +20,6 @@ const iconStyle = {
   width: 'var(--lumo-icon-size-s)',
 };
 
-const tabsStyle = {
-  width: '100%',
-};
-
 function Example() {
   const appLayoutRef = useRef<AppLayoutElement>(null);
   const horizontalLayoutRef = useRef<HorizontalLayoutElement>(null);
@@ -49,19 +45,27 @@ function Example() {
 
       <HorizontalLayout
         slot="navbar touch-optimized"
-        className="navigation"
+        className="w-full justify-evenly self-stretch"
         ref={horizontalLayoutRef}
       >
-        <a href="/dashboard" aria-label="Dashboard">
+        <a
+          href="/dashboard"
+          aria-label="Dashboard"
+          className="text-secondary px-l flex items-center"
+        >
           <Icon icon="vaadin:dashboard" style={iconStyle} />
         </a>
-        <a href="/orders" aria-label="Orders">
+        <a href="/orders" aria-label="Orders" className="text-secondary px-l flex items-center">
           <Icon icon="vaadin:cart" style={iconStyle} />
         </a>
-        <a href="/customers" aria-label="Customers">
+        <a
+          href="/customers"
+          aria-label="Customers"
+          className="text-secondary px-l flex items-center"
+        >
           <Icon icon="vaadin:user-heart" style={iconStyle} />
         </a>
-        <a href="/products" aria-label="Products">
+        <a href="/products" aria-label="Products" className="text-secondary px-l flex items-center">
           <Icon icon="vaadin:package" style={iconStyle} />
         </a>
       </HorizontalLayout>

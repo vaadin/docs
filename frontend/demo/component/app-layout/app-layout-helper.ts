@@ -4,11 +4,11 @@ export function patchAppLayoutNavigation(element: HTMLElement) {
     links.forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const current = element.querySelector('.active');
+        const current = element.querySelector('.text-primary');
         if (current) {
-          current.classList.remove('active');
+          current.classList.remove('text-primary');
         }
-        link.classList.add('active');
+        link.classList.add('text-primary');
       });
     });
     links[0].click();

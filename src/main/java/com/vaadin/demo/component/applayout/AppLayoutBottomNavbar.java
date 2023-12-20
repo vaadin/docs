@@ -10,6 +10,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-bottom-navbar")
 // tag::snippet[]
@@ -40,9 +41,11 @@ public class AppLayoutBottomNavbar extends AppLayout {
 
     private HorizontalLayout getNavigation() {
             HorizontalLayout navigation = new HorizontalLayout();
+            navigation.addClassNames(LumoUtility.Width.FULL,
+                            LumoUtility.JustifyContent.EVENLY,
+                            LumoUtility.AlignSelf.STRETCH);
             navigation.setPadding(false);
             navigation.setSpacing(false);
-            navigation.addClassName("navigation");
             navigation.add(createLink(VaadinIcon.DASHBOARD, "Dashboard"),
                             createLink(VaadinIcon.CART, "Orders"),
                             createLink(VaadinIcon.USER_HEART, "Customers"),
@@ -55,7 +58,13 @@ public class AppLayoutBottomNavbar extends AppLayout {
             RouterLink link = new RouterLink();
             // Demo has no routes
             // link.setRoute(viewClass.java);
+            link.addClassNames(LumoUtility.Display.FLEX,
+                            LumoUtility.AlignItems.CENTER,
+                            LumoUtility.Padding.Horizontal.LARGE,
+                            LumoUtility.TextColor.SECONDARY);
             link.add(icon.create());
+            // hidden-source-line: workaround to make text color work
+            link.getElement().setAttribute("href", viewName); // hidden-source-line
             link.getElement().setAttribute("aria-label", viewName);
             return link;
     }
