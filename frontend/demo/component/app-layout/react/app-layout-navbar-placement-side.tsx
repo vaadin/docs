@@ -1,24 +1,29 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AppLayout } from '@hilla/react-components/AppLayout.js';
 import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
-import { Tabs } from '@hilla/react-components/Tabs.js';
-import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
+import { Scroller } from '@hilla/react-components/Scroller.js';
+import { SideNav, type SideNavElement } from '@hilla/react-components/SideNav.js';
+import { SideNavItem } from '@hilla/react-components/SideNavItem.js';
+import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 
 const h1Style = {
   fontSize: 'var(--lumo-font-size-l)',
   margin: 0,
 };
 
-const iconStyle: React.CSSProperties = {
-  marginInlineEnd: 'var(--lumo-space-m)',
-  padding: 'var(--lumo-space-xs)',
-  boxSizing: 'border-box',
-};
-
 function Example() {
+  const sideNavRef = useRef<SideNavElement>(null);
+
+  useEffect(() => {
+    if (sideNavRef.current) {
+      // Example-specific workaround
+      patchSideNavNavigation(sideNavRef.current);
+    }
+  }, []);
+
   return (
     // tag::snippet[]
     <AppLayout primarySection="drawer">
@@ -28,63 +33,44 @@ function Example() {
         Dashboard
       </h1>
 
-      <Tabs slot="drawer" orientation="vertical">
-        <Tab>
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:dashboard" style={iconStyle} />
+      <Scroller slot="drawer" className="p-s">
+        <SideNav ref={sideNavRef}>
+          <SideNavItem path="/dashboard">
+            <Icon icon="vaadin:dashboard" slot="prefix" />
+            Dashboard
+          </SideNavItem>
 
-            <span>Dashboard</span>
-          </a>
-        </Tab>
+          <SideNavItem path="/orders">
+            <Icon icon="vaadin:cart" slot="prefix" />
+            Orders
+          </SideNavItem>
+          {/* end::snippet[] */}
+          <SideNavItem path="/customers">
+            <Icon icon="vaadin:user-heart" slot="prefix" />
+            Customers
+          </SideNavItem>
 
-        <Tab>
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:cart" style={iconStyle} />
+          <SideNavItem path="/products">
+            <Icon icon="vaadin:package" slot="prefix" />
+            Products
+          </SideNavItem>
 
-            <span>Orders</span>
-          </a>
-        </Tab>
-        {/* end::snippet[] */}
-        <Tab>
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:user-heart" style={iconStyle} />
+          <SideNavItem path="/documents">
+            <Icon icon="vaadin:records" slot="prefix" />
+            Documents
+          </SideNavItem>
+          <SideNavItem path="/tasks">
+            <Icon icon="vaadin:list" slot="prefix" />
+            Tasks
+          </SideNavItem>
 
-            <span>Customers</span>
-          </a>
-        </Tab>
-
-        <Tab>
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:package" style={iconStyle} />
-
-            <span>Products</span>
-          </a>
-        </Tab>
-
-        <Tab>
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:records" style={iconStyle} />
-
-            <span>Documents</span>
-          </a>
-        </Tab>
-        <Tab>
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:list" style={iconStyle} />
-
-            <span>Tasks</span>
-          </a>
-        </Tab>
-
-        <Tab>
-          <a tabIndex={-1}>
-            <Icon icon="vaadin:chart" style={iconStyle} />
-
-            <span>Analytics</span>
-          </a>
-        </Tab>
-        {/* tag::snippet[] */}
-      </Tabs>
+          <SideNavItem path="/analytics">
+            <Icon icon="vaadin:chart" slot="prefix" />
+            Analytics
+          </SideNavItem>
+          {/* tag::snippet[] */}
+        </SideNav>
+      </Scroller>
     </AppLayout>
     // end::snippet[]
   );
