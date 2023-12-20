@@ -2,12 +2,12 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect, useRef } from 'react';
 import { AppLayout } from '@hilla/react-components/AppLayout.js';
 import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
+import { Scroller } from '@hilla/react-components/Scroller.js';
 import { SideNav, type SideNavElement } from '@hilla/react-components/SideNav.js';
 import { SideNavItem } from '@hilla/react-components/SideNavItem.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
-import { Scroller } from '@hilla/react-components/Scroller.js';
 
 const h1Style = {
   fontSize: 'var(--lumo-font-size-l)',
@@ -31,7 +31,7 @@ function Example() {
       <h1 slot="navbar" style={h1Style}>
         MyApp
       </h1>
-      <Scroller slot="drawer">
+      <Scroller slot="drawer" className="p-s">
         <SideNav ref={sideNavRef}>
           <SideNavItem path="/dashboard">
             <Icon icon="vaadin:dashboard" slot="prefix" />
