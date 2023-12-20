@@ -2,14 +2,17 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect, useRef } from 'react';
 import { AppLayout } from '@hilla/react-components/AppLayout.js';
 import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
-import { Tabs } from '@hilla/react-components/Tabs.js';
-import { Tab } from '@hilla/react-components/Tab.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
 import { Scroller } from '@hilla/react-components/Scroller.js';
 import { SideNav, type SideNavElement } from '@hilla/react-components/SideNav.js';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 import { SideNavItem } from '@hilla/react-components/SideNavItem.js';
+import {
+  HorizontalLayout,
+  type HorizontalLayoutElement,
+} from '@hilla/react-components/HorizontalLayout.js';
+import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {
   fontSize: 'var(--lumo-font-size-l)',
@@ -24,11 +27,17 @@ const h2Style = {
 
 function Example() {
   const sideNavRef = useRef<SideNavElement>(null);
+  const horizontalLayoutRef = useRef<HorizontalLayoutElement>(null);
 
   useEffect(() => {
     if (sideNavRef.current) {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
+    }
+
+    if (horizontalLayoutRef.current) {
+      // Example-specific workaround
+      patchAppLayoutNavigation(horizontalLayoutRef.current);
     }
   }, []);
   return (
@@ -79,23 +88,38 @@ function Example() {
           <h2 style={h2Style}>Orders</h2>
         </div>
 
-        <Tabs>
-          <Tab>
-            <a tabIndex={-1}>All</a>
-          </Tab>
-
-          <Tab>
-            <a tabIndex={-1}>Open</a>
-          </Tab>
+        <HorizontalLayout ref={horizontalLayoutRef} className="h-m justify-center gap-s">
+          <a
+            href="/all"
+            className="flex items-center px-m text-secondary font-medium"
+            style={{ textDecoration: 'none' }}
+          >
+            All
+          </a>
+          <a
+            href="/open"
+            className="flex items-center px-m text-secondary font-medium"
+            style={{ textDecoration: 'none' }}
+          >
+            Open
+          </a>
           {/* end::snippet[] */}
-          <Tab>
-            <a tabIndex={-1}>Completed</a>
-          </Tab>
-          <Tab>
-            <a tabIndex={-1}>Cancelled</a>
-          </Tab>
+          <a
+            href="/completed"
+            className="flex items-center px-m text-secondary font-medium"
+            style={{ textDecoration: 'none' }}
+          >
+            Completed
+          </a>
+          <a
+            href="/cancelled"
+            className="flex items-center px-m text-secondary font-medium"
+            style={{ textDecoration: 'none' }}
+          >
+            Cancelled
+          </a>
           {/* tag::snippet[] */}
-        </Tabs>
+        </HorizontalLayout>
       </div>
     </AppLayout>
     // end::snippet[]

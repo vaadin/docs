@@ -12,10 +12,8 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
-import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.Lumo;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-secondary-navigation")
@@ -40,7 +38,9 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         viewTitle.getStyle().set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
 
-        Tabs subViews = getSecondaryNavigation();
+        HorizontalLayout subViews = getSecondaryNavigation();
+        subViews.getElement()
+                        .executeJs("window.patchAppLayoutNavigation(this);"); // hidden-source-line
 
         HorizontalLayout wrapper = new HorizontalLayout(toggle, viewTitle);
         wrapper.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -76,11 +76,31 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
             return sideNav;
     }
 
-    private Tabs getSecondaryNavigation() {
-        Tabs tabs = new Tabs();
-        tabs.add(new Tab("All"), new Tab("Open"), new Tab("Completed"),
-                new Tab("Cancelled"));
-        return tabs;
+    private HorizontalLayout getSecondaryNavigation() {
+            HorizontalLayout navigation = new HorizontalLayout();
+            navigation.addClassNames(LumoUtility.JustifyContent.CENTER,
+                            LumoUtility.Gap.SMALL, LumoUtility.Height.MEDIUM);
+            navigation.add(createLink("All"), createLink("Open"),
+                            createLink("Completed"), createLink("Cancelled"));
+            return navigation;
+    }
+
+    private RouterLink createLink(String viewName) {
+            RouterLink link = new RouterLink();
+            link.add(viewName);
+            // Demo has no routes
+            // link.setRoute(viewClass.java);
+
+            link.addClassNames(LumoUtility.Display.FLEX,
+                            LumoUtility.AlignItems.CENTER,
+                            LumoUtility.Padding.Horizontal.MEDIUM,
+                            LumoUtility.TextColor.SECONDARY,
+                            LumoUtility.FontWeight.MEDIUM);
+            link.getStyle().set("text-decoration", "none");
+            // hidden-source-line: workaround to make text color work
+            link.getElement().setAttribute("href", viewName); // hidden-source-line
+
+            return link;
     }
 
     public static class Exporter extends // hidden-source-line

@@ -6,12 +6,12 @@ import '@vaadin/app-layout/vaadin-drawer-toggle';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import '@vaadin/tabs';
 import '@vaadin/scroller';
 import '@vaadin/side-nav';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
+import { patchAppLayoutNavigation } from './app-layout-helper';
 
 @customElement('app-layout-secondary-navigation')
 export class Example extends LitElement {
@@ -35,8 +35,10 @@ export class Example extends LitElement {
     return root;
   }
 
-  /* prettier-ignore */ protected firstUpdated() { // hidden-source-line
+  /* prettier-ignore */ protected firstUpdated() {
+    // hidden-source-line
     patchSideNavNavigation(this.shadowRoot!.querySelector('vaadin-side-nav')!); // hidden-source-line
+    patchAppLayoutNavigation(this.shadowRoot!.querySelector('#navigation')!); // hidden-source-line
   } // hidden-source-line
 
   protected override render() {
@@ -83,22 +85,34 @@ export class Example extends LitElement {
             <vaadin-drawer-toggle></vaadin-drawer-toggle>
             <h2>Orders</h2>
           </vaadin-horizontal-layout>
-          <vaadin-tabs>
-            <vaadin-tab>
-              <a tabindex="-1">All</a>
-            </vaadin-tab>
-            <vaadin-tab>
-              <a tabindex="-1">Open</a>
-            </vaadin-tab>
+          <vaadin-horizontal-layout id="navigation" class="h-m justify-center gap-s">
+            <a
+              href="/all"
+              class="flex items-center px-m text-secondary font-medium"
+              style="text-decoration: none"
+              >All</a
+            >
+            <a
+              href="/open"
+              class="flex items-center px-m text-secondary font-medium"
+              style="text-decoration: none"
+              >Open</a
+            >
             <!-- end::snippet[] -->
-            <vaadin-tab>
-              <a tabindex="-1">Completed</a>
-            </vaadin-tab>
-            <vaadin-tab>
-              <a tabindex="-1">Cancelled</a>
-            </vaadin-tab>
+            <a
+              href="/completed"
+              class="flex items-center px-m text-secondary font-medium"
+              style="text-decoration: none"
+              >Completed</a
+            >
+            <a
+              href="/cancelled"
+              class="flex items-center px-m text-secondary font-medium"
+              style="text-decoration: none"
+              >Cancelled</a
+            >
             <!-- tag::snippet[] -->
-          </vaadin-tabs>
+          </vaadin-horizontal-layout>
         </vaadin-vertical-layout>
       </vaadin-app-layout>
       <!-- end::snippet[] -->
