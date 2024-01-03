@@ -3,10 +3,10 @@ package com.vaadin.demo.component.applayout;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-navbar")
 // tag::snippet[]
@@ -18,28 +18,39 @@ public class AppLayoutNavbar extends AppLayout {
                 .set("left", "var(--lumo-space-l)").set("margin", "0")
                 .set("position", "absolute");
 
-        Tabs tabs = getTabs();
+        HorizontalLayout navigation = getNavigation();
+        navigation.getElement()
+                .executeJs("window.patchAppLayoutNavigation(this);"); // hidden-source-line
 
-        addToNavbar(title, tabs);
+        addToNavbar(title, navigation);
     }
     // end::snippet[]
 
-    private Tabs getTabs() {
-        Tabs tabs = new Tabs();
-        tabs.getStyle().set("margin", "auto");
-        tabs.add(createTab("Dashboard"), createTab("Orders"),
-                createTab("Customers"), createTab("Products"));
-        return tabs;
+    private HorizontalLayout getNavigation() {
+        HorizontalLayout navigation = new HorizontalLayout();
+        navigation.addClassNames(LumoUtility.JustifyContent.CENTER,
+                LumoUtility.Gap.SMALL, LumoUtility.Height.MEDIUM,
+                LumoUtility.Width.FULL);
+        navigation.add(createLink("Dashboard"), createLink("Orders"),
+                createLink("Customers"), createLink("Products"));
+        return navigation;
     }
 
-    private Tab createTab(String viewName) {
+    private RouterLink createLink(String viewName) {
         RouterLink link = new RouterLink();
         link.add(viewName);
         // Demo has no routes
         // link.setRoute(viewClass.java);
-        link.setTabIndex(-1);
 
-        return new Tab(link);
+        link.addClassNames(LumoUtility.Display.FLEX,
+                LumoUtility.AlignItems.CENTER,
+                LumoUtility.Padding.Horizontal.MEDIUM,
+                LumoUtility.TextColor.SECONDARY, LumoUtility.FontWeight.MEDIUM);
+        link.getStyle().set("text-decoration", "none");
+        // hidden-source-line: workaround to make text color work
+        link.getElement().setAttribute("href", viewName); // hidden-source-line
+
+        return link;
     }
 
     public static class Exporter extends DemoExporter<AppLayoutNavbar> { // hidden-source-line
