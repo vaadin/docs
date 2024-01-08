@@ -2,6 +2,7 @@ package com.vaadin.demo.fusion.crud;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import dev.hilla.BrowserCallable;
+import dev.hilla.Nonnull;
 import dev.hilla.Nullable;
 import dev.hilla.crud.JpaFilterConverter;
 import dev.hilla.crud.ListService;
@@ -25,7 +26,8 @@ public class ProductDtoListService implements ListService<ProductDto> {
     }
 
     @Override
-    public List<ProductDto> list(Pageable pageable, @Nullable Filter filter) {
+    @Nonnull
+    public List<@Nonnull ProductDto> list(Pageable pageable, @Nullable Filter filter) {
         // Use the Hilla JpaFilterConverter to create a JPA specification from the filter
         Specification<Product> spec = filter != null
                 ? jpaFilterConverter.toSpec(filter, Product.class)
