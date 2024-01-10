@@ -1,0 +1,183 @@
+---
+title: npm/pnpm/bun
+description: Configuring the frontend package manager.
+order: 20
+---
+
+
+= Configuring npm/pnpm/bun
+
+https://docs.npmjs.com/cli/v8/commands/npm[npm] is the recommended and default package manager for Vaadin projects. This page explains how to configure npm and how to change to an alternative package manager (i.e., pnpm or bun).
+
+
+== Install a Custom Package
+
+To install a custom frontend package into your project with `npm`, run `npm i xxx`. For example, to add the `mobx` package as a dependency in [filename]`package.json` as well as install it into `node_modules`, run the following command in the project directory:
+
+[source,terminal]
+----
+npm i mobx
+----
+
+[NOTE]
+Vaadin expects transitive platform dependencies to be available directly under `node_modules`.
+Vaadin uses the `npm` https://docs.npmjs.com/cli/v8/configuring-npm/package-json#overrides[overrides feature] (since `npm` 8.3.0) to lock the transitive platform dependencies versions.
+
+
+== Switch Among npm, pnpm & bun
+
+`npm` is used as the default frontend package manager. Vaadin also supports using https://pnpm.io[_pnpm_] (also known as, _performant npm_). To switch to `pnpm`, you can set the `vaadin.pnpm.enable` system property to `true`.
+
+When using `pnpm`, the framework installs it locally using `npm` if it isn't installed globally. The [filename]`package-lock.json` file that's used by `npm` is incompatible with `pnpm` and is removed automatically if `pnpm` is used. `pnpm` uses the [filename]`pnpm-lock.yaml` file instead of [filename]`package-lock.json`. Any custom dependency configurations should go to [filename]`pnpm-lock.yaml`.
+
+Using https://bun.sh[_bun_] is also supported by Vaadin. With bun, packages are cached locally by default and linked -- instead of downloaded -- for every project. This results in reduced disk space usage, and faster recurring builds compared to npm. To switch to `bun`, you can set the `vaadin.bun.enable` system property to `true`.
+
+When using bun, a https://bun.sh/docs/install/lockfile[_binary lockfile_] named [filename]`bun.lockb` is used when `bun install` is run. This lockfile is not included in or used from Vaadin development bundle.
+
+[NOTE]
+Vaadin does not support automatic installation of bun - instead please follow the https://bun.sh/package-manager[_installation instructions_].
+
+
+=== Switching in a Spring Boot Project
+
+For a Spring Boot-based project, you can add `vaadin.pnpm.enable = true` or `vaadin.bun.enable = true` to the [filename]`application.properties` file.
+
+
+=== Switching in a Plain Java or JavaEE Project
+
+For a plain Java or a JavaEE-based project, you can set the `pnpmEnable` or `bunEnable` configuration property inside the `vaadin-maven-plugin`.
+
+.Enable pnpm (plain Java / JavaEE)
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-maven-plugin</artifactId>
+    <version>${project.version}</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>prepare-frontend</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <pnpmEnable>true</pnpmEnable>
+    </configuration>
+</plugin>
+----
+
+.Enable bun (plain Java / JavaEE)
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-maven-plugin</artifactId>
+    <version>${project.version}</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>prepare-frontend</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <bunEnable>true</bunEnable>
+    </configuration>
+</plugin>
+----
+
+Alternatively, you can use the Servlet 3.0 `@WebServlet` annotation:
+
+.Enable pnpm (via annotation)
+[source,java]
+----
+@WebServlet(urlPatterns = "/*", name = "myservlet", asyncSupported = true, loadOnStartup = 1,
+  initParams = { @WebInitParam(name = "pnpm.enable", value = "true") })
+public class CustomServlet extends VaadinServlet {
+}
+----
+
+.Enable bun (via annotation)
+[source,java]
+----
+@WebServlet(urlPatterns = "/*", name = "myservlet", asyncSupported = true, loadOnStartup = 1,
+  initParams = { @WebInitParam(name = "bun.enable", value = "true") })
+public class CustomServlet extends VaadinServlet {
+}
+----
+
+or use the traditional [filename]`web.xml` file:
+
+.Enable pnpm (via web.xml)
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app
+  id="WebApp_ID" version="3.0"
+  xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+  <servlet>
+    <servlet-name>myservlet</servlet-name>
+    <servlet-class>
+        com.vaadin.flow.server.VaadinServlet
+    </servlet-class>
+    <load-on-startup>1</load-on-startup>
+
+    <init-param>
+      <param-name>pnpm.enable</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>myservlet</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+</web-app>
+----
+
+.Enable bun (via web.xml)
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app
+  id="WebApp_ID" version="3.0"
+  xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+  <servlet>
+    <servlet-name>myservlet</servlet-name>
+    <servlet-class>
+        com.vaadin.flow.server.VaadinServlet
+    </servlet-class>
+    <load-on-startup>1</load-on-startup>
+
+    <init-param>
+      <param-name>bun.enable</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>myservlet</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+</web-app>
+----
+
+For more about how to set properties, see <<{articles}/configuration/properties#,Configuration Properties>>.
+
+
+[discussion-id]`B8A479EF-56AF-4F64-A52B-A2C01F1E5991`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
