@@ -1,0 +1,131 @@
+---
+title: Quick Start Guide
+order: 2
+---
+
+
+[[ce.tutorial]]
+= Getting Started with Collaboration Kit
+
+This guide shows the basic steps to set up Collaboration Kit in a Vaadin project, and then add the following collaboration features to a simple form:
+
+- Users can see the avatars of all who are using the application;
+- When someone enters a new value to a field, it's propagated to all users; and
+- Users can see who is editing each field (i.e., field highlight).
+
+.License Required for Production
+[IMPORTANT]
+Collaboration Kit follows a runtime billing model, based on the number of users using collaborative features in an application. Developers can start with a free 50-users-per-month license, or request a commercial license with a larger quota of end users. See the <<going-to-production#, Production Configuration>> section to learn how to download and install a license.
+
+
+[[ce.tutorial.setup]]
+== Preparing the Application
+
+First, you'll have to set up a Vaadin Project. You can download a new Vaadin project from `https://start.vaadin.com/?preset=collaboration`.
+
+[[ce.tutorial.push]]
+=== Enabling Server Push
+
+Add `@Push` annotation on top of your `AppShellConfigurator`. This enables the server to propagate updates between clients in real time. In Spring applications, you can implement the interface in your main application class.
+
+[source,java]
+----
+@Push
+@SpringBootApplication
+public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+
+    public static void main(String... args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+----
+
+.Manual Push Mode Not Supported
+[NOTE]
+If you configure push to use `PushMode.MANUAL`, Collaboration Kit won't work because it doesn't manually invoke `UI.push()` to send the user interactions to the other connected users. Collaboration Kit works, though, with any of the transport modes for push.
+
+
+[[ce.tutorial.add_collaborative_features]]
+== Adding Collaboration Features
+
+This tutorial shows how to build a form in which users can edit the name and date of birth of a person.
+
+Consider a `Person` bean class such as follows:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/TutorialView.java[tags=person-bean,indent=0]
+----
+
+
+=== Creating a Simple View
+
+To start writing the actual application, create a view with a text field and a date picker, but not with any collaborative functionality -- not at the start.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/TutorialView.java[tags=tutorial;add-components;!*,indent=0]
+----
+
+
+=== Providing User Information
+
+The `UserInfo` class represents a user of a collaborative application. It has properties such as `name` and `image`, which are used to display information about who else is currently viewing the same view or editing a field.
+
+The user identifier should be the unique identifier of the currently logged-in user. This tutorial uses an identifier based on the UI instance, instead of a user-based identifier. This allows simulating multiple users by opening the view in multiple browser tabs.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/TutorialView.java[tags=user-info,indent=0]
+----
+
+The name is displayed to other users when editing a field, and the user's avatar contains an abbreviation of the name -- since the above example doesn't provide a user image.
+
+`UserInfo` also has a `colorIndex` property. It defines which color is used in the user's avatar, as well as in the field highlight when editing a field. This property is generated automatically; you don't have to set it.
+
+
+=== Adding User Avatars
+
+To display the avatars of all users who are currently using the application, create a `CollaborationAvatarGroup` component.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/TutorialView.java[tags=avatar-group,indent=0]
+----
+
+First, the components need the local user's information -- the `UserInfo` object which was created in the earlier example -- to know how to render the user's avatar.
+
+As a second constructor argument, the component needs a topic identifier. A topic is similar to a chat room -- it has an identifier that's unique in the context of the application. Participating members receive all updates made to any topic in which they're participating. Topic identifiers are freeform strings (e.g., `"app"` or `"contract-126-address"`). In this example, there is only one topic on which to work, so you can use any hard-coded topic identifier.
+
+If the application was expanded so that there would be a view for editing person entities, you'd need to have unique topic identifiers for each entity. For example, you could have "person/123" as a topic identifier, where "123" would be different for each person. In that case, the same `CollaborationAvatarGroup` component could be reused for editing different persons by changing the topic with the `setTopic()` method.
+
+
+=== Adding Field Collaboration
+
+To enable collaboration with the text field and date picker components, use a class called `CollaborationBinder`. It extends the functionality of the `Binder` class, which binds values between Java beans and Vaadin field components. Read <<{articles}/flow/binding-data/components-binder#,Binding Data to Forms>> to learn more about the binder.
+
+To initialize a collaboration binder, you'll need to provide the type that's edited and the local user's information. After initializing, use the regular binder methods to bind the person object's name property to the text field component, and the date of birth property to the date picker component.
+
+Finally, set the topic on which to connect -- the same as for `CollaborationAvatarGroup` -- and a supplier for the initial bean value that populates the fields when the first user connects to the topic. The supplier could load the editable item from a backend, but in this example it populates the fields with an empty `Person` object:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/TutorialView.java[tags=binder,indent=0]
+----
+
+The example propagates the field values among users, as well as displays the currently focused user with the field highlight.
+
+
+[[ce.tutorial.run]]
+== Running the Application
+
+Follow the instructions in the application's `README.md` file to start it. Then open `http://localhost:8080/` in multiple browser tabs and test the application: notice the avatars; focus the fields and notice the field highlight; enter new values and notice how the fields update in the other tabs.
+
+
+[discussion-id]`5F96993D-DDC3-48F8-A2FE-D49ABB4C1865`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

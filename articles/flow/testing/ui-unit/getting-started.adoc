@@ -1,0 +1,223 @@
+---
+title: Getting Started
+description: Tutorial to create and run a UI unit test.
+order: 10
+---
+
+
+= Getting Started with UI Unit Testing
+
+To start creating UI unit tests in an existing project, you need to add the TestBench UI Unit Testing dependency (`com.vaadin`/`vaadin-testbench-unit`) with a `test` scope. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, all you need to do is add the following:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="JUnit 4"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-testbench-unit</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+JUnit 5 support is added in Vaadin 24.
+
+[source,xml]
+----
+<source-info group="JUnit 5"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-testbench-unit-junit5</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+--
+
+
+== First UI Unit Test
+
+To start unit testing your Vaadin UIs, create a class that extends [classname]`UIUnitTest` (for JUnit 5) or [classname]`UIUnit4Test` (for JUnit 4). The base class instantiates a UI along with all the necessary Vaadin environment, which is available to your test methods.
+
+.Testing with Spring
+[TIP]
+This guide shows how to implement UI unit tests in plain Java projects. For information about testing with Spring or Spring Boot, consult the <<spring#, UI Unit Testing with Spring>>.
+
+
+[source,java]
+----
+class HelloWorldViewTest extends UIUnitTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        // TextField and Button are available as package protected in the view
+        // So we can use those from there
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        // Notification isn't referenced in the view so we need to use the component
+        // query API to find the notification that opened
+        Notification notification = $(Notification.class).first();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+
+}
+----
+
+By default, the base class scans whole classpath for routes and error views, but this behavior can be changed for a faster bootstrap. To restrict the scan to specific packages and their sub-packages, annotate the test class with [annotationname]`ViewPackages` and specify the package by filling the [methodname]`classes()` array with classes that are members of the desired packages, or by providing the packages with fully qualified names in the [methodname]`packages()` property. Using [methodname]`classes()` is the preferred way, since it plays well with IDEs refactoring when moving classes to different packages.
+
+.Package Scan Examples
+[source,java]
+----
+@ViewPackages(classes={ MyView.class, OtherView.class })
+class MyViewTest extends UIUnitTest {
+}
+
+@ViewPackages(packages={ "com.example.app.pgk1", "com.example.app.pgk2" })
+class MyViewTest extends UIUnitTest {
+}
+
+@ViewPackages(
+    classes={ MyView.class, OtherView.class },
+    packages={ "com.example.app.pgk1", "com.example.app.pgk2" }
+)
+class MyViewTest extends UIUnitTest {
+}
+----
+
+
+Using the annotation without providing [methodname]`classes()` or [methodname]`packages()` acts as a shortcut for restricting the scan to the current test class package and sub-packages.
+
+[source,java]
+----
+@ViewPackages // same as @ViewPackages(classes=MyViewTest.class)
+class MyViewTest extends UIUnitTest {
+}
+----
+
+
+== Running Tests
+
+Testing with [classname]`UIUnitTest` does don't require any particular setup to be executed. Run the test directly from your IDE or use Maven, for example by typing `mvn test` on the terminal.
+
+
+== Navigating in Unit Tests
+
+On test initialization, the loaded view is the root view.
+
+To navigate to another registered view, the [classname]`UIUnitTest` base class contains [methodname]`navigate()` methods that support navigation to different supported views.
+
+- For a normal view with only a path defined
++
+[methodname]`navigate(MyView.class)`
++
+[methodname]`navigate("myView", MyView.class)`
+- For a view with [interfacename]`HasUrlParameter`
++
+[methodname]`navigate(MyParam.class, "parameter")`
++
+[methodname]`navigate("myParam/parameter", MyParam.class)`
+- For a view with URL template `@Route("template/:param")`
++
+[methodname]`navigate(Template.class, Collections.singletonMap("param", PARAMETER))`
++
+[methodname]`navigate("template/myParam", Template.class)`
+
+All navigation methods return the instantiated view, so that the package private fields can be used directly from the view for testing.
+
+[NOTE]
+Navigation by location string takes in the view class, so that the initialized view can be automatically validated to be the expected one.
+
+.Using `TextField` from view
+[source, java]
+----
+// Navigate to InputView
+InputView input = navigate(InputView.class);
+
+// Get the nameField TextField from InputView and then get the Tester to operate on it
+TextFieldTester nameField_ = test(input.nameField);
+
+// use the tester to set the value, to do required checks and fire expected events
+nameField_.setValue("User input");
+
+// Assert in another component that the change event fired and it has the correct value
+Assertions.assertEquals("User input", input.changeText.getText());
+----
+
+
+=== Testing Components
+
+The aim of browser-less testing isn't to test the components as is, but to simulate user actions and data "seen" on the client side.
+
+To help with actions and getting data, there are testers for components that have methods for use with components. In a [classname]`UIUnitTest` class, you can get a tester for a component with [methodname]`test(component)` or [methodname]`test(Tester.class, component)`.
+
+- [methodname]`test(component)` returns a component-specific tester, if one can be determined for the given component, or the [classname]`ComponentTester` generic tester.
+- [methodname]`test(Tester.class, component)` always returns an instance of the given tester.
+
+For each method call, where it's applicable, the tester methods check that the component is in a state where it could be used by the user. This means that the component should be visible, enabled, attached to the UI, and not behind a modal component.
+
+.Only Server Modality Checked
+[NOTE]
+The modality check only works when the modal component is <<{articles}/flow/advanced/server-side-modality#, server-side modal>>, as client modality isn't defined on the server.
+
+Sample test of the HelloWorld view.
+
+.HelloWorld.java
+[source,java]
+----
+@Route(value = "", layout = MainLayout.class)
+public class HelloWorldView extends HorizontalLayout {
+
+    TextField name;
+    Button sayHello;
+
+    public HelloWorldView() {
+        name = new TextField("Your name");
+        sayHello = new Button("Say hello");
+        sayHello.addClickListener(e -> {
+            Notification.show("Hello " + name.getValue());
+        });
+
+        setMargin(true);
+        setVerticalComponentAlignment(Alignment.END, name, sayHello);
+
+        add(name, sayHello);
+    }
+}
+----
+
+[NOTE]
+The components are package-protected, so that we can use them directly in the [classname]`UIUnitTest`.
+
+.HelloWorldViewTest.java
+[source,java]
+----
+class HelloWorldViewTest extends UIUnitTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        // TextField and Button are available as package protected in the view
+        // So we can use those from there
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        // Notification isn't referenced in the view so we need to use the component
+        // query API to find the notification that opened
+        Notification notification = $(Notification.class).first();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+}
+----
+
+
+[discussion-id]`7F423DA0-1C41-44BA-B832-55C269FA9311`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
