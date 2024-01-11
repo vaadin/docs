@@ -208,7 +208,9 @@ public class RouteService {
 
 [classname]`ParentView`, [classname]`ChildAView`, and [classname]`ChildBView` (paths: `/parent`, `/parent/child-a`, and `/parent/child-b`) use the same [classname]`RouteService` instance while you navigate between them. After navigating away from [classname]`ParentView`, the [classname]`RouteService` is also destroyed.
 
-Even though `@RouteScopeOwner` is redundant because it's a CDI qualifier, you need to define it on both the bean and on the injection point.
+Even though `@RouteScopeOwner` is a CDI qualifier, you need to define it on both the bean and on the injection point.
+Beans that are RouteScoped are in the RouteScope and for resolution are filtert for matching RouteScopeOwner qualifiers.
+E.g. querying for RouteScoped beans without a qualifier (thus implicit @Default) leads to no results. You must always provide a RouteScopeOwner.
 
 Route components can also be `@RouteScoped`. In this case, `@RouteScopeOwner` should point to a parent layout. If you omit it, the route itself becomes the owner.
 
@@ -229,6 +231,26 @@ public class ScopedView extends Div {
 ----
 
 The message is delivered to the `ScopedView` instance where the user already navigated. If on another view, there is no instance of this bean and the message isn't delivered to it.
+
+If you need to resolve RouteScoped beans programmatically, you need to instantiate the RouteScopeOwner qualifier on some matching Route.
+E.g. if you have an interface that lets controllers vote on a unsaved changes dialog:
+
+[source,java]
+----
+private static abstract class RouteScopeQualifier extends AnnotationLiteral<RouteScopeOwner> implements RouteScopeOwner {}
+
+public void voteOnRouteLeave(Class <? extends Component> currentRoute){
+       RouteScopeOwner routeScopeQualifier = new RouteScopeQualifier(){
+
+            @Override
+            public Class<? extends HasElement> value() {
+                return previousRoute;
+            }
+        };
+       Instance<RouteLeaveVoter> voters = CDI.current().select(RouteLeaveVoter.class, routeScopeQualifier);
+       boolean showDialog = voters.stream().map(RouteLeaveVoter::hasUnsavedChanges).anyMatch();
+}
+----
 
 
 === Preserving Beans during Browser Refresh
