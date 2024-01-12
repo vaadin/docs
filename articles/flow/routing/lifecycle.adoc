@@ -1,0 +1,254 @@
+---
+title: Navigation Lifecycle
+description: Explains the events that happen during a user initiated navigation between two routes.
+order: 30
+---
+
+
+= Navigation Lifecycle
+
+The navigation lifecycle is made up of various events that are fired when a user navigates from one state or view to another. The events are fired to listeners added to the `UI` instance and to attached components that implement related _observer_ interfaces.
+
+
+== BeforeLeaveEvent
+
+`BeforeLeaveEvent` is the first event fired during navigation.
+
+The event allows the navigation to be postponed, canceled, or changed to a different destination.
+
+This event is delivered to any component instance implementing [interfacename]`BeforeLeaveObserver` that's attached to the UI before the navigation starts.
+
+It's also possible to register a standalone listener for this event using the [methodname]`addBeforeLeaveListener(BeforeLeaveListener)` method in the [classname]`UI` class.
+
+A typical use case for this event is to ask the user whether they want to save any unsaved changes before navigating to another part of the application.
+
+.Event call order
+[NOTE]
+`BeforeLeaveEvent` is first sent to manually registered `BeforeLeaveListener` instances and then to `BeforeLeaveObserver` instances connected to the UI.
+
+.Listener order
+[NOTE]
+`BeforeLeaveListener` instances are called in the order they're registered. `BeforeLeaveObserver` instances are called in descendant order starting from the UI.
+
+[#postpone]
+=== Postponing a Navigation Transition
+[classname]`BeforeLeaveEvent` includes the [methodname]`postpone()` method, which can be used to postpone the current navigational transition until a specific condition is met.
+
+*Example*: The client requests the user's confirmation before leaving the page:
+
+[source,java]
+----
+public class SignupForm extends Div
+        implements BeforeLeaveObserver {
+    @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        if (hasChanges()) {
+            ContinueNavigationAction action =
+                    event.postpone();
+            ConfirmDialog confirmDialog = new ConfirmDialog();
+                 confirmDialog.setText("Your form has changes! Are you sure you want to leave?");
+                 confirmDialog.setCancelable(true);
+                 confirmDialog.addConfirmListener(__ -> action.proceed());
+                 confirmDialog.addCancelListener(__ -> action.cancel());
+                 confirmDialog.open();
+        }
+    }
+
+    private boolean hasChanges() {
+        // no-op implementation
+        return true;
+    }
+}
+----
+
+Postponing interrupts the process of notifying observers and listeners.
+When the transition resumes, the remaining observers (those that come after the observer that initiated the postpone) are called.
+
+*Example*:
+
+* Assume the current page has three observers, `a`, `b` and `c`, which are notified in the same order.
+* If `b` calls [methodname]`postpone()`, the call to `c` (and the rest of the transition process), is deferred.
+** If the transition isn't resumed, `c` is never notified of the event and the transition never finishes.
+** If `b` executes `ContinueNavigationAction` to resume the transition, it continues from the point of interruption: `a` and `b` aren't called again, but `c` is notified.
+
+.Only one navigation event may be postponed at a time.
+[NOTE]
+Starting a new navigation transition while a previous one is in a postponed state makes the postponed state obsolete, and executing `ContinueNavigationAction` has no effect.
+
+== BeforeEnterEvent
+
+`BeforeEnterEvent` is the second event fired during navigation.
+
+The event allows you to change the navigation to go to a destination that's different from the original.
+
+This event is typically used to react to special situations, for example if there is no data to show, or if the user doesn't have appropriate permissions.
+
+This event is delivered to any component instance implementing `BeforeEnterObserver` that's attached to the UI, beginning with the UI and moving through the child components.
+
+[NOTE]
+Components in the chain are instantiated after a parent handles `BeforeEnter` and doesn't <<Rerouting, reroute>> or <<Forwarding, forward>>
+
+The event is fired:
+
+* only after a <<postpone,Postpone method>> (called during a `BeforeLeaveEvent`) has been continued;
+* before detaching and attaching components to make the UI match the location being navigated to.
+
+It's also possible to register a standalone listener for this event using the [methodname]`addBeforeEnterListener(BeforeEnterListener)` method in the [classname]`UI` class.
+
+.Event call order
+[NOTE]
+`BeforeEnterEvent` is first sent to the target component if it implements `HasUrlParameter`, then to manually registered `BeforeEnterListener` instances and lastly to `BeforeEnterObserver` instances connected to the UI.
+
+.Listener order
+[NOTE]
+`BeforeEnterListener` instances are called in the order they're registered. `BeforeEnterObserver` instances are called in descendant order starting from the UI.
+
+=== Rerouting
+
+Both <<BeforeLeaveEvent,`BeforeLeaveEvent`>> and <<BeforeEnterEvent,`BeforeEnterEvent`>> can be used to reroute dynamically.
+
+Rerouting is typically used when there is a need to show completely different information in a particular state.
+
+When the [methodname]`reroute()` method is called:
+
+* the event isn't fired to any further listeners or observers;
+* the method triggers a new navigation phase, based on the new navigation target, and events are fired based on this instead;
+* for <<BeforeEnterEvent,BeforeEnterEvent>>: child components of the rerouting component aren't instantiated.
+
+*Example*: Rerouting when entering a `BlogList` with no results.
+[source,java]
+----
+@Route("no-items")
+public class NoItemsView extends Div {
+    public NoItemsView() {
+        setText("No items found.");
+    }
+}
+
+@Route("blog")
+public class BlogList extends Div
+        implements BeforeEnterObserver {
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        // implementation omitted
+        Object record = getItem();
+
+        if (record == null) {
+            event.rerouteTo(NoItemsView.class);
+        }
+    }
+
+    private Object getItem() {
+        // no-op implementation
+        return null;
+    }
+}
+----
+
+[NOTE]
+[methodname]`rerouteTo()` has overloads for different use cases.
+
+[NOTE]
+[methodname]`rerouteTo()` keeps the original URL in the browser's address bar and doesn't change it to a new URL based on the new target.
+
+=== Forwarding
+
+The [methodname]`forwardTo()` method <<Rerouting,reroutes>> navigation and updates the browser URL.
+
+Forwarding can be used during <<BeforeEnterEvent,BeforeEnter>> and <<BeforeLeaveEvent,BeforeLeave>> lifecycle states to dynamically redirect to a different URL.
+
+When the [methodname]`forwardTo()` method is called:
+
+* the event isn't fired to any further listeners or observers;
+* the method triggers a new navigation phase, based on the new navigation target, and fires new lifecycle events for the new forward navigation target;
+* for <<BeforeEnterEvent,BeforeEnterEvent>>: child components of the forwarding component aren't instantiated.
+
+*Example*: Forwarding when viewing `BlogList` without the required permissions.
+[source,java]
+----
+@Route("no-permission")
+public class NoPermission extends Div {
+    public NoPermission() {
+        setText("No permission.");
+    }
+}
+
+@Route("blog-post")
+public class BlogPost extends Div
+        implements BeforeEnterObserver {
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        if (!hasPermission()) {
+            event.forwardTo(NoPermission.class);
+        }
+    }
+
+    private boolean hasPermission() {
+        // no-op implementation
+        return false;
+    }
+}
+----
+[NOTE]
+[methodname]`forwardTo()` has overloads for different use cases
+
+[NOTE]
+[methodname]`forwardTo()` changes the URL in the browser's address bar to the URL of the new target.
+The URL of the original target isn't kept in the browser history.
+
+== AfterNavigationEvent
+
+[classname]`AfterNavigationEvent` is the third and *last* event fired during navigation.
+
+This event is typically used to update various parts of the UI after the actual navigation is complete.
+Examples include adjusting the content of a breadcrumb component and visually marking the active menu item as active.
+
+[classname]`AfterNavigationEvent` is fired:
+
+* after <<BeforeEnterEvent,`BeforeEnterEvent`>>, and
+* after updating which components are attached to the UI.
+
+At this point, the current navigation state is actually shown to the user, and further reroutes and similar changes are no longer possible.
+
+The event is delivered to any component instance implementing [interfacename]`AfterNavigationObserver` that's attached after completing the navigation.
+
+It's also possible to register a standalone listener for this event using the [methodname]`addAfterNavigationListener(AfterNavigationListener)` method in the [classname]`UI` class.
+
+*Example*: Marking the active navigation element as active.
+
+[source,java]
+----
+public class SideMenu extends Div
+        implements AfterNavigationObserver {
+    Anchor blog = new Anchor("blog", "Blog");
+
+    @Override
+    public void afterNavigation(
+          AfterNavigationEvent event) {
+        boolean active = event.getLocation()
+                .getFirstSegment()
+                .equals(blog.getHref());
+        blog.getElement()
+                .getClassList()
+                .set("active", active);
+    }
+}
+----
+
+
+.Event call order
+[NOTE]
+`AfterNavigationEvent` is first sent to manually registered `AfterNavigationListener` instances and then to `AfterNavigationObserver` instances found connected to the UI.
+
+.Listener order
+[NOTE]
+`AfterNavigationListener` instances are called in the order they were registered. `AfterNavigationObserver` instances are called in descendant order staring from the UI.
+
+
+[discussion-id]`6F4CE361-D861-401C-BE64-3280C877AFDF`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

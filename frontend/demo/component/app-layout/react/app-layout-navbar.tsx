@@ -1,8 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AppLayout } from '@hilla/react-components/AppLayout.js';
-import { Tabs } from '@hilla/react-components/Tabs.js';
-import { Tab } from '@hilla/react-components/Tab.js';
+import {
+  HorizontalLayout,
+  type HorizontalLayoutElement,
+} from '@hilla/react-components/HorizontalLayout.js';
+import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style: React.CSSProperties = {
   fontSize: 'var(--lumo-font-size-l)',
@@ -11,31 +14,60 @@ const h1Style: React.CSSProperties = {
   position: 'absolute',
 };
 
-const tabsStyle = {
-  margin: 'auto',
+const linkStyle = {
+  textDecoration: 'none',
 };
 
 function Example() {
+  const horizontalLayoutRef = useRef<HorizontalLayoutElement>(null);
+
+  useEffect(() => {
+    const horizontalLayout = horizontalLayoutRef.current;
+    if (horizontalLayout) {
+      patchAppLayoutNavigation(horizontalLayout);
+    }
+  }, []);
+
   return (
     // tag::snippet[]
     <AppLayout>
       <h1 slot="navbar" style={h1Style}>
         MyApp
       </h1>
-      <Tabs slot="navbar" style={tabsStyle}>
-        <Tab>
-          <a tabIndex={-1}>Dashboard</a>
-        </Tab>
-        <Tab>
-          <a tabIndex={-1}>Orders</a>
-        </Tab>
-        <Tab>
-          <a tabIndex={-1}>Customers</a>
-        </Tab>
-        <Tab>
-          <a tabIndex={-1}>Products</a>
-        </Tab>
-      </Tabs>
+      <HorizontalLayout
+        ref={horizontalLayoutRef}
+        slot="navbar"
+        className="h-m w-full justify-center gap-s"
+      >
+        <a
+          href="/dashboard"
+          className="flex items-center px-m text-secondary font-medium"
+          style={linkStyle}
+        >
+          Dashboard
+        </a>
+        <a
+          href="/orders"
+          className="flex items-center px-m text-secondary font-medium"
+          style={linkStyle}
+        >
+          Orders
+        </a>
+        <a
+          href="/customers"
+          className="flex items-center px-m text-secondary font-medium"
+          style={linkStyle}
+        >
+          Customers
+        </a>
+        <a
+          href="/products"
+          className="flex items-center px-m text-secondary font-medium"
+          style={linkStyle}
+        >
+          Products
+        </a>
+      </HorizontalLayout>
     </AppLayout>
     // end::snippet[]
   );

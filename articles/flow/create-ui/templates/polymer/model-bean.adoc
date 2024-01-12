@@ -1,0 +1,207 @@
+---
+title: Using Model Beans
+description: Polymer support is deprecated; use Lit templates instead.
+order: 16
+banner: Polymer support is deprecated. Use link:../[Lit templates] instead.
+banner-id: polymer-templates
+banner-style: caution
+---
+
+
+= [deprecated:com.vaadin:vaadin@V18]#Using Model Beans#
+
+:admonition:
+include::index.asciidoc[tag=deprecation-notice]
+
+Template model and model data aren't supported for Lit templates. You may use directly, though, component API and properties via [classname]`Element` API to achieve the same functionality.
+
+Using beans is an easy way to define a model or to reuse existing beans in a model. You can use any bean together with your model, provided it has a public no-argument constructor. See <<bindings#,PolymerTemplate, Binding Model Data>> for more information on this.
+
+A typical use case for using beans in a model is a form that allows the user to edit the content of one or more entities.
+
+This example shows JavaScript Polymer template defining a form to edit the `Person` bean:
+
+[source,javascript]
+----
+class MyForm extends PolymerElement {
+  static get template() {
+    return html`
+      <div>
+        <div>
+          <span>First name</span>
+          <input value="{{person.firstName}}" />
+        </div>
+        <div>
+          <span>Last name</span>
+          <input value="{{person.lastName}}" />
+        </div>
+        <div>
+          <span>Age</span>
+          <input value="{{person.age}}" />
+        </div>
+      </div>
+      <div>
+        <button on-click="setNameToJeff">Set Name To Jeff</button>
+      </div>
+    `;
+  }
+
+  static get is() {
+    return 'my-form';
+  }
+}
+
+customElements.define(MyForm.is, MyForm);
+----
+
+This example has a Java class defining a `Person` bean:
+
+[source,java]
+----
+public class Person {
+    private String firstName, lastName;
+    private int age;
+    private Long id;
+
+    public Person() {
+        // Needed for TemplateModel
+    }
+
+    public Person(String firstName, String lastName, int age) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public Long getId() {
+        return id;
+    }
+}
+----
+
+In this example, you can see Java interface defining a setter and getter for the `Person` bean:
+
+[source,java]
+----
+public interface FormModel extends TemplateModel {
+  @Exclude("id")
+  void setPerson(Person person);
+  Person getPerson();
+}
+----
+
+The `@Exclude` annotation allows you to provide a list of properties you want to exclude. As an alternative, you can use the `@Include` annotation and provide a list of properties that you want to import -- with all other properties are excluded.
+
+In this example, `@Include({"firstName","lastName","age"})` is the same as `@Exclude("id")`. The `Person` type can be declared as an interface -- you don't need to declare it as a class. It isn't necessary to create its instance and use a setter; you can call [methodname]`getPerson()` and the model returns an empty proxy object that you can use to set its property directly.
+
+You can include and exclude sub-bean properties using the dot annotation. For example, `@Exclude("account.password")`.
+
+.Excluding Bean Properties
+[NOTE]
+When setting backend data directly to the model, you should exclude any bean properties that could lead to circular dependencies. For example, if a `Patient` bean has the `Doctor doctor` property, the `Doctor` bean shouldn't have a property of the type `Patient` -- or a generic type for a collection property -- since this leads to a circular dependency.
+
+
+
+== Initializing the Model
+
+You can initialize the model by setting a new `person` instance to it in the Java template class.
+
+Below is an example of a Polymer Java template class:
+
+[source,java]
+----
+public class Form extends PolymerTemplate<FormModel> {
+    public Form() {
+        Person person = new Person("John", "Doe", 82);
+        getModel().setPerson(person);
+    }
+}
+----
+
+If you later update the `Person person` bean created in the constructor, the model remains unaffected. The bean values are copied only when the [methodname]`setPerson()` method is called. Thus, the bean isn't attached to the model in any way.
+
+
+
+== Updating the Model
+
+To update the values in the model, you can use the [methodname]`getModel().getPerson()` or [methodname]`getModel().getProxy("person", Person.class)` methods to get a proxy `Person` object that's attached to the model. Any changes to the proxy object automatically update the model.
+
+The example here is using the `@EventHandler` annotation to update the model:
+
+[source,java]
+----
+public class Form extends PolymerTemplate<FormModel> {
+    @EventHandler
+    public void setNameToJeff() {
+        getModel().getPerson().setFirstName("Jeff");
+    }
+}
+----
+
+The individual parts of the bean are stored in the model, not the bean itself. No method that can return the original bean exists. The proxy bean returned by the getter isn't meant to be passed on to an [classname]`EntityManager` or similar. Its only purpose is to update the values of the model.
+
+[WARNING]
+It's impossible to get a detached bean from the model.
+
+
+
+== Using Model Data Entity Manager
+
+To use model data with an entity manager, you need to re-instantiate a new entity and set the values using the getters for the item received from the model.
+
+In the previous example, you can't send the [classname]`Person` object from the model directly to the service, as the object is proxied and only returns data when the getters are used.
+
+The example here is using an entity manager to update the model data:
+
+[source,java]
+----
+public class OrderForm extends PolymerTemplate<FormModel> {
+
+    public interface FormModel extends TemplateModel {
+      @Exclude("id")
+      void setPerson(Person person);
+      Person getPerson();
+    }
+
+    public OrderForm() {
+        Person person = new Person("John", "Doe", 82);
+        getModel().setPerson(person);
+    }
+
+    @EventHandler
+    public void submit() {
+        Person person = getModel().getPerson();
+        getService().placeOrder(new Person(person.getFirstName(), person.getLastName(), person.getAge()));
+    }
+
+    private OrderService getService() {
+        // Implementation omitted
+        return new OrderService();
+    }
+}
+----
+
+
+[discussion-id]`D447526E-FA1C-4D15-A09F-A6DA873CFB9F`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

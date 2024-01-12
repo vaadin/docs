@@ -1,0 +1,64 @@
+---
+title: Service Init Listener
+description: Using VaadinServiceInitListener to configure RequestHandler, IndexHtmlRequestListener and DependencyFiler objects, and to dynamically register routes during start-up.
+order: 100
+---
+
+
+= Service Init Listener
+
+[classname]`VaadinServiceInitListener` can be used to configure [classname]`RequestHandler`, [classname]`IndexHtmlRequestListener` and <<dependency-filter#,DependencyFilter>> objects. You can also use it to <<{articles}/flow/routing/dynamic#application.startup,dynamically register routes>> during application startup, and to <<{articles}/flow/advanced/session-and-ui-init-listener#, register session and UI listeners>>.
+
+The listener gets a [classname]`ServiceInitEvent`, which is sent when a Vaadin service is initialized.
+
+[source,java]
+----
+public class ApplicationServiceInitListener
+        implements VaadinServiceInitListener {
+
+    @Override
+    public void serviceInit(ServiceInitEvent event) {
+        event.addIndexHtmlRequestListener(response -> {
+            // IndexHtmlRequestListener to change the bootstrap page
+        });
+
+        event.addDependencyFilter((dependencies, filterContext) -> {
+            // DependencyFilter to add/remove/change dependencies sent to
+            // the client
+            return dependencies;
+        });
+
+        event.addRequestHandler((session, request, response) -> {
+            // RequestHandler to change how responses are handled
+            return false;
+        });
+    }
+
+}
+----
+
+In a Spring Boot project, it's sufficient to register this listener by adding the `@Component` annotation on the class.
+In plain Java projects, the listener should be registered as a provider via the Java Service Provider Interface (SPI) loading facility.
+To do this, you should create the [filename]`META-INF/services` resource directory and a provider configuration file with the name [filename]`com.vaadin.flow.server.VaadinServiceInitListener`.
+This is a text file and should contain the fully qualified name of the [classname]`ApplicationServiceInitListener` class on its own line.
+It allows the application to discover the [classname]`ApplicationServiceInitListener` class, instantiate it and register it as a service init listener for the application.
+
+image:images/service-init-listener.png[The location of the configuration file]
+
+The content of the file should look like this:
+[source,text]
+----
+com.mycompany.ApplicationServiceInitListener
+----
+
+[TIP]
+See https://docs.oracle.com/javase/tutorial/ext/basics/spi.html#register-service-providers and https://docs.oracle.com/javase/7/docs/api/java/util/ServiceLoader.html for details of Java SPI loading.
+
+
+[discussion-id]`EA8B92C9-D967-4C55-B760-FEBEEA964D72`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

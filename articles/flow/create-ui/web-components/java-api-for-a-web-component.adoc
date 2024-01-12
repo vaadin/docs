@@ -1,0 +1,349 @@
+---
+title: Creating a Java API
+description: How to add functionality to a stub class to make it a functioning Java API.
+order: 5
+---
+
+
+= Creating a Java API for a Web Component
+
+While there are many ways to interact with a Web Component, there are a few typical ones worth noting. You could use properties on the element to define how it should behave. You can listen to events on the element to be notified when the user does something. Or you could call functions on the element to perform specific tasks, such as open a popup. And you can add sub-elements to define child content.
+
+The component class included with the https://github.com/vaadin/addon-template[Vaadin Add-on Starter], for example [classname]`MwcSlider.java`, is only a stub that handles the imports (see <<index#,Integrating a Web Component>> for more). This page demonstrates how to add functionality to the included stub class to transform it into a functioning Java API.
+
+
+== Setting & Reading Properties
+
+You can typically find the properties that an element supports in its JavaScript documentation on `npm` (see the https://github.com/material-components/material-web/tree/mwc/packages/slider[`<mwc-slider>`] documentation). The `mwc-slider` has a boolean property named `discrete` that defines whether a numeric-value label displays when the slider thumb is pressed.
+
+You can add getters and setters to match any property to create a corresponding Java setter-getter API for the property. An example of this would be adding a setter and getter for the `discrete` property in the [classname]`MwcSlider` class, like so:
+
+[source,java]
+----
+public void setDiscrete(boolean discrete) {
+    getElement().setProperty("discrete", discrete);
+}
+public boolean isDiscrete() {
+    return getElement().getProperty("discrete", false);
+}
+----
+
+The setter here sets the given property to the requested value. The getter returns the property value, or `false` as the default value, if the property hasn't been set. The default value should match the default of the Web Component property.
+
+When you set `discrete` to `true` -- which is done by updating the setter in the [classname]`AddonView` class -- the pin appears when the slider thumb is pressed.
+
+Calling [methodname]`setDiscrete(true)` in the [classname]`AddonView` class, for example, would look like this:
+
+[source,java]
+----
+public AddonView() {
+    MwcSlider slider = new MwcSlider();
+    slider.setDiscrete(true);
+    add(slider);
+}
+----
+
+One disadvantage of writing the [methodname]`getElement()` methods directly is that you have to repeat the property name in the getter and the setter. You can avoid this by using the [classname]`PropertyDescriptor` helper. This helper, and the factory methods in [classname]`PropertyDescriptors`, allows you to define the property as a single static field in the component and reference it from the getter and the setter.
+
+For example, using the [classname]`PropertyDescriptor` helper and [methodname]`propertyWithDefault()` factory method on the `discrete` property might be done like so:
+
+[source,java]
+----
+public class MwcSlider extends Component {
+
+    private static final PropertyDescriptor<Boolean, Boolean> discreteProperty =
+            PropertyDescriptors.propertyWithDefault("discrete", false);
+
+    public void setDiscrete(boolean discrete) {
+        discreteProperty.set(this, discrete);
+    }
+    public boolean isDiscrete() {
+        return discreteProperty.get(this);
+    }
+
+}
+----
+
+The `discreteProperty` descriptor here defines a property with the name `discrete` and a default value of `false`, which matches the Web Component. Also, both a setter and getter of type `Boolean` are set through generics (`<Boolean, Boolean>`). The setter and getter code, though, only invokes the descriptor with the component instance.
+
+
+== Synchronizing the Value
+
+The `mwc-slider` component allows the user to input a single value. To make it work automatically as a field, this kind of component should implement the [interfacename]`HasValue` interface. See <<../../binding-data/components-binder#,Binding Data to Forms>> for more information on this.
+
+The value needs to be synchronized automatically from the client to the server when the user changes it, as well as from the server to the client when it's updated programmatically. Additionally, a value-change event should be fired on the server whenever the value changes.
+
+Typically, when the [methodname]`getValue()` method is based on a single-element property, the [classname]`AbstractSinglePropertyField` base class takes care of everything related to the value.
+
+As an example, the following would extend the [classname]`AbstractSinglePropertyField` base class in the [classname]`MwcSlider` class:
+
+[source,java]
+----
+public class MwcSlider extends AbstractSinglePropertyField<MwcSlider, Integer> {
+
+    public MwcSlider() {
+        super("value", 0, false);
+    }
+
+}
+----
+
+The type parameters here define the component type (`MwcSlider`) returned by the [methodname]`getSource()` method in value change events, and the value type (`Integer`). The constructor parameters in this example define the name of the element property that contains the value (`"value"`), the default value to use if the property isn't set (`0`), and it determines whether [methodname]`setValue(null)` should be allowed or throw an exception (i.e., `false` means that `null` isn't allowed).
+
+For more advanced cases that are still based on a one-element property, there is an alternative constructor that defines callbacks that convert between the low-level element property type and the high-level [methodname]`getValue()` type. In cases where the value can't be derived based on a single-element property, you can use the more generic [classname]`AbstractField` base class.
+
+You can test this in the [classname]`AddonView` class. For example, testing the use of the alternative constructor in the [classname]`AddonView` class might look like this:
+
+[source,java]
+----
+public AddonView() {
+    MwcSlider slider = new MwcSlider();
+    slider.setDiscrete(true);
+    slider.addValueChangeListener(e -> {
+        String message = "The value is now " + e.getValue();
+        if (e.isFromClient()) {
+            message += " (set by the user)";
+        }
+        Notification.show(message, 3000, Notification.Position.MIDDLE);
+    });
+    add(slider);
+
+    Button incrementButton = new Button("Increment using setValue", e -> {
+        slider.setValue(slider.getValue() + 5);
+    });
+    add(incrementButton);
+}
+----
+
+.Properties not related to the HasValue interface
+[NOTE]
+For some Web Components, you need to update other properties that aren't related to the [interfacename]`HasValue` interface. See <<../creating-components/basic#,Creating A Simple Component Using the Element API>> for how to use the `@Synchronize` annotation to synchronize property values without automatically firing a value-change event.
+
+
+== Listening to Events
+
+All web elements fire a `click` event when the user clicks them. To allow the user of your component to listen to the `click` event, you can extend [classname]`ComponentEvent` and use the `@DomEvent` and `@EventData` annotations. For example, to extend [classname]`ComponentEvent` and use the `@DomEvent` and `@EventData` annotations in the [classname]`ClickEvent` class, you might do something like this:
+
+[source,java]
+----
+@DomEvent("click")
+public static class ClickEvent extends ComponentEvent<MwcSlider> {
+
+    private int x, y;
+
+    public ClickEvent(MwcSlider source,
+                      boolean fromClient,
+                      @EventData("event.offsetX") int x,
+                      @EventData("event.offsetY") int y) {
+        super(source, fromClient);
+        this.x = x;
+        this.y = y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+}
+----
+
+[classname]`ClickEvent` here uses the `@DomEvent` annotation to define the name of the DOM event for which to listen: `click` in this case. Like all other events fired by a `Component`, it extends [classname]`ComponentEvent`, which provides a typed [methodname]`getSource()` method. It uses two additional constructor parameters annotated with `@EventData` to get the click coordinates from the browser.
+
+The expression inside each `@EventData` annotation is evaluated when the event is handled in the browser. It accesses DOM event properties using the `event.` prefix (e.g., `event.offsetX`) and element properties using the `element.` prefix.
+
+.Constructor parameter requirements
+[NOTE]
+The two first parameters of a [classname]`ComponentEvent` constructor must be `MwcSlider source, boolean fromClient`. These are filled automatically. All parameters following these two initial parameters must be annotated with `@EventData`.
+
+You can now use the [classname]`ClickEvent` class as an argument when invoking the [methodname]`addListener()` method on your [classname]`MwcSlider` component. The example here uses the [classname]`ClickEvent` class in the [methodname]`addListener()` method:
+
+[source,java]
+----
+public Registration addClickListener(ComponentEventListener<ClickEvent> listener) {
+    return addListener(ClickEvent.class, listener);
+}
+----
+
+The [methodname]`addListener()` method shown here in the superclass sets up everything related to the event, based on the annotations in the [classname]`ClickEvent` class.
+
+You can test the integration in the [classname]`AddonView` class. To test the event integration in the [classname]`AddonView` class, you would do something like this:
+
+[source,java]
+----
+slider.addClickListener(e -> {
+    Notification.show("Clicked at " + e.getX() + "," + e.getY(), 1000, Notification.Position.BOTTOM_START);
+});
+----
+
+.Use the Vaadin-provided ClickEvent for production
+[TIP]
+The click event was used here for illustrative purposes. In a real use case, you should use the [classname]`ClickEvent` provided by Vaadin, instead. This also provides additional event details.
+
+.Controlling propagation behavior
+[TIP]
+As the event data expression is evaluated as JavaScript, you can control propagation behavior using `@EventData("event.preventDefault()") String ignored`, for example. This is a work-around when there is no other API to control this behavior.
+
+
+== Calling Element Functions
+
+In addition to properties and events, many elements offer methods that can be invoked for different reasons. For example, `vaadin-board` has a [methodname]`refresh()` method that's called whenever a change is made that the Web Component itself isn't able to detect automatically. To call a function on an element, you can use the [methodname]`callJsFunction()` method in [classname]`Element` as a way of providing an API.
+
+Using the [methodname]`callJsFunction()` method, for example, in the [classname]`MwcSlider` class to call the `layout` function on the `mwc-slider` element would be like this:
+
+[source,java]
+----
+public void layout(boolean skipUpdateUI) {
+    getElement().callJsFunction("layout", skipUpdateUI);
+}
+----
+
+You can test this in the `AddonView` class, for example, by using `layoutJSButton` in the [classname]`AddonView` class.
+
+[source,java]
+----
+Button layoutJSButton = new Button("Layout component using JS", e -> {
+    slider.layout(false);
+});
+add(layoutJSButton);
+----
+
+The above method recomputes the dimensions and lays out again the component. This should be called if the dimensions of the slider itself, or any of its parent elements, change programmatically. To check the results manually, set width of `<mwc-slider>` to a fixed value and then click the button.
+
+.callJsFunction() parameters and return value
+[TIP]
+In addition to the method name, [methodname]`callJsFunction()` accepts an arbitrary number of parameters of supported types. Current supported types are `String`, `Boolean`, `Integer`, `Double`, and the corresponding primitive types, `JsonValue`, and `Element` and `Component` references. It also returns a server-side promise for the JavaScript function's return value. See the available methods in the Javadoc for more.
+
+
+== Mwc-Slider Integration Result
+
+After you have completed the steps previously described, your [classname]`MwcSlider` class should be similar to the example below. In this example, Java API is provided by the [classname]`MwcSlider` class:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/ui/webcomponents/MwcSlider.java[tags=class,indent=0]
+----
+
+You can extend this class further to support additional configuration properties, such as `min` and `max`.
+
+
+== Adding Sub-Elements to Define Child Content
+
+Some Web Components can contain child elements. If a component is a layout type and you only want to add child components, implementing the [interfacename]`HasComponents` interface should be enough. This interface provides default implementations for the [methodname]`add(Component...)`, [methodname]`remove(Component…)` and [methodname]`removeAll()` methods.
+
+For example, implementing [interfacename]`HasComponents` to implement your own `<div>` wrapper would be done like so:
+
+[source,java]
+----
+@Tag(Tag.DIV)
+public class Div extends Component implements HasComponents {
+}
+----
+
+You can then add and remove components using the provided methods. For example, using [methodname]`add()` methods provided by the [interfacename]`HasComponents` interface like so:
+
+[source,java]
+----
+Div root = new Div();
+root.add(new Span("Hello"));
+root.add(new Span("World"));
+add(root);
+----
+
+If you don't want to provide a public `add`/`remove` API, you have two options: use the [classname]`Element` API, or create a new `Component` to encapsulate the internal element behavior.
+
+As an example, assume that you want to create a specialized Vaadin button that can only show a `VaadinIcon`. Below shows how to do that using the available `VaadinIcon` enum that lists the icons in the set:
+
+[source,java]
+----
+@Tag("vaadin-button")
+@NpmPackage(value = "@vaadin/button", version = "{moduleNpmVersion:@vaadin/button}")
+@JsModule("@vaadin/button/vaadin-button.js")
+public class IconButton extends Component {
+
+    private VaadinIcon icon;
+
+    public IconButton(VaadinIcon icon) {
+        setIcon(icon);
+    }
+
+    public void setIcon(VaadinIcon icon) {
+        this.icon = icon;
+
+        Component iconComponent = icon.create();
+        getElement().removeAllChildren();
+        getElement().appendChild(iconComponent.getElement());
+    }
+
+    public void addClickListener(
+            ComponentEventListener<ClickEvent<IconButton>> listener) {
+        addListener(ClickEvent.class, (ComponentEventListener) listener);
+    }
+
+    public VaadinIcon getIcon() {
+        return icon;
+    }
+}
+----
+
+The relevant part here is in the [methodname]`setIcon()` method. [classname]`VaadinIcon` happens to include a feature that creates a component for a given icon -- the [methodname]`create()` call -- that's used here to create the child element. After creating the element, all that's necessary is to attach the root element of the child component by calling [methodname]`getElement().appendChild(iconComponent.getElement())`.
+
+If the [methodname]`VaadinIcon.create()` method wasn't available, you would need to either create the component yourself or use the [classname]`Element` API directly. Using the [classname]`Element` API, for example, to define the [methodname]`setIcon()` method would look like this:
+
+[source,java]
+----
+public void setIcon(VaadinIcon icon) {
+    this.icon = icon;
+    getElement().removeAllChildren();
+
+    Element iconElement = new Element("vaadin-icon");
+    iconElement.setAttribute("icon", "vaadin:" + icon.name().toLowerCase().replace("_", "-"));
+    getElement().appendChild(iconElement);
+}
+----
+
+The first part here is the same as the previous example. However, in the second part, the element with the correct tag name, `<vaadin-icon>`, is created manually. The `icon` attribute is set to the correct value (as defined in [filename]`@vaadin/icons/vaadin-iconset.js`, for example `icon="vaadin:check"` for `VaadinIcon.CHECK`).
+
+After creation, the element is attached to the `<vaadin-button>` element, after removing any previous content.
+
+When using the second approach, you must also ensure that the [filename]`vaadin-button.js` dependency is loaded. Otherwise, it's handled by the [classname]`Icon` component class. An example of this would be importing [filename]`vaadin-button.js`, [filename]`vaadin-iconset.js` and [filename]`vaadin-icon.js` like so:
+
+[source,java]
+----
+@NpmPackage(value = "@vaadin/button", version = "{moduleNpmVersion:@vaadin/button}")
+@JsModule("@vaadin/button")
+@NpmPackage(value = "@vaadin/icons", version = "{moduleNpmVersion:@vaadin/icons}")
+@JsModule("@vaadin/icons/vaadin-iconset.js")
+@NpmPackage(value = "@vaadin/icon", version = "{moduleNpmVersion:@vaadin/icon}")
+@JsModule("@vaadin/icon")
+public class IconButton extends Component {
+----
+
+You can test either approach in the [classname]`AddonView` class. For example, to test the icon button sub-element in the [classname]`AddonView` class, you would do something like this:
+
+[source,java]
+----
+IconButton iconButton = new IconButton(VaadinIcon.CHECK);
+iconButton.addClickListener(e -> {
+    int next = (iconButton.getIcon().ordinal() + 1) % VaadinIcon.values().length;
+    iconButton.setIcon(VaadinIcon.values()[next]);
+});
+add(iconButton);
+----
+
+This shows the `CHECK` icon and then changes the icon on every click of the button.
+
+[NOTE]
+You could extend [classname]`Button` directly instead of [classname]`Component`, but you would then also inherit the entire public [classname]`Button` API.
+
+
+[discussion-id]`AACDBA11-3ECD-4E3B-9A36-C64E3963C26C`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

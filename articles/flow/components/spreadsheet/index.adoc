@@ -1,0 +1,359 @@
+---
+title: Spreadsheet
+description: Spreadsheet allows displaying and interacting with the contents of an Excel file.
+page-links:
+  - 'API: https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/spreadsheet/Spreadsheet.html[Java]'
+  - 'Source: https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-spreadsheet-flow-parent[Java]'
+section-nav: commercial
+---
+
+
+= Spreadsheet
+
+// Allow XLS, XLSX, and POI abbreviations
+pass:[<!-- vale Vaadin.Abbr = NO -->]
+
+:commercial-feature: Spreadsheet
+include::{articles}/flow/_commercial-banner.asciidoc[opts=optional]
+
+// tag::description[]
+Vaadin Spreadsheet allows displaying and interacting with the contents of an Excel file.
+// end::description[]
+You can directly modify cell data in an active worksheet by entering textual and numerical values, as well as using Excel formulas for spreadsheet calculations.
+
+Vaadin Spreadsheet supports Excel XLSX files and has limited support for XLS files. In large spreadsheets, cell data is loaded on demand from the server. This allows the component to handle large files without performance issues.
+
+Cell data can be copied and pasted between a spreadsheet and the clipboard. The clipboard can also be used to copy and paste data between Vaadin Spreadsheet and other spreadsheet applications, such as Microsoft Excel or Google Sheets.
+
+.Spreadsheet is only available for Vaadin Flow
+[NOTE]
+Spreadsheet is not available for Hilla applications.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetBasic.java[render,tags=snippet,indent=0]
+----
+--
+
+[[spreadsheet.installing.maven]]
+== Maven Dependency
+
+Install Spreadsheet by adding the dependency to your project, like in the following example with Maven:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-spreadsheet-flow</artifactId>
+</dependency>
+----
+
+
+== Loading XLSX
+
+To open an existing Excel file in Vaadin Spreadsheet, you need to pass an Excel file to the [classname]#Spreadsheet# constructor. You can load an Excel file from the local filesystem with a [classname]#File# reference or from memory or other sources with an [classname]#InputStream#.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetLoading.java[render,tags=snippet,indent=0]
+----
+--
+
+
+== Add & Delete Sheets
+
+A spreadsheet is actually a _workbook_, which contains one or more _worksheets_. You can create new sheets and delete existing ones with [methodname]#createNewSheet()# and [methodname]#deleteSheet()#, respectively.
+
+When a sheet is deleted, the index of the sheets with a higher index is decremented by one. When an active worksheet is deleted, the next one by index is set as active or, if there are none, the previous one is set instead.
+
+All operations on the spreadsheet content are processed through the currently active worksheet. You can set an existing sheet as active with [methodname]#setActiveSheetIndex()#.
+
+
+== Toggling Features
+
+The [classname]#Spreadsheet# object provides the following configuration of various UI elements:
+
+[cols="1,4"]
+|===
+| Element | Description
+
+|Grid Lines
+|Cells are by default separated by grid lines. You can control their visibility with `setGridlinesVisible()`.
+
+|Row and Column Headings
+|Row and column headings display the row and column indexes, and allow selecting and resizing the rows and columns. You can control their visibility with `setRowColHeadingsVisible()`.
+
+|Top Bar
+|The top bar displays the address of the currently selected cell and an editor for cell content. You can control its visibility with `setFunctionBarVisible()`.
+
+|Bottom Bar
+|The bottom bar displays sheet names and buttons for navigating between them. You can control its visibility with `setSheetSelectionBarVisible()`.
+
+|===
+
+
+== Frozen Panes
+
+You can define panes of rows and columns that are frozen when scrolling. You can create the pane for the current worksheet with [methodname]#createFreezePane()#, which takes the number of frozen rows and columns as parameters.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetFrozenPanes.java[render,tags=snippet,indent=0]
+----
+--
+
+
+== Configuring Cells
+
+There are a few aspects of cells that you can configure: data, formulas, format, etc. They're listed and described below.
+
+=== Data
+
+A cell may contain a variety of types, like string, number, and date. To set a cell value programmatically, the reference needs to be retrieved from the `getCell()` method. If a cell with the given coordinates exists, use the `setCellValue()` method to update the cell value. Otherwise, it can be created from the `createCell()` method, which takes the row and column coordinates and the cell value.
+
+.Don't forget to refresh the cells.
+[NOTE]
+If cells that are changed in the active sheet that is currently being displayed in the browser, you need to call `refreshCells()` passing the cells changed to get them updated on the client side, as well.
+
+=== Formulas
+
+You can use Excel formulas in the cells of the spreadsheet. The formulas are evaluated on the server, and the result is displayed in the cell.
+
+=== Format
+
+Formatting cell values can be accomplished by using cell styles. A cell style must be created in the workbook by using [methodname]#createCellStyle()#. Cell data format is set for the style with [methodname]#setDataFormat()#.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetFormat.java[render,tags=snippet,indent=0]
+----
+--
+
+=== Conditional Formatting
+
+Applying conditional formatting to cells can help in highlighting patterns in the data. The formatting is applied to the cells that match the specified condition. The condition can be based on the value of the cell, or on the value of another cell.
+
+=== Fonts
+
+Cells can be styled by different fonts. A font definition not only includes a particular typeface, but also weight (e.g., bold or normal), emphasis, underlining, and other such font attributes.
+
+A font definition is managed by [classname]#Font# class in the Apache POI API. A new font can be created with [methodname]#createFont()# in the workbook.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetFonts.java[render,tags=snippet,indent=0]
+----
+--
+
+=== Comments
+
+Cells may include comments, which are shown when the mouse is hovered over the cells. They're indicated by ticks in the corner of the cells. The [classname]#SpreadsheetDefaultActionHandler# enables adding comments from the context menu.
+
+A new comment can be added through the POI API of a cell, with [methodname]#addComment()#. For a detailed example on managing cell comments, refer to the [classname]#InsertDeleteCellCommentAction# and [classname]#EditCellCommentAction# classes employed by the default action handler.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetComments.java[render,tags=snippet,indent=0]
+----
+--
+
+=== Merging Cells
+
+You can merge spreadsheet cells with any variant of the [methodname]#addMergedRegion()# method in [classname]#Spreadsheet#. The [classname]#SpreadsheetDefaultActionHandler# enables merging selected cells from the context menu.
+
+Merged cells can be unmerged with [methodname]#removeMergedRegion()#. This method takes a region index as its parameter. You can search for a particular region through the POI [classname]#Sheet# API for the active sheet, which you can obtain with [methodname]#getActiveSheet()#.
+
+The [methodname]#getMergedRegion()# returns a merged region by index. You can iterate through them by knowing the number of regions, which you can find with [methodname]#getNumMergedRegions()#.
+
+=== Components in Cells
+
+You can have Vaadin components in spreadsheet cells and bind field components to the cell data. The components can be shown continuously, or function similar to editors that appear when a cell is activated for editing.
+
+Components in a spreadsheet must be generated by a [interfacename]#SpreadsheetComponentFactory#, which you need to implement.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetComponents.java[render,tags=snippet,indent=0,group=Java]
+----
+endif::[]
+--
+
+=== Hyperlinks
+
+Hyperlinks in cells can point to other worksheets in the current workbook -- or to external URLs. Links must be added through the POI API.
+
+Vaadin Spreadsheet provides default handling for hyperlink clicks. These can be overridden with a custom [interfacename]#HyperlinkCellClickHandler#, which you assign with [methodname]#setHyperlinkCellClickHandler()#.
+
+=== Pop-Up Buttons
+
+You can add a pop-up button in a cell, which will open a drop-down, pop-up overlay when clicked. The overlay can contain any Vaadin components. You can add a pop-up button with any of the [methodname]#setPopup()# methods for different cell addressing forms.
+
+You can create pop-up buttons for a row of cells in a cell range by defining a _table_, as described in <<#tables-filters,"Tables & Filters">>.
+
+
+== Grouping
+
+Multiple rows or multiple columns can be grouped together in a sheet. A grouping is indicated by a line with a collapse or expand button in the row or column heading. Rows and columns that are part of a group can be hidden or shown by clicking the button.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetGrouping.java[render,tags=snippet,indent=0]
+----
+--
+
+
+== Tables & Filters
+
+A cell range in a worksheet can be configured as a _table_, which adds pop-up menu buttons in the header row of the range. The pop-up menus contain Vaadin components, which you can use to implement various functionalities in the table, such as sorting or filtering. Vaadin Spreadsheet does not include any implementations of such features, merely the UI elements to enable them.
+
+Such a table is defined by a [classname]#SpreadsheetTable# or a [classname]#SpreadsheetFilterTable# added to the spreadsheet.
+
+[classname]#SpreadsheetFilterTable# is a spreadsheet table that allows filtering of the rows in the table in the pop-up menus. The menu is filled with checkboxes for each unique value in the column. Deselecting the items causes hiding of the respective rows in the spreadsheet.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetFiltering.java[render,tags=snippet,indent=0]
+----
+--
+
+
+== Report Mode
+
+In report mode, both the top and bottom bars are hidden. You can enable report mode with [methodname]#setReportStyle()#.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetReportMode.java[render,tags=snippet,indent=0]
+----
+--
+
+== Charts Within Spreadsheets
+
+Vaadin Spreadsheet supports Vaadin Charts, making it possible to open Excel files with charts in them.
+Spreadsheet depends on Vaadin Charts so there is no need to add the Charts dependency in addition to the Spreadsheet dependency.
+
+The Vaadin Spreadsheet Charts integration package does not allow editing the chart.
+To change chart parameters such as type, categories, or legend inside the spreadsheet, you need to edit the original Excel file.
+
+Vaadin Charts integration allows changing the values of the data points in a chart.
+However, it does not allow changing the range of cells that are used for rendering the chart.
+
+Changing the position of charts within a spreadsheet is not supported.
+
+Vaadin charts are shown in the spreadsheet by default.
+You can disable showing them by using `spreadsheet.setChartsEnabled(false)`.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/spreadsheet/spreadsheet-imports.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/spreadsheet/SpreadsheetCharts.java[render,tags=snippet,indent=0]
+----
+--
+
+
+== Limitations
+
+The Vaadin Spreadsheet has a few inherent limitations. Below is a list of them:
+
+* No provided toolbars, menus, or other controls for formatting cells.
+* Limited support for the older XSL formats.
+* Constraints related to Apache POI, such as importing and exporting Excel files.
+* The component is not serializable due to the internal usage of Apache POI. The `@PreserveOnRefresh` annotation and session replication with Kubernetes Kit are not supported when using Spreadsheet.
+* The SUBTOTAL formula is limited to aggregate functions that do not ignore hidden values (i.e., function codes from 1 to 7, as well as 9) because they are not implemented in Apache POI.
+* Strict OOXML format is not supported by Apache POI.
+* No support for theming the component the same way as other Vaadin components.
+* Material and Lumo themes are not implemented.
+* Right-to-left languages are not supported.
+* There is limited support for accessibility features.
+
+== Missing Features Compared to Vaadin 8 Version
+
+The following features are not yet implemented in the Flow version of Vaadin Spreadsheet:
+
+* Icons for custom context menu actions.
+
+[discussion-id]`bdde9d2b-4df8-4400-bba2-2b1c701fdab9`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
