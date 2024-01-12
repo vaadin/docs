@@ -13,6 +13,7 @@ public class LoginOverlayInternationalization extends Div {
         // tag::snippet[]
         LoginI18n i18n = LoginI18n.createDefault();
 
+        i18n.setHeader(new LoginI18n.Header());
         LoginI18n.Header i18nHeader = i18n.getHeader();
         i18nHeader.setTitle("Sovelluksen nimi");
         i18nHeader.setDescription("Sovelluksen kuvaus");
