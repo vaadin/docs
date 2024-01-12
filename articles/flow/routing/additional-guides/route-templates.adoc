@@ -1,0 +1,430 @@
+---
+title: Route Templates
+description: How to customize methods to include parameters in a route.
+order: 30
+---
+
+
+= Route Templates
+
+Route templates provide powerful and highly customizable methods to include parameters into a route.
+
+.Consider using route parameters
+[TIP]
+<<../route-parameters#, Route parameters>> is the easiest way to pass extra information to a given route, and it should work for most common use cases.
+It's recommended to use route templates only if your use case isn't achievable using <<../route-parameters#, route parameters>>.
+
+A global loading indicator shows at the top of the viewport while processing a server request, after a configurable delay.
+You don't need to provide an explicit Progress Bar for these situations.
+pass:[<!-- vale Vale.Spelling = NO -->]
+A route template is a sequence of segments `/*seg_1*/*seg_2*/.../*seg_n*`, where each segment is either a fixed segment (a string that doesn't start with `:`) or a parameter segment according to the syntax rule given in the next paragraph.
+pass:[<!-- vale Vale.Spelling = Yes -->]
+At least one segment must be a parameter segment.
+
+Route template parameters must use the following syntax:
+
+// Allow 'regex'
+pass:[<!-- vale Vaadin.Terms = NO -->]
+
+_``:parameter_name[modifier][(regex)]``_
+
+pass:[<!-- vale Vaadin.Terms = YES -->]
+
+where:
+
+* `_parameter_name_` is the name of the parameter whose value to retrieve when a URL matching the template is resolved on the server.
+It must be prefixed by a colon (`:`).
+* `_modifier_` is optional and may be one of the following:
+** `_?_` denotes an optional parameter which might be missing from the URL being resolved;
+** `_*_` denotes a wildcard parameter which can be used only as the last segment in the template, resolving all segment values at the end of the URL.
+* `_regex_` is also optional and defines the regular expression used to match the parameter value.
+The regular expression is compiled using https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html[`java.util.regex.Pattern`] and shouldn't contain the segment delimiter sign `/`.
+If the regular expression is missing, the parameter accepts any value.
+
+*Example*: Route template parameters
+
+`product/:identifier/:category?/resource/:id([0-9]\*)/:path*`
+
+Route template parameters are defined as segments within [annotationname]`@Route`, [annotationname]`@RouteAlias` and [annotationname]`@RoutePrefix` annotation values.
+
+Parameter values may be retrieved from a [classname]`BeforeEvent` instance on any [classname]`Component` in the navigation chain, either parent layout or navigation target.
+Parameter values are strings.
+You can use convenience methods for converting them to numeric and Boolean types.
+These are described later.
+
+Values may be empty, except if the parameter is defined in the last segment.
+This is because trailing slashes are removed before the URL is parsed.
+
+== Defining Route Templates Using @Route, @RouteAlias and @RoutePrefix
+
+The final route template is the result of the value composition from the [annotationname]`@Route`, [annotationname]`@RouteAlias` and [annotationname]`@RoutePrefix` annotations, as explained in <<{articles}/flow/routing/layout#,Router Layouts and Nested Router Targets>>.
+Any route segment defined by these annotations may represent a route parameter.
+
+.Parameter names must be unique
+[NOTE]
+Parameter names must be unique in the final template composed from [annotationname]`@Route`, [annotationname]`@RouteAlias` and [annotationname]`@RoutePrefix` values.
+When a URL is processed, if a parameter name occurs more than once, the values in the matching parameters are overwritten and only the last value is preserved.
+
+*Example*: A simple route where the parameter is defined as a middle segment.
+
+[source,java]
+----
+@Route("user/:userID/edit")
+public class UserProfileEdit extends Div implements BeforeEnterObserver {
+
+    private String userID;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        userID = event.getRouteParameters().get("userID").get();
+    }
+}
+----
+
+[NOTE]
+[classname]`BeforeEnterEvent` provides the [methodname]`getRouteParameters()` method, which returns a [classname]`RouteParameters` instance.
+This object contains the parameter values retrieved from the processed URL.
+
+*Example*: The following example demonstrates the use of all the annotations to configure two routes on the same view.
+In the routes defined for `ForumThreadView`:
+
+* `"threadID/:threadID"` route resolves URLs matching `forum/category/:categoryID/threadID/:threadID`, and
+* `"threadID/:threadID/comment"` route alias resolves into template `forum/category/:categoryID/threadID/:threadID/comment`.
+
+[classname]`ForumView` has an empty route for which only the value of its [annotationname]`@RoutePrefix` is used, so it resolves URLs matching `forum/category/:categoryID`.
+
+[source,java]
+----
+@Route(value = "")
+@RoutePrefix("forum/category/:categoryID")
+public class ForumView extends Div implements RouterLayout,
+        BeforeEnterObserver {
+
+    private String categoryID;
+
+    private String threadID;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        final RouteParameters urlParameters = beforeEnterEvent.getRouteParameters();
+
+        threadID = null;
+
+        categoryID = urlParameters.get("categoryID").get();
+        urlParameters.get("threadID").ifPresent(value -> threadID = value);
+    }
+}
+
+@Route(value = "threadID/:threadID", layout = ForumView.class)
+@RouteAlias(value = "threadID/:threadID/comment", layout = ForumView.class)
+public class ForumThreadView extends Div implements BeforeEnterObserver {
+
+    private String threadID;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        threadID = beforeEnterEvent.getRouteParameters().get("threadID").get();
+
+        if ("comment".equals(getLastSegment(beforeEnterEvent))) {
+            new CommentDialog().open();
+        }
+    }
+}
+----
+
+[NOTE]
+As seen in [classname]`ForumView`, the defined route contains only one parameter, `categoryID`.
+However, when used as a layout together with the [classname]`ForumThreadView` target, it can also access the parameter defined by the [classname]`ForumThreadView` routing annotations.
+
+== Optional Route Parameter Modifier
+
+A Route parameter may be defined as optional, which means that it may or may not be present in the resolved URL.
+
+*Example*: The following route defined as `user/:userID?/edit` accepts both `user/edit` and `user/123/edit` resolved URLs.
+In the second case, the parameter `userID` has a value of `123`, whereas in the first case, the `Optional` provided by [methodname]`event.getRouteParameters().get("userID")` wraps a `null` value.
+
+[source,java]
+----
+@Route("user/:userID?/edit")
+public class UserProfileEdit extends Div implements BeforeEnterObserver {
+
+    private String userID;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        userID = event.getRouteParameters().get("userID").
+                orElse(CurrentUser.get().getUserID());
+    }
+}
+----
+
+.Optional parameters use greedy matching
+[NOTE]
+Optional parameters are greedily matched from left to right.
+For instance, given the template `path/to/:param1?/:param2?`, the following URLs match:
+
+* `path/to` with no parameter,
+* `path/to/value1`, where `param1` = `value1`,
+* `path/to/value1/value2`, where `param1` = `value1` and `param2` = `value2`.
+
+== Wildcard Route Parameter Modifier
+
+The wildcard parameter may be defined only as the last segment of the route template matching all segments at the end of the URL.
+A wildcard parameter is also optional, so it also matches no segments at the end of the URL.
+In this case, its value when retrieved from [classname]`RouteParameters` is an empty `Optional`.
+
+*Example*: `api/:path*` template may resolve path `api/com/vaadin/flow`, where the value of parameter `path` is `"com/vaadin/flow"`.
+
+[source,java]
+----
+@Route("api/:path*")
+public class ApiViewer extends Div implements BeforeEnterObserver {
+
+    private String path;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        path = event.getRouteParameters().get("path").orElse("");
+    }
+}
+----
+
+[NOTE]
+Since the value can be `null`, use the [methodname]`Optional.orElse("")` method to retrieve it.
+
+A more convenient way of accessing the value of a wildcard parameter is the [methodname]`getWildcard()` method of [classname]`RouteParameters`.
+The [methodname]`getWildcard()` method returns an empty list if the value of the parameter is missing.
+
+[source,java]
+----
+@Route("api/:path*")
+public class ApiViewer extends Div implements BeforeEnterObserver {
+
+    private List<String> pathSegments;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        pathSegments = event.getRouteParameters().getWildcard("path");
+    }
+}
+----
+
+== Route Parameters Matching a Regular Expression
+
+In all the examples discussed, the parameter templates accept any value.
+However, a specific value is often expected for a parameter and the view should be shown only when that specific value is present in the URL.
+This may be achieved by defining a regular expression for the parameter.
+
+*Example*: The following example limits the value of the `userID` parameter to contain a maximum of 9 digits, making it suitable for an [classname]`Integer`:
+
+[source,java]
+----
+@Route("user/:userID?([0-9]{1,9})/edit")
+public class UserProfileEdit extends Div implements BeforeEnterObserver {
+
+    private Integer userID;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        userID = event.getRouteParameters().getInteger("userID").
+                orElse(CurrentUser.get().getUserID());
+    }
+}
+----
+
+[NOTE]
+[classname]`RouteParameters` also provides methods to access route parameter values: [methodname]`getInteger()`, [methodname]`getLong()` and [methodname]`getBoolean()`.
+The [classname]`RouteParameterRegex` class also defines the regular expression values for these types, so the route defined in the above example may be written as `@Route("user/:userID?(" + RouteParameterRegex.INTEGER + ")/edit")`
+
+== Wildcard Route Parameters Using Regular Expressions
+
+For wildcard parameters, the regular expression is applied to all segments at the end of the URL individually.
+If one segment fails to match the regular expression, the whole template fails to match the URL.
+
+*Example*: The following route `api/:path*(com|vaadin|flow)` accepts only one of the `com`, `vaadin` or `flow` values as any value of the segments which follow after `api` segment.
+
+* Resolved examples:
+** `api/com/vaadin/flow`, where parameter `path` has the value `"com/vaadin/flow"`.
+** `api/com/flow`, where parameter `path` has the value `"com/flow"`
+** `api/flow/vaadin`, where parameter `path` has the value `"flow/vaadin"`
+* Unresolved example:
+** `api/com/vaadin/framework`.
+
+[source,java]
+----
+@Route("api/:path*(com|vaadin|flow)")
+public class ApiViewer extends Div implements BeforeEnterObserver {
+}
+----
+
+[NOTE]
+Optional parameters are greedily matched from left to right.
+Hence, given the template `path/to/:param1?([0-9]\*)/:param2?([a-z]*)`, the following URLs match:
+
+* `path/to` with no parameter;
+* `path/to/123`, where `param1` = `123`;
+* `path/to/123/qwe`, where `param1` = `123` and `param2` = `qwe`.
+
+The `path/to/qwe/123` doesn't match the template.
+
+== Route Template Priority
+
+For an application with a complex structure, the list of route templates may cause some overlapping in the definition of parameters for each route.
+
+By default, the Router engine denies any attempt to register the same route for more than one view.
+A route containing optional parameters is in conflict with the same route without the parameters.
+Hence, the last to be registered fails.
+The failure causes an [classname]`InvalidRouteConfigurationException` to be thrown during route registration, leading to the termination of the application.
+
+*Example*: The following configuration fails, since both resolve to `items/show`.
+This is clear at configuration time.
+
+[source,java]
+----
+@Route("items/show")
+public static class ShowAllView extends Div {
+}
+
+// This route fails when registered and application is terminated.
+@Route("items/show/:filter?")
+public static class SearchView extends Div {
+}
+----
+
+[NOTE]
+One way to fix this is to make the `filter` parameter mandatory, by removing the `optional` modifier.
+The resulting route looks like `@Route("items/show/:filter")`.
+The other possibility is to remove the [classname]`ShowAllView` class and show all items using [classname]`SearchView` when the `filter` parameter is missing.
+
+However, computationally identifying all possible ambiguities between route templates is difficult.
+Hence, instead of failing the application when a conflicting route is registered, a priority mechanism needs to be used when the URL is resolved.
+By this mechanism, one route has priority over the others, depending on the parameter modifier and the order the routes are registered.
+This is applicable for any defined route, on the same navigation view or another view, and using either [annotationname]`@Route` or [annotationname]`@RouteAlias`.
+
+When resolving a URL, the matcher determines the final route template to apply by matching each URL segment with a template segment in the same position.
+If at any URL segment there is more than one matching template segment, the following priority order applies:
+
+1. Static segment.
+2. Mandatory parameter.
+3. Optional parameter.
+4. Next segments following the optional parameter.
+5. Wildcard parameter.
+
+[NOTE]
+You should avoid overlap when defining static routes using annotations, because not all conflicts are caught, and annotation discovery order isn't fully deterministic.
+For a dynamically registered route, the registration order is the developer's responsibility.
+
+*Example*: In the following example:
+
+* `items/show` always resolves into the [classname]`ShowAllView` navigation target, regardless of the order the routes are registered.
+* `items/phone` is resolved into [classname]`ItemView`, and the `identifier` parameter has the value `"phone"`.
+This is because `show` is a static segment within a registered route and has priority over the parameter in the other route.
+
+[source,java]
+----
+@Route("items/:identifier")
+public static class ItemView extends Div {
+}
+
+@Route("items/show")
+public static class ShowAllView extends Div {
+}
+----
+
+The same applies when using [annotationname]`@RouteAlias` on the same navigation target.
+
+*Example*: The following URLs are resolved by different routes registered on the same navigation target.
+
+* `thread/last` is resolved by `@RouteAlias("last")`.
+* `thread/123` is resolved by `@RouteAlias(":messageID(" + RouteParameterRegex.INTEGER + ")")` and the parameter `messageID` is assigned the value `"123"`.
+* `thread/web` is resolved by `@RouteAlias(":something?")` and parameter `something` is assigned the value `"web"`.
+
+[source,java]
+----
+@Route(":something?")
+@RouteAlias(":messageID(" + RouteParameterRegex.INTEGER + ")")
+@RouteAlias("last")
+@RoutePrefix("thread")
+public static class ThreadView extends Div implements BeforeEnterObserver {
+
+    private Integer messageID;
+
+    private String something;
+
+    private boolean last;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        last = "last".equals(getLastSegment(event));
+
+        messageID = null;
+        something = null;
+
+        if (!last) {
+            final RouteParameters urlParameters = event.getRouteParameters();
+
+            urlParameters.getInteger("messageID")
+                    .ifPresent(value -> messageID = value);
+            urlParameters.get("something")
+                    .ifPresent(value -> something = value);
+        }
+    }
+}
+----
+
+[NOTE]
+Even though [annotationname]`@Route(":something?")` is the first to be defined, it's the last to try resolving a URL, because its parameter is optional.
+
+[NOTE]
+In above example, since all templates resolve into the same navigation target, different parameters are passed to the view.
+And even though `messageID` is a mandatory parameter, it might be missing from the [classname]`RouteParameters` when the URL is resolved by one of the routes not containing a `messageID` parameter.
+
+A wildcard template is the last to process the ending segments of a URL, if any other registered Route templates failed.
+
+*Example*: Three route templates, where the first two contain wildcard parameters:
+
+* `component/:identifier/:path*`
+* `component/:identifier/:tab(api)/:path*`
+* `component/:identifier/:tab(overview|samples|links|reviews|discussions)`
+
+Any URL matched by the any of last two templates is matched by the first one as well.
+However, due to the priority rules, only URLs not matched by the last two templates end up being processed by the first one, thus:
+
+* `component/button/api/com/vaadin/flow/button` is processed by the `component/:identifier/:tab(api)/:path*` with parameters:
+** `identifier` = `button`
+** `tab` = `api`
+** `path` = `com/vaadin/flow/button`
+* `component/grid/com/vaadin/flow/grid` is processed by the `component/:identifier/:path*` with parameters:
+** `identifier` = `grid`
+** `path` = `com/vaadin/flow/grid`
+* `component/label/links` is processed by the `component/:identifier/:tab(overview|samples|links|reviews|discussions)` with parameters:
+** `identifier` = `label`
+** `tab` = `links`
+
+[source,java]
+----
+@Route(value = ":path*" , layout = ParentView.class)
+public static class PathView extends Div {
+}
+
+@Route(value = ":tab(api)/:path*", layout = ParentView.class)
+public static class ApiView extends Div {
+}
+
+@Route(value = ":tab(overview|samples|links|reviews|discussions)", layout = ParentView.class)
+public static class OthersView extends Div {
+}
+
+@RoutePrefix("component/:identifier")
+public static class ParentView extends Div implements RouterLayout {
+}
+----
+
+
+[discussion-id]`75B764EF-F25F-4C90-84AE-56E7A8C82519`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++
