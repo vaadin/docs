@@ -1,17 +1,19 @@
-// TODO: replace with real @hilla/react-crud styles
-import { css } from 'lit';
+import { css, unsafeCSS } from 'lit';
+// @ts-ignore
+import autoGridStyles from '@hilla/react-crud/autogrid.obj.js';
+// @ts-ignore
+import autoFormStyles from '@hilla/react-crud/autoform.obj.js';
+// @ts-ignore
+import autoCrudStyles from '@hilla/react-crud/autocrud.obj.js';
+
+function extractCss(stylesheet: CSSStyleSheet): string {
+  return Array.from(stylesheet.cssRules)
+    .map((rule) => rule.cssText)
+    .join('\n');
+}
 
 export const autoGridHostStyles = css`
-  .autoGridFilterWithLessGreaterEquals {
-    --vaadin-field-default-width: 2em;
-    margin-right: 3px;
-  }
-
-  .autoGridFilterWithLessGreaterEquals > vaadin-select-value-button {
-    --_lumo-text-field-overflow-mask-image: none !important;
-  }
-
-  .autoGridFilterWithLessGreaterEquals::part(toggle-button) {
-    display: none;
-  }
+  ${unsafeCSS(extractCss(autoGridStyles))}
+  ${unsafeCSS(extractCss(autoFormStyles))}
+  ${unsafeCSS(extractCss(autoCrudStyles))}
 `;
