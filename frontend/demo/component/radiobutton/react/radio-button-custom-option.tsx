@@ -45,10 +45,7 @@ function Example() {
       </RadioGroup>
       {/* end::snippet[] */}
 
-      {/* Workaround https://github.com/vaadin/react-components/issues/118 */}
-      <div hidden={value !== '-1'}>
-        <TextField label="Card number" />
-      </div>
+      <TextField label="Card number" hidden={value !== '-1'} />
     </VerticalLayout>
   );
 }

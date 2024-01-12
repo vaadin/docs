@@ -3,13 +3,6 @@ import React from 'react';
 import { MenuBar } from '@hilla/react-components/MenuBar.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import '@vaadin/icons';
-import { createRoot } from 'react-dom/client';
-
-function menuComponent(component: React.ReactNode) {
-  const container = document.createElement('vaadin-menu-bar-item');
-  createRoot(container).render(component);
-  return container;
-}
 
 function createItem(iconName: string, text: string, isChild = false) {
   const iconStyle: React.CSSProperties = {};
@@ -24,7 +17,7 @@ function createItem(iconName: string, text: string, isChild = false) {
     ariaLabel = 'duplicate';
   }
 
-  return menuComponent(
+  return (
     <>
       <Icon icon={`vaadin:${iconName}`} style={iconStyle} aria-label={ariaLabel} />
       {text}

@@ -4,7 +4,6 @@ import { Avatar } from '@hilla/react-components/Avatar.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { MenuBar } from '@hilla/react-components/MenuBar.js';
-import { createRoot } from 'react-dom/client';
 
 function Example() {
   const [person, setPerson] = useState<Person>();
@@ -16,18 +15,9 @@ function Example() {
   }, []);
 
   // tag::snippet[]
-  // Workaround https://github.com/vaadin/react-components/issues/132
-  function menuComponent(component: React.ReactNode) {
-    const container = document.createElement('div');
-    createRoot(container).render(component);
-    return container;
-  }
-
   const menuBarItems = [
     {
-      component: menuComponent(
-        <Avatar name={`${person?.firstName} ${person?.lastName}`} img={person?.pictureUrl} />
-      ),
+      component: <Avatar name={`${person?.firstName} ${person?.lastName}`} img={person?.pictureUrl} />,
       children: [
         {
           text: 'Profile',
