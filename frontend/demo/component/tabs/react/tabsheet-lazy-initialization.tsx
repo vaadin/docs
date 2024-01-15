@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example';
 import React, { useState } from 'react';
-import { TabSheet, type TabSheetSelectedChangedEvent } from '@hilla/react-components/TabSheet.js';
-import { Tabs } from '@hilla/react-components/Tabs.js';
-import { Tab } from '@hilla/react-components/Tab.js';
+import { TabSheet, type TabSheetSelectedChangedEvent } from '@vaadin/react-components/TabSheet.js';
+import { Tabs } from '@vaadin/react-components/Tabs.js';
+import { Tab } from '@vaadin/react-components/Tab.js';
 
 function Example() {
   // tag::snippet[]

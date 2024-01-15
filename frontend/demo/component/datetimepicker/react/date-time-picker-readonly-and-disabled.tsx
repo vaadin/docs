@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { DateTimePicker } from '@hilla/react-components/DateTimePicker.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { DateTimePicker } from '@vaadin/react-components/DateTimePicker.js';
 
 function Example() {
   return (

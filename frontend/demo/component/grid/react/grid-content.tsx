@@ -1,13 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { GridSelectionColumn } from '@hilla/react-components/GridSelectionColumn.js';
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { GridSelectionColumn } from '@vaadin/react-components/GridSelectionColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 // tag::snippet[]
 const employeeRenderer = (person: Person) => (

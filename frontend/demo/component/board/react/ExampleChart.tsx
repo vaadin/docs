@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Chart } from '@hilla/react-components/Chart.js';
-import { ChartSeries } from '@hilla/react-components/ChartSeries.js';
+import { Chart } from '@vaadin/react-components/Chart.js';
+import { ChartSeries } from '@vaadin/react-components/ChartSeries.js';
 import { getViewEvents } from 'Frontend/demo/domain/DataService';
 import type ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
 

@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { DateTimePicker } from '@hilla/react-components/DateTimePicker.js';
+import { DateTimePicker } from '@vaadin/react-components/DateTimePicker.js';
 
 const initialStartValue = '2020-08-25T20:00';
 const initialEndValue = '2020-09-01T20:00';

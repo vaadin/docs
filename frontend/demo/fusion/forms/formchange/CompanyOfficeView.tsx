@@ -5,8 +5,8 @@ import CompanyOfficeModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/
 import { useEffect, useState } from 'react';
 import Country from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/Country';
 import City from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/City';
-import { ComboBox } from '@hilla/react-components/ComboBox.js';
-import { Button } from '@hilla/react-components/Button.js';
+import { ComboBox } from '@vaadin/react-components/ComboBox.js';
+import { Button } from '@vaadin/react-components/Button.js';
 
 export default function CompanyOfficeView() {
   // tag::snippet[]

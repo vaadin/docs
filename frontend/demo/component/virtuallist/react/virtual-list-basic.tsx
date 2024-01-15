@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { VirtualList } from '@hilla/react-components/VirtualList.js';
+import { VirtualList } from '@vaadin/react-components/VirtualList.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { Details } from '@hilla/react-components/Details.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { Details } from '@vaadin/react-components/Details.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 
 const avatarStyle = {
   height: '64px',

@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState, useEffect } from 'react';
-import { GridPro } from '@hilla/react-components/GridPro.js';
+import { GridPro } from '@vaadin/react-components/GridPro.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { GridProEditColumn } from '@hilla/react-components/GridProEditColumn.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { GridProEditColumn } from '@vaadin/react-components/GridProEditColumn.js';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);

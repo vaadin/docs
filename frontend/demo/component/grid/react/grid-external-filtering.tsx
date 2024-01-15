@@ -1,14 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { TextField } from '@hilla/react-components/TextField.js';
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 type PersonEnhanced = Person & { displayName: string };

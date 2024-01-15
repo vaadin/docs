@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { LoginOverlay } from '@hilla/react-components/LoginOverlay.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 
 function Example() {
   const [loginOpened, setLoginOpened] = useState(false);

@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { AppLayout } from '@hilla/react-components/AppLayout.js';
+import { AppLayout } from '@vaadin/react-components/AppLayout.js';
 import {
   HorizontalLayout,
   type HorizontalLayoutElement,
-} from '@hilla/react-components/HorizontalLayout.js';
+} from '@vaadin/react-components/HorizontalLayout.js';
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style: React.CSSProperties = {

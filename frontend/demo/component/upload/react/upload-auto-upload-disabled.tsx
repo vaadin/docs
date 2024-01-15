@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useRef, useEffect } from 'react';
-import { Upload, type UploadElement } from '@hilla/react-components/Upload.js';
+import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
 import { createFakeFilesUploadAutoUploadDisabled } from './upload-demo-mock-files'; // hidden-source-line
 
 function Example() {

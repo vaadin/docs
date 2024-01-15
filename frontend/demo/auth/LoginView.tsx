@@ -1,4 +1,4 @@
-import { LoginOverlay } from '@hilla/react-components/LoginOverlay.js';
+import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './auth';

@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import {
   ConfirmDialog,
   type ConfirmDialogOpenedChangedEvent,
-} from '@hilla/react-components/ConfirmDialog.js';
+} from '@vaadin/react-components/ConfirmDialog.js';
 
 function Example() {
   const [dialogOpened, setDialogOpened] = useState(false);

@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Chart } from '@hilla/react-components/Chart.js';
-import { ChartSeries } from '@hilla/react-components/ChartSeries.js';
+import { Chart } from '@vaadin/react-components/Chart.js';
+import { ChartSeries } from '@vaadin/react-components/ChartSeries.js';
 import type { Options, PointOptionsObject, SeriesOptionsType } from 'highcharts';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

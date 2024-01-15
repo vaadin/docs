@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { LoginForm } from '@hilla/react-components/LoginForm.js';
+import { LoginForm } from '@vaadin/react-components/LoginForm.js';
 
 function Example() {
   return (
