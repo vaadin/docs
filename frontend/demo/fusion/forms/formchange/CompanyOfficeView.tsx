@@ -1,4 +1,4 @@
-import { useForm } from '@hilla/react-form';
+import { useForm } from '@vaadin/hilla-react-form';
 
 import { OfficeService } from 'Frontend/generated/endpoints';
 import CompanyOfficeModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/CompanyOfficeModel';
