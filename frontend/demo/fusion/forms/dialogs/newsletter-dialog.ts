@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
-import { Binder, field, ObjectModel } from '@hilla/form';
+import { Binder, field, ObjectModel } from '@vaadin/hilla-lit-form';
 import NewsletterSubscriptionModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/dialogs/NewsletterSubscriptionModel';
 import { NewsletterEndpoint } from 'Frontend/generated/endpoints';
 import { html, LitElement } from 'lit';

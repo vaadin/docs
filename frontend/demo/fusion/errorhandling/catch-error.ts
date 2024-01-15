@@ -8,7 +8,7 @@ export async function callEndpoint() {
   } catch (error) {
     if (error instanceof EndpointError) {
       console.warn((error as EndpointError).message); // "Not implemented"
-      console.warn((error as EndpointError).type); // "dev.hilla.exception.EndpointException"
+      console.warn((error as EndpointError).type); // "com.vaadin.hilla.exception.EndpointException"
     }
   }
 }
