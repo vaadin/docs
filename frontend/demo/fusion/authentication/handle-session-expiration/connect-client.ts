@@ -1,4 +1,4 @@
-import { ConnectClient, InvalidSessionMiddleware } from '@hilla/frontend';
+import { ConnectClient, InvalidSessionMiddleware } from '@vaadin/hilla-core';
 import { setSessionExpired } from '../auth';
 const client = new ConnectClient({
   prefix: 'connect',
