@@ -16,18 +16,9 @@ function Example() {
   }, []);
 
   // tag::snippet[]
-  // Workaround https://github.com/vaadin/react-components/issues/132
-  function menuComponent(component: React.ReactNode) {
-    const container = document.createElement('div');
-    createRoot(container).render(component);
-    return container;
-  }
-
   const menuBarItems = [
     {
-      component: menuComponent(
-        <Avatar name={`${person?.firstName} ${person?.lastName}`} img={person?.pictureUrl} />
-      ),
+      component: <Avatar name={`${person?.firstName} ${person?.lastName}`} img={person?.pictureUrl} />,
       children: [
         {
           text: 'Profile',
