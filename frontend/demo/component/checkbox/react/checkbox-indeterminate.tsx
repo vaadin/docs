@@ -25,8 +25,7 @@ function Example() {
         checked={selectedIds.length === items.length}
         indeterminate={selectedIds.length > 0 && selectedIds.length < items.length}
         onChange={(e) => {
-          // TODO: This doesn't currently invoke. See https://github.com/vaadin/react-components/issues/133
-          setSelectedIds(e.currentTarget.checked ? items.map((person) => String(person.id)) : []);
+          setSelectedIds(e.target.checked ? items.map((person) => String(person.id)) : []);
         }}
       />
 

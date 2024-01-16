@@ -4,16 +4,9 @@ import { MenuBar } from '@hilla/react-components/MenuBar.js';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { Tooltip } from '@hilla/react-components/Tooltip.js';
 import '@vaadin/icons';
-import { createRoot } from 'react-dom/client';
-
-function menuComponent(component: React.ReactNode) {
-  const container = document.createElement('vaadin-menu-bar-item');
-  createRoot(container).render(component);
-  return container;
-}
 
 function createItem(iconName: string) {
-  return menuComponent(<Icon icon={`vaadin:${iconName}`} />);
+  return <Icon icon={`vaadin:${iconName}`} />;
 }
 
 function Example() {
