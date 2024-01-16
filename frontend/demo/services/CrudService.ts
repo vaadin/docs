@@ -1,6 +1,6 @@
-import FilterUnion from 'Frontend/generated/dev/hilla/crud/filter/FilterUnion';
-import Matcher from 'Frontend/generated/dev/hilla/crud/filter/PropertyStringFilter/Matcher';
-import Pageable from 'Frontend/generated/dev/hilla/mappedtypes/Pageable';
+import FilterUnion from 'Frontend/generated/com/vaadin/hilla/crud/filter/FilterUnion';
+import Matcher from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter/Matcher';
+import Pageable from 'Frontend/generated/com/vaadin/hilla/mappedtypes/Pageable';
 import { CrudService } from '@vaadin/hilla-react-crud';
 
 type AbstractEntity = { id?: any };
