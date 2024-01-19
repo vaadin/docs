@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { TabSheet, type TabSheetSelectedChangedEvent } from '@hilla/react-components/TabSheet.js';
 import { Tabs } from '@hilla/react-components/Tabs.js';
@@ -32,4 +32,4 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

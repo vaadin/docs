@@ -1,5 +1,5 @@
-import React from 'react';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { Notification } from '@hilla/react-components/Notification.js';
 
 function Example() {

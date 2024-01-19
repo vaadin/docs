@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
 import { Accordion, type AccordionOpenedChangedEvent } from '@hilla/react-components/Accordion.js';
 import { AccordionPanel } from '@hilla/react-components/AccordionPanel.js';
@@ -95,4 +95,4 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

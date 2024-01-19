@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { Notification } from '@hilla/react-components/Notification.js';
 import React, { useEffect, useRef } from 'react';
+import { Notification } from '@hilla/react-components/Notification.js';
 import { Upload } from '@hilla/react-components/Upload.js';
 import type { UploadFileRejectEvent } from '@hilla/react-components/Upload.js';
 
