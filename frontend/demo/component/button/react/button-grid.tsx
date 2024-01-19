@@ -1,12 +1,12 @@
-import { Button } from '@hilla/react-components/Button.js'; // hidden-source-line
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
+import { Button } from '@hilla/react-components/Button.js';
 import { Grid } from '@hilla/react-components/Grid.js';
 import { GridColumn } from '@hilla/react-components/GridColumn.js';
 import { GridSelectionColumn } from '@hilla/react-components/GridSelectionColumn.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { reactExample } from 'Frontend/demo/react-example';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { useEffect, useState } from 'react';
 

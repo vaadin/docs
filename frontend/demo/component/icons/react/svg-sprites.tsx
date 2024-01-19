@@ -1,5 +1,5 @@
-import React from 'react';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { Icon } from '@hilla/react-components/Icon.js';
 import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
 import spriteIcons from '../../../../../src/main/resources/icons/solid.svg';
