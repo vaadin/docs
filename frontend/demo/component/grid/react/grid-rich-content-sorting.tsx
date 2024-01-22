@@ -16,7 +16,6 @@ function employeeRenderer({ item: person }: { item: Person }) {
       <Avatar
         img={person.pictureUrl}
         name={`${person.firstName} ${person.lastName}`}
-        {...{ alt: 'User avatar' }}
       />
 
       <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>

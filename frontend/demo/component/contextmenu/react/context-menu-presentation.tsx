@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
 import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
@@ -109,4 +109,4 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line
