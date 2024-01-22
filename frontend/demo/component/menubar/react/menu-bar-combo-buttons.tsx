@@ -1,4 +1,4 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { MenuBar } from '@vaadin/react-components/MenuBar.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
@@ -18,4 +18,4 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

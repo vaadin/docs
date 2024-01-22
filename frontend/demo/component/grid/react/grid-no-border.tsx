@@ -21,7 +21,6 @@ function Example() {
           <Avatar
             img={item.pictureUrl}
             name={`${item.firstName} ${item.lastName}`}
-            {...{ alt: 'User avatar' }}
           />
         )}
       </GridColumn>

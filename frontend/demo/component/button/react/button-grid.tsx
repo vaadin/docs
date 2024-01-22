@@ -5,8 +5,8 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridSelectionColumn } from '@vaadin/react-components/GridSelectionColumn.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line        
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { reactExample } from 'Frontend/demo/react-example';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { useEffect, useState } from 'react';
 

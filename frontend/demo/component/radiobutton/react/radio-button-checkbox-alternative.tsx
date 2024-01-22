@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-
 import React from 'react';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
 import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
