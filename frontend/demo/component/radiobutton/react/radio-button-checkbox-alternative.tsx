@@ -1,10 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-
 import React from 'react';
-import { Checkbox } from '@hilla/react-components/Checkbox.js';
-import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { RadioButton } from '@hilla/react-components/RadioButton.js';
+import { Checkbox } from '@vaadin/react-components/Checkbox.js';
+import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { RadioButton } from '@vaadin/react-components/RadioButton.js';
 
 function Example() {
   return (

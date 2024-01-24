@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { FormLayout, type FormLayoutResponsiveStep } from '@hilla/react-components/FormLayout.js';
-import { Upload, type UploadElement } from '@hilla/react-components/Upload.js';
+import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
+import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
 import {
   createFakeFilesUploadErrorMessagesA,
   createFakeFilesUploadErrorMessagesB,

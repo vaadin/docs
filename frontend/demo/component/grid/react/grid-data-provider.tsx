@@ -1,16 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useMemo, useState } from 'react';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import {
   Grid,
   type GridDataProviderCallback,
   type GridDataProviderParams,
   type GridSorterDefinition,
   type GridSorterDirection,
-} from '@hilla/react-components/Grid.js';
-import { GridSortColumn } from '@hilla/react-components/GridSortColumn.js';
+} from '@vaadin/react-components/Grid.js';
+import { GridSortColumn } from '@vaadin/react-components/GridSortColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import '@vaadin/icons';

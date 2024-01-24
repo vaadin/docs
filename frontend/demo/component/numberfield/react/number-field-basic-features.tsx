@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { NumberField } from '@hilla/react-components/NumberField.js';
-import { Tooltip } from '@hilla/react-components/Tooltip.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { NumberField } from '@vaadin/react-components/NumberField.js';
+import { Tooltip } from '@vaadin/react-components/Tooltip.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function Example() {

@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { MessageList } from '@hilla/react-components/MessageList.js';
+import { MessageList } from '@vaadin/react-components/MessageList.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { subDays, subMinutes, format } from 'date-fns';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';

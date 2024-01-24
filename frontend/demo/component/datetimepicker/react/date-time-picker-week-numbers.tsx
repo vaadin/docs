@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import {
   DateTimePicker,
   type DateTimePickerElement,
-} from '@hilla/react-components/DateTimePicker.js';
+} from '@vaadin/react-components/DateTimePicker.js';
 
 function Example() {
   // tag::snippet[]

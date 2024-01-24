@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { PasswordField } from '@hilla/react-components/PasswordField.js';
+import { PasswordField } from '@vaadin/react-components/PasswordField.js';
 
 function Example() {
   return (

@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { LoginOverlay, type LoginOverlayElement } from '@hilla/react-components/LoginOverlay.js';
+import { LoginOverlay, type LoginOverlayElement } from '@vaadin/react-components/LoginOverlay.js';
 
 function Example() {
   // tag::snippet[]

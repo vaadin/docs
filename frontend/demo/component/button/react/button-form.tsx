@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { EmailField } from '@hilla/react-components/EmailField.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { FormLayout } from '@hilla/react-components/FormLayout.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { EmailField } from '@vaadin/react-components/EmailField.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 
 function Example() {
   return (

@@ -1,9 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Notification } from '@hilla/react-components/Notification.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Notification } from '@vaadin/react-components/Notification.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 
 function Example() {

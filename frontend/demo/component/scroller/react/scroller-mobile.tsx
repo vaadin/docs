@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import '@vaadin/icons';
-import { Scroller } from '@hilla/react-components/Scroller.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Icon } from '@hilla/react-components/Icon.js';
-import { Button } from '@hilla/react-components/Button.js';
+import { Scroller } from '@vaadin/react-components/Scroller.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { Button } from '@vaadin/react-components/Button.js';
 
 const sectionStyle = {
   border: '1px solid var(--lumo-contrast-20pct)',

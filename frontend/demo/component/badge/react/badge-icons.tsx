@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Icon } from '@hilla/react-components/Icon.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import '@vaadin/icons';
 
 function Example() {

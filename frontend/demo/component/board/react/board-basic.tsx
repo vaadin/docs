@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Board } from '@hilla/react-components/Board.js';
-import { BoardRow } from '@hilla/react-components/BoardRow.js';
+import { Board } from '@vaadin/react-components/Board.js';
+import { BoardRow } from '@vaadin/react-components/BoardRow.js';
 import ExampleIndicator from './ExampleIndicator';
 import ExampleChart from './ExampleChart';
 import boardStyles from './board-styles';

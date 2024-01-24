@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { TimePicker } from '@hilla/react-components/TimePicker.js';
-import { Icon } from '@hilla/react-components/Icon.js';
-import { Tooltip } from '@hilla/react-components/Tooltip.js';
+import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { Tooltip } from '@vaadin/react-components/Tooltip.js';
 import '@vaadin/icons';
 
 function Example() {

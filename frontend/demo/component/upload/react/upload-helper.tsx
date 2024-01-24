@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { Upload } from '@hilla/react-components/Upload.js';
-import { Notification } from '@hilla/react-components/Notification.js';
+import { Upload } from '@vaadin/react-components/Upload.js';
+import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
   const maxFileSizeInMB = 1;
