@@ -4,16 +4,16 @@ import {
   Grid,
   type GridDataProviderCallback,
   type GridDataProviderParams,
-} from '@hilla/react-components/Grid.js';
-import { GridTreeToggle } from '@hilla/react-components/GridTreeToggle.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+} from '@vaadin/react-components/Grid.js';
+import { GridTreeToggle } from '@vaadin/react-components/GridTreeToggle.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import '@vaadin/icons';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 
 async function dataProvider(
   params: GridDataProviderParams<Person>,

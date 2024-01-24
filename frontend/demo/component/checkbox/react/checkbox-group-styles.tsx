@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { CheckboxGroup } from '@hilla/react-components/CheckboxGroup.js';
-import { Checkbox } from '@hilla/react-components/Checkbox.js';
+import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
+import { Checkbox } from '@vaadin/react-components/Checkbox.js';
 
 function Example() {
   return (

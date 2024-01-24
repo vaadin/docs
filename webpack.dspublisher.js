@@ -84,6 +84,12 @@ module.exports = async function (config) {
   config.resolve.alias['Frontend/generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
   const frontendFolder = path.resolve(__dirname, 'frontend');
+  config.resolve.alias['Frontend/generated/endpoints'] = path.resolve(
+    frontendFolder,
+    'demo',
+    'services',
+    'mocks.js'
+  );
   config.resolve.alias['Frontend'] = frontendFolder;
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
 

@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState, useEffect } from 'react';
-import { Grid, type GridEventContext } from '@hilla/react-components/Grid.js';
+import { Grid, type GridEventContext } from '@vaadin/react-components/Grid.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { Icon } from '@hilla/react-components/Icon.js';
-import { Tooltip } from '@hilla/react-components/Tooltip.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { Tooltip } from '@vaadin/react-components/Tooltip.js';
 import { differenceInYears, parseISO } from 'date-fns';
 import '@vaadin/icons';
 

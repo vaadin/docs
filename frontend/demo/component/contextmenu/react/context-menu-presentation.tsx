@@ -1,14 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
-import { ContextMenu, type ContextMenuItem } from '@hilla/react-components/ContextMenu.js';
-import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
+import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { createRoot } from 'react-dom/client';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function Item({ person }: { person: Person }) {

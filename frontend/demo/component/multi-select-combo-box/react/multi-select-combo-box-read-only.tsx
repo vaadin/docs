@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect, useState } from 'react';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
-import { MultiSelectComboBox } from '@hilla/react-components/MultiSelectComboBox.js';
+import { MultiSelectComboBox } from '@vaadin/react-components/MultiSelectComboBox.js';
 
 function Example() {
   const [items, setItems] = useState<Country[]>([]);

@@ -1,14 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { Crud, crudPath } from '@vaadin/react-components/Crud.js';
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { EmailField } from '@vaadin/react-components/EmailField.js';
+import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import React, { useEffect, useState } from 'react';
-import { Crud, crudPath } from '@hilla/react-components/Crud.js';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { EmailField } from '@hilla/react-components/EmailField.js';
-import { ComboBox } from '@hilla/react-components/ComboBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { CrudEditColumn } from '@hilla/react-components/CrudEditColumn.js';
+import { CrudEditColumn } from '@vaadin/react-components/CrudEditColumn.js';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);

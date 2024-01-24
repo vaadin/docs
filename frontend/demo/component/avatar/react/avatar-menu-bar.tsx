@@ -1,9 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Avatar } from '@hilla/react-components/Avatar.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { MenuBar } from '@hilla/react-components/MenuBar.js';
+import { MenuBar } from '@vaadin/react-components/MenuBar.js';
+import { createRoot } from 'react-dom/client';
 
 function Example() {
   const [person, setPerson] = useState<Person>();

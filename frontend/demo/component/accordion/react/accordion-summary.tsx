@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Accordion, type AccordionOpenedChangedEvent } from '@hilla/react-components/Accordion.js';
-import { AccordionPanel } from '@hilla/react-components/AccordionPanel.js';
-import { FormLayout, type FormLayoutResponsiveStep } from '@hilla/react-components/FormLayout.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { EmailField } from '@hilla/react-components/EmailField.js';
-import { Button } from '@hilla/react-components/Button.js';
-import { ComboBox } from '@hilla/react-components/ComboBox.js';
+import { Accordion, type AccordionOpenedChangedEvent } from '@vaadin/react-components/Accordion.js';
+import { AccordionPanel } from '@vaadin/react-components/AccordionPanel.js';
+import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { EmailField } from '@vaadin/react-components/EmailField.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 

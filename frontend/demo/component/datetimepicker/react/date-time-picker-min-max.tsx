@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { DateTimePicker } from '@hilla/react-components/DateTimePicker.js';
+import { DateTimePicker } from '@vaadin/react-components/DateTimePicker.js';
 import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
 
 // tag::snippet[]

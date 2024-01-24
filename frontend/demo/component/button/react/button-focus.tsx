@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Button } from '@hilla/react-components/Button.js';
+import { Button } from '@vaadin/react-components/Button.js';
 
 function Example() {
   return (
