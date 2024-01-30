@@ -3,7 +3,7 @@ package com.vaadin.demo.fusion.security.authentication;
 import java.util.Collection;
 import java.util.Collections;
 
-import jakarta.annotation.Nonnull;
+import dev.hilla.Nonnull;
 
 /**
  * User information used in client-side authentication and authorization.
@@ -15,7 +15,7 @@ public class UserInfo {
     @Nonnull
     private String name;
     @Nonnull
-    private Collection<String> authorities;
+    private Collection<@Nonnull String> authorities;
 
     public UserInfo(String name, Collection<String> authorities) {
         this.name = name;
