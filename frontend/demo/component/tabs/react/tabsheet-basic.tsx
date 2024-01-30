@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { TabSheet } from '@hilla/react-components/TabSheet.js';
-import { Tabs } from '@hilla/react-components/Tabs.js';
-import { Tab } from '@hilla/react-components/Tab.js';
+import { TabSheet } from '@vaadin/react-components/TabSheet.js';
+import { Tabs } from '@vaadin/react-components/Tabs.js';
+import { Tab } from '@vaadin/react-components/Tab.js';
 
 function Example() {
   return (

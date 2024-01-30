@@ -4,7 +4,7 @@ import {
   ContextMenu,
   type ContextMenuItemSelectedEvent,
   type ContextMenuItem,
-} from '@hilla/react-components/ContextMenu.js';
+} from '@vaadin/react-components/ContextMenu.js';
 
 function Example() {
   // tag::snippet[]

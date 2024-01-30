@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { TextArea } from '@hilla/react-components/TextArea.js';
+import { TextArea } from '@vaadin/react-components/TextArea.js';
 import templates from '../../../../../src/main/resources/data/templates.json';
 
 function Example() {

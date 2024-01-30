@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { RadioButton } from '@hilla/react-components/RadioButton.js';
-import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
+import { RadioButton } from '@vaadin/react-components/RadioButton.js';
+import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
 
 function Example() {
   return (

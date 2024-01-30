@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridSortColumn } from '@hilla/react-components/GridSortColumn.js';
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridSortColumn } from '@vaadin/react-components/GridSortColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { format, parseISO } from 'date-fns';
 
 // tag::snippet[]
@@ -16,7 +16,6 @@ function employeeRenderer({ item: person }: { item: Person }) {
       <Avatar
         img={person.pictureUrl}
         name={`${person.firstName} ${person.lastName}`}
-        {...{ alt: 'User avatar' }}
       />
 
       <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>

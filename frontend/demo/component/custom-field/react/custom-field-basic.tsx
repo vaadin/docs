@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { DatePicker } from '@hilla/react-components/DatePicker.js';
+import { DatePicker } from '@vaadin/react-components/DatePicker.js';
 import {
   CustomField,
   type CustomFieldValueChangedEvent,
-} from '@hilla/react-components/CustomField.js';
+} from '@vaadin/react-components/CustomField.js';
 import { differenceInDays, parseISO } from 'date-fns';
 
 function Example() {

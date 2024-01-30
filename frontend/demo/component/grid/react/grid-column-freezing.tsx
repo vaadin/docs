@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState, useRef } from 'react';
-import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
+import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { Button } from '@hilla/react-components/Button.js';
+import { Button } from '@vaadin/react-components/Button.js';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);

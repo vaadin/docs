@@ -3,8 +3,8 @@ import React from 'react';
 import {
   MessageInput,
   type MessageInputSubmitEvent,
-} from '@hilla/react-components/MessageInput.js';
-import { Notification } from '@hilla/react-components/Notification.js';
+} from '@vaadin/react-components/MessageInput.js';
+import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
   // tag::snippet[]
