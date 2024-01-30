@@ -18,13 +18,13 @@ export class Example extends LitElement {
   }
 
   @state()
-  private errorMessage = '';
+  private accessor errorMessage = '';
 
   @state()
-  private minDate = new Date();
+  private accessor minDate = new Date();
 
   @state()
-  private maxDate = addDays(new Date(), 60);
+  private accessor maxDate = addDays(new Date(), 60);
 
   protected override render() {
     return html`

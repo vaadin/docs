@@ -78,7 +78,7 @@ export class ExampleStatistics extends LitElement {
   `;
 
   @state()
-  private serviceHealth: ServiceHealth[] = [];
+  private accessor serviceHealth: ServiceHealth[] = [];
 
   protected override async firstUpdated() {
     this.serviceHealth = await getServiceHealth();

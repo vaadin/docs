@@ -17,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private message = '';
+  private accessor message = '';
 
   protected override render() {
     return html`

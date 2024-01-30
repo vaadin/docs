@@ -4,7 +4,7 @@ import {
   MenuBar,
   type SubMenuItem,
   type MenuBarItemSelectedEvent,
-} from '@hilla/react-components/MenuBar.js';
+} from '@vaadin/react-components/MenuBar.js';
 
 function Example() {
   // tag::snippet[]

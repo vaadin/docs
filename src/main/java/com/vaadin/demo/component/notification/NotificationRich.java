@@ -16,6 +16,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import java.util.function.Supplier;
 
@@ -64,12 +65,11 @@ public class NotificationRich extends HorizontalLayout {
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
         Icon icon = VaadinIcon.CHECK_CIRCLE.create();
-        Div info = new Div(new Text("Application submitted!"));
 
         Button viewBtn = new Button("View", clickEvent -> notification.close());
-        viewBtn.getStyle().set("margin", "0 0 0 var(--lumo-space-l)");
+        viewBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
 
-        HorizontalLayout layout = new HorizontalLayout(icon, info, viewBtn,
+        var layout = new HorizontalLayout(icon, new Text("Application submitted!"), viewBtn,
                 createCloseBtn(notification));
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
@@ -83,13 +83,11 @@ public class NotificationRich extends HorizontalLayout {
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
         Icon icon = VaadinIcon.WARNING.create();
-        Div info = new Div(new Text("Failed to generate report!"));
-
         Button retryBtn = new Button("Retry",
                 clickEvent -> notification.close());
-        retryBtn.getStyle().set("margin", "0 0 0 var(--lumo-space-l)");
+        retryBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
 
-        HorizontalLayout layout = new HorizontalLayout(icon, info, retryBtn,
+        var layout = new HorizontalLayout(icon, new Text("Failed to generate report!"), retryBtn,
                 createCloseBtn(notification));
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
@@ -125,20 +123,24 @@ public class NotificationRich extends HorizontalLayout {
         icon.setColor("var(--lumo-success-color)");
 
         Div uploadSuccessful = new Div(new Text("Upload successful"));
-        uploadSuccessful.getStyle().set("font-weight", "600").set("color",
-                "var(--lumo-success-text-color)");
+        uploadSuccessful.getStyle()
+                .set("font-weight", "600")
+                .setColor("var(--lumo-success-text-color)");
 
         Span fileName = new Span("Financials.xlsx");
-        fileName.getStyle().set("font-size", "var(--lumo-font-size-s)")
+        fileName.getStyle()
+                .set("font-size", "var(--lumo-font-size-s)")
                 .set("font-weight", "600");
 
         Div info = new Div(uploadSuccessful,
                 new Div(fileName, new Text(" is now available in "),
                         new Anchor("#", "Documents")));
-        info.getStyle().set("font-size", "var(--lumo-font-size-s)").set("color",
-                "var(--lumo-secondary-text-color)");
 
-        HorizontalLayout layout = new HorizontalLayout(icon, info,
+        info.getStyle()
+                .set("font-size", "var(--lumo-font-size-s)")
+                .setColor("var(--lumo-secondary-text-color)");
+
+        var layout = new HorizontalLayout(icon, info,
                 createCloseBtn(notification));
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 

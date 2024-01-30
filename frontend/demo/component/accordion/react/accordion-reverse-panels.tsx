@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Accordion } from '@hilla/react-components/Accordion.js';
-import { AccordionPanel } from '@hilla/react-components/AccordionPanel.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { Accordion } from '@vaadin/react-components/Accordion.js';
+import { AccordionPanel } from '@vaadin/react-components/AccordionPanel.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 function Example() {
   return (
@@ -35,6 +35,5 @@ function Example() {
     // end::snippet[]
   );
 }
-// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

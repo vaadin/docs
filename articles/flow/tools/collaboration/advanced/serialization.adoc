@@ -1,0 +1,51 @@
+---
+title: Session Replication with Kubernetes Kit
+description: Best practices to achieve session replication when using Kubernetes Kit.
+order: 30
+---
+
+
+= Kubernetes Kit Session Replication
+
+<<{articles}/flow/tools/kubernetes#,Kubernetes Kit>> allows session replication by transferring HTTP session data via a backend session storage for every request. This requires that everything stored in the session is made serializable. The Kubernetes Kit documentation provides some general <<{articles}/flow/tools/kubernetes/session-replication#session-replication-tips,session replication tips>>. However, when using Collaboration Kit, there are some specific changes you may need to make.
+
+
+== Collaboration Kit Classes
+
+An instance of the  class `CollaborationEngine` should not be stored in the session. Don't work directly with the `CollaborationEngine` class. Instead, utilize other APIs, such as <<{articles}/flow/tools/collaboration/advanced/topic-api#,`Topic`>>, <<{articles}/flow/tools/collaboration/components/collaboration-binder#,`CollaborationBinder`>> and the <<{articles}/flow/tools/collaboration/managers/index#,managers>>. If you must work directly with the class, it should always be accessed using its singleton method:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/ConnectionContextExample.java[tags=component-context,indent=0]
+----
+
+[NOTE]
+The `MessageManager` constructor now takes a static method reference as its last argument. Previously, this took an instance of `CollaborationEngine`. This version of the constructor has now been deprecated, so you should also update this in your code.
+
+Here is a list of other Collaboration Kit classes that should not be stored in the session:
+
+[cols="1,3"]
+|===
+|Class |Alternative
+
+|`CollaborationList` |Use `topic.getNamedList()`
+|`CollaborationMap` |Use `topic.getNamedMap()`
+|`TopicConnection` |Use `CollaborationEngine.getInstance().openTopicConnection()`
+|===
+
+Conversely, here is a list of Collaboration Kit classes that are serializable and can be stored in the session:
+
+|===
+|Class
+
+|`CollaborationAvatarGroup`
+|`CollaborationBinder`
+|`CollaborationMessage`
+|`CollaborationMessageInput`
+|`CollaborationMessageList`
+|`ComponentConnectionContext`
+|`FormManager`
+|`MessageManager`
+|`PresenceManager`
+|`SystemConnectionContext`
+|===

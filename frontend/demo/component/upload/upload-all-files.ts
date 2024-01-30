@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('vaadin-upload')
-  private upload!: Upload;
+  private accessor upload!: Upload;
 
   // end::snippet[]
   protected override firstUpdated() {

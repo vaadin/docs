@@ -74,6 +74,7 @@ public class GridColumnVisibility extends Div {
             });
             menuItem.setCheckable(true);
             menuItem.setChecked(column.isVisible());
+            menuItem.setKeepOpen(true);
         }
     }
     // end::snippet2[]

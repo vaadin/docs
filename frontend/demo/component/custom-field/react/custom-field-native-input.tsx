@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { CustomField } from '@hilla/react-components/CustomField.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import { CustomField } from '@vaadin/react-components/CustomField.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
   const [customFieldValue, setCustomFieldValue] = useState('');

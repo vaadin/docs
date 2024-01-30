@@ -1,0 +1,82 @@
+---
+title: Vaadin Legacy CDI Application with MPR pass:[&] Flow
+order: 7
+---
+
+
+= Vaadin Legacy CDI Application with MPR & Flow
+
+This step is needed if your Vaadin 7 or 8 application uses CDI. If it doesn't, go back to the <<3-legacy-uis#,framework selection>>.
+
+== Updating to Correct CDI version
+
+You need to remove any version from `com.vaadin:vaadin-cdi` since the compatible version for it is managed by the `vaadin-bom`. Instead, the [filename]`pom.xml` file should look like this:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-cdi</artifactId>
+</dependency>
+----
+
+// Allow CDIUI
+pass:[<!-- vale Vaadin.Abbr = NO -->]
+
+== Handling CDIUI Annotation
+
+pass:[<!-- vale Vaadin.Abbr = YES -->]
+
+Instead of using `@CDIUI`, as shown below, use `@Route` and `@CdiComponent`.
+
+[source,java]
+----
+@CDIUI
+@Theme("valo")
+public class TodoUI extends UI {
+    @Override
+    protected void init(VaadinRequest vaadinRequest) {
+        setContent(new HorizontalLayout());
+    }
+}
+----
+
+Below is an example of how a replacement for what's shown above might look:
+
+[source,java]
+----
+@Route("")
+@CdiComponent
+public class TodoUI extends Div implements HasLegacyComponents {
+    @PostConstruct
+    private void buildLayouts() {
+        setSizeFull();
+        add(new HorizontalLayout());
+    }
+}
+----
+
+Annotations in the UI, such as `@Theme` and `@Title`, are dealt with later in the tutorial. Most of them have similar counterparts in either Flow or MPR.
+
+
+== Handling CDI Views
+
+Any `@CDIView` should be updated to a Flow Route by wrapping them as a `MprRouteAdapter<? extends View>` or re-writing them to be a Flow Component. See <<3-navigator#no-navigator,Upgrading Views to Flow Routes>> for more information on this.
+
+
+== Handling ViewScopes
+
+All ViewScopes should be changed to RouteScopes. For example, `@ViewScoped` should be changed to `@RouteScoped`, and `@NormalViewScoped` changed to `@NormalRouteScoped`.
+
+In some projects, CDI has ignored the archive and has not instantiated objects as expected. This is fixed by adding a `beans.xml` file -- an empty file with this name is enough -- to `src/main/webapp/WEB_INF`. Additionally, all Vaadin components that should be managed by the CDI container, should be annotated with `@CdiComponent`, or set `bean-discovery-mode=all` in [filename]`beans.xml`. However, this is not a recommended method.
+
+The next step is <<4-ui-parameters#,Configuring UI Parameters>>.
+
+
+[discussion-id]`5092446E-699F-40C4-A994-D5804AF8C7B3`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

@@ -12,16 +12,16 @@ const dateTimeFormat = `yyyy-MM-dd'T'HH:00:00`;
 @customElement('date-time-picker-min-max')
 export class Example extends LitElement {
   @state()
-  private errorMessage = '';
+  private accessor errorMessage = '';
 
   @state()
-  private initialValue = addDays(new Date(), 7);
+  private accessor initialValue = addDays(new Date(), 7);
 
   @state()
-  private minDate = new Date();
+  private accessor minDate = new Date();
 
   @state()
-  private maxDate = addDays(new Date(), 60);
+  private accessor maxDate = addDays(new Date(), 60);
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

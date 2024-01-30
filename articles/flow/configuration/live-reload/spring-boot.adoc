@@ -1,0 +1,65 @@
+---
+title: Live Reload with Spring Boot Developer Tools
+description: How the default live reload behavior for Spring Boot-based Vaadin applications.
+tab-title: Spring Boot
+order: 10
+---
+
+
+= Live Reload with Spring Boot Developer Tools
+
+By default for Vaadin applications based on Spring Boot, live reload uses https://docs.spring.io/spring-boot/docs/2.4.0.RELEASE/reference/html/using-spring-boot.html#using-boot-devtools[Spring Boot Developer Tools] to automatically restart the server whenever classpath entries are updated.
+
+The restart is faster than a manual restart, as it uses a customized class loader that reloads only the application's own classes.
+All Java code modifications are applied, including changes in the internal application logic, route modification (adding / removing / updating routes), and changes made to custom components ([classname]`PolymerTemplate` subclasses).
+The session is also preserved during the restart.
+
+== Step-by-Step Guide
+
+. Ensure that `spring-boot-devtools` is a dependency in the application's [filename]`pom.xml`:
++
+[source,xml]
+----
+<dependencies>
+    ...
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-devtools</artifactId>
+        <optional>true</optional>
+    </dependency>
+</dependencies>
+----
+. Run the application using `mvn spring-boot:run` (requires forking the JVM, which is the default mode) or via the [classname]`Application` class.
+. Open the application in the browser, make some Java code changes, recompile, and the browser reloads automatically.
++
+.Disable other Spring Developer Tools-related browser extensions
+[NOTE]
+Uninstall or disable any other browser extensions that refresh on Spring Developer Tools reload.
+As the Vaadin client also refreshes, having both active might lead to unexpected behavior.
+
+== [#configuration]#Additional Configuration#
+
+If you notice spurious errors during server restart, such as `Could not navigate to ...` or `Error creating bean with name ...`, or you frequently see multiple restarts from a single code change, the problem may be file monitoring triggering the restart prematurely, before all updated files have been written.
+The polling interval and quiet time can be configured in the [filename]`application.properties` file:
+
+----
+spring.devtools.restart.poll-interval=2s
+spring.devtools.restart.quiet-period=1s
+----
+
+Higher values improve stability at the cost of a higher-latency restart cycle.
+
+== Limitations
+
+* Modifications which rely on updated classpath dependencies require a full application restart.
+* The Vaadin client connects from the browser to the Spring Boot live reload server default port (35729).
+The port number to use can't currently be changed in the client.
+
+
+[discussion-id]`593A3003-D63C-48C3-A7C1-EE53183A37B4`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

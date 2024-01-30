@@ -4,7 +4,7 @@ import {
   DatePicker,
   type DatePickerElement,
   type DatePickerDate,
-} from '@hilla/react-components/DatePicker.js';
+} from '@vaadin/react-components/DatePicker.js';
 import { useState } from 'react';
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';

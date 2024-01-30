@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/text-area';
-import { loremIpsum } from '../../../../src/main/resources/data/templates.json';
+import templates from '../../../../src/main/resources/data/templates.json';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-area-auto-height')
@@ -24,7 +24,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-text-area label="Description" value="${loremIpsum}"></vaadin-text-area>
+      <vaadin-text-area label="Description" value="${templates.loremIpsum}"></vaadin-text-area>
       <!-- end::snippet[] -->
     `;
   }

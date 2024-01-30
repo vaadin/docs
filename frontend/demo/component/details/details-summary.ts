@@ -27,10 +27,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private items: Country[] = [];
+  private accessor items: Country[] = [];
 
   @state()
-  private responsiveSteps: FormLayoutResponsiveStep[] = [
+  private accessor responsiveSteps: FormLayoutResponsiveStep[] = [
     { minWidth: 0, columns: 1 },
     { minWidth: '20em', columns: 2 },
   ];

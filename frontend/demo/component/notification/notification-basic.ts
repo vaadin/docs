@@ -1,44 +1,16 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/button';
+import { LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
-import type { NotificationOpenedChangedEvent } from '@vaadin/notification';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-basic')
 export class Example extends LitElement {
-  @state()
-  private notificationOpened = false;
-
-  protected override createRenderRoot() {
-    const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
-    applyTheme(root);
-    return root;
-  }
-
-  handleClick() {
+  firstUpdated() {
     // tag::snippet[]
     const notification = Notification.show('Financial report generated', {
       position: 'middle',
+      duration: 0,
     });
     // end::snippet[]
-    this.notificationOpened = true;
-    const handleOpenChanged = (e: NotificationOpenedChangedEvent) => {
-      if (!e.detail.value) {
-        this.notificationOpened = false;
-        notification.removeEventListener('opened-changed', handleOpenChanged);
-      }
-    };
-    notification.addEventListener('opened-changed', handleOpenChanged);
-  }
-
-  protected override render() {
-    return html`
-      <vaadin-button @click="${this.handleClick}" .disabled="${this.notificationOpened}">
-        Try it
-      </vaadin-button>
-    `;
   }
 }

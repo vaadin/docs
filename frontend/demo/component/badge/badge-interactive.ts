@@ -19,10 +19,10 @@ type Profession = string;
 @customElement('badge-interactive')
 export class Example extends LitElement {
   @state()
-  private items: readonly Profession[] = [];
+  private accessor items: readonly Profession[] = [];
 
   @state()
-  private selectedProfessions: readonly Profession[] = [];
+  private accessor selectedProfessions: readonly Profession[] = [];
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

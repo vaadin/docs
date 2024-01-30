@@ -17,8 +17,8 @@ A hierarchy of AsciiDoc (either `.asciidoc` or `.adoc`) files, documenting the u
 
 For example:
 
-- `articles/intro/index.asciidoc` → `/intro/`
-- `articles/forms/data-binding.asciidoc` → `/forms/data-binding/`
+- `articles/flow/intro/index.asciidoc` → `/intro/`
+- `articles/flow/forms/data-binding.asciidoc` → `/forms/data-binding/`
 
 See the [contribution guides](https://vaadin.com/docs/latest/contributing-docs/overview) to learn how to write documentation articles.
 

@@ -19,7 +19,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private tooltipOpened = false;
+  private accessor tooltipOpened = false;
 
   protected override render() {
     return html`

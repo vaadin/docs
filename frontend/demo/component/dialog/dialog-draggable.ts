@@ -22,7 +22,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private dialogOpened = false;
+  private accessor dialogOpened = false;
 
   protected override render() {
     return html`

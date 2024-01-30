@@ -1,0 +1,77 @@
+---
+title: Updating URL Parameters without Navigation
+description: How to update URL parameters manually and without navigation.
+order: 25
+---
+
+
+= Updating URL Parameters without Navigation
+
+To preserve deep linking, a developer sometimes may need to maintain the route parameters and query parameters, manually.
+
+Route parameters, route templates and query parameters are most often defined in a link pointing to a specific view with the desired state, and when navigating to a view, the Router calls the view's [methodname]`setParameter()` method. The view itself should often also maintain the route and query parameters so that the user can share the URL from the browser's location bar.
+
+A good example of such a use case could be a search view that maintains the search parameters in the URL but doesn't want to build its UI logic around the Router usage.
+Another case would be passing a more complex object to a view via a Java API instead of serializing the object somehow into the URL and passing the value via Router.
+
+In this kind of case, the developer can use the [classname]`History` object to maintain the [classname]`RouteParameters` (and query parameters).
+
+*Example*: A view that updates the URL parameters based on a parameter given in a public Java API.
+The view also implements [interfacename]`HasUrlParameter` to deserialize the parameter in case a user arrives at the page directly:
+
+[source,java]
+----
+@Route
+public class UserEditor extends VerticalLayout implements HasUrlParameter<Integer> {
+
+    /**
+     * This method can be called directly by other views.
+     *
+     * @param user the User instance to edit
+     */
+    public void editUser(User user) {
+        // do the actual UI changes
+        createFormForUser(user);
+        // maintain a complete url in the browser
+        updateQueryParameters(user);
+    }
+
+    private void updateQueryParameters(User o) {
+        String deepLinkingUrl = RouteConfiguration.forSessionScope()
+                .getUrl(getClass(), o.getId());
+        // Assign the full deep linking URL directly using
+        // History object: changes the URL in the browser,
+        // but doesn't reload the page.
+        getUI().get().getPage().getHistory()
+                .replaceState(null, deepLinkingUrl);
+    }
+
+    @Override // HasUrlParameter interface
+    public void setParameter(BeforeEvent event,
+                             @OptionalParameter Integer id) {
+        if(id != null) {
+            // This method is called if user arrives via "deep link"
+            // directly to this form. In a real world app, one would
+            // likely fetch an entity/DTO via service based on its id
+            createFormForUser(new User("User " + id, id));
+        }
+    }
+
+    private void createFormForUser(User user) {
+        // only show the user ID as this is really not a form example
+        add(new Paragraph("User: " + user.getId()) );
+    }
+
+}
+----
+
+See more about maintaining the browser URL from the <<../advanced/history-api#, History API>>
+
+
+[discussion-id]`B5908196-8C17-48CB-B35C-4269EEC580B8`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

@@ -76,16 +76,16 @@ export class LoginOverlayMockupElement extends LitElement {
   }
 
   @property({ type: String })
-  headerTitle: string | undefined = 'App name';
+  accessor headerTitle: string | undefined = 'App name';
 
   @property({ type: String })
-  description: string | undefined = 'Application description';
+  accessor description: string | undefined = 'Application description';
 
   @property({ type: Boolean })
-  error = false;
+  accessor error = false;
 
   @property({ type: Object })
-  i18n: LoginI18n = {
+  accessor i18n: LoginI18n = {
     form: {
       title: 'Log in',
       username: 'Username',
@@ -121,6 +121,18 @@ export class LoginOverlayMockupElement extends LitElement {
           </div>
         </section>
       </div>
+      <div hidden>
+        <slot name="custom-form-area" @slotchange="${this._onSlotChange}"></slot>
+        <slot name="footer" @slotchange="${this._onSlotChange}"></slot>
+      </div>
     `;
+  }
+
+  private _onSlotChange(event: Event) {
+    const wrapper = this.renderRoot.querySelector('vaadin-login-form-wrapper');
+    const slot = event.target as HTMLSlotElement;
+    [...slot.assignedElements()].forEach((el) => {
+      wrapper?.appendChild(el);
+    });
   }
 }

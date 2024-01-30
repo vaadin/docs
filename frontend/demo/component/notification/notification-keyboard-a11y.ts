@@ -12,10 +12,10 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('notification-keyboard-a11y')
 export class Example extends LitElement {
   @state()
-  private notificationOpened = false;
+  private accessor notificationOpened = true;
 
   @state()
-  private isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
+  private accessor isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -29,7 +29,7 @@ export class Example extends LitElement {
     return html`
       <!-- end::snippet[] -->
       <vaadin-button .disabled="${this.notificationOpened}" @click="${this.open}">
-        Try it
+        Show notification
       </vaadin-button>
 
       <!-- tag::snippet[] -->

@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { TimePicker } from '@hilla/react-components/TimePicker.js';
-import type { TimePickerChangeEvent } from '@hilla/react-components/TimePicker.js';
+import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import type { TimePickerChangeEvent } from '@vaadin/react-components/TimePicker.js';
 
 function Example() {
   const [errorMessage, setErrorMessage] = useState('');

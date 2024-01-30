@@ -26,48 +26,54 @@ const config = {
     "ignore": [
       /(^|\/)\..+/, // hidden files
 
-      "articles/guide",
-      "articles/advanced",
-      "articles/configuration",
-      "articles/tutorial",
-      "articles/tools",
-      "articles/api.adoc",
-      "articles/security",
-      "articles/contributing",
-      "articles/create-ui",
-      "articles/binding-data",
-      "articles/integrations",
-      "articles/testing",
+      "articles/flow/guide",
+      "articles/flow/kb",
+      "articles/flow/advanced",
+      "articles/flow/configuration",
+      "articles/flow/tutorial",
+      "articles/flow/tools",
+      "articles/flow/api.adoc",
+      "articles/flow/security",
+      "articles/flow/contributing",
+      "articles/flow/create-ui",
+      "articles/flow/binding-data",
+      "articles/flow/integrations",
+      "articles/flow/testing",
 
-      "articles/index.asciidoc",
-      "articles/overview.asciidoc",
-      "articles/contributing-docs",
-      "articles/upgrading",
-      "articles/application",
-      "articles/routing",
-      "articles/production",
-      "articles/_images",
-      "articles/_vaadin-version.adoc",
-      "articles/_commercial-banner.asciidoc",
-      "articles/_terminal.asciidoc",
-      "articles/404.asciidoc",
-      "articles/_figma-banner.adoc",
+      "articles/flow/index.asciidoc",
+      "articles/flow/overview.asciidoc",
+      "articles/flow/contributing-docs",
+      "articles/flow/upgrading",
+      "articles/flow/application",
+      "articles/flow/routing",
+      "articles/flow/production",
+      "articles/flow/_images",
+      "articles/flow/_vaadin-version.adoc",
+      "articles/flow/_commercial-banner.asciidoc",
+      "articles/flow/_terminal.asciidoc",
+      "articles/flow/404.asciidoc",
+      "articles/flow/_figma-banner.adoc",
 
-      "articles/styling/_images",
-      "articles/styling/_shared.adoc",
-      "articles/styling/advanced",
-      "articles/styling/custom-theme",
-      "articles/styling/getting-started.adoc",
-      "articles/styling/index.adoc",
-      "articles/styling/theme-annotation.adoc",
-      "articles/styling/_images/",
-      "articles/styling/lumo/_images",
-      "articles/styling/lumo/index.adoc",
-      "articles/styling/lumo/variants",
-      "articles/styling/lumo/design-tokens/styling-using-design-tokens.adoc",
-      "articles/styling/lumo/design-tokens/_images",
-      "articles/styling/lumo/design-tokens/index.adoc",
-
+      "articles/flow/styling/_images",
+      "articles/flow/styling/_shared.adoc",
+      "articles/flow/styling/advanced",
+      "articles/flow/styling/custom-theme",
+      "articles/flow/styling/getting-started.adoc",
+      "articles/flow/styling/index.adoc",
+      "articles/flow/styling/theme-annotation.adoc",
+      "articles/flow/styling/_images/",
+      "articles/flow/styling/lumo/_images",
+      "articles/flow/styling/lumo/index.adoc",
+      "articles/flow/styling/lumo/variants",
+      "articles/flow/styling/lumo/design-tokens/styling-using-design-tokens.adoc",
+      "articles/flow/styling/lumo/design-tokens/_images",
+      "articles/flow/styling/lumo/design-tokens/index.adoc",
+      "articles/flow/styling/legacy",
+      "articles/flow/styling/styling-components",
+      "articles/flow/styling/application-theme.adoc",
+      "articles/flow/styling/styling-other-elements.adoc",
+      "articles/flow/components/index.asciiidoc",
+      "articles/flow/compatibility.adoc",
 
       "frontend/demo/fusion",
       "frontend/demo/upgrade-tool",
@@ -80,34 +86,49 @@ const config = {
       "src/main/java/com/vaadin/demo/sso",
       "src/main/java/com/vaadin/demo/collaboration",
       "src/main/java/com/vaadin/demo/observability",
+      "src/main/java/com/vaadin/demo/ui/webcomponents/MwcSlider.java",
 
       "dspublisher/theme",
+      "dspublisher/config/default.json",
+      "dspublisher/config/production.json",
       
       "PULL_REQUEST_TEMPLATE.md",
+
+      ".gitattributes",
+
+      "frontend/demo/component/upload/upload-demo-mock-files.ts",
+      "frontend/demo/react-example.ts",
+      "frontend/demo/render-banner.ts",
+
+      // Ignore all React examples
+      /frontend\/demo\/component\/.*\/react.*/,
     ],
   },
   rename: {
     // paths in 'latest' to copy to different paths in 'dsp'
-    "articles/components": "articles/ds/components",
-    "articles/styling/lumo": "articles/ds/foundation",
-    "articles/styling/lumo/design-tokens": "articles/ds/foundation",
+    "articles/flow/styling/lumo/design-tokens": "articles/flow/ds/foundation",
+    "articles/flow/styling/lumo": "articles/flow/lumo",
   },
   target: {
     // paths in 'dsp' to keep (since they shouldn't be removed, even if they don't exist in latest)
     "keep": [
-      "articles/ds/foundation",
-      "articles/ds/_images",
-      "articles/ds/404.asciidoc",
-      "articles/ds/figma.asciidoc",
-      "articles/ds/index.asciidoc",
+      "articles/flow/foundation",
+      "articles/flow/_images",
+      "articles/flow/404.adoc",
+      "articles/flow/figma.asciidoc",
+      "articles/flow/index.adoc",
+      "articles/flow/components/index.adoc",
+      "articles/flow/lumo/index.adoc",
       "dspublisher/.env",
       "dspublisher/docs-theme",
+      "dspublisher/config/default.json",
+      "frontend/demo/component/upload/upload-demo-mock-files.ts",
     ]
   },
   // callbacks for changing the content of certain files
   callback: [
     {
-      path: 'articles/ds/components/grid/flow.asciidoc',
+      path: 'articles/flow/components/grid/flow.asciidoc',
       callback: content => content.replace(/.*_items-identities.adoc.*/, '')
     },
     {
@@ -117,6 +138,16 @@ const config = {
     {
       path: 'package.json',
       callback: content => content.replace(/.*@opentelemetry\/.*\n/g, '').replace(/,(\s*?})/sg, '$1')
+    },
+    {
+      path: /articles\/.*\.[asciidoc|adoc]/,
+      callback: (content) => {
+
+        // Remove discussion ids
+        content = content.replace(/\[discussion-id\].*/g, '');
+
+        return content;
+      },
     }
   ]
 }

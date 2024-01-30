@@ -1,9 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { DatePicker } from '@hilla/react-components/DatePicker.js';
-import { FormLayout } from '@hilla/react-components/FormLayout.js';
-import { TimePicker } from '@hilla/react-components/TimePicker.js';
-import { TextField } from '@hilla/react-components/TextField.js';
+import { DatePicker } from '@vaadin/react-components/DatePicker.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
+import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
 
 function Example() {
   const responsiveSteps = [

@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useRef, useEffect, useState } from 'react';
-import { FormLayout } from '@hilla/react-components/FormLayout.js';
-import { FormItem } from '@hilla/react-components/FormItem.js';
-import { Select, type SelectElement } from '@hilla/react-components/Select.js';
-import { CustomField } from '@hilla/react-components/CustomField.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import React, { useRef, useEffect } from 'react';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
+import { FormItem } from '@vaadin/react-components/FormItem.js';
+import { Select, type SelectElement } from '@vaadin/react-components/Select.js';
+import { CustomField } from '@vaadin/react-components/CustomField.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
   // tag::snippet[]
@@ -14,8 +14,8 @@ function Example() {
   const years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
 
   useEffect(() => {
-    (monthFieldRef.current as any)?.focusElement?.setAttribute('title', 'Month');
-    (yearFieldRef.current as any)?.focusElement?.setAttribute('title', 'Year');
+    monthFieldRef.current?.focusElement?.setAttribute('title', 'Month');
+    yearFieldRef.current?.focusElement?.setAttribute('title', 'Year');
   }, []);
 
   return (

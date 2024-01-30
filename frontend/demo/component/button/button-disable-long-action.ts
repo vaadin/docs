@@ -19,10 +19,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private isDisabled = false;
+  private accessor isDisabled = false;
 
   @query('fake-progress-bar')
-  private fakeProgressBar!: FakeProgressBar;
+  private accessor fakeProgressBar!: FakeProgressBar;
 
   protected override render() {
     return html`

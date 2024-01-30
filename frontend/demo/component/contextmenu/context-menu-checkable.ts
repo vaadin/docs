@@ -16,7 +16,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items: ContextMenuItem[] = [
+  private accessor items: ContextMenuItem[] = [
     { text: 'Abigail Lewis', checked: true },
     { text: 'Allison Torres' },
     { text: 'Anna Myers' },

@@ -1,22 +1,15 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { MenuBar } from '@hilla/react-components/MenuBar.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { MenuBar } from '@vaadin/react-components/MenuBar.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
-import { createRoot } from 'react-dom/client';
-
-function menuComponent(component: React.ReactNode) {
-  const container = document.createElement('vaadin-menu-bar-item');
-  createRoot(container).render(component);
-  return container;
-}
 
 function Example() {
   // tag::snippet[]
   const items = [
     { text: 'Save' },
     {
-      component: menuComponent(<Icon icon="vaadin:chevron-down" ariaLabel="Other save options" />),
+      component: <Icon icon="vaadin:chevron-down" aria-label="Other save options" />,
       children: [{ text: 'Save as draft' }, { text: 'Save as copy' }, { text: 'Save and publish' }],
     },
   ];
@@ -25,4 +18,4 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

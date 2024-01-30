@@ -1,0 +1,339 @@
+---
+title: Registering Routes Dynamically
+description: How to register routes and route templates, dynamically.
+order: 100
+---
+
+
+= Registering Routes Dynamically
+
+In addition to registering routes and route templates using the <<index#, `@Route`>> annotation, you can add and remove routes dynamically at runtime. This is useful, for example, when a route should be added or removed based on changed business data or application configuration at startup.
+
+The [classname]`RouteConfiguration` class can be used to limit route access to:
+
+* all users using the *application* scope, or
+* only certain active users using the *session* scope.
+
+You can access the scope using the static methods [methodname]`forSessionScope()` and [methodname]`forApplicationScope()` from the [classname]`RouteConfiguration` class.
+
+[NOTE]
+All components annotated with `@Route` are added to the application scope at startup, unless the <<Dynamic Registration of @Route Annotated Classes, `registerAtStartup`>> element has been set to `false`.
+
+== Configuring User-Specific Routes
+
+You can add and remove routes for certain users, for example, based on their access rights.
+
+*Example*: Adding *admin* and *home* views for users with an active session.
+
+[source,java]
+----
+RouteConfiguration.forSessionScope()
+        .setRoute(
+                "admin", //path
+                AdminView.class //navigation target
+         );
+
+// parent layouts can be given as a vargargs parameter
+RouteConfiguration.forSessionScope()
+        .setRoute(
+                "home", //path
+                HomeView.class, //navigation target
+                MainLayout.class //one or more parents
+        );
+----
+
+Any registered `@Route` in the application scope can be overridden for a specific user in the session scope.
+
+The routes in the session scope are accessible for the current user only for as
+long as the session is valid.
+When the session is invalidated by the user logging out, the session-scoped routes are no longer available.
+It's unnecessary to manually remove these routes.
+
+== Removing Routes
+
+When removing routes, you need to define precisely which route to remove.
+
+*Examples*:
+
+* Removing a navigation target ([classname]`AdminView.class`) with all possible route aliases and route templates registered to it.
++
+[source,java]
+----
+RouteConfiguration configuration = RouteConfiguration
+        .forSessionScope();
+// No view AdminView will be available
+configuration.removeRoute(AdminView.class);
+----
+
+* Removing a path (`"admin"`), which only removes the target mapped to it.
++
+[source,java]
+----
+// No path "admin" will be available
+configuration.removeRoute("admin");
+----
+
+[NOTE]
+Removing a route in the session scope that had previously overridden a route in the application scope makes the application-scoped route accessible once again.
+
+[NOTE]
+When dynamically registering a route, any annotations on classes *are ignored*, unless the method used contains `Annotated`; for example, [methodname]`setAnnotatedRoute()`.
+See <<Dynamic Registration of @Route Annotated Classes>> later in this article for more.
+
+For further related information, see:
+
+* <<Adding Route Aliases for Dynamic Routes>> (below).
+* <<additional-guides/route-templates#,Route Templates>>
+* <<route-parameters#,Route Parameters>>
+
+[[application.startup]]
+== Adding Routes on Application Startup
+
+You can register routes during application startup using the [classname]`ServiceInitLister`.
+
+*Example*: Using [classname]`ServiceInitLister` to register a route during deployment.
+
+[source,java]
+----
+public class ApplicationServiceInitListener
+        implements VaadinServiceInitListener {
+
+    @Override
+    public void serviceInit(ServiceInitEvent event) {
+        // add view only during development time
+        if (!event.getSource()
+                .getDeploymentConfiguration()
+                .isProductionMode()) {
+            RouteConfiguration configuration =
+               RouteConfiguration.forApplicationScope();
+
+            configuration.setRoute(
+                "crud", //path
+                DBCrudView.class //navigation target
+            );
+        }
+    }
+}
+----
+
+See <<../advanced/service-init-listener#,VaadinServiceInitListener>> for more.
+
+== Getting Registered Routes and Listening for Changes
+
+When routes are registered dynamically, you may need to update UI components, such as navigation menus, based on the added or removed routes.
+
+You can retrieve the registered route templates using the [methodname]`getAvailableRoutes()` method from the [classname]`RouteConfiguration`.
+To be notified of route changes, you can register a listener using the [methodname]`addRoutesChangeListener()` method.
+
+[NOTE]
+You should use the session registry to monitor changes, because it contains all the routes that are available for the current user.
+
+*Example*: Getting available routes and registering a routes change listener.
+
+[source,java]
+----
+RouteConfiguration configuration = RouteConfiguration
+        .forSessionScope();
+// add all currently available views
+configuration.getAvailableRoutes()
+        .forEach(menu::addMenuItem);
+
+// add and remove menu items when routes are added and
+// removed
+configuration.addRoutesChangeListener(event -> {
+    // ignoring any route alias changes
+    event.getAddedRoutes().stream()
+            .filter(route -> route instanceof RouteData)
+            .forEach(menu::addMenuItem);
+    event.getRemovedRoutes().stream()
+            .filter(route -> route instanceof RouteData)
+            .forEach(menu::removeMenuItem);
+});
+
+----
+
+== Adding Route Aliases for Dynamic Routes
+
+When adding dynamic routes, the first route for which a navigation target is added is marked as the main route, which can be retrieved by the [methodname]`getUrl()` methods in [classname]`RouteConfiguration`.
+
+Any additional registered route is considered a route alias.
+
+*Example*: Adding multiple routes as navigation targets in a [classname]`RouteConfiguration`.
+
+[source,java]
+----
+RouteConfiguration configuration =
+        RouteConfiguration.forSessionScope();
+configuration.setRoute("main", MyRoute.class);
+configuration.setRoute("info", MyRoute.class);
+configuration.setRoute("version", MyRoute.class);
+----
+
+In this scenario, the [methodname]`configuration.getUrl(MyRoute.class)` method returns `main`.
+
+*Example*: Static class definition equivalent of the previous route registration example.
+[source,java]
+----
+@Route("main")
+@RouteAlias("info")
+@RouteAlias("version")
+private class MyRoute extends Div {
+}
+----
+
+If the `"main"` path is removed and an alias path remains available for use, the first alias in the registry becomes the main path.
+
+[WARNING]
+Be cautious when adding or removing routes from the [classname]`ApplicationRouteRegistry`, because this impacts every user of the system.
+
+[[dynamic.annotations]]
+== Dynamic Registration of @Route Annotated Classes
+
+If you want to map all routes in the same way using the `@Route` annotation, you can configure the routes statically, but postpone registration until runtime.
+
+To skip static registration to the application-scoped registry on start-up, add the `registerAtStartup = false` parameter to the `@Route` annotation.
+This also makes it easier to use existing parent chains and paths that are modified from the parent.
+
+*Example*: Using the `registerAtStartup` parameter to postpone route registration.
+[source,java]
+----
+@Route(value = "quarterly-report",
+       layout = MainLayout.class,
+       registerAtStartup = false)
+@RouteAlias(value = "qr", layout = MainLayout.class)
+public class ReportView extends VerticalLayout
+        implements HasUrlParameter<String> {
+    // implementation omitted
+}
+
+// register the above view during runtime
+if (getCurrentUser().hasAccessToReporting()) {
+    RouteConfiguration.forSessionScope()
+            .setAnnotatedRoute(ReportView.class);
+}
+----
+
+== Example: Adding a New View on User Log-in
+
+This example demonstrates how to add a new view on user log-in.
+Two types of users exist: admin users and normal users.
+After log-in, a different view is shown depending on the user's access rights.
+
+The demo application contains:
+
+* The [classname]`LoginPage` class, which defines a statically registered route, `""`.
+This route is mapped to the log-in used for user authentication.
++
+[source,java]
+----
+@Route("")
+public class LoginPage extends Div {
+
+    private TextField login;
+    private PasswordField password;
+
+    public LoginPage() {
+        login = new TextField("Login");
+        password = new PasswordField("Password");
+
+        Button submit = new Button("Submit",
+                this::handleLogin);
+
+        add(login, password, submit);
+    }
+
+    private void handleLogin(
+            ClickEvent<Button> buttonClickEvent) {
+    }
+}
+----
++
+* The [classname]`MainLayout` class, which contains a menu.
++
+[source,java]
+----
+public class MainLayout extends Div
+        implements RouterLayout {
+    public MainLayout() {
+        // Implementation omitted, but could contain
+        // a menu.
+    }
+}
+----
+
+* The [classname]`InfoView` class, which defines the `"info"` route.
+This route isn't statically registered, because it has the `registerAtStartup = false` parameter.
+
++
+[source,java]
+----
+@Route(value = "info", layout = MainLayout.class,
+       registerAtStartup = false)
+public class InfoView extends Div {
+    public InfoView() {
+        add(new Span("This page contains info about "
+                + "the application"));
+    }
+}
+----
+
+After log-in, add a new route is added, depending on the access rights of the user.
+Two available targets are possible:
+
+* [classname]`AdminView` class.
++
+[source,java]
+----
+public class AdminView extends Div {
+}
+----
+* `UserView` class.
++
+[source,java]
+----
+public class UserView extends Div {
+}
+----
+
+// TODO I don't really understand what this sentence is saying
+The [classname]`LoginPage` class handles adding only to the user session as follows:
+
+[source,java]
+----
+private void handleLogin(
+        ClickEvent<Button> buttonClickEvent) {
+    // Validation of credentials is skipped
+
+    RouteConfiguration configuration =
+            RouteConfiguration.forSessionScope();
+
+    if ("admin".equals(login.getValue())) {
+        configuration.setRoute("", AdminView.class,
+                MainLayout.class);
+    } else if ("user".equals(login.getValue())) {
+        configuration.setRoute("", UserView.class,
+                MainLayout.class);
+    }
+
+    configuration.setAnnotatedRoute(InfoView.class);
+
+    UI.getCurrent().getPage().reload();
+}
+----
+
+* A new target for the path `""` is added to the session-scoped route registry.
+The new target overrides the application-scoped path `""` for the user.
+* The [classname]`InfoView` class is added using the `layout` setup, configured using the `@Route` annotation.
+It's registered to the path `"info"` with the same `MainLayout` as the parent layout.
+
+[NOTE]
+Other users on other sessions still get a log-in for the `""` path and can't access `"info"`.
+
+
+[discussion-id]`395A949E-3CE5-4B2D-B080-4519E702E652`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

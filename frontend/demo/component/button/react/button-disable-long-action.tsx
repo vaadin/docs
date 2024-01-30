@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { ProgressBar } from '@hilla/react-components/ProgressBar.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
 
 function Example() {
   // tag::snippet[]

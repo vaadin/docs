@@ -36,13 +36,13 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private draggedItem?: Person;
+  private accessor draggedItem: Person | undefined;
 
   @state()
-  private grid1Items: Person[] = [];
+  private accessor grid1Items: Person[] = [];
 
   @state()
-  private grid2Items: Person[] = [];
+  private accessor grid2Items: Person[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 10 });

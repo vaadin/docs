@@ -1,0 +1,126 @@
+---
+title: Route Parameters
+description: How to pass extra information to a route using route parameters.
+order: 20
+---
+
+= Route Parameters
+
+Route parameters refer to the variable parts of a URL segment. These parameters provide a way to pass extra information to a given route.
+
+For example, if the application has a route named `greet` that accepts a string parameter, then users can call the `greet` route with the URL `/greet/<some-string>`.
+For example, users can use any of the following URLs to call the `greet` route:
+
+    * `/greet/John`
+    * `/greet/Jane`
+    * `/greet/World`
+    *  and so on ..
+
+In these examples, the `John`, `Jane`, and `World` strings are route parameters that the `greet` route can use to respond to requests.
+
+== Defining Route Parameters
+
+A route target (_that is, a view_) that accepts route parameters passed through the URL should:
+
+* implement the [interfacename]`HasUrlParameter<T>` interface, and
+* define the parameter type using generics.
+
+[interfacename]`HasUrlParameter` defines the [methodname]`setParameter()` method that's called by the [classname]`Router`, based on values extracted from the URL.
+This method is always invoked before a navigation target is activated (before the [classname]`BeforeEnter` event).
+
+*Example*: Defining a navigation target that takes a string parameter and produces a greeting string from it, which the target then sets as its own text content on navigation:
+
+[source,java]
+----
+@Route(value = "greet")
+public class GreetingComponent extends Div
+        implements HasUrlParameter<String> {
+
+    @Override
+    public void setParameter(BeforeEvent event, String parameter) {
+        setText(String.format("Hello, %s!", parameter));
+    }
+}
+----
+
+On startup, the navigation target is automatically configured for every `greet/<anything>` path, except where a separate navigation target with the exact [annotationname]`@Route` is configured to match `greet/<some specific path>`.
+It's worth noting that an exact navigation target always takes precedence over route parameters when resolving the URL.
+
+[NOTE]
+[interfacename]`HasUrlParameter<T>` only supports a type argument of *Long*, *Integer*, *String*, and *Boolean* types.
+
+== Optional Route Parameters
+
+Route parameters can be annotated as optional using [annotationname]`@OptionalParameter`.
+
+*Example*: Defining the route to match both `greet` and `greet/<anything>`:
+
+[source,java]
+----
+@Route("greet")
+public class OptionalGreeting extends Div
+        implements HasUrlParameter<String> {
+
+    @Override
+    public void setParameter(BeforeEvent event,
+            @OptionalParameter String parameter) {
+        if (parameter == null) {
+            setText("Welcome anonymous.");
+        } else {
+            setText(String.format("Welcome %s.", parameter));
+        }
+    }
+}
+----
+
+A more specific route always takes precedence over an optionally parameterized route.
+
+== Wildcard Route Parameters
+
+When more parameters are needed, the route parameter can also be annotated with [annotationname]`@WildcardParameter`.
+
+*Example*: Defining the route to match `greet` and anything after it, for instance `greet/one/five/three`:
+
+[source,java]
+----
+@Route("greet")
+public class WildcardGreeting extends Div
+        implements HasUrlParameter<String> {
+
+    @Override
+    public void setParameter(BeforeEvent event,
+            @WildcardParameter String parameter) {
+        if (parameter.isEmpty()) {
+            setText("Welcome anonymous.");
+        } else {
+            setText(String.format("Handling parameter %s.", parameter));
+        }
+    }
+}
+----
+
+A more specific route always takes precedence over a wildcard route.
+If no value was passed to the wildcard route parameter, its value is an empty String.
+
+== Alternatives to Route Parameters
+
+Route parameters, the approach described in this guide, is the easiest method to accept parameters, and it should work for most common use cases.
+It's recommended to use this approach, if possible.
+
+However, if using route parameters isn't appropriate for your use case, Vaadin Flow supports two additional techniques for accepting parameters:
+
+. **Query Parameters**: this approach is suitable when it's necessary to have explicit name-value pairs or when you need to accept several optional parameters.
+(See the <<additional-guides/query-parameters#, Query Parameters guide>>).
+
+. **Route Templates**: this is the most powerful, yet a complex, approach to accepting parameters.
+Because of its complexity, you are recommended not to choose this approach unless your specific use case can't be addressed using route or query parameters.
+(See the <<additional-guides/route-templates#, Route Templates guide>>).
+
+
+[discussion-id]`6FAFEDE6-73B0-4C42-9471-DD575AD40A5F`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

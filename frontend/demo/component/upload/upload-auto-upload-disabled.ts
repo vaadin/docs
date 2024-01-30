@@ -18,7 +18,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('vaadin-upload')
-  private upload!: Upload;
+  private accessor upload!: Upload;
 
   protected override firstUpdated() {
     this.upload.i18n.addFiles.many = 'Select Files...';

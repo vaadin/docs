@@ -17,7 +17,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items = [
+  private accessor items = [
     {
       text: 'Options',
       children: [{ text: 'Save automatically', checked: true }, { text: 'Notify watchers' }],

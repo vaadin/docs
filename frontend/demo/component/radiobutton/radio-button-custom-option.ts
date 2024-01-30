@@ -21,10 +21,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private value?: string;
+  private accessor value: string | undefined;
 
   @state()
-  private items: Card[] = [];
+  private accessor items: Card[] = [];
 
   protected override async firstUpdated() {
     this.items = await getCards();

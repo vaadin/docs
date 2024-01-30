@@ -25,13 +25,13 @@ export class Example extends LitElement {
   }
 
   @state()
-  private items: Person[] = [];
+  private accessor items: Person[] = [];
 
   @state()
-  private invitedPeople: Person[] = [];
+  private accessor invitedPeople: Person[] = [];
 
   @state()
-  private selectedValue = '';
+  private accessor selectedValue = '';
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -57,7 +57,7 @@ export class Example extends LitElement {
         <vaadin-button
           theme="primary"
           @click="${() => {
-            const person = this.items.find((p) => p.id === parseInt(this.selectedValue));
+            const person = this.items.find((p) => String(p.id) === this.selectedValue);
             const isInvited = person && this.invitedPeople.some((p) => p.id === person.id);
             if (person && !isInvited) {
               this.invitedPeople = [...this.invitedPeople, person];

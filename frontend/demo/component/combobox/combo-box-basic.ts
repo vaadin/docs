@@ -17,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private items: Country[] = [];
+  private accessor items: Country[] = [];
 
   protected override async firstUpdated() {
     this.items = await getCountries();

@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
+import { Grid } from '@vaadin/react-components/Grid.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
@@ -20,7 +20,6 @@ function Example() {
           <Avatar
             img={item.pictureUrl}
             name={`${item.firstName} ${item.lastName}`}
-            {...{ alt: 'User avatar' }}
           />
         )}
       </GridColumn>

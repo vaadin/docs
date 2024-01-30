@@ -1,0 +1,156 @@
+---
+title: Google Cloud
+description: How to deploy your Vaadin application to Google Cloud.
+order: 30
+---
+
+
+= Deploying a Vaadin Application to Google Cloud
+
+This tutorial shows you how to deploy a Vaadin application to Google App Engine.
+Google Cloud has free-trial and free-tier offerings that you can read more about on the link:https://cloud.google.com/free/[Google Cloud website].
+
+.Google Cloud account required
+[NOTE]
+To complete this tutorial, you need to sign up for a Google Cloud account at https://cloud.google.com/.
+Your Google Cloud account should also have the billing enabled.
+
+== Step 1: Install and Set Up Google Cloud SDK
+
+To begin, download and install the link:https://cloud.google.com/sdk/docs/install[Google Cloud SDK].
+
+After it's installed, run the following command from a terminal window to add App Engine support for Java to the SDK.
+
+[source,terminal]
+----
+gcloud components install app-engine-java
+----
+
+== Step 2: Download a Starter App
+
+Download a minimal Vaadin project and unpack the downloaded zip into a folder on your computer.
+
+link:https://start.vaadin.com/dl[Download project]
+
+[WARNING]
+Due to issue https://github.com/vaadin/flow/issues/14164[14164], you need to disable the [annotationname]`@PWA` annotation found on the [classname]`Application` class.
+
+== Step 3: Initialize a Google Cloud Project
+
+Open the project directory from a terminal window, and enter the following command to initialize a Google Cloud project:
+
+[source,terminal]
+----
+gcloud init
+----
+
+If this is your first time running Google SDK, you're asked to authenticate your account.
+When prompted to log in, enter *'Y'* and allow the SDK to control your account in the opened browser window.
+
+After authentication, you're prompted to select a configuration.
+Enter '1' to select the default configuration, as in the following snippet:
+
+[source]
+----
+Settings from your current configuration [default] are:
+accessibility:
+  screen_reader: 'False'
+core:
+  account: john.doe@gmail.com
+  disable_usage_reporting: 'True'
+
+Pick configuration to use:
+ [1] Re-initialize this configuration [default] with new settings
+ [2] Create a new configuration
+Please enter your numeric choice:  1
+----
+
+== Step 4: Create an App Engine Instance
+
+From a terminal window, in the project root directory, create a Google App Engine instance using the following command:
+
+[source,terminal]
+----
+gcloud app create
+----
+
+You're then be asked to select a region.
+You may want to choose the region that's geographically closest to your users.
+
+== Step 5: Set Up the App Engine Plugin for Maven
+
+Add the App Engine Maven plugin to your project's [filename]`pom.xml` file.
+
+.pom.xml
+[source,xml]
+----
+<plugin>
+    <groupId>com.google.cloud.tools</groupId>
+    <artifactId>appengine-maven-plugin</artifactId>
+    <version>2.4.3</version>
+    <configuration>
+        <projectId>GCLOUD_CONFIG</projectId>
+        <version>GCLOUD_CONFIG</version>
+    </configuration>
+</plugin>
+----
+
+You need to set the `projectId` and `version` properties for the plugin to work.
+The value `GCLOUD_CONFIG` tells the Google Cloud CLI tools to use the `projectId` configured in <<Step 4: Create an App Engine Instance, step 4>>.
+Also, make sure to use the latest version of the `appengine-maven-plugin`, which you can find at this link:https://search.maven.org/artifact/com.google.cloud.tools/appengine-maven-plugin[link].
+
+== Step 6: Create the app.yaml File
+
+Next, you need to create an [filename]`app.yaml` file.
+
+[loweralpha]
+. Create a directory called `appengine` under `src/main`.
+. Create a file called [filename]`app.yaml` under `src/main/appengine`.
+This file should have the following content.
++
+.app.yaml
+[source,yaml]
+----
+runtime: java11
+----
+You should change the java runtime version number (`java11`) in the `yaml` file to match the value of the `<java.version>` property in your [filename]`pom.xml` file.
+
+== Step 7: Enable Cloud Build
+
+You also need to enable Cloud Build.
+
+[loweralpha]
+. Navigate to `https://console.cloud.google.com/cloud-build/builds?project=PROJECT_NAME`, replacing *PROJECT_NAME* with your project name found at https://console.cloud.google.com/cloud-resource-manager[Google Cloud Resource Manager].
+. Click *Enable*.
+
+== Step 8: Deploy to Google App Engine
+
+Finally, you can build and deploy using a single command as follows:
+
+[source,terminal]
+----
+mvn package appengine:deploy -Pproduction
+----
+
+When the deployment has finished, the application URL is displayed in the logs.
+
+== Common Problems
+
+=== Ensure Google Cloud Billing is Enabled
+
+If the deployment fails with an error similar to `ERROR: (gcloud.app.deploy) Error Response: [7] Access Not Configured.`, then ensure that your Google Cloud account has billing enabled.
+After it's enabled, try to deploy again.
+
+=== Memory Limit
+
+If you notice log messages similar to `Exceeded soft memory limit of 256 MB with X MB`, this means your instance has ran out of RAM. You should consider https://cloud.google.com/appengine/docs/standard/java-gen2/config/appref[upgrading to a larger App Engine instance] that fits your needs.
+
+[WARNING]
+Be mindful of costs when upgrading.
+Larger instances most likely incur more fees.
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

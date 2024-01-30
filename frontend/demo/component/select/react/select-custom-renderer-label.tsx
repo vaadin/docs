@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Select } from '@hilla/react-components/Select.js';
-import { ListBox } from '@hilla/react-components/ListBox.js';
-import { Item } from '@hilla/react-components/Item.js';
+import { Select } from '@vaadin/react-components/Select.js';
+import { ListBox } from '@vaadin/react-components/ListBox.js';
+import { Item } from '@vaadin/react-components/Item.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 

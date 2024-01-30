@@ -20,7 +20,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private items: Country[] = [];
+  private accessor items: Country[] = [];
 
   protected override async firstUpdated() {
     this.items = await getCountries();
@@ -28,7 +28,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private selectedCountries: Country[] = [];
+  private accessor selectedCountries: Country[] = [];
 
   private get selectedCountriesText(): string {
     return this.selectedCountries.map((country) => country.name).join(', ');

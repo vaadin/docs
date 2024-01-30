@@ -1,0 +1,101 @@
+---
+title: Using CDI Beans
+description: How to use CDI Beans in instantiate components.
+order: 20
+---
+
+
+= Using CDI Beans in Instantiated Components
+
+When using https://vaadin.com/directory/component/vaadin-cdi/[Vaadin CDI], most objects instantiated by the framework become managed beans. The framework uses the CDI [classname]`BeanManager` to get references to beans. This means that they are fully fledged CDI contextual instances.
+
+The add-on looks up the CDI bean by type (component class) and `@Any`.
+
+If the type isn't found as a CDI bean &ndash; for example, because it's ambiguous or doesn't have a no-arguments public constructor &ndash; instantiation falls back to the default Vaadin behavior, and the component is instantiated as a plain-old Java object (POJO). Field injection is performed after the instance has been created using a no-args constructor, but constructor injection doesn't work. Other CDI features don't work either, since the instantiated component isn't a contextual instance.
+
+[NOTE]
+Methods annotated with `@PreDestroy` in `Dependent` beans instantiated by the framework aren't run.
+
+
+== Using Router Components
+
+All <<../../routing#,route targets>>, <<../../routing/layout#,router layouts>>, and <<../../routing/exceptions#,exception targets>>  become managed beans when the add-on is used. The components look and behave the same as without the add-on, but CDI features are available.
+
+This example uses the `@Inject` annotation on a basic route target:
+
+[source,java]
+----
+@Route
+public class MainView extends VerticalLayout {
+    @Inject
+    public MainView(Greeter greeter) {
+        add(new Span(greeter.sayHello()));
+    }
+}
+----
+
+[NOTE]
+Vaadin scans for router components on start-up and is unaware of CDI beans. Using producers or the `@Typed` annotation causes issues with this kind of bean.
+
+
+== Using Components Injected into Templates
+
+Components injected into <<{articles}/flow/create-ui/templates/basic#, template classes>> using the `@id` annotation become managed beans when the add-on is used.
+
+This example uses the `@Id` annotation to inject the [classname]`DependentLabel` component into [classname]`TestTemplate` class:
+
+[source,java]
+----
+public class TestTemplate
+        extends LitTemplate {
+    @Id
+    private DependentLabel label;
+}
+----
+
+*Example*: `DependentLabel` class.
+
+[source,java]
+----
+@Dependent
+@Tag("dependent-label")
+public class DependentLabel extends Label {
+    @Inject
+    private Greeter greeter;
+
+    @PostConstruct
+    private void init() {
+        setText(greeter.sayHello());
+    }
+}
+----
+
+The example below shows a [filename]`TestTemplate.html` Polymer template:
+
+[source,javascript]
+----
+import { html, LitElement } from 'lit';
+
+class TestTemplate extends LitElement {
+  render() {
+    return html`
+      <div>
+        <dependent-label id="label"></dependent-label>
+      </div>
+    `;
+  }
+}
+
+customElements.define(TestTemplate.is, TestTemplate);
+----
+
+[IMPORTANT]
+The managed bean injected into the template shouldn't exist before the template is instantiated. If it does exist at this time, it may not bind to its element, and this may result in an incorrect component tree.
+
+[discussion-id]`4C1C4451-607C-4BFA-85AE-3ECD668C4FBB`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

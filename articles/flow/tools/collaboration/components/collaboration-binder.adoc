@@ -1,0 +1,149 @@
+---
+title: Binder
+order: 1
+---
+
+
+[[ce.collaborative-form-editing]]
+= Collaborative Form Editing
+
+The recommended way of binding data from Java beans to forms in Vaadin applications is to use `Binder` (see <<{articles}/flow/binding-data/components-binder#,Binding Data to Forms>>). Collaboration Kit provides a `Binder` extension called, `CollaborationBinder`.
+
+This extension adds field value synchronization and field highlight to the binder's data binding and validation APIs. With field value synchronization, when a user changes a field's value, it's updated for the other users. As for field highlight, when a user is focused on a field, other users see a highlight around the field, along with the name of the user who is editing it.
+
+.Collaborative Form Bound with `CollaborationBinder`
+[.fill.white]
+image::images/collaboration-binder-example.png[A form showing the email field is being edited by another user, width=387]
+
+
+== Constructing CollaborationBinder
+
+The constructor of `CollaborationBinder` requires the bean type on which to bind values. This is similar to the regular `Binder` when binding by property names. As the second argument, you'd provide information about the end user.
+
+The same `UserInfo` object is required by all Collaboration Kit features. `CollaborationBinder` uses the name in `UserInfo`, when indicating that another user is editing a field with the field highlight.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/BinderDocumentation.java[tags=binder-new,indent=0]
+----
+
+
+== Connecting & Populating
+
+The `CollaborationBinder::setTopic` method serves to connect to Collaboration Kit in the scope of the edited item, and to populate the form with initial values loaded from a backend.
+
+When selecting an item to edit (e.g., an instance of `Person` bean class), `setTopic` is used to connect to the topic and to populate the form:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/BinderDocumentation.java[tags=binder-topic,indent=0]
+----
+
+The first parameter is the identifier of the topic on which to connect. Using unique topic identifiers for different items ensures edits on different items don't interfere with each other.
+
+The second parameter is a callback for providing the bean that populates the fields. The regular `Binder` has the `readBean` method for populating the fields based on bean properties. This method, though, isn't supported by `CollaborationBinder` because calling `readBean` when a new view instance is constructed would have an unwanted effect: Every time a new user would join in editing the form, the field values would reset for every user. The `setBean` method is unsupported for the same reason.
+
+The callback provided for `setTopic` replaces `readBean`. It's used to populate the form if the topic doesn't have any data, which means the user is the first to edit it. Otherwise, the field values are loaded from the topic in Collaboration Kit. In this case, the callback isn't even called, possibly avoiding an unnecessary database request.
+
+[NOTE]
+If you want to override all field values for all collaborators (i.e., implement a reset button), you can use `CollaborationBinder::reset` method. It takes a bean instance and uses its properties for setting the field values.
+
+
+== Binding Collaborative Fields
+
+The example here shows how you can bind the  `name` property for the `Person` bean to a text field. This also enables the collaborative features (i.e., value synchronization and field highlight).
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/BinderDocumentation.java[tags=binder-bind,indent=0]
+----
+
+You could write exactly the same code for the regular `Binder`. `CollaborationBinder` adds the collaborative features in addition to regular data binding. Binding based on a property name (i.e., "name" in this case) requires the bean class (i.e., `Person`) to have standard getter and setter methods: `getName` and `setName`.
+
+The other `bind` variant, which takes the getter and setter callbacks as arguments, isn't supported by `CollaborationBinder`. The reason for this is that a unique key is needed for each field or property to store the data in the underlying `CollaborationMap` data structure. The property name is required for that purpose, to be used as the key.
+
+Because the data used to communicate with Collaboration Kit is serialized as JSON, there are some limitations to what `CollaborationBinder` can do automatically. To cover the special cases, you need to do a little bit more than bind a property to a field.
+
+
+=== Non-Primitive Value Types
+
+Collaboration Kit supports only a limited set of primitive-like value types, types that it knows how to serialize and deserialize. When using some other field value type, you must explicitly provide the serializer and deserializer functions.
+
+When the field is used for selecting a bean object that has a unique identifier, you can serialize the value by converting the bean to its identifier, and deserialize it by fetching the bean object that matches the identifier.
+
+In this example, the user can change the supervisor for an employee from a list of supervisors. Both the employee and the supervisor are distinct `Person` beans. Use a `ComboBox` component for selecting the person's supervisor:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/BinderDocumentation.java[tags=binder-serializer,indent=0]
+----
+
+The person identifiers are stored as `longs` in this case, and the serialized value needs to be a `String`. You'd need to do a bit of converting, though, between strings and longs.
+
+
+=== Converters
+
+When a `Converter` is used, you must provide the field's value type in `forField`.
+
+The example here binds an `enum` property of the bean to a `Checkbox`. Therefore, the value type `boolean` needs to be provided:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/BinderDocumentation.java[tags=binder-converter,indent=0]
+----
+
+This is necessary because `CollaborationBinder` uses the bean
+property type (i.e., the `enum` called `MaritalStatus`) for deserializing
+the field value, by default.
+
+
+=== Multi-Select Fields
+
+When the field's value type is a collection, you must provide the type of the collection, as well as the type of its contents in `forField`.
+
+The value type of `CheckboxGroup` is `Set` in the following example. Here you must provide the collection type, `Set`, and the content type, `String`.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/BinderDocumentation.java[tags=binder-bind,indent=0]
+----
+
+This is necessary because `CollaborationBinder` can't infer automatically the
+generic type for deserializing the value. If the element type isn't supported by Collaboration Kit (e.g., `CheckboxGroup<Person>`), you'll still need to implement custom serializer and deserializer functions.
+
+
+== Eagerly Propagate Values
+
+On text fields, the default and recommended mode for propagating values from one user to others is when the user blurs the field, or when the user presses the kbd:[Enter] key. You can configure how eagerly the field sends data through its own API, using the `setValueChangeMode(ValueChangeMode)` method.
+
+For example, to send instantly each keystroke to other users, you would do the following:
+
+[source,java]
+----
+TextField textField = new TextField();
+textField.setValueChangeMode(ValueChangeMode.EAGER);
+----
+
+Modes like `ValueChangeMode.LAZY` and `ValueChangeMode.TIMEOUT` can also be used together with the `setValueChangeTimeout(int)` method to reduce the amount of traffic.
+
+
+== Resetting When No Editors
+
+By default, the edited field values are stored in Collaboration Kit, indefinitely. Even a long time after someone viewed a form, when it's opened you're presented with field values from the previous user. For such situations, you might instead want the field values to be re-populated from the backend.
+
+This can be achieved by setting an expiration timeout on the binder. If there haven't been any connected users for the set period of time, the binder calls the bean supplier callback -- provided in `setTopic` -- to repopulate the fields.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/collaboration/BinderDocumentation.java[tags=binder-expiration-timeout,indent=0]
+----
+
+You can use `Duration.ZERO` to reset the fields immediately when there's a moment with no connected users. However, it might be better to have a small time window before it does this. It allows a user to recover from a temporary network issue without having to start over editing the form.
+
+[discussion-id]`62AA4352-774C-4E38-9D67-A8AA67DA8781`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

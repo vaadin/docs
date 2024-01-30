@@ -23,10 +23,10 @@ export class Example extends LitElement {
   }
 
   @query('#upload-caution')
-  private uploadCaution!: Upload;
+  private accessor uploadCaution!: Upload;
 
   @query('#upload-recommended')
-  private uploadRecommended!: Upload;
+  private accessor uploadRecommended!: Upload;
 
   // tag::snippet[]
   protected override firstUpdated() {

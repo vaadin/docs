@@ -1,0 +1,446 @@
+---
+title: Configure pom.xml for Vaadin 8
+order: 3
+---
+
+
+= Configure pom.xml for Vaadin 8
+
+include::{articles}/flow/_vaadin-version.adoc[]
+
+== Maven setup
+
+MPR is an integral part of Vaadin, so the supported version of projects is set for you when importing the platform into a project. You only need to define the platform version like this:
+
+[source,xml,subs="+attributes"]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <type>pom</type>
+            <scope>import</scope>
+            <version>{vaadin-version}</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+
+You would then declare the usage of `vaadin-core` and `mpr-v8` like so:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>mpr-v8</artifactId>
+</dependency>
+----
+
+
+=== Framework 8 Dependency
+
+When using MPR, the minimum requirement for Vaadin 8 is version 8.18.0 or later:
+
+[source,xml,subs="+attributes"]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-server-mpr-jakarta</artifactId>
+    <version>{vaadin-eight-version}</version>
+    <exclusions>
+        <exclusion>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-elemental</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-themes</artifactId>
+    <version>{vaadin-eight-version}</version>
+</dependency>
+----
+
+You need to remove the dependency on the `vaadin-client-compiled` since a custom widget set is served by the MPR project.
+
+When using MPR, you can't use a Content Delivery Network (CDN) for the widget set. As a result, the configuration `<vaadin.widgetset.mode>cdn</vaadin.widgetset.mode>` or `<vaadin.widgetset.mode>fetch</vaadin.widgetset.mode>` should be removed.
+
+
+[[exclude-incompatible-framework-8-dependency]]
+=== Exclude Incompatible Framework 8 Dependency
+
+A project may depend on artifacts that transitively bring in the legacy `vaadin-server` library. This artifact conflicts with `vaadin-server-mpr-jakarta`. Its presence may provoke unexpected errors at runtime. Therefore, for each of these dependencies, your configuration must explicitly exclude `vaadin-server`.
+
+The simplest way to do this is to add an explicit dependency with `provided` scope. This way, the `vaadin-server` artifact is not considered when packaging the application. Here's how that would look:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-server</artifactId>
+    <version>{vaadin-eight-version}</version>
+    <scope>provided</scope>
+</dependency>
+----
+
+This approach may produce unexpected behavior during development since the `provided` scope means that the dependency is expected to be provided at runtime. For example, the IDE may give wrong code completion, open the wrong source class when inspecting code, or fail to stop at breakpoints during debugging. To avoid these issues, the legacy `vaadin-server` should not be added to the project [filename]`pom.xml` file, and exclusions should be added manually to dependencies that transitively import it.
+
+Maven `dependency:tree` goal can be used to detect the presence of dependencies that transitively import `vaadin-server`. Using the latest version of the plugin is recommended for better results.
+
+[source,terminal]
+----
+mvn dependency:tree -Dincludes=com.vaadin:vaadin-server -Dverbose=true
+----
+
+To simplify the operation, the following profile can be added to the [filename]`pom.xml` file:
+
+[source,xml]
+----
+<profile>
+    <id>check-vaadin-server-deps</id>
+    <build>
+        <defaultGoal>dependency:tree</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <includes>com.vaadin:vaadin-server</includes>
+                    <verbose>true</verbose>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
+----
+
+With this profile, run `mvn -Pcheck-vaadin-server-deps` to get the list of the dependencies to fix.
+
+.Example of detection of dependencies importing `vaadin-server`
+[source,terminal]
+----
+[INFO] org.vaadin:mprdemo:war:1.0-SNAPSHOT
+[INFO] +- com.vaadin:vaadin-client-compiler:jar:8.19.0:provided
+[INFO] |  \- com.vaadin:vaadin-client:jar:8.19.0:compile
+[INFO] |     \- (com.vaadin:vaadin-server:jar:8.19.0:compile - omitted for conflict with 8.6.0)
+[INFO] +- org.vaadin:gwtav:jar:1.2.1:compile
+[INFO] |  \- com.vaadin:vaadin-server:jar:8.6.0:compile
+[INFO] +- com.vaadin:vaadin-spreadsheet:jar:3.0.0.alpha1:compile
+[INFO] |  \- (com.vaadin:vaadin-server:jar:8.0.0:compile - omitted for conflict with 8.6.0)
+[INFO] \- org.vaadin:filesystemdataprovider:jar:1.1.0:compile
+[INFO]    \- (com.vaadin:vaadin-server:jar:8.6.3:compile - omitted for conflict with 8.6.0)
+----
+
+For each dependency found, add an exclusion of `vaadin-server` artifact, as shown in the example here:
+
+.Exclusion of `vaadin-server` transitive dependency
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-spreadsheet</artifactId>
+    <version>3.0.0.alpha1</version>
+    <exclusions>
+        <exclusion>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-server</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+----
+
+
+=== Incompatible Dependency at Build Time
+
+To ensure that `vaadin-server` is not transitively imported by any dependency, you can configure the Maven enforcer plugin to stop the build with a failure if a reference to the artifact is detected. You would do that like this:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-enforcer-plugin</artifactId>
+    <version>3.1.0</version>
+    <executions>
+        <execution>
+            <id>ensure-vaadin-server-not-present</id>
+            <goals>
+                <goal>enforce</goal>
+            </goals>
+            <configuration>
+                <rules>
+                    <bannedDependencies>
+                        <excludes>
+                            <exclude>com.vaadin:vaadin-server</exclude>
+                        </excludes>
+                        <message><![CDATA[
+'com.vaadin:vaadin-server' is not compatible with Jakarta Servlet 5+ and must be excluded from dependencies
+run 'mvn -Pcheck-vaadin-server-deps' to locate the sources of the banned dependencies
+and add an exclusion to the dependency declaration
+
+<dependency>
+<groupId>com.vaadin</groupId>
+<artifactId>vaadin-spreadsheet</artifactId>
+<version>3.0.0.alpha1</version>
+<exclusions>
+    <exclusion>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-server</artifactId>
+    </exclusion>
+</exclusions>
+</dependency>
+                        ]]></message>
+                    </bannedDependencies>
+                </rules>
+                <fail>true</fail>
+                <failFast>true</failFast>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+
+=== Maven Plugins
+
+You need to add the `vaadin-maven-plugin` for it to manage the custom legacy widget set -- if it's not already added in your build section. The Maven plugin version used currently is {vaadin-eight-version}.
+
+[source,xml,subs="+attributes"]
+----
+<build>
+     <plugins>
+         <plugin>
+             <groupId>com.vaadin</groupId>
+             <artifactId>vaadin-maven-plugin</artifactId>
+             <version>{vaadin-eight-version}</version>
+             <executions>
+                 <execution>
+                     <goals>
+                         <goal>resources</goal>
+                         <goal>update-widgetset</goal>
+                         <goal>compile</goal>
+                     </goals>
+                 </execution>
+             </executions>
+         </plugin>
+     </plugins>
+ </build>
+----
+
+Vaadin 14 also requires a Maven plugin for processing frontend resources during development time. Because the `vaadin-maven-plugin` can only be defined with one version, you'll have to use the `flow-maven-plugin`, instead. This forces you to define manually the plugin version since Maven doesn't allow you to define a plugin version in the Bill-of-Materials (BOM).
+
+[source,xml,subs="+attributes"]
+----
+<build>
+     <plugins>
+         <plugin>
+             <groupId>com.vaadin</groupId>
+             <artifactId>flow-maven-plugin</artifactId>
+             <version>{vaadin-flow-version}</version>
+             <executions>
+                 <execution>
+                     <goals>
+                         <goal>prepare-frontend</goal>
+                     </goals>
+                 </execution>
+             </executions>
+         </plugin>
+     </plugins>
+ </build>
+----
+
+
+=== Logging
+
+To display Flow application logs, any slf4j implementation should be added to the project. The easiest way would be to use `slf4j-simple` dependency like so:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-simple</artifactId>
+    <version>1.7.25</version>
+</dependency>
+----
+
+
+=== Vaadin 7 Compatibility Package
+
+If your project is using components from the Vaadin 8 compatibility package, you will also need to add the following:
+
+[source,xml,subs="+attributes"]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-compatibility-server-mpr-jakarta</artifactId>
+    <version>{vaadin-eight-version}</version>
+</dependency>
+
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-compatibility-client</artifactId>
+    <version>{vaadin-eight-version}</version>
+    <scope>provided</scope>
+</dependency>
+----
+
+The next step is <<2-legacy-servlets#,Removing legacy servlets>>.
+
+== Appendix: Sample pom.xml
+
+[[sample-pom-v8]]
+[source,xml,subs="+attributes"]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.mycompany</groupId>
+    <artifactId>my-mpr-app</artifactId>
+    <packaging>war</packaging>
+    <version>0.1</version>
+
+    <properties>
+        <vaadin.version>{vaadin-eight-version}</vaadin.version>
+        <vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
+        <!-- Flow version needs to be defined manually for Flow Maven plugin
+             because Maven BOMs don't support plugin versions or defining properties.
+             The Flow version to use can be checked from vaadin-bom. -->
+        <flow.version>{vaadin-flow-version}</flow.version>
+
+        <slf4j.version>1.7.25</slf4j.version>
+        <jetty.plugin.version>11.0.13</jetty.plugin.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-bom</artifactId>
+                <type>pom</type>
+                <scope>import</scope>
+                <version>{vaadin-version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>mpr-v8</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-server-mpr-jakarta</artifactId>
+            <version>${vaadin.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jsoup</groupId>
+                    <artifactId>jsoup</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.gwt</groupId>
+                    <artifactId>gwt-elemental</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-themes</artifactId>
+            <version>${vaadin.version}</version>
+        </dependency>
+
+        <!-- Vaadin 7 compatibility packages -->
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-compatibility-server-mpr-jakarta</artifactId>
+            <version>${vaadin.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-compatibility-client</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>resources</goal>
+                            <goal>update-widgetset</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Since the Vaadin Maven plugin can only be defined with one version,
+                 the Flow Maven plugin is used instead for handling Vaadin 14+ frontend
+                 resources for development and production builds. -->
+            <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>flow-maven-plugin</artifactId>
+                <version>${flow.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-frontend</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- The Jetty plugin allows the development build to be
+				 tested by running jetty:run on the command line. -->
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>${jetty.plugin.version}</version>
+                <configuration>
+                    <scanIntervalSeconds>2</scanIntervalSeconds>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+----
+
+
+[discussion-id]`80D29A33-0103-4815-9C65-FBB78871F515`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

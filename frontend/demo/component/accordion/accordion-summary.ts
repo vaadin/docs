@@ -14,7 +14,7 @@ import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import { Binder, field } from '@hilla/form';
+import { Binder, field } from '@vaadin/hilla-lit-form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -27,16 +27,14 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
 @customElement('accordion-summary')
 export class Example extends LitElement {
   @state()
-  private countries: Country[] = [];
+  private accessor countries: Country[] = [];
 
-  @state()
   private readonly personBinder = new Binder(this, PersonModel);
 
-  @state()
   private readonly cardBinder = new Binder(this, CardModel);
 
   @state()
-  private openedPanelIndex: number | null = 0;
+  private accessor openedPanelIndex: number | null = 0;
 
   protected override async firstUpdated() {
     this.countries = await getCountries();
@@ -120,10 +118,7 @@ export class Example extends LitElement {
                 </span>
 
                 <span>
-                  ${
-                    // @ts-expect-error Workaround a Binder issue
-                    this.personBinder.value.address?.country?.name
-                  }
+                  ${this.personBinder.value.address?.country}
                 </span>
               </vaadin-vertical-layout>
             </vaadin-horizontal-layout>
@@ -147,7 +142,7 @@ export class Example extends LitElement {
               label="Country"
               ${field(this.personBinder.model.address.country)}
               item-label-path="name"
-              item-value-path="id"
+              item-value-path="name"
               .items="${this.countries}"
             ></vaadin-combo-box>
           </vaadin-form-layout>

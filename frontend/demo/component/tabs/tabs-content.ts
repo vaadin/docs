@@ -9,10 +9,10 @@ import { applyTheme } from 'Frontend/generated/theme';
 @customElement('tabs-content')
 export class Example extends LitElement {
   @state()
-  private content = '';
+  private accessor content = '';
 
   @state()
-  private pages = ['Dashboard', 'Payment', 'Shipping'];
+  private accessor pages = ['Dashboard', 'Payment', 'Shipping'];
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

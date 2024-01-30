@@ -19,8 +19,6 @@ public class ConnectionContextExample extends VerticalLayout {
 
     private UserInfo localUser = new UserInfo("userId");
     private String topicId = "mytopic";
-    private CollaborationEngine collaborationEngine = CollaborationEngine
-            .getInstance();
     private MessageManager messageManager;
     private PresenceManager presenceManager;
     private TopicConnectionRegistration registration;
@@ -36,10 +34,10 @@ public class ConnectionContextExample extends VerticalLayout {
         // tag::pass-a-connection-context[]
         // Use to create a message manager
         messageManager = new MessageManager(connectionContext, localUser,
-                topicId, collaborationEngine);
+                topicId, CollaborationEngine::getInstance);
 
         // Use to open a topic connection
-        registration = collaborationEngine.openTopicConnection(
+        registration = CollaborationEngine.getInstance().openTopicConnection(
                 connectionContext, topicId, localUser,
                 connectionActivationCallback);
         // end::pass-a-connection-context[]
@@ -51,7 +49,7 @@ public class ConnectionContextExample extends VerticalLayout {
         // when passing a component (this) as the first argument.
         messageManager = new MessageManager(this, localUser, topicId);
         presenceManager = new PresenceManager(this, localUser, topicId);
-        registration = collaborationEngine.openTopicConnection(this, topicId,
+        registration = CollaborationEngine.getInstance().openTopicConnection(this, topicId,
                 localUser, connectionActivationCallback);
         // end::component[]
     }
@@ -64,9 +62,9 @@ public class ConnectionContextExample extends VerticalLayout {
         // In this case the CollaborationEngine instance
         // also needs to be supplied.
         messageManager = new MessageManager(context, localUser, topicId,
-                CollaborationEngine.getInstance());
+                CollaborationEngine::getInstance);
 
-        registration = collaborationEngine.openTopicConnection(context, topicId,
+        registration = CollaborationEngine.getInstance().openTopicConnection(context, topicId,
                 localUser, connectionActivationCallback);
         // end::component-context[]
     }
@@ -79,7 +77,7 @@ public class ConnectionContextExample extends VerticalLayout {
         ConnectionContext context = collaborationEngine.getSystemContext(); // <2>
 
         MessageManager messageManager = new MessageManager(context, systemUser,
-                topicId, collaborationEngine); // <3>
+                topicId, () -> collaborationEngine); // <3>
 
         messageManager.submit("The system is shutting down")
                 .whenComplete((v, t) -> messageManager.close()); // <4>

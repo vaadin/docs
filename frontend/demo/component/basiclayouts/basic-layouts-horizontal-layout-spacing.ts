@@ -23,7 +23,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private theme = 'spacing';
+  private accessor theme = 'spacing';
 
   protected override render() {
     return html`

@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import {
   DateTimePicker,
   type DateTimePickerElement,
-} from '@hilla/react-components/DateTimePicker.js';
+} from '@vaadin/react-components/DateTimePicker.js';
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
 import type { DatePickerDate } from '@vaadin/date-picker';

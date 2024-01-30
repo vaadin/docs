@@ -1,23 +1,23 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
+import { Grid } from '@vaadin/react-components/Grid.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { ContextMenu } from '@hilla/react-components/ContextMenu.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Button } from '@hilla/react-components/Button.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Button } from '@vaadin/react-components/Button.js';
 
 function Example() {
   // tag::snippet[]
   const [items, setItems] = useState<Person[]>([]);
 
   const [contextMenuItems, setContextMenuItems] = useState([
-    { text: 'First name', checked: true, key: 'firstName' },
-    { text: 'Last name', checked: true, key: 'lastName' },
-    { text: 'Email', checked: true, key: 'email' },
-    { text: 'Phone', checked: true, key: 'address.phone' },
-    { text: 'Profession', checked: true, key: 'profession' },
+    { text: 'First name', checked: true, key: 'firstName', keepOpen: true },
+    { text: 'Last name', checked: true, key: 'lastName', keepOpen: true },
+    { text: 'Email', checked: true, key: 'email', keepOpen: true },
+    { text: 'Phone', checked: true, key: 'address.phone', keepOpen: true },
+    { text: 'Profession', checked: true, key: 'profession', keepOpen: true },
   ]);
 
   useEffect(() => {
@@ -32,12 +32,9 @@ function Example() {
           openOn="click"
           items={contextMenuItems}
           onItemSelected={(e: CustomEvent) => {
-            const value = e.detail.value;
-            setContextMenuItems(
-              contextMenuItems.map((item) =>
-                item.key === value.key ? { ...item, checked: !value.checked } : item
-              )
-            );
+            const item = e.detail.value;
+            item.checked = !item.checked;
+            setContextMenuItems([...contextMenuItems]);
           }}
         >
           <Button theme="tertiary">Show/Hide Columns</Button>

@@ -16,16 +16,16 @@ const config = {
     // paths in 'latest' to ignore (since they shouldn't be copied to 'hilla')
     ignore: [
       // Ignore Spreadsheet
-      'articles/components/spreadsheet',
+      'articles/flow/components/spreadsheet',
 
       // Ignore Map
-      'articles/components/map',
+      'articles/flow/components/map',
 
       // Ignore basic layouts
-      'articles/components/basic-layouts',
+      'articles/flow/components/basic-layouts',
 
       // Ignore Charts (for now)
-      'articles/components/charts',
+      'articles/flow/components/charts',
 
       // Ignore flow-specific articles
       /articles\/components\/.*\/flow.asciidoc/,
@@ -54,7 +54,6 @@ const config = {
       'src/main/java/com/vaadin/demo/sso',
       'src/main/java/com/vaadin/demo/collaboration',
       'src/main/java/com/vaadin/demo/observability',
-      'frontend/themes',
       'src/main/java/com/vaadin/demo/DemoExporter.java',
       'src/main/resources/testsheets',
       'src/main/resources/META-INF/resources/icons/icon.png',
@@ -63,20 +62,21 @@ const config = {
   },
   rename: {
     // paths in 'latest' to copy to different paths in 'hilla'
-    'articles/components': 'articles/react/components',
+    'articles/flow/components': 'articles/flow/react/components',
   },
   target: {
     // paths in 'hilla' to keep (since they shouldn't be removed, even if they don't exist in latest)
     keep: [
-      'articles/lit',
-      'articles/react',
-      'articles/404.asciidoc',
-      'articles/index.adoc',
-      'articles/_commercial-banner.asciidoc',
+      'articles/flow/lit',
+      'articles/flow/react',
+      'articles/flow/404.asciidoc',
+      'articles/flow/index.adoc',
+      'articles/flow/_commercial-banner.asciidoc',
       'src/main/java/com/vaadin/demo/fusion',
       'src/main/java/com/vaadin/demo/DemoExporter.java',
       'src/main/resources/application.properties',
       'frontend/demo/fusion',
+      'frontend/demo/component/auto-grid',
       'frontend/themes',
       'frontend/demo/init.ts',
     ],
@@ -84,11 +84,15 @@ const config = {
   // callbacks for changing the content of certain files
   callback: [
     {
-      // Regex to match all asciidoc files under articles/components
+      // Regex to match all asciidoc files under articles/flow/components
       path: /articles\/components\/.*\.[asciidoc|adoc]/,
       callback: (content) => {
-        // replace all instances of "{articles}/components" with "{articles}/react/components"
-        content = content.replace(/{articles}\/components/g, '{articles}/react/components');
+        // replace all instances of "{articles}/flow/components" with "{articles}/flow/react/components"
+        content = content.replace(/{articles}\/components/g, '{articles}/flow/react/components');
+
+        // replace all instances of "{articles}/flow/styling/lumo" and "/styling/lumo" with "https://vaadin.com/docs/styling/lumo"
+        content = content.replace(/{articles}\/styling\/lumo/g, 'https://vaadin.com/docs/styling/lumo');
+        content = content.replace(/\/styling\/lumo/g, 'https://vaadin.com/docs/styling/lumo');
 
         // Remove discussion ids
         content = content.replace(/\[discussion-id\].*/g, '');
@@ -108,9 +112,9 @@ const config = {
           content = content.replace(/= .*/, ':react:\n\n$&');
         }
 
-        // Add section-nav: flat to components index
+        // Add section-nav: flat components to components index
         if (content.includes('title: Components')) {
-          content = content.replace('title: Components', 'title: Components\nsection-nav: flat');
+          content = content.replace('title: Components', 'title: Components\nsection-nav: flat components');
         }
 
         return content;

@@ -1,0 +1,90 @@
+---
+title: Binding to Components
+description: How to use the @Id annotation to reference a JavaScript LitElement template.
+order: 3
+---
+
+
+= Binding to Template Components
+
+The `@Id` annotation allows you to interact with client-side templates on the server side. You can use the `@Id` annotation to get a [classname]`Component` or [classname]`Element` reference for an element defined in a JavaScript template.
+
+This section demonstrates how to use the `@Id` annotation to reference a JavaScript LitElement template. The same logic applies to Polymer templates.
+
+*Example*: `MainPage` TypeScript LitElement template file.
+
+[source,javascript]
+----
+class MainPage extends LitElement {
+  render() {
+    return html`
+      <div id="content"></div>
+      <button id="helloButton">Click me!</button>
+    `;
+  }
+}
+
+customElements.define('main-page', MainPage);
+----
+* The `html` returns a placeholder `div` element with a `"content"` identifier and `button` element with a `helloButton` identifier.
+* The `div` element is mapped to a `Div` component in the Java code (see below), allowing you to add a [classname]`Component` as a child to it.
+* The `button` element is mapped to a [classname]`NativeButton` component in the Java code (see below), allowing you to react to its click events.
+
+*Example*: Implementing a method in the [classname]`MainPage` class to add a [classname]`Component` to the content of a TypeScript LitElement template element.
+
+[NOTE]
+The return statement in the render method needs to end with a semi-colon (`;`) for the parser to find the template contents.
+
+[source,java]
+----
+@Tag("main-page")
+@JsModule("./com/example/main-page.ts")
+public class MainPage extends LitTemplate {
+
+    @Id("content")
+    private Div content;
+
+    @Id("helloButton")
+    private NativeButton helloButton;
+
+    public MainPage() {
+        helloButton.addClickListener(event -> {
+           System.out.println("Clicked!");
+        });
+    }
+
+    public void setContent(Component content) {
+        this.content.removeAll();
+        this.content.add(content);
+    }
+}
+----
+* The `@Id` annotation maps a component to an element in the TypeScript template on the client with the HTML identifiers `"content"` and `"helloButton"`.
+* Vaadin creates a component instance of the declared type automatically and wires it to the template DOM element with the `content` and `helloButton` fields in the Java class.
+
+[NOTE]
+The declared type used in an `@Id` injection declaration must have a default constructor to instantiate it.
+
+[NOTE]
+The [classname]`Component` or [classname]`Element` must have the same `@Tag` as the actual element that's referenced.
+This means that you can't bind a `<span id="content"></span>` to a `@Id("content") Div content`.
+
+[TIP]
+The `@Id` annotation can also be used to inject an [classname]`Element` instance instead of a [classname]`Component` instance, if you want to use the lower-level [classname]`Element` API or there is no suitable HTML component available.
+
+*Example*: Calling the [methodname]`setContent()` method to set any [classname]`Component` as content for the [classname]`MainPage` class.
+
+[source,java]
+----
+MainPage page = new MainPage();
+page.setContent(new Label("Hello!"));
+----
+
+
+[discussion-id]`46082B74-3CC0-46ED-AB3E-49BB388FC1B6`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

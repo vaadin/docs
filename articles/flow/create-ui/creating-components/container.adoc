@@ -1,0 +1,135 @@
+---
+title: Component Containers
+description: Creating a component that can contain other components.
+order: 8
+---
+
+
+= Creating a Component Container
+
+This section demonstrates how to create a `Component` container.
+
+A component container is a component to which you can add other components. A container is typically created through a generic public API.
+
+*Example*: Simple component container.
+
+[source,java]
+----
+@Tag("div")
+public class MyComponentContainer extends Component
+        implements HasComponents {
+}
+----
+
+* The [interfacename]`HasComponents` interface provides [methodname]`add(Component...)` and [methodname]`remove(Component...)` methods to handle attaching component elements to the `MyComponentContainer` root element (`<div>` in this example).
+
+== Implementing a Custom Add Method
+
+If necessary, you can implement your own `add` method.
+For example, you might a different kind of API or have a complex internal element hierarchy.
+
+*Example*: Implementing a custom method to add components to a container.
+
+[source,java]
+----
+@Tag("div")
+public class MyComponentContainer extends Component {
+
+    public void add(Component child) {
+        getElement().appendChild(child.getElement());
+    }
+}
+----
+
+== Attaching Child Components to the DOM
+
+When a child component is added to a container component, the container must attach the child to the DOM.
+This is the only absolute requirement for a container component.
+
+In the previous example, the child element attaches to the root element (as [interfacename]`HasComponents` does).
+As an alternative, you can place each child in a wrapper element or use a more complex element hierarchy if necessary.
+
+*Example*: Wrapping a child component in an element wrapper.
+
+[source,java]
+----
+@Tag("div")
+public class MyComponentContainer extends Component {
+
+    public void add(Component child) {
+        Element childWrapper = ElementFactory
+                .createDiv();
+        childWrapper.appendChild(child.getElement());
+        getElement().appendChild(childWrapper);
+    }
+}
+----
+
+== Using Component Hierarchy Methods
+
+Component hierarchy methods, such as [methodname]`getChildren()` and [methodname]`getParent()`, work automatically for container components, because they are implemented based on the element hierarchy.
+These methods also work if you have placed the child components in wrapper elements.
+
+You can add a similar method to remove components.
+
+*Example*: Using the [methodname]`removeFromParent()` method to detach a component.
+
+[source,java]
+----
+public void remove(Component child) {
+    Element wrapper = child.getElement().getParent();
+    wrapper.removeFromParent();
+}
+----
+
+.Removing child components
+[NOTE]
+When you use the [methodname]`remove()` method, you can't assume that a component is always removed.
+You can detach a child element manually through the `Element` API, for example, by using the [methodname]`Element.removeFromParent()` method.
+Another way is to add the child element to another component.
+For example, the [methodname]`Element.appendChild()` method moves the element to the new parent from the old one, if it's still attached.
+
+.Detecting when a child component is removed
+[TIP]
+If you need to know when a child component is removed, add a `detach` listener to it using the [methodname]`Component.addDetachListener()` method.
+
+== Enabling and Disabling Container Components
+
+When you set a container component as disabled, all child components are automatically also set as disabled, and updates from the client to the server are blocked.
+
+Components that implement the [interfacename]`HasEnabled` interface are updated accordingly to reflect the disabled state in the UI.
+This usually means setting the component's `disabled` attribute.
+
+If your container includes elements or components that don't implement the [interfacename]`HasEnabled` interface, you can still *visually* update them to reflect the disabled state in the UI by overriding the [methodname]`onEnabledStateChanged()` method.
+
+*Example*: Setting a component as `disabled` by overriding the [methodname]`onEnabledStateChanged()` method.
+
+[source,java]
+----
+@Override
+public void onEnabledStateChanged(boolean enabled) {
+    super.onEnabledStateChanged(enabled);
+    if (enabled) {
+        childElement.removeAttribute("disabled");
+    } else {
+        childElement.setAttribute("disabled", true);
+    }
+}
+----
+* You only need to override the [methodname]`onEnabledStateChanged()` method to update the visual aspect of the element.
+When the container is disabled, communication from the client to the server is blocked, regardless if you override the method.
+* It's important to call [methodname]`super.onEnabledStateChanged(enabled)` when overriding.
+This is because it contains common logic that applies to all components in connection with the `enabled` state.
+* The [methodname]`onEnabledStateChanged()` method is called every time the enabled state changes.
+This applies whether the state change is by direct calls to [methodname]`setEnabled()`, by calling [methodname]`setEnabled()` on a parent container, or by attaching the component to, or detaching it from, a disabled container.
+
+See <<../enabled-state#,Enabled State>> for more.
+
+
+[discussion-id]`B669953B-4FB8-4B0F-920A-67AAC655BBD2`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

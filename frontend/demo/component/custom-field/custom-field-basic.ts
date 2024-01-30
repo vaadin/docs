@@ -4,7 +4,7 @@ import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/custom-field';
 import '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
-import { Binder, field } from '@hilla/form';
+import { Binder, field } from '@vaadin/hilla-lit-form';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 import { differenceInDays, parseISO, isAfter } from 'date-fns';
 import type { DatePicker } from '@vaadin/date-picker';
@@ -19,10 +19,10 @@ export class Example extends LitElement {
   }
 
   @query('#start')
-  private start!: DatePicker;
+  private accessor start!: DatePicker;
 
   @query('#end')
-  private end!: DatePicker;
+  private accessor end!: DatePicker;
 
   private binder = new Binder(this, AppointmentModel);
 

@@ -1,0 +1,320 @@
+---
+title: Creating Tests
+description: How to create tests for code contributions to ensure changes and additions work properly.
+order: 30
+---
+
+
+= Creating Tests for Contributions
+:experimental:
+:commandkey: &#8984;
+
+Code contributions should include tests to ensure new functionality works as intended and to prevent future regressions when bugs are fixed. Adequate test coverage is what enables maintainers to refactor and enhance the product. Tests guarantee the products work the same as before, and that new contributions aren't re-introducing issues that have already been fixed. Success of a refactor depends greatly on the quality of existing tests.
+
+In general, follow the Test-Driven Development (TDD) and Don't Repeat Yourself (DRY) practices when preparing a contribution.
+
+
+== Testing Flow
+
+.Unit Tests in Flow
+[%collapsible.collapsible]
+====
+
+Every change in the code base requires a JUnit test for the code change. In cases where a JUnit test isn't practicable, an integration test should be added instead.
+
+
+[discrete]
+=== Mocking
+
+JUnit mocks use `Mockito`. Other mocking libraries shouldn't be used, as they may break when there are version updates. No new mocking libraries should be added to the project.
+
+To help with tests, there are many [classname]`Mock*` classes for use that make the setup for testing simpler.
+
+
+[discrete]
+=== Conventions
+
+JUnit tests shouldn't leak settings and changes outside the test execution. This means that any changes to current instances and system properties should be reset after the test execution.
+
+Test method naming must follow the convention `{given}_{when}_{then}`. Below is an example of this:
+
+.Example Standard Names for Unit Test Methods
+[source]
+----
+void setValue_sameValue_firesNoEvent()
+void setValue_differentValue_firesOneEvent()
+----
+
+It's always a good practice to see existing tests as an example of how to write new tests.
+
+
+[discrete]
+=== How to Run Tests
+
+Issuing the following command results in running all of the tests in the specified module:
+
+[source,terminal]
+----
+mvn test -pl <module-name>
+----
+
+The above command template works only for direct child modules of the directory. To run tests in nested modules, use the syntax `:<module-name>`, for example, `mvn test -pl :flow-maven-plugin`. Or use the full path instead: `mvn test -pl flow-plugins/flow-maven-plugin`. The same rule applies when targeting a specific nested module, as in the commands that follow.
+
+To execute tests for a single class, execute this from the command-line:
+
+[source,terminal]
+----
+mvn -Dtest=<test-class-name> test -pl <module-folder-name>
+----
+
+Also, to run a single test inside a class do something like this:
+
+[source,terminal]
+----
+mvn -Dtest=<test-class-name>#<test-method-name> test -pl <module-folder-name>
+----
+
+To run all of the unit tests in the project do this:
+
+[source,terminal]
+----
+mvn test -am -pl flow
+----
+
+To run tests via your IDE, see the IDE documentation.
+
+====
+
+
+.Integration Tests in Flow
+[%collapsible.collapsible]
+====
+
+Sometimes creating unit tests isn't enough. It might be important to test that the given functionality works end-to-end in an application. This is especially important for features and bugs that depend on the browser functionality. Integration testing in Flow is done with a View & Integration Test combination.
+
+The integration tests are in the link:https://github.com/vaadin/flow/tree/master/flow-tests[flow-tests] module. Most of the integration tests for the core part are under `flow-test-core` module. Descriptions about integration test modules are inside link:https://github.com/vaadin/flow/blob/master/flow-tests/README.md[the README.md file in /flow-tests].
+
+The integration tests use link:https://vaadin.com/testbench[TestBench], for information see <<{articles}/flow/testing#, Vaadin TestBench>>. TestBench is a commercial tool. You need the license for it to run the tests, locally. However, you can get a free TestBench product license if you contribute frequently to the Vaadin projects. You can ask for a community contributor license on link:https://discord.com/channels/732335336448852018/774366825756229632[Discord].
+
+
+[discrete]
+=== Creating a Test View
+
+You may need to create a test view. However, check if there's already a suitable test view that you can reuse. One way to do this is by seeing if the code related to the test is being called from any of the existing test views.
+
+The view `@Route` value should be the fully qualified name of the view class like `com.vaadin.flow.uitest.ui.YourTestClassNameView`. Here's an example of this:
+
+.Example of a test view
+[source,java]
+----
+@Route(value = "com.vaadin.flow.uitest.ui.CompositeView", layout = ViewTestLayout.class)
+public class CompositeView extends AbstractDivView {
+    // ...
+}
+----
+
+View class should only depend on Flow HTML components in the `com.vaadin.flow.component.html` package, such as `NativeButton`, `Div`, etc.
+
+
+[discrete]
+==== Opening Test View in Browser
+
+You can open the test view in the browser by first starting the jetty server for that module. You can trigger the `jetty:run` Maven task for the module through your IDE, or by running the command `mvn jetty:run -pl <test-module-name>` like this:
+
+----
+mvn jetty:run -pl flow-test-core
+----
+
+You can then open the view in the browser for example from http://localhost:8888/view/com.vaadin.flow.uitest.ui.CompositeView (depending on the route used).
+
+[discrete]
+=== Creating an Integration Test
+
+The integration test class should be named the same as the `View` class that it tests. For example, `PageView` gets the test class `PageIT`. This enables the `open()` method to find the correct test view path automatically.
+
+The integration test class should extend `ChromeBrowserTest`. Some test classes extend an `Abstract*` class that provides common functionality to be reused in the tests.
+
+.Example of a integration test class
+[source,java]
+----
+public class CompositeIT extends ChromeBrowserTest {
+    @Test
+    public void changeOnClient() {
+        open();
+        // ...
+    }
+}
+----
+
+When writing a lot of integration tests, you should use the _Page Object_ pattern where the interaction between the browser is handled through an API that's reused for all the tests. See the <<{articles}/flow/testing/end-to-end/page-objects#,TestBench documentation>> for more information.
+
+If the test class contains or modifies some shared objects which can't run in parallel, the `@NotThreadSafe` annotation should be present on the class.
+
+
+[discrete]
+=== Running Integration Tests
+
+Running all the integration tests takes a while, so it's more efficient to only compile the modules that changed, and then run the specific ITs written for the changes.
+
+**Before running integration tests locally**, install the following modules `mvn install -pl flow-test-util -pl flow-tests/test-resources -pl flow-tests/test-common`.
+
+Running all integration tests for a single module `mvn verify -pl <test-module-folder-name>`. Running all the integration tests `mvn verify -pl flow-tests`.
+
+You can execute tests for single class by running the `mvn -Dit.test=<it-test-class-name> verify -pl <module-folder-name>`. Also, for running a single inside a class you can execute `mvn -Dit.test=<test-class-name>#<test-method-name>\* test -pl <module-folder-name>`.
+
+To reduce the chance your IT test is flaky, run it several times before publishing it out.
+
+
+[discrete]
+=== Debugging Test Modules
+
+Debugging can be made in a several ways. One way is to navigate to a test module and run `mvnDebug jetty:run` and start "Remote JVM Debug" configuration. This is usually available in IDEs.
+
+In IntelliJ IDEA, you can run Jetty plugin in debug mode. For example, you'd navigate to a particular test module in the "Maven" panel under "Flow Tests" node. Then you'd choose "Plugins" &rarr; "jetty", and then right-click on "jetty:run" and select "Debug '[module-name]' ...".
+
+If you need to debug an integration test, you'll need to start Jetty. Then start Debug configuration for the test, which is usually available in IDEs.
+
+As an alternative, you can run `mvn -Dmaven.failsafe.debug verify` (integration tests) or `mvn -Dmaven.surefire.debug test` (unit tests) and then attach the IDE debugger to port `5005`.
+This gives a benefit of having Jetty configuration in the `pre-integration-test` phase preserved for the test.
+
+====
+
+
+== Testing UI Components
+
+.Testing Web Components
+[%collapsible.collapsible]
+====
+
+These instructions apply to the https://github.com/vaadin/web-components repository.
+
+
+[discrete]
+==== Creating a Unit Test
+
+Before writing a new test for a web component, start by familiarizing yourself with existing tests. Each component in the `packages` folder has a `test` folder. Test are divided into files, named by the topic they are covering. Select the file with the name of the category the contribution is targeting. For example, implementing the `aria-describedby` attribute for text-field based components requires tests to be added to `test/accessibility.test.js`.
+
+If none of the existing files suits the context of your contribution, you can create a new file. Make sure that the tests in newly created file are passing.
+
+
+[discrete]
+==== Running Unit Tests
+
+When creating a new test, you don't need to run all tests each time. You can isolate the test case during development and run it in conjunction with other tests in the end.
+
+See the instructions for https://github.com/vaadin/web-components/#unit-tests[running web component unit tests].
+
+
+[discrete]
+==== Visual Tests
+
+If a change affects the visual representation of the component, a visual test can be added. Those are located in the `test/visual` folder. Review the existing test files and construct a new one based on the existing ones.
+
+If needed, open a discussion in the pull request to ask maintainers to update reference screenshots.
+
+At the moment you can't update reference screenshots without an account and access to the automated testing platform used in visual tests. Therefore, you're not required to add visual tests for your change.
+
+
+[discrete]
+==== Reusing Existing Test Helpers
+
+It's good practice to check existing tests for the behaviour needed to be reproduced in the new test. For example, looking through the existing files or searching for `keydown` word in web-components tests leads to `mock-interactions` usages for pressing specific keys.
+
+Some components can have common helpers exposed, for example, `packages/combo-box/test/helpers.js`. Following the DRY principle, all the logic used in multiple files ends up in one file. New logic can be added if needed.
+
+====
+
+
+.Testing Flow Components
+[%collapsible.collapsible]
+====
+
+These instructions apply to the https://github.com/vaadin/flow-components repository.
+
+
+[discrete]
+==== Module Structure
+
+Components wrappers implementations for Flow have modular structure. When coming up with a test for the contribution start with the main component module (for example, `vaadin-button-flow`). Unit tests are located there under `src/test/\...`. Integration tests are located in the `integration-tests` module (for example, `vaadin-button-flow-integration-tests`)
+
+
+[discrete]
+==== Unit Tests
+
+If the whole fix or feature, or part of its logic can be tested without roundtrip to the client-side, new unit test should be created. Files names are separated by the topic categories they are covering. Creation of the new file is acceptable following the same advices as for web components tests.
+
+The technologies / libraries used for the test creation can be found from imports. For example, in existing unit tests of `vaadin-button-flow` `@Test` annotation is used which lead to `org.junit.Test` import.
+
+Good practice would be to follow the existing test structure and naming conventions. For example, action and result mentioned in `removeNullColumn_throws`.
+
+
+[discrete]
+==== Integrations Tests
+
+If contribution's logic need to be tested with roundtrip to the client-side or in conjunction with other components, new integration test need to be added. Start with reviewing the existing structure of the `integration-tests` module of the component to which contribution is done. They have similar structure, but more complex component requires more complex tests.
+
+For example, `vaadin-grid-flow` also includes `frontend` resources to provide custom styling in tests, test grid in a polymer template etc. In addition, it has `data` generators and helpers used.
+
+
+[discrete]
+===== Test Page
+
+The next step is to select the integration test page which has the needed structure, and enhance it with new logic. For example, if contribution affects grid's filtering logic, `GridFilteringPage.java` should be enhanced to test new behaviour. The name of the file helps to find the proper page. If structure of the page becomes much more complex or there is no file with suitable structure, new one can be created based on existing ones.
+
+Remember to update `@Route` when creating a new file to avoid name conflicts.
+
+
+[discrete]
+===== Test
+
+After selecting the page, new test should be added to existing files that are using the same route as `@TestPath`. For example, `GridFilteringIT.java` is using `GridFilteringPage.java`. If page was created instead, new correspondent test file should be created based on the existing ones.
+
+Remember to update `@TestPath` when creating a new file to avoid name conflicts and ensure the tests are passing.
+
+
+[discrete]
+==== Inspiration from Existing Tests
+
+Take a look onto the existing tests and search for the logic that's needed to be implemented in newly created tests.
+
+Examples worth mentioning:
+
+- <<{articles}/flow/testing/end-to-end/creating-tests#,Creating TestBench Tests>>
+- JUnit `Assert` and `Test` usage
+- `executeScript` for executing a JavaScript snippet
+
+====
+
+
+=== General Guidelines for Testing Components
+
+
+==== Test the Use Case
+
+Start by going through the requirements for the feature or the description of the bug.
+
+When writing a test, consider the use-case itself rather than the implementation details. That comes naturally if the TDD principle is followed.
+
+Consider, for example, a contribution which adds feature to an input field component to prevent the user from entering invalid values. During the development process a boolean property `preventInvalidInput` is added to control the possibility of typing invalid characters to the input field. A test for this feature shouldn't only test setting the `preventInvalidInput` property, but focus on testing the use-case of a user typing invalid characters to the input field and that those aren't accepted by the field.
+
+
+==== Maintain Test Coverage
+
+Make sure that test coverage doesn't decrease with your contribution. The easiest way to check this is to remove lines from your change one by one and check if there are correspondent test failures for each of those.
+
+
+==== Avoid Asynchronous Tests
+
+If possible, avoid asynchronous tests. It simplifies reviewing of the test and helps future contributors. If it's impossible, you should explain any delays in comments and you should not use any "magic numbers", for example, a timeout for explicitly *300* milliseconds.
+
+
+==== Test on Supported Browsers
+
+Keep in mind that there could be differences in browsers behaviour, so it's a good habit to check that tests pass on all supported browsers. Supported browsers are listed in the release notes of each Vaadin major and minor release: https://github.com/vaadin/platform/releases
+
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

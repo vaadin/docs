@@ -16,7 +16,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private items = ['Chrome', 'Edge', 'Firefox', 'Safari'];
+  private accessor items = ['Chrome', 'Edge', 'Firefox', 'Safari'];
 
   protected override render() {
     return html`

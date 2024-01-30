@@ -19,11 +19,11 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
+  private accessor items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];
   // end::snippet[]
 
   @state()
-  private gridItems: Person[] = [];
+  private accessor gridItems: Person[] = [];
 
   protected override async firstUpdated() {
     this.gridItems = (await getPeople({ count: 5 })).people;
