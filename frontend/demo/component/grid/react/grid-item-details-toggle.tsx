@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { Button } from '@hilla/react-components/Button.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { FormLayout } from '@hilla/react-components/FormLayout.js';
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 

@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Select } from '@hilla/react-components/Select.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import { Select } from '@vaadin/react-components/Select.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
   const items = [

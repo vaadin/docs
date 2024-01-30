@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { MessageList } from '@hilla/react-components/MessageList.js';
-import { MessageInput } from '@hilla/react-components/MessageInput.js';
+import { MessageList } from '@vaadin/react-components/MessageList.js';
+import { MessageInput } from '@vaadin/react-components/MessageInput.js';
 import type { MessageListItem } from '@vaadin/message-list';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 

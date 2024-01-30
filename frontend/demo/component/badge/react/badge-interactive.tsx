@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { ComboBox, type ComboBoxChangeEvent } from '@hilla/react-components/ComboBox.js';
-import { Button, type ButtonElement } from '@hilla/react-components/Button.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { ComboBox, type ComboBoxChangeEvent } from '@vaadin/react-components/ComboBox.js';
+import { Button, type ButtonElement } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 import { getPeople } from 'Frontend/demo/domain/DataService';

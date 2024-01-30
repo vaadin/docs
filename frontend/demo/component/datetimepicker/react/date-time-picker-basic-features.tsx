@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { DateTimePicker } from '@hilla/react-components/DateTimePicker.js';
-import { Tooltip } from '@hilla/react-components/Tooltip.js';
+import { DateTimePicker } from '@vaadin/react-components/DateTimePicker.js';
+import { Tooltip } from '@vaadin/react-components/Tooltip.js';
 
 function Example() {
   return (

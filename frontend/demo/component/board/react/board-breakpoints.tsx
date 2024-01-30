@@ -1,7 +1,7 @@
-import { Board } from '@hilla/react-components/Board.js';
+import { Board } from '@vaadin/react-components/Board.js';
 import React from 'react';
-import { BoardRow } from '@hilla/react-components/BoardRow.js';
-import { SplitLayout } from '@hilla/react-components/SplitLayout.js';
+import { BoardRow } from '@vaadin/react-components/BoardRow.js';
+import { SplitLayout } from '@vaadin/react-components/SplitLayout.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import boardStyles from './board-styles';
 

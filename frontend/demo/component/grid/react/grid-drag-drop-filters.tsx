@@ -4,9 +4,9 @@ import {
   Grid,
   type GridDataProviderCallback,
   type GridDataProviderParams,
-} from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { GridTreeColumn } from '@hilla/react-components/GridTreeColumn.js';
+} from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { GridTreeColumn } from '@vaadin/react-components/GridTreeColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 

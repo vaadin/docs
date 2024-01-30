@@ -1,13 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
+import { Button } from '@vaadin/react-components/Button.js';
 import {
   RadioGroup,
   type RadioGroupValueChangedEvent,
-} from '@hilla/react-components/RadioGroup.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { RadioButton } from '@hilla/react-components/RadioButton.js';
+} from '@vaadin/react-components/RadioGroup.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { RadioButton } from '@vaadin/react-components/RadioButton.js';
 
 function Example() {
   const [theme, setTheme] = useState('padding');

@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { Dialog } from '@hilla/react-components/Dialog.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { Dialog } from '@vaadin/react-components/Dialog.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 // tag::snippet[]

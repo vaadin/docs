@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { FormLayout } from '@hilla/react-components/FormLayout.js';
-import { FormItem } from '@hilla/react-components/FormItem.js';
-import { TextField } from '@hilla/react-components/TextField.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
+import { FormItem } from '@vaadin/react-components/FormItem.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
 
 function Example() {
   return (

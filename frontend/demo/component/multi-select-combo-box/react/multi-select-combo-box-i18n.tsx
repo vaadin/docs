@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { MultiSelectComboBox } from '@hilla/react-components/MultiSelectComboBox.js';
+import { MultiSelectComboBox } from '@vaadin/react-components/MultiSelectComboBox.js';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 
