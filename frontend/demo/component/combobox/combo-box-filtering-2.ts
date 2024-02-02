@@ -19,10 +19,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor allItems: Country[] = [];
+  private allItems: Country[] = [];
 
   @state()
-  private accessor filteredItems: Country[] = [];
+  private filteredItems: Country[] = [];
 
   protected override async firstUpdated() {
     const countries = await getCountries();
