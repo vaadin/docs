@@ -19,10 +19,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor menuBarItems: MenuBarItem[] = [];
+  private menuBarItems: MenuBarItem[] = [];
 
   @state()
-  private accessor person: Person | undefined;
+  private person: Person | undefined;
 
   // tag::snippet[]
   protected override async firstUpdated() {
