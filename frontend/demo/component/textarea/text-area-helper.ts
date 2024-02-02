@@ -26,7 +26,7 @@ export class Example extends LitElement {
   private charLimit = 600;
 
   @state()
-  private accessor text = templates.loremIpsum;
+  private text = templates.loremIpsum;
 
   protected override render() {
     return html`

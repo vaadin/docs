@@ -24,10 +24,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor dialogOpened = false;
+  private dialogOpened = false;
 
   @state()
-  private accessor people: Person[] | undefined;
+  private people: Person[] | undefined;
 
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 50 });

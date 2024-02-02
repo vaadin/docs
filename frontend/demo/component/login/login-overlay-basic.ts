@@ -15,7 +15,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor loginOpened = false;
+  private loginOpened = false;
 
   protected override render() {
     return html`
