@@ -27,14 +27,14 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
 @customElement('accordion-summary')
 export class Example extends LitElement {
   @state()
-  private accessor countries: Country[] = [];
+  private countries: Country[] = [];
 
   private readonly personBinder = new Binder(this, PersonModel);
 
   private readonly cardBinder = new Binder(this, CardModel);
 
   @state()
-  private accessor openedPanelIndex: number | null = 0;
+  private openedPanelIndex: number | null = 0;
 
   protected override async firstUpdated() {
     this.countries = await getCountries();
@@ -117,9 +117,7 @@ export class Example extends LitElement {
                   ${this.personBinder.value.address?.zip} ${this.personBinder.value.address?.city}
                 </span>
 
-                <span>
-                  ${this.personBinder.value.address?.country}
-                </span>
+                <span> ${this.personBinder.value.address?.country} </span>
               </vaadin-vertical-layout>
             </vaadin-horizontal-layout>
           </vaadin-accordion-heading>

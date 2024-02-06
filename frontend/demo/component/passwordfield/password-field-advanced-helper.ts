@@ -26,10 +26,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor strengthText: PasswordStrength = 'weak';
+  private strengthText: PasswordStrength = 'weak';
 
   @state()
-  private accessor strengthColor = StrengthColor.weak;
+  private strengthColor = StrengthColor.weak;
 
   private pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$';
 

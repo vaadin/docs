@@ -2,9 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import { TabSheet } from '@vaadin/react-components/TabSheet.js';
-import { Tabs } from '@vaadin/react-components/Tabs.js';
-import { Tab } from '@vaadin/react-components/Tab.js';
+import { TabSheet, TabSheetTab } from '@vaadin/react-components/TabSheet.js';
 import '@vaadin/icons';
 
 function Example() {
@@ -17,15 +15,17 @@ function Example() {
         <Icon icon="vaadin:plus"></Icon>
       </Button>
 
-      <Tabs slot="tabs">
-        <Tab id="dashboard-tab">Dashboard</Tab>
-        <Tab id="payment-tab">Payment</Tab>
-        <Tab id="shipping-tab">Shipping</Tab>
-      </Tabs>
+      <TabSheetTab label="Dashboard">
+        <div>This is the Dashboard tab content</div>
+      </TabSheetTab>
 
-      <div {...{ tab: 'dashboard-tab' }}>This is the Dashboard tab content</div>
-      <div {...{ tab: 'payment-tab' }}>This is the Payment tab content</div>
-      <div {...{ tab: 'shipping-tab' }}>This is the Shipping tab content</div>
+      <TabSheetTab label="Payment">
+        <div>This is the Payment tab content</div>
+      </TabSheetTab>
+
+      <TabSheetTab label="Shipping">
+        <div>This is the Shipping tab content</div>
+      </TabSheetTab>
     </TabSheet>
     // end::snippet[]
   );

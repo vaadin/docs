@@ -50,13 +50,13 @@ export class ExampleIndicator extends LitElement {
   `;
 
   @property()
-  accessor title = 'Unknown';
+  title = 'Unknown';
 
   @property()
-  accessor current = '0';
+  current = '0';
 
   @property({ type: Number })
-  accessor change = 0;
+  change = 0;
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

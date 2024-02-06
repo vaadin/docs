@@ -18,7 +18,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -32,16 +32,17 @@ export class Example extends LitElement {
         <!-- end::snippet[] -->
         <vaadin-grid-column frozen .renderer="${this.indexColumnRenderer}"></vaadin-grid-column>
 
-        ${[...Array(100).keys()].map((index) => {
-          // Generate 100 columns
-          return html`
-            <vaadin-grid-column
-              data-index="${index}"
-              .header="${`Col ${index}`}"
-              .renderer="${this.columnRenderer}"
-            ></vaadin-grid-column>
-          `;
-        })}
+        ${[...Array(100).keys()].map(
+          (index) =>
+            // Generate 100 columns
+            html`
+              <vaadin-grid-column
+                data-index="${index}"
+                .header="${`Col ${index}`}"
+                .renderer="${this.columnRenderer}"
+              ></vaadin-grid-column>
+            `
+        )}
       </vaadin-grid>
     `;
   }
@@ -51,6 +52,6 @@ export class Example extends LitElement {
   };
 
   private indexColumnRenderer: GridBodyRenderer<Person> = (root, _, { index }) => {
-    root.textContent = 'Row ' + index;
+    root.textContent = `Row ${index}`;
   };
 }

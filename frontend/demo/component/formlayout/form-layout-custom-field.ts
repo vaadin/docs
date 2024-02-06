@@ -9,7 +9,7 @@ import '@vaadin/custom-field';
 import '@vaadin/horizontal-layout';
 
 import { applyTheme } from 'Frontend/generated/theme';
-import { Select } from '@vaadin/select';
+import type { Select } from '@vaadin/select';
 
 @customElement('form-layout-custom-field')
 export class Example extends LitElement {
@@ -22,16 +22,16 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('#month-field')
-  private accessor monthField!: Select;
+  private monthField!: Select;
 
   @query('#year-field')
-  private accessor yearField!: Select;
+  private yearField!: Select;
 
   @state()
-  private accessor months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
+  private months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
 
   @state()
-  private accessor years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
+  private years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
 
   protected override firstUpdated() {
     // Set title for screen readers
@@ -45,12 +45,9 @@ export class Example extends LitElement {
         <vaadin-form-item>
           <label slot="label">Expiration</label>
           <vaadin-custom-field
-            .parseValue="${(value: string) => {
-              return value ? value.split('/') : ['', ''];
-            }}"
-            .formatValue="${(values: unknown[]) => {
-              return values[0] && values[1] ? values.join('/') : '';
-            }}"
+            .parseValue="${(value: string) => (value ? value.split('/') : ['', ''])}"
+            .formatValue="${(values: unknown[]) =>
+              values[0] && values[1] ? values.join('/') : ''}"
           >
             <vaadin-horizontal-layout theme="spacing-xs">
               <vaadin-select
