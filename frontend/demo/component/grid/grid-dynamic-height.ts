@@ -25,13 +25,13 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   @state()
-  private accessor invitedPeople: Person[] = [];
+  private invitedPeople: Person[] = [];
 
   @state()
-  private accessor selectedValue = '';
+  private selectedValue = '';
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
