@@ -11,7 +11,7 @@ export class FakeProgressBar extends LitElement {
   `;
 
   @property({ type: Number })
-  accessor progress = 0;
+  progress = 0;
 
   simulateProgress() {
     this.progress = 0;

@@ -17,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items = [
+  private items = [
     { text: 'View' },
     { text: 'Edit' },
     {

@@ -70,7 +70,7 @@ class Footer extends LitElement {
   }
 
   @state()
-  private accessor documentTitle = document.title;
+  private documentTitle = document.title;
 
   private __titleObserver = new MutationObserver(() => {
     this.documentTitle = document.title;
