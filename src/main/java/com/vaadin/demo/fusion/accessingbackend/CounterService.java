@@ -3,6 +3,7 @@ package com.vaadin.demo.fusion.accessingbackend;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 
+// tag::snippet[]
 /**
  * A service that counts numbers.
  */

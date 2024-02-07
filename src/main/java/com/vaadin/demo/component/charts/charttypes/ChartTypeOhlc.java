@@ -18,7 +18,7 @@ import com.vaadin.flow.router.Route;
 @Route("chart-type-ohlc")
 public class ChartTypeOhlc extends Div {
     public ChartTypeOhlc() {
-        // tag::snippet{}
+        // tag::snippet[]
         Chart chart = new Chart(ChartType.OHLC);
 
         Configuration configuration = chart.getConfiguration();
@@ -47,13 +47,13 @@ public class ChartTypeOhlc extends Div {
         configuration.setRangeSelector(rangeSelector);
 
         chart.setTimeline(true);
-        // end::snippet{}
+        // end::snippet[]
 
         add(new VerticalLayout(chart));
     }
 
     private Number[][] getRawData(){
-        return new Number[][] { 
+        return new Number[][] {
         {1470317400000l,105.58,106,105.28,105.87},
         {1470403800000l,106.27,107.65,106.18,107.48},
         {1470663000000l,107.52,108.37,107.16,108.37},
@@ -558,8 +558,8 @@ public class ChartTypeOhlc extends Div {
         {1533130200000l,199.13,201.76,197.31,201.5},
         {1533216600000l,200.58,208.38,200.35,207.39}};
     }
-    
-    
+
+
     public static class Exporter extends DemoExporter<ChartTypeOhlc> { // hidden-source-line
     } // hidden-source-line
 }
