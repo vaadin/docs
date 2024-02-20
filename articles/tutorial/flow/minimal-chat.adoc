@@ -1,0 +1,261 @@
+---
+title: Your first view
+description: Learn how to implement a minimal chat user interface
+order: 10
+---
+
+= Your first view
+
+You are now going to create your first view. This view will allow the user to receive and post messages in a specific channel. It will contain the following user interface components:
+
+- a list of the messages in the channel
+- an input field for writing new messages
+- a button for sending new messages to the channel
+
+Furthermore, the view is going to need access to the follwing:
+
+- the ID of the channel, passed as a URL parameter like this: `/channel/<channelId>`
+- an instance of [classname]`ChatService`, injected through constructor injection
+
+Once finished, the view is going to look like this:
+
+*INSERT SCREENSHOT*
+
+== Routing in Flow
+
+You can make any Vaadin component a routing target by adding a `@Route("<path>")` annotation. This will also make it possible to inject Spring managed beans into the component through constructor parameter injection. Note, however, that the component will not become a Spring bean itself. In other words, the component cannot be injected into other components and its lifecycle is still managed by Vaadin, not by Spring.
+
+You can pass parameters into any Vaadin route. There are various ways of doing this, but the easiest way is to implement the [interfacename]`HasUrlParameter` interface. This interface defines a single URL parameter that is appended to the path of the route. The type of the parameter can be *Long*, *Integer*, *String* or *Boolean*.
+
+You can find more information about routing in the <<{articles}/flow/routing,Flow documentation>>.
+
+== Create the channel view
+
+Start by creating a class named [classname]`ChannelView` in the [packagename]`com.example.application.ui.views.channel` package, like this: 
+
+.`ChannelView.java`
+[source, java]
+----
+package com.example.application.ui.views.channel;
+
+import com.example.application.chat.ChatService;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Route;
+
+@Route(value = "channel") // <1>
+public class ChannelView extends VerticalLayout // <2>
+        implements HasUrlParameter<String> { // <3>
+
+    public ChannelView(ChatService chatService) { // <4>
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, String channelId) { // <5>
+    }
+}
+----
+<1> The view is accessible at the `/channel` path.
+<2> `VerticalLayout` is one of the built-in layouts in Vaadin that lays out components vertically on top of each other.
+<3> The view accepts a single URL parameter of type `String` (the channel ID).
+<4> The `ChatService` is injected by Spring.
+<5> This method is provided by the `HasUrlParameter` interface and will get called whenever the URL parameter is changed.
+
+Next, you are going to set up the user interface. Update the constructor like this:
+
+[source,java]
+----
+public ChannelView(ChatService chatService) {
+    setSizeFull(); // <1>
+
+    var messageList = new MessageList(); // <2>
+    messageList.setSizeFull();
+    add(messageList);
+
+    var messageInput = new MessageInput(); // <3>
+    messageInput.setWidthFull();
+    add(messageInput);
+}
+----
+<1> This makes the view fill the entire screen by setting its width and height to 100%.
+<2> `MessageList` is a built-in component for displaying messages from different users.
+<3> `MessageInput` is a built-in component for entering and sending messages.
+
+You can now start the application and navigate to http://localhost:8080/channel/foo. Please note that `foo` is just a dummy value for the channel ID URL parameter. If you leave it out, you will not be able to enter the view as the parameter is required. Your application should now look like this:
+
+*INSERT SCREENSHOT*
+
+== Get the channel ID
+
+You are going to need the channel ID both for posting and receiving messages, so that is what you will implement next. You are going to:
+
+1. Get the channel ID from the [methodname]`setParameter` method.
+2. Verify that it is valid with the [classname]`ChatService`.
+3. Store it in a private field for future use.
+
+Start by declaring a private field that will contain the channel ID:
+
+[source,java]
+----
+private String channelId;
+----
+
+Then, implement the [methodname]`setParameter` method like this:
+
+[source,java]
+----
+@Override
+public void setParameter(BeforeEvent event, String channelId) {
+    if (!chatService.channel(channelId).isPresent()) {
+        throw new IllegalArgumentException("Invalid channel ID"); // <1>
+    }
+    this.channelId = channelId;
+}
+----
+<1> In a future iteration, you will be navigating away from this view if the channel ID is invalid. For now, throwing an exception is enough.
+
+== Post a message
+
+You now have everything you need to start posting messages to a channel. You are going to:
+
+1. Add a listener to the [classname]`MessageInput` that gets called whenever the user sends a message.
+2. Call the [methodname]`postMessage` method of the [classname]`ChatService`.
+
+It is good practice to put the user interface logic in private methods rather than inside event listeners. Start by creating this method:
+
+[source,java]
+----
+private void sendMessage(String message) {
+    if (!message.isBlank()) {
+        chatService.postMessage(channelId, message);
+    }
+}
+----
+
+Next, inside the constructor of [classname]`ChannelView`, add a [classname]`SubmitEvent` listener to the [classname]`MessageInput` component. You can do this by either calling the [methodname]`addSubmitListener` method, or by passing the listener as a constructor parameter, like this:
+
+[source,java]
+----
+var messageInput = new MessageInput(event -> sendMessage(event.getValue()));
+----
+
+== Server push in Flow
+
+Since messages can be received at any time, you are going to use server push to update the user interface. When server push is enabled, Vaadin will use a websocket connection to push updates to the browser. In order to enable server push, you have to add the `@Push` annotation to your application shell class.
+
+The application shell class is an application that implements the [interfacename]`AppShellConfigurator` interface. In Spring Boot applications, the main [classname]`Application` class is often used for this. 
+
+Now go ahead and open up `com.example.application.Application` and change it accordingly:
+
+.`Application.java`
+[source,java]
+----
+package com.example.application;
+
+import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.Push;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+import java.time.Clock;
+
+@SpringBootApplication
+@Push
+public class Application implements AppShellConfigurator {
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}
+----
+
+Once you have enabled server push, you can trigger it in various ways. The easiest way is to use the `UI.access()` method, which can be called from any thread. The method takes a lambda or a function pointer as its parameter and will run it at the next suitable moment. Vaadin will make sure the session is properly locked while the user interface is being updated. Once the method has returned, Vaadin will automatically push the updates to the browser.
+
+You can find more information about server push in the <<{articles}/flow/advanced/server-push,Flow documentation>>.
+
+== Receive messages
+
+In order to receive messages from the server, you are going to:
+
+1. Subscribe to a [classname]`Flux` returned by the [methodname]`liveMessages` method of the [classname]`ChatService`.
+2. Update the [classname]`MessageList` using server push whenever new messages arrive.
+3. Unsubscribe when leaving the view to avoid memory leaks.
+
+Since you want to keep the messages you have already received, you have to start by creating a new field that will contain them:
+
+[source,java]
+----
+private final List<Message> receivedMessages = new ArrayList<>();
+----
+
+The list contains objects of type `Message`. You have to convert them to [classname]`MessageListItem` before you can add them to the [classname]`MessageList`:
+
+[source,java]
+----
+private MessageListItem createMessageListItem(Message message) {
+    var item = new MessageListItem(message.message(), message.timestamp(), message.author());
+    return item;
+}
+----
+
+Next, create the method that gets called whenever new messages arrive:
+
+[source,java]
+----
+private void receiveMessages(List<Message> incoming) { // <1>
+    getUI().ifPresent(ui -> ui.access(() -> { // <2>
+        receivedMessages.addAll(incoming);
+        messageList.setItems(receivedMessages.stream().map(this::createMessageListItem).toList()); // <3>
+    }));
+}
+----
+<1> The server is providing messages in batches rather than one and one. This is to improve performance in cases where a lot of messages are being received in a short amount of time.
+<2> You have to use `UI.access()` whenever you update a Vaadin user interface from some other thread than the HTTP request thread. The method will make sure the session is properly locked during the update and push the changes to the browser once finished.
+<3> There currently is no way of adding individual items to a `MessageList` so you have to re-create all of them.
+
+Next, create the method that subscribes to the service:
+
+[source,java]
+----
+private Disposable subscribe() {
+    var subscription = chatService
+            .liveMessages(channelId)
+            .subscribe(this::receiveMessages); // <1>
+    return subscription; // <2>
+}
+----
+<1> Whenever the [classname]`Flux` emits a new batch of messages, the [methodname]`receiveMessages` method is going to be called.
+<2> You are going to need a reference to the subscription in order to cancel it when you do not need it any longer.
+
+Finally, you have to actually call the newly created [methodname]`subscribe()` method. However, you only want to receive messages while the view is visible to the user. You can use component lifecycle callbacks to achieve this. Whenever you want to register a listener with an object that will outlive the view itself, it is recommended to do this in the `onAttach` callback and clean up in the `onDetach` callback:
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    var subscription = subscribe(); // <1>
+    addDetachListener(event -> subscription.dispose()); // <2>
+}
+----
+<1> Whenever the view is attached to a UI and becomes visible, you subscribe to the backend service.
+<2> Whenever the view is detached from the UI, you cancel the subscription.
+
+You can find more information about component lifecycle callbacks in the <<{articles}/flow/create-ui/lifecycle-callback,Flow documentation>>.
+
+== Try it out!
+
+You are now ready to try out the channel view:
+
+1. Start the application by running `./mvnw spring-boot:run`
+2. The application will create some channels for you during startup. Each channel gets a UUID as its ID. Check the log for the URLs, they should look something like `\http://localhost:8080/channel/28ca4624-81b6-48bd-8090-82efa26cfd02`.
+3. Open your browser at one of the URLs and send some messages. They should appear in the list.
+4. Open another browser window using the same URL and send some messages. They should appear in the list of both windows.
+
