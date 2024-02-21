@@ -1,0 +1,235 @@
+---
+title: Adding a layout
+description: Learn how to add a layout to your views
+order: 30
+---
+
+= Adding a layout
+
+Unless your application consists of a single view, you often want a common layout with maybe a header or a navigation bar. Since the chat application now consists of two views, you are going to do just that. The main layout is going to consist of the following user interface components:
+
+* A header that contains the name of the current view
+* A side bar that contains the name of the application and a link to the lobby view
+* A menu toggle button for showing and hiding the side bar
+
+Once finished, the layout is going to look like this:
+
+*INSERT SCREENSHOT*
+
+== The App Layout
+
+It is quite common for business applications to have a layout like the one you are going to build. Fortuntely, Vaadin provides one out of the box and it is called [classname]`AppLayout`. The app layout splits the user interface up into three parts:
+
+* a horizontal naviation bar, called the *navbar*
+* a collapsible navigation drawer, called the *drawer*
+* a content area, where the actual view is rendered
+
+The navbar can be placed at the top of the screen, or next to the drawer. When placed at the top the navbar is typically used as the application header.
+
+*INSERT SCREENSHOT*
+
+When placed next to the drawer, it is typically used as the view header. This is the mode you will be using in this tutorial.
+
+*INSERT SCREENSHOT*
+
+The layout is progressive, meaning it will automatically adapt to the screen size.
+
+You can find more information about the app layout in the <<{articles}/components/app-layout,Flow documentation>>.
+
+== Create the layout
+
+Start by creating a class named [classname]`MainLayout` in the [packagename]`com.example.application.ui` package, like this:
+
+.`MainLayout.java`
+[source,java]
+----
+package com.example.application.ui;
+
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.html.H2;
+
+public class MainLayout extends AppLayout { // <1>
+
+    private H2 viewTitle;
+
+    public MainLayout() {
+        setPrimarySection(Section.DRAWER); // <2>
+        addNavbarContent();
+        addDrawerContent();
+    }
+
+    private void addNavbarContent() {
+    }
+
+    private void addDrawerContent() {
+    }
+}
+----
+<1> You use the [classname]`AppLayout` by extending it.
+<2> This makes the drawer take up the entire height of the screen, moving the header (navbar) to the side of it.
+
+So far in this tutorial, you have initialized all the components directly in the constructor. This time, you are going to try out another way. You are going to split the user interface up into smaller parts and initialize each part in its own private method.
+
+Start by initializing the navbar content, like this:
+
+[source,java]
+----
+private void addNavbarContent() {
+    var toggle = new DrawerToggle(); // <1>
+    toggle.setAriaLabel("Menu toggle"); // <2>
+    toggle.setTooltipText("Menu toggle"); // <3>
+
+    viewTitle = new H2();
+    viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE, 
+        LumoUtility.Flex.GROW); // <4>
+
+    var header = new Header(toggle, viewTitle, logout); // <5>
+    header.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX, 
+        LumoUtility.Padding.End.MEDIUM, LumoUtility.Width.FULL);
+
+    addToNavbar(false, header); // <6>
+}
+----
+<1> `DrawerToggle` is a built-in component for showing and hiding the drawer. Adding it to the layout is enough, you do not need to write any code yourself.
+<2> Setting the `aria-label` for components without captions is important for accessibility.
+<3> The tooltip text will show up when the mouse pointer hovers over the toggle button.
+<4> This is the first time in this tutorial that you use CSS styling. Styling will be covered in more detail later.
+<5> `Header` is the Vaadin component representing the `<header>` HTML element.
+<6> The boolean flag instructs the app layout to keep the header at the top of the screen even on mobile devices. Setting the flag to `true` would have caused the header to move to the bottom of the screen on mobile devices.
+
+Next, initialize the drawer content, like this:
+
+[source,java]
+----
+private void addDrawerContent() {
+    var appName = new Span("Vaadin Chat"); // <1>
+    appName.addClassNames(AlignItems.CENTER, Display.FLEX, FontSize.LARGE, FontWeight.SEMIBOLD, Height.XLARGE,
+            Padding.Horizontal.MEDIUM);
+
+    addToDrawer(appName, new Scroller(createSideNav())); // <2>
+}
+
+private SideNav createSideNav() {
+    SideNav nav = new SideNav(); // <3>
+
+    nav.addItem(new SideNavItem("Lobby", LobbyView.class, VaadinIcon.BUILDING.create())); // <4>
+
+    return nav;
+}
+----
+<1> `Span` is the Vaadin component representing the `<span>` HTML element.
+<2> The `SideNav` is wrapped inside a `Scroller` component to make sure it scrolls in case it does not fit on the screen.
+<3> `SideNav` is a side navigation menu component with support for flat and hierarchical navigation items.
+<4> The side navigation menu will contain a single item that navigates the user to the lobby view.
+
+You can find more information about side navigation in the <<{articles}/components/side-nav,Flow documentation>>.
+
+== Get the view title
+
+You have created a component in the navbar - `viewTitle` - that will contain the title of the current view. Now you need to get the title from somewhere. There is no standard way of doing this in Vaadin, but in this tutorial, you are going to use the page title as the view title.
+
+In a Vaadin Flow application, the page title can be either static or dynamic. A static page title is set using the `@PageTitle` annotation, and a dynamic page title is set by implementing the [interfacename]`HasDynamicTitle` interface.
+
+In order to get the page title visible, you have to do two things:
+
+1. Implement a method that retrieves the title.
+2. Update the user interface when the layout content changes.
+
+Start with retrieving the title by adding this method:
+
+[source,java]
+----
+private String getCurrentPageTitle() {
+    if (getContent() == null) {
+        return "";
+    } else if (getContent() instanceof HasDynamicTitle titleHolder) {
+        return titleHolder.getPageTitle();
+    } else {
+        var title = getContent().getClass().getAnnotation(PageTitle.class);
+        return title == null ? "" : title.value();
+    }
+}
+----
+
+Next, update the user interface when the content changes by overriding the [methodname]`afterNavigation` method:
+
+[source,java]
+----
+@Override
+protected void afterNavigation() {
+    super.afterNavigation(); // <1>
+    viewTitle.setText(getCurrentPageTitle());
+}
+----
+<1> The super implementation contains some code so remember to call it!
+
+== Add a layout to the lobby view
+
+If you were to start the application right now and try it out, the layout would not be visible anywhere. This is because you have to define which layout to use for each individual route. This is done by adding a `layout` parameter to the `@Route` annotation.
+
+Go ahead and do that for the [classname]`LobbyView`:
+
+[source,java]
+----
+@Route(value = "", layout = MainLayout.class) // <1>
+@PageTitle("Lobby")
+public class LobbyView extends VerticalLayout {
+    // ...
+}
+----
+<1> The `layout` parameter has been set to [classname]`MainLayout`.
+
+The view already had a static page title, so this is all you need to do for now.
+
+== Add a layout and view title to the channel view
+
+Next, you are going to add the layout to the [classname]`ChannelView`. You are also going to add a title, but for this view, the title is going to be the name of the channel. This means that the view has to implement the [interface]`HasDynamicTitle` interface.
+
+Go ahead and do that:
+
+[source,java]
+----
+@Route(value = "channel", layout = MainLayout.class) // <1>
+public class ChannelView extends VerticalLayout implements HasUrlParameter<String>, HasDynamicTitle { // <2>
+
+    private String channelName; // <3>
+    
+    // ... 
+
+    @Override
+    public String getPageTitle() {
+        return channelName;
+    }
+}
+----
+<1> The `layout` parameter has been set to [classname]`MainLayout`.
+<2> The view implements the [interfacename]`HasDynamicTitle` interface.
+<3> A new string field will contain the name of the currenet channel.
+
+The channel name is included in the [classname]`Channel` object that is returned by the [classname]`ChatService`. In order to get a hold of it, you need to make a change to the [methodname]`setParameter` method:
+
+[source,java]
+----
+@Override
+public void setParameter(BeforeEvent event, String channelId) {
+    chatService.channel(channelId).ifPresentOrElse(
+            channel -> this.channelName = channel.name(), // <1>
+            () -> event.forwardTo(LobbyView.class) // <2>
+    );
+    this.channelId = channelId;
+}
+----
+<1> If the channel ID was valid, store the name in the `channelName` field.
+<2> If the channel ID was invalid, navigate back to the lobby view.
+
+Vaadin will automatically take care of calling `setParameter` on the view before the main layout calls `getPageTitle`.
+
+== Try it out!
+
+You are now ready to try out the new layout:
+
+1. Start the application by running `./mvnw spring-boot:run`
+2. Open your browser at http://localhost:8080/. You should see a list of channels rendered inside your new main layout, with the title visible in the navbar.
+3. Click the toggle button a couple of times. The drawer should hide and show up accordingly.
+4. Resize the browser window. The drawer should automatically hide itself when the screen becomes too small.
+5. Navigate to a channel. The channel name should show up in the navbar.
