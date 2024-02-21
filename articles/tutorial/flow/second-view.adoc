@@ -1,0 +1,182 @@
+---
+title: Your second view
+description: Learn how to navigate between views in Vaadin Flow
+order: 20
+---
+
+= Your second view
+
+Having to know the UUID of a chat channel in order to be able to use it is not very userfriendly. Therefore, you are now going to build your second view that allows users to see a list of available channels and navigate to them. It will contain the following user interface components:
+
+* A list of channels
+* An input field for entering the name of a new channel
+* A button for creating a new channel
+
+Once finished, the view is going to look like this:
+
+*INSERT SCREENSHOT*
+
+== Create the lobby view
+
+Start by creating a class named [classname]`LobbyView` in the `com.example.application.ui.views.lobby` package, like this:
+
+.`LobbyView.java`
+[source,java]
+----
+package com.example.application.ui.views.lobby;
+
+import com.example.application.chat.Channel;
+import com.example.application.chat.ChatService;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.virtuallist.VirtualList;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route(value = "") // <1>
+@PageTitle("Lobby") // <2>
+public class LobbyView extends VerticalLayout {
+
+    private final ChatService chatService;
+    private final VirtualList<Channel> channels;
+    private final TextField channelNameField;
+    private final Button addChannelButton;
+
+    public LobbyView(ChatService chatService) {
+    }
+}
+----
+<1> This view will become the default view of the application, accessible at http://localhost:8080/.
+<2> You can set the page title of a view using the `@PageTitle` annotation.
+
+Next, you are going to set up the user interface. Update the constructor like this:
+
+[source,java]
+----
+public LobbyView(ChatService chatService) {
+    this.chatService = chatService;
+    setSizeFull();
+
+    channels = new VirtualList<>(); // <1>
+    add(channels);
+    expand(channels); // <2>
+
+    channelNameField = new TextField();
+    channelNameField.setPlaceholder("New channel name"); // <3>
+
+    addChannelButton = new Button("Add channel");
+    addChannelButton.setDisableOnClick(true); // <4>
+
+    var toolbar = new HorizontalLayout(channelNameField, addChannelButton); // <5>
+    toolbar.setWidthFull();
+    toolbar.expand(channelNameField);
+    add(toolbar);
+}
+----
+<1> `VirtualList` is a Vaadin component that renders items inside a scrollable container, allowing you to control how an item is rendered.
+<2> `expand()` instructs the `VerticalLayout` to expand the size of the channels list to take up all available space.
+<3> The placeholder text is visible inside the text field whenever it is empty.
+<4> To prevent the user from accidentally triggering the button action more than once, the button disables itself after the first click.
+<5> `HorizontalLayout` is one of the built-in layouts of Vaadin that lays out components horizontally next to each other.
+
+The user interface is now in place, but it does not do anything yet. You are now going to implement two operations:
+
+1. Fetching the channels from the `ChatService`.
+2. Adding a new channel to the `ChatService`.
+
+It is good practice to put the user interface logic inside its own methods, so that is what you are going to do as well. Start with a method for fetching the channels:
+
+[source,java]
+----
+private void refreshChannels() {
+    channels.setItems(chatService.channels());
+}
+----
+
+Call this method when `LobbyView` is attached to the UI, like this:
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    refreshChannels();
+}
+----
+
+Next, add a method for adding a new channel:
+
+[source,java]
+----
+private void addChannel() {
+    try {
+        var nameOfNewChannel = channelNameField.getValue(); <1>
+        if (!nameOfNewChannel.isBlank()) {
+            chatService.createChannel(nameOfNewChannel);
+            channelNameField.clear(); <2>
+            refreshChannels(); <3>
+        }
+    } finally {
+        addChannelButton.setEnabled(true); <4>
+    }
+}
+----
+<1> If the field is empty, its value will be an empty string, not `null`.
+<2> If the channel was successfully created, the name field should be cleared so that another channel can be easily created if needed.
+<3> The easiest way to get the new channel to show up in the list is to refresh the entire list.
+<4> Remember how you called `setDisableOnClick(true)` on the button? You have to remember to re-enable the button.
+
+Call this method when the `addChannelButton` is clicked, like this:
+
+[source,java]
+----
+addChannelButton = new Button("Add channel", event -> addChannel());
+----
+
+If you now were to try out the application, you would see a list of channels, but it would not look very nice. For every [classname]`Channel` in the list, you would see only its string representation (something like `Channel[id=5dcca1da-5416-4d17-8825-727196105eb7, name=Artists' Alley, lastMessage=null]`). This is because you have not defined a renderer for the `VirtualList` yet.
+
+The simplest possible renderer that is useful is a link that when clicked takes the user to the corresponding [classname]`ChannelView`. Create one by adding the following private method:
+
+[source,java]
+----
+private Component createChannelComponent(Channel channel) {
+    return new RouterLink(channel.name(), ChannelView.class, channel.id()); // <1>
+}
+----
+<1> This will create a link with the channel's name. When clicked, it will naviagate to the [classname]`ChannelView` and pass the channel's ID as a URL parameter.
+
+Finally, you enable the renderer by adding this line to the [classname]`LobbyView` constructor, just after `channels` has been created:
+
+[source,java]
+----
+channels.setRenderer(new ComponentRenderer<>(this::createChannelComponent));
+----
+
+== Improve the channel view
+
+Recall from the previous step in the tutorial that the [classname]`ChannelView` will throw an exception if it receives an invalid channel ID. This is easy to implement, but not very userfriendly. A better way is to redirect the user to the lobby view, allowing them to select a channel that exists. Fortunately, that is also easy to do.
+
+Open `ChannelView` in your IDE and change the [methodname]`setParameter` method as follows:
+
+[source,java]
+----
+@Override
+public void setParameter(BeforeEvent event, String channelId) {
+    if (!chatService.channel(channelId).isPresent()) {
+        event.forwardTo(LobbyView.class); // <1>
+    } else {
+        this.channelId = channelId;
+    }
+}
+----
+<1> This forwards the user to the [classname]`LobbyView` and also changes the URL accordingly.
+
+== Try it out!
+
+You are now ready to try out the lobby view:
+
+1. Start the application by running `./mvnw spring-boot:run`
+2. Open your browser at http://localhost:8080/. You should see a list of channels.
+3. Click on any of the channels. You should be navigated to the corresponding channel view.
+4. Navigate to a non-existent channel, for instance http://localhost:8080/channel/doesnotexist. You should end up in the lobby view again.
+
