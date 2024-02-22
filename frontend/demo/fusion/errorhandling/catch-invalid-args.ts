@@ -1,4 +1,4 @@
-import { EndpointValidationError } from '@vaadin/hilla-core';
+import { EndpointValidationError } from '@vaadin/hilla-frontend';
 
 import { DateEndpoint } from 'Frontend/generated/endpoints';
 

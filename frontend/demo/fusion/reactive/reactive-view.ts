@@ -1,4 +1,4 @@
-import { Subscription } from '@vaadin/hilla-core';
+import { Subscription } from '@vaadin/hilla-frontend';
 import '@vaadin/button';
 import '@vaadin/notification';
 import '@vaadin/text-field';
