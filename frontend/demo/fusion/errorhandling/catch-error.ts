@@ -1,4 +1,4 @@
-import { EndpointError } from '@vaadin/hilla-core';
+import { EndpointError } from '@vaadin/hilla-frontend';
 
 import { DataEndpoint } from 'Frontend/generated/endpoints';
 
