@@ -1,0 +1,334 @@
+---
+title: Security
+description: Learn how to secure a Flow application
+order: 40
+---
+
+= Security
+
+So far, anyone has been able to post messages and create new channels. All the messages have also been sent by the author "John Doe". In this part of the tutorial, you are going to secure the application like this:
+
+* Only authenticated users are permitted to access the application.
+* Only administrators are permitted to create new chat channels.
+* The usernames are used as the message author rather than "John Doe".
+
+== Add the necessary dependencies
+
+The chat application is a Spring Boot application and so you are going to use Spring Security to secure it. Start by adding this dependency to your `pom.xml` file:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+----
+
+== Add a login screen
+
+Next, you are going to add a login screen. Create a class named [classname]`LoginView` in the [packagename]`com.example.application.ui.views.login` package, like this:
+
+.`LoginView.java`
+[source,java]
+----
+package com.example.application.ui.views.login;
+
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.login.LoginForm;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+
+@Route("login") // <1>
+@PageTitle("Chat Login")
+@AnonymousAllowed // <2>
+public class LoginView extends VerticalLayout implements BeforeEnterObserver {
+
+    private final LoginForm loginForm;
+
+    public LoginView() {
+        loginForm = new LoginForm(); // <3>
+        setSizeFull();
+        setAlignItems(Alignment.CENTER); // <4>
+        setJustifyContentMode(JustifyContentMode.CENTER);
+
+        loginForm.setAction("login"); // <5>
+
+        add(new H1("Vaadin Chat"), new Div("You can log in as 'alice', 'bob' or 'admin'. The password for all of them is 'password'."), loginForm);
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        if (event.getLocation().getQueryParameters().getParameters().containsKey("error")) {
+            loginForm.setError(true); // <6>
+        }
+    }
+}
+----
+<1> The login view will be available at `/login`.
+<2> Once security is enabled, access to all views will be denied by default. The login view must be accessible by anonymous users.
+<3> `LoginForm` is a built in Vaadin component that works nicely with Spring Security.
+<4> `VerticalLayout` is actually a flex layout and in order to center the login form on the screen, some flexbox configuration is needed.
+<5> When the user clicks the login button, a `POST` request will be submitted to `/login`.
+<6> If there is a query parameter called "error" (such as `/login?error`), the login form will show an error message.
+
+== Define roles
+
+The application is going to have two user roles:
+
+* `USER` for ordinary users, that are allowed to post and receive message.
+* `ADMIN` for administrators, that are allowed to create new channels.
+
+Even though roles are just strings, it is good practice to declare them as constants. Create a new class named [classname]`Roles` in the [packagename]`com.example.application.security` package, like this:
+
+.`Roles.java`
+[source,java]
+----
+package com.example.application.security;
+
+public final class Roles {
+
+    private Roles() {
+    }
+
+    public static final String USER = "USER";
+    public static final String ADMIN = "ADMIN";
+}
+----
+
+== Add a security configuration
+
+With the login view and roles in place, you now have to configure Spring Security to use it. You also have to configure Spring Security to protect your views and your backend services. Fortunately, Vaadin brings a base class - [classname]`VaadinWebSecurity` - that makes this easy.
+
+Create a class named [classname]`SecurityConfig` in the [packagename]`com.example.application.security` package, like this:
+
+.`SecurityConfig.java`
+[source,java]
+----
+package com.example.application.security;
+
+import com.example.application.ui.views.login.LoginView;
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+@EnableWebSecurity // <1>
+@EnableMethodSecurity(jsr250Enabled = true) // <2>
+@Configuration
+class SecurityConfig extends VaadinWebSecurity { // <3>
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        super.configure(http); // <4>
+        setLoginView(http, LoginView.class); // <5>
+    }
+
+    @Bean
+    public UserDetailsService users() { // <6>
+        var alice = User.builder()
+                .username("alice")
+                // password = password with this hash, don't tell anybody :-)
+                .password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
+                .roles(Roles.USER)
+                .build();
+        var bob = User.builder()
+                .username("bob")
+                // password = password with this hash, don't tell anybody :-)
+                .password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
+                .roles(Roles.USER)
+                .build();
+        var admin = User.builder()
+                .username("admin")
+                // password = password with this hash, don't tell anybody :-)
+                .password("{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW")
+                .roles(Roles.ADMIN, Roles.USER)
+                .build();
+        return new InMemoryUserDetailsManager(alice, bob, admin);
+    }
+}
+----
+<1> `@EnableWebSecurity` instructs Spring to use this class when configuring Spring Security.
+<2> You are going to use JSR-250 annotations to secure `ChatService`.
+<3> You are extending `VaadinWebSecurity`, which takes care of the heavy lifting.
+<4> Always call `super.configure(http)` first to apply the default configuration before making any customizations.
+<5> Spring Security will now use your `LoginView` when asking users to authenticate themselves
+<6> In this example, you are using an `InMemoryUserDetailsManager` (this is obviously not recommended in real-world applications).
+
+You can find more information about securing Vaadin applications in the <<{articles}/flow/security,Flow documentation>>.
+
+== Grant access to the views
+
+By default, Vaadin will deny access to all views unless told otherwise. You have already granted anonymous users access to the login view. You are now going to grant all authenticated users access to the `LobbyView` and `ChannelView`. Do this by adding the `@PermitAll` annotation to both classes, like this:
+
+[source,java]
+----
+@Route(value = "", layout = MainLayout.class)
+@PageTitle("Lobby")
+@PermitAll
+public class LobbyView extends VerticalLayout {
+    //...
+}
+
+@Route(value = "channel", layout = MainLayout.class)
+@PermitAll
+public class ChannelView extends VerticalLayout implements HasUrlParameter<String>, HasDynamicTitle {
+    //...
+}
+----
+
+== Secure the backend
+
+By default, Spring Security will grant access to all backend services unless told otherwise. You are now going to protect `ChatService` so that only users with the `USER` role can invoke it. Do this by adding the `@RolesAllowed` annotation to the class, like this:
+
+[source,java]
+----
+@Service
+@RolesAllowed(Roles.USER) // <1>
+public class ChatService {
+    // ...
+}
+----
+<1> `@RolesAllowed` is a JSR-250 annotation that you enabled in `SecurityConfig`.
+
+Furthermore, you only want users with the `ADMIN` role to be able to invoke the [methodname]`createChannel` method. Do this by adding the `@RolesAllowed` annotation to the method, like this:
+
+[source,java]
+----
+@RolesAllowed(Roles.ADMIN) // <1>
+public Channel createChannel(String name) {
+        // ...
+}
+----
+<1> A `@RolesAllowed` annotation on a method will take precedense over an annotation on the class.
+
+== Hide channel creation for non-admins
+
+If you now were to start up the application and login as an ordinary user, the channel creation components would still be visible. However, if you tried to actually create a channel, you would get an [classname]`AccessDeniedException`. Even though the application is secure, the user experience could be better and you are going to address this next.
+
+It is good practice to only show actions that the user is allowed to perform. In this case, the text field and button for creating new channels should only be visible to users that hold the `ADMIN` role. Vaadin provides a class called `AuthenticationContext` that you can inject into your views and use for this purpose.
+
+Change the constructor of the [classname]`LobbyView` as follows:
+
+[source,java]
+----
+public LobbyView(ChatService chatService, AuthenticationContext authenticationContext) { // <1>
+    this.chatService = chatService;
+    setSizeFull();
+
+    channels = new VirtualList<>();
+    channels.setRenderer(new ComponentRenderer<>(this::createChannelComponent));
+    add(channels);
+    expand(channels);
+
+    channelNameField = new TextField();
+    channelNameField.setPlaceholder("New channel name");
+
+    addChannelButton = new Button("Add channel", event -> addChannel());
+    addChannelButton.setDisableOnClick(true);
+
+    if (authenticationContext.hasRole(Roles.ADMIN)) { // <2>
+        var toolbar = new HorizontalLayout(channelNameField,
+                addChannelButton);
+        toolbar.setWidthFull();
+        toolbar.expand(channelNameField);
+        add(toolbar);
+    }
+}
+----
+<1> Use constructor injection to inject an instance of [classname]`AuthenticationContext`.
+<2> Only show the toolbar if the current user has the `ADMIN` role.
+
+== Add a logout button
+
+When securing a web application, a lot of focus is often put on the login functionality. However, it is just important to implement the logout functionality properly. Otherwise, another user using the same computer or device may end up getting unintended access to the application.
+
+You are now going to add a logout button to the navbar of the main layout. Open the [classname]`MainLayout` class and change the `addNavbarContent` method as follows:
+
+[source,java]
+----
+private void addNavbarContent() {
+    var toggle = new DrawerToggle();
+    toggle.setAriaLabel("Menu toggle");
+    toggle.setTooltipText("Menu toggle");
+
+    viewTitle = new H2();
+    viewTitle.addClassNames(FontSize.LARGE, Margin.NONE, Flex.GROW);
+
+    var logout = new Button("Logout " + authenticationContext.getPrincipalName().orElse(""), // <1>
+        event -> authenticationContext.logout()); // <2>
+
+    var header = new Header(toggle, viewTitle, logout); // <3>
+    header.addClassNames(AlignItems.CENTER, Display.FLEX, Padding.End.MEDIUM, Width.FULL);
+
+    addToNavbar(false, header);
+}
+----
+<1> `AuthenticationContext` can be used to get the name of the current user, not just the roles.
+<2> `AuthenticationContext` has a method for logging out.
+<3> Remember to add the logout button to the header.
+
+If you now try to compile the code, you will get an error because `authenticationContext` is not defined. Since the navbar is configured inside its own private method and not inside the constructor, you have to store a reference to `AuthenticationContext` in a private field, like this:
+
+[source,java]
+----
+public class MainLayout extends AppLayout {
+    private final AuthenticationContext authenticationContext;
+    // ...
+
+    public MainLayout(AuthenticationContext authenticationContext) {
+        this.authenticationContext = authenticationContext;
+        // ...
+    }
+    // ...
+}
+----
+
+The code should now compile.
+
+== Use the user's name as message author
+
+Now there is only one final piece missing. You are going to replace "John Doe" as the author name with the user's actual username. Since you are using Spring Security, you can get this name from the current [interfacename]`SecurityContext``, which in turn can be retrieved from the [classname]`SecurityContextHolder`.
+
+Open [classname]`ChatService` and change the [methodname]`postMessage` method as follows:
+
+[source,java]
+----
+public void postMessage(String channelId, String message) throws InvalidChannelException {
+    if (!channelRepository.exists(channelId)) {
+        throw new InvalidChannelException();
+    }
+    var author = SecurityContextHolder.getContext().getAuthentication().getName(); // <1>
+    var msg = messageRepository.save(new NewMessage(channelId, clock.instant(), author, message)); // <2>
+    var result = sink.tryEmitNext(msg);
+    if (result.isFailure()) {
+        log.error("Error posting message to channel {}: {}", channelId, result);
+    }
+}
+----
+<1> Retrieve the current user's name. Since this method is protected by `@RolesAllowed`, the security context is guaranteed to always contain a valid authentication token.
+<2> Replace the "John Doe" string with the user's name.
+
+== Try it out!
+
+You are now ready to try out the new security feaetures.
+
+1. Start the application by running `./mvnw spring-boot:run`
+2. Open your browser at http://localhost:8080/. You should be redirected to the login screen.
+3. Login using the username "admin" and password "password". You should be taken to the lobby screen.
+4. Try to create a new channel. This should work as before.
+5. Go to the new channel and send a message. The message author should show up as "admin".
+6. Logout by clicking the logout button. You should end up back at the login screen.
+7. Login using the username "bob" and password "password". You should be taken to the lobby screen.
+8. The components for creating new channels should no longer be visible.
+9. Go to the channel you created in step 4. You should see the message sent by "admin".
+10. Send another message. The author should show up as "bob".
