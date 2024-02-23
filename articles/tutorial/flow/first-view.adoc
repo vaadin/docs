@@ -39,6 +39,7 @@ Start by creating a class named [classname]`ChannelView` in the [packagename]`co
 package com.example.application.ui.views.channel;
 
 import com.example.application.chat.ChatService;
+import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -48,7 +49,11 @@ import com.vaadin.flow.router.Route;
 public class ChannelView extends VerticalLayout // <2>
         implements HasUrlParameter<String> { // <3>
 
+    private final ChatService chatService;
+    private final MessageList messageList;
+
     public ChannelView(ChatService chatService) { // <4>
+        this.chatService = chatService;
     }
 
     @Override
@@ -67,9 +72,10 @@ Next, you are going to set up the user interface. Update the constructor like th
 [source,java]
 ----
 public ChannelView(ChatService chatService) {
+    this.chatService = chatService;
     setSizeFull(); // <1>
 
-    var messageList = new MessageList(); // <2>
+    messageList = new MessageList(); // <2>
     messageList.setSizeFull();
     add(messageList);
 
@@ -103,7 +109,7 @@ Then, implement the [methodname]`setParameter` method like this:
 ----
 @Override
 public void setParameter(BeforeEvent event, String channelId) {
-    if (!chatService.channel(channelId).isPresent()) {
+    if (chatService.channel(channelId).isEmpty()) {
         throw new IllegalArgumentException("Invalid channel ID"); // <1>
     }
     this.channelId = channelId;
@@ -197,7 +203,11 @@ The list contains objects of type `Message`. You have to convert them to [classn
 [source,java]
 ----
 private MessageListItem createMessageListItem(Message message) {
-    var item = new MessageListItem(message.message(), message.timestamp(), message.author());
+    var item = new MessageListItem(
+        message.message(), 
+        message.timestamp(), 
+        message.author()
+    );
     return item;
 }
 ----
@@ -209,7 +219,9 @@ Next, create the method that gets called whenever new messages arrive:
 private void receiveMessages(List<Message> incoming) { // <1>
     getUI().ifPresent(ui -> ui.access(() -> { // <2>
         receivedMessages.addAll(incoming);
-        messageList.setItems(receivedMessages.stream().map(this::createMessageListItem).toList()); // <3>
+        messageList.setItems(receivedMessages.stream()
+            .map(this::createMessageListItem)
+            .toList()); // <3>
     }));
 }
 ----
