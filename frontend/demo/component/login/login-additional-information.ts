@@ -16,7 +16,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @query('vaadin-login-overlay')
-  private accessor login!: LoginOverlay;
+  private login!: LoginOverlay;
 
   protected override firstUpdated() {
     this.login.i18n = {

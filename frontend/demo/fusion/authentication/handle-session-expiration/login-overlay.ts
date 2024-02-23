@@ -1,7 +1,7 @@
 import { LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
-import { LoginResult } from '@vaadin/hilla-core';
+import { LoginResult } from '@vaadin/hilla-frontend';
 
 @customElement('login-view')
 export class LoginView extends LitElement {

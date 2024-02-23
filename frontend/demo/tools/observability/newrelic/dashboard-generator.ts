@@ -22,10 +22,10 @@ export class DashboardGenerator extends LitElement {
   `;
 
   @state()
-  accessor accountId = '';
+  accountId = '';
 
   @state()
-  accessor json = '';
+  json = '';
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

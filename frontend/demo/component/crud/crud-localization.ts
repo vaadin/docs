@@ -17,10 +17,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   @query('vaadin-crud')
-  private accessor crud!: Crud<Person>;
+  private crud!: Crud<Person>;
 
   protected override async firstUpdated() {
     const { people } = await getPeople();

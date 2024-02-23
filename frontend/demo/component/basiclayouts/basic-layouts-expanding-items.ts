@@ -23,7 +23,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor size = '0';
+  private size = '0';
 
   protected override render() {
     return html`
