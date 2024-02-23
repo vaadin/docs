@@ -1,0 +1,145 @@
+---
+title: User experience tweaks
+description: Learn how to add keyboard shortcuts and handle errors
+order: 70
+---
+
+= User experience tweaks
+
+The chat application is now almost ready. Before moving on to packaging and deployment, you are just going to do some small tweaks that improves the user experience.
+
+== Adding a keyboard shortcut
+
+The user interfaces of the lobby and the channel view are quite similar. They both have a list at the top and a text field and a button at the bottom. However, in the channel view, you can press Enter instead of clicking the "Send" button. The send button is also blue, whereas it is gray in the lobby view. You are now going to change the lobby view so that it looks and behaves in the same way as the channel view.
+
+This is actually very easy to do. Just open [classname]`LobbyView`, look up the code in the constructor that initializes `addChannelButton` and change it like this:
+
+[source,java]
+----
+addChannelButton = new Button("Add channel", event -> addChannel());
+addChannelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY); // <1>
+addChannelButton.addClickShortcut(Key.ENTER); // <2>
+addChannelButton.setDisableOnClick(true);
+----
+<1> This applies the primary thee variant to the button, making it blue.
+<2> This associates the Enter key with the button.
+
+You can find more information about keyboard shortcuts in the <<{articles}/flow/create-ui/shortcut,Flow documentation>>.
+
+== Handling errors
+
+So far, the only errors you have handled in the application are errors that are expected to occur, such as trying to navigate to a channel that does not exist. However, those are not the only errors that can occur.
+
+It is good practice to always assume that any call to the backend - in this case `ChatService` - can fail for one reason or another. When this happens, an exception is thrown and execution of that method is immediately aborted. The user will experience this error in different ways depending on where it happens. In some cases, it will just look like nothing happened. In other cases, the entire user interface may start to behave strangely. In the worst case, the user ends up with a 500 internal server error.
+
+You could wrap all the backend calls with `try...catch`, but that would clutter the code very quickly. A better way is to only handle expected exceptions (like validation errors or optimistic locking errors) in the code and let Vaadin's error handle take care of the unexpected exceptions.
+
+In order to create your own error handler, you have to do two things:
+
+1. Implement the [interfacename]`ErrorHandler` interface.
+2. Register the new error handler with every [classname]`VaadinSession`.
+
+You can find more information about custom error handling in the <<{articles}/flow/advanced/custom-error-handler,Flow documentation>>.
+
+Start by creating a new class called [classname]`ErrorHandler` inside the [packagename]`com.example.application.ui.error` package, like this:
+
+.`ErrorHandler.java`
+[source,java]
+----
+package com.example.application.ui.error;
+
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.server.ErrorEvent;
+import com.vaadin.flow.server.ErrorHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
+
+class CustomErrorHandler implements ErrorHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(CustomErrorHandler.class);
+
+    @Override
+    public void error(ErrorEvent event) {
+        log.error("Unexpected error caught", event.getThrowable()); // <1>
+        showError("An unexpected error has occurred. Please try again later."); // <2>
+    }
+
+    private void showError(String error) {
+        Optional.ofNullable(UI.getCurrent()).ifPresent(ui -> ui.access(() -> { // <3>
+            var notification = Notification.show(error);
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }));
+    }
+}
+----
+<1> To make debugging easier, it is a good idea to log every unexpected exception.
+<2> Do not reveal any technical information about the error, as this could be used by hackers.
+<3> The error notification will only be shown if the current thread has access to a `UI`. Otherwise, Flow has no idea where to render the notification.
+
+You can find more information about showing notifications in the <<{articles}/components/notification,components documentation>>.
+
+Next, you have to register the error handler with every new [classname]`VaadinSession` that is created. Vaadin sessions are, in turn, created by the [classname]`VaadinService`, which is initialized by Flow. However, there is a mechanism that allows developers to customize the service after it has been initialized.
+
+Any Spring beans that implement the [interfacename]`VaadinServiceInitListener` will receive an event when the Vaadin service has been initialized. This event contains a reference to the Vaadin service itself, which can be used to register a new [interfacename]`SessionInitListener`.
+
+The [interfacename]`SessionInitListener` will, in turn, receive an event every time a new Vaadin session is created and this is where you should plug in your custom error handler.
+
+Fortunately, this sounds more complicated than it is to implement. The implementation consists of the following steps:
+
+1. Create a new Spring `@Configuration` class.
+2. Inside this class, declare a new bean that implements `VaadinServiceInitListener`.
+3. Use lambas to implement both `VaadinServiceInitListener` and `SessionInitListener`.
+
+Create a new class called [classname]`CustomErrorHandlerConfig` inside the [packagename]`com.example.application.ui.error` package, like this:
+
+.`ErrorHandlerConfig.java`
+[source,java]
+----
+package com.example.application.ui.error;
+
+import com.vaadin.flow.server.VaadinServiceInitListener;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+class CustomErrorHandlerConfig {
+
+    @Bean
+    public VaadinServiceInitListener vaadinServiceInitListener() {
+        return event -> event.getSource().addSessionInitListener( // <1>
+            e -> e.getSession().setErrorHandler(new CustomErrorHandler()) // <2>
+        );
+    }
+}
+----
+<1> This is the first lambda that implements `VaadinServiceInitListener`
+<2> This is the second lambda that implements `SessionInitListener` and registers the error handler. In this case, since the error handler is stateless, you could turn it into a singleton if you wanted to.
+
+You can find more information about the service init listener in the <<{articles}/flow/advanced/service-init-listener,Flow documentation>>.
+
+== Try it out!
+
+You are now almost ready to try out the new features. In order to test the error handling, you have to install a tripwire into the application that you can use to intentionally trigger unhandled exceptions. In [classname]`ChatService`, add the following lines to the top of the [methodname]`postMessage` method:
+
+[source,java]
+----
+if (message.equals("fail")) {
+    throw new RuntimeException("I failed!");
+}
+----
+
+Now try it out:
+
+1. Start the application by running `./mvnw spring-boot:run`
+2. Open your browser at http://localhost:8080/ and login as `admin`
+3. Enter a new channel name and press Enter. A new channel should be created.
+4. Open the channel
+5. Enter "fail" into the message field and send it. A red error message should show up on the screen and a stacktrace should show up in the console output.
+
+Remember to remove the tripwire afterwards!
+
