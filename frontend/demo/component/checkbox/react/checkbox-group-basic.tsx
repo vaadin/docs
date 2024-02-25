@@ -1,17 +1,22 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
 
 function Example() {
-  const [value, setValue] = useState(['0', '2']);
+  useSignals(); // hidden-source-line
+  const value = useSignal(['0', '2']);
 
   return (
     // tag::snippet[]
     <CheckboxGroup
       label="Export data"
-      value={value}
-      onValueChanged={(event) => setValue(event.detail.value)}
+      value={value.value}
+      onValueChanged={(event) => {
+        value.value = event.detail.value;
+      }}
       theme="vertical"
     >
       <Checkbox value="0" label="Order ID" />

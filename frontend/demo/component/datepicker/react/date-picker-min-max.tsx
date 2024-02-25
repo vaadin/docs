@@ -1,12 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { DatePicker } from '@vaadin/react-components/DatePicker.js';
 import { formatISO, addDays, isBefore, isAfter, parse } from 'date-fns';
 
 function Example() {
+  useSignals(); // hidden-source-line
   const minDate = new Date();
   const maxDate = addDays(new Date(), 60);
-  const [errorMessage, setErrorMessage] = useState('');
+  const errorMessage = useSignal('');
 
   return (
     // tag::snippet[]
@@ -15,15 +18,15 @@ function Example() {
       helperText="Must be within 60 days from today"
       min={formatISO(minDate, { representation: 'date' })}
       max={formatISO(maxDate, { representation: 'date' })}
-      errorMessage={errorMessage}
+      errorMessage={errorMessage.value}
       onChange={({ target }) => {
         const date = parse(target.value ?? '', 'yyyy-MM-dd', new Date());
         if (isBefore(date, minDate)) {
-          setErrorMessage('Too early, choose another date');
+          errorMessage.value = 'Too early, choose another date';
         } else if (isAfter(date, maxDate)) {
-          setErrorMessage('Too late, choose another date');
+          errorMessage.value = 'Too late, choose another date';
         } else {
-          setErrorMessage('');
+          errorMessage.value = '';
         }
       }}
     />

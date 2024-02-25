@@ -1,10 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import getDaysInMonth from 'date-fns/getDaysInMonth';
 
 function Example() {
+  useSignals(); // hidden-source-line
   const months = [
     'January',
     'February',
@@ -22,21 +25,21 @@ function Example() {
 
   const years = Array.from({ length: 100 }, (_, k) => new Date().getFullYear() - 99 + k);
 
-  const [selectedYear, setSelectedYear] = useState<number>();
-  const [selectedMonth, setSelectedMonth] = useState<string>();
-  const [selectedDay, setSelectedDay] = useState<number>();
-  const [selectableDays, setSelectableDays] = useState<number[]>([]);
+  const selectedYear = useSignal<number | undefined>(undefined);
+  const selectedMonth = useSignal<string | undefined>(undefined);
+  const selectedDay = useSignal<number | undefined>(undefined);
+  const selectableDays = useSignal<number[]>([]);
 
   useEffect(() => {
     if (!selectedYear || !selectedMonth) {
-      setSelectableDays([]);
+      selectableDays.value = [];
       return;
     }
 
-    const startOfMonth = new Date(selectedYear, months.indexOf(selectedMonth), 1);
+    const startOfMonth = new Date(selectedYear.value ?? 0, months.indexOf(selectedMonth.value ?? 'January'), 1);
     const lengthOfMonth = getDaysInMonth(startOfMonth);
 
-    setSelectableDays(Array.from({ length: lengthOfMonth }, (_, k) => k + 1));
+    selectableDays.value = Array.from({ length: lengthOfMonth }, (_, k) => k + 1);
   }, [selectedYear, selectedMonth]);
 
   return (
@@ -48,9 +51,9 @@ function Example() {
         items={years}
         value={String(selectedYear)}
         onValueChanged={(e) => {
-          setSelectedYear(parseInt(e.detail.value));
-          setSelectedMonth(undefined);
-          setSelectedDay(undefined);
+          selectedYear.value = parseInt(e.detail.value);
+          selectedMonth.value = undefined;
+          selectedDay.value = undefined;
         }}
       />
 
@@ -58,21 +61,21 @@ function Example() {
         label="Month"
         style={{ width: '9em' }}
         items={months}
-        value={selectedMonth}
+        value={selectedMonth.value}
         disabled={!selectedYear}
         onValueChanged={(e) => {
-          setSelectedMonth(e.detail.value);
-          setSelectedDay(undefined);
+          selectedMonth.value = e.detail.value;
+          selectedDay.value = undefined;
         }}
       />
 
       <ComboBox
         label="Day"
         style={{ width: '5em' }}
-        items={selectableDays}
+        items={selectableDays.value}
         value={String(selectedDay)}
-        disabled={!selectedYear || !selectedMonth}
-        onValueChanged={(e) => setSelectedDay(parseInt(e.detail.value))}
+        disabled={!selectedYear.value || !selectedMonth.value}
+        onValueChanged={(e) => selectedDay.value = parseInt(e.detail.value)}
       />
     </HorizontalLayout>
     // end::snippet[]

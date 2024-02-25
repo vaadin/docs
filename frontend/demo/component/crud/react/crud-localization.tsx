@@ -5,16 +5,19 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
 import { EmailField } from '@vaadin/react-components/EmailField.js';
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { CrudEditColumn } from '@vaadin/react-components/CrudEditColumn.js';
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => items.value = people);
   }, []);
 
   // tag::snippet[]
@@ -49,7 +52,7 @@ function Example() {
     <Crud
       editorPosition="aside"
       include="firstName, lastName, email, profession"
-      items={items}
+      items={items.value}
       i18n={i18n}
     >
       <Grid slot="grid">
@@ -67,7 +70,7 @@ function Example() {
         <ComboBox
           {...crudPath('profession')}
           label="Ammatti"
-          items={[...new Set(items.map((i) => i.profession))]}
+          items={[...new Set(items.value.map((i) => i.profession))]}
         />
       </div>
     </Crud>

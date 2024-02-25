@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Crud, crudPath } from '@vaadin/react-components/Crud.js';
 import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
@@ -9,25 +11,26 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
-  const [professions, setProfessions] = useState<string[]>([]);
-  const [responsiveSteps, setResponsiveSteps] = useState<FormLayoutResponsiveStep[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
+  const professions = useSignal<string[]>([]);
+  const responsiveSteps = useSignal<FormLayoutResponsiveStep[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
-      setItems(people);
-      setProfessions([...new Set(people.map((i) => i.profession))]);
-      setResponsiveSteps([
+      items.value = people;
+      professions.value = [...new Set(people.map((i) => i.profession))];
+      responsiveSteps.value = [
         { minWidth: 0, columns: 1 },
         { minWidth: '30em', columns: 2 },
-      ]);
+      ];
     });
   }, []);
 
   return (
     // tag::snippet[]
-    <Crud include="firstName, lastName, email, profession" items={items}>
-      <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps}>
+    <Crud include="firstName, lastName, email, profession" items={items.value}>
+      <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps.value}>
         <TextField label="First name" {...crudPath('firstName')} required />
         <TextField label="Last name" {...crudPath('lastName')} required />
         <EmailField {...{ colspan: 2 }} label="Email" {...crudPath('email')} required />
@@ -35,7 +38,7 @@ function Example() {
           {...{ colspan: 2 }}
           label="Profession"
           {...crudPath('profession')}
-          items={professions}
+          items={professions.value}
         />
       </FormLayout>
     </Crud>

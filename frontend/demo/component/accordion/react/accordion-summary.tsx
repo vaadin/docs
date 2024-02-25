@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Accordion, type AccordionOpenedChangedEvent } from '@vaadin/react-components/Accordion.js';
 import { AccordionPanel } from '@vaadin/react-components/AccordionPanel.js';
 import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
@@ -16,20 +18,23 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
 ];
 
 function Example() {
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [openedPanelIndex, setOpenedPanelIndex] = useState<number | null>(0);
+  useSignals(); // hidden-source-line
+  const countries = useSignal<Country[]>([]);
+  const openedPanelIndex = useSignal<number | null>(0);
 
   const handleAccordionPanelOpen = (event: AccordionOpenedChangedEvent) => {
-    setOpenedPanelIndex(event.detail.value);
+    openedPanelIndex.value = event.detail.value;
   };
 
   useEffect(() => {
-    getCountries().then((items) => setCountries(items));
+    getCountries().then((items) => {
+      countries.value = items;
+    });
   }, []);
 
   // tag::snippet[]
   return (
-    <Accordion opened={openedPanelIndex} onOpenedChanged={handleAccordionPanelOpen}>
+    <Accordion opened={openedPanelIndex.value} onOpenedChanged={handleAccordionPanelOpen}>
       <AccordionPanel summary="Customer details">
         <FormLayout responsiveSteps={responsiveSteps}>
           <TextField label="First name" />
@@ -44,7 +49,7 @@ function Example() {
         <Button
           theme="primary"
           onClick={() => {
-            setOpenedPanelIndex(1);
+            openedPanelIndex.value = 1;
           }}
         >
           Continue
@@ -59,13 +64,18 @@ function Example() {
 
           <TextField label="City" />
 
-          <ComboBox label="Country" itemLabelPath="name" itemValuePath="id" items={countries} />
+          <ComboBox
+            label="Country"
+            itemLabelPath="name"
+            itemValuePath="id"
+            items={countries.value}
+          />
         </FormLayout>
 
         <Button
           theme="primary"
           onClick={() => {
-            setOpenedPanelIndex(2);
+            openedPanelIndex.value = 2;
           }}
         >
           Continue
@@ -84,7 +94,7 @@ function Example() {
         <Button
           theme="primary"
           onClick={() => {
-            setOpenedPanelIndex(-1);
+            openedPanelIndex.value = -1;
           }}
         >
           Finish

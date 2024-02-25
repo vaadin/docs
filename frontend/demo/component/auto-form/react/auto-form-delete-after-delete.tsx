@@ -1,17 +1,20 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react'; // hidden-source-line
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
 import { AutoForm } from '@vaadin/hilla-react-crud';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import { EmployeeService } from 'Frontend/generated/endpoints.js';
 import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
-import Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
+import type Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
   const existingItem: Employee = {
     firstName: 'Jennifer',
@@ -21,24 +24,24 @@ function Example() {
     active: true,
     description: 'Customer Service Manager',
   };
-  const [editedItem, setEditedItem] = useState<Employee | null>(null);
-  const [showDeleteButton, setShowDeleteButton] = useState<boolean>(false);
+  const editedItem = useSignal<Employee | null>(null);
+  const showDeleteButton = useSignal<boolean>(false);
 
   const handleEdit = () => {
-    setEditedItem(existingItem);
+    editedItem.value = existingItem;
   };
 
   const handleCreate = () => {
-    setEditedItem(null);
+    editedItem.value = null;
   };
 
   const toggleDeleteButtonVisibility = () => {
-    setShowDeleteButton(!showDeleteButton);
+    showDeleteButton.value = !showDeleteButton.value;
   };
 
   const handleDeleteSuccess = ({ item }: { item: Employee }) => {
     const json = JSON.stringify(item);
-    Notification.show('Item deleted: ' + json);
+    Notification.show(`Item deleted: ${json}`);
   };
 
   return (
@@ -53,8 +56,8 @@ function Example() {
       <AutoForm
         service={EmployeeService}
         model={EmployeeModel}
-        item={editedItem}
-        deleteButtonVisible={showDeleteButton}
+        item={editedItem.value}
+        deleteButtonVisible={showDeleteButton.value}
         onDeleteSuccess={handleDeleteSuccess}
       />
     </VerticalLayout>
