@@ -1,6 +1,78 @@
 ---
 title: Build for production
+description: Learn how to make a production build
 order: 50
 ---
 
 = Build for production
+
+Up to this point, you have been running the application in development mode. As you are now ready to deploy it to production, you have to make a production build. The production build first gathers all the necessary frontend resources and dependencies. It then transpiles, minimizes and bundles them to make the application load faster.
+
+== Maven plugin configuration
+
+In a Vaadin application, you use the Vaadin maven plugin to make a production build. Typically, this is done by activating the `production` profile, like this: 
+
+[source,terminal]
+----
+./mvnw clean package -Pproduction
+----
+
+In addition to configuring the plugin, you also have to exclude the development server bundle as it contains features that are not used in production.
+
+Vaadin starter projects have the production build configured out of the box. The tutorial starter that you downloaded also has it configured. That said, you should know how to configure it yourself in case you find yourself in a situation where you are adding Vaadin to an existing Maven project.
+
+If you open the `pom.xml` file, you will find the following:
+
+[source,xml]
+----
+<profiles>
+    <profile>
+        <id>production</id> <!-- <1> -->
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-core</artifactId>
+                <exclusions>
+                    <exclusion> <!-- <2> -->
+                        <groupId>com.vaadin</groupId>
+                        <artifactId>vaadin-dev</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-maven-plugin</artifactId>
+                    <version>${vaadin.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>build-frontend</goal> <!-- <3> -->
+                            </goals>
+                            <phase>compile</phase> <!-- <4> -->
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+    </profile>
+</profiles>
+----
+<1> The production build is activated by the `production` profile.
+<2> Exclude the development server module.
+<3> This goal will generate the production bundle.
+<4> Bind the execution to the `compile` phase to make sure the production bundle gets built together with the rest of the application.
+
+You can find more information about production builds in the <<{articles}/flow/production/production-build,Flow documentation>> (it also applies to Hilla applications).
+
+== Try it out!
+
+You can now make your first production build of your application:
+
+1. Run `./mvnw clean package -Pproduction` to start the build
+2. Once the build has finished, check the `target` directory. You should find a JAR file called `unified-chat-tutorial-1.0-SNAPSHOT.jar`.
+3. Start the application from the JAR by running `java -jar unified-chat-tutorial-1.0-SNAPSHOT.jar`
+4. The application should start up in production mode. Try it out by navigating to `http://localhost:8080`
+
