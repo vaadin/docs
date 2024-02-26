@@ -16,7 +16,9 @@ function Example() {
   const employeeCount = useSignal(0);
 
   useEffect(() => {
-    getPeople().then(({ people }) => items.value = people);
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
     employeeCount.value = items.value.length;
   }, []);
 

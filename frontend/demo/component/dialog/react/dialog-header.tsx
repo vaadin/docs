@@ -15,7 +15,7 @@ import '@vaadin/icons';
 function Example() {
   useSignals(); // hidden-source-line
   const dialogOpened = useSignal(false);
-  const user = useSignal<Person>();
+  const user = useSignal<Person | undefined>(undefined);
   const open = () => {
     dialogOpened.value = true;
   };

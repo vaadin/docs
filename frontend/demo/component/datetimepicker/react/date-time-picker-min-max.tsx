@@ -9,9 +9,9 @@ import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
 function Example() {
   useSignals(); // hidden-source-line
   const errorMessage = useSignal('');
-  const value = useSignal(() => addDays(new Date(), 7));
+  const value = useSignal(addDays(new Date(), 7));
   const minDate = useSignal(new Date());
-  const maxDate = useSignal(() => addDays(new Date(), 60));
+  const maxDate = useSignal(addDays(new Date(), 60));
 
   return (
     <DateTimePicker

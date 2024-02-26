@@ -10,12 +10,18 @@ function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
   useEffect(() => {
-    getPeople().then(({ people }) => items.value = people);
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (
     // tag::snippet[]
-    <Crud editorPosition="aside" include="firstName, lastName, email, profession" items={items.value} />
+    <Crud
+      editorPosition="aside"
+      include="firstName, lastName, email, profession"
+      items={items.value}
+    />
     // end::snippet[]
   );
 }

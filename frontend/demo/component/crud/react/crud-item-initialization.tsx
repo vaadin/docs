@@ -12,7 +12,9 @@ function Example() {
   const editedItem = useSignal<Partial<Person> | undefined>(undefined);
 
   useEffect(() => {
-    getPeople().then(({ people }) => items.value = people);
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   // tag::snippet[]

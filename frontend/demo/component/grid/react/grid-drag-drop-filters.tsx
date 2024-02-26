@@ -15,7 +15,7 @@ import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-lin
 function Example() {
   useSignals(); // hidden-source-line
   // tag::snippet[]
-  const draggedItem = useSignal<Person>();
+  const draggedItem = useSignal<Person | undefined>(undefined);
   const items = useSignal<Person[]>([]);
   const expandedItems = useSignal<Person[]>([]);
 

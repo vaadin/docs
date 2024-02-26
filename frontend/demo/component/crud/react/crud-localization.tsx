@@ -17,7 +17,9 @@ function Example() {
   const items = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople().then(({ people }) => items.value = people);
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   // tag::snippet[]

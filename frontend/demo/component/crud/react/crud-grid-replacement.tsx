@@ -13,7 +13,9 @@ function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
   useEffect(() => {
-    getPeople().then(({ people }) => items.value = people);
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (

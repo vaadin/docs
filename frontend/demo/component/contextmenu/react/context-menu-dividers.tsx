@@ -14,7 +14,9 @@ function Example() {
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
-    getPeople({ count: 5 }).then(({ people }) => gridItems.value = people);
+    getPeople({ count: 5 }).then(({ people }) => {
+      gridItems.value = people;
+    });
 
     const grid = gridRef.current;
     if (grid) {

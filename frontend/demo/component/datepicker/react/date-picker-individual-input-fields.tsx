@@ -36,7 +36,11 @@ function Example() {
       return;
     }
 
-    const startOfMonth = new Date(selectedYear.value ?? 0, months.indexOf(selectedMonth.value ?? 'January'), 1);
+    const startOfMonth = new Date(
+      selectedYear.value ?? 0,
+      months.indexOf(selectedMonth.value ?? 'January'),
+      1
+    );
     const lengthOfMonth = getDaysInMonth(startOfMonth);
 
     selectableDays.value = Array.from({ length: lengthOfMonth }, (_, k) => k + 1);
@@ -75,7 +79,9 @@ function Example() {
         items={selectableDays.value}
         value={String(selectedDay)}
         disabled={!selectedYear.value || !selectedMonth.value}
-        onValueChanged={(e) => selectedDay.value = parseInt(e.detail.value)}
+        onValueChanged={(e) => {
+          selectedDay.value = parseInt(e.detail.value);
+        }}
       />
     </HorizontalLayout>
     // end::snippet[]

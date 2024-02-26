@@ -13,7 +13,7 @@ import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-lin
 
 function Example() {
   useSignals(); // hidden-source-line
-  const value = useSignal<string>();
+  const value = useSignal<string>('');
   const items = useSignal<Card[]>([]);
 
   useEffect(() => {

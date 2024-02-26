@@ -14,7 +14,9 @@ function Example() {
   const editedItem = useSignal<Person | undefined>(undefined);
 
   useEffect(() => {
-    getPeople().then(({ people }) => items.value = people);
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   function onEditedItemChanged(event: any) {

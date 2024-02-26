@@ -9,7 +9,7 @@ import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-lin
 
 function Example() {
   useSignals(); // hidden-source-line
-  const person = useSignal<Person>();
+  const person = useSignal<Person | undefined>(undefined);
 
   useEffect(() => {
     getPeople({ count: 1 }).then(({ people }) => {

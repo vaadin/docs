@@ -24,9 +24,13 @@ function Example() {
   return (
     <>
       <HorizontalLayout style={{ alignItems: 'center', justifyContent: 'center' }} theme="spacing">
-        <Button onClick={() => {
-          dialogOpened.value = true;
-        }}>Open confirm dialog</Button>
+        <Button
+          onClick={() => {
+            dialogOpened.value = true;
+          }}
+        >
+          Open confirm dialog
+        </Button>
 
         {/* tag::snippet[] */}
         <ConfirmDialog

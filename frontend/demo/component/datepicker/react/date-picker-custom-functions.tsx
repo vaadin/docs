@@ -26,9 +26,7 @@ function parseDateIso8601(inputValue: string) {
 
 function Example() {
   useSignals(); // hidden-source-line
-  const selectedDateValue = useSignal(
-    dateFnsFormat(new Date(), 'yyyy-MM-dd')
-  );
+  const selectedDateValue = useSignal(dateFnsFormat(new Date(), 'yyyy-MM-dd'));
 
   const datePickerRef = useRef<DatePickerElement>(null);
   useEffect(() => {
@@ -48,7 +46,9 @@ function Example() {
       label="Select a date:"
       value={selectedDateValue.value}
       helperText="Date picker configured to use ISO 8601 format"
-      onValueChanged={(event) => selectedDateValue.value = event.detail.value}
+      onValueChanged={(event) => {
+        selectedDateValue.value = event.detail.value;
+      }}
     />
   );
   // end::snippet[]

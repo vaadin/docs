@@ -23,7 +23,7 @@ const gridStyle = {
 
 function Example() {
   useSignals(); // hidden-source-line
-  const draggedItem = useSignal<Person>();
+  const draggedItem = useSignal<Person | undefined>(undefined);
   const grid1Items = useSignal<Person[]>([]);
   const grid2Items = useSignal<Person[]>([]);
 

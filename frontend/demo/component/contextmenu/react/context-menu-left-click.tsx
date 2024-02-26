@@ -27,7 +27,9 @@ function Example() {
   }, []);
 
   React.useEffect(() => {
-    getPeople({ count: 5 }).then(({ people }) => gridItems.value = people);
+    getPeople({ count: 5 }).then(({ people }) => {
+      gridItems.value = people;
+    });
   }, []);
 
   // tag::snippet[]

@@ -20,7 +20,9 @@ function Example() {
 
   function filterChanged(event: ComboBoxFilterChangedEvent) {
     const filter = event.detail.value;
-    filteredItems.value = allItems.value.filter(({ name }) => name.toLowerCase().startsWith(filter.toLowerCase()));
+    filteredItems.value = allItems.value.filter(({ name }) =>
+      name.toLowerCase().startsWith(filter.toLowerCase())
+    );
   }
 
   return (

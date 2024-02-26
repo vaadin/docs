@@ -17,7 +17,7 @@ function Example() {
       {/* tag::snippet[] */}
       <Dialog
         headerTitle="New employee"
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={({ detail }) => {
           dialogOpened.value = detail.value;
         }}

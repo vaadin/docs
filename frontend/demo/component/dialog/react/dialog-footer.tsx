@@ -10,7 +10,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 function Example() {
   useSignals(); // hidden-source-line
   const dialogOpened = useSignal(false);
-  const user = useSignal<Person>();
+  const user = useSignal<Person | undefined>(undefined);
 
   useEffect(() => {
     getPeople({ count: 1 }).then(({ people }) => {
