@@ -1,20 +1,23 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
+  useSignals(); // hidden-source-line
   const charLimit = 140;
-  const [text, setText] = useState('Great job. This is excellent!');
+  const text = useSignal('Great job. This is excellent!');
 
   return (
     // tag::snippet[]
     <TextArea
       label="Comment"
       maxlength={charLimit}
-      value={text}
-      helperText={`${text.length}/${charLimit}`}
+      value={text.value}
+      helperText={`${text.value.length}/${charLimit}`}
       onValueChanged={(event) => {
-        setText(event.detail.value);
+        text.value = event.detail.value;
       }}
     />
     // end::snippet[]

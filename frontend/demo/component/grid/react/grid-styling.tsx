@@ -1,9 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Grid, type GridCellPartNameGenerator } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 // tag::snippet[]
 interface PersonWithRating extends Person {
@@ -37,19 +39,21 @@ const ratingRenderer = (person: PersonWithRating) => (
 );
 
 function Example() {
-  const [items, setItems] = useState<PersonWithRating[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<PersonWithRating[]>([]);
+
   useEffect(() => {
     getPeople().then(({ people }) => {
       const peopleWithRating = people.map((person) => ({
         ...person,
         customerRating: Math.random() * 10,
       }));
-      setItems(peopleWithRating);
+      items.value = peopleWithRating;
     });
   }, []);
 
   return (
-    <Grid items={items} cellPartNameGenerator={cellPartNameGenerator} className="styling">
+    <Grid items={items.value} cellPartNameGenerator={cellPartNameGenerator} className="styling">
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="profession" />

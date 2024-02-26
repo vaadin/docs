@@ -1,20 +1,25 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
 import templates from '../../../../../src/main/resources/data/templates.json';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
+  useSignals(); // hidden-source-line
   const charLimit = 600;
-  const [text, setText] = useState(templates.loremIpsum);
+  const text = useSignal(templates.loremIpsum);
 
   return (
     // tag::snippet[]
     <TextArea
       label="Description"
       maxlength={charLimit}
-      value={text}
-      helperText={`${text.length}/${charLimit}`}
-      onValueChanged={(event) => setText(event.detail.value)}
+      value={text.value}
+      helperText={`${text.value.length}/${charLimit}`}
+      onValueChanged={(event) => {
+        text.value = event.detail.value;
+      }}
       style={{ width: '100%' }}
     ></TextArea>
     // end::snippet[]

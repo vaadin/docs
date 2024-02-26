@@ -1,9 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Grid, type GridDragStartEvent } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 const gridContainerStyle: React.CSSProperties = {
   display: 'flex',
@@ -20,42 +22,45 @@ const gridStyle = {
 };
 
 function Example() {
-  const [draggedItem, setDraggedItem] = useState<Person>();
-  const [grid1Items, setGrid1Items] = useState<Person[]>([]);
-  const [grid2Items, setGrid2Items] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const draggedItem = useSignal<Person>();
+  const grid1Items = useSignal<Person[]>([]);
+  const grid2Items = useSignal<Person[]>([]);
 
   useEffect(() => {
     getPeople({ count: 10 }).then(({ people }) => {
-      setGrid1Items(people.slice(0, 5));
-      setGrid2Items(people.slice(5));
+      grid1Items.value = people.slice(0, 5);
+      grid2Items.value = people.slice(5);
     });
   }, []);
 
   // tag::snippet[]
   const startDraggingItem = (event: GridDragStartEvent<Person>) => {
-    setDraggedItem(event.detail.draggedItems[0]);
+    draggedItem.value = event.detail.draggedItems[0];
   };
 
   const clearDraggedItem = () => {
-    setDraggedItem(undefined);
+    draggedItem.value = undefined;
   };
 
   return (
     <div style={gridContainerStyle}>
       <Grid
-        items={grid1Items}
+        items={grid1Items.value}
         rowsDraggable
         dropMode="on-grid"
         style={gridStyle}
         onGridDragstart={startDraggingItem}
         onGridDragend={clearDraggedItem}
         onGridDrop={() => {
-          const draggedPerson = draggedItem!;
-          const draggedItemIndex = grid2Items.indexOf(draggedPerson);
+          const draggedPerson = draggedItem.value!;
+          const draggedItemIndex = grid2Items.value.indexOf(draggedPerson);
           if (draggedItemIndex >= 0) {
-            const updatedGrid2Items = grid2Items.filter((_, index) => index !== draggedItemIndex);
-            setGrid2Items(updatedGrid2Items);
-            setGrid1Items([...grid1Items, draggedPerson]);
+            const updatedGrid2Items = grid2Items.value.filter(
+              (_, index) => index !== draggedItemIndex
+            );
+            grid2Items.value = updatedGrid2Items;
+            grid1Items.value = [...grid1Items.value, draggedPerson];
           }
         }}
       >
@@ -67,19 +72,21 @@ function Example() {
       </Grid>
 
       <Grid
-        items={grid2Items}
+        items={grid2Items.value}
         rowsDraggable
         dropMode="on-grid"
         style={gridStyle}
         onGridDragstart={startDraggingItem}
         onGridDragend={clearDraggedItem}
         onGridDrop={() => {
-          const draggedPerson = draggedItem!;
-          const draggedItemIndex = grid1Items.indexOf(draggedPerson);
+          const draggedPerson = draggedItem.value!;
+          const draggedItemIndex = grid1Items.value.indexOf(draggedPerson);
           if (draggedItemIndex >= 0) {
-            const updatedGrid1Items = grid1Items.filter((_, index) => index !== draggedItemIndex);
-            setGrid1Items(updatedGrid1Items);
-            setGrid2Items([...grid2Items, draggedPerson]);
+            const updatedGrid1Items = grid1Items.value.filter(
+              (_, index) => index !== draggedItemIndex
+            );
+            grid1Items.value = updatedGrid1Items;
+            grid2Items.value = [...grid2Items.value, draggedPerson];
           }
         }}
       >

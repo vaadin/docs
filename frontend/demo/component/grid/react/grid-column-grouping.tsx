@@ -1,21 +1,26 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { GridColumnGroup } from '@vaadin/react-components/GridColumnGroup.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [items, setItems] = useState<Person[]>([]);
+  const items = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (
-    <Grid items={items}>
+    <Grid items={items.value}>
       <GridColumnGroup header="Name">
         <GridColumn path="firstName" />
         <GridColumn path="lastName" />

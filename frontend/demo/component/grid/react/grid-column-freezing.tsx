@@ -1,17 +1,22 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { Button } from '@vaadin/react-components/Button.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
 
     // Workaround for https://github.com/vaadin/react-components/issues/129
     setTimeout(() => {
@@ -23,7 +28,7 @@ function Example() {
 
   return (
     <>
-      <Grid items={items} ref={gridRef}>
+      <Grid items={items.value} ref={gridRef}>
         {/* tag::snippet1[] */}
         <GridColumn frozen header="Name" autoWidth flexGrow={0}>
           {({ item: person }) => (

@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
@@ -14,6 +14,8 @@ import { GridSortColumn } from '@vaadin/react-components/GridSortColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import '@vaadin/icons';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function matchesTerm(value: string, searchTerm: string) {
   return value.toLowerCase().includes(searchTerm.toLowerCase());
@@ -60,7 +62,8 @@ async function fetchPeople(params: {
 }
 
 function Example() {
-  const [searchTerm, setSearchTerm] = useState('');
+  useSignals(); // hidden-source-line
+  const searchTerm = useSignal('');
 
   const dataProvider = useMemo(
     () =>
@@ -74,12 +77,12 @@ function Example() {
           page,
           pageSize,
           sortOrders,
-          searchTerm,
+          searchTerm: searchTerm.value,
         });
 
         callback(people, count);
       },
-    [searchTerm]
+    [searchTerm.value]
   );
 
   return (
@@ -88,7 +91,7 @@ function Example() {
         placeholder="Search"
         style={{ width: '50%' }}
         onValueChanged={(e) => {
-          setSearchTerm(e.detail.value.trim());
+          searchTerm.value = e.detail.value.trim();
         }}
       >
         <Icon slot="prefix" icon="vaadin:search" />

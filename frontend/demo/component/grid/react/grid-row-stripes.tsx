@@ -1,27 +1,27 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (
     // tag::snippet[]
-    <Grid items={items} theme="row-stripes">
+    <Grid items={items.value} theme="row-stripes">
       <GridColumn header="Image" flexGrow={0} autoWidth>
-        {({ item }) => (
-          <Avatar
-            img={item.pictureUrl}
-            name={`${item.firstName} ${item.lastName}`}
-          />
-        )}
+        {({ item }) => <Avatar img={item.pictureUrl} name={`${item.firstName} ${item.lastName}`} />}
       </GridColumn>
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />

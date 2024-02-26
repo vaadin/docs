@@ -1,13 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Tooltip } from '@vaadin/react-components/Tooltip.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
 import '@vaadin/icons';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
-  const [tooltipOpened, setTooltipOpened] = useState(false);
+  useSignals(); // hidden-source-line
+  const tooltipOpened = useSignal(false);
 
   return (
     // tag::snippet[]
@@ -17,12 +20,14 @@ function Example() {
         slot="tooltip"
         text="Wrap in “quotes” for exact phrase"
         manual
-        opened={tooltipOpened}
+        opened={tooltipOpened.value}
       />
       <Button
         slot="suffix"
         theme="tertiary-inline icon"
-        onClick={() => setTooltipOpened(!tooltipOpened)}
+        onClick={() => {
+          tooltipOpened.value = !tooltipOpened.value;
+        }}
       >
         <Icon icon="vaadin:info-circle" />
       </Button>

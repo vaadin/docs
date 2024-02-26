@@ -1,15 +1,20 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { format, subDays, subMinutes } from 'date-fns';
 import { MessageList } from '@vaadin/react-components/MessageList.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
-  // tag::snippet[]
-  const [person, setPerson] = useState<Person>();
+  useSignals(); // hidden-source-line
+  const person = useSignal<Person>();
+
   useEffect(() => {
-    getPeople({ count: 1 }).then(({ people }) => setPerson(people[0]));
+    getPeople({ count: 1 }).then(({ people }) => {
+      person.value = people[0];
+    });
   }, []);
 
   const isoMinutes = 'yyyy-MM-dd HH:mm';
@@ -28,12 +33,11 @@ function Example() {
       time: fiftyMinutesAgo,
       userName: 'Linsey Listy',
       userColorIndex: 2,
-      userImg: person?.pictureUrl,
+      userImg: person.value?.pictureUrl,
     },
   ];
 
   return <MessageList items={items} />;
-  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

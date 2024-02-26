@@ -1,27 +1,34 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { ListBox } from '@vaadin/react-components/ListBox.js';
 import { Item } from '@vaadin/react-components/Item.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
-  const [selectedValues, setSelectedValues] = useState<number[]>([0, 3]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
+  const selectedValues = useSignal<number[]>([0, 3]);
 
   useEffect(() => {
-    getPeople({ count: 20 }).then(({ people }) => setItems(people));
+    getPeople({ count: 20 }).then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (
     // tag::snippet[]
     <ListBox
       multiple
-      selectedValues={selectedValues}
-      onSelectedValuesChanged={(e) => setSelectedValues(e.detail.value)}
+      selectedValues={selectedValues.value}
+      onSelectedValuesChanged={(e) => {
+        selectedValues.value = e.detail.value;
+      }}
       style={{ height: '200px' }}
     >
-      {items.map((person, index) => (
+      {items.value.map((person, index) => (
         <Item key={index}>
           {person.firstName} {person.lastName}
         </Item>
