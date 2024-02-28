@@ -1,15 +1,19 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Accordion, type AccordionOpenedChangedEvent } from '@vaadin/react-components/Accordion.js';
-import { AccordionHeading } from '@vaadin/react-components/AccordionHeading.js';
-import { AccordionPanel } from '@vaadin/react-components/AccordionPanel.js';
-import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { EmailField } from '@vaadin/react-components/EmailField.js';
-import { Button } from '@vaadin/react-components/Button.js';
-import { ComboBox } from '@vaadin/react-components/ComboBox.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import {
+  Accordion,
+  AccordionHeading,
+  type AccordionOpenedChangedEvent,
+  AccordionPanel,
+  Button,
+  ComboBox,
+  EmailField,
+  FormLayout,
+  type FormLayoutResponsiveStep,
+  HorizontalLayout,
+  TextField,
+  VerticalLayout,
+} from '@vaadin/react-components';
 import { useForm } from '@vaadin/hilla-react-form';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
