@@ -33,7 +33,7 @@ public class ProductDtoListService implements ListService<ProductDto> {
                 ? jpaFilterConverter.toSpec(filter, Product.class)
                 : Specification.anyOf();
         // Query the JPA repository
-        Page<Product> products = productRepository.findAll(spec, pageable);
+        Page<Product> products = productRepository.findAll(pageable);
         // Map entities to DTOs and return result
         return products.stream().map(ProductDto::fromEntity).toList();
     }

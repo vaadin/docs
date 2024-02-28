@@ -32,7 +32,7 @@ public class ProductAdvancedDtoListService implements ListService<ProductAdvance
         // Create JPA specification from Hilla filter
         Specification<Product> specification = createSpecification(filter);
         // Fetch data from JPA repository
-        return productRepository.findAll(specification, pageable)
+        return productRepository.findAll(pageable)
                 .map(ProductAdvancedDto::fromEntity)
                 .toList();
     }
