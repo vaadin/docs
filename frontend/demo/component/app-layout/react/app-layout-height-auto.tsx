@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { AppLayout } from '@vaadin/react-components/AppLayout.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
@@ -12,9 +14,12 @@ const h1Style = {
 };
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
   useEffect(() => {
-    getPeople({ count: 20 }).then(({ people }) => setItems(people));
+    getPeople({ count: 20 }).then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (
@@ -24,7 +29,7 @@ function Example() {
         MyApp
       </h1>
 
-      <Grid items={items} allRowsVisible>
+      <Grid items={items.value} allRowsVisible>
         <GridColumn path="firstName" />
         <GridColumn path="lastName" />
         <GridColumn path="email" />

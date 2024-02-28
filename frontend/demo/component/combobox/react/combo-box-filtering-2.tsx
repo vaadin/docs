@@ -1,24 +1,27 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { ComboBox, type ComboBoxFilterChangedEvent } from '@vaadin/react-components/ComboBox.js';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 function Example() {
-  const [allItems, setAllItems] = useState<Country[]>([]);
-  const [filteredItems, setFilteredItems] = useState<Country[]>([]);
+  useSignals(); // hidden-source-line
+  const allItems = useSignal<Country[]>([]);
+  const filteredItems = useSignal<Country[]>([]);
 
   useEffect(() => {
     getCountries().then((countries) => {
-      setAllItems(countries);
-      setFilteredItems(countries);
+      allItems.value = countries;
+      filteredItems.value = countries;
     });
   }, []);
 
   function filterChanged(event: ComboBoxFilterChangedEvent) {
     const filter = event.detail.value;
-    setFilteredItems(
-      allItems.filter(({ name }) => name.toLowerCase().startsWith(filter.toLowerCase()))
+    filteredItems.value = allItems.value.filter(({ name }) =>
+      name.toLowerCase().startsWith(filter.toLowerCase())
     );
   }
 
@@ -28,7 +31,7 @@ function Example() {
       label="Country"
       itemLabelPath="name"
       itemValuePath="id"
-      filteredItems={filteredItems}
+      filteredItems={filteredItems.value}
       onFilterChanged={filterChanged}
     />
     // end::snippet[]

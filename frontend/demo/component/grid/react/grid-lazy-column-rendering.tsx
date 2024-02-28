@@ -1,9 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function columnRenderer(column: HTMLElement, index: number) {
   return (
@@ -18,14 +20,17 @@ function indexColumnRenderer(index: number) {
 }
 
 function Example() {
-  // tag::snippet[]
-  const [items, setItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
+
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (
-    <Grid items={items} columnRendering="lazy">
+    <Grid items={items.value} columnRendering="lazy">
       <GridColumn frozen>{({ model }) => indexColumnRenderer(model.index)}</GridColumn>
 
       {[...Array(100).keys()].map((index) => (
@@ -36,7 +41,6 @@ function Example() {
       ))}
     </Grid>
   );
-  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

@@ -1,10 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
 import { MenuBar, type MenuBarItem } from '@vaadin/react-components/MenuBar.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [selectedItem, setSelectedItem] = useState<MenuBarItem | undefined>(undefined);
+  const selectedItem = useSignal<MenuBarItem | undefined>(undefined);
 
   const items = [
     { text: 'View' },
@@ -29,8 +32,13 @@ function Example() {
 
   return (
     <>
-      <MenuBar items={items} onItemSelected={(event) => setSelectedItem(event.detail.value)} />
-      <div>Clicked item: {selectedItem?.text}</div>
+      <MenuBar
+        items={items}
+        onItemSelected={(event) => {
+          selectedItem.value = event.detail.value;
+        }}
+      />
+      <div>Clicked item: {selectedItem.value?.text}</div>
     </>
   );
   // end::snippet[]

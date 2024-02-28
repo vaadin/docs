@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { DatePicker } from '@vaadin/react-components/DatePicker.js';
 import {
   CustomField,
@@ -8,7 +10,8 @@ import {
 import { differenceInDays, parseISO } from 'date-fns';
 
 function Example() {
-  const [errorMessage, setErrorMessage] = useState('');
+  useSignals(); // hidden-source-line
+  const errorMessage = useSignal('');
 
   // Workaround for missing form-binding support
   // See https://github.com/vaadin/hilla/issues/587
@@ -21,9 +24,9 @@ function Example() {
     }
 
     if (differenceInDays(parseISO(to), parseISO(from)) > 30) {
-      setErrorMessage('Enrollment period cannot be longer than 30 days');
+      errorMessage.value = 'Enrollment period cannot be longer than 30 days';
     } else {
-      setErrorMessage('');
+      errorMessage.value = '';
     }
   }
 
@@ -32,8 +35,8 @@ function Example() {
     <CustomField
       label="Enrollment period"
       helperText="Cannot be longer than 30 days"
-      errorMessage={errorMessage}
-      invalid={errorMessage !== ''}
+      errorMessage={errorMessage.value}
+      invalid={errorMessage.value !== ''}
       required
       onValueChanged={validate}
     >

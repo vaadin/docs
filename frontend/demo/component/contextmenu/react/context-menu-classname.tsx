@@ -1,11 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [items] = useState<ContextMenuItem[]>([
+  const items = useSignal<ContextMenuItem[]>([
     { text: 'Share' },
     { text: 'Duplicate' },
     { text: 'Delete', className: 'text-error' },
@@ -13,7 +16,7 @@ function Example() {
   // end::snippet[]
 
   return (
-    <ContextMenu items={items} openOn="click">
+    <ContextMenu items={items.value} openOn="click">
       <Button>Actions</Button>
     </ContextMenu>
   );

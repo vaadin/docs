@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
@@ -7,14 +9,15 @@ import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(false);
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(false);
 
   const open = () => {
-    setDialogOpened(true);
+    dialogOpened.value = true;
   };
 
   const close = () => {
-    setDialogOpened(false);
+    dialogOpened.value = false;
   };
 
   return (
@@ -24,9 +27,9 @@ function Example() {
         aria-label="Add note"
         draggable
         modeless
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={(event) => {
-          setDialogOpened(event.detail.value);
+          dialogOpened.value = event.detail.value;
         }}
         headerRenderer={() => (
           <h2

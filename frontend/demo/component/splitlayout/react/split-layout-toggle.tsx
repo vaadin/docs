@@ -1,22 +1,25 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import exampleStyles from './split-layout-example-styles'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { SplitLayout } from '@vaadin/react-components/SplitLayout.js';
 import MasterContent from './master-content';
 import DetailContent from './detail-content';
 import '@vaadin/icons';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const sidebarCollapsed = useSignal(false);
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    sidebarCollapsed.value = !sidebarCollapsed.value;
   };
 
-  const sidebarWidthPercentage = sidebarCollapsed ? 13 : 40;
+  const sidebarWidthPercentage = sidebarCollapsed.value ? 13 : 40;
 
   return (
     <SplitLayout style={{ maxHeight: '280px' }}>
@@ -34,7 +37,7 @@ function Example() {
           onClick={toggleSidebar}
           style={{ alignSelf: 'flex-end' }}
         >
-          <Icon icon={sidebarCollapsed ? 'vaadin:arrow-right' : 'vaadin:arrow-left'} />
+          <Icon icon={sidebarCollapsed.value ? 'vaadin:arrow-right' : 'vaadin:arrow-left'} />
         </Button>
         <MasterContent />
       </div>

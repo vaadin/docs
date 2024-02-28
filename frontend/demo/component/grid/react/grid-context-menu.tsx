@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import {
@@ -11,13 +11,18 @@ import { Item } from '@vaadin/react-components/Item.js';
 import { ListBox } from '@vaadin/react-components/ListBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
 
     const grid = gridRef.current;
     if (grid) {
@@ -65,7 +70,7 @@ function Example() {
 
   return (
     <ContextMenu renderer={renderMenu}>
-      <Grid items={items} ref={gridRef}>
+      <Grid items={items.value} ref={gridRef}>
         <GridColumn path="firstName" />
         <GridColumn path="lastName" />
         <GridColumn path="email" />

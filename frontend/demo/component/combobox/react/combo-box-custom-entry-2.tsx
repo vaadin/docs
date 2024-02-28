@@ -1,9 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 
 function Example() {
-  const [items, setItems] = useState(['Chrome', 'Edge', 'Firefox', 'Safari']);
+  useSignals(); // hidden-source-line
+  const items = useSignal(['Chrome', 'Edge', 'Firefox', 'Safari']);
 
   return (
     // tag::snippet[]
@@ -11,9 +14,9 @@ function Example() {
       allowCustomValue
       label="Browser"
       helperText="Select or type a browser"
-      items={items}
+      items={items.value}
       onCustomValueSet={(event) => {
-        setItems([...items, event.detail]);
+        items.value = [...items.value, event.detail];
       }}
     />
     // end::snippet[]

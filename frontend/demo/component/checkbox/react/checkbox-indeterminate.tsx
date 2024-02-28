@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
 import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
@@ -8,13 +10,14 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 
 // tag::snippet[]
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
+  const selectedIds = useSignal<string[]>([]);
 
   useEffect(() => {
     getPeople({ count: 3 }).then(({ people }) => {
-      setItems(people);
-      setSelectedIds([String(people[0].id), String(people[2].id)]);
+      items.value = people;
+      selectedIds.value = [String(people[0].id), String(people[2].id)];
     });
   }, []);
 
@@ -22,22 +25,26 @@ function Example() {
     <VerticalLayout theme="spacing">
       <Checkbox
         label="Notify users"
-        checked={selectedIds.length === items.length}
-        indeterminate={selectedIds.length > 0 && selectedIds.length < items.length}
+        checked={selectedIds.value.length === items.value.length}
+        indeterminate={
+          selectedIds.value.length > 0 && selectedIds.value.length < items.value.length
+        }
         onChange={(e) => {
-          setSelectedIds(e.target.checked ? items.map((person) => String(person.id)) : []);
+          selectedIds.value = e.target.checked
+            ? items.value.map((person) => String(person.id))
+            : [];
         }}
       />
 
       <CheckboxGroup
         label="Users to notify"
         theme="vertical"
-        value={selectedIds}
+        value={selectedIds.value}
         onValueChanged={(event) => {
-          setSelectedIds(event.detail.value);
+          selectedIds.value = event.detail.value;
         }}
       >
-        {items.map((person) => (
+        {items.value.map((person) => (
           <Checkbox
             key={person.id}
             value={String(person.id)}

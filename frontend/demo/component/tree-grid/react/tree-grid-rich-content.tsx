@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Grid,
   type GridDataProviderCallback,
@@ -14,6 +14,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import '@vaadin/icons';
 import { Icon } from '@vaadin/react-components/Icon.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 async function dataProvider(
   params: GridDataProviderParams<Person>,
@@ -29,11 +31,12 @@ async function dataProvider(
 }
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [expandedItems, setExpandedItems] = useState<Person[]>([]);
+  const expandedItems = useSignal<Person[]>([]);
 
   return (
-    <Grid dataProvider={dataProvider} expandedItems={expandedItems}>
+    <Grid dataProvider={dataProvider} expandedItems={expandedItems.value}>
       <GridColumn autoWidth header="Employee">
         {({ item: person, model }) => (
           <GridTreeToggle
@@ -49,9 +52,9 @@ function Example() {
                 return;
               }
               if (e.currentTarget.expanded) {
-                setExpandedItems([...expandedItems, person]);
+                expandedItems.value = [...expandedItems.value, person];
               } else {
-                setExpandedItems(expandedItems.filter((p) => p.id !== person.id));
+                expandedItems.value = expandedItems.value.filter((p) => p.id !== person.id);
               }
             }}
           >

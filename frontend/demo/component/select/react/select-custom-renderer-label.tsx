@@ -1,25 +1,30 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Select } from '@vaadin/react-components/Select.js';
 import { ListBox } from '@vaadin/react-components/ListBox.js';
 import { Item } from '@vaadin/react-components/Item.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 const formatPersonFullName = (person: Person) => `${person.firstName} ${person.lastName}`;
 
 function Example() {
-  const [people, setPeople] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const people = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople({ count: 5 }).then(({ people: items }) => setPeople(items));
+    getPeople({ count: 5 }).then(({ people: items }) => {
+      people.value = items;
+    });
   }, []);
 
   return (
     // tag::snippet[]
     <Select label="Assignee">
       <ListBox>
-        {people.map((person) => (
+        {people.value.map((person) => (
           // Use the label attribute to display full name of the person as selected value label
           <Item
             value={String(person.id)}

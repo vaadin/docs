@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
@@ -13,6 +15,7 @@ import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function Item({ person }: { person: Person }) {
+  useSignals(); // hidden-source-line
   return (
     <HorizontalLayout
       style={{ alignItems: 'center', lineHeight: 'var(--lumo-line-height-m)' }}
@@ -50,13 +53,13 @@ function createItem(iconName: string, text: string) {
 }
 
 function Example() {
-  const [gridItems, setGridItems] = useState<Person[]>([]);
-  const [items, setItems] = useState<ContextMenuItem[]>([]);
+  const gridItems = useSignal<Person[]>([]);
+  const items = useSignal<ContextMenuItem[]>([]);
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
     getPeople({ count: 5 }).then(({ people }) => {
-      setGridItems(people);
+      gridItems.value = people;
       // tag::snippet[]
       const contextMenuItems: ContextMenuItem[] = [
         { component: createItem('vaadin:file-search', 'Open') },
@@ -74,7 +77,7 @@ function Example() {
         { component: createItem('vaadin:trash', 'Delete') },
       ];
 
-      setItems(contextMenuItems);
+      items.value = contextMenuItems;
       // end::snippet[]
     });
 
@@ -92,8 +95,8 @@ function Example() {
 
   // tag::snippet[]
   return (
-    <ContextMenu items={items}>
-      <Grid allRowsVisible items={gridItems} ref={gridRef}>
+    <ContextMenu items={items.value}>
+      <Grid allRowsVisible items={gridItems.value} ref={gridRef}>
         <GridColumn header="Applicant">
           {({ item }) => (
             <span>
