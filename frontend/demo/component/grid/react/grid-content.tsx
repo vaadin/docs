@@ -12,10 +12,7 @@ import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 // tag::snippet[]
 const employeeRenderer = (person: Person) => (
   <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
-    <Avatar
-      img={person.pictureUrl}
-      name={`${person.firstName} ${person.lastName}`}
-    />
+    <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
 
     <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>
       <span>
@@ -31,11 +28,7 @@ const employeeRenderer = (person: Person) => (
 );
 
 const statusRenderer = (person: Person) => (
-  <span
-    {...({
-      theme: `badge ${person.status === 'Available' ? 'success' : 'error'}`,
-    } satisfies object)}
-  >
+  <span {...{ theme: `badge ${person.status === 'Available' ? 'success' : 'error'}` }}>
     {person.status}
   </span>
 );

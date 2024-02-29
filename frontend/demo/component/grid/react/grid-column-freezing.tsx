@@ -22,31 +22,29 @@ function Example() {
   }, []);
 
   return (
-    <>
-      <Grid items={items} ref={gridRef}>
-        {/* tag::snippet1[] */}
-        <GridColumn frozen header="Name" autoWidth flexGrow={0}>
-          {({ item: person }) => (
-            <>
-              {person.firstName} {person.lastName}
-            </>
-          )}
-        </GridColumn>
-        {/* end::snippet1[] */}
+    <Grid items={items} ref={gridRef}>
+      {/* tag::snippet1[] */}
+      <GridColumn frozen header="Name" autoWidth flexGrow={0}>
+        {({ item: person }) => (
+          <>
+            {person.firstName} {person.lastName}
+          </>
+        )}
+      </GridColumn>
+      {/* end::snippet1[] */}
 
-        <GridColumn path="email" autoWidth />
-        <GridColumn path="address.phone" autoWidth />
-        <GridColumn path="profession" autoWidth />
-        <GridColumn path="address.street" autoWidth />
+      <GridColumn path="email" autoWidth />
+      <GridColumn path="address.phone" autoWidth />
+      <GridColumn path="profession" autoWidth />
+      <GridColumn path="address.street" autoWidth />
 
-        {/* tag::snippet2[] */}
+      {/* tag::snippet2[] */}
 
-        <GridColumn frozenToEnd autoWidth flexGrow={0}>
-          {() => <Button theme="tertiary-inline">Edit</Button>}
-        </GridColumn>
-        {/* end::snippet2[] */}
-      </Grid>
-    </>
+      <GridColumn frozenToEnd autoWidth flexGrow={0}>
+        {() => <Button theme="tertiary-inline">Edit</Button>}
+      </GridColumn>
+      {/* end::snippet2[] */}
+    </Grid>
   );
 }
 
