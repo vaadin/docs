@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Button, HorizontalLayout } from '@vaadin/react-components';
 
 function Example() {
   const [counter, setCounter] = useState(0);
