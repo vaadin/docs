@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { AvatarGroup, type AvatarGroupI18n } from '@vaadin/react-components/AvatarGroup.js';
+import { AvatarGroup, type AvatarGroupI18n } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 // tag::snippet[]

@@ -1,9 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { Avatar, HorizontalLayout } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout';
 
 function Example() {
   const [person, setPerson] = useState<Person | undefined>(undefined);
