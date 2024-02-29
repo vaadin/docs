@@ -31,17 +31,12 @@ function Example() {
       detailsOpenedItems={detailsOpenedItems}
       rowDetailsRenderer={({ item: person }) => (
         <FormLayout responsiveSteps={[{ minWidth: '0', columns: 3 }]}>
-          <TextField label="Email address" value={person.email} {...{ colspan: 3 }} readonly />
-          <TextField
-            label="Phone number"
-            value={person.address.phone}
-            {...{ colspan: 3 }}
-            readonly
-          />
+          <TextField label="Email address" value={person.email} data-colspan="3" readonly />
+          <TextField label="Phone number" value={person.address.phone} data-colspan="3" readonly />
           <TextField
             label="Street address"
             value={person.address.street}
-            {...{ colspan: 3 }}
+            data-colspan="3"
             readonly
           />
           <TextField label="ZIP code" value={person.address.zip} readonly />
