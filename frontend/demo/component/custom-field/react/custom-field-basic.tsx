@@ -1,17 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
 import { DatePicker } from '@vaadin/react-components/DatePicker.js';
-import {
-  CustomField,
-  type CustomFieldValueChangedEvent,
-} from '@vaadin/react-components/CustomField.js';
+import { CustomField } from '@vaadin/react-components/CustomField.js';
 import { differenceInDays, isAfter, parseISO } from 'date-fns';
 import { useForm, useFormPart } from '@vaadin/hilla-react-form';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 
 function Example() {
-  const [errorMessage, setErrorMessage] = useState('');
-
   const { model, field } = useForm(AppointmentModel);
   const periodField = useFormPart(model.enrollmentPeriod);
 
