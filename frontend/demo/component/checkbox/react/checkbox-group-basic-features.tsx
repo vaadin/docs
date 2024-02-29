@@ -1,8 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Checkbox } from '@vaadin/react-components/Checkbox.js';
-import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
-import { Tooltip } from '@vaadin/react-components/Tooltip.js';
+import { Checkbox, CheckboxGroup, Tooltip } from '@vaadin/react-components';
 
 function Example() {
   // tag::snippet[]

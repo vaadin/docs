@@ -1,8 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Checkbox } from '@vaadin/react-components/Checkbox.js';
-import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { Checkbox, CheckboxGroup, VerticalLayout } from '@vaadin/react-components';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
