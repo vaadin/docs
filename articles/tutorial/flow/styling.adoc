@@ -1,275 +1,1079 @@
 ---
 title: Styling
-description: Learn how to make a Flow application look good
+description: Learn how to style a Flow application
 order: 60
 ---
 
 = Styling
 
-The chat application is now fully functional, but it does not look very nice. In this part of the tutorial, you are going to tweak the look and feel of the application.
+The chat application is now fully functional, but it is still a bit rough around the edges. In this part of the tutorial, you are going to tweak the look and feel of the application.
 
 == Styling in Flow
 
-So far in this tutorial, you have been using a theme called Lumo, which is the default theme in all Vaadin applications. It provides several utility CSS classes out of the box that can be added to your components and HTML elements to style them. In Java, these utility classes are available in the [classname]`LumoUtility` class.
+So far in this tutorial, you have been using a theme called Lumo, which is the default theme in all Vaadin applications. It provides several utility CSS classes out of the box that can be added to your components and HTML elements to style them. In Java, these utility classes are available in the [classname]`LumoUtility` class. Each utility class applies a particular style to the element, such as background color, borders, fonts, sizing, or spacing. 
 
-However, there are cases that cannot be handled with utility classes alone. One such case could be when you need to use a different selector than just a classname. Another case could be a complex layout where semantic CSS makes more sense than using a lot of utility classes. In this case, you need to create a new theme.
+However, there are cases that cannot be handled with utility classes alone. One such case could be when you need to use a different selector than just a classname. Another case could be a complex layout where semantic CSS makes more sense than using a lot of utility classes.
+
+In both of these cases, you have to create a new theme, either to enable the Lumo utility classes or to hold your custom CSS. Applications generated with https://start.vaadin.com[start.vaadin.com] already have this configured, but in this tutorial, you are going to learn how to do it yourself.
 
 *TODO Add links to styling documentation (in the process of being moved)*
 
 == Create a theme
 
-Create a new directory `frontend/themes/chat-theme`. Inside this directory, create an empty file `styles.css`. You will be adding `@import`:s to this file later in this tutorial step. Vaadin will automatically import the Lumo theme and apply your styles on top of the Lumo styles.
+Create a new directory `frontend/themes/chat-theme`. Inside this directory, create an empty file `styles.css`. You will be adding custom styles and `@import`:s to this file later in this tutorial. Vaadin will automatically import the Lumo theme and apply your styles on top of the Lumo styles, allowing you to override them.
 
-Next, you need to configure your application to use applu new theme. You do this by adding the `@Push` annotation to your application shell class or in this case, the [classname]`Application` class:
+Next, you create a theme configuration file. This is a file called `theme.json` and resides in the same directory as `styles.css`. You use this file to configure various theme-related features and now, you are going to use it to enable the Lumo utility classes. Do this by copy-pasing the following code into the file:
 
+.`theme.json`
+[source,json]
+----
+{
+    "lumoImports" : [ "typography", "color", "sizing", "spacing", "utility" ]
+}
+----
+
+If you left out this file, the `typography`, `color`, `sizing`, and `spacing` modules would have been loaded by default.
+
+Finally, you need to configure your application to use the new theme. You do this by adding the `@Theme` annotation to your application shell class or in this case, the [classname]`Application` class:
+
+.`Application.java`
 [source,java]
 ----
+<source-info>
+package com.example.application;
+
+import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.Push;
+import com.vaadin.flow.theme.Theme;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+import java.time.Clock;
+
 @SpringBootApplication
 @Push
-@Theme(value = "chat-theme") // <1>
+// tag::snippet[]
+@Theme("chat-theme")
+// end::snippet[]
 public class Application implements AppShellConfigurator {
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}
+</source-info>
+@Theme("chat-theme")
+----
+
+== Highligh user's own messages
+
+So far, all the messages in `ChannelView` have shown up the same regardless of who wrote them. You are now going to change this so that all messages sent by the current user has a darker background. In order to do that, you first need to get a hold of the current user's username. You can retrieve this from the `AuthenticationContext` like this:
+
+.`ChannelView.java`
+[source,java]
+----
+<source-info>
+package com.example.application.ui.views.channel;
+
+import com.example.application.chat.ChatService;
+import com.example.application.chat.Message;
+import com.example.application.ui.MainLayout;
+import com.example.application.ui.views.lobby.LobbyView;
+import com.example.application.util.LimitedSortedAppendOnlyList;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.messages.MessageInput;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Route;
+// tag::snippet[]
+import com.vaadin.flow.spring.security.AuthenticationContext;
+// end::snippet[]
+import jakarta.annotation.security.PermitAll;
+import reactor.core.Disposable;
+
+import java.util.Comparator;
+import java.util.List;
+
+@Route(value = "channel", layout = MainLayout.class)
+@PermitAll
+public class ChannelView extends VerticalLayout implements HasUrlParameter<String>, HasDynamicTitle {
+
+    private static final int HISTORY_SIZE = 20; // A small number to demonstrate the feature
+    private final ChatService chatService;
+    private final MessageList messageList;
+    private final LimitedSortedAppendOnlyList<Message> receivedMessages;
+    // tag::snippet[]
+    private final String currentUserName;
+    // end::snippet[]
+    private String channelName;
+    private String channelId;
+
+    public ChannelView(ChatService chatService, 
+            // tag::snippet[]
+            AuthenticationContext authenticationContext) {
+            // end::snippet[]
+        this.chatService = chatService;
+        // tag::snippet[]
+        this.currentUserName = authenticationContext.getPrincipalName().orElseThrow();
+        // end::snippet[]
+        setSizeFull();
+
+        receivedMessages = new LimitedSortedAppendOnlyList<>(HISTORY_SIZE, Comparator.comparing(Message::sequenceNumber));
+
+        messageList = new MessageList();
+        messageList.setSizeFull();
+        add(messageList);
+
+        var messageInput = new MessageInput(event -> sendMessage(event.getValue()));
+        messageInput.setWidthFull();
+
+        add(messageInput);
+    }
+
+    private Disposable subscribe() {
+        var subscription = chatService
+                .liveMessages(channelId)
+                .subscribe(this::receiveMessages);
+        var lastSeenMessageId = receivedMessages.getLast().map(Message::messageId).orElse(null);
+        receiveMessages(chatService.messageHistory(channelId, HISTORY_SIZE, lastSeenMessageId));
+        return subscription;
+    }
+
+    private void sendMessage(String message) {
+        if (!message.isBlank()) {
+            chatService.postMessage(channelId, message);
+        }
+    }
+
+    private void receiveMessages(List<Message> incoming) {
+        getUI().ifPresent(ui -> ui.access(() -> {
+            receivedMessages.addAll(incoming);
+            messageList.setItems(receivedMessages.stream().map(this::createMessageListItem).toList());
+        }));
+    }
+
+    private MessageListItem createMessageListItem(Message message) {
+        var item = new MessageListItem(message.message(), message.timestamp(), message.author());
+        return item;
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        var subscription = subscribe();
+        addDetachListener(event -> subscription.dispose());
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, String channelId) {
+        this.channelId = channelId;
+        chatService.channel(channelId).ifPresentOrElse(
+                channel -> this.channelName = channel.name(),
+                () -> event.forwardTo(LobbyView.class)
+        );
+    }
+
+    @Override
+    public String getPageTitle() {
+        return channelName;
+    }
+}
+</source-info>
+// tag::snippet[]
+private final String currentUserName;
+// end::snippet[]
+// ...
+public ChannelView(ChatService chatService, 
+// tag::snippet[]
+        AuthenticationContext authenticationContext) {
+    this.currentUserName = authenticationContext.getPrincipalName().orElseThrow();
+// end::snippet[]
     // ...
 }
 ----
-<1> This is the new line to add.
 
-== Improve the look and feel of the channel view
+Next, you are going to use a Lumo utility class to add a darker background to all messages sent by the current user. While you are at it, you are also going to add a small margin and a round border around them. Look up the `createMessageListItem` method and change it like this:
 
-You are now going to improve the look and feel of the channel view by using some custom CSS and some Lumo utility classes. You are going to make the following improvements:
-
-* Add a border around the message list.
-* Adjust the padding of the message input so that it aligns with the message list.
-* Add some spacing around the messages in the message list.
-* Give different colors to the avatars of different authors.
-* Show the current user's own messages in a different color.
-
-Once finished, the styled view is going to look like this:
-
-image::images/styled-channel-view.png[A web application with a listing of chat messages and an input field for posting new messages.]
-
-Start by making some changes to the constructor of [classname]`ChannelView`.
-
+.`ChannelView.java`
 [source,java]
 ----
-private final String currentUserName; // <1>
+<source-info>
+package com.example.application.ui.views.channel;
 
-public ChannelView(ChatService chatService, 
-        AuthenticationContext authenticationContext) { // <2>
-    this.chatService = chatService;
-    currentUserName = authenticationContext.getPrincipalName().orElseThrow(); // <3>
-    receivedMessages = new LimitedSortedAppendOnlyList<>(
-        HISTORY_SIZE, 
-        Comparator.comparing (Message::sequenceNumber)
-    );
+import com.example.application.chat.ChatService;
+import com.example.application.chat.Message;
+import com.example.application.ui.MainLayout;
+import com.example.application.ui.views.lobby.LobbyView;
+import com.example.application.util.LimitedSortedAppendOnlyList;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.messages.MessageInput;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+// tag::snippet[]
+import com.vaadin.flow.theme.lumo.LumoUtility;
+// end::snippet[]
+import jakarta.annotation.security.PermitAll;
+import reactor.core.Disposable;
 
-    setSizeFull();
-    addClassName("channel-view"); // <4>
+import java.util.Comparator;
+import java.util.List;
 
-    messageList = new MessageList();
-    messageList.addClassNames(LumoUtility.Border.ALL); // <5>
-    messageList.setSizeFull();
-    add(messageList);
+@Route(value = "channel", layout = MainLayout.class)
+@PermitAll
+public class ChannelView extends VerticalLayout implements HasUrlParameter<String>, HasDynamicTitle {
 
-    var messageInput = new MessageInput(event -> sendMessage(event.getValue()));
-    messageInput.addClassNames(LumoUtility.Padding.NONE); // <6>
-    messageInput.setWidthFull();
+    private static final int HISTORY_SIZE = 20; // A small number to demonstrate the feature
+    private final ChatService chatService;
+    private final MessageList messageList;
+    private final LimitedSortedAppendOnlyList<Message> receivedMessages;
+    private final String currentUserName;
+    private String channelName;
+    private String channelId;
 
-    add(messageInput);
+    public ChannelView(ChatService chatService, 
+            AuthenticationContext authenticationContext) {
+        this.chatService = chatService;
+        this.currentUserName = authenticationContext.getPrincipalName().orElseThrow();
+        setSizeFull();
+
+        receivedMessages = new LimitedSortedAppendOnlyList<>(HISTORY_SIZE, Comparator.comparing(Message::sequenceNumber));
+
+        messageList = new MessageList();
+        messageList.setSizeFull();
+        add(messageList);
+
+        var messageInput = new MessageInput(event -> sendMessage(event.getValue()));
+        messageInput.setWidthFull();
+
+        add(messageInput);
+    }
+
+    private Disposable subscribe() {
+        var subscription = chatService
+                .liveMessages(channelId)
+                .subscribe(this::receiveMessages);
+        var lastSeenMessageId = receivedMessages.getLast().map(Message::messageId).orElse(null);
+        receiveMessages(chatService.messageHistory(channelId, HISTORY_SIZE, lastSeenMessageId));
+        return subscription;
+    }
+
+    private void sendMessage(String message) {
+        if (!message.isBlank()) {
+            chatService.postMessage(channelId, message);
+        }
+    }
+
+    private void receiveMessages(List<Message> incoming) {
+        getUI().ifPresent(ui -> ui.access(() -> {
+            receivedMessages.addAll(incoming);
+            messageList.setItems(receivedMessages.stream().map(this::createMessageListItem).toList());
+        }));
+    }
+
+    private MessageListItem createMessageListItem(Message message) {
+        var item = new MessageListItem(
+            message.message(), 
+            message.timestamp(), 
+            message.author()
+        );
+        // tag::snippet[]
+        item.addClassNames(LumoUtility.Margin.SMALL, LumoUtility.BorderRadius.MEDIUM);
+        if (message.author().equals(currentUserName)) {
+            item.addClassNames(LumoUtility.Background.CONTRAST_5); 
+        }
+        // end::snippet[]
+        return item;
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        var subscription = subscribe();
+        addDetachListener(event -> subscription.dispose());
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, String channelId) {
+        this.channelId = channelId;
+        chatService.channel(channelId).ifPresentOrElse(
+                channel -> this.channelName = channel.name(),
+                () -> event.forwardTo(LobbyView.class)
+        );
+    }
+
+    @Override
+    public String getPageTitle() {
+        return channelName;
+    }
 }
-----
-<1> In order to know which messages are sent by the current user, you need to know the username of the current user.
-<2> You need to inject an instance of `AuthenticationContext` in order to get the current username.
-<3> Since `ChannelView` is protected, the authentication context is guaranteed to contain a principal name at the time of creation.
-<4> You will be needing this for semantic CSS later.
-<5> In this case, it is easier to use a Lumo utility class than to declare a semantic CSS classname.
-<6> `MessageInput` by default has a padding. This is an easy way of disabling it.
-
-`MessageListItem` has a property called `userColorIndex` that can take a value between 0 and 6. Every value corresponds to a different color of the user's avatar. This can come in handy when you do not have access to the users' actual avatars (such as photos) but still want to make different avatars easier to distinguish (and the user interface more colorful).
-
-You are now going to set a color index based on the `hashCode` of the message author and also add a custom theme name to all messages that are written by the current user. 
-Look up the [methodname]`createMessageListItem` method and change it as follows:
-
-[source,java]
-----
+</source-info>
 private MessageListItem createMessageListItem(Message message) {
     var item = new MessageListItem(
         message.message(), 
         message.timestamp(), 
         message.author()
     );
-    item.setUserColorIndex(Math.abs(message.author().hashCode() % 7)); // <1>
+    // tag::snippet[]
+    item.addClassNames(LumoUtility.Margin.SMALL, LumoUtility.BorderRadius.MEDIUM);
     if (message.author().equals(currentUserName)) {
-        item.addThemeNames("current-user"); // <2>
+        item.addClassNames(LumoUtility.Background.CONTRAST_5); 
+    }
+    // end::snippet[]
+    return item;
+}
+----
+
+== Color the avatars
+
+The purpose of avatars in the message list is to make it easier to distinguish messages from different authors. So far, they have not been doing that good a job as the avatars are all gray and only contain the initial letter of the username. The best solution would be to actually show pictures of the users but since that information is not available, you have to settle for the next best solution: giving the avatars different colors.
+
+`MessageListItem` has a property called `userColorIndex` that can take a value between 0 and 6. Every value corresponds to a different color of the user's avatar. You are now going to set a color index based on the `hashCode` of the message author. You can use a modulo operation to turn the hash into an integer between 0 and 6:
+
+.`ChannelView.java`
+[source,java]
+----
+<source-info>
+package com.example.application.ui.views.channel;
+
+import com.example.application.chat.ChatService;
+import com.example.application.chat.Message;
+import com.example.application.ui.MainLayout;
+import com.example.application.ui.views.lobby.LobbyView;
+import com.example.application.util.LimitedSortedAppendOnlyList;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.messages.MessageInput;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import jakarta.annotation.security.PermitAll;
+import reactor.core.Disposable;
+
+import java.util.Comparator;
+import java.util.List;
+
+@Route(value = "channel", layout = MainLayout.class)
+@PermitAll
+public class ChannelView extends VerticalLayout implements HasUrlParameter<String>, HasDynamicTitle {
+
+    private static final int HISTORY_SIZE = 20; // A small number to demonstrate the feature
+    private final ChatService chatService;
+    private final MessageList messageList;
+    private final LimitedSortedAppendOnlyList<Message> receivedMessages;
+    private final String currentUserName;
+    private String channelName;
+    private String channelId;
+
+    public ChannelView(ChatService chatService, 
+            AuthenticationContext authenticationContext) {
+        this.chatService = chatService;
+        this.currentUserName = authenticationContext.getPrincipalName().orElseThrow();
+        setSizeFull();
+
+        receivedMessages = new LimitedSortedAppendOnlyList<>(HISTORY_SIZE, Comparator.comparing(Message::sequenceNumber));
+
+        messageList = new MessageList();
+        messageList.setSizeFull();
+        add(messageList);
+
+        var messageInput = new MessageInput(event -> sendMessage(event.getValue()));
+        messageInput.setWidthFull();
+
+        add(messageInput);
+    }
+
+    private Disposable subscribe() {
+        var subscription = chatService
+                .liveMessages(channelId)
+                .subscribe(this::receiveMessages);
+        var lastSeenMessageId = receivedMessages.getLast().map(Message::messageId).orElse(null);
+        receiveMessages(chatService.messageHistory(channelId, HISTORY_SIZE, lastSeenMessageId));
+        return subscription;
+    }
+
+    private void sendMessage(String message) {
+        if (!message.isBlank()) {
+            chatService.postMessage(channelId, message);
+        }
+    }
+
+    private void receiveMessages(List<Message> incoming) {
+        getUI().ifPresent(ui -> ui.access(() -> {
+            receivedMessages.addAll(incoming);
+            messageList.setItems(receivedMessages.stream().map(this::createMessageListItem).toList());
+        }));
+    }
+
+    private MessageListItem createMessageListItem(Message message) {
+        var item = new MessageListItem(
+            message.message(), 
+            message.timestamp(), 
+            message.author()
+        );
+        // tag::snippet[]
+        item.setUserColorIndex(Math.abs(message.author().hashCode() % 7));
+        // end::snippet[]
+        item.addClassNames(LumoUtility.Margin.SMALL, LumoUtility.BorderRadius.MEDIUM);
+        if (message.author().equals(currentUserName)) {
+            item.addClassNames(LumoUtility.Background.CONTRAST_5); 
+        }
+        return item;
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        var subscription = subscribe();
+        addDetachListener(event -> subscription.dispose());
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, String channelId) {
+        this.channelId = channelId;
+        chatService.channel(channelId).ifPresentOrElse(
+                channel -> this.channelName = channel.name(),
+                () -> event.forwardTo(LobbyView.class)
+        );
+    }
+
+    @Override
+    public String getPageTitle() {
+        return channelName;
+    }
+}
+</source-info>
+private MessageListItem createMessageListItem(Message message) {
+    var item = new MessageListItem(
+        message.message(), 
+        message.timestamp(), 
+        message.author()
+    );
+    // tag::snippet[]
+    item.setUserColorIndex(Math.abs(message.author().hashCode() % 7));
+    // end::snippet[]
+    item.addClassNames(LumoUtility.Margin.SMALL, LumoUtility.BorderRadius.MEDIUM);
+    if (message.author().equals(currentUserName)) {
+        item.addClassNames(LumoUtility.Background.CONTRAST_5); 
     }
     return item;
 }
 ----
-<1> This is a quick and dirty way of turning the author's username into an integer between 0 and 6.
-<2> You will be referring to the `current-user` theme name in a CSS selector later.
 
-You can find more information about `MessageList` styling in the <<{articles}/components/message-list/styling,component documentation>>.
+== Tweak the message list
 
-You have now done all the changes needed on the Java side. Now it is time to move over to the CSS side. Start by creating a new file called `channel-view.css` in the `frontend/themes/chat-theme` directory, like this:
+If you look at the channel view right now, it has some extra whitespace around both the message list and the message input. This looks a bit strange and you are going to fix this now.
 
-.`channel-view.css`
-[source,css]
-----
-.channel-view vaadin-message { /* <1> */
-    margin: var(--lumo-space-s);
-}
-
-.channel-view vaadin-message[theme~="current-user"] { /* <2> */
-    border-radius: var(--lumo-border-radius-m);
-    background-color: var(--lumo-contrast-5pct);
-}
-----
-<1> This will add a small margin to every `MessageListItem` inside the `ChannelView`.
-<2> This will add a radius and a darker background to every `MessageListItem` inside `ChannelView` that has been written by the current user.
-
-Finally, you have to add `channel-view.css` to the theme. You do this by importing it into the `styles.css` file, like this:
+By default, the `MessageInput` component has a medium padding. In order to remove this default, you should add the following lines to the `styles.css` file:
 
 .`styles.css`
 [source,css]
 ----
-@import url('channel-view.css');
+vaadin-message-input {
+    padding: 0;
+}
 ----
 
-== Improve the look and feel of the lobby view
+Next, you should add a border to the message list. The easiest way of doing this is to use a Lumo utility class, like this:
 
-Right now, the lobby is just showing a list of channels. However, if you look at the [classname]`Channel` objects returned by [classname]`ChatService`, you can see that the last message posted to the channel is also provided, including its author, timestamp and the message text itself. You are now going to change the view so that this information is also visible.
+.`ChannelView.java`
+[source,java]
+----
+<source-info>
+package com.example.application.ui.views.channel;
 
-Once finished, the view is going to look like this:
+import com.example.application.chat.ChatService;
+import com.example.application.chat.Message;
+import com.example.application.ui.MainLayout;
+import com.example.application.ui.views.lobby.LobbyView;
+import com.example.application.util.LimitedSortedAppendOnlyList;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.messages.MessageInput;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import jakarta.annotation.security.PermitAll;
+import reactor.core.Disposable;
 
-image::images/styled-lobby-view.png[A web application with a listing of chat channels and an input field and button for creating new channels.]
+import java.util.Comparator;
+import java.util.List;
 
-In order to show all the channel information in a nice way, you are going to construct the following custom layout:
+@Route(value = "channel", layout = MainLayout.class)
+@PermitAll
+public class ChannelView extends VerticalLayout implements HasUrlParameter<String>, HasDynamicTitle {
+
+    private static final int HISTORY_SIZE = 20; // A small number to demonstrate the feature
+    private final ChatService chatService;
+    private final MessageList messageList;
+    private final LimitedSortedAppendOnlyList<Message> receivedMessages;
+    private final String currentUserName;
+    private String channelName;
+    private String channelId;
+
+    public ChannelView(ChatService chatService, 
+            AuthenticationContext authenticationContext) {
+        this.chatService = chatService;
+        this.currentUserName = authenticationContext.getPrincipalName().orElseThrow();
+        setSizeFull();
+
+        receivedMessages = new LimitedSortedAppendOnlyList<>(HISTORY_SIZE, Comparator.comparing(Message::sequenceNumber));
+
+        messageList = new MessageList();
+        // tag::snippet[]
+        messageList.addClassNames(LumoUtility.Border.ALL);
+        // end::snippet[]
+        messageList.setSizeFull();
+        add(messageList);
+
+        var messageInput = new MessageInput(event -> sendMessage(event.getValue()));
+        messageInput.setWidthFull();
+
+        add(messageInput);
+    }
+
+    private Disposable subscribe() {
+        var subscription = chatService
+                .liveMessages(channelId)
+                .subscribe(this::receiveMessages);
+        var lastSeenMessageId = receivedMessages.getLast().map(Message::messageId).orElse(null);
+        receiveMessages(chatService.messageHistory(channelId, HISTORY_SIZE, lastSeenMessageId));
+        return subscription;
+    }
+
+    private void sendMessage(String message) {
+        if (!message.isBlank()) {
+            chatService.postMessage(channelId, message);
+        }
+    }
+
+    private void receiveMessages(List<Message> incoming) {
+        getUI().ifPresent(ui -> ui.access(() -> {
+            receivedMessages.addAll(incoming);
+            messageList.setItems(receivedMessages.stream().map(this::createMessageListItem).toList());
+        }));
+    }
+
+    private MessageListItem createMessageListItem(Message message) {
+        var item = new MessageListItem(
+            message.message(), 
+            message.timestamp(), 
+            message.author()
+        );
+        item.setUserColorIndex(Math.abs(message.author().hashCode() % 7));
+        item.addClassNames(LumoUtility.Margin.SMALL, LumoUtility.BorderRadius.MEDIUM);
+        if (message.author().equals(currentUserName)) {
+            item.addClassNames(LumoUtility.Background.CONTRAST_5); 
+        }
+        return item;
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        var subscription = subscribe();
+        addDetachListener(event -> subscription.dispose());
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, String channelId) {
+        this.channelId = channelId;
+        chatService.channel(channelId).ifPresentOrElse(
+                channel -> this.channelName = channel.name(),
+                () -> event.forwardTo(LobbyView.class)
+        );
+    }
+
+    @Override
+    public String getPageTitle() {
+        return channelName;
+    }
+}
+</source-info>
+messageList = new MessageList();
+// tag::snippet[]
+messageList.addClassNames(LumoUtility.Border.ALL);
+// end::snippet[]
+messageList.setSizeFull();
+add(messageList);
+----
+
+You can now try the new channel view. Start up the application by running:
+
+[source,terminal]
+----
+./mvnw spring-boot:run
+----
+
+The channel view should look like this:
+
+image::images/styled-channel-view.png[A web application with a listing of chat messages and an input field for posting new messages.]
+
+== Expand channel information
+
+Right now, the lobby is just showing a list of channels. However, if you look at the [classname]`Channel` objects returned by [classname]`ChatService`, you can see that the last message posted to the channel is also provided, including its author, timestamp and the message text itself. In order to show all the channel information in a nice way, you are going to construct the following custom layout:
 
 image::images/channel-component.png[A schematic picture of an HTML layout with nexted div elements]
 
-* The outer div contains the channel's avatar and an inner div, called the `content-div`.
-* The `content-div` contains another div, called the `channel-div`, and the last message, if any.
-* The `channel-div` contains a link to the channel and the date of the last message, if any.
+* The `channel` div contains the channel's avatar and an inner div, called `content`.
+* The `content` div contains another div, called `name`, and a truncated version of the last message posted to the channel, if any.
+* The `name` div contains a link to the channel and the timestamp of the last message posted to the channel, if any.
 
-Making a layout like this in HTML is quite easy. However, Flow also allows you to do this in 100% Java (even though the resulting code is more verbose). Furtherore, you can use Lumo utility classes to style the entire layout.
+Making a layout like this in HTML is quite easy, but Flow also makes it possible to do it in 100% Java. You could even style it using Lumo utility classes, but that would quickly clutter the code. Therefore, in this tutorial, you are going to build the layout in Java but do the styling in CSS.
 
-You are now going to try out building an HTML layout in Java. In [classname]`LobbyView`, look up the [methodname]`createChannelComponent` method and replace it with the following behemoth: 
-
+.`LobbyView.java`
 [source,java]
 ----
-private Component createChannelComponent(Channel channel) { // <1>
-    var div = new Div();
-    div.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.MEDIUM, 
-        LumoUtility.Padding.MEDIUM, LumoUtility.BorderRadius.MEDIUM, 
-        "channel"); // <2>
+<source-info>
+package com.example.application.ui.views.lobby;
 
-    var avatar = new Avatar(channel.name());
-    avatar.setColorIndex(Math.abs(channel.id().hashCode() % 7)); // <3>
-    div.add(avatar);
+import com.example.application.chat.Channel;
+import com.example.application.chat.ChatService;
+import com.example.application.security.Roles;
+import com.example.application.ui.MainLayout;
+import com.example.application.ui.views.channel.ChannelView;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.virtuallist.VirtualList;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+import jakarta.annotation.security.PermitAll;
 
-    var contentDiv = new Div();
-    contentDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Flex.AUTO,
-        LumoUtility.FlexDirection.COLUMN, LumoUtility.LineHeight.XSMALL, 
-        LumoUtility.Gap.XSMALL);
-    div.add(contentDiv);
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
 
-    var channelDiv = new Div();
-    channelDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.AlignItems.BASELINE, 
-        LumoUtility.JustifyContent.START, LumoUtility.Gap.SMALL);
-    contentDiv.add(channelDiv);
+@Route(value = "", layout = MainLayout.class)
+@PageTitle("Lobby")
+@PermitAll
+public class LobbyView extends VerticalLayout {
 
-    var channelLink = new RouterLink(channel.name(), ChannelView.class, channel.id()); // <4>
-    channelLink.addClassNames(LumoUtility.FontSize.MEDIUM, LumoUtility.FontWeight.BOLD, 
-        LumoUtility.TextColor.BODY);
-    channelDiv.add(channelLink);
+    private final ChatService chatService;
+    private final VirtualList<Channel> channels;
+    private final TextField channelNameField;
+    private final Button addChannelButton;
 
-    if (channel.lastMessage() != null) {
-        var lastMessageTimestamp = new Div(formatInstant(channel.lastMessage().timestamp(), getLocale()));
-        lastMessageTimestamp.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
-        channelDiv.add(lastMessageTimestamp);
+    public LobbyView(ChatService chatService, AuthenticationContext authenticationContext) {
+        this.chatService = chatService;
+        setSizeFull();
+
+        channels = new VirtualList<>();
+        // tag::snippet[]
+        channels.addClassNames("channel-list");
+        // end::snippet[]
+        channels.setRenderer(new ComponentRenderer<>(this::createChannelComponent));
+        add(channels);
+        expand(channels);
+
+        channelNameField = new TextField();
+        channelNameField.setPlaceholder("New channel name");
+
+        addChannelButton = new Button("Add channel", event -> addChannel());
+        addChannelButton.setDisableOnClick(true);
+
+        if (authenticationContext.hasRole(Roles.ADMIN)) {
+            var toolbar = new HorizontalLayout(channelNameField,
+                    addChannelButton);
+            toolbar.setWidthFull();
+            toolbar.expand(channelNameField);
+            add(toolbar);
+        }
     }
 
-    var lastMessage = new Div();
-    lastMessage.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        refreshChannels();
+    }
+
+    private void addChannel() {
+        try {
+            var nameOfNewChannel = channelNameField.getValue();
+            if (!nameOfNewChannel.isBlank()) {
+                chatService.createChannel(nameOfNewChannel);
+                channelNameField.clear();
+                refreshChannels();
+            }
+        } finally {
+            addChannelButton.setEnabled(true);
+        }
+    }
+
+    private void refreshChannels() {
+        channels.setItems(chatService.channels());
+    }
+
+    private Component createChannelComponent(Channel channel) {
+        // tag::snippet[]
+        var channelComponent = new Div();
+        channelComponent.addClassNames("channel");
+
+        var avatar = new Avatar(channel.name());
+        avatar.setColorIndex(Math.abs(channel.id().hashCode() % 7));
+        channelComponent.add(avatar);
+
+        var contentDiv = new Div();
+        contentDiv.addClassNames("content");
+        channelComponent.add(contentDiv);
+
+        var channelName = new Div();
+        channelName.addClassNames("name");
+        contentDiv.add(channelName);
+
+        var channelLink = new RouterLink(channel.name(), ChannelView.class, channel.id());
+        channelName.add(channelLink);
+
+        if (channel.lastMessage() != null) {
+            var lastMessageTimestamp = new Span(formatInstant(channel.lastMessage().timestamp(), getLocale()));
+            lastMessageTimestamp.addClassNames("last-message-timestamp");
+            channelName.add(lastMessageTimestamp);
+        }
+
+        var lastMessage = new Span();
+        lastMessage.addClassNames("last-message");
+        contentDiv.add(lastMessage);
+        if (channel.lastMessage() != null) {
+            var author = new Span(channel.lastMessage().author());
+            author.addClassNames("author");
+            lastMessage.add(author, new Text(": " + truncateMessage(channel.lastMessage().message())));
+        } else {
+            lastMessage.setText("No messages yet");
+        }
+        return channelComponent;
+        // end::snippet[]
+    }
+
+    // tag::snippet[]
+    private String truncateMessage(String msg) {
+        return msg.length() > 50 ? msg.substring(0, 50) + "..." : msg;
+    }
+
+    private String formatInstant(Instant instant, Locale locale) {
+        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                .withLocale(locale)
+                .format(ZonedDateTime.ofInstant(instant, ZoneId.systemDefault()));
+    }
+    // end::snippet[]
+}
+</source-info>
+private Component createChannelComponent(Channel channel) {
+    // tag::snippet[]
+    var channelComponent = new Div();
+    channelComponent.addClassNames("channel");
+
+    var avatar = new Avatar(channel.name());
+    avatar.setColorIndex(Math.abs(channel.id().hashCode() % 7));
+    channelComponent.add(avatar);
+
+    var contentDiv = new Div();
+    contentDiv.addClassNames("content");
+    channelComponent.add(contentDiv);
+
+    var channelName = new Div();
+    channelName.addClassNames("name");
+    contentDiv.add(channelName);
+
+    var channelLink = new RouterLink(channel.name(), ChannelView.class, channel.id());
+    channelName.add(channelLink);
+
+    if (channel.lastMessage() != null) {
+        var lastMessageTimestamp = new Span(formatInstant(channel.lastMessage().timestamp(), getLocale()));
+        lastMessageTimestamp.addClassNames("last-message-timestamp");
+        channelName.add(lastMessageTimestamp);
+    }
+
+    var lastMessage = new Span();
+    lastMessage.addClassNames("last-message");
     contentDiv.add(lastMessage);
     if (channel.lastMessage() != null) {
         var author = new Span(channel.lastMessage().author());
-        author.addClassNames(LumoUtility.FontWeight.BOLD);
-        lastMessage.add(author, new Text(": " + truncateMessage(channel.lastMessage().message()))); // <5>
+        author.addClassNames("author");
+        lastMessage.add(author, new Text(": " + truncateMessage(channel.lastMessage().message())));
     } else {
         lastMessage.setText("No messages yet");
     }
-    return div;
-}
-----
-<1> Since this layout will only be used inside a single view, you are using composition inside a method to build it. If the layout was needed in multiple views, a better way would have been to turn it into a class of its own.
-<2> The `channel` CSS classname will be used later when you add the final touch using CSS.
-<3> You use the same trick here to turn the channel name into an integer between 0 and 6 as you did in [methodname]`ChannelView`.
-<4> The link to the channel is now embedded inside a layout instead of being returned directly.
-<5> Unless the documentation says otherwise, you do not have to worry about escaping special characters when building HTML using Flow's API - Flow will take care of that for you.
-
-*TODO Would it have made more sense to style this with semantic CSS? Or could it be left as an exercie to the reader and an example of a case where using utility classes makes the code difficult to read?*
-
-In order to make the code compile, you also have to add two helper methods: one method for truncating a message string and another for formatting an `Instant`. In this case, you can add these methods directly to [classname]`LobbyView` as they will only be used there. However, if they were to be needed in multiple views, a better way would have been to create a utility class and add them there.
-
-[source,java]
-----
-private static String truncateMessage(String msg) {
-    return msg.length() > 50 ? msg.substring(0, 50) + "..." : msg;
-}
-
-private static String formatInstant(Instant instant, Locale locale) {
-    return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-            .withLocale(locale)
-            .format(ZonedDateTime.ofInstant(instant, ZoneId.systemDefault()));
+    return channelComponent;
+    // end::snippet[]
 }
 ----
 
-You are now almost done with all the changes needed on the Java side. Before you can move over to the CSS side, you have to make one more addition to the constructor of [classname]`LobbyView`.
+Now, with the Java code in place, it is time to create the CSS styles. Create a new file called `channel-list.css` in the `frontend/themes/chat-theme` directory and copy the following styles into it:
 
-In order to be able to write proper CSS selectors, you have to add a semantic CSS classname to the top element of the view by adding this line:
-
-[source,java]
-----
-addClassName("lobby-view");
-----
-
-While you are at it, add a border around the channel list as well:
-
-[source,java]
-----
-channels.addClassNames(LumoUtility.Border.ALL, LumoUtility.Padding.SMALL);
-----
-
-Now it is time to move over to the CSS side to add a final touch: a hover effect for every channel in the list. 
-
-Start by creating a new file called `lobby-view.css` in the `frontend/themes/chat-theme` directory, like this:
-
-.`lobby-view.css`
+.`channel-list.css`
 [source,css]
 ----
-.lobby-view .channel:hover {
+.channel-list .channel {
+    display: flex;
+    gap: var(--lumo-space-m);
+    padding: var(--lumo-space-m);
+    border-radius: var(--lumo-border-radius-m);
+}
+
+.channel-list .channel .content {
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+    line-height: var(--lumo-line-height-xs);
+    gap: var(--lumo-space-xs);
+}
+
+.channel-list .channel .name {
+    display: flex;
+    align-items: baseline;
+    justify-content: start;
+    gap: var(--lumo-space-s);
+}
+
+.channel-list .channel .name a {
+    font-size: var(--lumo-font-size-m);
+    font-weight: bold;
+    color: var(--lumo-body-text-color);
+}
+
+.channel-list .channel .name .last-message-timestamp {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+}
+
+.channel-list .channel .last-message {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+}
+
+.channel-list .channel .last-message .author {
+    font-weight: bold;
+}
+
+.channel-list .channel:hover {
     background-color: var(--lumo-contrast-5pct);
 }
 ----
 
-Finally, you have to add `lobby-view.css` to the theme. You do this by importing it into the `styles.css` file, like this:
+Next, import the the CSS file into `styles.css`, like this:
 
 .`styles.css`
 [source,css]
 ----
-@import url('channel-view.css');
-@import url('lobby-view.css'); // <1>
+vaadin-message-input {
+    padding: 0;
+}
+
+/* tag::snippet[] */
+@import "channel-list.css";
+/* end::snippet[] */
 ----
-<1> This is the new line to add.
 
-== Try it out!
+== Tweak the channel list
 
-You are now ready to try out your new theme.
+Just as you tweaked the message list, there are two small additions you need to make to the channel list in order to make it look consistent with the rest of the application: add a border, and some padding between the border and the channels. The easiest way to do this is by using Lumo utility classes, like this:
 
-1. Start the application by running `./mvnw spring-boot:run`
-2. Open your browser at http://localhost:8080/ and login as `alice`
-3. Notice how the channel avatars have different colors
-4. Open another browser window in incognito mode and login as `bob`
-5. Navigate to the same channel in both windows
-6. Send some messages in both windows. Notice how the author avatars show up with different colors.
-7. Navigate back to the lobby view. Notice how the last message is visible in the channel list.
+.`LobbyView.java`
+[source,java]
+----
+<source-info>
+package com.example.application.ui.views.lobby;
+
+import com.example.application.chat.Channel;
+import com.example.application.chat.ChatService;
+import com.example.application.security.Roles;
+import com.example.application.ui.MainLayout;
+import com.example.application.ui.views.channel.ChannelView;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.virtuallist.VirtualList;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+// tag::snippet[]
+import com.vaadin.flow.theme.lumo.LumoUtility;
+// end::snippet[]
+import jakarta.annotation.security.PermitAll;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
+
+@Route(value = "", layout = MainLayout.class)
+@PageTitle("Lobby")
+@PermitAll
+public class LobbyView extends VerticalLayout {
+
+    private final ChatService chatService;
+    private final VirtualList<Channel> channels;
+    private final TextField channelNameField;
+    private final Button addChannelButton;
+
+    public LobbyView(ChatService chatService, AuthenticationContext authenticationContext) {
+        this.chatService = chatService;
+        setSizeFull();
+
+        channels = new VirtualList<>();
+        channels.addClassNames(
+        // tag::snippet[]
+            LumoUtility.Border.ALL, 
+            LumoUtility.Padding.SMALL,
+        // end::snippet[]
+            "channel-list"
+        );
+        channels.setRenderer(new ComponentRenderer<>(this::createChannelComponent));
+        add(channels);
+        expand(channels);
+
+        channelNameField = new TextField();
+        channelNameField.setPlaceholder("New channel name");
+
+        addChannelButton = new Button("Add channel", event -> addChannel());
+        addChannelButton.setDisableOnClick(true);
+
+        if (authenticationContext.hasRole(Roles.ADMIN)) {
+            var toolbar = new HorizontalLayout(channelNameField,
+                    addChannelButton);
+            toolbar.setWidthFull();
+            toolbar.expand(channelNameField);
+            add(toolbar);
+        }
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        refreshChannels();
+    }
+
+    private void addChannel() {
+        try {
+            var nameOfNewChannel = channelNameField.getValue();
+            if (!nameOfNewChannel.isBlank()) {
+                chatService.createChannel(nameOfNewChannel);
+                channelNameField.clear();
+                refreshChannels();
+            }
+        } finally {
+            addChannelButton.setEnabled(true);
+        }
+    }
+
+    private void refreshChannels() {
+        channels.setItems(chatService.channels());
+    }
+
+    private Component createChannelComponent(Channel channel) {
+        var channelComponent = new Div();
+        channelComponent.addClassNames("channel");
+
+        var avatar = new Avatar(channel.name());
+        avatar.setColorIndex(Math.abs(channel.id().hashCode() % 7));
+        channelComponent.add(avatar);
+
+        var contentDiv = new Div();
+        contentDiv.addClassNames("content");
+        channelComponent.add(contentDiv);
+
+        var channelName = new Div();
+        channelName.addClassNames("name");
+        contentDiv.add(channelName);
+
+        var channelLink = new RouterLink(channel.name(), ChannelView.class, channel.id());
+        channelName.add(channelLink);
+
+        if (channel.lastMessage() != null) {
+            var lastMessageTimestamp = new Span(formatInstant(channel.lastMessage().timestamp(), getLocale()));
+            lastMessageTimestamp.addClassNames("last-message-timestamp");
+            channelName.add(lastMessageTimestamp);
+        }
+
+        var lastMessage = new Span();
+        lastMessage.addClassNames("last-message");
+        contentDiv.add(lastMessage);
+        if (channel.lastMessage() != null) {
+            var author = new Span(channel.lastMessage().author());
+            author.addClassNames("author");
+            lastMessage.add(author, new Text(": " + truncateMessage(channel.lastMessage().message())));
+        } else {
+            lastMessage.setText("No messages yet");
+        }
+        return channelComponent;
+    }
+
+    private String truncateMessage(String msg) {
+        return msg.length() > 50 ? msg.substring(0, 50) + "..." : msg;
+    }
+
+    private String formatInstant(Instant instant, Locale locale) {
+        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                .withLocale(locale)
+                .format(ZonedDateTime.ofInstant(instant, ZoneId.systemDefault()));
+    }
+}
+</source-info>
+channels = new VirtualList<>();
+channels.addClassNames(
+// tag::snippet[]
+    LumoUtility.Border.ALL, 
+    LumoUtility.Padding.SMALL,
+// end::snippet[]
+    "channel-list"
+);
+channels.setRenderer(new ComponentRenderer<>(this::createChannelComponent));
+add(channels);
+----
+
+You can now try the new lobby view. Start up the application by running:
+
+[source,terminal]
+----
+./mvnw spring-boot:run
+----
+
+The lobby view should look like this:
+
+image::images/styled-lobby-view.png[A web application with a listing of chat channels and an input field and button for creating new channels.]
