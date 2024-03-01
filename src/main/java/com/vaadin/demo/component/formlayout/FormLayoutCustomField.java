@@ -38,14 +38,12 @@ public class FormLayoutCustomField extends Div {
             month.setItems(MONTHS);
             month.setPlaceholder("Month");
             // Set title for screen readers
-            month.getElement().executeJs(
-                    "this.focusElement.setAttribute('title', 'Month');");
+            month.setAriaLabel("Month");
             layout.add(month);
 
             year.setItems(YEARS);
             year.setPlaceholder("Year");
-            year.getElement().executeJs(
-                    "this.focusElement.setAttribute('title', 'Year');");
+            year.setAriaLabel("Year");
             layout.add(year);
 
             add(layout);

@@ -7,9 +7,9 @@ function Example() {
   return (
     <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
-      <Avatar name="Augusta Ada King"></Avatar>
+      <Avatar name="Augusta Ada King" />
 
-      <Avatar name="Augusta Ada King" abbr="AK"></Avatar>
+      <Avatar name="Augusta Ada King" abbr="AK" />
       {/* end::snippet[] */}
     </HorizontalLayout>
   );

@@ -15,7 +15,7 @@ function createFakeFiles() {
 }
 
 function Example() {
-  return <Upload files={createFakeFiles()}></Upload>;
+  return <Upload files={createFakeFiles()} />;
 }
 
 export default reactExample(Example); // hidden-source-line
