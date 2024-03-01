@@ -15,7 +15,7 @@ function Example() {
     <FormLayout responsiveSteps={responsiveSteps}>
       <TextField label="First name" />
       <TextField label="Last name" />
-      <TextField {...{ colspan: 2 }} label="Username" />
+      <TextField label="Username" data-colspan="2" />
       <PasswordField label="Password" />
       <PasswordField label="Confirm password" />
     </FormLayout>
