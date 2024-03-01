@@ -17,7 +17,7 @@ type PersonEnhanced = Person & { displayName: string };
 function nameRenderer(person: PersonEnhanced) {
   return (
     <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
-      <Avatar img={person.pictureUrl} name={person.displayName}></Avatar>
+      <Avatar img={person.pictureUrl} name={person.displayName} />
       <span> {person.displayName} </span>
     </HorizontalLayout>
   );
@@ -56,7 +56,7 @@ function Example() {
           );
         }}
       >
-        <Icon slot="prefix" icon="vaadin:search"></Icon>
+        <Icon slot="prefix" icon="vaadin:search" />
       </TextField>
 
       <Grid items={filteredItems}>
@@ -64,8 +64,8 @@ function Example() {
           {({ item }) => nameRenderer(item)}
         </GridColumn>
 
-        <GridColumn path="email"></GridColumn>
-        <GridColumn path="profession"></GridColumn>
+        <GridColumn path="email" />
+        <GridColumn path="profession" />
       </Grid>
     </VerticalLayout>
   );
