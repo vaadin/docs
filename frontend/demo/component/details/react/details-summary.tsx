@@ -47,7 +47,7 @@ function Example() {
       </DetailsSummary>
 
       <FormLayout responsiveSteps={responsiveSteps}>
-        <TextField label="Address" value="4027 Amber Lake Canyon" {...{ colspan: 2 }} />
+        <TextField label="Address" value="4027 Amber Lake Canyon" data-colspan="2" />
 
         <TextField label="ZIP code" required />
 
