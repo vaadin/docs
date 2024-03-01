@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/form-layout';
 import '@vaadin/form-layout/vaadin-form-item';
 import '@vaadin/select';
@@ -21,23 +21,11 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @query('#month-field')
-  private monthField!: Select;
-
-  @query('#year-field')
-  private yearField!: Select;
-
   @state()
   private months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
 
   @state()
   private years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
-
-  protected override firstUpdated() {
-    // Set title for screen readers
-    this.monthField.focusElement!.setAttribute('title', 'Month');
-    this.yearField.focusElement!.setAttribute('title', 'Year');
-  }
 
   render() {
     return html`
@@ -51,12 +39,12 @@ export class Example extends LitElement {
           >
             <vaadin-horizontal-layout theme="spacing-xs">
               <vaadin-select
-                id="month-field"
+                accessible-name="Month"
                 placeholder="Month"
                 .items="${this.months.map((month) => ({ label: month, value: month }))}"
               ></vaadin-select>
               <vaadin-select
-                id="year-field"
+                accessible-name="Year"
                 placeholder="Year"
                 .items="${this.years.map((year) => ({ label: year, value: year }))}"
               ></vaadin-select>

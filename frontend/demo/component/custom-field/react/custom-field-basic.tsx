@@ -44,9 +44,9 @@ function Example() {
       required
       {...field(model.enrollmentPeriod)}
     >
-      <DatePicker placeholder="Start date"></DatePicker>
+      <DatePicker accessibleName="Start date" placeholder="Start date" />
       &ndash;
-      <DatePicker placeholder="End date"></DatePicker>
+      <DatePicker accessibleName="End date" placeholder="End date" />
     </CustomField>
     // end::snippet[]
   );
