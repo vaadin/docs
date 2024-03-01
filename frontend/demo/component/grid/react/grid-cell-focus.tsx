@@ -22,7 +22,7 @@ function Example() {
     }
     const eventContext = gridRef.current.getEventContext(event);
     const section = eventContext.section ?? 'Not available';
-    const row = eventContext.index != null ? eventContext.index : 'Not available';
+    const row = eventContext.index ?? 'Not available';
     const column = eventContext.column?.path ?? 'Not available';
     const person = eventContext.item;
     const fullName =
