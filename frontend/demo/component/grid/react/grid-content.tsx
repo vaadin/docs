@@ -34,19 +34,14 @@ const statusRenderer = (person: Person) => (
 );
 
 function Example() {
-  const gridRef = React.useRef<any>(null);
   const [items, setItems] = useState<Person[]>([]);
+
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
-
-    // Workaround for https://github.com/vaadin/react-components/issues/129
-    setTimeout(() => {
-      gridRef.current?.recalculateColumnWidths();
-    }, 100);
   }, []);
 
   return (
-    <Grid items={items} ref={gridRef}>
+    <Grid items={items}>
       <GridSelectionColumn />
 
       <GridColumn header="Employee" flexGrow={0} autoWidth>
