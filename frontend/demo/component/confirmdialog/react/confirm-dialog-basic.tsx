@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
 import {
+  Button,
   ConfirmDialog,
   type ConfirmDialogOpenedChangedEvent,
-} from '@vaadin/react-components/ConfirmDialog.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+  HorizontalLayout,
+} from '@vaadin/react-components';
 import confirmDialogBasicStyles from './confirm-dialog-basic-styles';
 
 function Example() {
