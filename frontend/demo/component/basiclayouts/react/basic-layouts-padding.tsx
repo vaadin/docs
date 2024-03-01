@@ -1,11 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
-import type { RadioGroupValueChangedEvent } from '@vaadin/react-components/RadioGroup.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { RadioButton } from '@vaadin/react-components/RadioButton.js';
+import { Button, RadioButton, RadioGroup, VerticalLayout } from '@vaadin/react-components';
 
 function Example() {
   const [theme, setTheme] = useState('padding');
@@ -26,9 +22,7 @@ function Example() {
       <RadioGroup
         label="Padding"
         value={theme}
-        onValueChanged={(event: RadioGroupValueChangedEvent) => {
-          setTheme(event.detail.value);
-        }}
+        onValueChanged={(event) => setTheme(event.detail.value)}
       >
         <RadioButton value="padding" label="Enabled" />
         <RadioButton value="" label="Disabled" />

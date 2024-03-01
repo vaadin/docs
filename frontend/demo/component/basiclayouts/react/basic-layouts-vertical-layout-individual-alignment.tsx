@@ -1,8 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { Button, VerticalLayout } from '@vaadin/react-components';
 
 function Example() {
   return (

@@ -1,10 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { RadioButton } from '@vaadin/react-components/RadioButton.js';
-import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Button, HorizontalLayout, RadioButton, RadioGroup } from '@vaadin/react-components';
 
 function Example() {
   const [themeVariant, setThemeVariant] = useState('spacing-xl');

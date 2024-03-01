@@ -1,10 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
-import { RadioButton } from '@vaadin/react-components/RadioButton.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Button, HorizontalLayout, RadioButton, RadioGroup } from '@vaadin/react-components';
 
 function Example() {
   // tag::snippet[]
@@ -21,9 +18,7 @@ function Example() {
       <RadioGroup
         label="Spacing"
         value={theme}
-        onValueChanged={(event) => {
-          setTheme(event.detail.value);
-        }}
+        onValueChanged={(event) => setTheme(event.detail.value)}
       >
         <RadioButton value="spacing" label="Enabled" />
         <RadioButton value="" label="Disabled" />
