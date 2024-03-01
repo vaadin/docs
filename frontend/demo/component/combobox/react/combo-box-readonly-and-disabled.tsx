@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { ComboBox } from '@vaadin/react-components/ComboBox.js';
+import { ComboBox, HorizontalLayout } from '@vaadin/react-components';
 
 function Example() {
   return (

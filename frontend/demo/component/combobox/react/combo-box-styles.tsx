@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { ComboBox } from '@vaadin/react-components/ComboBox.js';
+import { ComboBox } from '@vaadin/react-components';
 
 function Example() {
   return (
