@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState, useRef } from 'react';
-import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
+import React, { useEffect, useState } from 'react';
+import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -8,21 +8,13 @@ import { Button } from '@vaadin/react-components/Button.js';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
-  const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
-
-    // Workaround for https://github.com/vaadin/react-components/issues/129
-    setTimeout(() => {
-      gridRef.current?.recalculateColumnWidths();
-      gridRef.current?.scrollToIndex(1);
-      gridRef.current?.scrollToIndex(0);
-    }, 100);
   }, []);
 
   return (
-    <Grid items={items} ref={gridRef}>
+    <Grid items={items}>
       {/* tag::snippet1[] */}
       <GridColumn frozen header="Name" autoWidth flexGrow={0}>
         {({ item: person }) => (
