@@ -27,7 +27,7 @@ function Example() {
   return (
     // tag::snippet[]
     <AppLayout>
-      <DrawerToggle slot="navbar"></DrawerToggle>
+      <DrawerToggle slot="navbar" />
       <h1 slot="navbar" style={h1Style}>
         MyApp
       </h1>

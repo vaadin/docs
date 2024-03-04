@@ -85,11 +85,11 @@ export class CrudMockService<T extends AbstractEntity> implements CrudService<T>
    */
   list(pageable: Pageable, filter: FilterUnion | undefined): Promise<Array<T>> {
     const filtered = this.items.filter((item) => !filter || applyFilter(item, filter));
-    pageable.sort.orders.forEach((order) => {
+    pageable.sort!.orders!.forEach((order) => {
       if (order) {
         filtered.sort((a, b) => {
-          const aValue = getPropertyValue(a, order.property) ?? '';
-          const bValue = getPropertyValue(b, order.property) ?? '';
+          const aValue = getPropertyValue(a, order.property!) ?? '';
+          const bValue = getPropertyValue(b, order.property!) ?? '';
           const matchers = compare(aValue.toString(), bValue.toString());
 
           if (order.direction === 'ASC') {

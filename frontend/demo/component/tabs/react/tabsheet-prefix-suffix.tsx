@@ -12,7 +12,7 @@ function Example() {
       <Button slot="prefix">Close all</Button>
 
       <Button slot="suffix" theme="icon" aria-label="Add tab">
-        <Icon icon="vaadin:plus"></Icon>
+        <Icon icon="vaadin:plus" />
       </Button>
 
       <TabSheetTab label="Dashboard">
