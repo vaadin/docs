@@ -6,11 +6,10 @@ order: 20
 
 = [since:com.vaadin:vaadin@V24.4]#Using React Components in Flow#
 
-https://reactjs.org/[React] is a popular JS-based frontend UI library with a wide adoption and a lot of components available.
-
-This page explains how to integrate existing React components with Flow by using an intermediate adapter Web Component, and then using it in your Java application.
+https://reactjs.org/[React] is a popular JS-based frontend UI library with a wide adoption and a lot of components available. This documentation page explains how to integrate existing React components with Flow by using an intermediate adapter Web Component, and then using it in Java applications.
 
 This integration involves two parts: creating a Java class for the server-side adapter component; and a client-side adapter counterpart with TypeScript and React. As an example, the https://omgovich.github.io/react-colorful/[React Colorful] color picker component will be used.
+
 
 [[server-side]]
 == Server-Side Adapter Java Component
@@ -21,31 +20,29 @@ For the server-side part of the integration, create a Java class that extends fr
 ----
 include::../../../src/main/java/com/vaadin/demo/flow/integration/react/RgbaColorPicker.java[tags=annotations]
 ----
-<1> Since this will integrate a third-party React component, the [annotationname]`@NpmPackage` annotation was added to get it installed from npm.
+<1> Since this will integrate a third-party React component, the [annotationname]`@NpmPackage` annotation is added to get it installed from npm.
 <2> The [annotationname]`@Tag` annotation defines the DOM element name of the adapter Web Component (see below).
-<3> The client-side part of the integration, the adapter Web Component, is yet to be defined and implemented in TypeScript. Therefore, you'll need a separate file for it. Although this file will be created later in this guide, the [annotationname]`@JsModule` annotation is added here to import it.
+<3> The client-side part of the integration (i.e., the adapter Web Component) is yet to be defined and implemented in TypeScript. Therefore, you'll need a separate file for it. Although this file will be created later, the [annotationname]`@JsModule` annotation is added here to import it.
 
 
-=== Synchronising State between Java and React
+=== Java and React States Synchronized
 
-The Web Component adapter allows the state to be sent from Java to React, and back by using named properties and events in the intermediate Web Component. On the server side, the `ReactAdapterComponent` class provides the following APIs for synchronising the state with the adapter Web Component:
+The Web Component adapter allows the state to be sent from Java to React and back by using named properties and events in the intermediate Web Component. On the server side, the `ReactAdapterComponent` class provides the following APIs for synchronizing the state with the adapter Web Component:
 
-- [methodname]`setState(String, T)` method is for sending the state from the server.
-- [methodname]`getState(String, Class<T>)` method is used for retrieving the current value from the client.
-- [methodname]`addStateChangeListener(String, Class<T>, Consumer<T>)` is for adding a server-side listener for state changes in the client.
+- [methodname]`setState(String, T)` method is for sending the state from the server;
+- [methodname]`getState(String, Class<T>)` method is used for retrieving the current value from the client; and
+- [methodname]`addStateChangeListener(String, Class<T>, Consumer<T>)` adds a server-side listener for state changes in the client.
 
-You can use these methods to implement Java component property getters and setters, and event APIs. The example here is using the synchronized state for the [methodname]`getColor()` and [methodname]`setColor(RgbaColor)` accessor methods:
+You can use these methods to implement Java component property getters and setters, and event APIs. The example here uses the synchronized state for the [methodname]`getColor()` and [methodname]`setColor(RgbaColor)` accessor methods:
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/flow/integration/react/RgbaColorPicker.java[tags=accessors]
 ----
 
-[NOTE]
 .Setting Initial Value
-====
+[NOTE]
 Call `setState` from the Java constructor to ensure the state is initialized from Java. Doing so enables [annotationname]`@PreserveOnRefresh` to work correctly.
-====
 
 Next, invoke [methodname]`setColor(RgbaColor)` from the constructor to define the initial state:
 
@@ -54,12 +51,13 @@ Next, invoke [methodname]`setColor(RgbaColor)` from the constructor to define th
 include::{root}/src/main/java/com/vaadin/demo/flow/integration/react/RgbaColorPicker.java[tags=constructor]
 ----
 
-Additionally, add the [methodname]`addColorChangeListener(Consumer<T>)` state change callback:
+Also, add the [methodname]`addColorChangeListener(Consumer<T>)` state change callback:
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/flow/integration/react/RgbaColorPicker.java[tags=event]
 ----
+
 
 === Using Non-Primitive Types
 
@@ -96,17 +94,17 @@ The following example uses `ReactAdapterElement` to create the `<rgba-color-pick
 ----
 include::{root}/frontend/demo/flow/integration/react/rgba-color-picker.tsx
 ----
-<1> The main part of the Web Component is the [methodname]`render(RenderHooks)` callback, which defines the rendering using React JSX tags. You could also define state and events there using the APIs provided with the `hooks` argument.
-<2> This example calls `hooks.useState<RgbaColor>("color")` to define that the `color` property of the adapter Web Component is going to be used for synchronising the state with the server.
+<1> The main part of the Web Component is the [methodname]`render(RenderHooks)` callback, which defines the rendering using React JSX tags. You could also define state and events using the APIs provided with the `hooks` argument.
+<2> This example calls `hooks.useState<RgbaColor>("color")` to define that the `color` property of the adapter Web Component is going to be used for synchronizing the state with the server.
 <3> The JSX rendering uses the adapter state (i.e., `color` and `setColor`) with the `<RgbaColorPicker>` React component, following the third-party component's API.
 <4> As usual with Web Components, the JS class is registered for its DOM element name using `CustomElements.define()` standard web API.
 
 
 === RenderHooks APIs
 
-The `RenderHooks` render callback argument provides with the following methods:
+The `RenderHooks` render callback argument provides the following methods:
 
-- [methodname]`useState<T>(string)` method defines and uses a named state JS property of the adapter Web Component.
+- [methodname]`useState<T>(string)` method defines and uses a named state JS property of the adapter Web Component; and 
 - [methodname]`useCustomEvent<T | undefined>(string, CustomEventInit<T>)` method returns a simple to use callback that dispatches a Custom Event with the given name on the adapter Web Component. When the user action is not related with a state change, you could use this hook and subscribe to this event in Java.
 
 ++++
