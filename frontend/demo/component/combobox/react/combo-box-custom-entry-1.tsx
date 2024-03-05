@@ -12,7 +12,7 @@ function Example() {
       label="Browser"
       helperText="Select or type a browser"
       items={items}
-    ></ComboBox>
+    />
     // end::snippet[]
   );
 }

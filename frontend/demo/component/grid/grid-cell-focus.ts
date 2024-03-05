@@ -47,7 +47,7 @@ export class Example extends LitElement {
         @cell-focus="${(e: GridCellFocusEvent<Person>) => {
           const eventContext = this.grid.getEventContext(e);
           const section = eventContext.section ?? 'Not available';
-          const row = eventContext.index != null ? eventContext.index : 'Not available';
+          const row = eventContext.index ?? 'Not available';
           const column = eventContext.column?.path ?? 'Not available';
           const person = eventContext.item;
           const fullName =
