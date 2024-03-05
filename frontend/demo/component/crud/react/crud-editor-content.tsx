@@ -1,10 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Crud, crudPath } from '@vaadin/react-components/Crud.js';
-import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { EmailField } from '@vaadin/react-components/EmailField.js';
-import { ComboBox } from '@vaadin/react-components/ComboBox.js';
+import {
+  ComboBox,
+  Crud,
+  crudPath,
+  EmailField,
+  FormLayout,
+  type FormLayoutResponsiveStep,
+  TextField,
+} from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 

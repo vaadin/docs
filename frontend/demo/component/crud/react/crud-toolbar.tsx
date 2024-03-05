@@ -1,9 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { Crud } from '@vaadin/react-components/Crud.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
+import { Button, Crud, HorizontalLayout, Icon } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import '@vaadin/icons';

@@ -1,14 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Crud } from '@vaadin/react-components/Crud.js';
-import { Grid } from '@vaadin/react-components/Grid.js';
-import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { CrudEditColumn } from '@vaadin/react-components/CrudEditColumn.js';
+import { Crud, CrudEditColumn, Grid, GridColumn } from '@vaadin/react-components';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
+
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
   }, []);
