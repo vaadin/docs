@@ -4,12 +4,28 @@ description: Using VaadinServiceInitListener to configure RequestHandler, IndexH
 order: 100
 ---
 
-
 = Service Init Listener
 
-[classname]`VaadinServiceInitListener` can be used to configure [classname]`RequestHandler`, [classname]`IndexHtmlRequestListener` and <<dependency-filter#,DependencyFilter>> objects. You can also use it to <<{articles}/flow/routing/dynamic#application.startup,dynamically register routes>> during application startup, and to <<{articles}/flow/advanced/session-and-ui-init-listener#, register session and UI listeners>>.
+The [classname]`ServiceInitEvent` is fired when your Vaadin application starts. It is a good place to configure [classname]`RequestHandler`, [classname]`IndexHtmlRequestListener` and <<dependency-filter#,DependencyFilter>> objects. You can also use it to <<{articles}/flow/routing/dynamic#application.startup,dynamically register routes>> during application startup, and to <<{articles}/flow/advanced/session-and-ui-init-listener#, register session and UI listeners>>.
 
-The listener gets a [classname]`ServiceInitEvent`, which is sent when a Vaadin service is initialized.
+In Spring and CDI apps the [classname]`ServiceInitEvent` is fired as applications event, so it is enought to annotate your bean method accepting [classname]`ServiceInitEvent` as a parameter with https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/event/EventListener.html[@EventListener] (Spring) or https://jakarta.ee/specifications/cdi/4.0/apidocs/jakarta.cdi/jakarta/enterprise/event/observes[@Observes] (CDI) annotation.
+
+[source,java]
+----
+@Component
+public class MyBean {
+
+    @EventListener
+    public void logSessionInits(ServiceInitEvent event) {
+        event.getSource().addSessionInitListener(
+                sessionInitEvent -> LoggerFactory.getLogger(getClass())
+                        .info("A new Session has been initialized!"));
+    }
+
+}
+----
+
+Alternatively you can implement [classname]`VaadinServiceInitListener` interface and register it.
 
 [source,java]
 ----
@@ -37,7 +53,8 @@ public class ApplicationServiceInitListener
 }
 ----
 
-In a Spring Boot project, it's sufficient to register this listener by adding the `@Component` annotation on the class.
+In Spring and CDI project, all beans implementing the interface are automatically registered.
+
 In plain Java projects, the listener should be registered as a provider via the Java Service Provider Interface (SPI) loading facility.
 To do this, you should create the [filename]`META-INF/services` resource directory and a provider configuration file with the name [filename]`com.vaadin.flow.server.VaadinServiceInitListener`.
 This is a text file and should contain the fully qualified name of the [classname]`ApplicationServiceInitListener` class on its own line.
