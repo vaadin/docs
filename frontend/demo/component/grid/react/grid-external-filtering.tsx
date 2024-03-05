@@ -17,7 +17,7 @@ type PersonEnhanced = Person & { displayName: string };
 function nameRenderer(person: PersonEnhanced) {
   return (
     <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
-      <Avatar img={person.pictureUrl} name={person.displayName}></Avatar>
+      <Avatar img={person.pictureUrl} name={person.displayName} />
       <span> {person.displayName} </span>
     </HorizontalLayout>
   );
@@ -39,37 +39,35 @@ function Example() {
   }, []);
 
   return (
-    <>
-      <VerticalLayout theme="spacing">
-        <TextField
-          placeholder="Search"
-          style={{ width: '50%' }}
-          onValueChanged={(e) => {
-            const searchTerm = (e.detail.value || '').trim().toLowerCase();
-            setFilteredItems(
-              items.filter(
-                ({ displayName, email, profession }) =>
-                  !searchTerm ||
-                  displayName.toLowerCase().includes(searchTerm) ||
-                  email.toLowerCase().includes(searchTerm) ||
-                  profession.toLowerCase().includes(searchTerm)
-              )
-            );
-          }}
-        >
-          <Icon slot="prefix" icon="vaadin:search"></Icon>
-        </TextField>
+    <VerticalLayout theme="spacing">
+      <TextField
+        placeholder="Search"
+        style={{ width: '50%' }}
+        onValueChanged={(e) => {
+          const searchTerm = (e.detail.value || '').trim().toLowerCase();
+          setFilteredItems(
+            items.filter(
+              ({ displayName, email, profession }) =>
+                !searchTerm ||
+                displayName.toLowerCase().includes(searchTerm) ||
+                email.toLowerCase().includes(searchTerm) ||
+                profession.toLowerCase().includes(searchTerm)
+            )
+          );
+        }}
+      >
+        <Icon slot="prefix" icon="vaadin:search" />
+      </TextField>
 
-        <Grid items={filteredItems}>
-          <GridColumn header="Name" flexGrow={0} width="230px">
-            {({ item }) => nameRenderer(item)}
-          </GridColumn>
+      <Grid items={filteredItems}>
+        <GridColumn header="Name" flexGrow={0} width="230px">
+          {({ item }) => nameRenderer(item)}
+        </GridColumn>
 
-          <GridColumn path="email"></GridColumn>
-          <GridColumn path="profession"></GridColumn>
-        </Grid>
-      </VerticalLayout>
-    </>
+        <GridColumn path="email" />
+        <GridColumn path="profession" />
+      </Grid>
+    </VerticalLayout>
   );
 }
 

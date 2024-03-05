@@ -61,7 +61,9 @@ export class IconsetGenerator extends LitElement {
     }
 
     .drop:focus-within {
-      box-shadow: 0 0 0 2px var(--docs-surface-color-2), 0 0 0 4px var(--docs-link-color);
+      box-shadow:
+        0 0 0 2px var(--docs-surface-color-2),
+        0 0 0 4px var(--docs-link-color);
     }
 
     .drop:hover,

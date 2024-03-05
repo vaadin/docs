@@ -1,13 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/custom-field';
 import '@vaadin/horizontal-layout';
 import '@vaadin/select';
 import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { Select } from '@vaadin/select';
-import type { TextField } from '@vaadin/text-field';
 
 @customElement('custom-field-size-variants')
 export class Example extends LitElement {
@@ -17,12 +15,6 @@ export class Example extends LitElement {
     applyTheme(root);
     return root;
   }
-
-  @query('#amount')
-  private amount!: TextField;
-
-  @query('#currency')
-  private currency!: Select;
 
   @state()
   private currencies = [
@@ -35,20 +27,14 @@ export class Example extends LitElement {
     { label: 'USD', value: 'usd' },
   ];
 
-  protected override firstUpdated() {
-    // Set title for screen readers
-    this.amount.focusElement!.setAttribute('title', 'Amount');
-    this.currency.focusElement!.setAttribute('title', 'Currency');
-  }
-
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-custom-field label="Price" theme="small">
         <vaadin-horizontal-layout theme="spacing-s">
-          <vaadin-text-field id="amount" theme="small"></vaadin-text-field>
+          <vaadin-text-field accessible-name="Amount" theme="small"></vaadin-text-field>
           <vaadin-select
-            id="currency"
+            accessible-name="Currency"
             .items="${this.currencies}"
             theme="small"
             style="width: 6em;"

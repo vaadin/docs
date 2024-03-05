@@ -41,7 +41,7 @@ function Example() {
               style={{ padding: 'var(--lumo-space-xs)' }}
               aria-label="Upcoming appointment"
               slot="suffix"
-            ></Icon>
+            />
           </SideNavItem>
         </SideNav>
         {/* end::snippet[] */}

@@ -49,10 +49,7 @@ function Example() {
     >
       <GridColumn header="Image" flexGrow={0} autoWidth>
         {({ item: person }) => (
-          <Avatar
-            img={person.pictureUrl}
-            name={`${person.firstName} ${person.lastName}`}
-          />
+          <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
         )}
       </GridColumn>
 
