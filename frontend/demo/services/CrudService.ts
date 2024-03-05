@@ -1,7 +1,8 @@
-import FilterUnion from 'Frontend/generated/com/vaadin/hilla/crud/filter/FilterUnion';
+import type FilterUnion from 'Frontend/generated/com/vaadin/hilla/crud/filter/FilterUnion';
 import Matcher from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter/Matcher';
-import Pageable from 'Frontend/generated/com/vaadin/hilla/mappedtypes/Pageable';
-import { CrudService } from '@vaadin/hilla-react-crud';
+import type Pageable from 'Frontend/generated/com/vaadin/hilla/mappedtypes/Pageable';
+import type { CrudService } from '@vaadin/hilla-react-crud';
+import Direction from 'Frontend/generated/org/springframework/data/domain/Sort/Direction';
 
 type AbstractEntity = { id?: any };
 
@@ -12,7 +13,7 @@ function getPropertyValue(item: any, propertyId: string): any {
   const parts = propertyId.split('.');
   let value = item;
   parts.forEach((part) => {
-    value = value && value[part];
+    value = value?.[part];
   });
   return value;
 }
@@ -59,18 +60,13 @@ function compare(val1: string, val2: string): Matcher[] {
  */
 function applyFilter<T>(item: T, filter: FilterUnion): boolean {
   if (filter['@type'] === 'and') {
-    return filter.children.every((child) => {
-      return applyFilter(item, child as FilterUnion);
-    });
+    return filter.children.every((child) => applyFilter(item, child as FilterUnion));
   } else if (filter['@type'] === 'or') {
-    return filter.children.some((child) => {
-      return applyFilter(item, child as FilterUnion);
-    });
-  } else {
-    const propertyValue = getPropertyValue(item, filter.propertyId) ?? '';
-    const matchers = compare(propertyValue.toString(), filter.filterValue);
-    return matchers.includes(filter.matcher);
+    return filter.children.some((child) => applyFilter(item, child as FilterUnion));
   }
+  const propertyValue = getPropertyValue(item, filter.propertyId) ?? '';
+  const matchers = compare(propertyValue.toString(), filter.filterValue);
+  return matchers.includes(filter.matcher);
 }
 
 export class CrudMockService<T extends AbstractEntity> implements CrudService<T> {
@@ -83,32 +79,29 @@ export class CrudMockService<T extends AbstractEntity> implements CrudService<T>
   /**
    * List all items that match the given filter and pageable, like in Spring Data.
    */
-  list(pageable: Pageable, filter: FilterUnion | undefined): Promise<Array<T>> {
+  async list(pageable: Pageable, filter: FilterUnion | undefined): Promise<T[]> {
     const filtered = this.items.filter((item) => !filter || applyFilter(item, filter));
-    pageable.sort!.orders!.forEach((order) => {
+    pageable.sort.orders.forEach((order) => {
       if (order) {
         filtered.sort((a, b) => {
-          const aValue = getPropertyValue(a, order.property!) ?? '';
-          const bValue = getPropertyValue(b, order.property!) ?? '';
+          const aValue = getPropertyValue(a, order.property) ?? '';
+          const bValue = getPropertyValue(b, order.property) ?? '';
           const matchers = compare(aValue.toString(), bValue.toString());
 
-          if (order.direction === 'ASC') {
+          if (order.direction === Direction.ASC) {
             if (matchers.includes(Matcher.GREATER_THAN)) {
               return 1;
             } else if (matchers.includes(Matcher.LESS_THAN)) {
               return -1;
-            } else {
-              return 0;
             }
-          } else {
-            if (matchers.includes(Matcher.GREATER_THAN)) {
-              return -1;
-            } else if (matchers.includes(Matcher.LESS_THAN)) {
-              return 1;
-            } else {
-              return 0;
-            }
+            return 0;
           }
+          if (matchers.includes(Matcher.GREATER_THAN)) {
+            return -1;
+          } else if (matchers.includes(Matcher.LESS_THAN)) {
+            return 1;
+          }
+          return 0;
         });
       }
     });
@@ -118,20 +111,20 @@ export class CrudMockService<T extends AbstractEntity> implements CrudService<T>
     return Promise.resolve(filtered.slice(start, end));
   }
 
-  save(item: T): Promise<T> {
+  async save(item: T): Promise<T> {
     const existingIndex = this.items.findIndex((i) => i.id === item.id);
     if (existingIndex >= 0) {
       this.items[existingIndex] = item;
     } else {
       this.items.push({
         ...item,
-        id: this.items.map((item) => item.id).reduce((a, b) => Math.max(a, b), 0) + 1,
+        id: this.items.map((it) => it.id).reduce((a, b) => Math.max(a, b), 0) + 1,
       });
     }
     return Promise.resolve(item);
   }
 
-  delete(id: any): Promise<void> {
+  async delete(id: any): Promise<void> {
     const existingIndex = this.items.findIndex((i) => i.id === id);
     if (existingIndex >= 0) {
       this.items.splice(existingIndex, 1);
