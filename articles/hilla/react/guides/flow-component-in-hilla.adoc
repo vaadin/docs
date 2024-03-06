@@ -73,21 +73,23 @@ export default function HillaView() {
 }
 ----
 
-When a component needs attributes or other custom parts in `React.createElement`, instead of importing `createWebComponent`, import `loadComponentScript` and create the element in the function.
+=== Using Attributes
 
-This can be necessary when the [classname]`WebComponent` exposes properties to the client.
+Adding attributes for the element can be done by giving a [interface]`Properties` object with `string` value pairs to the [method]`createWebComponent`.
+The [interface]`Properties` is defined as `[key: string]: string;`.
+
+This can be used when the [classname]`WebComponent` exposes properties to the client.
 
 .Custom Properties for Flow WebComponent
 [source,typescriptjsx]
 ----
 import { VerticalLayout } from "@vaadin/react-components/VerticalLayout";
-import { loadComponentScript } from "Frontend/generated/flow/Flow";
+import { createWebComponent } from "Frontend/generated/flow/Flow";
 import React from "react";
 
 function MyFlowComponent() {
-  loadComponentScript("my-flow-component");
   // Create element with property hellomsg
-  return React.createElement("my-flow-component", {
+  return createWebComponent("my-flow-component", {
     hellomsg: 'Hi from the client!'
   });
 }
@@ -103,6 +105,42 @@ export default function HillaView() {
   );
 }
 ----
+
+The properties can also be linked to the element attributes using a custom properties type:
+
+.Custom Properties With Attribute Link
+[source,typescriptjsx]
+----
+import { VerticalLayout } from "@vaadin/react-components/VerticalLayout";
+import { createWebComponent } from "Frontend/generated/flow/Flow";
+import React from "react";
+
+type MyProperties = {
+  hellomsg: string
+}
+
+function MyFlowComponent(props: MyProperties) {
+  // Create element with property hellomsg
+  return createWebComponent("my-flow-component", {
+    hellomsg: props.hellomsg
+  });
+}
+
+export default function HillaView() {
+  return (
+    <>
+      <VerticalLayout className={'centered-content'}>
+        <h3>Hilla View</h3>
+        <MyFlowComponent hellomsg={'Hi from the client!'}/>
+      </VerticalLayout>
+    </>
+  );
+}
+----
+
+This way the changing of the attribute will also update the [classname]`WebComponent` property value.
+
+The corresponding server-side code for the attribute component is made as following sample shows.
 
 .WebComponent with Exposed Properties
 [source,java]
@@ -143,6 +181,41 @@ public class CustomComponent extends Div {
         this.helloMessage = helloMessage;
 
     }
+}
+----
+
+=== Onload Event For WebComponent
+
+It is possible to listen to the `onload` event for the [classname]`WebComponent` script by giving a callback to the [methodname]`createWebComponent` as the 3rd parameter.
+
+[source,typescriptjsx]
+----
+import { VerticalLayout } from "@vaadin/react-components/VerticalLayout";
+import { createWebComponent } from "Frontend/generated/flow/Flow";
+import React from "react";
+
+type MyProperties = {
+  hellomsg: string
+}
+
+function MyFlowComponent(props: MyProperties) {
+  // Create element with property hellomsg
+  return createWebComponent("my-flow-component",
+          undefined,
+          () => {
+            console.log("Component script loaded!");
+          });
+}
+
+export default function HillaView() {
+  return (
+    <>
+      <VerticalLayout className={'centered-content'}>
+        <h3>Hilla View</h3>
+        <MyFlowComponent hellomsg={'Hi from the client!'}/>
+      </VerticalLayout>
+    </>
+  );
 }
 ----
 
