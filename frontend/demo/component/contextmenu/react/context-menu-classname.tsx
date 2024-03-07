@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
+import { Button, ContextMenu, type ContextMenuItem } from '@vaadin/react-components';
 
 function Example() {
   // tag::snippet[]

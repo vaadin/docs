@@ -1,8 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
-import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
-import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
+import { ContextMenu, Grid, GridColumn, type GridElement } from '@vaadin/react-components';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 

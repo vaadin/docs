@@ -1,9 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Grid } from '@vaadin/react-components/Grid.js';
-import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
-import { MenuBar } from '@vaadin/react-components/MenuBar.js';
+import { ContextMenu, Grid, GridColumn, MenuBar } from '@vaadin/react-components';
 
 interface FileItem {
   name: string;

@@ -1,14 +1,18 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
-import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
-import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
-import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { Avatar } from '@vaadin/react-components/Avatar.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import {
+  Avatar,
+  ContextMenu,
+  type ContextMenuItem,
+  Grid,
+  GridColumn,
+  type GridElement,
+  HorizontalLayout,
+  Icon,
+  VerticalLayout,
+} from '@vaadin/react-components';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function Item({ person }: { person: Person }) {

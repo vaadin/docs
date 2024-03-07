@@ -1,10 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
-import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
-import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
+import { ContextMenu, Grid, GridColumn, type GridElement } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 
 function Example() {
   const [gridItems, setGridItems] = useState<Person[]>([]);
