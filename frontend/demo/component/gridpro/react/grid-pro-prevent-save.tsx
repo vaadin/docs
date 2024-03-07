@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GridPro, type GridProItemPropertyChangedEvent } from '@vaadin/react-components/GridPro.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { Notification } from '@vaadin/notification';
@@ -7,9 +7,9 @@ import { GridProEditColumn } from '@vaadin/react-components/GridProEditColumn.js
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
-  const [items, setItems] = React.useState<Person[]>([]);
+  const [items, setItems] = useState<Person[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
