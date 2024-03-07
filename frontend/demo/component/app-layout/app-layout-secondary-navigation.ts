@@ -11,7 +11,7 @@ import '@vaadin/side-nav';
 import '@vaadin/vertical-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
-import { patchAppLayoutNavigation } from './app-layout-helper';
+import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source-line
 
 @customElement('app-layout-secondary-navigation')
 export class Example extends LitElement {
@@ -35,8 +35,7 @@ export class Example extends LitElement {
     return root;
   }
 
-  /* prettier-ignore */ protected firstUpdated() {
-    // hidden-source-line
+  /* prettier-ignore */ protected firstUpdated() { // hidden-source-line
     patchSideNavNavigation(this.shadowRoot!.querySelector('vaadin-side-nav')!); // hidden-source-line
     patchAppLayoutNavigation(this.shadowRoot!.querySelector('#navigation')!); // hidden-source-line
   } // hidden-source-line
