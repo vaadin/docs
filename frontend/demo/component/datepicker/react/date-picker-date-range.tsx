@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { DatePicker } from '@vaadin/react-components/DatePicker.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { DatePicker, HorizontalLayout } from '@vaadin/react-components';
 
 function Example() {
   const [departureDate, setDepartureDate] = useState('');

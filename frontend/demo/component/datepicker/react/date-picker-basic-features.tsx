@@ -1,8 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { DatePicker } from '@vaadin/react-components/DatePicker';
-import { Icon } from '@vaadin/react-components/Icon';
-import { Tooltip } from '@vaadin/react-components/Tooltip';
+import { DatePicker, Icon, Tooltip } from '@vaadin/react-components';
 import '@vaadin/icons/';
 
 function Example() {
