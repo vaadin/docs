@@ -7,7 +7,7 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import { patchAppLayoutNavigation } from './app-layout-helper';
+import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source-line
 
 @customElement('app-layout-navbar')
 export class Example extends LitElement {

@@ -23,12 +23,9 @@ export class Example extends LitElement {
     } /* hidden-source-line */
   `;
 
-  /* prettier-ignore */ protected firstUpdated() {
-    /* hidden-source-line */
-    patchAppLayoutNavigation(
-      this.shadowRoot!.querySelector('vaadin-horizontal-layout')!
-    ); /* hidden-source-line */
-  } /* hidden-source-line */
+  /* prettier-ignore */ protected firstUpdated() { // hidden-source-line
+    patchAppLayoutNavigation(this.shadowRoot!.querySelector('vaadin-horizontal-layout')!); // hidden-source-line
+  } // hidden-source-line
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
