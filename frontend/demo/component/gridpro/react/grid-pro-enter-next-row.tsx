@@ -15,10 +15,10 @@ function Example() {
   return (
     // tag::snippet[]
     <GridPro items={items} enterNextRow>
-      <GridProEditColumn path="firstName"></GridProEditColumn>
-      <GridProEditColumn path="lastName"></GridProEditColumn>
-      <GridProEditColumn path="email"></GridProEditColumn>
-      <GridProEditColumn path="profession"></GridProEditColumn>
+      <GridProEditColumn path="firstName" />
+      <GridProEditColumn path="lastName" />
+      <GridProEditColumn path="email" />
+      <GridProEditColumn path="profession" />
     </GridPro>
     // end::snippet[]
   );

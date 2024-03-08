@@ -30,9 +30,9 @@ function Example() {
       <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps}>
         <TextField label="First name" {...crudPath('firstName')} required />
         <TextField label="Last name" {...crudPath('lastName')} required />
-        <EmailField {...{ colspan: 2 }} label="Email" {...crudPath('email')} required />
+        <EmailField label="Email" {...crudPath('email')} required data-colspan="2" />
         <ComboBox
-          {...{ colspan: 2 }}
+          data-colspan="2"
           label="Profession"
           {...crudPath('profession')}
           items={professions}

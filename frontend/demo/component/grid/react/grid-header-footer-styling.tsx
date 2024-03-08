@@ -21,6 +21,7 @@ const ratingRenderer = (person: PersonWithRating) => (
 
 function Example() {
   const [items, setItems] = useState<PersonWithRating[]>([]);
+
   useEffect(() => {
     getPeople().then(({ people }) => {
       const peopleWithRating = people.map((person) => ({
@@ -41,7 +42,9 @@ function Example() {
         header-part-name="rating-header"
         footer-part-name="rating-footer"
         footerRenderer={() => <span>Avg rating: 5.32</span>}
-      >{({ item }) => ratingRenderer(item)}</GridColumn>
+      >
+        {({ item }) => ratingRenderer(item)}
+      </GridColumn>
     </Grid>
   );
 }

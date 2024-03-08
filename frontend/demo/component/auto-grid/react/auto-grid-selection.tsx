@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { AutoGrid } from '@vaadin/hilla-react-crud';
 import { ProductService } from 'Frontend/generated/endpoints';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
-import Product from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product';
+import type Product from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product';
 
 function Example() {
   // tag::snippet[]

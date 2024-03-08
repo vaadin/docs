@@ -6,9 +6,9 @@ import { ProductService } from 'Frontend/generated/endpoints';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
 import Matcher from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter/Matcher';
 import { TextField } from '@vaadin/react-components/TextField.js';
-import { Select, SelectItem } from '@vaadin/react-components/Select.js';
-import PropertyStringFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter';
-import AndFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/AndFilter';
+import { Select, type SelectItem } from '@vaadin/react-components/Select.js';
+import type PropertyStringFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter';
+import type AndFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/AndFilter';
 
 const categories: SelectItem[] = [
   { label: 'All', value: 'All' },
@@ -40,7 +40,7 @@ function Example() {
       children: [nameFilter, categoryFilter],
     };
 
-    return categoryFilterValue == 'All' ? nameFilter : andFilter;
+    return categoryFilterValue === 'All' ? nameFilter : andFilter;
   }, [categoryFilterValue, nameFilterValue]);
 
   return (

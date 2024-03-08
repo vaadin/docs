@@ -13,10 +13,7 @@ import { format, parseISO } from 'date-fns';
 function employeeRenderer({ item: person }: { item: Person }) {
   return (
     <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
-      <Avatar
-        img={person.pictureUrl}
-        name={`${person.firstName} ${person.lastName}`}
-      />
+      <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
 
       <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>
         <span>

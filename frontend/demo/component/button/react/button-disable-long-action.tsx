@@ -20,7 +20,7 @@ function Example() {
         Perform Action
       </Button>
 
-      <ProgressBar value={progress}></ProgressBar>
+      <ProgressBar value={progress} />
     </HorizontalLayout>
   );
   // end::snippet[]
