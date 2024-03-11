@@ -1,0 +1,214 @@
+---
+title: Quarkus-based Projects
+description: Describes and provides examples of how to perform UI Unit Tests.
+order: 50
+---
+
+
+= [since:com.vaadin:vaadin@V24.4]#UI Unit Testing in Quarkus-based Projects#
+
+In Quarkus-based projects, views may use dependency injection to get references to service and other software components. To instantiate such views and correctly handle navigation, Vaadin needs special implementation of internal components, such as [classname]`QuarkusInstantiator`. Testing with [classname]`UIUnitTest` provides specialized base test classes that integrate with the Quarkus Testing Framework: [classname]`QuarkusUIUnitTest`, which is only supported for JUnit 5.
+
+Subclasses can therefore rely on all of the features offered by the Quarkus Testing Framework by being annotated with [annotationname]`@QuarkusTest`. See https://quarkus.io/guides/getting-started-testing[Quarkus Testing documentation] for additional information about Quarkus testing framework.
+
+.Quarkus Test Example
+[source,java]
+----
+@QuarkusTest
+class ViewTest extends QuarkusUIUnitTest {
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = $(Notification.class).first();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+}
+----
+
+[NOTE]
+With [annotationname]`@QuarkusTest` annotation, the testing framework starts the application and the HTTP server -- although it won't be required for UI unit testing. However, [classname]`QuarkusUIUnitTest` tests are still executed in a mocked environment.
+
+A test can be annotated with [annotationname]`@TestProfile` to reference a specific test configuration. With a test profile you can, for example, override application configuration, provide bean alternatives and custom test resources. Refer to the https://quarkus.io/guides/getting-started-testing#testing_different_profiles[Quarkus Testing Profiles documentation] for additional information.
+
+.Quarkus Testing Profile Example
+[source,java]
+----
+public class MockServiceProfile implements QuarkusTestProfile { 
+
+    @Override
+    public Map<String, String> getConfigOverrides() {
+        return Collections.singletonMap("app.some.config","value");
+    }
+
+    @Override
+    public Set<Class<?>> getEnabledAlternatives() {
+        return Collections.singleton(MockService.class);
+    }
+}
+
+@QuarkusTest
+@TestProfile(MockServiceProfile.class)
+class ViewTest extends QuarkusUIUnitTest {
+}
+----
+
+
+== Additional Setup
+
+In addition to <<getting-started#,the TestBench dependency>>, be sure to add the Quarkus UI Unit Testing and the Quarkus test dependencies to your project. Add the following to your [filename]`pom.xml` file:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-testbench-unit-quarkus</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-junit5</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+
+== Set Up View Access Control
+
+To apply view access control, Vaadin requires a [classname]`NavigationAccessControl` to be registered as a [classname]`BeforeEnterListener` for the UI. Currently, the Vaadin Quarkus add-on doesn't support automatic registration of the access control feature. To enable it for UI Unit Testing, perform the setup in a [classname]`QuarkusTestProfile` class by providing an observer for the Vaadin [classname]`ServiceInitEvent` that executes this step.
+
+.NavigationAccessControl for Quarkus Project Test
+[source,java]
+----
+public class TestViewSecurityConfig implements QuarkusTestProfile {
+
+    @Override
+    public String getConfigProfile() {
+        return "test-security"; // <1>
+    }
+
+    @IfBuildProfile("test-security") // <1>
+    public static class NavigationAccessControlInitializer {
+
+        public void serviceInit(@Observes ServiceInitEvent event) { // <2>
+            // @QuarkusTest starts the whole application, so we check
+            // the VaadinService type to enable access control only for
+            // UI Unit tests
+            if (event.getSource() instanceof MockQuarkusServletService) { // <3>
+                event.getSource().addUIInitListener(uiEvent -> {
+                    // Customize the NavigationAccessControl as needed
+                    NavigationAccessControl accessControl = new NavigationAccessControl();
+                    accessControl.setLoginView(LoginView.class);
+
+                    uiEvent.getUI().addBeforeEnterListener(accessControl);
+                });
+            }
+        }
+    }
+}
+----
+<1> Sets the configuration profile to be used for the test. The class is annotated with [annotationname]`@IfBuildProfile` to make the observer only run it for tests that require this profile.
+<2> Listens for Vaadin [classname]`ServiceInitEvent`. This is the same as implementing [classname]`VaadinServiceInitListener` and registering the class to be loaded by Java [classname]`ServiceLoader`.
+<3> Checks that execution is started by the UI Unit Test. This is required because [annotationname]`@QuarksTest` causes the whole application to start when running the test. 
+
+[classname]`NavigationAccessControl` was introduced in Vaadin 24.3. In a project based on an earlier version, view security can be configured in the same way, but using the [classname]`ViewAccessChecker` component:
+
+.ViewAccessChecker for Quarkus Project Test
+[source,java]
+----
+public class TestViewSecurityConfig implements QuarkusTestProfile {
+
+    @Override
+    public String getConfigProfile() {
+        return "test-security";
+    }
+
+    @IfBuildProfile("test-security")
+    public static class NavigationAccessControlInitializer {
+
+        public void serviceInit(@Observes ServiceInitEvent event) {
+            // @QuarkusTest starts the whole application, so we check
+            // the VaadinService type to enable access control only
+            // for UI Unit tests
+            if (event.getSource() instanceof MockQuarkusServletService) {
+                event.getSource().addUIInitListener(uiEvent -> {
+                    ViewAccessChecker viewAccessChecker = new ViewAccessChecker();
+                    viewAccessChecker.setLoginView(LoginView.class);
+                    uiEvent.getUI().addBeforeEnterListener(viewAccessChecker);
+                });
+            }
+        }
+    }
+}
+----
+
+
+== Quarkus Test Security Features
+
+When using [classname]`QuarkusUIUnitTest`, if Quarkus Security is present on the classpath, the mock environment is instructed to fetch authentication details from Quarkus [classname]`SecurityIdentity`.
+
+With this support, you can use Quarkus [annotationname]`@TestSecurity` annotation to simulate different authentication scenarios with test method granularity. More information is available from the https://quarkus.io/guides/security-testing[Quarkus Security Testing documentation]. Authentication details are available before creating the UI instance and navigating to the default route. Redirects to the login view aren't performed when simulating logged-in users. In the same way, custom redirect logic for authenticated users works as expected.
+
+To use Quarkus Security test annotations, first ensure the dependency is added to the project:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-test-security</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+Next, extend [classname]`QuarkusUIUnitTest` and annotate test methods to set up an authentication scenario. For the simplest situations, use [annotationname]`@TestSecurity`, providing the username and roles that should be granted.
+
+.Tests with Mock Users
+[source,java]
+----
+@QuarkusTest
+@TestProfile(TestViewSecurityConfig.class) // <1>
+class ViewSecurityTest extends QuarkusUIUnitTest {
+
+    @Test
+    @TestSecurity(authorizationEnabled = false) // <2>
+    void anonymousUser_protectedView_redirectToLogin() {
+        navigate("protected", LoginView.class);
+    }
+
+    @Test
+    @TestSecurity(authorizationEnabled = false) // <2>
+    void anonymousUser_publicView_signInLinkPresent() {
+        // public view is default page
+        Assertions.assertInstanceOf(PublicView.class, getCurrentView());
+
+        Anchor anchor = $(Anchor.class).withText("Sign in").first();
+        Assertions.assertTrue(
+                test(anchor).isUsable(),
+                "Sign in link should be available for anonymous user");
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = "ADMIN") // <2>
+    void adminUser_adminView_viewShown() {
+        navigate(AdminRoleView.class);
+
+        Assertions.assertTrue(
+                $(Avatar.class).first().isVisible(),
+                "Avatar should be visible for logged users");
+    }
+}
+----
+<1> Sets a profile to activate Vaadin access control feature.
+<2> Uses Quarkus test security annotations.
+
+[discussion-id]`61B2F8E5-448E-4C36-82E3-D492712ECE67`
+
+++++
+<style>
+[class^=PageHeader-module--descriptionContainer] {display: none;}
+</style>
+++++

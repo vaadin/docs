@@ -32,7 +32,7 @@ function Example() {
       {/* tag::snippet[] */}
       <Select label="Read-only" value={items[0].value} items={items} readonly />
 
-      <Select label="Disabled" {...{ disabled: true }} />
+      <Select label="Disabled" disabled />
       {/* end::snippet[] */}
     </HorizontalLayout>
   );

@@ -57,7 +57,7 @@ function Example() {
           </div>
         </div>
       )}
-    ></ComboBox>
+    />
     // end::snippet[]
   );
 }

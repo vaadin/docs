@@ -5,7 +5,7 @@ import { AutoForm } from '@vaadin/hilla-react-crud';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import { EmployeeService } from 'Frontend/generated/endpoints';
 import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
-import Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
+import type Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
 import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
@@ -21,12 +21,12 @@ function Example() {
 
   const handleOnSubmitError = ({ error }: { error: unknown }) => {
     const json = JSON.stringify(error);
-    Notification.show('Error while submitting: ' + json);
+    Notification.show(`Error while submitting: ${json}`);
   };
 
   const handleOnDeleteError = ({ error }: { error: unknown }) => {
     const json = JSON.stringify(error);
-    Notification.show('Error while deleting: ' + json);
+    Notification.show(`Error while deleting: ${json}`);
   };
 
   return (

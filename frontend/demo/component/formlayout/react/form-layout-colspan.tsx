@@ -14,7 +14,7 @@ function Example() {
   return (
     <FormLayout responsiveSteps={responsiveSteps}>
       {/* tag::snippet[] */}
-      <TextField label="Title" {...{ colspan: 3 }} />
+      <TextField label="Title" data-colspan="3" />
       {/* end::snippet[] */}
       <DatePicker label="Date" />
       <TimePicker label="From" />
