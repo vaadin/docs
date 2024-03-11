@@ -40,8 +40,7 @@ const config = {
       "articles/flow/integrations",
       "articles/flow/testing",
 
-      "articles/flow/index.asciidoc",
-      "articles/flow/overview.asciidoc",
+      "articles/flow/index.adoc",
       "articles/flow/contributing-docs",
       "articles/flow/upgrading",
       "articles/flow/application",
@@ -49,9 +48,9 @@ const config = {
       "articles/flow/production",
       "articles/flow/_images",
       "articles/flow/_vaadin-version.adoc",
-      "articles/flow/_commercial-banner.asciidoc",
-      "articles/flow/_terminal.asciidoc",
-      "articles/flow/404.asciidoc",
+      "articles/flow/_commercial-banner.adoc",
+      "articles/flow/_terminal.adoc",
+      "articles/flow/404.adoc",
       "articles/flow/_figma-banner.adoc",
 
       "articles/styling/_images",
@@ -115,7 +114,7 @@ const config = {
       "articles/flow/foundation",
       "articles/flow/_images",
       "articles/flow/404.adoc",
-      "articles/flow/figma.asciidoc",
+      "articles/flow/figma.adoc",
       "articles/flow/index.adoc",
       "articles/flow/components/index.adoc",
       "articles/flow/lumo/index.adoc",
@@ -128,7 +127,7 @@ const config = {
   // callbacks for changing the content of certain files
   callback: [
     {
-      path: 'articles/flow/components/grid/flow.asciidoc',
+      path: 'articles/flow/components/grid/flow.adoc',
       callback: content => content.replace(/.*_items-identities.adoc.*/, '')
     },
     {
