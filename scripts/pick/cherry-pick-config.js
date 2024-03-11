@@ -54,24 +54,24 @@ const config = {
       "articles/flow/404.asciidoc",
       "articles/flow/_figma-banner.adoc",
 
-      "articles/flow/styling/_images",
-      "articles/flow/styling/_shared.adoc",
-      "articles/flow/styling/advanced",
-      "articles/flow/styling/custom-theme",
-      "articles/flow/styling/getting-started.adoc",
-      "articles/flow/styling/index.adoc",
-      "articles/flow/styling/theme-annotation.adoc",
-      "articles/flow/styling/_images/",
-      "articles/flow/styling/lumo/_images",
-      "articles/flow/styling/lumo/index.adoc",
-      "articles/flow/styling/lumo/variants",
-      "articles/flow/styling/lumo/design-tokens/styling-using-design-tokens.adoc",
-      "articles/flow/styling/lumo/design-tokens/_images",
-      "articles/flow/styling/lumo/design-tokens/index.adoc",
-      "articles/flow/styling/legacy",
-      "articles/flow/styling/styling-components",
-      "articles/flow/styling/application-theme.adoc",
-      "articles/flow/styling/styling-other-elements.adoc",
+      "articles/styling/_images",
+      "articles/styling/_shared.adoc",
+      "articles/styling/advanced",
+      "articles/styling/custom-theme",
+      "articles/styling/getting-started.adoc",
+      "articles/styling/index.adoc",
+      "articles/styling/theme-annotation.adoc",
+      "articles/styling/_images/",
+      "articles/styling/lumo/_images",
+      "articles/styling/lumo/index.adoc",
+      "articles/styling/lumo/variants",
+      "articles/styling/lumo/design-tokens/styling-using-design-tokens.adoc",
+      "articles/styling/lumo/design-tokens/_images",
+      "articles/styling/lumo/design-tokens/index.adoc",
+      "articles/styling/legacy",
+      "articles/styling/styling-components",
+      "articles/styling/application-theme.adoc",
+      "articles/styling/styling-other-elements.adoc",
       "articles/flow/components/index.asciiidoc",
       "articles/flow/compatibility.adoc",
 
@@ -91,7 +91,7 @@ const config = {
       "dspublisher/theme",
       "dspublisher/config/default.json",
       "dspublisher/config/production.json",
-      
+
       "PULL_REQUEST_TEMPLATE.md",
 
       ".gitattributes",
@@ -106,8 +106,8 @@ const config = {
   },
   rename: {
     // paths in 'latest' to copy to different paths in 'dsp'
-    "articles/flow/styling/lumo/design-tokens": "articles/flow/ds/foundation",
-    "articles/flow/styling/lumo": "articles/flow/lumo",
+    "articles/styling/lumo/design-tokens": "articles/flow/ds/foundation",
+    "articles/styling/lumo": "articles/flow/lumo",
   },
   target: {
     // paths in 'dsp' to keep (since they shouldn't be removed, even if they don't exist in latest)
