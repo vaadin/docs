@@ -19,7 +19,7 @@ function Example() {
       itemLabelPath="name"
       itemValuePath="id"
       items={items}
-    ></ComboBox>
+    />
     // end::snippet[]
   );
 }

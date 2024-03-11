@@ -1,9 +1,9 @@
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
 import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { Notification } from '@vaadin/react-components/Notification.js';
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 
 function Example() {

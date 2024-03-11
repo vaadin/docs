@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/custom-field';
 import '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 import { Binder, field } from '@vaadin/hilla-lit-form';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 import { differenceInDays, parseISO, isAfter } from 'date-fns';
-import type { DatePicker } from '@vaadin/date-picker';
 
 @customElement('custom-field-basic')
 export class Example extends LitElement {
@@ -18,19 +17,9 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('#start')
-  private start!: DatePicker;
-
-  @query('#end')
-  private end!: DatePicker;
-
   private binder = new Binder(this, AppointmentModel);
 
   protected override firstUpdated() {
-    // Set title for screen readers
-    this.start.focusElement!.setAttribute('title', 'Start date');
-    this.end.focusElement!.setAttribute('title', 'End date');
-
     this.binder.for(this.binder.model.enrollmentPeriod).addValidator({
       message: 'Dates cannot be more than 30 days apart',
       validate: (enrollmentPeriod: string) => {
@@ -66,9 +55,12 @@ export class Example extends LitElement {
         required
         ${field(this.binder.model.enrollmentPeriod)}
       >
-        <vaadin-date-picker id="start" placeholder="Start date"></vaadin-date-picker>
+        <vaadin-date-picker
+          accessible-name="Start date"
+          placeholder="Start date"
+        ></vaadin-date-picker>
         &ndash;
-        <vaadin-date-picker id="end" placeholder="End date"></vaadin-date-picker>
+        <vaadin-date-picker accessible-name="End date" placeholder="End date"></vaadin-date-picker>
       </vaadin-custom-field>
       <!-- end::snippet[] -->
     `;

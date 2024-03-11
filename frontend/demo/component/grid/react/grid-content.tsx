@@ -12,10 +12,7 @@ import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 // tag::snippet[]
 const employeeRenderer = (person: Person) => (
   <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
-    <Avatar
-      img={person.pictureUrl}
-      name={`${person.firstName} ${person.lastName}`}
-    />
+    <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
 
     <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>
       <span>
@@ -31,29 +28,20 @@ const employeeRenderer = (person: Person) => (
 );
 
 const statusRenderer = (person: Person) => (
-  <span
-    {...({
-      theme: `badge ${person.status === 'Available' ? 'success' : 'error'}`,
-    } satisfies object)}
-  >
+  <span {...{ theme: `badge ${person.status === 'Available' ? 'success' : 'error'}` }}>
     {person.status}
   </span>
 );
 
 function Example() {
-  const gridRef = React.useRef<any>(null);
   const [items, setItems] = useState<Person[]>([]);
+
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
-
-    // Workaround for https://github.com/vaadin/react-components/issues/129
-    setTimeout(() => {
-      gridRef.current?.recalculateColumnWidths();
-    }, 100);
   }, []);
 
   return (
-    <Grid items={items} ref={gridRef}>
+    <Grid items={items}>
       <GridSelectionColumn />
 
       <GridColumn header="Employee" flexGrow={0} autoWidth>

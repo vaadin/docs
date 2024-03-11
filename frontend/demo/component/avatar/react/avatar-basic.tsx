@@ -7,22 +7,21 @@ import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout';
 
 function Example() {
   const [person, setPerson] = useState<Person | undefined>(undefined);
+
   useEffect(() => {
     getPeople({ count: 1 }).then(({ people }) => setPerson(people[0]));
   }, []);
 
   return (
-    <>
-      <HorizontalLayout theme="spacing">
-        {/* tag::snippet[] */}
-        <Avatar />
+    <HorizontalLayout theme="spacing">
+      {/* tag::snippet[] */}
+      <Avatar />
 
-        <Avatar name={`${person?.firstName} ${person?.lastName}`} />
+      <Avatar name={`${person?.firstName} ${person?.lastName}`} />
 
-        <Avatar img={person?.pictureUrl} name={`${person?.firstName} ${person?.lastName}`} />
-        {/* end::snippet[] */}
-      </HorizontalLayout>
-    </>
+      <Avatar img={person?.pictureUrl} name={`${person?.firstName} ${person?.lastName}`} />
+      {/* end::snippet[] */}
+    </HorizontalLayout>
   );
 }
 

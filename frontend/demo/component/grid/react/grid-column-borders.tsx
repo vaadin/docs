@@ -19,12 +19,7 @@ function Example() {
     // tag::snippet[]
     <Grid items={items} theme="column-borders">
       <GridColumn header="Image" flexGrow={0} autoWidth>
-        {({ item }) => (
-          <Avatar
-            img={item.pictureUrl}
-            name={`${item.firstName} ${item.lastName}`}
-          />
-        )}
+        {({ item }) => <Avatar img={item.pictureUrl} name={`${item.firstName} ${item.lastName}`} />}
       </GridColumn>
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
