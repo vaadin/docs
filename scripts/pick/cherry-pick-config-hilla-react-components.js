@@ -90,7 +90,7 @@ const config = {
         // replace all instances of "{articles}/flow/components" with "{articles}/flow/react/components"
         content = content.replace(/{articles}\/components/g, '{articles}/flow/react/components');
 
-        // replace all instances of "{articles}/flow/styling/lumo" and "/styling/lumo" with "https://vaadin.com/docs/styling/lumo"
+        // replace all instances of "{articles}/styling/lumo" and "/styling/lumo" with "https://vaadin.com/docs/styling/lumo"
         content = content.replace(/{articles}\/styling\/lumo/g, 'https://vaadin.com/docs/styling/lumo');
         content = content.replace(/\/styling\/lumo/g, 'https://vaadin.com/docs/styling/lumo');
 
