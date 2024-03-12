@@ -14,7 +14,7 @@ function Example() {
       <FormLayout responsiveSteps={[{ columns: 2 }]}>
         <TextField label="First name" value="John" />
         <TextField label="Last name" value="Smith" />
-        <EmailField {...{ colspan: 2 }} label="Email address" value="john.smith@example.com" />
+        <EmailField label="Email address" value="john.smith@example.com" data-colspan="2" />
       </FormLayout>
 
       <HorizontalLayout theme="spacing">

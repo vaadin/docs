@@ -1,16 +1,20 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
-import { Grid, type GridDropEvent, type GridDragStartEvent } from '@vaadin/react-components/Grid.js';
+import React, { useEffect, useState } from 'react';
+import {
+  Grid,
+  type GridDropEvent,
+  type GridDragStartEvent,
+} from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
-  const [items, setItems] = React.useState<Person[]>([]);
-  const [draggedItem, setDraggedItem] = React.useState<Person | undefined>(undefined);
+  const [items, setItems] = useState<Person[]>([]);
+  const [draggedItem, setDraggedItem] = useState<Person | undefined>(undefined);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
   }, []);
 
@@ -49,10 +53,7 @@ function Example() {
     >
       <GridColumn header="Image" flexGrow={0} autoWidth>
         {({ item: person }) => (
-          <Avatar
-            img={person.pictureUrl}
-            name={`${person.firstName} ${person.lastName}`}
-          />
+          <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
         )}
       </GridColumn>
 

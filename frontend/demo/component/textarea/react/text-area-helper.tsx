@@ -16,7 +16,7 @@ function Example() {
       helperText={`${text.length}/${charLimit}`}
       onValueChanged={(event) => setText(event.detail.value)}
       style={{ width: '100%' }}
-    ></TextArea>
+    />
     // end::snippet[]
   );
 }

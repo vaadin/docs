@@ -8,6 +8,7 @@ import { Avatar } from '@vaadin/react-components/Avatar.js';
 
 function Example() {
   const [items, setItems] = useState<Person[]>([]);
+
   useEffect(() => {
     getPeople().then(({ people }) => setItems(people));
   }, []);
@@ -16,12 +17,7 @@ function Example() {
     // tag::snippet[]
     <Grid items={items} theme="no-row-borders">
       <GridColumn header="Image" flexGrow={0} autoWidth>
-        {({ item }) => (
-          <Avatar
-            img={item.pictureUrl}
-            name={`${item.firstName} ${item.lastName}`}
-          />
-        )}
+        {({ item }) => <Avatar img={item.pictureUrl} name={`${item.firstName} ${item.lastName}`} />}
       </GridColumn>
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
