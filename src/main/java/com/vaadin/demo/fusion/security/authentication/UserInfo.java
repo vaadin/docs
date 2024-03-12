@@ -15,7 +15,7 @@ public class UserInfo {
     @Nonnull
     private String name;
     @Nonnull
-    private Collection<String> authorities;
+    private Collection<@Nonnull String> authorities;
 
     public UserInfo(String name, Collection<String> authorities) {
         this.name = name;
