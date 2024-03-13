@@ -1,10 +1,10 @@
-import { configureAuth } from '@hilla/react-auth';
+import { configureAuth } from '@vaadin/hilla-react-auth';
 import { UserInfoService } from 'Frontend/generated/endpoints';
 
 // tag::snippet[]
 // Configure auth to use `UserInfoService.getUserInfo` and map to custom roles
 const auth = configureAuth(UserInfoService.getUserInfo, {
-  getRoles: (userInfo) => userInfo.authorities,
+  getRoles: (userInfo) => userInfo.authorities.map((v) => v ?? ''),
 });
 // end::snippet[]
 
