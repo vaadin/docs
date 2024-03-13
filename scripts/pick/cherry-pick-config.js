@@ -42,7 +42,7 @@ const config = {
 
       "articles/flow/index.adoc",
       "articles/flow/contributing-docs",
-      "articles/flow/upgrading",
+      "articles/upgrading",
       "articles/flow/application",
       "articles/flow/routing",
       "articles/flow/production",
