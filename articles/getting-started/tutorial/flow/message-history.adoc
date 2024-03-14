@@ -1,30 +1,28 @@
 ---
 title: Add Message History
-description: Learn how to protect your applications from being overwhelmed with data.
+description: Learn how to protect applications from being overwhelmed with data.
 order: 40
 ---
 
 
 = Add Message History
 
-The application is now able to post and receive messages, but if you navigate away from a channel and back, you lose all the previous messages. The backend is already storing all the messages and your task is now to make them show up in the user interface when you open the channel view. However, there are a few things to keep in mind:
+The application you've been developing in this application is now able to post and receive messages in a channel. However, if you leave the channel, you lose all of the previous messages -- or rathere, you won't see them. The backend is storing the messages, though. 
 
-- Every message is rendered in the DOM. Over time, the number of messages will grow which means you cannot show the complete message history without slowing down the application and consuming a lot of memory.
-- You may be receiving messages while fetching the message history. You do not want to miss any of them.
-- On the rare occation, you may receive the same message as a part of the message history and as a part of the live stream. You only want a message to show up once in the user interface.
+// RUSSELL: Do you need to say, DOM? If so, define it.
 
-It is good practice to always ensure there is an upper limit on all backend queries. Unless you know for sure that a query will return exactly zero or one item, assume it will return enough items to bring your application down. In this tutorial, we are going to use a ridiculously low limit of only 20 messages in order to make it easier to demonstrate how the limit works.
+The next step in this tutorial is to display them in the user interface when the channel view is opened. There are a few things to consider.  First, you'll need to ensure all messages are rendered in the DOM. However, there may be too many messages: displaying them all may slow down the application and consuming resources.
+
+The second thing to consider is related to timing. You might receive messages while fetching the message history. You don't want to miss those. Similarly, albeit rare, you might receive a message twice: once in the message history and again as a part of the live stream. You'll need to prevent such duplicates.
+
+Always set an upper limit on all backend queries. Unless you know a query will return one or zero items, assume it'll return an excessive amount. In this tutorial, you'll set the limit to only twenty messages to demonstrate how limits work.
 
 
 == Container for Received Messages
 
-You are now going to create a new data type that will hold all the received messages. This data type has the following capabilities:
+The first step for being able to provide message history to the user is to create a new data type to hold all of the received messages. This list must always to be sorted using a [interfacename]`Comparator`. It'll have a fixed size limit. If the list is full when you add a new item, the first item is removed automatically. The list can't allow duplicates, which are determined by comparing items using their [methodname]`equals()` method.
 
-- The list is always sorted using a [interfacename]`Comparator`.
-- The list has a fixed size limit. If the list is full when you add a new item, the first item is automatically removed.
-- The list does not allow any duplicates. Duplicates are determined by comparing items using their [methodname]`equals()` method.
-
-Since a Flow user interface is written in 100% Java, you have all the features of the JVM at your disposal. Create a class named [classname]`LimitedSortedAppendOnlyList` inside the [packagename]`com.example.application.util` package, like this:
+Since a Flow user interface is written totally in Java, you have all JVM features at your disposal. Create a class named [classname]`LimitedSortedAppendOnlyList` inside the [packagename]`com.example.application.util` package, like this:
 
 .`LimitedSortedAppendOnlyList.java`
 [source,java]
@@ -70,16 +68,16 @@ public class LimitedSortedAppendOnlyList<T> {
     }
 }
 ----
-<1> [classname]`TreeSet` is a built-in Java [interfacename]`Set` that is always sorted and makes sure there are no duplicates.
+<1> [classname]`TreeSet` is a built-in Java [interfacename]`Set` that's always sorted and ensures no duplicates.
 <2> [classname]`TreeSet` uses a [interfacename]`Comparator` to sort its items.
 <3> [methodname]`pollFirst` is a built-in method for removing the first item in a [classname]`TreeSet`.
 
 
-== Change the Channel View for New Container
+== Change Channel View for New Container
 
-When you implemented the first version of [classname]`ChannelView`, you used an [classname]`ArrayList` as a container of received messages. You are now going to replace this with the newly created [classname]`LimitedSortedAppendOnlyList`.
+When you implemented the first version of [classname]`ChannelView`, you used an [classname]`ArrayList` as a container for received messages. Now replace that with the newly created [classname]`LimitedSortedAppendOnlyList`.
 
-Open [classname]`ChannelView` and change the field definition of `receivedMessages` like this:
+To do that, open [classname]`ChannelView` and change the field definition of `receivedMessages` like this:
 
 [source,java]
 ----
@@ -110,7 +108,7 @@ public ChannelView(ChatService chatService) {
     add(messageInput);
 }
 ----
-<1> The list will only contain 20 messages.
+<1> The list will only contain twenty messages.
 <2> Messages will be sorted by their sequence number, which is the number in which they were received by the server.
 
 The `ChannelView` should now compile, as the methods [methodname]`addAll` and [methodname]`stream` are present in both [classname]`ArrayList` and [classname]`LimitedSortedAppendOnlyList`.
@@ -118,13 +116,9 @@ The `ChannelView` should now compile, as the methods [methodname]`addAll` and [m
 
 == Retrieve Message History
 
-Now with all the plumbing in place, all that remains is to fetch the message history from [classname]`ChatService`. There is a method called [methodname]`messageHistory` that takes the following parameters:
+Now with the structure in place, all that remains is to fetch the message history from [classname]`ChatService`. There's a method called [methodname]`messageHistory` that takes three parameters: the ID of the channel; the number of messages to retrieve; and the ID of the latest message that the client has received, if any.
 
-1. The ID of the channel.
-2. The number of messages to retrieve.
-3. The ID of the latest message that the client has received, if any.
-
-The method will return at most the given number of messages that have been posted to the given channel after the given latest message.
+The [methodname]`messageHistory` method will return at most the given number of messages that have been posted to the given channel after the given latest message.
 
 Change the [methodname]`subscribe` method of [classname]`ChannelView` like this:
 
@@ -147,28 +141,34 @@ private Disposable subscribe() {
 <1> The latest message that the client has received is the last message in the `receivedMessages` list.
 <2> If the list is empty, you should pass `null` as the latest message.
 <3> The channel ID is already available in a private field.
-<4> Retrieve a maximum of 20 messages.
+<4> Retrieve a maximum of twenty messages.
 
-Please note, that you are fetching the history after you have subscribed to the live message feed. Because the list of received messages is sorted by sequence number, it does not matter whether you add the messages to the list in the wrong order - they will still show up correctly.
+Please note that you're fetching the history after you've subscribed to the live message feed. Because the list of received messages is sorted by sequence number, it doesn't matter whether you add the messages to the list in the wrong order -- they'll still display correctly.
 
-But what about thread safety? What happens if a message comes in through the live stream in one thread while the history is being retrieved in another thread? This is a valid concern, but fortunately you have already addressed it. Have a look at the [methodname]`receivedMessages` method again.
-
-You will see that all interactions with both the user interface and the `receivedMessages` list is happening inside a call to [methodname]`UI.access`. This acts as a thread synchronization mechanism, as Vaadin will make sure that only one thread at a time can access the same [classname]`UI` instance.
+You may be wondering what happens if a message comes in through the live stream in one thread while the history is being retrieved in another. With the [methodname]`receivedMessages` method, all interactions with both the user interface and the `receivedMessages` list is occurring inside a call to [methodname]`UI.access`. This acts as a thread synchronization mechanism, as Vaadin will make sure that only one thread at a time can access the same [classname]`UI` instance.
 
 
 == Try It!
 
-You are now ready to try out the new history feature.
+The new history feature is ready for you to try. Start the application by running `./mvnw spring-boot:run`
 
-1. Start the application by running `./mvnw spring-boot:run`
-2. Open your browser at http://localhost:8080/ and pick a channel.
-3. Open another browser window (window 2) and go to the same channel.
-4. Write some messages in window 1. They should show up in both windows.
-5. Go back to the lobby in window 2.
-6. Write some more messages in window 1.
-7. Go the channel again in window 2.
-8. All the previous messages should show up, including the messages you wrote in step 6.
-9. Keep writing messages until you have 20 messages in the view. As you keep writing messages, you should see the oldest one automatically disappear.
+
+[discrete]
+==== Exercise 1
+
+Open your browser at `http://localhost:8080/` and pick a channel. Open another browser window and go to the same channel. Write some messages in the first browser window. They should appear in both browser windows.
+
+
+[discrete]
+==== Exercise 2
+
+On the second browser window, go back to the lobby. Then back in the first browser window, enter some more messages.  When you finish, in the second browser window, return to the channel. You should see there all of the previous messages, as well as the new messages.
+
+
+[discrete]
+==== Exercise 3
+
+Keep entering messages on one or both browser windows until you have twenty messages in the views. Then enter a few more to see if the oldest ones disappear automatically.
 
 
 ++++
