@@ -9,7 +9,7 @@ order: 500
 
 Custom Flow components can be embedded in a Hilla view by implementing a [classname]`WebComponentExporter` and using it in the view. A [classname]`WebComponentExporter` can target any Flow Component.
 
-Below is an example for a component that follows:
+Below is an example for a component that follows this:
 
 [source,java]
 ----
@@ -73,21 +73,23 @@ export default function HillaView() {
 }
 ----
 
-When a component needs attributes or other custom parts in `React.createElement`, instead of importing `createWebComponent`, import `loadComponentScript` and create the element in the function.
 
-This can be necessary when the [classname]`WebComponent` exposes properties to the client.
+=== Using Attributes
+
+Adding attributes for the element can be done by giving a [interface]`Properties` object with `string` value pairs to the [method]`createWebComponent`. The [interface]`Properties` is defined as `[key: string]: string;`.
+
+This can be used when the [classname]`WebComponent` exposes properties to the client.
 
 .Custom Properties for Flow WebComponent
 [source,typescriptjsx]
 ----
 import { VerticalLayout } from "@vaadin/react-components/VerticalLayout";
-import { loadComponentScript } from "Frontend/generated/flow/Flow";
+import { createWebComponent } from "Frontend/generated/flow/Flow";
 import React from "react";
 
 function MyFlowComponent() {
-  loadComponentScript("my-flow-component");
   // Create element with property hellomsg
-  return React.createElement("my-flow-component", {
+  return createWebComponent("my-flow-component", {
     hellomsg: 'Hi from the client!'
   });
 }
@@ -103,6 +105,42 @@ export default function HillaView() {
   );
 }
 ----
+
+The properties can also be linked to the element attributes using a custom properties type:
+
+.Custom Properties with Attribute Link
+[source,typescriptjsx]
+----
+import { VerticalLayout } from "@vaadin/react-components/VerticalLayout";
+import { createWebComponent } from "Frontend/generated/flow/Flow";
+import React from "react";
+
+type MyProperties = {
+  hellomsg: string
+}
+
+function MyFlowComponent(props: MyProperties) {
+  // Create element with property hellomsg
+  return createWebComponent("my-flow-component", {
+    hellomsg: props.hellomsg
+  });
+}
+
+export default function HillaView() {
+  return (
+    <>
+      <VerticalLayout className={'centered-content'}>
+        <h3>Hilla View</h3>
+        <MyFlowComponent hellomsg={'Hi from the client!'}/>
+      </VerticalLayout>
+    </>
+  );
+}
+----
+
+In this way, changing the attribute will also update the [classname]`WebComponent` property value.
+
+The corresponding server-side code for the attribute component is made as the following example shows:
 
 .WebComponent with Exposed Properties
 [source,java]
@@ -146,10 +184,46 @@ public class CustomComponent extends Div {
 }
 ----
 
-[discussion-id]`920dc03d-5eb4-4826-8934-4416b58a9a3e`
 
-++++
-<style>
-[class^=PageHeader-module--descriptionContainer] {display: none;}
-</style>
-++++
+=== Onload Event for WebComponent
+
+Loading the [classname]`WebComponent` script can take some time, depending on the network. Therefore, it might be prudent to show a loading indicator so the user knows to wait.
+
+It's possible to listen to the `onload` event for the [classname]`WebComponent` script so that the loading element can be removed when the script is finished loading.
+
+The [methodname]`createWebComponent` accepts an onload callback function as the third parameter. An onerror callback can be set as the fourth parameter. However, if it's not given, there will be an error logged into the console with the script tag to show which [classname]`WebComponent` script failed to load.
+
+.Loading Indicator Example
+[source,typescriptjsx]
+----
+import { VerticalLayout } from "@vaadin/react-components/VerticalLayout";
+import { createWebComponent } from "Frontend/generated/flow/Flow";
+import React from "react";
+
+type MyProperties = {
+  hellomsg: string
+}
+
+function MyFlowComponent(props: MyProperties) {
+  // Create element with property hellomsg
+  return createWebComponent("my-flow-component",
+    undefined,
+    () => document.getElementById("loading")?.remove()
+  );
+}
+
+export default function HillaView() {
+  return (
+    <>
+      <VerticalLayout className={'centered-content'}>
+        <h3>Hilla View</h3>
+        <!-- Placeholder element for MyFlowComponent script loading -->
+        <div id={"loading"}>Loading script...</div>
+        <MyFlowComponent hellomsg={'Hi from the client!'}/>
+      </VerticalLayout>
+    </>
+  );
+}
+----
+
+[discussion-id]`920dc03d-5eb4-4826-8934-4416b58a9a3e`
