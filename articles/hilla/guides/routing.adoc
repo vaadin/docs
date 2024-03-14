@@ -6,73 +6,23 @@ order: 60
 
 = Routing
 
-The routing system in Hilla is built on top of https://reactrouter.com/en/main[React Router], a popular routing library for React applications. This documentation can guide you through the basics of setting up and using routing in your application.
+Hilla React applications are using a file-system based router, which is built on top of https://reactrouter.com/en/main[React Router], a popular routing library for React applications. This documentation can guide you through the basics of using routing in your application.
 
-Routes are managed through a configuration file called, [filename]`routes.tsx`. This file defines the application's routes, including the components associated with each. The routing configuration is located in the project's `frontend` directory.
-
-Here's an example of how the configuration looks typically in a starter application:
-
-[source,tsx]
-----
-export const routes: RouteObject[] = [
-  {
-    element: <MainLayout />,
-    children: [
-      { path: '/', element: <HelloReactView /> },
-      { path: '/about', element: <AboutView /> },
-    ],
-  },
-];
-
-export default createBrowserRouter(routes);
-----
-
-In this example, two routes are defined: the root path `/` and the `/about` path. These routes are associated with different components. The `<MainLayout />` component acts as the layout template for the entire application. The last line creates and exports the router instance.
-
-The router instance is then used in the [filename]`App.tsx` file to render the application:
-
-[source,tsx]
-----
-import router from 'Frontend/routes';
-import { RouterProvider } from 'react-router-dom';
-
-export default function App() {
-  return <RouterProvider router={router} />;
-}
-----
-
-In the next section are the details of how to work with routing in Hilla.
+The file-based router is using the `.tsx` files in the `frontend/views/` directory and its subdirectories as routes.
 
 
 == Adding Routes
 
-To add a new route to an application, first create a new component that should be displayed when the route is active. For example, create a file called [filename]`MyView.tsx` in the `views` folder with the following content:
+To add a new route to an application, create a new component that should be displayed when the route is active. For example, create a file called [filename]`example.tsx` in the `views` directory with the following content:
 
 [source,tsx]
 ----
-export default function MyView() {
+export default function ExampleView() {
   return <div>My first view</div>;
 }
 ----
 
-Second, open the [filename]`routes.tsx` file and import the component you created in the previous step:
-
-[source,tsx]
-----
-import MyView from 'Frontend/views/MyView';
-----
-
-Next, inside the `routes` array, add a new route object to the `children` array of the main layout:
-
-[source,tsx]
-----
-{
-  path: '/my-route',
-  element: <MyView />,
-}
-----
-
-Now, after saving the file, you should be able to navigate to `http://localhost:8080/my-route` and see the new component rendered in the browser.
+Now, after saving the file, you should be able to navigate to `http://localhost:8080/example` and see the new component rendered in the browser.
 
 To add a navigation link that points to your new route, use the `<NavLink>` component from `react-router-dom`:
 
@@ -80,38 +30,34 @@ To add a navigation link that points to your new route, use the `<NavLink>` comp
 ----
 import { NavLink } from 'react-router-dom';
 
-<NavLink to="/my-route">My View</NavLink>
+<NavLink to="/my-view">My View</NavLink>
 ----
 
 This creates a clickable link in your application that navigates to the specified route.
 
 
+=== Filename Conventions
+
+Hilla file-system router supports the following file naming conventions for the `.tsx` files in `views` and any nested subdirectories:
+
+`_` at the start — ignore the file::
+  The file-system router ignores any files named starting with the underscore character, for example, `_utils.tsx`.
+`$index.tsx` — directory index view::
+  Files named `$index.tsx` are mapped to the index of the directory. For example, the `views/$index.tsx` file will be mapped to the root URL of the application (`/`).
+`$layout.tsx` — directory layout::
+  Files named `$layout.tsx` define the layout (view wrapping component) for the other views defined in the same directory or its subdirectories. The layouts are further described in the <<Adding Layout Routes>> section.
+`{parameterName}.tsx` — parameter mapping::
+  The file name part between the braces is mapped to a route parameter, as described in <<Adding Routes with Parameters>> below.
+
 == Adding Routes with Parameters
 
-Sometimes, you may need to create routes that accept dynamic parameters, such as product IDs or names. This can be done by defining a route path with parameters. For example, the following route takes a product ID as a parameter:
-
-[source,tsx]
-----
-{
-  path: '/products/:productId',
-  element: <ProductDetailView />
-}
-----
-
-In this example, `:productId` acts as a placeholder for the actual product ID. To link to this route with a specific `productId`, you can use the `to` property of `NavLink` like this:
-
-[source,tsx]
-----
-<NavLink to="/products/123">Show product details</NavLink>
-----
-
-To access the route parameter, you can use the `useParams` hook from `react-router-dom` in your component. The following example outlines a detailed view that fetches product data for the product ID in the route:
+Sometimes, you may need to create routes that accept dynamic parameters, such as product IDs or names. This can be done by using the `{parameterName}` filename convention. For example, create the file named `{productId}.tsx` in the `frontend/views/products/` directory with the following content:
 
 [source,tsx]
 ----
 import { useParams } from 'react-router-dom';
 
-export default function ProductDetailView() {
+export default function ProductView() {
   const { productId } = useParams();
 
   // Fetch product details for the given ID
@@ -123,19 +69,90 @@ export default function ProductDetailView() {
 }
 ----
 
+This creates the route with the path `/products/{productId}`, where `{productId}` acts as a placeholder for the actual product ID. To access the route parameter in the view, use the `useParams` hook from `react-router-dom` in your component, as shown in the example above. The view component fetches product data for the product ID in the route.
 
-== Adding Custom Metadata
-
-You may want to add custom metadata to your routes, which could include page titles, icons, or any other data relevant to your application's structure and layout.
-
-To add custom metadata to a route, you can use the `handle` property of the route object:
+To link to this route with a specific `productId`, you can use the `to` property of `NavLink` like this:
 
 [source,tsx]
 ----
-{ path: '/about', element: <AboutView />, handle: { title: 'About us' } },
+<NavLink to="/products/123">Show product details</NavLink>
 ----
 
-In this example, a page title is added to the `/about` route.
+
+== Adding Layout Routes
+
+Layouts are special view components that wrap around other views. It is common for applications to have at least one layout: the main layout that renders the toolbar, the main manu, and similar functionality.
+
+For adding a layout, create a view file named `$layout.tsx` in the views directory, and render the `<Outlet/>` in the component. You can also use the <<../../../components/app-layout,`App Layout`>> component to add common application layout parts.
+
+The following example defines the main layout with the drawer and the main menu:
+
+[source,tsx]
+----
+import { AppLayout } from '@vaadin/react-components/AppLayout.js';
+import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
+import Placeholder from 'Frontend/components/placeholder/Placeholder.js';
+import { createMenuItems } from '@vaadin/hilla-file-router/runtime.js';
+import { useRouteMetadata } from 'Frontend/util/routing.js';
+import { Suspense, useEffect } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
+
+const navLinkClasses = ({ isActive }: any) => {
+    return `block rounded-m p-s ${isActive ? 'bg-primary-10 text-primary' : 'text-body'}`;
+};
+
+export default function MainLayout() {
+    const currentTitle = useRouteMetadata()?.title ?? 'My application';
+
+    useEffect(() => {document.title = currentTitle;}, [currentTitle]);
+
+    return (
+        <AppLayout primarySection="drawer">
+            <div slot="drawer" className="flex flex-col justify-between h-full p-m">
+                <header className="flex flex-col gap-m">
+                    <h1 className="text-l m-0">My application</h1>
+                    <nav>
+                      {createMenuItems().map(({ to, icon, title }) => (
+                        <NavLink className={navLinkClasses} to={to} key={to}>
+                          {title}
+                        </NavLink>
+                      ))}
+                    </nav>
+                </header>
+            </div>
+
+            <DrawerToggle slot="navbar" aria-label="Menu toggle"></DrawerToggle>
+
+            <Suspense fallback={<Placeholder />}>
+                <Outlet />
+            </Suspense>
+        </AppLayout>
+    );
+}----
+
+== Customizing Route Configuration
+
+In some cases, you may want to customize the configuration of a route on top of what is inferred from the file. By customizing a route you can, for example, set a page title, a menu link title and icon, or override the route path.
+
+To customize the route to a route, in your view `.tsx` file, export an object named `config` of `ViewConfig` type:
+
+[source,tsx]
+.`frontend/views/about.tsx`
+----
+import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+
+export default fuction AboutView() {
+  return (
+    /* ... */
+  );
+}
+
+export const config: ViewConfig = {
+  title: "About Us",
+};
+----
+
+In this example, a page title is added to the example route.
 
 To access this metadata from within a component, you can use the `useMatches` hook from `react-router-dom`. In the following example, the page title is used to display it in the header of the main layout:
 
@@ -172,6 +189,7 @@ Hilla starter applications provide a helper hook that simplifies accessing route
 import { useRouteMetadata } from "Frontend/util/routing";
 
 const metadata = useRouteMetadata();
+const title = metadata.title ?? "My App";
 ----
 ====
 
@@ -214,23 +232,26 @@ navigate('/products', { replace: true });
 
 Adding a custom error page to an application is essential for handling situations in which no other route matches the requested URL. This allows you to provide helpful feedback to the user, for example, by communicating the problem or providing links to other pages.
 
-To add an error page (e.g., for 404 not found), first create a new component for your error page (e.g., `ErrorView.tsx`). This component is displayed when no other route matches:
+To add an error page (e.g., for 404 not found), create a new route view file for your error page (e.g., `error.tsx`), set the route config to use a wildcard route, and exclude the route from the menu:
 
 [source,tsx]
+.`frontend/views/error.tsx`
 ----
 export default function ErrorView() {
   return <div>Page not found</div>;
 }
+
+export const config: ViewConfig = {
+  route: '*',
+  menu: {
+    exclude: true,
+  },
+};
 ----
 
-Next, in the `routes.tsx` file, add a wildcard route at the end of the `routes` array. This route matches any unknown routes and display the error page.
+This route matches any unknown routes and display the error page.
 
-[source,tsx]
-----
-{ path: '*', element: <ErrorView /> }
-----
-
-Then customize the `ErrorView` component to provide helpful information to the user.
+Customize the `ErrorView` component to provide helpful information to the user.
 
 Now, your application is equipped with an error page that'll be shown when no other route matches a requested URL.
 
