@@ -33,9 +33,82 @@ class Header extends LitElement {
     return script;
   }
 
+  private addGoogleTagListeners = () => {
+    let searchWrapperObserver: MutationObserver;
+    let hasSearchResults = false;
+    //  Add GTM specific listeners to search input only after it is loaded(1s after user clicks search button)
+    document.getElementById('docs-search-btn')?.addEventListener('click', () => {
+      hasSearchResults = false;
+      setTimeout(() => {
+        const searchInput = document.querySelector('#docs-search-input > input');
+        if (searchInput) {
+          //  Send GTM custom event after user inputs anything into the search field
+          searchInput.addEventListener('change', (_event): void => {
+            const inputValue = _event.target?.value;
+            if (inputValue) {
+              (window as any).dataLayer?.push({
+                event: 'docs-search-input',
+                'docs-last-search-input': inputValue,
+              });
+            }
+          });
+
+          // Monitor if the search has results and send GTM custom event when user query has no results
+          searchInput.addEventListener('focusout', (_event): void => {
+            const results = document.querySelector('#react-autowhatever-docs-autosuggestion');
+            const inputValue = _event.target?.value;
+            if (inputValue && results ? results.children.length === 0 : false) {
+              (window as any).dataLayer?.push({ event: 'docs-search-leave-no-results' });
+              hasSearchResults = false;
+            } else {
+              hasSearchResults = (results && results.children.length > 0) || false;
+            }
+          });
+
+          // Send GTM custom event when user closes the search and the search had results
+          if (!searchWrapperObserver) {
+            searchWrapperObserver = new MutationObserver((_event) => {
+              if (
+                hasSearchResults &&
+                _event[0].removedNodes &&
+                _event[0].removedNodes.length === 1 &&
+                _event[0].removedNodes.item(0)?.id === 'docs-search-wrapper'
+              ) {
+                // (window as any).dataLayer?.push({ event: 'docs-search-leave' });
+                (window as any).dataLayer?.push({ event: 'docs-search-leave-has-results' });
+              }
+            });
+
+            const wrapperParent = document.getElementById('docs-search-wrapper')?.parentElement;
+
+            if (wrapperParent) {
+              searchWrapperObserver.observe(wrapperParent, { childList: true });
+            }
+          }
+        }
+      }, 1000);
+    });
+  };
+
   render() {
+    this.addGoogleTagListeners();
+
     // Don't render HaaS in development (avoid noise in analytics)
     if (process.env.NODE_ENV === 'development') {
+      if (process.env.GTM_CONTAINER_ID) {
+        //  Google Tag Manager
+        const gtm = (w: Window, d: Document, s: string, l: string, i: string) => {
+          (w as any)[l] = (w as any)[l] || [];
+          (w as any)[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+          const f = d.getElementsByTagName(s)[0];
+          const j = d.createElement(s);
+          const dl = l !== 'dataLayer' ? `&l=${l}` : '';
+          j.async = true;
+          j.src = `https://www.googletagmanager.com/gtm.js?id=${i}${dl}`;
+          f.parentNode!.insertBefore(j, f);
+        };
+        gtm(window, document, 'script', 'dataLayer', process.env.GTM_CONTAINER_ID);
+      }
       return html``;
     }
 
