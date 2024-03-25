@@ -1,0 +1,425 @@
+---
+title: Renderers
+order: 20
+---
+
+
+= Renderers
+
+Although most grid content is typically plain text, cell renderers can be used to render the contents of specific columns using components and native HTML elements.
+
+A cell renderer is a function that generates the HTML to be rendered into a cell, defined through Java, Lit or React code.
+
+[.example]
+--
+
+ifdef::lit[]
+[source,typescript]
+----
+include::{root}/frontend/demo/component/grid/grid-content.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/grid/GridContent.java[render,tags=snippet1,indent=0,group=Flow]
+
+...
+
+include::{root}/src/main/java/com/vaadin/demo/component/grid/GridContent.java[render,tags=snippet2,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/grid/react/grid-content.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+
+== Grid Cell Renderers in Flow
+
+The Grid API in Flow supports three types of cell renderer:
+
+- *Basic Renderer*: Formatted plain text values and native HTML buttons.
+- *Component Renderer*: Renders content using UI components; Easy to use, but can have an adverse effect on performance.
+- *Lit Renderer*: Renders content using HTML markup and Lit data-binding syntax; More lightweight than component renderers.
+
+
+The example above demonstrates a Lit Renderer in the first column and a Component Renderer in the last column.
+
+
+=== Basic Renderers
+
+The following basic renderers can be used in the Flow Grid component.
+
+
+==== Local Date Renderer
+
+Use [classname]`LocalDateRenderer` to render [classname]`LocalDate` objects in the cells. An example of this is below, which is using [classname]`LocalDateRenderer` with the [methodname]`addColumn()` method:
+
+[source,java]
+----
+grid.addColumn(new LocalDateRenderer<>(
+        Item::getEstimatedDeliveryDate,
+        () -> DateTimeFormatter.ofLocalizedDate(
+                FormatStyle.MEDIUM)))
+    .setHeader("Estimated delivery date");
+----
+
+[classname]`LocalDateRenderer` works with a [classname]`DateTimeFormatter` or a [classname]`String` format to render [classname]`LocalDate` objects.
+
+Here is an example using a [classname]`String` format to render the [classname]`LocalDate` object:
+
+[source,java]
+----
+grid.addColumn(new LocalDateRenderer<>(
+        Item::getEstimatedDeliveryDate,
+        "dd/MM/yyyy"))
+    .setHeader("Estimated delivery date");
+----
+
+==== Local Date Time Renderer
+
+Use [classname]`LocalDateTimeRenderer` to render [classname]`LocalDateTime` objects in the cells. Below is an example using [classname]`LocalDateTimeRenderer` with the [methodname]`addColumn()` method:
+
+[source,java]
+----
+grid.addColumn(new LocalDateTimeRenderer<>(
+        Item::getPurchaseDate,
+        () -> DateTimeFormatter.ofLocalizedDateTime(
+                FormatStyle.SHORT,
+                FormatStyle.MEDIUM)))
+    .setHeader("Purchase date and time");
+----
+
+[classname]`LocalDateTimeRenderer` also works with [classname]`DateTimeFormatter` -- with separate styles for date and time -- or a [classname]`String` format to render [classname]`LocalDateTime` objects.
+
+Here is an example using a [classname]`String` format to render the [classname]`LocalDateTime` object:
+
+[source,java]
+----
+grid.addColumn(new LocalDateTimeRenderer<>(
+        Item::getPurchaseDate,
+        "dd/MM HH:mm:ss")
+).setHeader("Purchase date and time");
+----
+
+==== Number Renderer
+
+Use [classname]`NumberRenderer` to render any type of [classname]`Number` in the cells. It's especially useful for rendering floating-point values.
+
+The example here is using [classname]`NumberRenderer` with the [methodname]`addColumn()` method:
+
+[source,java]
+----
+grid.addColumn(new NumberRenderer<>(Item::getPrice,
+        NumberFormat.getCurrencyInstance())
+).setHeader("Price");
+----
+
+It's possible to configure the [classname]`NumberRenderer` with a [classname]`String` format, and an optional null representation. For example, to use a [classname]`String` format to render a price do something like this:
+
+[source,java]
+----
+grid.addColumn(new NumberRenderer<>(
+        Item::getPrice, "$ %(,.2f",
+        Locale.US, "$ 0.00")
+).setHeader("Price");
+----
+
+==== Native Button Renderer
+
+Use [classname]`NativeButtonRenderer` to create a clickable button in the cells. This creates a native `<button>` on the client side. Click events -- or tap for touch devices -- are handled on the server side.
+
+Below is an example using [classname]`NativeButtonRenderer` with the [methodname]`addColumn()` method:
+
+[source,java]
+----
+grid.addColumn(
+    new NativeButtonRenderer<>("Remove item",
+       clickedItem -> {
+           // remove the item
+    })
+);
+----
+
+You can configure a custom label for each item. The example here is configuring [classname]`NativeButtonRenderer` to use a custom label:
+
+[source,java]
+----
+grid.addColumn(new NativeButtonRenderer<>(
+        item -> "Remove " + item,
+        clickedItem -> {
+            // remove the item
+        })
+);
+----
+
+
+
+=== Component Renderer
+
+Component renderers are easy to build, but slow to render as they generate a component for each item in the dataset for a given column. The rendered components are fully controllable on the server side.
+
+For each rendered cell, Grid creates a corresponding component instance on the server side. A dataset of 100 items with 10 columns using a component renderer produces up to 1,000 components that need to be managed. The more components you use in a component renderer, the greater the impact on performance.
+
+You can use any component in the grid cells by providing a [classname]`ComponentRenderer` for a column. To define how the component is generated for each item, you need to pass a [classname]`Function` for the [classname]`ComponentRenderer`.
+
+For example, to add a column that contains a different icon depending on the person's gender, you would do something like this:
+
+[source,java]
+----
+Grid<Person> grid = new Grid<>();
+grid.setItems(people);
+
+grid.addColumn(new ComponentRenderer<>(person -> {
+    if (person.getGender() == Gender.MALE) {
+        return VaadinIcon.MALE.create();
+    } else {
+        return VaadinIcon.FEMALE.create();
+    }
+})).setHeader("Gender");
+----
+
+It's also possible to provide a separate [classname]`Supplier` to create the component, and a [classname]`Consumer` to configure it for each item.
+
+The example below uses [classname]`ComponentRenderer` with a [classname]`Consumer`:
+
+[source,java]
+----
+SerializableBiConsumer<Div, Person> consumer =
+        (div, person) -> div.setText(person.getName());
+grid.addColumn(
+        new ComponentRenderer<>(Div::new, consumer))
+    .setHeader("Name");
+----
+
+If the component is the same for each item, you only need to provide the [classname]`Supplier`.
+
+The example here is using [classname]`ComponentRenderer` with a [classname]`Supplier`:
+
+[source,java]
+----
+grid.addColumn(
+    new ComponentRenderer<>(
+             () -> VaadinIcon.ARROW_LEFT.create()));
+----
+
+You can create complex content for the grid cells by using the component APIs. This example is using [classname]`ComponentRenderer` to create complex content that listens for events and wraps multiple components in layouts:
+
+[source,java]
+----
+grid.addColumn(new ComponentRenderer<>(person -> {
+
+    // text field for entering a new name for the person
+    TextField name = new TextField("Name");
+    name.setValue(person.getName());
+
+    // button for saving the name to backend
+    Button update = new Button("Update", event -> {
+        person.setName(name.getValue());
+        grid.getDataProvider().refreshItem(person);
+    });
+
+    // button that removes the item
+    Button remove = new Button("Remove", event -> {
+        ListDataProvider<Person> dataProvider =
+            (ListDataProvider<Person>) grid
+                .getDataProvider();
+        dataProvider.getItems().remove(person);
+        dataProvider.refreshAll();
+    });
+
+    // layouts for placing the text field on top
+    // of the buttons
+    HorizontalLayout buttons =
+            new HorizontalLayout(update, remove);
+    return new VerticalLayout(name, buttons);
+})).setHeader("Actions");
+----
+
+Incidentally, [methodname]`addComponentColumn()` is a shorthand for [methodname]`addColumn()` with a [classname]`ComponentRenderer`.
+
+Editing grid items requires refreshing the grid's [classname]`DataProvider`. See <<{articles}/flow/binding-data/data-provider#,Data Providers>> for more details.
+
+
+
+=== Lit Renderer
+
+Lit renders quickly, but requires you to write HTML code. Components can be used in Lit renderers through their custom HTML tags.
+
+Lit templates are immutable: the state of the components can't be managed on the server side. However, the template can have different representations, depending on the state of the item.
+
+The only data sent from the server -- other than the template itself, which is sent only once -- is the extra name property of each item.
+
+Lit templates do support event handling on the server side. However, you can't, for example, disable or change the text of a button from the event handler. For such situations, use an editor instead.
+
+With Lit renderers, the server doesn't keep track of the components in each cell. It only manages the state of the items in each row. The client doesn't have to wait for the server to send missing information about what needs rendering. It can use the template to render all of the cells it requires.
+
+==== Using Lit Renderers
+
+Providing a [classname]`LitRenderer` for a column allows you to define the content of cells using HTML markup, and to use Lit notations for data binding and event handling.
+
+The example here is using [classname]`LitRenderer` to embolden the names of the persons:
+
+[source,java]
+----
+Grid<Person> grid = new Grid<>();
+grid.setItems(people);
+
+grid.addColumn(LitRenderer
+       .<Person>of("<b>${item.name}</b>")
+       .withProperty("name", Person::getName)
+).setHeader("Name");
+----
+
+The template string here is passed for the static [methodname]`LitRenderer.of()` method. Every property in the template needs to be defined in the [methodname]`withProperty()` method. The `${item.name}` is the Lit syntax for interpolating properties into the template. See the https://lit.dev/docs/templates/overview/[Lit documentation] for more.
+
+When using a custom Web Component or a Vaadin element in a Lit renderer, remember to import the component. This can be done using link:https://vaadin.com/api/platform/com/vaadin/flow/component/dependency/JsModule.html[`@JsModule`] or link:https://vaadin.com/api/platform/com/vaadin/flow/component/dependency/Uses.html[`@Uses`], if the component has a server-side counterpart. It ensures that all `StyleSheet`, `HtmlImport`, and `JavaScript` dependencies for the component are loaded when the Grid is used.
+
+
+==== Custom Properties in Lit Renderers
+
+You can use a [classname]`LitRenderer` to create and display new properties, properties the item didn't originally contain.
+
+The example below is using [classname]`LitRenderer` to compute the approximate age of each person and add it in a new column. Age is the current year minus the birth year.
+
+[source,java]
+----
+grid.addColumn(LitRenderer
+        .<Person>of("${item.age} years old")
+        .withProperty("age",
+                person -> Year.now().getValue()
+                        - person.getYearOfBirth())
+).setHeader("Age");
+----
+
+
+==== Using Expressions in Lit Renderers
+
+Lit templates can include any type of JavaScript expression, not limited to binding single property values.
+
+For example, by evaluating the person's age in the template expression, the age column could also be written as this:
+
+[source,java]
+----
+grid.addColumn(LitRenderer
+        .<Person>of("${new Date().getFullYear() - item.yearOfBirth} years old")
+        .withProperty("yearOfBirth", Person::getYearOfBirth);
+).setHeader("Age");
+----
+
+
+==== Binding Beans in Lit Renderers
+
+If an object contains a bean property that has sub-properties, it's only necessary to make the bean accessible by calling the [methodname]`withProperty()` method. The sub-properties become accessible automatically.
+
+[WARNING]
+All properties of the bean, even ones which aren't used in the template, are sent to the client. Therefore, use this feature with caution.
+
+The example that follows is using the [methodname]`withProperty()` method to access multiple sub-properties. This assumes that [classname]`Person` has a field for the [classname]`Address` bean, which has `street`, `number` and `postalCode` fields with corresponding getter and setter methods.
+
+[source,java]
+----
+grid.addColumn(LitRenderer.<Person>of(
+        "<div>${item.address.street}, number " +
+        "${item.address.number}<br>" +
+        "<small>${item.address.postalCode}</small>" +
+        "</div>")
+        .withProperty("address", Person::getAddress))
+    .setHeader("Address");
+----
+
+
+==== Handling Events in Lit Renderers
+
+You can define event handlers for the elements in your template, and hook them to server-side code, by calling the [methodname]`withFunction()` method on your [classname]`LitRenderer`. This is useful for editing items in the grid.
+
+The example that follows is using the [methodname]`withFunction()` method to map defined method names to server-side code. The snippet adds a new column with two buttons: one to edit a property of the item; and one to remove the item. Both buttons define a method to call for `click` events.
+
+[source,java]
+----
+grid.addColumn(LitRenderer.<Person>of(
+     "<button @click=\"${handleUpdate}\">Update</button>" +
+     "<button @click=\"${handleRemove}\">Remove</button>")
+    .withFunction("handleUpdate", person -> {
+        person.setName(person.getName() + " Updated");
+        grid.getDataProvider().refreshItem(person);
+    }).withFunction("handleRemove", person -> {
+        ListDataProvider<Person> dataProvider =
+            (ListDataProvider<Person>) grid
+                .getDataProvider();
+        dataProvider.getItems().remove(person);
+        dataProvider.refreshAll();
+    })).setHeader("Actions");
+----
+
+When the server-side data used by the grid here is edited, the grid's [classname]`DataProvider` is refreshed by calling the [methodname]`refreshItem()` method. This ensures that the changes are in the element. When an item is removed, the [methodname]`refreshAll()` method call ensures that all of the data is updated.
+
+You'll need to use Lit notation for event handlers. The `@click` is Lit syntax for the native `click`. The  [classname]`LitRenderer` has a fluent API, so you can chain the commands (e.g., `LitRenderer.of().withProperty().withProperty().withFunction()...`).
+
+The [methodname]`withFunction()` handler can also receive more data in addition to the item. To pass additional data from client to the server-side handler, you'll need to invoke the function in the Lit template with the desired extra parameters. The additional data can be accessed via the second handler parameter -- of type [classname]`JsonArray`.
+
+Below is an example of this:
+
+[source,java]
+----
+grid.addColumn(LitRenderer.<Person>of(
+     "<input .value=\"${item.profession}\" @change=\"${e => changed(e.target.value)}\">")
+    .withFunction("changed", (person, args) -> {
+        String profession = args.getString(0);
+        person.setProfession(profession);
+        grid.getDataProvider().refreshItem(person);
+    }).withProperty("profession", Person::getProfession));
+----
+
+The functions defined by the [methodname]`withFunction()` method can be called with any number of additional parameters. The additional argument of type [classname]`String` (the updated profession) is obtained from the second handler parameter with [methodname]`args.getString(0)`, where the number is the index of the argument in the [classname]`JsonArray`.
+
+
+==== Accessing Model Properties
+
+In addition to the most commonly used `item` and `index`, `Grid` has the following meta properties associated with each item. You can access these properties in the template via the `model` object.
+
+`model.expanded`::
+Indicates whether the item is expanded or collapsed. This is relevant only for `TreeGrid`.
+
+`model.level`::
+Indicates the hierarchy level of the item. This is relevant only for `TreeGrid`.
+
+`model.selected`::
+Indicates whether the item is selected or not.
+
+`model.detailsOpened`::
+Indicates whether the details row for the item is opened or closed.
+
+The example below shows how to create a custom tree toggle for the `TreeGrid`:
+
+[source,java]
+----
+// The click listener needs to check if the event gets canceled (by
+// vaadin-grid-tree-toggle) and only invoke the callback if it does.
+// vaadin-grid-tree-toggle will cancel the event if the user clicks on
+// a non-focusable element inside the toggle.
+var clickListener = "e => requestAnimationFrame(() => { e.defaultPrevented && onClick(e) })";
+
+grid.addColumn(LitRenderer.<Person> of(
+    "<vaadin-grid-tree-toggle @click=${" + clickListener + "} .leaf=${item.leaf} .expanded=${model.expanded} .level=${model.level}>"
+            + "${item.name}</vaadin-grid-tree-toggle>")
+    .withProperty("leaf",
+            item -> !grid.getDataCommunicator().hasChildren(item))
+    .withProperty("name",
+            item -> item.getName())
+    .withFunction("onClick", item -> {
+        if (grid.getDataCommunicator().hasChildren(item)) {
+            if (grid.isExpanded(item)) {
+                grid.collapse(item);
+            } else {
+                grid.expand(item);
+            }
+        }
+    }));
+----
