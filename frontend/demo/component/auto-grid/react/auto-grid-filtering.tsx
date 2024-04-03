@@ -43,8 +43,8 @@ function Example() {
       children: [nameFilter, categoryFilter],
     };
 
-    return categoryFilterValue === 'All' ? nameFilter : andFilter;
-  }, [categoryFilterValue, nameFilterValue]);
+    return categoryFilterValue.value === 'All' ? nameFilter : andFilter;
+  });
 
   return (
     <div className="flex flex-col items-start gap-m">

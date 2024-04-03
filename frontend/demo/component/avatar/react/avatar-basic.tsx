@@ -21,15 +21,14 @@ function Example() {
       {/* tag::snippet[] */}
       <Avatar />
 
-        <Avatar name={`${person.value?.firstName} ${person.value?.lastName}`} />
+      <Avatar name={`${person.value?.firstName} ${person.value?.lastName}`} />
 
-        <Avatar
-          img={person.value?.pictureUrl}
-          name={`${person.value?.firstName} ${person.value?.lastName}`}
-        />
-        {/* end::snippet[] */}
-      </HorizontalLayout>
-    </>
+      <Avatar
+        img={person.value?.pictureUrl}
+        name={`${person.value?.firstName} ${person.value?.lastName}`}
+      />
+      {/* end::snippet[] */}
+    </HorizontalLayout>
   );
 }
 

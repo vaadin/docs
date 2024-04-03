@@ -49,7 +49,7 @@ function Example() {
           <HorizontalLayout style={{ width: '100%', alignItems: 'center' }}>
             Customer details
             <VerticalLayout
-              hidden={openedPanelIndex === 0}
+              hidden={openedPanelIndex.value === 0}
               style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
             >
               <span>
@@ -93,7 +93,7 @@ function Example() {
           <HorizontalLayout style={{ width: '100%', alignItems: 'center' }}>
             Billing address
             <VerticalLayout
-              hidden={openedPanelIndex === 1}
+              hidden={openedPanelIndex.value === 1}
               style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
             >
               <span>{person.value.address?.street}</span>
@@ -140,7 +140,7 @@ function Example() {
           <HorizontalLayout style={{ width: '100%', alignItems: 'center' }}>
             Payment
             <VerticalLayout
-              hidden={openedPanelIndex === 2}
+              hidden={openedPanelIndex.value === 2}
               style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
             >
               <span>{card.value.accountNumber}</span>
