@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { GridPro } from '@vaadin/react-components/GridPro.js';
 import { GridProEditColumn } from '@vaadin/react-components/GridProEditColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -20,10 +20,10 @@ function Example() {
   return (
     // tag::snippet[]
     <GridPro items={items.value} enterNextRow>
-      <GridProEditColumn path="firstName"></GridProEditColumn>
-      <GridProEditColumn path="lastName"></GridProEditColumn>
-      <GridProEditColumn path="email"></GridProEditColumn>
-      <GridProEditColumn path="profession"></GridProEditColumn>
+      <GridProEditColumn path="firstName" />
+      <GridProEditColumn path="lastName" />
+      <GridProEditColumn path="email" />
+      <GridProEditColumn path="profession" />
     </GridPro>
     // end::snippet[]
   );

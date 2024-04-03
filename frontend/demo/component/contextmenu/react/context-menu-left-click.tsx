@@ -26,7 +26,7 @@ function Example() {
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getPeople({ count: 5 }).then(({ people }) => {
       gridItems.value = people;
     });

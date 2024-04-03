@@ -4,7 +4,7 @@ import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto
 import { AutoCrud } from '@vaadin/hilla-react-crud';
 import { EmployeeService } from 'Frontend/generated/endpoints';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
-import Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
+import type Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
 
 function Example() {
   // tag::snippet[]

@@ -22,38 +22,36 @@ function Example() {
   };
 
   return (
-    <>
-      <HorizontalLayout style={{ alignItems: 'center', justifyContent: 'center' }} theme="spacing">
-        <Button
-          onClick={() => {
-            dialogOpened.value = true;
-          }}
-        >
-          Open confirm dialog
-        </Button>
+    <HorizontalLayout style={{ alignItems: 'center', justifyContent: 'center' }} theme="spacing">
+      <Button
+        onClick={() => {
+          dialogOpened.value = true;
+        }}
+      >
+        Open confirm dialog
+      </Button>
 
-        {/* tag::snippet[] */}
-        <ConfirmDialog
-          header='Delete "Report Q4"?'
-          cancelButtonVisible
-          confirmText="Delete"
-          confirmTheme="error primary"
-          opened={dialogOpened.value}
-          onOpenedChanged={openedChanged}
-          onCancel={() => {
-            status.value = 'Canceled';
-          }}
-          onConfirm={() => {
-            status.value = 'Deleted';
-          }}
-        >
-          Are you sure you want to permanently delete this item?
-        </ConfirmDialog>
-        {/* end::snippet[] */}
+      {/* tag::snippet[] */}
+      <ConfirmDialog
+        header='Delete "Report Q4"?'
+        cancelButtonVisible
+        confirmText="Delete"
+        confirmTheme="error primary"
+        opened={dialogOpened.value}
+        onOpenedChanged={openedChanged}
+        onCancel={() => {
+          status.value = 'Canceled';
+        }}
+        onConfirm={() => {
+          status.value = 'Deleted';
+        }}
+      >
+        Are you sure you want to permanently delete this item?
+      </ConfirmDialog>
+      {/* end::snippet[] */}
 
-        <span hidden={status.value === ''}>Status: {status.value}</span>
-      </HorizontalLayout>
-    </>
+      <span hidden={status.value === ''}>Status: {status.value}</span>
+    </HorizontalLayout>
   );
 }
 

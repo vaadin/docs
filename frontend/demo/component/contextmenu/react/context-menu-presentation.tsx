@@ -10,7 +10,6 @@ import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { createRoot } from 'react-dom/client';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 

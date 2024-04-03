@@ -17,10 +17,9 @@ function Example() {
   }, []);
 
   return (
-    <>
-      <HorizontalLayout theme="spacing">
-        {/* tag::snippet[] */}
-        <Avatar />
+    <HorizontalLayout theme="spacing">
+      {/* tag::snippet[] */}
+      <Avatar />
 
         <Avatar name={`${person.value?.firstName} ${person.value?.lastName}`} />
 

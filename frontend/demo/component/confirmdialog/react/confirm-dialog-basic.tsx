@@ -1,6 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import {
@@ -23,42 +24,40 @@ function Example() {
   }
 
   return (
-    <>
-      <HorizontalLayout style={{ alignItems: 'center', justifyContent: 'center' }} theme="spacing">
-        <Button
-          onClick={() => {
-            dialogOpened.value = true;
-          }}
-        >
-          Open confirm dialog
-        </Button>
+    <HorizontalLayout style={{ alignItems: 'center', justifyContent: 'center' }} theme="spacing">
+      <Button
+        onClick={() => {
+          dialogOpened.value = true;
+        }}
+      >
+        Open confirm dialog
+      </Button>
 
-        {/* tag::snippet[] */}
-        <ConfirmDialog
-          header="Unsaved changes"
-          cancelButtonVisible
-          rejectButtonVisible
-          rejectText="Discard"
-          confirmText="Save"
-          opened={dialogOpened.value}
-          onOpenedChanged={openedChanged}
-          onConfirm={() => {
-            status.value = 'Saved';
-          }}
-          onCancel={() => {
-            status.value = 'Canceled';
-          }}
-          onReject={() => {
-            status.value = 'Discarded';
-          }}
-        >
-          There are unsaved changes. Do you want to discard or save them?
-        </ConfirmDialog>
-        {/* end::snippet[] */}
+      {/* tag::snippet[] */}
+      <ConfirmDialog
+        header="Unsaved changes"
+        cancelButtonVisible
+        rejectButtonVisible
+        rejectText="Discard"
+        confirmText="Save"
+        opened={dialogOpened.value}
+        onOpenedChanged={openedChanged}
+        onConfirm={() => {
+          status.value = 'Saved';
+        }}
+        onCancel={() => {
+          status.value = 'Canceled';
+        }}
+        onReject={() => {
+          status.value = 'Discarded';
+        }}
+      >
+        There are unsaved changes. Do you want to discard or save them?
+      </ConfirmDialog>
+      {/* end::snippet[] */}
 
-        <span hidden={status.value === ''}>Status: {status.value}</span>
-      </HorizontalLayout>
-    </>
+      <span hidden={status.value === ''}>Status: {status.value}</span>
+    </HorizontalLayout>
   );
 }
 

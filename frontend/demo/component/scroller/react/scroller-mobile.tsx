@@ -25,19 +25,19 @@ function Example() {
       <Scroller scroll-direction="horizontal">
         <HorizontalLayout style={{ display: 'inline-flex' }} theme="padding spacing">
           <Button style={{ height: '100px' }}>
-            <Icon icon="vaadin:clipboard-check" slot="prefix"></Icon>
+            <Icon icon="vaadin:clipboard-check" slot="prefix" />
             Audit
           </Button>
           <Button style={{ height: '100px' }}>
-            <Icon icon="vaadin:book-dollar" slot="prefix"></Icon>
+            <Icon icon="vaadin:book-dollar" slot="prefix" />
             Report
           </Button>
           <Button style={{ height: '100px' }}>
-            <Icon icon="vaadin:line-chart" slot="prefix"></Icon>
+            <Icon icon="vaadin:line-chart" slot="prefix" />
             Dashboard
           </Button>
           <Button style={{ height: '100px' }}>
-            <Icon icon="vaadin:invoice" slot="prefix"></Icon>
+            <Icon icon="vaadin:invoice" slot="prefix" />
             Invoice
           </Button>
         </HorizontalLayout>

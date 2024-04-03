@@ -34,16 +34,14 @@ function Example() {
   }, []);
 
   return (
-    <>
-      <Grid items={items.value}>
-        <GridFilterColumn header="Name" path="displayName" flexGrow={0} width="230px">
-          {nameRenderer}
-        </GridFilterColumn>
+    <Grid items={items.value}>
+      <GridFilterColumn header="Name" path="displayName" flexGrow={0} width="230px">
+        {nameRenderer}
+      </GridFilterColumn>
 
-        <GridFilterColumn path="email" />
-        <GridFilterColumn path="profession" />
-      </Grid>
-    </>
+      <GridFilterColumn path="email" />
+      <GridFilterColumn path="profession" />
+    </Grid>
   );
 }
 

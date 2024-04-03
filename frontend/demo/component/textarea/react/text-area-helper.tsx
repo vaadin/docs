@@ -21,7 +21,7 @@ function Example() {
         text.value = event.detail.value;
       }}
       style={{ width: '100%' }}
-    ></TextArea>
+    />
     // end::snippet[]
   );
 }

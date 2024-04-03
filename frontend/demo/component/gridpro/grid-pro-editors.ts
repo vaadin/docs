@@ -48,10 +48,9 @@ export class Example extends LitElement {
             []
           )}
           ${columnEditModeRenderer<Person>(
-            ({ birthday }) =>
-              html`
-                <vaadin-date-picker style="width: 100%" .value="${birthday}"></vaadin-date-picker>
-              `,
+            ({ birthday }) => html`
+              <vaadin-date-picker style="width: 100%" .value="${birthday}"></vaadin-date-picker>
+            `,
             []
           )}
         ></vaadin-grid-pro-edit-column>

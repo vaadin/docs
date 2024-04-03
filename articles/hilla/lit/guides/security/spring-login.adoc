@@ -4,6 +4,8 @@ description: How to configure authentication with Spring Security.
 order: 90
 ---
 :hilla-lit:
+// Workaround for https://github.com/vaadin/docs-app/issues/411
+:root-fix:
 // tag::content[]
 
 
@@ -30,7 +32,7 @@ After doing this, the application is protected with a default Spring login view,
 
 == Server Configuration
 
-To implement your own security configuration, create a new configuration class that extends the [classname]`VaadinWebSecurity` class, and annotate it to enable security. 
+To implement your own security configuration, create a new configuration class that extends the [classname]`VaadinWebSecurity` class, and annotate it to enable security.
 
 [classname]`VaadinWebSecurity` is a helper which provides default bean implementations for link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/SecurityFilterChain.html[SecurityFilterChain] and link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/configuration/WebSecurityCustomizer.html[WebSecurityCustomizer]. It takes care of the basic configuration for requests, so that you can concentrate on your application-specific configuration.
 
@@ -89,7 +91,7 @@ Public resources can be added by overriding [methodname]`configure(WebSecurity w
 .`SecurityConfig.java`
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/SecurityConfigDemo.java[tags=public-resources]
+include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/authentication/SecurityConfigDemo.java[tags=public-resources]
 ----
 
 ifdef::hilla-lit[]
@@ -102,7 +104,7 @@ Use the `<vaadin-login-overlay>` component to create the following login view, s
 .`frontend/login-view.ts`
 [source,typescript]
 ----
-include::{root}/frontend/demo/fusion/authentication/login-view.ts[]
+include::{root}{root-fix}/frontend/demo/fusion/authentication/login-view.ts[]
 ----
 
 The authentication helper methods in the code examples are grouped in a separate TypeScript file, as shown in the following. It utilizes a Hilla [methodname]`login()` helper method for authentication based on Spring Security.
@@ -112,12 +114,12 @@ The authentication helper methods in the code examples are grouped in a separate
 .`frontend/auth.ts`
 [source,typescript]
 ----
-include::{root}/frontend/demo/fusion/authentication/auth.ts[tags=**]
+include::{root}{root-fix}/frontend/demo/fusion/authentication/auth.ts[tags=**]
 ----
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=**]
+include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=**]
 ----
 --
 
@@ -141,7 +143,7 @@ Update the [classname]`SecurityConfig` to use the [methodname]`setLogin()` helpe
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/SecurityConfigDemo.java[tags=login]
+include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/authentication/SecurityConfigDemo.java[tags=login]
 ----
 
 Note, the `path` for the login view in [filename]`routes.ts` must match the one defined in [classname]`SecurityConfig`.
@@ -233,16 +235,17 @@ ifdef::hilla-react[]
 
 The implementation of client-side security in React is greatly simplified by the `react-auth` package. It can use any `@BrowserCallable` service which provides user authentication information, like the one in this example:
 
+[#_user-info-service]
 [.example]
 --
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfoService.java[tags=snippet]
+include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfoService.java[tags=snippet]
 ----
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=snippet]
+include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=snippet]
 ----
 --
 
@@ -253,7 +256,7 @@ The easiest way to configure authentication to use this service is to create an 
 .`frontend/auth.ts`
 [source,typescript]
 ----
-include::{root}/frontend/demo/auth/auth.ts[]
+include::{root}{root-fix}/frontend/demo/auth/auth.ts[]
 ----
 
 The exported `AuthProvider` must wrap the root component of your application to be able to apply security to it:
@@ -261,7 +264,7 @@ The exported `AuthProvider` must wrap the root component of your application to 
 `frontend/App.tsx`
 [source,tsx]
 ----
-include::{root}/frontend/demo/auth/App.tsx[tags=snippet]
+include::{root}{root-fix}/frontend/demo/auth/App.tsx[tags=snippet]
 ----
 
 The `useAuth` hook provides four items:
@@ -278,7 +281,7 @@ Use the `<LoginOverlay>` component to create the following login view, so that t
 .`frontend/views/LoginView.tsx`
 [source,typescript]
 ----
-include::{root}/frontend/demo/auth/LoginView.tsx[tags=snippet]
+include::{root}{root-fix}/frontend/demo/auth/LoginView.tsx[tags=snippet]
 ----
 
 
@@ -289,7 +292,7 @@ After the login view is defined, you should define a route for it in the [filena
 .`frontend/routes.tsx`
 [source,typescript]
 ----
-include::{root}/frontend/demo/auth/routes.tsx[tags=snippet]
+include::{root}{root-fix}/frontend/demo/auth/routes.tsx[tags=snippet]
 ----
 
 
@@ -307,14 +310,12 @@ Hilla supports role-based security out-of-the-box, provided that the user object
 }
 ----
 
-If roles are exposed differently in your user object, you can still tell Hilla how to find them by amending your authentication configuration on the client:
+If roles are exposed differently in your user object, you can still tell Hilla how to find them by amending your authentication configuration on the client. In the <<#_user-info-service,[classname]`UserInfo` example>> provided before, the roles are returned by [methodname]`getAuthorities`, so the [filename]`auth.ts` file should be modified as such:
 
 .`frontend/auth.ts`
 [source,typescript]
 ----
-const auth = configureAuth(UserInfoService.getUserInfo, {
-  getRoles: (user) => user.customRoles,
-});
+include::{root}/frontend/demo/auth/authRoles.ts[tags=snippet]
 ----
 
 The `getRoles` function is still expected to return an array of strings. As a result, you might need to `map` your roles to strings.
@@ -433,10 +434,3 @@ Remember to add the corresponding LDAP client dependency to the project:
 ----
 
 // end::content[]
-
-
-++++
-<style>
-[class^=PageHeader-module--descriptionContainer] {display: none;}
-</style>
-++++

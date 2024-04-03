@@ -21,7 +21,7 @@ document.body.style.setProperty('--docs-example-render-background-color', 'var(-
 document.documentElement.setAttribute('lang', 'en');
 
 // Applies input field borders based on a `borders` URL parameter
-var url = new URL(window.location.href);
-if (url.searchParams.has("borders")) {
-    document.body.style.setProperty("--vaadin-input-field-border-width", "1px");
+const url = new URL(window.location.href);
+if (url.searchParams.has('borders')) {
+  document.body.style.setProperty('--vaadin-input-field-border-width', '1px');
 }
