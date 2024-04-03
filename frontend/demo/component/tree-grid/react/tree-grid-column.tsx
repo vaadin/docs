@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useMemo } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   Grid,
   type GridDataProviderCallback,
@@ -11,8 +13,6 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Button } from '@vaadin/react-components/Button.js';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

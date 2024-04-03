@@ -1,13 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   PasswordField,
   type PasswordFieldValueChangedEvent,
 } from '@vaadin/react-components/PasswordField.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 type PasswordStrength = 'moderate' | 'strong' | 'weak';
 

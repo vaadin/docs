@@ -1,9 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { RichTextEditor } from '@vaadin/react-components/RichTextEditor.js';
-import templates from '../../../../../src/main/resources/data/templates.json';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { RichTextEditor } from '@vaadin/react-components/RichTextEditor.js';
+import templates from '../../../../../src/main/resources/data/templates.json';
 
 function Example() {
   useSignals(); // hidden-source-line

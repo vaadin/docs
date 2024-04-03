@@ -1,14 +1,13 @@
 import { useForm } from '@vaadin/hilla-react-form';
-
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { OfficeService } from 'Frontend/generated/endpoints';
 import CompanyOfficeModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/CompanyOfficeModel';
-import { useEffect } from 'react';
 import type Country from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/Country';
 import type City from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/City';
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { Button } from '@vaadin/react-components/Button.js';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 export default function CompanyOfficeView() {
   useSignals(); // hidden-source-line

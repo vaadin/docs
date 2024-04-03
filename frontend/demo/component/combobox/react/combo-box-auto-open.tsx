@@ -7,6 +7,7 @@ import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 
 function Example() {
+  useSignals(); // hidden-source-line
   const items = useSignal<Country[]>([]);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
-import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './auth';
 

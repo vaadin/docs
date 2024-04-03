@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Grid } from '@vaadin/react-components/Grid.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -7,8 +9,6 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 // tag::snippet[]
 function subscriberHeaderRenderer() {

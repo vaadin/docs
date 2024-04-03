@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Grid, type GridCellFocusEvent, type GridElement } from '@vaadin/react-components/Grid.js';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line
