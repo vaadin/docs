@@ -1,11 +1,10 @@
 package com.vaadin.demo.flow.integration.react;
 
-import java.util.function.Consumer;
-
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.react.ReactAdapterComponent;
+import com.vaadin.flow.function.SerializableConsumer;
 
 // tag::annotations[]
 @NpmPackage(value = "react-colorful", version = "5.6.1") // <1>
@@ -35,7 +34,7 @@ public class RgbaColorPicker extends ReactAdapterComponent {
     // end::accessors[]
 
     // tag::event[]
-    public void addColorChangeListener(Consumer<RgbaColor> listener) {
+    public void addColorChangeListener(SerializableConsumer<RgbaColor> listener) {
         addStateChangeListener("color", RgbaColor.class, listener);
     }
     // tag::annotations[]
