@@ -196,15 +196,52 @@ public void setWebDriverAndCapabilities(BrowserTestInfo browserTestInfo) {
 - Hostname of the hub for remote execution; and
 - Browser name and version used for local execution.
 
-== Parameterized Tests (JUnit 5)
+== Parameterized Tests
 
-https://junit.org/junit5/docs/current/user-guide/#writing-tests-parameterized-tests[Parameterized tests] is a JUnit feature that make it possible to run a test multiple times with different arguments.
-They are declared as regular test methods but use the [annotationname]`@ParameterizedTest` annotation instead of [annotationname]`@Test`.
+https://junit.org/junit5/docs/current/user-guide/#writing-tests-parameterized-tests[Parameterized tests] is a JUnit feature that make it possible to run a test multiple times with different arguments. It is available both in JUnit 4 and JUnit 5, and Testbench supports it, but the test setup is slightly different.
 
+In https://github.com/junit-team/junit4/wiki/Parameterized-tests[JUnit 4], the test class must use the [classname]`Parameterized` runner and you provide parameters that can be injected into the class constructor or public fields.
+
+.Example of Parameterized Test in JUnit 4
+[source,java]
+----
+@RunWith(Parameterized.class)
+public class MyTestClass extends TestBenchTestCase {
+
+    @Parameterized.Parameters
+    public static Iterable<String> data() {
+        return List.of("first", "second");
+    }
+
+    private final String parameter;
+
+    public MyTestClass(String parameter) {
+        this.parameter = parameter;
+    }
+
+    @Test
+    public void myTestMethod() {
+        getDriver().get("http://localhost:8080/" + parameter);
+    }
+
+    @Before
+    public void setup() {
+        setDriver(new ChromeDriver());
+    }
+
+    @After
+    public void tearDown() {
+        getDriver().quit();
+    }
+}
+----
+
+With JUnit 5 the tests are declared as regular test methods but using the [annotationname]`@ParameterizedTest` annotation instead of [annotationname]`@Test`. Parameters are injected as method arguments.
 Unfortunately, currently using [annotationname]`@ParameterizedTest` in combination with other https://junit.org/junit5/docs/current/user-guide/#writing-tests-test-templates[Test Templates], like
-[annotationname]`@BrowserTest`, may not produce the desired effects, because every generated test is aware only of the features provided by its generator.
+[annotationname]`@BrowserTest`, may not produce the desired effects, because every generated test is aware only of the features provided by its generator. 
 To better clarify, look at the following (not working) example code
 
+.Not Working Example of Parameterized Test in JUnit 5
 [source,java]
 ----
 class MyTestClass extends BrowserTestBase {
@@ -219,12 +256,15 @@ class MyTestClass extends BrowserTestBase {
 ----
 
 The expectation might be that the test should run twice, opening the browser at the requested URL, first `http://localhost:8080/first` and then `http://localhost:8080/second`. However, what happens is that the execution produces three failures: two because the `@BrowserTest` initialization is not performed (_No ParameterResolver registered for parameter [com.vaadin.testbench.browser.BrowserTestInfo arg0]_), and one because the parameter value cannot be injected (_No ParameterResolver registered for parameter [java.lang.String param]_).
+For further informaton, you can look at the https://github.com/junit-team/junit5/issues/1224#issuecomment-355303637[JUnit issues] reporting the problem, and the related https://github.com/junit-team/junit5/issues/871[Feature request ticket].
+
 
 To circumvent this limitation, Testbench introduced the [annotationname]`@ParameterizedBrowserTest` annotation.
 It is a specialization `@BrowserTest` that supports parameter injection, in the exactly same way as when using [annotationname]`@ParameterizedTest`.
 
 Below is an example on how to implement a parameterized browser tests
 
+.Example of Parameterized Browser Test in JUnit 5
 [source,java]
 ----
 @RunLocally(Browser.CHROME) // (1)
@@ -242,15 +282,17 @@ class MyTestClass extends BrowserTestBase {
 2. Mark the method as a parameterized browser test
 3. Provide sources for method parameters
 
-=== Parameterized tests on multiple browser
+=== Parameterized Tests on Multiple Browsers
 
-A [annotationname]`@ParameterizedBrowserTest` method can run on a single browser.
-If the Testbench test class is configured to run on <<./multiple-browsers#,multiple browsers>>, then the [annotationname]`@ParameterizedBrowserTest` test will be automatically disabled.
+To run a parameterized tests on <<./multiple-browsers#,multiple local browsers>> you need to implement the tests in a base abstract class and then create a subclass for each browser, annotating it with [annotationname]`@RunLocally`.
+With JUnit 4, the base test class inherits from [classname]`ParallelTest` to make Testbench take care of creating and destroying driver instances.
 
-To run a parameterized tests on multiple local browser you need to implement the tests in a base abstract class and then create a subclass for each browser, annotating it with [annotationname]`@RunLocally`.
 
+[.example]
+--
 [source,java]
 ----
+<source-info group="JUnit 5"></source-info>
 abstract class AbstractParameterizedTest extends BrowserTestBase {
 
     @ParameterizedBrowserTest
@@ -271,12 +313,48 @@ class FirefoxParameterizedIT extends AbstractParameterizedTest {
 
 }
 ----
+[source,java]
+----
+<source-info group="JUnit 4"></source-info>
+@RunWith(Parameterized.class)
+abstract class AbstractParameterizedTest extends ParallelTest {
+
+    @Parameterized.Parameters
+    public static Iterable<String> data() {
+        return List.of("first", "second");
+    }
+
+    @Parameterized.Parameter(0)
+    public String parameter;
+
+    @Test
+    public void myTestMethod() {
+        getDriver().get("http://localhost:8080/" + parameter);
+    }
+
+}
+
+@RunLocally(Browser.CHROME)
+class ChromeParameterizedIT extends AbstractParameterizedTest {
+
+}
+
+@RunLocally(Browser.FIREFOX)
+class FirefoxParameterizedIT extends AbstractParameterizedTest {
+
+}
+----
+--
+
 
 Parameterized test can also run on multiple remote browsers, using a similar setup.
 The main difference is that the base class should be annotated with [annotionname]`@RunOnHub` and the subclasses should have a method annotated with [annotationname]`@BrowserConfiguration` that returns a [interfacename]`List` containing a single [classname]`DesiredCapabilities` item. Note that the subclasses must have `public` visibility to work with [annotationname]`@BrowserConfiguration` annotation.
 
+[.example]
+--
 [source,java]
 ----
+<source-info group="JUnit 5"></source-info>
 @RunOnHub("hub.testgrid.mydomain.com")
 abstract class AbstractParameterizedTest extends BrowserTestBase {
 
@@ -304,7 +382,39 @@ public class FirefoxParameterizedIT extends AbstractParameterizedTest {
         return capabilities;
     }
 }
-
 ----
+[source,java]
+----
+<source-info group="JUnit 4"></source-info>
+@RunWith(Parameterized.class)
+@RunOnHub("hub.testgrid.mydomain.com")
+abstract class AbstractParameterizedTest extends ParallelTest {
+
+    @Parameterized.Parameters
+    public static Iterable<String> data() {
+        return List.of("first", "second");
+    }
+
+    @Parameterized.Parameter(0)
+    public String parameter;
+
+    @Test
+    public void myTestMethod() {
+        getDriver().get("http://localhost:8080/" + parameter);
+    }
+
+}
+
+@RunLocally(Browser.CHROME)
+class ChromeParameterizedIT extends AbstractParameterizedTest {
+
+}
+
+@RunLocally(Browser.FIREFOX)
+class FirefoxParameterizedIT extends AbstractParameterizedTest {
+
+}
+----
+--
 
 [discussion-id]`9F6A7015-9AD8-43DC-AC68-CC6D66C5212F`
