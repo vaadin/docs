@@ -18,11 +18,11 @@ Kubernetes Kit helps with session replication by transferring HTTP session data 
 
 To transfer information to the session storage, the HTTP session attributes are encoded in a binary format, using https://docs.oracle.com/en/java/javase/17/docs/specs/serialization/index.html[Java serialization].
 
-To get session replication working, the application code should be written in a way that all objects stored in the HTTP session are eligible for Java serialization. They must implement a special marker interface: [classname]`java.io.Serializable`. Objects that can't be serializable (e.g., third-party classes) must be defined as `transient`. As a result, they're skipped by the serialization process. After deserialization, transient fields are null.
+To get session replication working, the application code should be written in a way that all objects stored in the HTTP session are eligible for Java serialization. They must implement a special marker interface: [classname]`java.io.Serializable`. Objects that can't be serializable (e.g., third-party classes) must be defined as `transient`. As a result, they're skipped by the serialization process. After deserialization, the values of transient fields are null.
 
 For Spring applications, Kubernetes Kit is also able to overcome this limitation. Transient fields referencing Spring beans are detected during serialization and metadata is stored along with the session attributes. On deserialization, transient fields matching metadata are injected with the corresponding Spring bean.
 
-Transient field inspection and injection is performed using Java reflection. For performance reasons, and to avoid potential issues with reflection access checks, restrict the inspection to only application classes.
+Transient field inspection and injection is performed using Java reflection. For performance reasons, and to avoid potential problems with reflection access checks, restrict the inspection to only application classes.
 
 Restrictions can be imposed by configuring `vaadin.serialization.transients.include-packages` and `vaadin.serialization.transients.exclude-packages` properties to limit the inspection to classes whose packages match the configured rules. You may want to exclude packages not involved in the session.
 
@@ -266,7 +266,7 @@ class OrderEditor {
 
 === Serialization & Deserialization Callbacks
 
-When a serialization or deserialization error happens, Kubernetes Kit provides a callback mechanism which can be used to add custom steps for error handling -- before the serialization or deserialization fails. This can be achieved by implementing the `SessionSerializationCallback` interface, overriding the `onSerializationError(Exception exception)` or `onDeserializationError(Exception exception)` callback methods and providing a bean from a class implementing this interface. If no bean is provided, a no-op implementation of this interface is used by default.
+When a serialization or a deserialization error happens, Kubernetes Kit provides a callback mechanism which can be used to add custom steps for error handling -- before the serialization or deserialization fails. This can be achieved by implementing the `SessionSerializationCallback` interface, overriding the `onSerializationError(Exception exception)` or the `onDeserializationError(Exception exception)` callback methods, and providing a bean from a class implementing this interface. If no bean is provided, a no-op implementation of this interface is used by default.
 
 The `SessionSerializationCallback` interface also provides the `onSerializationSuccess()` and `onDeserializationSuccess()` callback methods which can be used to add custom steps after a successful serialization or deserialization in the same way as for the error callbacks.
 
