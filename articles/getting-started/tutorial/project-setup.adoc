@@ -17,19 +17,57 @@ In a Vaadin application it makes more sense to talk about _presentation layer_ a
 
 In a Flow app, the presentation layer has parts that run in the browser and parts that run on the server. In a Hilla app, the presentation layer runs only in the browser. The application layer is the same for both cases. It is even possible to combine Hilla and Flow in the same app. This is called a _hybrid app_, but it is outside the scope of this tutorial.
 
-== Architecture
-
-// TODO Describe the architecture of the application we are going to build
-
 == Download the Starter
 
-In this tutorial, the focus is going to be on the presentation layer only. Therefore, a starter project with a complete application layer has been created for you. It is a Maven-project compressed as a zip-file that you can download https://github.com/peholmst-sandbox/unified-tutorial/releases/download/latest-starter/unified-chat-tutorial-starter.zip:[here].
+In this tutorial, the focus is going to be on the presentation layer only. Therefore, a starter project with a complete application layer has been created for you. It is a Maven-project compressed as a zip-file that you can https://github.com/peholmst-sandbox/unified-tutorial/releases/download/latest-starter/unified-chat-tutorial-starter.zip:[download from GitHub].
 
 Once you have downloaded it, uncompress it and open it in your favorite Java IDE. In IntelliJ IDEA, the project looks like this:
 
 image::images/project-setup.png[]
 
-// TODO Continue here to explain the file structure and how it relates to the architecture
+In order to understand the structure of this project, you are going to have a quick look at the underlying architecture of the application.
+
+== Architecture
+
+Software architecture can be diagrammed in many different ways. A simple and intuitive way of diagramming software architectures is the https://c4model.com[C4 model]. 
+
+C4 takes its inspiration from digital maps with multiple levels. The highest level has the least amount of details. "Zooming in" on a level takes you to the next level that reveals more details, etc. The name "C4" represents four levels: _Context_, _Container_, _Component_ and _Code_.
+
+The highest level, the context, shows _how the software system fits into the world around it_. If you zoom in on the system, you get to the second level, which shows the containers that make up the system. 
+
+A container is _an application or a data store_. If you zoom in on a container, you get to the third level, which shows the components that make up the container. 
+
+A component is _a grouping of related functionality encapsulated behind a well-defined interface_. Finally, if you zoom in on a component, you get to the fourth and last level, which shows the code that implements the component. 
+
+The C4 model does not require you to use all four levels unless you need to. The application you are going to build during this tutorial is quite simple and so you can jump straight to the container diagram, which looks like this:
+
+image::images/container-diagram.png[]
+
+The application consists of two containers: the user's web browser and a Spring Boot web application. Regardless of whether you build the user interface with Hilla or Flow, the containers remain the same. However, if you zoom in on them to have a look at the components, they are slightly different. The web application container looks like this:
+
+image::images/component-diagram.png[]
+
+The application layer consists of two components: _Chat_ and _In-memory Storage_. The chat component exposes an Application Programming Interface (API) for the user interface to call, and a Service Provider Interface (SPI) for storing and retrieving messages. This makes it possible to plug in different storage mechanisms without changing the chat component itself. In this tutorial, all chat messages are stored in memory, but you could easily plug in another component that stores the messages in, for example, a relational database instead. This way of splitting systems into smaller components with clearly defined interfaces (APIs and SPIs) is a good praxis when building Vaadin applications and can be applied to both the application layer and the presentation layer.
+
+If you implement the user interface with Hilla and React, Vaadin generates a TypeScript client that you can use to call the Chat API directly from the browser. You do not need to worry about REST controllers; Vaadin takes care of that automatically.
+
+If you implement the user interface with Flow, you need to build a new component: the Flow UI. This is a component that uses the Chat API direcetly inside the Java Virtual Machine (JVM). It does not expose a public API for other components to use. Instead, Vaadin takes care of the rendering of the user interface in the browser, and the communication between the browser and the server.
+
+Finally a word of caution. When you build user interfaces, you construct them from components (such as buttons, text fields, grids, etc.). You can also have containers in your user interface, such as layouts containing other components. Especially when taking about both types of components and containers in the same setting, it may be a good idea to use prefixes to avoid confusion: UI containers and components when talking about the user interface, and architectural containers and components when talking about the software architecture.
+
+== Project Structure
+
+With the architecture fresh in mind, take another look at the project structure in your IDE:
+
+image::images/project-setup.png[]
+
+The chat component resides in the `com.example.application.chat` package. Its API consists of all the public classes and public methods in this package. The `spi` subpackage contains interfaces, and any classes needed by them, that a service provider component should implement.
+
+The in-memory storage component resides in the `com.example.application.inmemorystorage` package. It has no public API and so all its classes are package-private.
+
+Finally, there is a Spring Boot application class, `com.example.application.Application`. This class sets up the Spring application context, which wires the components together.
+
+The rest of the files are files you would typically find in a Spring Boot application built with Maven.
 
 == Pick Your Technology
 
