@@ -4,6 +4,7 @@ import {spawn} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
+import * as readline from 'readline'
 
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
@@ -254,11 +255,11 @@ const progressState = {
 function clearLines(n) {
   for (let i = 0; i < n; i++) {
     const y = i === 0 ? null : -1;
-    process.stdout.moveCursor(0, y);
-    process.stdout.clearLine(i);
+    readline.moveCursor(process.stdout,0, y);
+    readline.clearLine(process.stdout, i);
     process.stdout.line;
   }
-  process.stdout.cursorTo(0);
+  readline.cursorTo(process.stdout,0);
 }
 
 /**
