@@ -49,7 +49,7 @@ function Example() {
       <HorizontalLayout theme="spacing">
         <Button onClick={handleEdit}>Edit item</Button>
         <Button onClick={handleCreate}>Create item</Button>
-        <Button onClick={toggleDisabled}>{disabled ? 'Enable Form' : 'Disable Form'}</Button>
+        <Button onClick={toggleDisabled}>{disabled.value ? 'Enable Form' : 'Disable Form'}</Button>
       </HorizontalLayout>
       <AutoForm
         service={EmployeeService}
