@@ -1,6 +1,6 @@
-const path = require(`path`);
-const fs = require(`fs`);
-const https = require('https');
+import path from 'path';
+import fs from 'fs';
+import https from 'https';
 
 async function fetchAntlersStyleSheets() {
   // Full collection of available style sheets: https://gitlab.vaadin.com/vaadincom/antlers
