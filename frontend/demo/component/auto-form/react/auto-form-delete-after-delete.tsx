@@ -50,7 +50,7 @@ function Example() {
         <Button onClick={handleEdit}>Edit item</Button>
         <Button onClick={handleCreate}>Create item</Button>
         <Button onClick={toggleDeleteButtonVisibility}>
-          {showDeleteButton ? 'Hide Delete Button' : 'Show Delete Button'}
+          {showDeleteButton.value ? 'Hide Delete Button' : 'Show Delete Button'}
         </Button>
       </HorizontalLayout>
       <AutoForm
