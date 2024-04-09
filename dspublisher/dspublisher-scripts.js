@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
+import {spawn} from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const DSP_VERSION = '2.2.0-rc.5';
 
@@ -260,12 +264,13 @@ function clearLines(n) {
 /**
  * Logs to console and renders the progress bar.
  */
+let progressLogged = false;
 function logProgress(state, output) {
-  if (this.progressLogged && !process.env.NO_PROGRESS_LOG) {
+  if (progressLogged && !process.env.NO_PROGRESS_LOG) {
     // Clear the progress bar
     clearLines(2);
   }
-  this.progressLogged = true;
+  progressLogged = true;
 
   // Log the output
   if (output) {
