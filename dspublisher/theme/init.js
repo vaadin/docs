@@ -1,6 +1,10 @@
 import path from 'path';
 import fs from 'fs';
 import https from 'https';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function fetchAntlersStyleSheets() {
   // Full collection of available style sheets: https://gitlab.vaadin.com/vaadincom/antlers
@@ -53,4 +57,4 @@ async function fetchAntlersStyleSheets() {
 }
 
 // The default gets run whenever dspublisher is started
-module.exports = fetchAntlersStyleSheets;
+export default fetchAntlersStyleSheets;
