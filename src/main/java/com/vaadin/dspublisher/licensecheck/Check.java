@@ -6,7 +6,7 @@ import com.vaadin.pro.licensechecker.LicenseChecker;
 public class Check {
     public static void main(String[] args) {
         try {
-            LicenseChecker.checkLicense("vaadin-dspublisher", "2.2.0-rc.5",
+            LicenseChecker.checkLicense("vaadin-dspublisher", "2.2.0-rc.7",
                     (BuildType) null);
         } catch (Exception e) {
             System.exit(1);

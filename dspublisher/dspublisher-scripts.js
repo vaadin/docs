@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
-import {spawn} from 'child_process';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
-import * as readline from 'readline'
+import * as readline from 'readline';
 
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DSP_VERSION = '2.2.0-rc.5';
+const DSP_VERSION = '2.2.0-rc.7';
 
 async function checkPreConditions() {
   try {
@@ -255,11 +255,11 @@ const progressState = {
 function clearLines(n) {
   for (let i = 0; i < n; i++) {
     const y = i === 0 ? null : -1;
-    readline.moveCursor(process.stdout,0, y);
+    readline.moveCursor(process.stdout, 0, y);
     readline.clearLine(process.stdout, i);
     process.stdout.line;
   }
-  readline.cursorTo(process.stdout,0);
+  readline.cursorTo(process.stdout, 0);
 }
 
 /**
