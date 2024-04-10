@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
+import React, {
+  useEffect
+} from 'react'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
@@ -11,13 +13,15 @@ function Example() {
   // tag::snippet[]
   const progress = useSignal(-1);
 
-  if (progress.value >= 1) {
-    progress.value = -1;
-  } else if (progress.value >= 0) {
-    setTimeout(() => {
-      progress.value += 0.005;
-    }, 25);
-  }
+  useEffect(() => {
+    if (progress.value >= 1) {
+      progress.value = -1;
+    } else if (progress.value >= 0) {
+      setTimeout(() => {
+        progress.value += 0.005;
+      }, 25);
+    }
+  }, [progress.value]);
 
   return (
     <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
