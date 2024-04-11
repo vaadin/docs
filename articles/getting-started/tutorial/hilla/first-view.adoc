@@ -141,7 +141,7 @@ Finally, you need to configure your application to use the new theme. You do thi
 ----
 package com.example.application;
 
-// ...
+...
 // tag::snippet[]
 import com.vaadin.flow.theme.Theme;
 // end::snippet[]
@@ -151,7 +151,7 @@ import com.vaadin.flow.theme.Theme;
 @Theme("chat-theme")
 // end::snippet[]
 public class Application implements AppShellConfigurator {
-    // ...
+    ...
 }
 ----
 
@@ -162,9 +162,9 @@ The first thing you are going to do is to make the layout fill the entire screen
 .@index.tsx
 [source,tsx]
 ----
-// ...
+...
 export default function ChannelView() {
-    // ...
+    ...
     return <VerticalLayout theme="padding spacing" className="h-full">
         <MessageList/>
         <MessageInput/>
@@ -177,9 +177,9 @@ Next, you are going to make the message list take up all the available space in 
 .@index.tsx
 [source,tsx]
 ----
-// ...
+...
 export default function ChannelView() {
-    // ...
+    ...
     return <VerticalLayout theme="padding spacing" className="h-full">
         <MessageList className="h-full w-full border"/>
         <MessageInput/>
@@ -187,22 +187,24 @@ export default function ChannelView() {
 }
 ----
 
-Finally, you are going to make the message input take up the full width of the screen and remove the extra padding that the component has by default. There are CSS utility classes for this: `w-full` and `p-0` (for setting the padding to 0):
+Finally, you are going to make the message input take up the full width of the screen:
 
 .@index.tsx
 [source,tsx]
 ----
-// ...
+...
 export default function ChannelView() {
-    // ...
+    ...
     return <VerticalLayout theme="padding spacing" className="h-full">
         <MessageList className="h-full w-full border"/>
-        <MessageInput className="p-0 w-full"/>
+        <MessageInput className="w-full"/>
     </VerticalLayout>
 }
 ----
 
 Your browser should now look like this:
+
+// TODO This image is wrong, there is still extra paddding around the message input. It needs to be removed in another way.
 
 image::images/channel_view_with_styles.png[A web application with an empty message list and an input field for posting new messages.]
 
@@ -227,7 +229,7 @@ import com.vaadin.hilla.BrowserCallable;
 @BrowserCallable
 // end::snippet[]
 public class ChatService {
-    // ...
+    ...
 }
 ----
 
@@ -238,7 +240,7 @@ Because Hilla endpoints are protected by default, and you have not added securit
 ----
 package com.example.application.chat;
 
-// ...
+...
 // tag::snippet[]
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 // end::snippet[]
@@ -249,7 +251,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 @AnonymousAllowed
 // end::snippet[]
 public class ChatService {
-    // ...
+    ...
 }
 ----
 
@@ -292,7 +294,7 @@ export default function ChannelView() {
 
     return <VerticalLayout theme="padding spacing" className="h-full">
         <MessageList className="h-full w-full border"/>
-        <MessageInput className="p-0 w-full"/>
+        <MessageInput className="w-full"/>
     </VerticalLayout>
 }
 ----
@@ -338,7 +340,7 @@ export default function ChannelView() {
 
     return <VerticalLayout theme="padding spacing" className="h-full">
         <MessageList className="h-full w-full border"/>
-        <MessageInput className="p-0 w-full"/>
+        <MessageInput className="w-full"/>
     </VerticalLayout>
 }
 ----
@@ -361,17 +363,16 @@ You are now ready to write the code that posts messages to the channel. You are 
 
 Add the function to the channel view, like this:
 
-.@index.tsx
 [source,tsx]
 ----
-// ...
+...
 import { Notification } from "@vaadin/react-components/Notification"
 
 export default function ChannelView() {
-    // ...
+    ...
 
     async function updateChannel() {
-      // ...
+        ...
     }
 
     // tag::snippet[]
@@ -390,7 +391,7 @@ export default function ChannelView() {
     }
     // end::snippet[]
 
-    // ...
+    ...
 }
 ----
 <1> The `ChatService.postMessage` method requires a channel ID and if there is none, there is no point in calling the method in the first place.
@@ -401,20 +402,19 @@ Next, you want to call this function when the user clicks the send button. The m
 
 [source,tsx]
 ----
-// ....
+...
 export default function ChannelView() {
-    // ...
+    ...
 
     return <VerticalLayout theme="padding spacing" className="h-full">
         <MessageList className="h-full w-full border"/>
-        <MessageInput className="p-0 w-full" onSubmit={e => postMessage(e.detail.value)}/>
+        <MessageInput className="w-full" onSubmit={e => postMessage(e.detail.value)}/>
     </VerticalLayout>
 }
 ----
 
 If you now try to send a message, you will see an error in the server log that looks like this:
 
-.@index.tsx
 [source]
 ----
 2024-04-03T16:48:11.803+03:00 ERROR 44614 --- [io-8080-exec-13] c.example.application.chat.ChatService   : Error posting message to channel 2058465e-c964-4231-aeff-b3b1ba47f9ff: FAIL_ZERO_SUBSCRIBER
@@ -424,8 +424,153 @@ This is because there is nobody that could receive the message. You are going to
 
 == Receive Messages
 
-On the server side, `ChatService` has a method called `liveMessages(..)` that returns a `Flux`. A `Flux` is a reactive stream that can emit zero or more elements. In `ChatService`, it is a _hot_ stream, which means that subscribers will only receive elements that are emitted after they subscribed. Hilla makes this stream available on the browser side as well.
+On the server side, `ChatService` has a method called `liveMessages(..)` that returns a `Flux`. A `Flux` is a reactive stream that can emit zero or more elements, in this case messages. Hilla makes this stream available on the browser side as well.
 
-Because you are going to subscribe to a stream, you will need to manage the subscription itself. When the channel ID changes, you want to start by cancelling any existing subscription. After that, you want to subscribe to the new channel.
+The first thing you need to do is create a signal that will hold the messages that you have received, like this:
 
-// TODO Continue here...
+[source,tsx]
+----
+...
+import Message from "Frontend/generated/com/example/application/chat/Message";
+
+export default function ChannelView() {
+    const { channelId } = useParams()
+    const channel = useSignal<Channel | undefined>(undefined)
+    // tag::snippet[]
+    const messages = useSignal<Message[]>([]) // <1>
+    // end::snippet[]
+    ...
+}
+----
+<1> If no messages have been received, the signal value is an empty array.
+
+Second, you need to update the message list so that the messages are rendered. Because the `MessageList` component expects items of its own type, you'll have to map the messages in the signal like this:
+
+[source,tsx]
+----
+...
+export default function ChannelView() {
+    ...
+    return <VerticalLayout theme="padding spacing" className="h-full">
+        // tag::snippet[]
+        <MessageList className="h-full w-full border" items={messages.value.map(message => ({
+            text: message.message,
+            userName: message.author,
+            time: message.timestamp 
+        }))}/>
+        // end::snippet[]
+        <MessageInput className="w-full" onSubmit={e => postMessage(e.detail.value)}/>
+    </VerticalLayout>
+}
+----
+
+Now, whenever the `messages` signal is updated, the user interface will also get updated.
+
+Now you are ready to subscribe to the live messages stream. When you subscribe, you pass in a function that will get called whenever a message arrives from the server. This will happen until the network connection is broken or your explicitly unsubscribe. To prevent memory leaks and other unwanted behavior, it is important to manage the subscription correctly, and that's what you are going to do next.
+
+When you subscribe, you will get a `Subscription` object that you can use to unsubscribe. Create a new signal for storing it:
+
+[source,tsx]
+----
+...
+import { Subscription } from "@vaadin/hilla-frontend";
+
+export default function ChannelView() {
+    const { channelId } = useParams()
+    const channel = useSignal<Channel | undefined>(undefined)
+    const messages = useSignal<Message[]>([])
+    // tag::snippet[]
+    const subscription = useSignal<Subscription<Message[]> | undefined>(undefined) // <1>
+    // end::snippet[]
+    ...
+}
+----
+<1> If you have no active subscription, the signal value is `undefined`.
+
+Next, create the function that unsubscribes from the stream. You start with this function because it is needed when you write the subscribe function. Add the following function to the `ChannelView()`, after the `postMessage()` function:
+
+[source,tsx]
+----
+...
+export default function ChannelView() {
+    ...
+    async function postMessage(message: string) {
+        ...
+    }
+
+    // tag::snippet[]
+    function unsubscribe() {
+        if (subscription.value) {
+            console.log("Unsubscribing")
+            subscription.value.cancel() // <1>
+            subscription.value = undefined // <2>
+        }
+    }
+    // end::snippet[]
+
+    useEffect(() => {
+        ...
+    }, [channelId])
+    ...
+}
+----
+<1> Cancel the subscription if it is defined.
+<2> Replace the stale `Subscription` object with `undefined` to indicate that there is no active subscription.
+
+Next, create the function that subscribes to the message stream:
+
+[source,tsx]
+----
+...
+export default function ChannelView() {
+    ...
+
+    function unsubscribe() {
+        ...
+    }
+
+    // tag::snippet[]
+    function subscribe() {
+        unsubscribe() // <1>
+        if (channel.value) {
+            console.log("Subscribing to", channel.value.id)
+            subscription.value = ChatService.liveMessages(channel.value.id) // <2>
+                .onNext(incoming => messages.value = [...messages.value, ...incoming]) // <3>
+                .onError(() => console.error("Error in subscription")) // <4>
+        }
+    }
+    // end::snippet[]
+
+    useEffect(() => {
+        ...
+    }, [channelId])
+    ...
+}
+----
+<1> You can only have one active subscription at a time. This line will make sure to cancel any existing subscription before creating a new one.
+<2> This line updates the `subscription` signal to indicate that there is an active subscription.
+<3> This line appends the newly arrived messages to the array of messages already stored in the `messages` signal.
+<4> This line logs any errors in the console.
+
+Finally, you need to call the `subscribe()` function to start receiving messages. Do this by amending the effect you used to update the channel, like this:
+
+[source,tsx]
+----
+...
+export default function ChannelView() {
+    ...
+
+    // tag::snippet[]
+    useEffect(() => {
+        updateChannel().then(subscribe).catch(console.error) // <1>
+        return unsubscribe // <2>
+    }, [channelId])
+    // end::snippet[]
+
+    ...
+}
+----
+<1> This line calls the `subscribe()` function after the `updateChannel()` function has successfully completed.
+<2> This line instructs React to call the `unsubscribe()` function whenever the `ChannelView` component is unmounted.
+
+If you know switch over to your browser and send some messages, they should show up in the message list.
