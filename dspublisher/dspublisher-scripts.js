@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+import * as readline from 'readline';
 
-const DSP_VERSION = '2.2.0-rc.5';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const DSP_VERSION = '2.2.0-rc.9';
 
 async function checkPreConditions() {
   try {
@@ -250,22 +255,23 @@ const progressState = {
 function clearLines(n) {
   for (let i = 0; i < n; i++) {
     const y = i === 0 ? null : -1;
-    process.stdout.moveCursor(0, y);
-    process.stdout.clearLine(i);
+    readline.moveCursor(process.stdout, 0, y);
+    readline.clearLine(process.stdout, i);
     process.stdout.line;
   }
-  process.stdout.cursorTo(0);
+  readline.cursorTo(process.stdout, 0);
 }
 
 /**
  * Logs to console and renders the progress bar.
  */
+let progressLogged = false;
 function logProgress(state, output) {
-  if (this.progressLogged && !process.env.NO_PROGRESS_LOG) {
+  if (progressLogged && !process.env.NO_PROGRESS_LOG) {
     // Clear the progress bar
     clearLines(2);
   }
-  this.progressLogged = true;
+  progressLogged = true;
 
   // Log the output
   if (output) {
