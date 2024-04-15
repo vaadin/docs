@@ -1,5 +1,5 @@
 ---
-title: Upgrading from Hilla 1.x
+title: Upgrading from earlier Hilla versions
 order: 900
 ---
 :hilla-lit:
@@ -7,8 +7,340 @@ order: 900
 :root-fix:
 // tag::content[]
 
+= Upgrading from Earlier Hilla Versions
 
-= Upgrading from Hilla 1.x
+== Upgrading to 24.4.0 from 2.x
+
+=== Introduction
+
+Upgrading from Hilla 2.x to 24.4.0 involves several important steps across different parts of your project. This guide provides detailed instructions to ensure a smooth transition, covering changes from build configurations to source code adjustments.
+Note that upgrading to Vaadin 24.4.0 means your project is utilizing the new Vaadin Unified Platform, not just Hilla framework.
+
+.Changes In Build Related Files
+[NOTE]
+Regardless of how you build your project, the changes listed below are relevant to all Hilla project. However, when it comes to the changes in the build related files, you can refer to <<Maven Projects: Changes in pom.xml,Maven Projects: Changes in pom.xml>> or <<Gradle Projects: Changes in Configuration Files,Gradle Projects: Changes in Configuration Files>> according to the type of your build tool.
+
+
+=== Maven Projects: Changes in pom.xml
+
+To update your Maven project to use Vaadin 24.4.0, you need to adjust your `pom.xml` as follows:
+
+. **Rename `hilla.version` property to `vaadin.version`, and use `24.4.x` as the value**
++
+You need to update the property name that defines the framework version. This change ensures that all subsequent dependencies use the correct version variable:
++
+[source,xml]
+----
+<properties>
+    - <hilla.version>2.x</hilla.version>
+    + <vaadin.version>24.4.0</vaadin.version>
+</properties>
+----
+
+. **Replace the Hilla BOM with Vaadin BOM**
++
+Change the Bill of Materials (BOM) from Hilla to Vaadin to ensure that your project uses compatible versions of Vaadin libraries:
++
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        - <dependency>
+        -     <groupId>dev.hilla</groupId>
+        -     <artifactId>hilla-bom</artifactId>
+        -     <version>${hilla.version}</version>
+        -     <type>pom</type>
+        -     <scope>import</scope>
+        - </dependency>
+        + <dependency>
+        +     <groupId>com.vaadin</groupId>
+        +     <artifactId>vaadin-bom</artifactId>
+        +     <version>${vaadin.version}</version>
+        +     <type>pom</type>
+        +     <scope>import</scope>
+        + </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+
+. **Update Hilla Core Dependency**
++
+Replace the core Hilla library dependency with the equivalent Vaadin library:
++
+[source,xml]
+----
+<dependencies>
+    - <dependency>
+    -     <groupId>dev.hilla</groupId>
+    -     <artifactId>hilla</artifactId>
+    - </dependency>
+    + <dependency>
+    +     <groupId>com.vaadin</groupId>
+    +     <artifactId>vaadin</artifactId>
+    + </dependency>
+</dependencies>
+----
+
+. **Update Spring Boot Starter for Hilla**
++
+Change the Hilla Spring Boot starter dependency to Vaadin's Spring Boot starter:
++
+[source,xml]
+----
+<dependencies>
+    - <dependency>
+    -     <groupId>dev.hilla</groupId>
+    -     <artifactId>hilla-spring-boot-starter</artifactId>
+    - </dependency>
+    + <dependency>
+    +     <groupId>com.vaadin</groupId>
+    +     <artifactId>vaadin-spring-boot-starter</artifactId>
+    + </dependency>
+</dependencies>
+----
+
+. **Handle React-Spring Boot Starter**
++
+Ensure that any React-specific Spring Boot starters are also updated:
++
+[source,xml]
+----
+<dependencies>
+    - <dependency>
+    -     <groupId>dev.hilla</groupId>
+    -     <artifactId>hilla-react-spring-boot-starter</artifactId>
+    - </dependency>
+    + <dependency>
+    +     <groupId>com.vaadin</groupId>
+    +     <artifactId>vaadin-spring-boot-starter</artifactId>
+    + </dependency>
+</dependencies>
+----
+
+. **Replace Hilla Maven Plugin**
++
+Switch the Maven plugin from Hilla to Vaadin to use Vaadin's build plugin capabilities:
++
+[source,xml]
+----
+<build>
+    <plugins>
+        - <plugin>
+        -     <groupId>dev.hilla</groupId>
+        -     <artifactId>hilla-maven-plugin</artifactId>
+        - </plugin>
+        + <plugin>
+        +     <groupId>com.vaadin</groupId>
+        +     <artifactId>vaadin-maven-plugin</artifactId>
+        + </plugin>
+    </plugins>
+</build>
+----
+
+.**Update all Hilla Maven Plugin Occurrences**
+[NOTE]
+Note that the Hilla Maven plugin normally appears in more than one place in the `pom.xml` file. Make sure to replace all occurrences with the Vaadin Maven plugin.
+
+=== Hilla React Projects
+
+For projects specifically utilizing Hilla React, some dependencies can now be removed as they are already included within the standard Vaadin 24.4.0 artifacts.
+
+. **Remove the `dev.hilla:hilla-react` Dependency**:
++
+With the integration of Hilla functionalities into Vaadin core artifacts, the separate `dev.hilla:hilla-react` dependency is no longer required and should be removed from your project's dependency management to avoid redundancy and potential conflicts.
++
+[source,xml]
+----
+<dependencies>
+    <!-- other dependencies -->
+    - <dependency>
+    -     <groupId>dev.hilla</groupId>
+    -     <artifactId>hilla-react</artifactId>
+    - </dependency>
+    <!-- other dependencies -->
+</dependencies>
+----
++
+Confirm that all functionalities are operational post-update, as Vaadin should natively support all previously Hilla-specific features.
+
+
+=== Changes to Java Sources
+
+Update Java source files to reflect the new package names:
+
+. Replace all occurrences of `dev.hilla` to `com.vaadin.hilla`, for example, in imports now you should have:
++
+[source,java]
+----
+import com.vaadin.hilla.BrowserCallable;
+import com.vaadin.hilla.Nullable;
+import com.vaadin.hilla.crud.CrudRepositoryService;
+----
+
+=== Changes in Frontend Sources (.ts and .tsx Files)
+
+When upgrading to Vaadin 24.4.0, it's crucial to update import paths in your TypeScript and TSX files to align with the new package names provided by Vaadin. Here's how to update your frontend sources correctly:
+
+=== Update Hilla Packages Imports
+
+The general rule is to replace all occurrences of `@hilla/` with `@vaadin/hilla-`, and there is only one exception to this rule which is about `@hilla/form` which should be replaced with `@vaadin/hilla-lit-form`. Hence, do the replacements in the following order:
+
+. **Update `@hilla/form` Module Imports**:
++
+-- From `@hilla/form` to `@vaadin/hilla-lit-form`:
++
+[source,typescript]
+----
+- import { Binder, field } from '@hilla/form';
++ import { Binder, field } from '@vaadin/hilla-lit-form';
+----
++
+. **General Update for Any Remaining `@hilla/` Occurrences**:
++
+Ensure that any remaining imports using the old `@hilla/` namespace are updated to `@vaadin/hilla-`:
++
+[source,typescript]
+----
+- import { something } from '@hilla/some-module';
++ import { something } from '@vaadin/hilla-some-module';
+----
++
+This includes updates to any miscellaneous modules that may not have been explicitly listed above but are part of the Hilla suite.
+
+=== Update Generated Path Imports
+
+. **Update Generated Path Imports**:
++
+In case you have used Hilla CRUD helpers such as AutoCRUD, AutoGrid, and AutoForm, there is chance that you have imported generated paths from the old Hilla structure. You need to update these paths according to the new Vaadin package structure:
++
+[source,typescript]
+----
+- import type FilterUnion from 'Frontend/generated/dev/hilla/crud/filter/FilterUnion.js';
+- import type OrFilter from 'Frontend/generated/dev/hilla/crud/filter/OrFilter.js';
++ import type FilterUnion from 'Frontend/generated/com/vaadin/hilla/crud/filter/FilterUnion.js';
++ import type OrFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/OrFilter.js';
+----
+
+=== Moving `frontend` Directory to `src/main` (Optional)
+
+In Vaadin 24.4.0, the `frontend` directory is moved to `src/main` by default. If your project is not yet following this structure, you can move the `frontend` directory to `src/main` to align with the new Vaadin conventions. This change is optional but recommended for consistency and compatibility with future Vaadin releases.
+
+=== React File Router
+
+Vaadin 24.4.0 comes with a File-System based router for React applications, and it is enabled by default. This means that the `Frontend/views` directory will be scanned for React components and the routes are being generated based on the file-system structure of files under `Frontend/views`. However, if your project already have a `routes.tsx` file under `Frontend` directory, this will disable the File-System based router from being used. In case you want to enable this new feature, you can read more about it in <<,File-System Based Router>>.
+
+=== Gradle Projects: Changes in Configuration Files
+
+Gradle-based projects require updates to several files to accommodate the new Vaadin 24.4.0 platform. Follow these steps meticulously to update your Gradle configuration files.
+
+. **Rename `hillaVersion` property to `vaadinVersion`, and use `24.4.x` as the value**
++
+Update the `hillaVersion` property to `vaadinVersion`, and use latest `24.4.x` as the value:
++
+-- `gradle.properties`:
++
+[source]
+----
+- hillaVersion=2.x
++ vaadinVersion=24.4.x
+----
++
+and do not forget to update the references in `settings.gradle` and `build.gradle` (if any).
+
+. **Replace the Hilla BOM with Vaadin BOM in `build.gradle`**:
++
+Change the Bill of Materials (BOM) from Hilla to Vaadin in your `dependencyManagement` closure:
++
+[source,groovy]
+----
+dependencyManagement {
+	imports {
+        - implementation platform('dev.hilla:hilla-bom:${hillaVersion}')
+        + implementation platform('com.vaadin:vaadin-bom:${vaadinVersion}')
+    }
+}
+----
+
+. **Update Hilla Core Dependency (if present)**
++
+Replace the core Hilla library dependency with the equivalent Vaadin library in your `build.gradle`:
++
+[source,groovy]
+----
+dependencies {
+    - implementation 'dev.hilla:hilla'
+    + implementation 'com.vaadin:vaadin'
+}
+----
+
+. **Update Spring Boot Starter for Hilla**
++
+Change the Hilla Spring Boot starter dependency to Vaadin's Spring Boot starter:
++
+[source,groovy]
+----
+dependencies {
+    - implementation 'dev.hilla:hilla-spring-boot-starter'
+    + implementation 'com.vaadin:vaadin-spring-boot-starter'
+}
+----
+
+. **Handle React-Spring Boot Starter (if present)**
++
+Ensure that any React-specific Spring Boot starters are also updated:
++
+[source,groovy]
+----
+dependencies {
+    - implementation 'dev.hilla:hilla-react-spring-boot-starter'
+    + implementation 'com.vaadin:vaadin-spring-boot-starter'
+}
+----
+
+. **Replace Hilla Gradle Plugin with Vaadin Plugin**
++
+Switch the Gradle plugin from Hilla to Vaadin to utilize latest Vaadin's build capabilities:
++
+[source,groovy]
+----
+plugins {
+    - id 'dev.hilla' version '2.x'
+    + id 'com.vaadin' version '24.4.0'
+}
+----
+
+==== Hilla React Projects
+
+For projects specifically utilizing Hilla React, some dependencies can now be removed as they are already included within the standard Vaadin 24.4.0 artifacts.
+
+. **Remove the `dev.vaadin:hilla-react` Dependency**
++
+With the integration of Hilla functionalities into Vaadin core artifacts, the separate `dev.vaadin:hilla-react` dependency is no longer required and should be removed from your project's dependency management to avoid redundancy and potential conflicts.
++
+[source,groovy]
+----
+dependencies {
+    - implementation 'dev.vaadin:hilla-react'
+}
+----
++
+Confirm that all functionalities are operational post-update, as Vaadin should natively support all previously Hilla-specific features.
+
+==== Building For Production
+
+For building the project for production you should use `vaadin.productionMode` instead of using the old `hilla.productionMode` property:
+
+[source, terminal]
+----
+./gradlew -Pvaadin.productionMode build
+----
+
+=== Final Checks
+
+After making these changes, ensure to thoroughly test your application to verify that all dependencies are correctly linked and functioning as expected. Look out for any warnings or errors in your console related to module imports or path issues, and resolve them accordingly.
+
+
+== Upgrading to Hilla 2.0 from Hilla 1.x
 
 To migrate a Hilla 1.x application to Hilla 2.0, you'll have to change several things in your application. Many of the breaking changes in Hilla 2 were introduced by the following updates of the underlying Java platform dependencies:
 
@@ -33,7 +365,7 @@ Released previously as an experimental feature behind the `hillaPush` feature fl
 Hilla 2 complements Vaadin Flow 24 release. The Vaadin components, introduced in version 24, support styling using the `::part()` CSS selector. They come with some changes that affect styling the component internals.
 
 
-== Preparation
+=== Preparation
 
 Before migrating any application, a few tasks must be done. They're described in the sub-sections here.
 
@@ -65,7 +397,7 @@ Upgrade the Hilla version in the [filename]`pom.xml` file to the latest release 
 You can find the latest version number in the link:https://github.com/vaadin/hilla/releases[GitHub Hilla releases list].
 
 
-== Jakarta EE 10 Namespaces
+=== Jakarta EE 10 Namespaces
 
 You can download from GitHub a couple of free tools for the package name conversion: https://github.com/eclipse/transformer[Eclipse Transformer]; and https://github.com/apache/tomcat-jakartaee-migration[Apache Migration Tool].
 
@@ -103,7 +435,7 @@ Below are some examples:
 ----
 
 
-== Spring Upgrade Instructions
+=== Spring Upgrade Instructions
 
 Spring Boot 3 and Spring Framework 6 don't fundamentally change how applications are developed. The main changes are related to Jakarta EE 10 namespaces and supported products, Java version, and the dependency upgrades and deprecations.
 
@@ -143,7 +475,7 @@ include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/stateles
 In this example, `AuthenticationManagerBuilder` -- used in Spring Boot 2.x -- is replaced by `UserDetailsService`. And `http.authorizeRequests().antMatchers()` are replaced by `http.authorizeHttpRequests().requestMatchers()`.
 
 
-== Java Version
+=== Java Version
 
 Java 17 or later is required. Below is an example of how to use this version:
 
@@ -162,7 +494,7 @@ Java 17 or later is required. Below is an example of how to use this version:
 --
 
 
-== Maven Plugins
+=== Maven Plugins
 
 Several plugins are available for use with Maven. The ones relevant to upgrading a Hilla application to Hilla 2.0 are described here.
 
@@ -187,12 +519,12 @@ You can use Maven goals of the former `vaadin-maven-plugin` the same way from th
 Make sure that the versions of Maven plugins -- the ones defined explicitly in your project -- are compatible with Java 17. For example, `nexus-staging-maven-plugin` requires a minimal version 1.6.13.
 
 
-== SLF4J 2.0
+=== SLF4J 2.0
 
 Hilla 2, Vaadin 24 and Spring Boot 3 use SLF4J library version 2.0, which has breaking changes compared to earlier versions. See the https://www.slf4j.org/news.html[SLF4J release notes] for more information.
 
 
-== Changes in Hilla Endpoints
+=== Changes in Hilla Endpoints
 
 The behavior of null type annotations, such as `@com.vaadin.hilla.Nonnull`, has been fixed according to the https://docs.oracle.com/javase/specs/jls/se17/html/jls-9.html#jls-9.7.4[Java Language Specification]. In particular, this affects arrays in endpoints and entity classes:
 
@@ -203,12 +535,12 @@ The behavior of null type annotations, such as `@com.vaadin.hilla.Nonnull`, has 
 This also affects nullability in generated TypeScript code. Consider using the link:https://hilla.dev/docs/lit/reference/type-nullability/#nonnullapi[@NonNullApi] annotation for declaring nullability on the package level.
 
 
-== Breaking Changes in Vaadin Components
+=== Breaking Changes in Vaadin Components
 
 Upgrading a Hilla application to Hilla 2 can involve several breaking changes. They're described in the following sub-sections.
 
 
-=== Behavior & Styling
+==== Behavior & Styling
 
 Upgrading can lead to changes in the behavior and styling. Below is a list of these changes and what you might do to resolve problems they may cause:
 
@@ -228,7 +560,7 @@ h5 { margin-bottom: 0.25em; }
 ----
 
 
-=== API of Web Components
+==== API of Web Components
 
 The following changes affect the client-side APIs of Vaadin components:
 
@@ -243,7 +575,7 @@ The following changes affect the client-side APIs of Vaadin components:
 - The read-only `theme` _property_ was removed. Use instead the `theme` _attribute_.
 
 
-=== Update Component Styling
+==== Update Component Styling
 
 .Click and read if you have styled Vaadin components:
 [%collapsible]
