@@ -12,6 +12,7 @@ import '@vaadin/vaadin-lumo-styles/style.js';
 // Import all Material CSS custom properties into the global style scope
 import '@vaadin/vaadin-material-styles/color';
 import '@vaadin/vaadin-material-styles/typography';
+import './docs-assistant';
 
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
