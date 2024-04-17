@@ -52,6 +52,7 @@ function createItem(iconName: string, text: string) {
 }
 
 function Example() {
+  useSignals(); // hidden-source-line
   const gridItems = useSignal<Person[]>([]);
   const items = useSignal<ContextMenuItem[]>([]);
   const gridRef = useRef<GridElement>(null);
