@@ -172,12 +172,31 @@ Live reload functionality is supported for changes in either Java or frontend fi
 
 When running in development mode (i.e., `quarkus:dev`), changes in Java or frontend files compile after saving and appear after the browser page is refreshed. For frontend changes, the browser page is automatically reloaded. However, for Java changes a manual refresh is required. Furthermore, Java hot reload may sometimes break frontend live reload. If this happens, the server needs to be restarted.
 
+== Integrating Vaadin With an Existing Quarkus Application
+
+One of the things to consider when integrating Vaadin with an existing Quarkus application is that the application may already have set up routes that may effectively "shadow" the Vaadin UI. A typical scenario for adding Vaadin to an existing Quarkus application is providing some sort of administration dashboard functionality that sits under a sub-root path, e.g., `/admin`. Going with the documented way of setting a `@Route` at the view level, won't solve the issue:
+
+```java
+// This won't solve the issue
+@Route("/admin")
+public class MainView extends VerticalLayout {
+```
+
+The problem is that by default, Vaadin's Quarkus extension would spin a `QuarkusVaadinServlet` instance that expects every call to the root (`/`) of your Quarkus app to go through it. If there is even a single `@Path("/")` annotation anywhere in the app's code, it may effectively "shadow" the access to the servlet. 
+
+To solve that, we need to either remove the `@Path("/")` annotations if possible (may be impossible if those serve the index page of your site alredy, for instance), or create a custom instance of `QuarkusVaadinServlet` that would take place instead of the default one:
+
+```java
+@WebServlet(urlPatterns = "/admin/*", name = "AdminServlet", asyncSupported = true)
+public class AdminServlet extends QuarkusVaadinServlet {
+```
+
+See how we made the servlet to listen to incoming requests matching the `/admin/*` route and not the root anymore. In this case, we also need to adjust Vaadin's `@Route` annotations accoddingly. For example, `@Route("/admin")` would now simply turn into `@Route("")`, otherwise, your view would expect to be called with `/admin/admin`, which is likely not what you desire.
 
 [[quarkus.vaadin.limitations]]
 == Limitations
 
 The Vaadin Quarkus add-on doesn't support Hilla, because Hilla requires the use of Spring. Adding the Quarkus Spring extensions doesn't allow Hilla to work correctly, because the extensions don't provide a complete Spring implementation, as explained in the https://quarkus.io/guides/spring-di#important-technical-note[Important Technical Note] paragraph of the Quarkus Spring DI documentation.
-
 
 [[quarkus.vaadin.knownissues]]
 == Known Issues
