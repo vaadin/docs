@@ -7,15 +7,15 @@ import { Checkbox } from '@vaadin/react-components/Checkbox.js';
 
 function Example() {
   useSignals(); // hidden-source-line
-  const value = useSignal(['0', '2']);
+  const exportData = useSignal(['0', '2']);
 
   return (
     // tag::snippet[]
     <CheckboxGroup
       label="Export data"
-      value={value.value}
+      value={exportData.value}
       onValueChanged={(event) => {
-        value.value = event.detail.value;
+        exportData.value = event.detail.value;
       }}
       theme="vertical"
     >
