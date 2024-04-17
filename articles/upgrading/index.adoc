@@ -9,7 +9,7 @@ order: 900
 
 This guide goes through the changes you'll need to make in your applications when upgrading from Vaadin 23 to the latest version. After these changes, your application should compile, run, behave, and look the way it did before you upgraded.
 
-.Upgrading from an Earlier Version
+.Upgrading from Earlier Version
 [TIP]
 See link:/docs/v23/upgrading/essential-steps[Vaadin 14 to 23 Upgrade Instructions] if you're upgrading from a version earlier than Vaadin 23.
 
@@ -232,16 +232,30 @@ Java 17 or later is required. Below is an example of how to use this version:
     <maven.compiler.target>17</maven.compiler.target>
 </properties>
 ----
+[source,kotlin]
+----
+<source-info group="Gradle (Kotlin DSL)"></source-info>
+plugins {
+    java
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+----
 [source,groovy]
 ----
-<source-info group="Groovy"></source-info>
+<source-info group="Gradle (Groovy DSL)"></source-info>
 plugins {
     id 'java'
 }
 
 java {
-    sourceCompatibility = 17
-    targetCompatibility = 17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 ----
 --
@@ -257,28 +271,32 @@ To let the container scan and manage Vaadin components and views when the `bean-
 
 As an alternative, you can set `bean-discovery-mode=all` in the [filename]`beans.xml` file if it's applicable to your project. However, this is not recommended.
 
-[role="since:com.vaadin:vaadin@V24.4"]
-== Unification with Hilla and Integration with React
 
-Vaadin 24.4 and later versions unify the server and client development approaches known as Vaadin Flow and Hilla respectively.
-This makes it easier to create hybrid applications, including:
+[role="since:com.vaadin:vaadin@V24.4"]
+== Frontend Sources Directory
+Vaadin uses the [filename]`{project directory}/src/main/frontend/` directory as the default location for frontend sources. Legacy location [filename]`{project directory}/frontend/` is also supported and used if the [filename]`{project directory}/src/main/frontend/` directory doesn't exist. Although it's currently optional, if you're using the legacy location, you should move your files to a new location, as support for this may be removed in the future releases.
+
+
+[role="since:com.vaadin:vaadin@V24.4"]
+== Unification with Hilla & Integration with React
+
+Vaadin 24.4 and later versions unify the server and client development approaches known as Vaadin Flow and Hilla respectively. This makes it easier to create hybrid applications, including:
 
 - unified dependencies for the Vaadin platform, making the project configuration simpler;
 - develop https://reactjs.org/[React]-based routes and components in Vaadin Flow applications;
-- export Flow components or entire views into frontend views implemented with React;
-- use unified routing based on https://reactrouter.com/en/main[React Router];
+- export Flow components or entire views into frontend views implemented with React; and
+- use unified routing based on https://reactrouter.com/en/main[React Router].
 
 
-=== Hilla and React Dependencies
+=== Hilla & React Dependencies
 
-Vaadin 24 includes React dependencies, such as https://www.npmjs.com/package/react[React], https://www.npmjs.com/package/react-router-dom[React Router], and https://github.com/vaadin/react-components[React-based components] provided by Vaadin, that allow you to start developing with React immediately.
-Even though all the React versions of Vaadin's Pro components are downloaded in [filename]`node_modules`, they will not be a part of the frontend bundle if you don't use them in your project.
+Vaadin 24 includes React dependencies, such as https://www.npmjs.com/package/react[React], https://www.npmjs.com/package/react-router-dom[React Router], and https://github.com/vaadin/react-components[React-based components] provided by Vaadin, that allow you to start developing with React immediately. Even though all the React versions of Vaadin's Pro components are downloaded in [filename]`node_modules`, they will not be a part of the frontend bundle if you don't use them in your project.
 
 Vaadin Flow applications don't need any changes regarding React or Hilla dependencies management, though the opt-out options are available if you have one of the following cases:
 
 - Lit is used for frontend development instead of React;
 - having Hilla or React dependencies is undesirable;
-- you use only the core components, and installing Pro components is undesirable;
+- you use only the core components, and installing Pro components is undesirable; and
 - you need the legacy `vaadin-router`, e.g. if your project uses an add-on that needs it.
 
 To opt-out, use the `reactEnable` configuration parameter. Enabling it excludes React completely from your project and fallbacks to `vaadin-router` and Lit:
@@ -346,9 +364,14 @@ The following Hilla dependencies are included in the Vaadin platform dependencie
 - `dev.hilla:hilla`
 
 
-=== Frontend Bundles and Hot Deploy Modes
+=== Frontend Bundles & Hot Deploy Modes
 
-Vaadin automatically selects between using a pre-compiled frontend bundle, re-building a new bundle or starting a frontend development server. If it detects Hilla views in a project, it always uses development server, unless one sets the configuration parameter `vaadin.frontend.hotdeploy=false`. And other way around, for Flow applications it uses frontend bundle, unless one sets the configuration parameter `vaadin.frontend.hotdeploy=true`.
+Vaadin chooses using a pre-compiled frontend bundle, or re-building a new bundle, or starting a frontend development server. If it detects Hilla views in a project, it always uses development server -- unless one sets the configuration parameter `vaadin.frontend.hotdeploy=false`. Conversely, for Flow applications it uses frontend bundle -- unless one sets the configuration parameter `vaadin.frontend.hotdeploy=true`.
+
+
+=== Default Location for Client-Side Views
+
+Place your React client-side views into [filename]`src/main/frontend/views/` directory. Vaadin searches for any [filename]`.tsx` or [filename]`.jsx` React views and registers them as React routes if they are present in this directory or subdirectories. See <<{articles}/hilla/guides/routing#,Routing >> for more details about File-Based Routing.
 
 
 == Polymer Templates
@@ -557,27 +580,34 @@ Vaadin might ask to add new types definitions to the [filename]`types.d.ts` file
 Vaadin components have several breaking changes related to upgrading to the latest version.
 
 === Shrinking Badges
+
 Badges no longer shrink by default. This can be overridden globally with CSS `[theme~="badge"] { flex-shrink:1; }`, or for specific instances with `badge.getStyle().set("flex-shrink", "1")`, or with `layout.setFlexShrink(badge, 1)`.
 
 === Shrinking Buttons
+
 Buttons also no longer shrink by default. This also can be overridden globally, but with CSS `vaadin-button { flex-shrink:1; }`, or for specific instances with `btn.getStyle().set("flex-shrink", "1")` or with `layout.setFlexShrink(btn, 1)`.
 
 === CheckboxGroup
 The `CheckboxGroup::setItemLabelGenerator` no longer clears the current selection. The `CheckboxGroup.clear()` can be used to clear values, separately.
 
 === BlurNotifier
+
 The `BlurNotifier<CustomField>` type signature was corrected to `BlurNotifier<CustomField<T>>`.
 
 === Date Picker
+
 Date Picker now uses the ISO 8601 date format (i.e., `yyyy-mm-dd`) as fallback for unsupported locales -- instead of `mm-dd-yyyy`. Time Picker no longer automatically adjusts values to fit minimum and maximum constraints.
 
 === Number Field
+
 Number Field's default width now matches that of other text input components. The old default can be brought back with CSS `vaadin-number-field { width:8em; }`.
 
 === RichTextEditor
+
 `RichTextEditor::setvalue` and `getValue` now use HTML format by default, instead of Delta. Applications using the Delta format must be refactored to use the `RichTextEditor.asDelta()` API (e.g. `rte.asDelta().getValue()` and `binder.forField(rte.asDelta())`). To help avoid using the wrong setter, `RichTextEditor.setValue(String)` now throws an exception if the value looks like it's in Delta format (i.e., it starts with a `[` or `{` bracket). To set an HTML value starting with the above characters, either wrap the value in an HTML tag, or use the `RichTextEditor.asHtml()` API, which doesn't check for them.
 
 === Margins for Headings
+
 The default top and bottom margins of the `H1`...`H6` HTML elements have been removed. This change can be reverted by applying the following CSS:
 
 .styles.css
