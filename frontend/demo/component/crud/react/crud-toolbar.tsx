@@ -35,7 +35,7 @@ function Example() {
     >
       <HorizontalLayout slot="toolbar" style={{ alignItems: 'center', flexGrow: 1 }}>
         <span>
-          Total: <b>{items.value.length}</b> employees
+          Total: <b>{employeeCount.value}</b> employees
         </span>
       </HorizontalLayout>
 
