@@ -9,6 +9,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
   useSignals(); // hidden-source-line
+  // tag::snippet[]
   const items = useSignal<Person[]>([]);
   const selectedItems = useSignal<Person[]>([]);
 
@@ -32,6 +33,7 @@ function Example() {
       <GridColumn path="email" />
     </Grid>
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

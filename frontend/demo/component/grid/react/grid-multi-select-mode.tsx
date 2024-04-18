@@ -19,12 +19,14 @@ function Example() {
   }, []);
 
   return (
+    // tag::snippet[]
     <Grid items={items.value}>
       <GridSelectionColumn />
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="email" />
     </Grid>
+    // end::snippet[]
   );
 }
 

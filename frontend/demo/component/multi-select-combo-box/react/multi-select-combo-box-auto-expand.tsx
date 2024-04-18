@@ -17,6 +17,7 @@ function Example() {
   }, []);
 
   return (
+    // tag::snippet[]
     <MultiSelectComboBox
       label="Countries"
       itemLabelPath="name"
@@ -26,6 +27,7 @@ function Example() {
       autoExpandVertically
       selectedItems={items.value.slice(0, 4)}
     />
+    // end::snippet[]
   );
 }
 

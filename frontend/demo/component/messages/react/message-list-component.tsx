@@ -9,6 +9,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
   useSignals(); // hidden-source-line
+  // tag::snippet[]
   const person = useSignal<Person | undefined>(undefined);
 
   useEffect(() => {
@@ -38,6 +39,7 @@ function Example() {
   ];
 
   return <MessageList items={items} />;
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

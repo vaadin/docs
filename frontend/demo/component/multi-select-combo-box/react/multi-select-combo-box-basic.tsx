@@ -8,6 +8,7 @@ import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 function Example() {
   useSignals(); // hidden-source-line
+  // tag::snippet[]
   const items = useSignal<Country[]>([]);
 
   useEffect(() => {
@@ -25,6 +26,7 @@ function Example() {
       style={{ width: '300px' }}
     />
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

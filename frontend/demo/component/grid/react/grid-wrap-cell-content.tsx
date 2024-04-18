@@ -19,6 +19,7 @@ function Example() {
   }, []);
 
   return (
+    // tag::snippet[]
     <Grid items={items.value} theme="wrap-cell-content">
       <GridColumn header="Image" flexGrow={0} autoWidth>
         {({ item: person }) => (
@@ -35,6 +36,7 @@ function Example() {
         )}
       </GridColumn>
     </Grid>
+    // end::snippet[]
   );
 }
 
