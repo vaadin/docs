@@ -69,12 +69,14 @@ async function checkPreConditions() {
   }
 }
 
-const firstLaunch = !fs.existsSync(path.resolve(__dirname, '..', 'node_modules'));
+const projectRootPath = path.resolve(__dirname, '..');
+const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
+const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
 
 // License check helper command
 const hasLicenseChecker = (() => {
-  const pomFilePath = path.resolve(__dirname, '..', 'pom.xml');
+  const pomFilePath = path.resolve(projectRootPath, 'pom.xml');
   const pomFile = fs.readFileSync(pomFilePath, 'utf8');
   return pomFile.includes('dspublisher-license-check');
 })();
@@ -113,8 +115,35 @@ const SCRIPTS = {
           {
             text: `Cleaning up project${firstLaunchMessage}`,
             readySignal: 'BUILD SUCCESS',
-            doneText: 'Ready. Caches cleaned up',
             weight: 5,
+          },
+        ],
+      },
+      {
+        func: () => {
+          const generatedPath = path.resolve(projectRootPath, 'frontend', 'generated');
+          if (fs.existsSync(generatedPath)) {
+            fs.rmSync(generatedPath, { recursive: true });
+          }
+        },
+        phases: [
+          {
+            text: 'Removing generated frontend files',
+            weight: 1,
+          },
+        ],
+      },
+      {
+        func: () => {
+          if (fs.existsSync(nodeModulesPath)) {
+            fs.rmSync(nodeModulesPath, { recursive: true });
+          }
+        },
+        phases: [
+          {
+            text: 'Removing node_modules',
+            weight: 3,
+            doneText: 'Ready. Caches cleaned up',
           },
         ],
       },
@@ -210,11 +239,11 @@ const SCRIPTS = {
         func: () => {
           // Copy the jar file from ../target/*.jar to ../dspublisher/out/docs.jar
           const jarFile = fs
-            .readdirSync(path.resolve(__dirname, '..', 'target'))
+            .readdirSync(path.resolve(projectRootPath, 'target'))
             .find((fn) => fn.endsWith('.jar'));
 
           fs.copyFileSync(
-            path.resolve(__dirname, '..', 'target', jarFile),
+            path.resolve(projectRootPath, 'target', jarFile),
             path.resolve(__dirname, 'out', 'docs.jar')
           );
         },
