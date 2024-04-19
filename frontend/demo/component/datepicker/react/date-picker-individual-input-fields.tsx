@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSignal, useComputed } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';

@@ -1,9 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
-import {
-  useComputed,
-  useSignal
-} from '@vaadin/hilla-react-signals';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { Button } from '@vaadin/react-components/Button.js';

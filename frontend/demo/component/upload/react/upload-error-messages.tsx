@@ -1,20 +1,20 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
+import { useComputed } from "@vaadin/hilla-react-signals";
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
 import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
 import {
   createFakeFilesUploadErrorMessagesA,
   createFakeFilesUploadErrorMessagesB,
 } from './upload-demo-mock-files';
-import {
-  useComputed
-} from "@vaadin/hilla-react-signals";
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1, labelsPosition: 'top' },
   { minWidth: '540px', columns: 2, labelsPosition: 'top' },
 ];
 const Example = () => {
+  useSignals(); // hidden-source-line
   const uploadCaution = useRef<UploadElement>(null);
   const uploadRecommended = useRef<UploadElement>(null);
 
