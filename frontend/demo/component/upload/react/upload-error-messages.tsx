@@ -17,20 +17,27 @@ const Example = () => {
 
   // tag::snippet[]
   useEffect(() => {
-    if (!uploadCaution.current || !uploadRecommended.current) {
+    if (!uploadCaution.current) {
       return;
     }
 
     uploadCaution.current.setupMockErrorResponse();
-    uploadRecommended.current.setupMockErrorResponse();
 
     uploadCaution.current.i18n.uploading.error.unexpectedServerError = 'Unexpected Server Error';
     uploadCaution.current.i18n = { ...uploadCaution.current.i18n };
+  }, [uploadCaution.current]);
+
+  useEffect(() => {
+    if (!uploadRecommended.current) {
+      return;
+    }
+
+    uploadRecommended.current.setupMockErrorResponse();
 
     uploadRecommended.current.i18n.uploading.error.unexpectedServerError =
       "File couldn't be uploaded, try again later";
     uploadRecommended.current.i18n = { ...uploadRecommended.current.i18n };
-  }, []);
+  }, [uploadRecommended.current]);
 
   return (
     <FormLayout responsiveSteps={layoutSteps}>

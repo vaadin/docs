@@ -24,7 +24,7 @@ function Example() {
         }
       });
     }
-  }, []);
+  }, [gridRef.current]);
 
   useEffect(() => {
     getPeople({ count: 5 }).then(({ people }) => {

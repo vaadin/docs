@@ -13,7 +13,7 @@ function Example() {
     }
     uploadRef.current.i18n.addFiles.many = 'Select Files...';
     uploadRef.current.i18n = { ...uploadRef.current.i18n };
-  }, []);
+  }, [uploadRef.current]);
 
   return (
     <>

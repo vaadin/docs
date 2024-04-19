@@ -14,10 +14,12 @@ function Example() {
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
-    getPeople({ count: 5 }).then(({ people }) => {
+    getPeople({count: 5}).then(({people}) => {
       gridItems.value = people;
     });
+  }, []);
 
+  useEffect(() => {
     const grid = gridRef.current;
     if (grid) {
       // Workaround: Prevent opening context menu on header row.
@@ -28,7 +30,7 @@ function Example() {
         }
       });
     }
-  }, []);
+  }, [gridRef.current]);
 
   // tag::snippet[]
   const items = [{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }];

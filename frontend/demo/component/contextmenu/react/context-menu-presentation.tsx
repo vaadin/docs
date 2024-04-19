@@ -58,29 +58,51 @@ function Example() {
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
-    getPeople({ count: 5 }).then(({ people }) => {
+    getPeople({count: 5}).then(({people}) => {
       gridItems.value = people;
       // tag::snippet[]
       const contextMenuItems: ContextMenuItem[] = [
-        { component: createItem('vaadin:file-search', 'Open') },
+        {component: createItem('vaadin:file-search', 'Open')},
         {
           component: createItem('vaadin:user-check', 'Assign'),
           children: [
-            { component: <Item person={people[0]} /> },
-            { component: <Item person={people[1]} /> },
-            { component: <Item person={people[2]} /> },
-            { component: <Item person={people[3]} /> },
-            { component: <Item person={people[4]} /> },
+            {
+              component:
+                <Item
+                  person={people[0]}/>
+            },
+            {
+              component:
+                <Item
+                  person={people[1]}/>
+            },
+            {
+              component:
+                <Item
+                  person={people[2]}/>
+            },
+            {
+              component:
+                <Item
+                  person={people[3]}/>
+            },
+            {
+              component:
+                <Item
+                  person={people[4]}/>
+            },
           ],
         },
-        { component: 'hr' },
-        { component: createItem('vaadin:trash', 'Delete') },
+        {component: 'hr'},
+        {component: createItem('vaadin:trash', 'Delete')},
       ];
 
       items.value = contextMenuItems;
       // end::snippet[]
     });
+  }, []);
 
+  useEffect(() => {
     const grid = gridRef.current;
     if (grid) {
       // Workaround: Prevent opening context menu on header row.
@@ -91,7 +113,7 @@ function Example() {
         }
       });
     }
-  }, []);
+  }, [gridRef.current]);
 
   // tag::snippet[]
   return (

@@ -33,7 +33,7 @@ function Example() {
     return () => {
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [notificationOpened]);
+  }, [notificationOpened.value]);
 
   const renderer = () => (
     <HorizontalLayout style={{ alignItems: 'center' }}>

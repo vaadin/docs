@@ -38,7 +38,7 @@ function Example() {
         parseDate: parseDateIso8601,
       };
     }
-  }, [datePickerRef]);
+  }, [datePickerRef.current]);
 
   return (
     <DatePicker

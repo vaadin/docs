@@ -34,12 +34,15 @@ function Example() {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
     }
+  }, [sideNavRef.current]);
 
+  useEffect(() => {
     if (horizontalLayoutRef.current) {
       // Example-specific workaround
       patchAppLayoutNavigation(horizontalLayoutRef.current);
     }
-  }, []);
+  }, [horizontalLayoutRef.current]);
+
   return (
     // tag::snippet[]
     <AppLayout primarySection="drawer">
