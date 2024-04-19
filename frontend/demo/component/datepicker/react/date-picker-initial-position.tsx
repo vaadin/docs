@@ -2,15 +2,18 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { DatePicker } from '@vaadin/react-components/DatePicker.js';
 import { formatISO, lastDayOfYear } from 'date-fns';
+import {
+  useComputed
+} from "@vaadin/hilla-react-signals";
 
 function Example() {
-  const lastDayOfTheYear = lastDayOfYear(Date.now());
+  const lastDayOfTheYear = useComputed(() => lastDayOfYear(Date.now()));
 
   return (
     // tag::snippet[]
     <DatePicker
       label="Q4 deadline"
-      initialPosition={formatISO(lastDayOfTheYear, { representation: 'date' })}
+      initialPosition={formatISO(lastDayOfTheYear.value, { representation: 'date' })}
     />
     // end::snippet[]
   );

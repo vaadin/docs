@@ -6,6 +6,9 @@ import {
   createFakeFilesUploadErrorMessagesA,
   createFakeFilesUploadErrorMessagesB,
 } from './upload-demo-mock-files';
+import {
+  useComputed
+} from "@vaadin/hilla-react-signals";
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1, labelsPosition: 'top' },
@@ -39,16 +42,19 @@ const Example = () => {
     uploadRecommended.current.i18n = { ...uploadRecommended.current.i18n };
   }, [uploadRecommended.current]);
 
+  const filesA = useComputed(createFakeFilesUploadErrorMessagesA);
+  const filesB = useComputed(createFakeFilesUploadErrorMessagesB);
+
   return (
     <FormLayout responsiveSteps={layoutSteps}>
       <div>
         <strong>Caution</strong>
-        <Upload ref={uploadCaution} nodrop files={createFakeFilesUploadErrorMessagesA()} />
+        <Upload ref={uploadCaution} nodrop files={filesA.value} />
       </div>
 
       <div>
         <strong>Recommended</strong>
-        <Upload ref={uploadRecommended} nodrop files={createFakeFilesUploadErrorMessagesB()} />
+        <Upload ref={uploadRecommended} nodrop files={filesB.value} />
       </div>
     </FormLayout>
   );

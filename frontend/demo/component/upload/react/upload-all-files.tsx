@@ -3,6 +3,9 @@ import React, { useRef, useEffect } from 'react';
 import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
 import { createFakeFilesUploadAllFiles } from './upload-demo-mock-files'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
+import {
+  useComputed
+} from "@vaadin/hilla-react-signals";
 
 function Example() {
   const uploadRef = useRef<UploadElement>(null);
@@ -15,10 +18,12 @@ function Example() {
     uploadRef.current.i18n = { ...uploadRef.current.i18n };
   }, [uploadRef.current]);
 
+  const files = useComputed(createFakeFilesUploadAllFiles);
+
   return (
     <>
       {/* tag::snippet[] */}
-      <Upload noAuto ref={uploadRef} files={createFakeFilesUploadAllFiles()} />
+      <Upload noAuto ref={uploadRef} files={files.value} />
 
       <Button theme="primary" onClick={() => uploadRef.current?.uploadFiles()}>
         Upload All Files

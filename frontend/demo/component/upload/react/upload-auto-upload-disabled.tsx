@@ -1,7 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useRef, useEffect } from 'react';
 import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
-import { createFakeFilesUploadAutoUploadDisabled } from './upload-demo-mock-files'; // hidden-source-line
+import { createFakeFilesUploadAutoUploadDisabled } from './upload-demo-mock-files';
+import {
+  useComputed
+} from "@vaadin/hilla-react-signals"; // hidden-source-line
 
 function Example() {
   const uploadRef = useRef<UploadElement>(null);
@@ -14,9 +17,11 @@ function Example() {
     uploadRef.current.i18n = { ...uploadRef.current.i18n };
   }, [uploadRef.current]);
 
+  const files = useComputed(createFakeFilesUploadAutoUploadDisabled);
+
   return (
     // tag::snippet[]
-    <Upload noAuto ref={uploadRef} files={createFakeFilesUploadAutoUploadDisabled()} />
+    <Upload noAuto ref={uploadRef} files={files.value} />
     // end::snippet[]
   );
 }

@@ -2,6 +2,9 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { Upload } from '@vaadin/react-components/Upload.js';
 import { createFakeUploadFiles } from './upload-demo-helpers';
+import {
+  useComputed
+} from "@vaadin/hilla-react-signals";
 
 function createFakeFiles() {
   return createFakeUploadFiles([
@@ -14,9 +17,11 @@ function createFakeFiles() {
 }
 
 function Example() {
+  const files = useComputed(createFakeFiles);
+
   return (
     // tag::snippet[]
-    <Upload files={createFakeFiles()} />
+    <Upload files={files.value} />
     // end::snippet[]
   );
 }

@@ -1,6 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import {
+  useComputed,
+  useSignal
+} from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
@@ -16,6 +19,8 @@ function Example() {
     });
   }, []);
 
+  const selectedItems = useComputed(() => items.value.slice(0, 4));
+
   return (
     // tag::snippet[]
     <MultiSelectComboBox
@@ -23,7 +28,7 @@ function Example() {
       itemLabelPath="name"
       itemIdPath="id"
       items={items.value}
-      selectedItems={items.value.slice(0, 4)}
+      selectedItems={selectedItems.value}
       readonly
       style={{ width: '300px' }}
     />

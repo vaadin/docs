@@ -1,6 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import {
+  useComputed,
+  useSignal
+} from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { AvatarGroup } from '@vaadin/react-components/AvatarGroup.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -8,21 +11,25 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
   useSignals(); // hidden-source-line
-  const items = useSignal<Person[]>([]);
+  const peopleData = useSignal<Person[]>([]);
 
   useEffect(() => {
     getPeople({ count: 6 }).then(({ people }) => {
-      items.value = people;
+      peopleData.value = people;
     });
   }, []);
+
+  const avatars = useComputed(() =>
+    peopleData.value.map((person) => ({
+      name: `${person.firstName} ${person.lastName}`,
+    }))
+  );
 
   return (
     // tag::snippet[]
     <AvatarGroup
       maxItemsVisible={3}
-      items={items.value.map((person) => ({
-        name: `${person.firstName} ${person.lastName}`,
-      }))}
+      items={avatars.value}
     />
     // end::snippet[]
   );

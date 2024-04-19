@@ -1,5 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
+import { useComputed } from "@vaadin/hilla-react-signals";
 import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { FormItem } from '@vaadin/react-components/FormItem.js';
 import { Select } from '@vaadin/react-components/Select.js';
@@ -8,8 +9,16 @@ import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
   // tag::snippet[]
-  const months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
-  const years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
+  const monthItems = useComputed(() =>
+    Array
+      .from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'))
+      .map((month) => ({ label: month, value: month }))
+  );
+  const yearItems = useComputed(() =>
+    Array
+      .from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`)
+      .map((year) => ({ label: year, value: year }))
+  );
 
   return (
     <FormLayout>
@@ -23,12 +32,12 @@ function Example() {
             <Select
               accessibleName="Month"
               placeholder="Month"
-              items={months.map((month) => ({ label: month, value: month }))}
+              items={monthItems.value}
             />
             <Select
               accessibleName="Year"
               placeholder="Year"
-              items={years.map((year) => ({ label: year, value: year }))}
+              items={yearItems.value}
             />
           </HorizontalLayout>
         </CustomField>

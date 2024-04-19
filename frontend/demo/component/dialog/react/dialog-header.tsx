@@ -1,6 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import {
+  useComputed,
+  useSignal
+} from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { Button } from '@vaadin/react-components/Button.js';
@@ -29,13 +32,13 @@ function Example() {
     });
   }, []);
 
-  const addressDescription = () => {
+  const addressDescription = useComputed(() => {
     if (!user.value) {
       return '';
     }
     const { address } = user.value;
     return `${address.street}, ${address.city}, ${address.country}`;
-  };
+  });
 
   return (
     <>
@@ -64,7 +67,7 @@ function Example() {
               style={{ paddingTop: 0 }}
             />
             <EmailField label="Email" value={user.value?.email} readonly />
-            <TextField label="Address" value={addressDescription()} readonly />
+            <TextField label="Address" value={addressDescription.value} readonly />
           </VerticalLayout>
         </VerticalLayout>
       </Dialog>
