@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState, useEffect } from 'react';
-import { ListBox } from '@hilla/react-components/ListBox.js';
-import { Item } from '@hilla/react-components/Item.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { ListBox } from '@vaadin/react-components/ListBox.js';
+import { Item } from '@vaadin/react-components/Item.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 

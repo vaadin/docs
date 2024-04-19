@@ -22,7 +22,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -48,10 +48,9 @@ export class Example extends LitElement {
             []
           )}
           ${columnEditModeRenderer<Person>(
-            ({ birthday }) =>
-              html`
-                <vaadin-date-picker style="width: 100%" .value="${birthday}"></vaadin-date-picker>
-              `,
+            ({ birthday }) => html`
+              <vaadin-date-picker style="width: 100%" .value="${birthday}"></vaadin-date-picker>
+            `,
             []
           )}
         ></vaadin-grid-pro-edit-column>

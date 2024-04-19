@@ -26,33 +26,32 @@ const config = {
     "ignore": [
       /(^|\/)\..+/, // hidden files
 
-      "articles/guide",
-      "articles/kb",
-      "articles/advanced",
-      "articles/configuration",
-      "articles/tutorial",
-      "articles/tools",
-      "articles/api.adoc",
-      "articles/security",
-      "articles/contributing",
-      "articles/create-ui",
-      "articles/binding-data",
-      "articles/integrations",
-      "articles/testing",
+      "articles/flow/guide",
+      "articles/flow/kb",
+      "articles/flow/advanced",
+      "articles/flow/configuration",
+      "articles/flow/tutorial",
+      "articles/flow/tools",
+      "articles/flow/api.adoc",
+      "articles/flow/security",
+      "articles/flow/contributing",
+      "articles/flow/create-ui",
+      "articles/flow/binding-data",
+      "articles/flow/integrations",
+      "articles/flow/testing",
 
-      "articles/index.asciidoc",
-      "articles/overview.asciidoc",
-      "articles/contributing-docs",
+      "articles/flow/index.adoc",
+      "articles/flow/contributing-docs",
       "articles/upgrading",
-      "articles/application",
-      "articles/routing",
-      "articles/production",
-      "articles/_images",
-      "articles/_vaadin-version.adoc",
-      "articles/_commercial-banner.asciidoc",
-      "articles/_terminal.asciidoc",
-      "articles/404.asciidoc",
-      "articles/_figma-banner.adoc",
+      "articles/flow/application",
+      "articles/flow/routing",
+      "articles/flow/production",
+      "articles/flow/_images",
+      "articles/flow/_vaadin-version.adoc",
+      "articles/flow/_commercial-banner.adoc",
+      "articles/flow/_terminal.adoc",
+      "articles/flow/404.adoc",
+      "articles/flow/_figma-banner.adoc",
 
       "articles/styling/_images",
       "articles/styling/_shared.adoc",
@@ -72,8 +71,8 @@ const config = {
       "articles/styling/styling-components",
       "articles/styling/application-theme.adoc",
       "articles/styling/styling-other-elements.adoc",
-      "articles/components/index.asciiidoc",
-      "articles/compatibility.adoc",
+      "articles/flow/components/index.asciiidoc",
+      "articles/flow/compatibility.adoc",
 
       "frontend/demo/fusion",
       "frontend/demo/upgrade-tool",
@@ -91,7 +90,7 @@ const config = {
       "dspublisher/theme",
       "dspublisher/config/default.json",
       "dspublisher/config/production.json",
-      
+
       "PULL_REQUEST_TEMPLATE.md",
 
       ".gitattributes",
@@ -106,19 +105,19 @@ const config = {
   },
   rename: {
     // paths in 'latest' to copy to different paths in 'dsp'
-    "articles/styling/lumo/design-tokens": "articles/ds/foundation",
-    "articles/styling/lumo": "articles/lumo",
+    "articles/styling/lumo/design-tokens": "articles/flow/ds/foundation",
+    "articles/styling/lumo": "articles/flow/lumo",
   },
   target: {
     // paths in 'dsp' to keep (since they shouldn't be removed, even if they don't exist in latest)
     "keep": [
-      "articles/foundation",
-      "articles/_images",
-      "articles/404.adoc",
-      "articles/figma.asciidoc",
-      "articles/index.adoc",
-      "articles/components/index.adoc",
-      "articles/lumo/index.adoc",
+      "articles/flow/foundation",
+      "articles/flow/_images",
+      "articles/flow/404.adoc",
+      "articles/flow/figma.adoc",
+      "articles/flow/index.adoc",
+      "articles/flow/components/index.adoc",
+      "articles/flow/lumo/index.adoc",
       "dspublisher/.env",
       "dspublisher/docs-theme",
       "dspublisher/config/default.json",
@@ -128,7 +127,7 @@ const config = {
   // callbacks for changing the content of certain files
   callback: [
     {
-      path: 'articles/components/grid/flow.asciidoc',
+      path: 'articles/flow/components/grid/flow.adoc',
       callback: content => content.replace(/.*_items-identities.adoc.*/, '')
     },
     {

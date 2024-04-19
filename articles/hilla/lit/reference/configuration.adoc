@@ -1,0 +1,125 @@
+---
+title: Configuration
+description: Customizing the configuration of a Hilla application for both a development environment and for execution.
+---
+// tag::content[]
+
+= Configuration
+
+// TODO nothing to configure here - why is the content here?
+// == Live-reload during development
+
+// When running the application in development mode, all modifications in the `frontend` folder are compiled automatically.
+// Refreshing the browser is enough to see the updates in the application.
+
+// .Server restart is required
+// [NOTE]
+// When adding [filename]`index.ts` or [filename]`index.html`, the application server needs to be restarted to update the entry point and the bootstrap template.
+
+[[java-compiler-options]]
+== Configure the Endpoint Generator
+
+To allow the <<endpoint-generator#,endpoint generator>> to use the correct parameter names when building TypeScript files, you need to configure the Java compiler not to omit them by using the `javac -parameters` option. For example, the following shows how to configure the Maven plugin to include this compiler option:
+
+.`pom.xml`
+[source,xml]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+                <encoding>UTF-8</encoding>
+                <!-- tag::snippet[] -->
+                <parameters>true</parameters>
+                <!-- end::snippet[] -->
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+----
+
+
+== Multi-Module Projects or External Dependency Endpoints
+
+By default, Hilla searches only for endpoints in your application. You can extend the search, though, to other modules in your project, or even to dependencies, like the
+ifdef::hilla-react[]
+<</hilla/acceleration-kits/sso-kit#, SSO Kit>>.
+endif::hilla-react[]
+ifdef::hilla-lit[]
+<</hilla/lit/acceleration-kits/sso-kit#, SSO Kit>>.
+endif::hilla-lit[]
+
+
+The Hilla Maven plugin can be configured to list the Java packages that contain the endpoints. That list should always include the main application package and can include other packages as needed.
+
+If your application is in a package named `com.example.application`, and you have another module containing endpoints in `com.example.module`, and you want to use some third-party endpoints in `com.acme.module`, you can configure the plugin as follows:
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin.hilla</groupId>
+    <artifactId>hilla-maven-plugin</artifactId>
+    <version>${hilla.version}</version>
+    <!-- Add this configuration -->
+    <configuration>
+        <parser>
+            <packages>
+                <package>com.example.application</package>
+                <package>com.example.module</package>
+                <package>com.acme.module</package>
+            </packages>
+        </parser>
+    </configuration>
+    <!-- ... -->
+</plugin>
+----
+
+.Endpoints & Spring Dependencies
+[NOTE]
+If endpoints external to the main application have autowired Spring dependencies, make sure that Spring can find them. Otherwise, Hilla tries to instantiate them using a default no-arguments constructor, which won't trigger dependency injection.
+
+[[ts-compiler-options]]
+== TypeScript Compiler Options
+
+The TypeScript compiler requires a [filename]`tsconfig.json` file. If there is no [filename]`tsconfig.json` in the project root, the `vaadin-maven-plugin` generates one.
+
+The default configuration looks similar to the following:
+
+.`tsconfig.json`
+[source,json]
+----
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "module": "esNext",
+    "target": "es2017",
+    "moduleResolution": "node",
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "experimentalDecorators": true,
+    "baseUrl": "frontend",
+    "paths": {
+      "Frontend/*": [
+        "*"
+      ]
+    }
+  },
+  "include": [
+    "frontend/**/*.ts",
+    "frontend/index.js",
+    "types.d.ts"
+  ],
+  "exclude": []
+}
+----
+
+// end::content[]

@@ -34,7 +34,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items = [
+  private items = [
     {
       label: 'Most recent first',
       value: 'recent',

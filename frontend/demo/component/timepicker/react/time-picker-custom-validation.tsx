@@ -1,20 +1,34 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
-import { TimePicker } from '@hilla/react-components/TimePicker.js';
+import React, { useEffect } from 'react';
+import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { useForm, useFormPart } from '@vaadin/hilla-react-form';
+import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 
 function Example() {
-  // This is a placeholder file. Binder support for React is not yet implemented. See https://github.com/vaadin/hilla/issues/587
+  // tag::snippet[]
+  const { model, field } = useForm(AppointmentModel);
+  const timeField = useFormPart(model.startTime);
+
+  useEffect(() => {
+    timeField.addValidator({
+      message: 'The selected time is not available',
+      validate: (startTime: string) =>
+        (startTime >= '08:00' && startTime <= '12:00') ||
+        (startTime >= '13:00' && startTime <= '16:00'),
+    });
+  }, []);
+
   return (
-    // tag::snippet[]
     <TimePicker
       label="Appointment time"
       helperText="Open 8:00-12:00, 13:00-16:00"
       min="08:00"
       max="16:00"
       step={60 * 30}
+      {...field(model.startTime)}
     />
-    // end::snippet[]
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

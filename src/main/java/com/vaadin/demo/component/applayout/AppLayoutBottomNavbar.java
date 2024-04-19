@@ -6,13 +6,11 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.tabs.TabsVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-bottom-navbar")
 // tag::snippet[]
@@ -25,7 +23,8 @@ public class AppLayoutBottomNavbar extends AppLayout {
         title.getStyle().set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "var(--lumo-space-m) var(--lumo-space-l)");
 
-        Tabs tabs = getTabs();
+        HorizontalLayout nav = getNavigation();
+        nav.getElement().executeJs("window.patchAppLayoutNavigation(this);"); // hidden-source-line
 
         H2 viewTitle = new H2("View title");
         Paragraph viewContent = new Paragraph("View content");
@@ -34,37 +33,40 @@ public class AppLayoutBottomNavbar extends AppLayout {
         content.add(viewTitle, viewContent);
 
         addToNavbar(title);
-        addToNavbar(true, tabs);
+        addToNavbar(true, nav);
 
         setContent(content);
     }
     // end::snippet[]
 
-    private Tabs getTabs() {
-        Tabs tabs = new Tabs();
-        tabs.add(createTab(VaadinIcon.DASHBOARD, "Dashboard"),
-                createTab(VaadinIcon.CART, "Orders"),
-                createTab(VaadinIcon.USER_HEART, "Customers"),
-                createTab(VaadinIcon.PACKAGE, "Products"));
-        tabs.addThemeVariants(TabsVariant.LUMO_MINIMAL,
-                TabsVariant.LUMO_EQUAL_WIDTH_TABS);
-        return tabs;
+    private HorizontalLayout getNavigation() {
+            HorizontalLayout navigation = new HorizontalLayout();
+            navigation.addClassNames(LumoUtility.Width.FULL,
+                            LumoUtility.JustifyContent.EVENLY,
+                            LumoUtility.AlignSelf.STRETCH);
+            navigation.setPadding(false);
+            navigation.setSpacing(false);
+            navigation.add(createLink(VaadinIcon.DASHBOARD, "Dashboard"),
+                            createLink(VaadinIcon.CART, "Orders"),
+                            createLink(VaadinIcon.USER_HEART, "Customers"),
+                            createLink(VaadinIcon.PACKAGE, "Products"));
+
+            return navigation;
     }
 
-    private Tab createTab(VaadinIcon viewIcon, String viewName) {
-        Icon icon = viewIcon.create();
-        icon.setSize("var(--lumo-icon-size-s)");
-        icon.getStyle().set("margin", "auto");
-
-        RouterLink link = new RouterLink();
-        link.add(icon);
-        // Demo has no routes
-        // link.setRoute(viewClass.java);
-        link.setTabIndex(-1);
-
-        Tab tab = new Tab(link);
-        tab.setAriaLabel(viewName);
-        return tab;
+    private RouterLink createLink(VaadinIcon icon, String viewName) {
+            RouterLink link = new RouterLink();
+            // Demo has no routes
+            // link.setRoute(viewClass.java);
+            link.addClassNames(LumoUtility.Display.FLEX,
+                            LumoUtility.AlignItems.CENTER,
+                            LumoUtility.Padding.Horizontal.LARGE,
+                            LumoUtility.TextColor.SECONDARY);
+            link.add(icon.create());
+            // hidden-source-line: workaround to make text color work
+            link.getElement().setAttribute("href", viewName); // hidden-source-line
+            link.getElement().setAttribute("aria-label", viewName);
+            return link;
     }
 
     public static class Exporter extends DemoExporter<AppLayoutBottomNavbar> { // hidden-source-line

@@ -1,9 +1,15 @@
-const path = require('path');
-const url = require('url');
-const fs = require('fs');
-const settings = require('./target/vaadin-dev-server-settings.json');
+import path from 'path';
+import fs from 'fs';
+import url from 'url';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const buildDirectory = path.resolve(__dirname, 'target');
+
+const settingsPath = path.resolve(buildDirectory, 'vaadin-dev-server-settings.json');
+const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
 
 const frontendFolder = path.resolve(__dirname, settings.frontendFolder);
 
@@ -61,7 +67,7 @@ const usesProjectTheme = projectThemeNames.some((themeName) =>
 const themesPath = usesProjectTheme ? projectThemePath : themeResourceFolder;
 const applyThemePath = path.resolve(frontendGeneratedFolder, 'theme.js');
 
-module.exports = async function (config) {
+export default async function (config) {
   const { ApplicationThemePlugin, extractThemeName, findParentThemes } = await import(url.pathToFileURL(
     buildDirectory + '/plugins/application-theme-plugin/application-theme-plugin.js').href
   );
@@ -84,6 +90,12 @@ module.exports = async function (config) {
   config.resolve.alias['Frontend/generated/theme'] = applyThemePath;
   config.resolve.alias.themes = themesPath;
   const frontendFolder = path.resolve(__dirname, 'frontend');
+  config.resolve.alias['Frontend/generated/endpoints'] = path.resolve(
+    frontendFolder,
+    'demo',
+    'services',
+    'mocks.js'
+  );
   config.resolve.alias['Frontend'] = frontendFolder;
   config.plugins.push(new ApplicationThemePlugin(themeOptions));
 

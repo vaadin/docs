@@ -25,13 +25,13 @@ export class Example extends LitElement {
   }
 
   @query('vaadin-grid')
-  private accessor grid!: Grid<Person>;
+  private grid!: Grid<Person>;
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   @state()
-  private accessor eventSummary = '';
+  private eventSummary = '';
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -47,7 +47,7 @@ export class Example extends LitElement {
         @cell-focus="${(e: GridCellFocusEvent<Person>) => {
           const eventContext = this.grid.getEventContext(e);
           const section = eventContext.section ?? 'Not available';
-          const row = eventContext.index != null ? eventContext.index : 'Not available';
+          const row = eventContext.index ?? 'Not available';
           const column = eventContext.column?.path ?? 'Not available';
           const person = eventContext.item;
           const fullName =

@@ -17,7 +17,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: SelectItem[] = [];
+  private items: SelectItem[] = [];
 
   protected override async firstUpdated() {
     const people = (await getPeople({ count: 5 })).people;

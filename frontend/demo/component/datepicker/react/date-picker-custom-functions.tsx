@@ -1,11 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   DatePicker,
   type DatePickerElement,
   type DatePickerDate,
-} from '@hilla/react-components/DatePicker.js';
-import { useState } from 'react';
+} from '@vaadin/react-components/DatePicker.js';
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
 

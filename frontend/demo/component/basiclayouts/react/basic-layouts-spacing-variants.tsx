@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
-import type { RadioGroupValueChangedEvent } from '@hilla/react-components/RadioGroup';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { RadioButton } from '@hilla/react-components/RadioButton.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
+import type { RadioGroupValueChangedEvent } from '@vaadin/react-components/RadioGroup';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { RadioButton } from '@vaadin/react-components/RadioButton.js';
 
 function Example() {
   const [themeVariant, setThemeVariant] = useState('spacing-xl');

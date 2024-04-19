@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import {
   PasswordField,
   type PasswordFieldValueChangedEvent,
-} from '@hilla/react-components/PasswordField.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+} from '@vaadin/react-components/PasswordField.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 type PasswordStrength = 'moderate' | 'strong' | 'weak';

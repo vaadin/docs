@@ -1,15 +1,14 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
-import { ContextMenu, type ContextMenuItem } from '@hilla/react-components/ContextMenu.js';
-import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
+import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { createRoot } from 'react-dom/client';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function Item({ person }: { person: Person }) {
@@ -49,15 +48,6 @@ function createItem(iconName: string, text: string) {
   );
 }
 
-/**
- * Workaround: Renders a React given component into a HTMLElement.
- */
-function menuComponent(component: React.ReactNode) {
-  const container = document.createElement('vaadin-context-menu-item');
-  createRoot(container).render(component);
-  return container;
-}
-
 function Example() {
   const [gridItems, setGridItems] = useState<Person[]>([]);
   const [items, setItems] = useState<ContextMenuItem[]>([]);
@@ -68,19 +58,19 @@ function Example() {
       setGridItems(people);
       // tag::snippet[]
       const contextMenuItems: ContextMenuItem[] = [
-        { component: menuComponent(createItem('vaadin:file-search', 'Open')) },
+        { component: createItem('vaadin:file-search', 'Open') },
         {
-          component: menuComponent(createItem('vaadin:user-check', 'Assign')),
+          component: createItem('vaadin:user-check', 'Assign'),
           children: [
-            { component: menuComponent(<Item person={people[0]} />) },
-            { component: menuComponent(<Item person={people[1]} />) },
-            { component: menuComponent(<Item person={people[2]} />) },
-            { component: menuComponent(<Item person={people[3]} />) },
-            { component: menuComponent(<Item person={people[4]} />) },
+            { component: <Item person={people[0]} /> },
+            { component: <Item person={people[1]} /> },
+            { component: <Item person={people[2]} /> },
+            { component: <Item person={people[3]} /> },
+            { component: <Item person={people[4]} /> },
           ],
         },
         { component: 'hr' },
-        { component: menuComponent(createItem('vaadin:trash', 'Delete')) },
+        { component: createItem('vaadin:trash', 'Delete') },
       ];
 
       setItems(contextMenuItems);
@@ -118,4 +108,4 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

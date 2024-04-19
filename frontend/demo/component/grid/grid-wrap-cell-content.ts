@@ -21,7 +21,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -51,7 +51,6 @@ export class Example extends LitElement {
     <vaadin-avatar
       img="${person.pictureUrl}"
       name="${person.firstName} ${person.lastName}"
-      alt="User avatar"
     ></vaadin-avatar>
   `;
 

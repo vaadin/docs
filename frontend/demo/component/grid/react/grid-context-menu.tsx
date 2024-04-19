@@ -1,14 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
-import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
+import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import {
   ContextMenu,
   type ContextMenuElement,
   type ContextMenuRendererContext,
-} from '@hilla/react-components/ContextMenu.js';
-import { Item } from '@hilla/react-components/Item.js';
-import { ListBox } from '@hilla/react-components/ListBox.js';
+} from '@vaadin/react-components/ContextMenu.js';
+import { Item } from '@vaadin/react-components/Item.js';
+import { ListBox } from '@vaadin/react-components/ListBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 

@@ -22,7 +22,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor dialogOpened = false;
+  private dialogOpened = false;
 
   protected override render() {
     return html`
@@ -61,11 +61,10 @@ export class Example extends LitElement {
           []
         )}
         ${dialogFooterRenderer(
-          () =>
-            html`
-              <vaadin-button @click="${this.close}">Cancel</vaadin-button>
-              <vaadin-button theme="primary" @click="${this.close}">Add note</vaadin-button>
-            `,
+          () => html`
+            <vaadin-button @click="${this.close}">Cancel</vaadin-button>
+            <vaadin-button theme="primary" @click="${this.close}">Add note</vaadin-button>
+          `,
           []
         )}
       ></vaadin-dialog>

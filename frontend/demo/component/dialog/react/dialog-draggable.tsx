@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { Dialog } from '@hilla/react-components/Dialog.js';
-import { Button } from '@hilla/react-components/Button.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { TextArea } from '@hilla/react-components/TextArea.js';
+import { Dialog } from '@vaadin/react-components/Dialog.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { TextArea } from '@vaadin/react-components/TextArea.js';
 
 function Example() {
   const [dialogOpened, setDialogOpened] = useState(false);

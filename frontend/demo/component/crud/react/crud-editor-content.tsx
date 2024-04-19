@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Crud, crudPath } from '@hilla/react-components/Crud.js';
-import { FormLayout, type FormLayoutResponsiveStep } from '@hilla/react-components/FormLayout.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { EmailField } from '@hilla/react-components/EmailField.js';
-import { ComboBox } from '@hilla/react-components/ComboBox.js';
+import { Crud, crudPath } from '@vaadin/react-components/Crud.js';
+import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { EmailField } from '@vaadin/react-components/EmailField.js';
+import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -30,9 +30,9 @@ function Example() {
       <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps}>
         <TextField label="First name" {...crudPath('firstName')} required />
         <TextField label="Last name" {...crudPath('lastName')} required />
-        <EmailField {...{ colspan: 2 }} label="Email" {...crudPath('email')} required />
+        <EmailField label="Email" {...crudPath('email')} required data-colspan="2" />
         <ComboBox
-          {...{ colspan: 2 }}
+          data-colspan="2"
           label="Profession"
           {...crudPath('profession')}
           items={professions}

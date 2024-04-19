@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Details } from '@hilla/react-components/Details.js';
-import { DetailsSummary } from '@hilla/react-components/DetailsSummary.js';
-import { FormLayout, type FormLayoutResponsiveStep } from '@hilla/react-components/FormLayout.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { ComboBox } from '@hilla/react-components/ComboBox.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { Details } from '@vaadin/react-components/Details.js';
+import { DetailsSummary } from '@vaadin/react-components/DetailsSummary.js';
+import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { ComboBox } from '@vaadin/react-components/ComboBox.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import '@vaadin/icons';
@@ -47,7 +47,7 @@ function Example() {
       </DetailsSummary>
 
       <FormLayout responsiveSteps={responsiveSteps}>
-        <TextField label="Address" value="4027 Amber Lake Canyon" {...{ colspan: 2 }} />
+        <TextField label="Address" value="4027 Amber Lake Canyon" data-colspan="2" />
 
         <TextField label="ZIP code" required />
 

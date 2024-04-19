@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Select } from '@hilla/react-components/Select.js';
+import { Select } from '@vaadin/react-components/Select.js';
 
 function Example() {
   const items = [

@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
@@ -21,6 +21,7 @@ const ratingRenderer = (person: PersonWithRating) => (
 
 function Example() {
   const [items, setItems] = useState<PersonWithRating[]>([]);
+
   useEffect(() => {
     getPeople().then(({ people }) => {
       const peopleWithRating = people.map((person) => ({
@@ -41,7 +42,9 @@ function Example() {
         header-part-name="rating-header"
         footer-part-name="rating-footer"
         footerRenderer={() => <span>Avg rating: 5.32</span>}
-      >{({ item }) => ratingRenderer(item)}</GridColumn>
+      >
+        {({ item }) => ratingRenderer(item)}
+      </GridColumn>
     </Grid>
   );
 }

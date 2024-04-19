@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { Icon } from '@hilla/react-components/Icon.js';
-import { ContextMenu } from '@hilla/react-components/ContextMenu.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
 import '@vaadin/icons';
 
 function Example() {

@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/form-layout';
 import '@vaadin/form-layout/vaadin-form-item';
 import '@vaadin/select';
@@ -9,7 +9,7 @@ import '@vaadin/custom-field';
 import '@vaadin/horizontal-layout';
 
 import { applyTheme } from 'Frontend/generated/theme';
-import { Select } from '@vaadin/select';
+import type { Select } from '@vaadin/select';
 
 @customElement('form-layout-custom-field')
 export class Example extends LitElement {
@@ -21,23 +21,11 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @query('#month-field')
-  private accessor monthField!: Select;
-
-  @query('#year-field')
-  private accessor yearField!: Select;
+  @state()
+  private months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
 
   @state()
-  private accessor months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
-
-  @state()
-  private accessor years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
-
-  protected override firstUpdated() {
-    // Set title for screen readers
-    this.monthField.focusElement!.setAttribute('title', 'Month');
-    this.yearField.focusElement!.setAttribute('title', 'Year');
-  }
+  private years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
 
   render() {
     return html`
@@ -45,21 +33,18 @@ export class Example extends LitElement {
         <vaadin-form-item>
           <label slot="label">Expiration</label>
           <vaadin-custom-field
-            .parseValue="${(value: string) => {
-              return value ? value.split('/') : ['', ''];
-            }}"
-            .formatValue="${(values: unknown[]) => {
-              return values[0] && values[1] ? values.join('/') : '';
-            }}"
+            .parseValue="${(value: string) => (value ? value.split('/') : ['', ''])}"
+            .formatValue="${(values: unknown[]) =>
+              values[0] && values[1] ? values.join('/') : ''}"
           >
             <vaadin-horizontal-layout theme="spacing-xs">
               <vaadin-select
-                id="month-field"
+                accessible-name="Month"
                 placeholder="Month"
                 .items="${this.months.map((month) => ({ label: month, value: month }))}"
               ></vaadin-select>
               <vaadin-select
-                id="year-field"
+                accessible-name="Year"
                 placeholder="Year"
                 .items="${this.years.map((year) => ({ label: year, value: year }))}"
               ></vaadin-select>

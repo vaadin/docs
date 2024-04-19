@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState, useRef } from 'react';
-import { RichTextEditor } from '@hilla/react-components/RichTextEditor.js';
-import { TextArea, type TextAreaChangeEvent } from '@hilla/react-components/TextArea.js';
+import { RichTextEditor } from '@vaadin/react-components/RichTextEditor.js';
+import { TextArea, type TextAreaChangeEvent } from '@vaadin/react-components/TextArea.js';
 import type {
   RichTextEditorElement,
   RichTextEditorValueChangedEvent,
-} from '@hilla/react-components/RichTextEditor.js';
+} from '@vaadin/react-components/RichTextEditor.js';
 
 function Example() {
   // tag::snippet[]

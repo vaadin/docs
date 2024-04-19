@@ -1,8 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { TabSheet, type TabSheetSelectedChangedEvent } from '@hilla/react-components/TabSheet.js';
-import { Tabs } from '@hilla/react-components/Tabs.js';
-import { Tab } from '@hilla/react-components/Tab.js';
+import {
+  TabSheet,
+  TabSheetTab,
+  type TabSheetSelectedChangedEvent,
+} from '@vaadin/react-components/TabSheet.js';
 
 function Example() {
   // tag::snippet[]
@@ -14,22 +16,20 @@ function Example() {
 
   return (
     <TabSheet onSelectedChanged={selectedTabChanged}>
-      <Tabs slot="tabs">
-        <Tab id="dashboard-tab">Dashboard</Tab>
-        <Tab id="payment-tab">Payment</Tab>
-        <Tab id="shipping-tab">Shipping</Tab>
-      </Tabs>
+      <TabSheetTab label="Dashboard">
+        {visitedTabs.has(0) && <div>This is the Dashboard tab content</div>}
+      </TabSheetTab>
 
-      {visitedTabs.has(0) && (
-        <div {...{ tab: 'dashboard-tab' }}>This is the Dashboard tab content</div>
-      )}
-      {visitedTabs.has(1) && <div {...{ tab: 'payment-tab' }}>This is the Payment tab content</div>}
-      {visitedTabs.has(2) && (
-        <div {...{ tab: 'shipping-tab' }}>This is the Shipping tab content</div>
-      )}
+      <TabSheetTab label="Payment">
+        {visitedTabs.has(1) && <div>This is the Payment tab content</div>}
+      </TabSheetTab>
+
+      <TabSheetTab label="Shipping">
+        {visitedTabs.has(2) && <div>This is the Shipping tab content</div>}
+      </TabSheetTab>
     </TabSheet>
   );
   // end::snippet[]
 }
 
-export default reactExample(Example);
+export default reactExample(Example); // hidden-source-line

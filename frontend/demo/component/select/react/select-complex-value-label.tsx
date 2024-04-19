@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Select, type SelectItem } from '@hilla/react-components/Select.js';
+import { Select, type SelectItem } from '@vaadin/react-components/Select.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {

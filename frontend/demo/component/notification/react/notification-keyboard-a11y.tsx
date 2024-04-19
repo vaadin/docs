@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Notification } from '@hilla/react-components/Notification.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
   const [notificationOpened, setNotificationOpened] = useState(true);

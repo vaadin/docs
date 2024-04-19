@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef, useState } from 'react';
-import { ContextMenu } from '@hilla/react-components/ContextMenu.js';
-import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
+import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
+import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 
 function Example() {
   const [items] = useState([{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }]);
@@ -23,7 +23,7 @@ function Example() {
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getPeople({ count: 5 }).then(({ people }) => setGridItems(people));
   }, []);
 

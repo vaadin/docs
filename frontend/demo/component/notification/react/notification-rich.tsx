@@ -1,14 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
-import { Notification } from '@hilla/react-components/Notification.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Icon } from '@hilla/react-components/Icon.js';
-import { Button } from '@hilla/react-components/Button.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
+import React, { useState } from 'react';
+import { Notification } from '@vaadin/react-components/Notification.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 import '@vaadin/icons';
 
 function Example() {
-  const [openedNotifications, setOpenedNotifications] = React.useState<number[]>([]);
+  const [openedNotifications, setOpenedNotifications] = useState<number[]>([]);
 
   function open(index: number) {
     setOpenedNotifications([...openedNotifications, index]);
