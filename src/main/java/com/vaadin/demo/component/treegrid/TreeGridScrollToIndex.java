@@ -6,6 +6,7 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.provider.hierarchy.AbstractHierarchicalDataProvider;
@@ -25,6 +26,7 @@ public class TreeGridScrollToIndex extends Div {
 
     private IntegerField parentIndexField = new IntegerField("Parent index");
     private IntegerField childIndexField = new IntegerField("Child index");
+    private Button scrollToIndexButton = new Button();
 
     private Map<Person, List<Integer>> personToIndexAddress = new HashMap<>();
     TreeGrid<Person> treeGrid = new TreeGrid<>();
@@ -40,6 +42,7 @@ public class TreeGridScrollToIndex extends Div {
         treeGrid.expand(DataService.getManagers());
 
         treeGrid.addHierarchyColumn(Person::getFirstName)
+        .setWidth("200px").setFlexGrow(0)
                 .setHeader("First name");
 
         treeGrid.addSelectionListener(e -> {
@@ -57,12 +60,22 @@ public class TreeGridScrollToIndex extends Div {
 
         
         treeGrid.addColumn(person -> StringUtils.join(personToIndexAddress.get(person), ", "))
+                .setWidth("80px").setFlexGrow(0)
                 .setHeader("Index");
         treeGrid.addColumn(Person::getEmail).setHeader("Email");
 
         add(treeGrid);
 
         var controls = new HorizontalLayout();
+        controls.setSpacing(true);
+        controls.setAlignItems(Alignment.END);
+
+        parentIndexField.setWidth("120px");
+        childIndexField.setWidth("120px");
+        parentIndexField.setMin(0);
+        childIndexField.setMin(0);
+        parentIndexField.setStepButtonsVisible(true);
+        childIndexField.setStepButtonsVisible(true);
         parentIndexField.setValue(13);
         childIndexField.setValue(6);
         parentIndexField.addValueChangeListener(e -> updateSelectedItem());
@@ -70,7 +83,7 @@ public class TreeGridScrollToIndex extends Div {
         controls.add(parentIndexField);
         controls.add(childIndexField);
 
-        var scrollToIndexButton = new Button("Scroll to index", e -> {
+        scrollToIndexButton.addClickListener(e -> {
             var parentIndex = parentIndexField.getValue();
             var childIndex = childIndexField.getValue();
             // tag::snippet[]
@@ -93,6 +106,8 @@ public class TreeGridScrollToIndex extends Div {
         }).findFirst().ifPresent(entry -> {
             treeGrid.select(entry.getKey());
         });
+
+        scrollToIndexButton.setText("Scroll to index: " + parentIndex + ", " + childIndex);
     }
 
     public List<Person> getStaff(Person manager) {

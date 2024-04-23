@@ -5,6 +5,7 @@ import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/grid';
 import '@vaadin/button';
 import '@vaadin/integer-field';
+import '@vaadin/horizontal-layout';
 import type { IntegerFieldChangeEvent } from '@vaadin/integer-field';
 import type {
   Grid,
