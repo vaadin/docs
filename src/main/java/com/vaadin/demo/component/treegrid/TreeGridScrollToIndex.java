@@ -18,19 +18,24 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+
 @Route("tree-grid-scroll-to-index")
 public class TreeGridScrollToIndex extends Div {
 
     private IntegerField parentIndexField = new IntegerField("Parent index");
     private IntegerField childIndexField = new IntegerField("Child index");
 
-    private Map<Person, String> personToIndexAddress = new HashMap<>();
+    private Map<Person, List<Integer>> personToIndexAddress = new HashMap<>();
     TreeGrid<Person> treeGrid = new TreeGrid<>();
 
     public TreeGridScrollToIndex() {
-        // tag::snippet[]
 
         treeGrid.setDataProvider(new LazyLoadingProvider());
+        
+        treeGrid.setUniqueKeyDataGenerator("key", (person) -> {
+            return String.valueOf(person.getId());
+        });
 
         treeGrid.expand(DataService.getManagers());
 
@@ -42,17 +47,19 @@ public class TreeGridScrollToIndex extends Div {
                 var person = e.getFirstSelectedItem().get();
                 var indexAddress = personToIndexAddress.get(person);
                 if (indexAddress != null) {
-                    var indexes = indexAddress.split(", ");
-                    parentIndexField.setValue(Integer.parseInt(indexes[0]));
-                    childIndexField.setValue(Integer.parseInt(indexes[1]));
+                    parentIndexField.setValue(indexAddress.get(0));
+                    if (indexAddress.size() > 1) {
+                        childIndexField.setValue(indexAddress.get(1));
+                    }
                 }
             }
         });
 
-        treeGrid.addColumn(person -> personToIndexAddress.get(person))
+        
+        treeGrid.addColumn(person -> StringUtils.join(personToIndexAddress.get(person), ", "))
                 .setHeader("Index");
         treeGrid.addColumn(Person::getEmail).setHeader("Email");
-        // end::snippet[]
+
         add(treeGrid);
 
         var controls = new HorizontalLayout();
@@ -66,7 +73,9 @@ public class TreeGridScrollToIndex extends Div {
         var scrollToIndexButton = new Button("Scroll to index", e -> {
             var parentIndex = parentIndexField.getValue();
             var childIndex = childIndexField.getValue();
+            // tag::snippet[]
             treeGrid.scrollToIndex(parentIndex, childIndex);
+            // end::snippet[]
         });
         controls.add(scrollToIndexButton);
 
@@ -77,13 +86,13 @@ public class TreeGridScrollToIndex extends Div {
         treeGrid.select(null);
         var parentIndex = parentIndexField.getValue();
         var childIndex = childIndexField.getValue();
-        var indexAddress = parentIndex + ", " + childIndex;
-        personToIndexAddress.entrySet().stream()
-                .filter(entry -> entry.getValue().equals(indexAddress))
-                .findFirst().ifPresent(entry -> {
-                    var person = entry.getKey();
-                    treeGrid.select(person);
-                });
+        personToIndexAddress.entrySet().stream().filter(entry -> {
+            var indexes = entry.getValue();
+            return indexes.size() == 2
+                    && List.of(parentIndex, childIndex).equals(indexes);
+        }).findFirst().ifPresent(entry -> {
+            treeGrid.select(entry.getKey());
+        });
     }
 
     public List<Person> getStaff(Person manager) {
@@ -116,12 +125,9 @@ public class TreeGridScrollToIndex extends Div {
                 var index = offset + personIndex.getAndIncrement();
                 var parentIndexAddress = personToIndexAddress
                         .get(query.getParent());
-                var indexAddress = parentIndexAddress != null
-                        ? parentIndexAddress + ", " + index
-                        : String.valueOf(index);
-
-                System.out.println("person: " + person.getFirstName()
-                        + " index: " + indexAddress);
+                List<Integer> indexAddress = parentIndexAddress == null
+                        ? List.of(index)
+                        : List.of(parentIndexAddress.get(0), index);
                 personToIndexAddress.put(person, indexAddress);
             });
             updateSelectedItem();
