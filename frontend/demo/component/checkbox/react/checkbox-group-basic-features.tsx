@@ -9,7 +9,7 @@ function Example() {
   // tag::snippet[]
   return (
     <VerticalLayout theme="spacing">
-      <Checkbox label="Label" helperText="Helper text"></Checkbox>
+      <Checkbox label="Label" helperText="Helper text" />
 
       <CheckboxGroup label="Label" helperText="Helper text">
         <Tooltip slot="tooltip" text="Tooltip text" />
