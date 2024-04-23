@@ -1,11 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/checkbox';
 import '@vaadin/horizontal-layout';
-import type { Checkbox } from '@vaadin/checkbox';
+import { Binder, field, Required } from '@vaadin/hilla-lit-form';
+import UserPermissionsModel from 'Frontend/generated/com/vaadin/demo/domain/UserPermissionsModel';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-required')
@@ -17,17 +18,17 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('vaadin-checkbox')
-  protected checkbox!: Checkbox;
+  private binder = new Binder(this, UserPermissionsModel);
 
   protected override render() {
     return html`
       <vaadin-horizontal-layout theme="spacing" style="align-items: baseline">
         <!-- tag::snippet[] -->
         <vaadin-checkbox
-          label="I accept the terms and conditions"
+          label="Grant view permissions"
           required
           error-message="This field is required"
+          ${field(this.binder.model.view)}
         ></vaadin-checkbox>
         <!-- end::snippet[] -->
         <vaadin-button @click="${this.validate}">Submit</vaadin-button>
@@ -35,7 +36,11 @@ export class Example extends LitElement {
     `;
   }
 
+  protected override firstUpdated() {
+    this.binder.for(this.binder.model.view).addValidator(new Required());
+  }
+
   protected validate() {
-    this.checkbox.validate();
+    this.binder.validate();
   }
 }

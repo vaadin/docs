@@ -1,24 +1,28 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@vaadin/react-components/Button.js';
-import { Checkbox, type CheckboxElement } from '@vaadin/react-components/Checkbox.js';
+import { Checkbox } from '@vaadin/react-components/Checkbox.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Required } from '@vaadin/hilla-lit-form';
+import { useForm, useFormPart } from '@vaadin/hilla-react-form';
+import UserPermissionsModel from 'Frontend/generated/com/vaadin/demo/domain/UserPermissionsModel';
 
 function Example() {
-  const checkboxRef = useRef<CheckboxElement>(null);
+  const { model, field, validate } = useForm(UserPermissionsModel);
+  const viewField = useFormPart(model.view);
 
-  const validate = () => {
-    checkboxRef.current?.validate();
-  };
+  useEffect(() => {
+    viewField.addValidator(new Required());
+  }, []);
 
   return (
     // tag::snippet[]
     <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
       <Checkbox
-        label="I accept the terms and conditions"
+        label="Grant view permissions"
         required
-        ref={checkboxRef}
         errorMessage="This field is required"
+        {...field(model.view)}
       />
       <Button onClick={validate}>Submit</Button>
     </HorizontalLayout>
