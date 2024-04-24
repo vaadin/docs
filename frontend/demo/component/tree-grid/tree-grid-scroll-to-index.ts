@@ -77,12 +77,6 @@ export class Example extends LitElement {
     root.textContent = this.idToIndexAddress.get(item.id) ?? '';
   };
 
-  private scrollToIndex(indexes: number[]) {
-    // tag::snippet[]
-    this.grid.scrollToIndex(...indexes);
-    // end::snippet[]
-  }
-
   private getSelectedItems(indexes: number[], idToIndexAddress: Map<number, string>) {
     const indexAddress = indexes.join(', ');
     const id = Array.from(idToIndexAddress).find(([_, address]) => address === indexAddress)?.[0];
@@ -128,7 +122,7 @@ export class Example extends LitElement {
           step-buttons-visible
           min="0"
           style="width: 120px"
-          .value=${String(this.indexesToScrollTo[0] ?? 0)}
+          .value=${String(this.indexesToScrollTo[0] ?? '')}
           @change=${(e: IntegerFieldChangeEvent) => {
             this.indexesToScrollTo = [parseInt(e.target.value) || 0, this.indexesToScrollTo[1]];
           }}
@@ -139,13 +133,19 @@ export class Example extends LitElement {
           step-buttons-visible
           min="0"
           style="width: 120px"
-          .value=${String(this.indexesToScrollTo[1] ?? 0)}
+          .value=${String(this.indexesToScrollTo[1] ?? '')}
           @change=${(e: IntegerFieldChangeEvent) => {
             this.indexesToScrollTo = [this.indexesToScrollTo[0], parseInt(e.target.value) || 0];
           }}
         ></vaadin-integer-field>
 
-        <vaadin-button @click=${() => this.scrollToIndex(this.indexesToScrollTo)}>
+        <vaadin-button
+          @click=${() => {
+            // tag::snippet[]
+            this.grid.scrollToIndex(...this.indexesToScrollTo);
+            // end::snippet[]
+          }}
+        >
           Scroll to index: ${this.indexesToScrollTo.join(', ')}
         </vaadin-button>
       </vaadin-horizontal-layout>

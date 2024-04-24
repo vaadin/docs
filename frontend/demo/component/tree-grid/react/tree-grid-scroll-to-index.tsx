@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useMemo, useRef, useState } from 'react';
 import {
   Grid,
-  GridElement,
+  type GridElement,
   type GridDataProviderCallback,
   type GridDataProviderParams,
 } from '@vaadin/react-components/Grid.js';
@@ -20,8 +20,6 @@ type PersonOrId =
       id: number;
     };
 
-// tag::snippet[]
-
 function Example() {
   const gridRef = useRef<GridElement>(null);
 
@@ -33,10 +31,10 @@ function Example() {
 
   const dataProvider = useMemo(
     () =>
-      async function dataProvider(
+      async (
         params: GridDataProviderParams<PersonOrId>,
         callback: GridDataProviderCallback<PersonOrId>
-      ) {
+      ) => {
         const startIndex = params.page * params.pageSize;
         const { people, hierarchyLevelSize } = await getPeople({
           count: params.pageSize,
@@ -47,12 +45,19 @@ function Example() {
         people.forEach((person, idx) => {
           const index = startIndex + idx;
           const parentIndexes = params.parentItem
-            ? idToIndexes.get(params.parentItem.id) || []
+            ? idToIndexes.get(params.parentItem.id) ?? []
             : [];
           const indexAddress = [...parentIndexes, index];
           idToIndexes.set(person.id, indexAddress);
-          setIdToIndexes(idToIndexes);
+
+          if (
+            indexAddress[0] === indexesToScrollTo[0] &&
+            indexAddress[1] === indexesToScrollTo[1]
+          ) {
+            setIndexesToScrollTo(indexAddress);
+          }
         });
+        setIdToIndexes(idToIndexes);
 
         if (!expandedItems.length && !params.parentItem) {
           // Expand the root level by default
@@ -83,15 +88,15 @@ function Example() {
         selectedItems={selectedItems}
         onActiveItemChanged={(e) => {
           if (e.detail.value) {
-            setIndexesToScrollTo(idToIndexes.get(e.detail.value.id) || []);
+            setIndexesToScrollTo(idToIndexes.get(e.detail.value.id) ?? []);
           }
         }}
       >
-        <GridTreeColumn path="firstName" width="200px" flexGrow={0} />
-        <GridColumn header="Index" width="80px" flexGrow={0}>
+        <GridTreeColumn<Person> path="firstName" width="200px" flexGrow={0} />
+        <GridColumn<Person> header="Index" width="80px" flexGrow={0}>
           {({ item }) => idToIndexes.get(item.id)?.join(', ')}
         </GridColumn>
-        <GridColumn path="email" />
+        <GridColumn<Person> path="email" />
       </Grid>
 
       <HorizontalLayout theme="spacing" className="items-end">
@@ -119,7 +124,12 @@ function Example() {
 
         <Button
           onClick={() => {
-            gridRef.current?.scrollToIndex(...indexesToScrollTo);
+            const grid = gridRef.current;
+            if (grid) {
+              // tag::snippet[]
+              grid.scrollToIndex(...indexesToScrollTo);
+              // end::snippet[]
+            }
           }}
         >
           Scroll to index: {indexesToScrollTo.join(', ')}
@@ -128,6 +138,5 @@ function Example() {
     </>
   );
 }
-// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line
