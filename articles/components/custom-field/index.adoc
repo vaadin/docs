@@ -74,18 +74,17 @@ Custom Field is optimized for wrapping the following components:
 
 It can also be used to give a label, helper, and other field features for components that don't have them built-in, such as <<../list-box#,List Box>>.
 
-== Value Type & Format
+== Value Propagation & Format
 
 ifdef::flow[]
 === Java
 
 Custom Field is a generic class that requires a value type. The value type can be anything: String, List, a bean, etc.
 
-Custom Field doesn't offer a default strategy for value propagation between the Custom Field and its child components, as the child components can vary widely in type and may not be direct children of the Custom Field in the DOM. Instead, Custom Field provides two methods that should be implemented manually: `generateModelValue` and `setPresentationValue`.
+Custom Field does not offer a default strategy for value propagation between the Custom Field and its child components, as the child components can vary widely in type and ways of setting their value. Instead, it provides two methods that should be implemented manually: `generateModelValue` and `setPresentationValue`.
 
-The `generateModelValue` method defines how to convert child components' values to a value of the Custom Field type. This method is automatically triggered whenever a change event is detected on a DOM element within the Custom Field.
-
-The `setPresentationValue` method defines how to distribute the Custom Field's value to the child components. This method is triggered when the Custom Field's value changes programmatically on the server-side.
+- The `generateModelValue` method defines how to generate a value of the Custom Field type from the child components values. Custom Field automatically triggers this method when a child component within the content area emits a change DOM event. In this method, you typically need to collect values from all child components and return a single value that represents the Custom Field.
+- The `setPresentationValue` method receives a value of the Custom Field type and defines how to distribute it to the child components. Custom Field triggers this method when its value changes programmatically on the server-side. In this method, you typically need to split the given value into parts and apply them to each individual child component respectively.
 
 The following example shows how to set up value propagation, using a bean as the value type:
 
@@ -139,7 +138,11 @@ endif::[]
 
 === Lit and React
 
-Custom Field only supports string values. The default value format is a string concatenation of the child component values, separated by the `\t` character.
+Custom Field includes a parser and formatter to manage the value format. Custom Field only supports string values.
+
+When a child component emits a change event, the Custom Field automatically collects values from all child components using their value property and passes them as an array to the formatter, which should return a string value. Custom Field then updates its own value using the returned value from the formatter.
+
+Similarly, when the Custom Field's value is set programmatically, it passes this value to the parser, which should return an array of string values. Custom Field then assigns these values to the value property of the child components, following the order in which they appear in the DOM.
 
 You can customize the value format by defining your own value formatter and parser, as shown in the following example:
 
