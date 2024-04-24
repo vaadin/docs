@@ -1,27 +1,20 @@
 ---
-title: Building Blocks
-page-title: Architectural Building Blocks
-description: Learn which building blocks to use when designing the architecture of a Vaadin business app.
-order: 10
+title: System Components
+description: TODO WRITE THE DESCRIPTION
+order: 20
 ---
 
-# Architectural Building Blocks
+# System Components
 
-Software architecture is a wide concept. You can't point at a single thing and say "this is the software architecture". There is a <<deep-dive,deep dive>> section of this documentation that goes further into the many aspects of software architecture. However, on this page, you'll only look at one of them: the structure of the software.
+In the <<design, Designing the Architecture>> page of the documentation, you learned about _system components_ and _UI components_. On this page, you are going to learn more about system components and how to turn them into Java code.
 
-## What is a Component?
-
-The term _component_ is used quite liberally in the software industry, often for different things depending on the context. In this context, the term component is defined as an encapsulation of related functionality that has a well-defined interface and that can be instantiated. Furthermore, the scope and type of a component can be qualified by a prefix. In a Vaadin app, there are two types of components: _UI components_ and _system components_.
-
-Vaadin user interfaces are composed from UI components. Vaadin applications are composed from system components, of which at least one is the user interface. In this section, the focus is going to be on system components alone.
-
-## System Components
-
-Vaadin applications are composed from system components. The number of system components depends on the size and complexity of the application. A small application could have only one component, a large application tens of components. Here is an example of a Vaadin app with three components:
+Vaadin applications are composed from system components, at least one of which is the user interface. The number of system components depends on the size and complexity of the application. A small application could have only one component, a large application tens of components. Here is an example of a Vaadin app with three components:
 
 image:images/three-components.png[A diagram of three system components and a database]
 
-Here, the views component talks to the services component. The services component in turn talks to the entities component, which uses JPA to communicate with a relational database.
+Here, the _Views_ component talks to the _Services_ component. The _Services_ component in turn talks to the _Entities_ component, which uses JPA to communicate with a relational database.
+
+## Components in Java
 
 The Java programming language has no component concept. Instead, you use Java packages to model components. Thus, the component diagram above would correspond to the following Java package structure:
 
@@ -30,9 +23,9 @@ The Java programming language has no component concept. Instead, you use Java pa
 * `com.example.application.services` - package corresponding to the _services_ system component.
 * `com.example.application.entities` - package corresponding to the _entities_ system component.
 
-But how do components communicate with each other? You'll learn about that next.
+For small system components, a package per component is enough. However, in more complex cases, you need to create subpackages to keep the code organized. You may also need to organize the system component packages themselves into parent packages. For more information about this, please see the <<{articles}/building-apps/project-structure,Project Structure>> section of the documentation.
 
-### API
+## Component APIs
 
 A system component can have an _Application Programming Interface_ (API) that allows other components to _call_ it. We say _can have_, because system components are not required to make themselves available to other components. For instance, a user interface system component will typically only be called by the web browser and never by other system components. It therefore does not need an API at all.
 
@@ -74,9 +67,9 @@ public class OrderService { // <1>
 <2> The services system component takes care of instantiating the service itself. The constructor is _package private_, as it is not part of the API.
 <3> `completeOrder` is a part of the API, so it is _public_. `DraftOrder` and `CompletedOrder` are inherited from the API of the entities system component.
 
-As you can see, you are not required to use Java interfaces for the API unless you need or want to. There is, however, one usecase where you are required to use Java interfaces. You'll learn about that next.
+As you can see, you are not required to use Java interfaces for the API unless you need or want to.
 
-### SPI
+## Component SPIs
 
 A system component can also have a _Service Provider Interface_ (SPI) that allows other components to _plug into_ it. This is especially useful in cases where a component needs to interact with an external system, or when a component needs to externalize some business rules to another component, for example because they are so complex or change often.
 
@@ -111,7 +104,7 @@ image:images/combined-spi-api.png[A diagram of three system components: Services
 
 The repository interface is a part of the API of the domain model and called by the services system component. However, the repository interface is also a part of the SPI of the domain model and implemented by the persistence system component (that in turn talks to the database). In this case, using a subpackage `spi` is only confusing. Instead, JavaDocs or custom annotations (like `@API` or `@SPI`) should be used to explain the roles of the interface. Sometimes you just have to be pragmatic.
 
-### Instantiating Components
+## Instantiating Components
 
 As Java has no component concept, a component instance consists of ordinary Java objects during runtime. These objects are instantiated by Spring, which also takes care of setting up the dependencies between them through dependency injection. We recommend using _constructor injection_ into _final_ fields, rather then autowiring into mutable fields, like this:
 
@@ -143,20 +136,3 @@ Unless you need to `@Import` the configuration class into some other configurati
 
 If you are not familiar with Spring's Java-based container configuration, or you want to learn more about it, please read the https://docs.spring.io/spring-framework/reference/core/beans/java/basic-concepts.html:[Spring Framework Documentation].
 
-## Conceptual Layers
-
-If you have any previous experience with software architectures, you have probably heard about layers. You may have ran into terms like "presentation layer", "business logic laye", "infrastructure layer", etc. Layers can help you reason about the structure of the application, but they can also impose unneccessary restrictions. For instance, if you require that a layer can only depend on the layers below it, you cannot use SPIs. Because of this, we recommend you focus on components rather than layers in your Vaadin apps.
-
-That said, there are two layers that make sense to use in Vaadin apps as well: _presentation layer_ and _application layer_.
-
-In traditional web apps, you have the _frontend_ and the _backend_. The frontend of the application runs inside the user's web browser whereas the backend runs on the server. Furthermore, the frontend is more or less synonymous with the user interface of the application and the backend is the "business logic" or simply "everything else". In a Vaadin application, however, the terms frontend and backend can be confusing. Take a look at this diagram:
-
-image:images/layers.png[A diagram illustrating the presentation layer and application layer of a Flow and a Hilla app, respectively]
-
-When you are building your user interface with Flow, the user interface is written in Java and runs on the server - the backend. Unless you have created any web components of your own, all the code that runs in the browser - the frontend - is provided by Vaadin in one way or the other. There is a frontend and a backend, but they do not map directly onto user interface and business logic.
-
-On the other hand, when you are building your user interface with Hilla, the user interface is written in React and runs in the browser while the rest of the application runs on the server. In this case, the frontend and backend correspond to user interface and business logic.
-
-It is also possible to write hybrid applications, where some parts of the user interface are written in Java and other parts are written in React. In this case, you will have parts of your user interface running in the browser and parts on the server.
-
-Because of this, it makes more sense to talk about presentation layer and application layer, as opposed to frontend and backend (or user interface and business logic). It is important to note that these layers are _conceptual_ rather than physical: in a Flow or hybrid application, the presentation layer covers both the browser and a part of the server, wheras in a Hilla application, the presentation layer is confied to the browser alone. In all cases, the application layer resides on the server.
