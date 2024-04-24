@@ -20,7 +20,7 @@ function Example() {
         'The provided file does not have the correct format (PDF document).';
       uploadRef.current.i18n = { ...uploadRef.current.i18n };
     }
-  }, []);
+  }, [uploadRef.current]);
 
   return (
     <Upload

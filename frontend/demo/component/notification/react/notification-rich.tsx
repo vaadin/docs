@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Notification } from '@vaadin/react-components/Notification.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
@@ -8,14 +10,15 @@ import { Avatar } from '@vaadin/react-components/Avatar.js';
 import '@vaadin/icons';
 
 function Example() {
-  const [openedNotifications, setOpenedNotifications] = useState<number[]>([]);
+  useSignals(); // hidden-source-line
+  const openedNotifications = useSignal<number[]>([]);
 
   function open(index: number) {
-    setOpenedNotifications([...openedNotifications, index]);
+    openedNotifications.value = [...openedNotifications.value, index];
   }
 
   function close(index: number) {
-    setOpenedNotifications(openedNotifications.filter((n) => n !== index));
+    openedNotifications.value = openedNotifications.value.filter((n) => n !== index);
   }
 
   return (
@@ -24,7 +27,7 @@ function Example() {
       <Notification
         theme="success"
         position="middle"
-        opened={openedNotifications.includes(0)}
+        opened={openedNotifications.value.includes(0)}
         onOpenedChanged={(e) => {
           if (!e.detail.value) {
             close(0);
@@ -46,7 +49,7 @@ function Example() {
       <Notification
         theme="error"
         position="middle"
-        opened={openedNotifications.includes(1)}
+        opened={openedNotifications.value.includes(1)}
         onOpenedChanged={(e) => {
           if (!e.detail.value) {
             close(1);
@@ -67,7 +70,7 @@ function Example() {
 
       <Notification
         position="middle"
-        opened={openedNotifications.includes(2)}
+        opened={openedNotifications.value.includes(2)}
         onOpenedChanged={(e) => {
           if (!e.detail.value) {
             close(2);
@@ -87,7 +90,7 @@ function Example() {
 
       <Notification
         position="middle"
-        opened={openedNotifications.includes(3)}
+        opened={openedNotifications.value.includes(3)}
         onOpenedChanged={(e) => {
           if (!e.detail.value) {
             close(3);
