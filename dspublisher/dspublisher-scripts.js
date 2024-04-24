@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+import * as readline from 'readline';
 
-const DSP_VERSION = '2.2.0-rc.5';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const DSP_VERSION = '2.2.0-rc.9';
 
 async function checkPreConditions() {
   try {
@@ -64,12 +69,14 @@ async function checkPreConditions() {
   }
 }
 
-const firstLaunch = !fs.existsSync(path.resolve(__dirname, '..', 'node_modules'));
+const projectRootPath = path.resolve(__dirname, '..');
+const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
+const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
 
 // License check helper command
 const hasLicenseChecker = (() => {
-  const pomFilePath = path.resolve(__dirname, '..', 'pom.xml');
+  const pomFilePath = path.resolve(projectRootPath, 'pom.xml');
   const pomFile = fs.readFileSync(pomFilePath, 'utf8');
   return pomFile.includes('dspublisher-license-check');
 })();
@@ -108,8 +115,35 @@ const SCRIPTS = {
           {
             text: `Cleaning up project${firstLaunchMessage}`,
             readySignal: 'BUILD SUCCESS',
-            doneText: 'Ready. Caches cleaned up',
             weight: 5,
+          },
+        ],
+      },
+      {
+        func: () => {
+          const generatedPath = path.resolve(projectRootPath, 'frontend', 'generated');
+          if (fs.existsSync(generatedPath)) {
+            fs.rmSync(generatedPath, { recursive: true });
+          }
+        },
+        phases: [
+          {
+            text: 'Removing generated frontend files',
+            weight: 1,
+          },
+        ],
+      },
+      {
+        func: () => {
+          if (fs.existsSync(nodeModulesPath)) {
+            fs.rmSync(nodeModulesPath, { recursive: true });
+          }
+        },
+        phases: [
+          {
+            text: 'Removing node_modules',
+            weight: 3,
+            doneText: 'Ready. Caches cleaned up',
           },
         ],
       },
@@ -205,11 +239,11 @@ const SCRIPTS = {
         func: () => {
           // Copy the jar file from ../target/*.jar to ../dspublisher/out/docs.jar
           const jarFile = fs
-            .readdirSync(path.resolve(__dirname, '..', 'target'))
+            .readdirSync(path.resolve(projectRootPath, 'target'))
             .find((fn) => fn.endsWith('.jar'));
 
           fs.copyFileSync(
-            path.resolve(__dirname, '..', 'target', jarFile),
+            path.resolve(projectRootPath, 'target', jarFile),
             path.resolve(__dirname, 'out', 'docs.jar')
           );
         },
@@ -250,22 +284,23 @@ const progressState = {
 function clearLines(n) {
   for (let i = 0; i < n; i++) {
     const y = i === 0 ? null : -1;
-    process.stdout.moveCursor(0, y);
-    process.stdout.clearLine(i);
+    readline.moveCursor(process.stdout, 0, y);
+    readline.clearLine(process.stdout, i);
     process.stdout.line;
   }
-  process.stdout.cursorTo(0);
+  readline.cursorTo(process.stdout, 0);
 }
 
 /**
  * Logs to console and renders the progress bar.
  */
+let progressLogged = false;
 function logProgress(state, output) {
-  if (this.progressLogged && !process.env.NO_PROGRESS_LOG) {
+  if (progressLogged && !process.env.NO_PROGRESS_LOG) {
     // Clear the progress bar
     clearLines(2);
   }
-  this.progressLogged = true;
+  progressLogged = true;
 
   // Log the output
   if (output) {
