@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   Grid,
   type GridElement,
@@ -13,6 +13,8 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { IntegerField } from '@vaadin/react-components/IntegerField.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { useSignal, useComputed } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 type PersonOrId =
   | Person
@@ -21,15 +23,16 @@ type PersonOrId =
     };
 
 function Example() {
+  useSignals(); // hidden-source-line
   const gridRef = useRef<GridElement>(null);
 
   const idToIndexes = useMemo(() => new Map<number, number[]>(), []);
 
-  const [expandedItems, setExpandedItems] = useState<PersonOrId[]>([]);
+  const expandedItems = useSignal<Person[]>([]);
+  const indexesToScrollTo = useSignal<number[]>([13, 6]);
 
-  const [indexesToScrollTo, setIndexesToScrollTo] = useState<number[]>([13, 6]);
-  const indexesToScrollToRef = useRef<number[]>(indexesToScrollTo);
-  indexesToScrollToRef.current = indexesToScrollTo;
+  const indexesToScrollToRef = useRef<number[]>(indexesToScrollTo.value);
+  indexesToScrollToRef.current = indexesToScrollTo.value;
 
   const dataProvider = useMemo(
     () =>
@@ -57,13 +60,13 @@ function Example() {
             indexAddress[0] === indexesToScrollToRef.current[0] &&
             indexAddress[1] === indexesToScrollToRef.current[1]
           ) {
-            setIndexesToScrollTo(indexAddress);
+            indexesToScrollTo.value = indexAddress;
           }
         });
 
-        if (!expandedItems.length && !params.parentItem) {
+        if (!expandedItems.value.length && !params.parentItem) {
           // Expand the root level by default
-          setExpandedItems(people);
+          expandedItems.value = people;
         }
 
         callback(people, hierarchyLevelSize);
@@ -71,13 +74,13 @@ function Example() {
     []
   );
 
-  const selectedItems = useMemo(() => {
-    const indexAddress = indexesToScrollTo.join(', ');
+  const selectedItems = useComputed(() => {
+    const indexAddress = indexesToScrollTo.value.join(', ');
     const id = Array.from(idToIndexes.entries()).find(
       ([, indexes]) => indexes.join(', ') === indexAddress
     )?.[0];
     return id ? [{ id }] : [];
-  }, [indexesToScrollTo]);
+  });
 
   return (
     <>
@@ -86,11 +89,11 @@ function Example() {
         itemIdPath="id"
         itemHasChildrenPath="manager"
         dataProvider={dataProvider}
-        expandedItems={expandedItems}
-        selectedItems={selectedItems}
+        expandedItems={expandedItems.value}
+        selectedItems={selectedItems.value}
         onActiveItemChanged={(e) => {
           if (e.detail.value) {
-            setIndexesToScrollTo(idToIndexes.get(e.detail.value.id) ?? []);
+            indexesToScrollTo.value = idToIndexes.get(e.detail.value.id) ?? [];
           }
         }}
       >
@@ -107,9 +110,9 @@ function Example() {
           stepButtonsVisible
           min={0}
           style={{ width: '120px' }}
-          value={String(indexesToScrollTo[0])}
+          value={String(indexesToScrollTo.value[0])}
           onChange={(e) => {
-            setIndexesToScrollTo([parseInt(e.target.value) || 0, indexesToScrollTo[1]]);
+            indexesToScrollTo.value = [parseInt(e.target.value) || 0, indexesToScrollTo.value[1]];
           }}
         />
 
@@ -118,9 +121,9 @@ function Example() {
           stepButtonsVisible
           min={0}
           style={{ width: '120px' }}
-          value={String(indexesToScrollTo[1])}
+          value={String(indexesToScrollTo.value[1])}
           onChange={(e) => {
-            setIndexesToScrollTo([indexesToScrollTo[0], parseInt(e.target.value) || 0]);
+            indexesToScrollTo.value = [indexesToScrollTo.value[0], parseInt(e.target.value) || 0];
           }}
         />
 
@@ -129,12 +132,12 @@ function Example() {
             const grid = gridRef.current;
             if (grid) {
               // tag::snippet[]
-              grid.scrollToIndex(...indexesToScrollTo);
+              grid.scrollToIndex(...indexesToScrollTo.value);
               // end::snippet[]
             }
           }}
         >
-          Scroll to index: {indexesToScrollTo.join(', ')}
+          Scroll to index: {indexesToScrollTo.value.join(', ')}
         </Button>
       </HorizontalLayout>
     </>
