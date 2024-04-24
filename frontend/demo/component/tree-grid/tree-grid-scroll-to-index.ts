@@ -38,7 +38,7 @@ export class Example extends LitElement {
   private indexesToScrollTo: number[] = [13, 6];
 
   @state()
-  private idToIndexAddress = new Map<number, string>();
+  private idToIndexes = new Map<number, number[]>();
 
   constructor() {
     super();
@@ -59,11 +59,11 @@ export class Example extends LitElement {
     // Cache the index address of each person for demo purposes
     people.forEach((person, idx) => {
       const index = startIndex + idx;
-      const parentIndexAddress = params.parentItem
-        ? this.idToIndexAddress.get(params.parentItem.id)
-        : '';
-      const indexAddress = parentIndexAddress ? `${parentIndexAddress}, ${index}` : `${index}`;
-      this.idToIndexAddress = new Map(this.idToIndexAddress).set(person.id, indexAddress);
+      const parentIndexes = params.parentItem
+        ? this.idToIndexes.get(params.parentItem.id) ?? []
+        : [];
+      const indexes = [...parentIndexes, index];
+      this.idToIndexes = new Map(this.idToIndexes).set(person.id, indexes);
     });
 
     if (!this.expandedItems && !params.parentItem) {
@@ -75,12 +75,14 @@ export class Example extends LitElement {
   }
 
   private indexRenderer: GridBodyRenderer<Person> = (root, _, { item }) => {
-    root.textContent = this.idToIndexAddress.get(item.id) ?? '';
+    root.textContent = this.idToIndexes.get(item.id)?.join(', ') ?? '';
   };
 
-  private getSelectedItems(indexes: number[], idToIndexAddress: Map<number, string>) {
-    const indexAddress = indexes.join(', ');
-    const id = Array.from(idToIndexAddress).find(([_, address]) => address === indexAddress)?.[0];
+  private getSelectedItems(indexes: number[], idToIndexes: Map<number, number[]>) {
+    const id = Array.from(idToIndexes.entries()).find(
+      ([, idxs]) => idxs[0] === indexes[0] && idxs[1] === indexes[1]
+    )?.[0];
+
     return id ? [{ id }] : [];
   }
 
@@ -91,13 +93,10 @@ export class Example extends LitElement {
         item-has-children-path="manager"
         .dataProvider="${this.dataProvider}"
         .expandedItems="${this.expandedItems ?? []}"
-        .selectedItems="${this.getSelectedItems(this.indexesToScrollTo, this.idToIndexAddress)}"
+        .selectedItems="${this.getSelectedItems(this.indexesToScrollTo, this.idToIndexes)}"
         @active-item-changed=${(e: GridActiveItemChangedEvent<Person>) => {
           if (e.detail.value) {
-            this.indexesToScrollTo = this.idToIndexAddress
-              .get(e.detail.value.id)
-              ?.split(', ')
-              .map((index) => parseInt(index)) ?? [0, 0];
+            this.indexesToScrollTo = this.idToIndexes.get(e.detail.value.id) ?? [];
           }
         }}
       >
