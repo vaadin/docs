@@ -30,11 +30,14 @@ function Example() {
       appLayout.style.setProperty('--vaadin-app-layout-touch-optimized', 'true');
       (appLayout as any)._updateTouchOptimizedMode();
     }
+  }, [appLayoutRef.current]);
+
+  useEffect(() => {
     const horizontalLayout = horizontalLayoutRef.current;
     if (horizontalLayout) {
       patchAppLayoutNavigation(horizontalLayout);
     }
-  }, []);
+  }, [horizontalLayoutRef.current]);
 
   return (
     // tag::snippet[]

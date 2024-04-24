@@ -1,10 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { CustomField } from '@vaadin/react-components/CustomField.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
-  const [customFieldValue, setCustomFieldValue] = useState('');
+  useSignals(); // hidden-source-line
+  const customFieldValue = useSignal('');
 
   return (
     <>
@@ -13,7 +16,7 @@ function Example() {
         label="Payment information"
         theme="whitespace"
         onValueChanged={(event) => {
-          setCustomFieldValue(event.detail.value ?? '');
+          customFieldValue.value = event.detail.value ?? '';
         }}
       >
         <HorizontalLayout theme="spacing-s">

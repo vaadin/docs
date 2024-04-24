@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
@@ -12,6 +14,7 @@ import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function Item({ person }: { person: Person }) {
+  useSignals(); // hidden-source-line
   return (
     <HorizontalLayout
       style={{ alignItems: 'center', lineHeight: 'var(--lumo-line-height-m)' }}
@@ -49,34 +52,57 @@ function createItem(iconName: string, text: string) {
 }
 
 function Example() {
-  const [gridItems, setGridItems] = useState<Person[]>([]);
-  const [items, setItems] = useState<ContextMenuItem[]>([]);
+  useSignals(); // hidden-source-line
+  const gridItems = useSignal<Person[]>([]);
+  const items = useSignal<ContextMenuItem[]>([]);
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
-    getPeople({ count: 5 }).then(({ people }) => {
-      setGridItems(people);
+    getPeople({count: 5}).then(({people}) => {
+      gridItems.value = people;
       // tag::snippet[]
       const contextMenuItems: ContextMenuItem[] = [
-        { component: createItem('vaadin:file-search', 'Open') },
+        {component: createItem('vaadin:file-search', 'Open')},
         {
           component: createItem('vaadin:user-check', 'Assign'),
           children: [
-            { component: <Item person={people[0]} /> },
-            { component: <Item person={people[1]} /> },
-            { component: <Item person={people[2]} /> },
-            { component: <Item person={people[3]} /> },
-            { component: <Item person={people[4]} /> },
+            {
+              component:
+                <Item
+                  person={people[0]}/>
+            },
+            {
+              component:
+                <Item
+                  person={people[1]}/>
+            },
+            {
+              component:
+                <Item
+                  person={people[2]}/>
+            },
+            {
+              component:
+                <Item
+                  person={people[3]}/>
+            },
+            {
+              component:
+                <Item
+                  person={people[4]}/>
+            },
           ],
         },
-        { component: 'hr' },
-        { component: createItem('vaadin:trash', 'Delete') },
+        {component: 'hr'},
+        {component: createItem('vaadin:trash', 'Delete')},
       ];
 
-      setItems(contextMenuItems);
+      items.value = contextMenuItems;
       // end::snippet[]
     });
+  }, []);
 
+  useEffect(() => {
     const grid = gridRef.current;
     if (grid) {
       // Workaround: Prevent opening context menu on header row.
@@ -87,12 +113,12 @@ function Example() {
         }
       });
     }
-  }, []);
+  }, [gridRef.current]);
 
   // tag::snippet[]
   return (
-    <ContextMenu items={items}>
-      <Grid allRowsVisible items={gridItems} ref={gridRef}>
+    <ContextMenu items={items.value}>
+      <Grid allRowsVisible items={gridItems.value} ref={gridRef}>
         <GridColumn header="Applicant">
           {({ item }) => (
             <span>
