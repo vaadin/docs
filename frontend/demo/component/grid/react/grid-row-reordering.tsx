@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   Grid,
   type GridDropEvent,
@@ -11,40 +13,43 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
-  const [draggedItem, setDraggedItem] = useState<Person | undefined>(undefined);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
+  const draggedItem = useSignal<Person | undefined>(undefined);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   // tag::snippet[]
   function handleDragStart(event: GridDragStartEvent<Person>): void {
-    setDraggedItem(event.detail.draggedItems[0]);
+    draggedItem.value = event.detail.draggedItems[0];
   }
 
   function handleDragEnd(): void {
-    setDraggedItem(undefined);
+    draggedItem.value = undefined;
   }
 
   function handleDrop(event: GridDropEvent<Person>): void {
     const { dropTargetItem, dropLocation } = event.detail;
     // Only act when dropping on another item
-    if (draggedItem && dropTargetItem !== draggedItem) {
+    if (draggedItem.value && dropTargetItem !== draggedItem.value) {
       // Remove the item from its previous position
-      const draggedItemIndex = items.indexOf(draggedItem);
-      items.splice(draggedItemIndex, 1);
+      const draggedItemIndex = items.value.indexOf(draggedItem.value);
+      items.value.splice(draggedItemIndex, 1);
       // Re-insert the item at its new position
-      const dropIndex = items.indexOf(dropTargetItem) + (dropLocation === 'below' ? 1 : 0);
-      items.splice(dropIndex, 0, draggedItem);
+      const dropIndex = items.value.indexOf(dropTargetItem) + (dropLocation === 'below' ? 1 : 0);
+      items.value.splice(dropIndex, 0, draggedItem.value);
       // Re-assign the array to refresh the grid
-      setItems([...items]);
+      items.value = [...items.value];
     }
   }
 
   return (
     <Grid
-      items={items}
+      items={items.value}
       rowsDraggable
       dropMode="between"
       onGridDragstart={handleDragStart}
