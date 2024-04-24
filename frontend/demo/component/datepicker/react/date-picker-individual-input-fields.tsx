@@ -8,7 +8,7 @@ import getDaysInMonth from 'date-fns/getDaysInMonth';
 
 function Example() {
   useSignals(); // hidden-source-line
-  const months = useComputed<string []>(() => [
+  const months = useComputed<string[]>(() => [
     'January',
     'February',
     'March',
@@ -23,15 +23,14 @@ function Example() {
     'December',
   ]);
 
-  const years = useComputed<number []>(() => Array.from(
-    { length: 100 },
-    (_, k) => new Date().getFullYear() - 99 + k),
+  const years = useComputed<number[]>(() =>
+    Array.from({ length: 100 }, (_, k) => new Date().getFullYear() - 99 + k)
   );
 
   const selectedYear = useSignal<number | undefined>(undefined);
   const selectedMonth = useSignal<string | undefined>(undefined);
   const selectedDay = useSignal<number | undefined>(undefined);
-  const selectableDays = useComputed<number []>(() => {
+  const selectableDays = useComputed<number[]>(() => {
     if (!selectedYear.value || !selectedMonth.value) {
       return [];
     }
