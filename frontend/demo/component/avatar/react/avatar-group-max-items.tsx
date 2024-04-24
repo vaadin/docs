@@ -24,10 +24,7 @@ function Example() {
 
   return (
     // tag::snippet[]
-    <AvatarGroup
-      maxItemsVisible={3}
-      items={avatars.value}
-    />
+    <AvatarGroup maxItemsVisible={3} items={avatars.value} />
     // end::snippet[]
   );
 }

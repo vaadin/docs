@@ -20,7 +20,7 @@ function Example() {
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
-    getPeople().then(({people}) => {
+    getPeople().then(({ people }) => {
       items.value = people;
     });
   }, []);
