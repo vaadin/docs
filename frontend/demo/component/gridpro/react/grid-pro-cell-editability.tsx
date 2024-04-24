@@ -1,29 +1,27 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GridPro } from '@vaadin/react-components/GridPro.js';
 import { GridProEditColumn } from '@vaadin/react-components/GridProEditColumn.js';
 import type { GridItemModel } from '@vaadin/react-components/Grid.js';
-
-type Transaction = {
-  name: string;
-  amount: number;
-  approved: boolean;
-};
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
-  const [items] = useState<Transaction[]>([
-    { name: 'Transaction 1', amount: 100, approved: true },
-    { name: 'Transaction 2', amount: 200, approved: false },
-  ]);
+  const [items, setItems] = useState<Person[]>([]);
 
-  const isNotApproved = (model: GridItemModel<Transaction>) => !model.item.approved;
+  useEffect(() => {
+    getPeople().then(({ people }) => setItems(people));
+  }, []);
+
+  const isSubscriber = (model: GridItemModel<Person>) => model.item.subscriber;
 
   return (
     // tag::snippet[]
     <GridPro items={items}>
-      <GridProEditColumn path="name" isCellEditable={isNotApproved} />
-      <GridProEditColumn path="amount" isCellEditable={isNotApproved} />
-      <GridProEditColumn path="approved" editorType="checkbox" />
+      <GridProEditColumn path="firstName" />
+      <GridProEditColumn path="lastName" />
+      <GridProEditColumn path="email" isCellEditable={isSubscriber} />
+      <GridProEditColumn path="subscriber" editorType="checkbox" />
     </GridPro>
     // end::snippet[]
   );

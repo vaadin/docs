@@ -5,13 +5,9 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid-pro';
 import '@vaadin/grid-pro/vaadin-grid-pro-edit-column.js';
 import type { GridItemModel } from '@vaadin/grid';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-
-type Transaction = {
-  name: string;
-  amount: number;
-  approved: boolean;
-};
 
 @customElement('grid-pro-cell-editability')
 export class Example extends LitElement {
@@ -23,25 +19,25 @@ export class Example extends LitElement {
   }
 
   @state()
-  private items: Transaction[] = [
-    { name: 'Transaction 1', amount: 100, approved: true },
-    { name: 'Transaction 2', amount: 200, approved: false },
-  ];
+  private items: Person[] = [];
+
+  protected override async firstUpdated() {
+    const { people } = await getPeople();
+    this.items = people;
+  }
 
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-grid-pro .items="${this.items}">
+        <vaadin-grid-pro-edit-column path="firstName"></vaadin-grid-pro-edit-column>
+        <vaadin-grid-pro-edit-column path="lastName"></vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column
-          path="name"
-          .isCellEditable="${this.isNotApproved}"
+          path="email"
+          .isCellEditable="${this.isSubscriber}"
         ></vaadin-grid-pro-edit-column>
         <vaadin-grid-pro-edit-column
-          path="amount"
-          .isCellEditable="${this.isNotApproved}"
-        ></vaadin-grid-pro-edit-column>
-        <vaadin-grid-pro-edit-column
-          path="approved"
+          path="subscriber"
           editor-type="checkbox"
         ></vaadin-grid-pro-edit-column>
       </vaadin-grid-pro>
@@ -49,7 +45,7 @@ export class Example extends LitElement {
     `;
   }
 
-  protected isNotApproved(model: GridItemModel<Transaction>) {
-    return !model.item.approved;
+  protected isSubscriber(model: GridItemModel<Person>) {
+    return model.item.subscriber;
   }
 }
