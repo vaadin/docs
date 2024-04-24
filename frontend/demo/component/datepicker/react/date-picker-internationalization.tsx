@@ -30,7 +30,7 @@ function Example() {
         cancel: 'Abbrechen',
       };
     }
-  });
+  }, [datePickerRef.current]);
 
   return <DatePicker label="Sitzungsdatum" ref={datePickerRef} />;
   // end::snippet[]
