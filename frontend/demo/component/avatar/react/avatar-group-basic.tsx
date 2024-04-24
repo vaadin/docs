@@ -11,7 +11,7 @@ function Example() {
   const peopleData = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople({count: 3}).then(({people}) => {
+    getPeople({ count: 3 }).then(({ people }) => {
       peopleData.value = people;
     });
   }, []);
@@ -23,9 +23,7 @@ function Example() {
     }))
   );
 
-  return (
-    <AvatarGroup items={avatars.value}/>
-  );
+  return <AvatarGroup items={avatars.value} />;
   // end::snippet[]
 }
 
