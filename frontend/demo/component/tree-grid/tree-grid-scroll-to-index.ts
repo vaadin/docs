@@ -56,6 +56,7 @@ export class Example extends LitElement {
       managerId: params.parentItem ? params.parentItem.id : null,
     });
 
+    // Cache the index address of each person for demo purposes
     people.forEach((person, idx) => {
       const index = startIndex + idx;
       const parentIndexAddress = params.parentItem

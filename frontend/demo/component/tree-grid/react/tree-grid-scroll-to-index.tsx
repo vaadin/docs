@@ -23,11 +23,13 @@ type PersonOrId =
 function Example() {
   const gridRef = useRef<GridElement>(null);
 
+  const idToIndexes = useMemo(() => new Map<number, number[]>(), []);
+
   const [expandedItems, setExpandedItems] = useState<PersonOrId[]>([]);
 
   const [indexesToScrollTo, setIndexesToScrollTo] = useState<number[]>([13, 6]);
-
-  const [idToIndexes, setIdToIndexes] = useState<Map<number, number[]>>(new Map());
+  const indexesToScrollToRef = useRef<number[]>(indexesToScrollTo);
+  indexesToScrollToRef.current = indexesToScrollTo;
 
   const dataProvider = useMemo(
     () =>
@@ -42,6 +44,7 @@ function Example() {
           managerId: params.parentItem ? params.parentItem.id : null,
         });
 
+        // Cache the index address of each person for demo purposes
         people.forEach((person, idx) => {
           const index = startIndex + idx;
           const parentIndexes = params.parentItem
@@ -51,13 +54,12 @@ function Example() {
           idToIndexes.set(person.id, indexAddress);
 
           if (
-            indexAddress[0] === indexesToScrollTo[0] &&
-            indexAddress[1] === indexesToScrollTo[1]
+            indexAddress[0] === indexesToScrollToRef.current[0] &&
+            indexAddress[1] === indexesToScrollToRef.current[1]
           ) {
             setIndexesToScrollTo(indexAddress);
           }
         });
-        setIdToIndexes(idToIndexes);
 
         if (!expandedItems.length && !params.parentItem) {
           // Expand the root level by default
@@ -66,7 +68,7 @@ function Example() {
 
         callback(people, hierarchyLevelSize);
       },
-    [idToIndexes]
+    []
   );
 
   const selectedItems = useMemo(() => {
@@ -75,7 +77,7 @@ function Example() {
       ([, indexes]) => indexes.join(', ') === indexAddress
     )?.[0];
     return id ? [{ id }] : [];
-  }, [indexesToScrollTo, idToIndexes]);
+  }, [indexesToScrollTo]);
 
   return (
     <>

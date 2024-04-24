@@ -29,26 +29,24 @@ public class TreeGridScrollToIndex extends Div {
     private Button scrollToIndexButton = new Button();
 
     private Map<Person, List<Integer>> personToIndexAddress = new HashMap<>();
-    TreeGrid<Person> treeGrid = new TreeGrid<>();
+    private TreeGrid<Person> treeGrid = new TreeGrid<>();
 
     public TreeGridScrollToIndex() {
-
         treeGrid.setDataProvider(new LazyLoadingProvider());
-        
+
         treeGrid.setUniqueKeyDataGenerator("key", (person) -> {
             return String.valueOf(person.getId());
         });
 
         treeGrid.expand(DataService.getManagers());
 
-        treeGrid.addHierarchyColumn(Person::getFirstName)
-        .setWidth("200px").setFlexGrow(0)
-                .setHeader("First name");
+        treeGrid.addHierarchyColumn(Person::getFirstName).setWidth("200px")
+                .setFlexGrow(0).setHeader("First name");
 
         treeGrid.addSelectionListener(e -> {
             if (e.getFirstSelectedItem().isPresent()) {
-                var person = e.getFirstSelectedItem().get();
-                var indexAddress = personToIndexAddress.get(person);
+                Person person = e.getFirstSelectedItem().get();
+                List<Integer> indexAddress = personToIndexAddress.get(person);
                 if (indexAddress != null) {
                     parentIndexField.setValue(indexAddress.get(0));
                     if (indexAddress.size() > 1) {
@@ -58,15 +56,14 @@ public class TreeGridScrollToIndex extends Div {
             }
         });
 
-        
-        treeGrid.addColumn(person -> StringUtils.join(personToIndexAddress.get(person), ", "))
-                .setWidth("80px").setFlexGrow(0)
-                .setHeader("Index");
+        treeGrid.addColumn(person -> StringUtils
+                .join(personToIndexAddress.get(person), ", ")).setWidth("80px")
+                .setFlexGrow(0).setHeader("Index");
         treeGrid.addColumn(Person::getEmail).setHeader("Email");
 
         add(treeGrid);
 
-        var controls = new HorizontalLayout();
+        HorizontalLayout controls = new HorizontalLayout();
         controls.setSpacing(true);
         controls.setAlignItems(Alignment.END);
 
@@ -84,10 +81,10 @@ public class TreeGridScrollToIndex extends Div {
         controls.add(childIndexField);
 
         scrollToIndexButton.addClickListener(e -> {
-            var parentIndex = parentIndexField.getValue();
-            var childIndex = childIndexField.getValue();
+            int[] indexesToScrollTo = { parentIndexField.getValue(),
+                    childIndexField.getValue() };
             // tag::snippet[]
-            treeGrid.scrollToIndex(parentIndex, childIndex);
+            treeGrid.scrollToIndex(indexesToScrollTo);
             // end::snippet[]
         });
         controls.add(scrollToIndexButton);
@@ -97,21 +94,18 @@ public class TreeGridScrollToIndex extends Div {
 
     private void updateSelectedItem() {
         treeGrid.select(null);
-        var parentIndex = parentIndexField.getValue();
-        var childIndex = childIndexField.getValue();
+        Integer parentIndex = parentIndexField.getValue();
+        Integer childIndex = childIndexField.getValue();
         personToIndexAddress.entrySet().stream().filter(entry -> {
-            var indexes = entry.getValue();
+            List<Integer> indexes = entry.getValue();
             return indexes.size() == 2
                     && List.of(parentIndex, childIndex).equals(indexes);
         }).findFirst().ifPresent(entry -> {
             treeGrid.select(entry.getKey());
         });
 
-        scrollToIndexButton.setText("Scroll to index: " + parentIndex + ", " + childIndex);
-    }
-
-    public List<Person> getStaff(Person manager) {
-        return DataService.getPeople(manager.getId());
+        scrollToIndexButton
+                .setText("Scroll to index: " + parentIndex + ", " + childIndex);
     }
 
     private class LazyLoadingProvider
@@ -129,16 +123,17 @@ public class TreeGridScrollToIndex extends Div {
             if (query.getParent() == null) {
                 people = DataService.getManagers();
             } else {
-                people = getStaff(query.getParent());
+                people = DataService.getPeople(query.getParent().getId());
             }
 
             int limit = query.getLimit();
             int offset = query.getOffset();
 
-            var personIndex = new AtomicInteger(0);
+            // Cache the index address of each person for demo purposes
+            AtomicInteger personIndex = new AtomicInteger(0);
             people.stream().skip(offset).limit(limit).forEach(person -> {
-                var index = offset + personIndex.getAndIncrement();
-                var parentIndexAddress = personToIndexAddress
+                int index = offset + personIndex.getAndIncrement();
+                List<Integer> parentIndexAddress = personToIndexAddress
                         .get(query.getParent());
                 List<Integer> indexAddress = parentIndexAddress == null
                         ? List.of(index)
@@ -152,7 +147,7 @@ public class TreeGridScrollToIndex extends Div {
 
         @Override
         public boolean hasChildren(Person item) {
-            return getStaff(item).size() > 0;
+            return DataService.getPeople(item.getId()).size() > 0;
         }
 
         @Override
