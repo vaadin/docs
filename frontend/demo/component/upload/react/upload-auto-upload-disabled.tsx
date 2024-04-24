@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useRef, useEffect } from 'react';
-import { useComputed } from "@vaadin/hilla-react-signals"; // hidden-source-line
+import { useComputed } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
 import { createFakeFilesUploadAutoUploadDisabled } from './upload-demo-mock-files';

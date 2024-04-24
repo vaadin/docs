@@ -24,9 +24,7 @@ function Example() {
     }))
   );
 
-  return (
-    <AvatarGroup items={avatars.value}/>
-  );
+  return <AvatarGroup items={avatars.value} />;
   // end::snippet[]
 }
 
