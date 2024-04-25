@@ -101,6 +101,8 @@ export default async function (config) {
 
   config.resolve.alias['@vaadin/flow-frontend'] = jarResourcesFolder;
 
+  config.resolve.alias['@vaadin/hilla-react-signals'] = '@preact/signals-react';
+
   // Temporary workaround for embedded web components, where due to a bug Flow currently generates
   // theme imports from `/generated/theme`, rather than `Frontend/generated/theme.js`
   config.resolve.alias['/generated/theme'] = applyThemePath;
