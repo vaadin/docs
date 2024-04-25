@@ -35,7 +35,7 @@ function Example() {
         timeLabel: 'zeit',
       };
     }
-  }, []);
+  }, [dateTimePickerRef.current]);
 
   return <DateTimePicker ref={dateTimePickerRef} label="Sitzungsdatum" />;
   // end::snippet[]

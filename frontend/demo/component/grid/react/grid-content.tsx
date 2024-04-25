@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridSelectionColumn } from '@vaadin/react-components/GridSelectionColumn.js';
@@ -34,14 +36,17 @@ const statusRenderer = (person: Person) => (
 );
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (
-    <Grid items={items}>
+    <Grid items={items.value}>
       <GridSelectionColumn />
 
       <GridColumn header="Employee" flexGrow={0} autoWidth>

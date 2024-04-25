@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   PasswordField,
   type PasswordFieldValueChangedEvent,
@@ -16,8 +18,9 @@ const StrengthColor: Record<PasswordStrength, string> = {
 };
 
 function Example() {
-  const [strengthText, setStrengthText] = useState<PasswordStrength>('weak');
-  const [strengthColor, setStrengthColor] = useState<string>(StrengthColor.weak);
+  useSignals(); // hidden-source-line
+  const strengthText = useSignal<PasswordStrength>('weak');
+  const strengthColor = useSignal<string>(StrengthColor.weak);
 
   const pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*';
 
@@ -31,8 +34,8 @@ function Example() {
         strength = 'moderate';
       }
     }
-    setStrengthText(strength);
-    setStrengthColor(StrengthColor[strength]);
+    strengthText.value = strength;
+    strengthColor.value = StrengthColor[strength];
   }
 
   return (
@@ -47,11 +50,11 @@ function Example() {
         icon="vaadin:check"
         slot="suffix"
         style={{ color: StrengthColor.strong }}
-        hidden={strengthText !== 'strong'}
+        hidden={strengthText.value !== 'strong'}
       />
 
       <div slot="helper">
-        Password strength: <span style={{ color: strengthColor }}>{strengthText}</span>
+        Password strength: <span style={{ color: strengthColor.value }}>{strengthText.value}</span>
       </div>
     </PasswordField>
     // end::snippet[]
