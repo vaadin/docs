@@ -1,3 +1,4 @@
+// tag::snippet[]
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
@@ -11,3 +12,4 @@ function App() {
 }
 
 createRoot(document.getElementById('outlet')!).render(createElement(App));
+// end::snippet[]
