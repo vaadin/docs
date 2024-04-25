@@ -1,0 +1,89 @@
+---
+title: Add Message History
+description: Learn how to protect applications from being overwhelmed with data.
+order: 40
+---
+
+= Add Message History
+
+The application you've been developing in this application is now able to post and receive messages in a channel. However, if you leave the channel, you lose all of the previous messages -- or rather, you won't see them. The backend is storing the messages, though. 
+
+The next step in this tutorial is to display them in the user interface when the channel view is opened. There are a few things to consider. First, you'll need to ensure all messages are rendered. However, there may be too many messages: displaying them all may slow down the application and consume resources.
+
+The second thing to consider is related to timing. You might receive messages while fetching the message history. You don't want to miss those. Similarly, albeit rare, you might receive a message twice: once in the message history and again as a part of the live stream. You'll need to prevent such duplicates.
+
+Always set an upper limit on all backend queries. Unless you know a query will return one or zero items, assume it'll return an excessive amount. In this tutorial, you'll set the limit to only twenty messages to demonstrate how limits work.
+
+== Function for Receiving Messages
+
+The first step for being able to provide message history to the user is to create a new function that will be called whenver a new batch of messages are received from the server. It does not matter if the messages are coming from the message history or the live stream, they will be treated in the same way: sort the messages according to a sequence number provided by the server, remove any duplicates by comparing the message IDs (also provided by the server) and remove the oldest messages if the total number of messages exceeds the limit.
+
+Open `views/channel/{channelId}/@index.tsx` and add the following:
+
+.views/channel/{channelId}/@index.tsx
+[source,tsx]
+----
+...
+// tag::snippet[]
+const HISTORY_SIZE = 20
+// end::snippet[]
+
+export default function ChannelView() {
+    ...
+    const subscription = useSignal<Subscription<Message[]> | undefined>(undefined)
+
+// tag::snippet[]
+    function receiveMessages(incoming: Message[]) {
+        const newMessages = [...messages.value, ...incoming] // <1>
+            .sort((a, b) => a.sequenceNumber - b.sequenceNumber) // <2>
+            .filter((msg, index, all) => all.findIndex(m => m.messageId === msg.messageId) == index) // <3>
+        if (newMessages.length > HISTORY_SIZE) {
+            newMessages.splice(0, newMessages.length - HISTORY_SIZE) // <4>
+        }            
+        messages.value = newMessages
+    }
+// end::snippet[]
+    ...
+}
+----
+<1> This line merges the incoming messages and the existing messages into a new array.
+<2> This line sorts the array by sequence number.
+<3> This line removes any duplicates from the array.
+<4> This line removes the oldest messages if the length of the array exceeds 20 (`HISTORY_SIZE`).
+
+== Change Subscribe Function
+
+The next step is to make some changes to the `subscribe()` function. First, you'll want to call the new `receiveMessages()` function when new messages arrive over the live stream. Second, you'll want to fetch the message history from the server. Change the `subscribe()` function as follows:
+
+.views/channel/{channelId}/@index.tsx
+[source,tsx]
+----
+...
+export default function ChannelView() {
+    ...
+    function subscribe() {
+        unsubscribe()
+        if (channel.value) {
+            console.log("Subscribing to channel", channel.value.id)
+            subscription.value = ChatService.liveMessages(channel.value.id)
+// tag::snippet[]
+                .onNext(receiveMessages) // <1>
+// end::snippet[]
+                .onError(() => console.error("Error in subscription"))    
+// tag::snippet[]
+            ChatService.messageHistory(channel.value.id, HISTORY_SIZE, undefined) // <2>
+                .then(receiveMessages) // <3>
+                .catch(console.error) 
+// end::snippet[]
+        }
+    }
+    ...
+}
+----
+<1> Instead of manipulating the `messages` signal directly, you're now calling `receiveMessages()` when new messages arrive over the live stream.
+<2> This line fetches the 20 (`HISTORY_SIZE`) latest messages from the server. You'll address the third `undefined` parameter later in this tutorial.
+<3> This line calles `receiveMessages()` as soon as the message history arrives from the server.
+
+You can now try the new functionality. In your web browser, open any channel and post 20 messages (you can number them from 1 to 20). They should all show up in the window. Then post another message. The oldest message (the first) should now have disappeared from the window. As you keep posting messages, the older messages are disappearing to make sure there are always at most 20 messages visible.
+
+Next, navigate to the lobby and back to the channel. The 20 last messages should be visible in the window.
