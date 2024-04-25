@@ -6,9 +6,9 @@ import '@vaadin/icons';
 
 function createItem(iconName: string, text: string, isChild = false) {
   const iconStyle: React.CSSProperties = {
-    width: isChild ? 'var(--lumo-icon-size-s)' : 'auto',
-    height: isChild ? 'var(--lumo-icon-size-s)' : 'auto',
-    marginRight: isChild ? 'var(--lumo-space-s)' : 0
+    width: isChild ? 'var(--lumo-icon-size-s)' : '',
+    height: isChild ? 'var(--lumo-icon-size-s)' : '',
+    marginRight: isChild ? 'var(--lumo-space-s)' : '',
   };
 
   let ariaLabel = '';
