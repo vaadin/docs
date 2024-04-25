@@ -14,7 +14,7 @@ function Example() {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
     }
-  }, []);
+  }, [sideNavRef.current]);
 
   return (
     <div className="side-nav-sample">

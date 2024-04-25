@@ -13,7 +13,7 @@ function Example() {
         additionalInformation: `Contact admin@company.com if you're experiencing issues logging into your account`,
       };
     }
-  }, []);
+  }, [loginRef.current]);
 
   return <LoginOverlay ref={loginRef} opened />;
   // end::snippet[]

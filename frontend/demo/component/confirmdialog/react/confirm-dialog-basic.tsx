@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import {
   ConfirmDialog,
@@ -9,19 +11,26 @@ import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import confirmDialogBasicStyles from './confirm-dialog-basic-styles';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(true);
-  const [status, setStatus] = useState('');
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(true);
+  const status = useSignal('');
 
   function openedChanged(event: ConfirmDialogOpenedChangedEvent) {
-    setDialogOpened(event.detail.value);
+    dialogOpened.value = event.detail.value;
     if (event.detail.value) {
-      setStatus('');
+      status.value = '';
     }
   }
 
   return (
     <HorizontalLayout style={{ alignItems: 'center', justifyContent: 'center' }} theme="spacing">
-      <Button onClick={() => setDialogOpened(true)}>Open confirm dialog</Button>
+      <Button
+        onClick={() => {
+          dialogOpened.value = true;
+        }}
+      >
+        Open confirm dialog
+      </Button>
 
       {/* tag::snippet[] */}
       <ConfirmDialog
@@ -30,23 +39,23 @@ function Example() {
         rejectButtonVisible
         rejectText="Discard"
         confirmText="Save"
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={openedChanged}
         onConfirm={() => {
-          setStatus('Saved');
+          status.value = 'Saved';
         }}
         onCancel={() => {
-          setStatus('Canceled');
+          status.value = 'Canceled';
         }}
         onReject={() => {
-          setStatus('Discarded');
+          status.value = 'Discarded';
         }}
       >
         There are unsaved changes. Do you want to discard or save them?
       </ConfirmDialog>
       {/* end::snippet[] */}
 
-      <span hidden={status === ''}>Status: {status}</span>
+      <span hidden={status.value === ''}>Status: {status.value}</span>
     </HorizontalLayout>
   );
 }
