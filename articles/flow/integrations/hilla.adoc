@@ -105,4 +105,75 @@ import { NavLink } from 'react-router-dom';
 <NavLink to="/flow-route">Navigate to a Flow View</NavLink>
 ----
 
+
+=== Include Route automatically to Hilla main menu
+
+When using Hilla's `createMenuItems()` utility function to build main menu in the main layout as described in <<../../hilla/guides/routing.adoc#Creating Menu From Routes,Creating Menu From Routes>>, you can use `Menu` annotation to include server route automatically to the returned menu items.
+
+[annotationname]`Menu` annotation should be always used together with a [annotationname]`Route` annotated class like in the following example:
+
+.HelloView.java
+[source,java]
+----
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Menu;
+import com.vaadin.flow.router.Route;
+
+@Menu
+@Route("hello")
+public class HelloView extends VerticalLayout {
+    public HelloView() {
+    }
+}
+----
+
+Menu annotation has a `title`, `order` and `icon` attributes. Values are passed to the client side and are available when using `createMenuItems()` utility function to build the menu.
+
+Server side routes are sent to the client menu conditionally by three modes. Default is automatic mode that returns server routes only if root main layout exists when using <<../../hilla/guides/routing.adoc#File Based Routing,File Based Routing>>. Other options are to either always or never send server routes. Mode is configurable with [interfacename]`MenuAccessControl` interface with `PopulateClientMenu` enum.
+
+Following example changes the default mode to `ALWAYS` in a Spring Framework application:
+
+.Application.java
+[source,java]
+----
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import com.vaadin.flow.server.auth.DefaultMenuAccessControl;
+import com.vaadin.flow.server.auth.MenuAccessControl;
+
+@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @Bean
+    public MenuAccessControl customMenuAccessControl() {
+        DefaultMenuAccessControl menuAccessControl = new DefaultMenuAccessControl();
+        menuAccessControl.setPopulateClientSideMenu(
+                MenuAccessControl.PopulateClientMenu.ALWAYS);
+        return menuAccessControl;
+    }
+}
+----
+
+Another example changes the default mode to `NEVER` in a non-Spring application by using <<../configuration/properties.adoc#Servlet Initialization Parameters,Servlet Initialization Parameters>> `menu.access.control` with value `org.vaadin.example.CustomMenuAccessControl`. [classname]`DefaultMenuAccessControl` implements [interfacename]`MenuAccessControl`:
+
+.org.vaadin.example.CustomMenuAccessControl.java
+[source,java]
+----
+import com.vaadin.flow.server.auth.DefaultMenuAccessControl;
+
+public class CustomMenuAccessControl extends DefaultMenuAccessControl {
+
+    public CustomMenuAccessControl() {
+        setPopulateClientSideMenu(PopulateClientMenu.NEVER);
+    }
+}
+----
+
+
+
 [discussion-id]`9da82521-5074-42b6-82a5-88fc207987d0`
