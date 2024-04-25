@@ -5,12 +5,11 @@ import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function createItem(iconName: string, text: string, isChild = false) {
-  const iconStyle: React.CSSProperties = {};
-  if (isChild) {
-    iconStyle.width = 'var(--lumo-icon-size-s)';
-    iconStyle.height = 'var(--lumo-icon-size-s)';
-    iconStyle.marginRight = 'var(--lumo-space-s)';
-  }
+  const iconStyle: React.CSSProperties = {
+    width: isChild ? 'var(--lumo-icon-size-s)' : 'auto',
+    height: isChild ? 'var(--lumo-icon-size-s)' : 'auto',
+    marginRight: isChild ? 'var(--lumo-space-s)' : 0
+  };
 
   let ariaLabel = '';
   if (iconName === 'copy') {
