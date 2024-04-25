@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridFilterColumn } from '@vaadin/react-components/GridFilterColumn.js';
@@ -19,21 +21,20 @@ const nameRenderer = ({ item: person }: { item: PersonEnhanced }) => (
 
 // tag::snippet[]
 function Example() {
-  const [items, setItems] = useState<PersonEnhanced[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<PersonEnhanced[]>([]);
 
   useEffect(() => {
-    getPeople().then(({ people }) =>
-      setItems(
-        people.map((person) => ({
-          ...person,
-          displayName: `${person.firstName} ${person.lastName}`,
-        }))
-      )
-    );
+    getPeople().then(({ people }) => {
+      items.value = people.map((person) => ({
+        ...person,
+        displayName: `${person.firstName} ${person.lastName}`,
+      }));
+    });
   }, []);
 
   return (
-    <Grid items={items}>
+    <Grid items={items.value}>
       <GridFilterColumn header="Name" path="displayName" flexGrow={0} width="230px">
         {nameRenderer}
       </GridFilterColumn>

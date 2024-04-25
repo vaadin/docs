@@ -29,7 +29,7 @@ function Example() {
         'Provide the file in one of the supported formats (.xls, .xlsx, .csv).';
       uploadRef.current.i18n = { ...uploadRef.current.i18n };
     }
-  }, []);
+  }, [uploadRef.current]);
 
   return (
     <>

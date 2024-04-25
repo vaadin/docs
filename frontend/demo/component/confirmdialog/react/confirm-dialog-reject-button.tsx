@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import {
   ConfirmDialog,
@@ -8,18 +10,19 @@ import {
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(false);
-  const [status, setStatus] = useState('');
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(false);
+  const status = useSignal('');
 
   const openedChanged = (e: ConfirmDialogOpenedChangedEvent) => {
-    setDialogOpened(e.detail.value);
+    dialogOpened.value = e.detail.value;
     if (e.detail.value) {
-      setStatus('');
+      status.value = '';
     }
   };
 
   const open = () => {
-    setDialogOpened(true);
+    dialogOpened.value = true;
   };
 
   return (
@@ -33,23 +36,23 @@ function Example() {
         rejectButtonVisible
         rejectText="Discard"
         confirmText="Save"
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={openedChanged}
         onConfirm={() => {
-          setStatus('Saved');
+          status.value = 'Saved';
         }}
         onCancel={() => {
-          setStatus('Canceled');
+          status.value = 'Canceled';
         }}
         onReject={() => {
-          setStatus('Discarded');
+          status.value = 'Discarded';
         }}
       >
         Do you want to discard or save your changes before navigating away?
       </ConfirmDialog>
       {/* end::snippet[] */}
 
-      <span hidden={status === ''}>Status: {status}</span>
+      <span hidden={status.value === ''}>Status: {status.value}</span>
     </HorizontalLayout>
   );
 }
