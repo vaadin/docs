@@ -108,7 +108,7 @@ import { NavLink } from 'react-router-dom';
 
 === Include Route automatically to Hilla main menu
 
-When using Hilla's `createMenuItems()` utility function to build main menu in the main layout as described in <<../../hilla/guides/routing.adoc#Creating Menu From Routes,Creating Menu From Routes>>, you can use `Menu` annotation to include server route automatically to the returned menu items.
+When using Hilla's `createMenuItems()` utility function to build main menu in the main layout as described in <<../../hilla/guides/routing.adoc#Creating Menu From Routes,Creating Menu From Routes>>, use `Menu` annotation to include server route automatically to the returned menu items.
 
 [annotationname]`Menu` annotation should be always used together with a [annotationname]`Route` annotated class like in the following example:
 
@@ -129,9 +129,20 @@ public class HelloView extends VerticalLayout {
 
 Menu annotation has a `title`, `order` and `icon` attributes. Values are passed to the client side and are available when using `createMenuItems()` utility function to build the menu.
 
-Server side routes are sent to the client menu conditionally by three modes. Default is automatic mode that returns server routes only if root main layout exists when using <<../../hilla/guides/routing.adoc#File Based Routing,File Based Routing>>. Other options are to either always or never send server routes. Mode is configurable with [interfacename]`MenuAccessControl` interface with `PopulateClientMenu` enum.
+When having access controlled routes, it's important to not sent any information about the routes other than those user has permission to see. Following conditions must be met to send a route to the client side:
 
-Following example changes the default mode to `ALWAYS` in a Spring Framework application:
+* a route must be annotated with [annotationname]`Menu`
+* a route is accessible by <<../security/advanced-topics/navigation-access-control.adoc#,[classname]`NavigationAccessControl`>>
+* based on a value of `MenuAccessControl#getPopulateClientSideMenu`:
+** AUTOMATIC - Default mode. Accessible route is sent to the client.
+** ALWAYS - always send accessible route
+** NEVER - never send a route.
+
+Only routes sent to the client can show up automatically in the main menu. In `AUTOMATIC` and `ALWAYS` mode, routes that reach the client are additionally filtered to only include received server routes if root main layout exists when using <<../../hilla/guides/routing.adoc#File Based Routing,File Based Routing>>. It checks the existence of main layout file in `src/main/frontend/views/`, e.g. `src/main/frontend/views/@layout.tsx`.
+
+Mode is configurable with [interfacename]`MenuAccessControl` interface with `PopulateClientMenu` enum.
+
+Following example changes the default mode to `NEVER` in a Spring Framework application:
 
 .Application.java
 [source,java]
@@ -153,7 +164,7 @@ public class Application {
     public MenuAccessControl customMenuAccessControl() {
         DefaultMenuAccessControl menuAccessControl = new DefaultMenuAccessControl();
         menuAccessControl.setPopulateClientSideMenu(
-                MenuAccessControl.PopulateClientMenu.ALWAYS);
+                MenuAccessControl.PopulateClientMenu.NEVER);
         return menuAccessControl;
     }
 }
