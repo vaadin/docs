@@ -23,7 +23,7 @@ function Example() {
         }
       });
     }
-  }, []);
+  }, [gridRef.current]);
 
   // tag::snippet[]
   const items = [

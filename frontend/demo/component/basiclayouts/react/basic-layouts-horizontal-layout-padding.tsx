@@ -1,6 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import {
   RadioGroup,
@@ -10,21 +12,22 @@ import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { RadioButton } from '@vaadin/react-components/RadioButton.js';
 
 function Example() {
-  const [theme, setTheme] = useState('padding');
+  useSignals(); // hidden-source-line
+  const theme = useSignal('padding');
 
   return (
     <>
       {/* tag::snippet[] */}
-      <HorizontalLayout theme={`${theme} spacing`} style={{ alignItems: 'stretch' }}>
+      <HorizontalLayout theme={`${theme.value} spacing`} style={{ alignItems: 'stretch' }}>
         <Button>Button 1</Button>
         <Button>Button 2</Button>
         <Button>Button 3</Button>
       </HorizontalLayout>
       <RadioGroup
         label="Padding"
-        value={theme}
+        value={theme.value}
         onValueChanged={(event: RadioGroupValueChangedEvent) => {
-          setTheme(event.detail.value);
+          theme.value = event.detail.value;
         }}
       >
         <RadioButton value="padding" label="Enabled" />

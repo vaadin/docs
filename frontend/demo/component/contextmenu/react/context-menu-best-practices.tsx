@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
@@ -11,20 +13,21 @@ interface FileItem {
 }
 
 function Example() {
-  const [items] = useState([{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }]);
-  const [gridItems] = useState<FileItem[]>([
+  useSignals(); // hidden-source-line
+  const items = useSignal([{ text: 'View' }, { text: 'Edit' }, { text: 'Delete' }]);
+  const gridItems = useSignal<FileItem[]>([
     { name: 'Annual Report.docx', size: '24 MB' },
     { name: 'Financials.xlsx', size: '42 MB' },
   ]);
 
   return (
     // tag::snippet[]
-    <ContextMenu items={items}>
-      <Grid allRowsVisible items={gridItems}>
+    <ContextMenu items={items.value}>
+      <Grid allRowsVisible items={gridItems.value}>
         <GridColumn path="name" />
         <GridColumn path="size" />
         <GridColumn width="70px" flexGrow={0}>
-          {() => <MenuBar items={items} theme="tertiary" />}
+          {() => <MenuBar items={items.value} theme="tertiary" />}
         </GridColumn>
       </Grid>
     </ContextMenu>

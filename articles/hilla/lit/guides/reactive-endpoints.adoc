@@ -99,26 +99,25 @@ import { Subscription } from "@vaadin/hilla-frontend";
 import { Button } from "@vaadin/react-components/Button.js";
 import { TextField } from "@vaadin/react-components/TextField.js";
 import { getClockCancellable } from "Frontend/generated/ReactiveEndpoint";
-import { useState } from "react";
 
 export default function ReactiveView() {
-  const [serverTime, setServerTime] = useState("");
-  const [subscription, setSubscription] = useState<Subscription<string> | undefined>();
+  const serverTime = useSignal("");
+  const subscription = useSignal<Subscription<string> | undefined>(undefined);
 
   const toggleServerClock = async () => {
     if (subscription) {
       subscription.cancel();
-      setSubscription(undefined);
+      subscription.value = undefined;
     } else {
-      setSubscription(getClockCancellable().onNext((time) => {
-        setServerTime(time);
-      }));
+      subscription.value = getClockCancellable().onNext((time) => {
+        serverTime.value = time;
+      });
     }
   }
 
   return (
       <section className="flex p-m gap-m items-end">
-        <TextField label="Server time" value={serverTime} readonly />
+        <TextField label="Server time" value={serverTime.value} readonly />
         <Button onClick={toggleServerClock}>Toggle server clock</Button>
       </section>
   );
