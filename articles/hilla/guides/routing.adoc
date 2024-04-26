@@ -11,7 +11,16 @@ Since Vaadin 24.4, Hilla React applications are using the file router. This docu
 
 == Adding Routes
 
-The file router is using the `.tsx` files in the `frontend/views/` directory and its subdirectories as routes.
+The file router is using the `.tsx` files in the `src/main/frontend/views/` directory and its subdirectories as routes.
+
+[NOTE]
+[role="since:com.vaadin:vaadin@V24.4"]
+.The default frontend source directory
+====
+Since Vaadin 24.4, the default frontend source directory location is `src/main/frontend`. The documentation is using the new default.
+
+The old default location, the `frontend` directory in the root of the application project, is also supported.
+====
 
 To add a new route to an application, create a new component file that should be displayed when the route is active. For example, create a file called [filename]`example.tsx` in the `views` directory with the following content:
 
@@ -24,7 +33,7 @@ export default function ExampleView() {
 
 Now, after saving the file, you should be able to navigate to `http://localhost:8080/example` and see the new component rendered in the browser.
 
-To add a navigation link that points to your new route, use the `<NavLink>` component from `react-router-dom`:
+To add a simple navigation link that points to your new route, use the `<NavLink>` component from `react-router-dom`:
 
 [source,tsx]
 ----
@@ -52,7 +61,7 @@ Hilla file router supports the following file naming conventions for the `.tsx` 
 
 == Adding Routes with Parameters
 
-Sometimes, you may need to create routes that accept dynamic parameters, such as product IDs or names. This can be done by using the `{parameterName}` filename convention. For example, create the file named `{productId}.tsx` in the `frontend/views/products/` directory with the following content:
+Sometimes, you may need to create routes that accept dynamic parameters, such as product IDs or names. This can be done by using the `{parameterName}` filename convention. For example, create the file named `{productId}.tsx` in the `src/main/frontend/views/products/` directory with the following content:
 
 [source,tsx]
 ----
@@ -91,9 +100,12 @@ The following example defines the main layout with the drawer and the main menu:
 ----
 import { AppLayout } from '@vaadin/react-components/AppLayout.js';
 import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
+import { SideNav } from '@vaadin/react-components/SideNav.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
 import { Suspense } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 export default function MainLayout() {
   return (
@@ -101,9 +113,9 @@ export default function MainLayout() {
       <div slot="drawer" className="flex flex-col justify-between h-full p-m">
         <header className="flex flex-col gap-m">
           <h1 className="text-l m-0">My application</h1>
-          <nav>
-            <NavLink to="/example">Example</NavLink>
-          </nav>
+          <SideNav onNavigate={({path}) => path && navigate(path)} location={location}>
+            <SideNavItem path="/example"></SideNavItem>
+          </SideNav>
         </header>
       </div>
 
@@ -129,19 +141,29 @@ The following example demonstrates creating the main menu `createMenuItems()`:
 [source,tsx]
 ----
 import { createMenuItems } from '@vaadin/hilla-file-router/runtime.js';
-import { NavLink } from 'react-router-dom';
+import { SideNav } from '@vaadin/react-components/SideNav.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 const navLinkClasses = ({ isActive }: any) => {
   return `block rounded-m p-s ${isActive ? 'bg-primary-10 text-primary' : 'text-body'}`;
 };
 
 export default function MainMenu() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   return (
-    {createMenuItems().map(({ to, icon, title }) => (
-      <NavLink className={navLinkClasses} to={to} key={to}>
-        {title}
-      </NavLink>
-    ))}
+    <SideNav onNavigate={({path}) => path && navigate(path)} location={location}>
+      {
+        createMenuItems().map(({ to, icon, title }) => (
+          <SideNavItem path={to} key={to}>
+            {icon && <Icon icon={icon} slot="prefix"/>}
+            {title}
+          </SideNavItem>
+        ))
+      }
+    </SideNav>
   );
 }
 ----
@@ -154,7 +176,7 @@ In some cases, you may want to customize the configuration of a route on top of 
 To customize the route to a route, in your view `.tsx` file, export an object named `config` of `ViewConfig` type:
 
 [source,tsx]
-.`frontend/views/about.tsx`
+.`src/main/frontend/views/about.tsx`
 ----
 import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
 
@@ -212,11 +234,15 @@ Here are the options currently supported in the `config` object:
 
 `title: string`::
   View title for use in the main layout header, in the browser window `document.title`, and as the default for the menu entry. If not defined, the component name will be taken, transformed from camelCase.
-`rolesAllowed: readonly string[]`::
-  For applications using authentication, the array of user roles that are allowed to access the view.
 
 `route: string`::
-  Overrides the route path configuration. Uses the same syntax as the `path` property with React Router.
+Overrides the route path configuration. Uses the same syntax as the `path` property with React Router.
+
+`loginRequired: boolean`::
+For applications using authentication, requires user authentication for accessing the view.
+
+`rolesAllowed: readonly string[]`::
+  For applications using authentication, the array of user roles that are allowed to access the view.
 
 `menu: object`::
   The menu item metadata object with the following options:
@@ -276,7 +302,7 @@ Adding a custom error page to an application is essential for handling situation
 To add an error page (e.g., for 404 not found), create a new route view file for your error page (e.g., `error.tsx`), set the route config to use a wildcard route, and exclude the route from the menu:
 
 [source,tsx]
-.`frontend/views/error.tsx`
+.`src/main/frontend/views/error.tsx`
 ----
 export default function ErrorView() {
   return <div>Page not found</div>;

@@ -8,40 +8,51 @@ description: Customizing routing beyond the basics
 The file router of Hilla is built on top of https://reactrouter.com/en/main[React Router], a popular routing library for React applications. This article describes the details of the router integration, and provides instructions for customizing the route mapping.
 
 
-== React Router Mapping
+== React Router Configuration
 
 In cases when file-based routing is not applicable, it is possible to declare views manually in the route mapping, which is described below.
 
 The route mapping is managed through a source file called [filename]`routes.tsx`. This file defines the application's routes, including the components associated with each.
 
-The file defining the route mapping is located in the project's `frontend` directory. When this file is missing, a default template is generated and used in the `frontend/generated` directory. You can copy the generated file to the `frontend` directory and use it as a base for creating a custom route mapping.
+The file defining the route mapping is located in the project's `src/main/frontend` directory. When this file is missing, a default template is generated and used in the `src/main/frontend/generated` directory. You can copy the generated file to the `src/main/frontend` directory and use it as a base for creating a custom route mapping.
 
-Here's an example of how the route mapping looks typically in a Hilla application:
+The `RouterConfigurationBuilder` utility provides an API for configuring the React Router. Here's an example of how the builder API could be used in the [filename]`routes.tsx` file:
 
 [source,tsx]
+.Example [filename]`src/main/frontend/routes.tsx` file contents
 ----
-import { createBrowserRouter, RouteObject } from 'react-router-dom';
-import { buildRoute } from "Frontend/generated/flow/Flow";
+import { RouterConfigurationBuilder } from '@vaadin/hilla-file-router/runtime.js';
+import Flow from 'Frontend/generated/flow/Flow';
+import fileRoutes from 'Frontend/generated/file-routes.js';
+import MainLayout from 'Frontend/explicit-routes/MainLayout.js';
+import HillaView from 'Frontend/explicit-routes/HillaView.js';
+import Login from 'Frontend/explicit-routes/Login.js';
 
-export const routes = buildRoute();
-
-const routing = [
-  {
-    element: <MainLayout />,
-    children: [
-      { path: '/', element: <MainView />, handle: { title: 'Main' } }
-      { path: '/about', element: <AboutView />, handle: { title: 'About' } }
-    ],
-  },
-] as RouteObject[];
-export const routes = buildRoute(routing, routing[0].children);
-
-export default createBrowserRouter(routes);
+export const { router, routes } = new RouterConfigurationBuilder()
+  .withFileRoutes(fileRoutes) // <1>
+  .withReactRoutes( // <2>
+    [
+      {
+        element: <MainLayout />,
+        handle: { title: 'Main' },
+        children: [
+          { path: '/hilla', element: <HillaView />, handle: { title: 'Hilla' } }
+        ],
+        },
+      { path: '/login', element: <Login />, handle: { title: 'Login' } }
+    ]
+  )
+  .withFallback(Flow) // <3>
+  .protect('/login') // <4>
+  .build(); // <5>
 ----
+<1> The `.withFileRoutes()` method enables routes collected by the <</hilla/guides/routing#,Hilla file router>>.
+<2> The `.withReactRoutes()` method adds custom React Router routes by merging them with the hierarchy above. In this example, the custom routes are added after the file routes. The `<HillaView />` view component is mapped to the `/hilla` path inside the main layout, and the `/login` route is defined to show the `<Login />` view outside the main layout.
+<3> The `.withFallback()` method allows to map a component as a fallback route, which handles the case when none of the routes above match. In this example, as well as by default, the `Flow` component acts as a fallback, which enables navigation to the Flow Java views on the server side.
+<4> The `.protect()` method wraps enables client-side view authorization. In this example, the `/login` path is defined as a redirect target for unauthorized navigation attempts.
+<5> The `.build()` method finalizes the builder setup and returns the object with the `router` instance and the `routes`. It is used to define exports in the [filename]`routes.tsx` file.
 
-In this example, two routes are defined: the root path `/` and the `/about` path. These routes are associated with different components. The `<MainLayout />` component acts as the layout template for the entire application. In addition, the routes from the file router, and the server-side Flow routes are combined with this mapping using the provided `buildRoute()` utility. The last line creates and exports the router instance.
-
-The router instance is then used in the [filename]`index.tsx` file to render the application.
+The router instance exported from this file is then used in the [filename]`index.tsx` file to render the application.
 
 
 == Further Information
