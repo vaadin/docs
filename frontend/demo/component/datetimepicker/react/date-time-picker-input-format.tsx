@@ -30,7 +30,7 @@ function DateTimePickerInputFormat() {
         parseDate,
       };
     }
-  }, []);
+  }, [dateTimePickerRef.current]);
 
   return (
     // tag::snippet[]

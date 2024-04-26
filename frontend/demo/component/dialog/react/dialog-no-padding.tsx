@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
@@ -10,11 +12,14 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example(): JSX.Element {
-  const [dialogOpened, setDialogOpened] = useState(false);
-  const [people, setPeople] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(false);
+  const people = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople({ count: 50 }).then((result) => setPeople(result.people));
+    getPeople({ count: 50 }).then((result) => {
+      people.value = result.people;
+    });
   }, []);
 
   return (
@@ -23,15 +28,22 @@ function Example(): JSX.Element {
       <Dialog
         theme="no-padding"
         header-title="Filter reports by users:"
-        opened={dialogOpened}
-        onOpenedChanged={({ detail }) => setDialogOpened(detail.value)}
+        opened={dialogOpened.value}
+        onOpenedChanged={({ detail }) => {
+          dialogOpened.value = detail.value;
+        }}
         footerRenderer={() => (
-          <Button theme="primary" onClick={() => setDialogOpened(false)}>
+          <Button
+            theme="primary"
+            onClick={() => {
+              dialogOpened.value = false;
+            }}
+          >
             Filter
           </Button>
         )}
       >
-        <Grid items={people} style={{ width: '500px', maxWidth: '100%' }}>
+        <Grid items={people.value} style={{ width: '500px', maxWidth: '100%' }}>
           <GridSelectionColumn />
           <GridColumn header="Name">
             {({ item }) => (
@@ -44,7 +56,13 @@ function Example(): JSX.Element {
       </Dialog>
 
       {/* end::snippet[] */}
-      <Button onClick={() => setDialogOpened(true)}>Show dialog</Button>
+      <Button
+        onClick={() => {
+          dialogOpened.value = true;
+        }}
+      >
+        Show dialog
+      </Button>
     </>
   );
 }

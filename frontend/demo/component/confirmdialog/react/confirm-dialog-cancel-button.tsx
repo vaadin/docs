@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import {
@@ -8,19 +10,26 @@ import {
 } from '@vaadin/react-components/ConfirmDialog.js';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(false);
-  const [status, setStatus] = useState('');
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(false);
+  const status = useSignal('');
 
   const openedChanged = (event: ConfirmDialogOpenedChangedEvent) => {
-    setDialogOpened(event.detail.value);
+    dialogOpened.value = event.detail.value;
     if (event.detail.value) {
-      setStatus('');
+      status.value = '';
     }
   };
 
   return (
     <HorizontalLayout style={{ alignItems: 'center', justifyContent: 'center' }} theme="spacing">
-      <Button onClick={() => setDialogOpened(true)}>Open confirm dialog</Button>
+      <Button
+        onClick={() => {
+          dialogOpened.value = true;
+        }}
+      >
+        Open confirm dialog
+      </Button>
 
       {/* tag::snippet[] */}
       <ConfirmDialog
@@ -28,20 +37,20 @@ function Example() {
         cancelButtonVisible
         confirmText="Delete"
         confirmTheme="error primary"
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={openedChanged}
         onCancel={() => {
-          setStatus('Canceled');
+          status.value = 'Canceled';
         }}
         onConfirm={() => {
-          setStatus('Deleted');
+          status.value = 'Deleted';
         }}
       >
         Are you sure you want to permanently delete this item?
       </ConfirmDialog>
       {/* end::snippet[] */}
 
-      <span hidden={status === ''}>Status: {status}</span>
+      <span hidden={status.value === ''}>Status: {status.value}</span>
     </HorizontalLayout>
   );
 }
