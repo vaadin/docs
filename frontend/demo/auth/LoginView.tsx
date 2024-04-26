@@ -1,8 +1,30 @@
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from './auth';
+import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+
+export const config: ViewConfig = {
+    menu: { exclude: true}
+}
+
+interface NavigateAndReloadProps {
+    to: string;
+}
+
+const NavigateAndReload : React.FC<NavigateAndReloadProps> = ({ to }) => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        navigate(to, { replace: true });
+        // reload a page on log in to update the menu items
+        window.location.reload();
+    }, [navigate, to]);
+
+    return null;
+}
 
 // tag::snippet[]
 export default function LoginView() {
@@ -13,7 +35,7 @@ export default function LoginView() {
 
   if (state.user && url.value) {
     const path = new URL(url.value, document.baseURI).pathname;
-    return <Navigate to={path} replace />;
+    return <NavigateAndReload to={path} replace />;
   }
 
   return (
