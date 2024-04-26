@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { ListBox } from '@vaadin/react-components/ListBox.js';
 import { Item } from '@vaadin/react-components/Item.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
@@ -9,11 +11,12 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
-  const [selectedValues, setSelectedValues] = useState([0, 2]);
-  const [items, setItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const selectedValues = useSignal([0, 2]);
+  const items = useSignal<Person[]>([]);
   useEffect(() => {
     getPeople({ count: 5 }).then(({ people }) => {
-      setItems(people);
+      items.value = people;
     });
   }, []);
 
@@ -21,14 +24,16 @@ function Example() {
     // tag::snippet[]
     <ListBox
       multiple
-      selectedValues={selectedValues}
-      onSelectedValuesChanged={(e) => setSelectedValues(e.detail.value)}
+      selectedValues={selectedValues.value}
+      onSelectedValuesChanged={(e) => {
+        selectedValues.value = e.detail.value;
+      }}
     >
-      {items.map((person) => (
+      {items.value.map((person) => (
         <Item
-          value={String(items.indexOf(person))}
+          value={String(items.value.indexOf(person))}
           style={{ lineHeight: 'var(--lumo-line-height-m)' }}
-          key={items.indexOf(person)}
+          key={items.value.indexOf(person)}
         >
           <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
             <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />

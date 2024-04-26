@@ -1,3 +1,4 @@
+// tag::snippet[]
 import { AppLayout } from '@vaadin/react-components/AppLayout.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
@@ -55,3 +56,4 @@ export default function MainLayout() {
     </AppLayout>
   );
 }
+// end::snippet[]

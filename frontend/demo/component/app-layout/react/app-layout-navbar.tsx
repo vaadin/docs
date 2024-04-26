@@ -26,7 +26,7 @@ function Example() {
     if (horizontalLayout) {
       patchAppLayoutNavigation(horizontalLayout);
     }
-  }, []);
+  }, [horizontalLayoutRef.current]);
 
   return (
     // tag::snippet[]

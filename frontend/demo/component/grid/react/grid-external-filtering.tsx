@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
@@ -24,8 +26,9 @@ function nameRenderer(person: PersonEnhanced) {
 }
 
 function Example() {
-  const [filteredItems, setFilteredItems] = useState<PersonEnhanced[]>([]);
-  const [items, setItems] = useState<PersonEnhanced[]>([]);
+  useSignals(); // hidden-source-line
+  const filteredItems = useSignal<PersonEnhanced[]>([]);
+  const items = useSignal<PersonEnhanced[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -33,8 +36,8 @@ function Example() {
         ...person,
         displayName: `${person.firstName} ${person.lastName}`,
       }));
-      setItems(newItems);
-      setFilteredItems(newItems);
+      items.value = newItems;
+      filteredItems.value = newItems;
     });
   }, []);
 
@@ -45,21 +48,19 @@ function Example() {
         style={{ width: '50%' }}
         onValueChanged={(e) => {
           const searchTerm = (e.detail.value || '').trim().toLowerCase();
-          setFilteredItems(
-            items.filter(
-              ({ displayName, email, profession }) =>
-                !searchTerm ||
-                displayName.toLowerCase().includes(searchTerm) ||
-                email.toLowerCase().includes(searchTerm) ||
-                profession.toLowerCase().includes(searchTerm)
-            )
+          filteredItems.value = items.value.filter(
+            ({ displayName, email, profession }) =>
+              !searchTerm ||
+              displayName.toLowerCase().includes(searchTerm) ||
+              email.toLowerCase().includes(searchTerm) ||
+              profession.toLowerCase().includes(searchTerm)
           );
         }}
       >
-        <Icon slot="prefix" icon="vaadin:search" />
+        <Icon slot="prefix" icon="vaadin:search"></Icon>
       </TextField>
 
-      <Grid items={filteredItems}>
+      <Grid items={filteredItems.value}>
         <GridColumn header="Name" flexGrow={0} width="230px">
           {({ item }) => nameRenderer(item)}
         </GridColumn>

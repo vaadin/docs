@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Details } from '@vaadin/react-components/Details.js';
 import { DetailsSummary } from '@vaadin/react-components/DetailsSummary.js';
 import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
@@ -17,10 +19,13 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
 ];
 
 function Example() {
-  const [items, setItems] = useState<Country[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Country[]>([]);
 
   useEffect(() => {
-    getCountries().then((data) => setItems(data));
+    getCountries().then((data) => {
+      items.value = data;
+    });
   }, []);
 
   return (
@@ -53,7 +58,7 @@ function Example() {
 
         <TextField label="City" required />
 
-        <ComboBox label="Country" itemLabelPath="name" itemValuePath="id" items={items} />
+        <ComboBox label="Country" itemLabelPath="name" itemValuePath="id" items={items.value} />
       </FormLayout>
     </Details>
     // end::snippet[]

@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Accordion, type AccordionOpenedChangedEvent } from '@vaadin/react-components/Accordion.js';
 import { AccordionHeading } from '@vaadin/react-components/AccordionHeading.js';
 import { AccordionPanel } from '@vaadin/react-components/AccordionPanel.js';
@@ -22,29 +24,32 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
 ];
 
 function Example() {
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [openedPanelIndex, setOpenedPanelIndex] = useState<number | null>(0);
+  useSignals(); // hidden-source-line
+  const countries = useSignal<Country[]>([]);
+  const openedPanelIndex = useSignal<number | null>(0);
 
   const person = useForm(PersonModel);
   const card = useForm(CardModel);
 
   const handleAccordionPanelOpen = (event: AccordionOpenedChangedEvent) => {
-    setOpenedPanelIndex(event.detail.value);
+    openedPanelIndex.value = event.detail.value;
   };
 
   useEffect(() => {
-    getCountries().then((items) => setCountries(items));
+    getCountries().then((items) => {
+      countries.value = items;
+    });
   }, []);
 
   // tag::snippet[]
   return (
-    <Accordion opened={openedPanelIndex} onOpenedChanged={handleAccordionPanelOpen}>
+    <Accordion opened={openedPanelIndex.value} onOpenedChanged={handleAccordionPanelOpen}>
       <AccordionPanel>
         <AccordionHeading slot="summary">
           <HorizontalLayout style={{ width: '100%', alignItems: 'center' }}>
             Customer details
             <VerticalLayout
-              hidden={openedPanelIndex === 0}
+              hidden={openedPanelIndex.value === 0}
               style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
             >
               <span>
@@ -76,7 +81,7 @@ function Example() {
         <Button
           theme="primary"
           onClick={() => {
-            setOpenedPanelIndex(1);
+            openedPanelIndex.value = 1;
           }}
         >
           Continue
@@ -88,7 +93,7 @@ function Example() {
           <HorizontalLayout style={{ width: '100%', alignItems: 'center' }}>
             Billing address
             <VerticalLayout
-              hidden={openedPanelIndex === 1}
+              hidden={openedPanelIndex.value === 1}
               style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
             >
               <span>{person.value.address?.street}</span>
@@ -115,7 +120,7 @@ function Example() {
             label="Country"
             itemLabelPath="name"
             itemValuePath="name"
-            items={countries}
+            items={countries.value}
             {...person.field(person.model.address.country)}
           />
         </FormLayout>
@@ -123,7 +128,7 @@ function Example() {
         <Button
           theme="primary"
           onClick={() => {
-            setOpenedPanelIndex(2);
+            openedPanelIndex.value = 2;
           }}
         >
           Continue
@@ -135,7 +140,7 @@ function Example() {
           <HorizontalLayout style={{ width: '100%', alignItems: 'center' }}>
             Payment
             <VerticalLayout
-              hidden={openedPanelIndex === 2}
+              hidden={openedPanelIndex.value === 2}
               style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
             >
               <span>{card.value.accountNumber}</span>
@@ -159,7 +164,7 @@ function Example() {
         <Button
           theme="primary"
           onClick={() => {
-            setOpenedPanelIndex(-1);
+            openedPanelIndex.value = -1;
           }}
         >
           Finish

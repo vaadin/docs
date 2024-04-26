@@ -1,12 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
 import type ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
 
 // tag::snippet[]
 function ExampleStatistics() {
-  const [serviceHealth, setServiceHealth] = useState<ServiceHealth[]>([]);
+  useSignals(); // hidden-source-line
+  const serviceHealth = useSignal<ServiceHealth[]>([]);
   useEffect(() => {
-    getServiceHealth().then((health) => setServiceHealth(health));
+    getServiceHealth().then((health) => {
+      serviceHealth.value = health;
+    });
   }, []);
 
   return (
@@ -35,7 +40,7 @@ function ExampleStatistics() {
             <th>Output</th>
           </thead>
           <tbody>
-            {serviceHealth.map(({ id, city, input, output }) => (
+            {serviceHealth.value.map(({ id, city, input, output }) => (
               <tr key={id}>
                 <td>
                   <span className="level ok" />

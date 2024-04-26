@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
+import { useComputed } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Upload } from '@vaadin/react-components/Upload.js';
 import { createFakeUploadFiles } from './upload-demo-helpers';
 
@@ -14,9 +16,12 @@ function createFakeFiles() {
 }
 
 function Example() {
+  useSignals(); // hidden-source-line
+  const files = useComputed(createFakeFiles);
+
   return (
     // tag::snippet[]
-    <Upload files={createFakeFiles()} />
+    <Upload files={files.value} />
     // end::snippet[]
   );
 }
