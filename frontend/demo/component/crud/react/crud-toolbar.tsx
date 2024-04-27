@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import { Crud } from '@vaadin/react-components/Crud.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
@@ -9,28 +11,31 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import '@vaadin/icons';
 
 function Example() {
-  const [items, setItems] = useState<Person[]>([]);
-  const [employeeCount, setEmployeeCount] = useState(0);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
+  const employeeCount = useSignal(0);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
-    setEmployeeCount(items.length);
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
+    employeeCount.value = items.value.length;
   }, []);
 
   return (
     // tag::snippet[]
     <Crud
       include="firstName, lastName"
-      items={items}
+      items={items.value}
       onSizeChanged={() => {
-        if (items.length !== employeeCount) {
-          setEmployeeCount(items.length);
+        if (items.value.length !== employeeCount.value) {
+          employeeCount.value = items.value.length;
         }
       }}
     >
       <HorizontalLayout slot="toolbar" style={{ alignItems: 'center', flexGrow: 1 }}>
         <span>
-          Total: <b>{items.length}</b> employees
+          Total: <b>{employeeCount.value}</b> employees
         </span>
       </HorizontalLayout>
 

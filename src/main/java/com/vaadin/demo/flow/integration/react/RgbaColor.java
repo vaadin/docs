@@ -1,6 +1,6 @@
 package com.vaadin.demo.flow.integration.react;
 
-
+// tag::class[]
 public record RgbaColor(int r, int g, int b, double a) {
 
     @Override
@@ -9,3 +9,4 @@ public record RgbaColor(int r, int g, int b, double a) {
     }
 
 }
+// end::class[]

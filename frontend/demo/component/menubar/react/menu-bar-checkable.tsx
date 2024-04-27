@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   MenuBar,
   type SubMenuItem,
@@ -7,8 +9,9 @@ import {
 } from '@vaadin/react-components/MenuBar.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [items, setItems] = useState([
+  const items = useSignal([
     {
       text: 'Options',
       children: [{ text: 'Save automatically', checked: true }, { text: 'Notify watchers' }],
@@ -18,10 +21,10 @@ function Example() {
   const itemSelected = (e: MenuBarItemSelectedEvent) => {
     const item = e.detail.value;
     (item as SubMenuItem).checked = !(item as SubMenuItem).checked;
-    setItems([...items]);
+    items.value = [...items.value];
   };
 
-  return <MenuBar items={items} onItemSelected={itemSelected} />;
+  return <MenuBar items={items.value} onItemSelected={itemSelected} />;
   // end::snippet[]
 }
 

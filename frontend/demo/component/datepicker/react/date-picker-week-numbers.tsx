@@ -13,7 +13,7 @@ function Example() {
         firstDayOfWeek: 1,
       };
     }
-  }, []);
+  }, [datePickerRef.current]);
 
   return <DatePicker label="Vacation start date" showWeekNumbers ref={datePickerRef} />;
   // end::snippet[]

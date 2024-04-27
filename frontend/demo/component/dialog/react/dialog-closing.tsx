@@ -1,27 +1,30 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(false);
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(false);
 
   function open() {
-    setDialogOpened(true);
+    dialogOpened.value = true;
   }
 
   function close() {
-    setDialogOpened(false);
+    dialogOpened.value = false;
   }
   return (
     <>
       {/* tag::snippet[] */}
       <Dialog
         aria-label="System maintenance notice"
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={(event) => {
-          setDialogOpened(event.detail.value);
+          dialogOpened.value = event.detail.value;
         }}
       >
         <VerticalLayout

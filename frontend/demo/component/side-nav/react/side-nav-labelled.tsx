@@ -11,12 +11,18 @@ const Example = () => {
   const secondSideNavRef = useRef<SideNavElement>(null);
 
   useEffect(() => {
-    if (sideNavRef.current && secondSideNavRef.current) {
+    if (sideNavRef.current) {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
+    }
+  }, [sideNavRef.current]);
+
+  useEffect(() => {
+    if (secondSideNavRef.current) {
+      // Example-specific workaround
       patchSideNavNavigation(secondSideNavRef.current);
     }
-  }, []);
+  }, [secondSideNavRef.current]);
 
   return (
     <div className="side-nav-sample">
