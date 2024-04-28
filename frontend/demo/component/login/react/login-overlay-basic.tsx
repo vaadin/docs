@@ -1,10 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 
 function Example() {
-  const [loginOpened, setLoginOpened] = useState(false);
+  useSignals(); // hidden-source-line
+  const loginOpened = useSignal(false);
 
   return (
     <>
@@ -12,16 +15,16 @@ function Example() {
       <Button
         theme="primary"
         onClick={() => {
-          setLoginOpened(true);
+          loginOpened.value = true;
         }}
       >
         Log in
       </Button>
 
       <LoginOverlay
-        opened={loginOpened}
+        opened={loginOpened.value}
         onLogin={() => {
-          setLoginOpened(false);
+          loginOpened.value = false;
         }}
       />
       {/* end::snippet[] */}
