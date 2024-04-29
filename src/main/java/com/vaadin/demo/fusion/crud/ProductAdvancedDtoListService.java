@@ -45,4 +45,4 @@ public class ProductAdvancedDtoListService
                 .map(ProductAdvancedDto::fromEntity).toList();
     }
 }
-// end::snippet[]
+//end::snippet[]
