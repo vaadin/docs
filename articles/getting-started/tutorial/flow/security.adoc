@@ -74,18 +74,18 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 ----
 <1> The login view will be available at `/login`.
 <2> Once security is enabled, access to all views will be denied by default. However, the login view must be accessible by anonymous users.
-<3> `LoginForm` is a built in Vaadin component that works nicely with Spring Security.
+<3> [classname]`LoginForm` is a built in Vaadin component that works nicely with Spring Security.
 
 // RUSSELL: Is 'flex' in the next line short for 'flexible'? No, it's part of CSS.
 
-<4> `VerticalLayout` is actually a flex layout. To center the login form on the screen, some flexbox configuration is needed.
+<4> [classname]`VerticalLayout` is actually a https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout[flex layout]. To center the login form on the screen, some flexbox configuration is needed.
 <5> When the user clicks the login button, a `POST` request will be submitted to `/login`.
 <6> If there's a query parameter called, "error" (e.g., `/login?error`), the login form will show an error message.
 
 
 == Define Roles
 
-The application should have two user roles: `USER` for ordinary users, that are allowed to post and receive message; and `ADMIN` for administrators, that are allowed to create new channels.
+The application should have two user roles: `USER` for ordinary users, that are allowed to post and receive messages; and `ADMIN` for administrators, that are allowed to create new channels.
 
 Even though roles are just strings, it's good practice to declare them as constants. Create a new class named, [classname]`Roles` in the [packagename]`com.example.application.security` package, like this:
 
@@ -109,7 +109,7 @@ public final class Roles {
 
 == Add Security Configuration
 
-With the login view and roles in place, you now have to configure Spring Security to use it. You also have to configure Spring Security to protect your views and your backend services. Fortunately, Vaadin has a base class (i.e., [classname]`VaadinWebSecurity`) that makes this easy.
+With the login view and roles in place, you now have to configure Spring Security to use it. You also have to configure Spring Security to protect your views and your application services. Fortunately, Vaadin has a base class (i.e., [classname]`VaadinWebSecurity`) that makes this easy.
 
 Create a class named, [classname]`SecurityConfig` in the [packagename]`com.example.application.security` package, like this:
 
@@ -165,13 +165,13 @@ class SecurityConfig extends VaadinWebSecurity { // <3>
 }
 ----
 <1> `@EnableWebSecurity` instructs Spring to use this class when configuring Spring Security.
-<2> You'll use JSR-250 annotations to secure `ChatService`.
-<3> Here you're extending `VaadinWebSecurity`, which does most of the work.
-<4> Always call `super.configure(http)` first to apply the default configuration, before making any customizations.
-<5> Spring Security will now use your `LoginView` when asking users to authenticate themselves.
-<6> In this example, you're using an `InMemoryUserDetailsManager` -- which is not recommended in real-world applications.
+<2> You'll use https://jakarta.ee/specifications/annotations/[Jakarta Annotations (JSR-250)] to secure [classname]`ChatService`.
+<3> Here you're extending [classname]`VaadinWebSecurity`, which does most of the work.
+<4> Always call [methodname]`super.configure(http)` first to apply the default configuration, before making any customizations.
+<5> Spring Security will now use your [classname]`LoginView` when asking users to authenticate themselves.
+<6> In this example, you're using an [classname]`InMemoryUserDetailsManager` -- which is not recommended in real-world applications.
 
-You can find more information about securing Vaadin applications on the <<{articles}/flow/security,Security>> page of the Flow documentation.
+You can find more information about securing Vaadin applications on the <<{articles}/flow/security#,Security>> page of the Flow documentation.
 
 
 == Grant Access to Views
@@ -197,9 +197,9 @@ public class ChannelView extends VerticalLayout implements HasUrlParameter<Strin
 // RUSSELL: Some comments on this bit of code might be good, as well as concluding comments for the section.
 
 
-== Secure Backend
+== Secure Application Layer
 
-By default, Spring Security will grant access to all backend services unless told otherwise. You should now protect `ChatService` so that only users with the `USER` role can invoke it. Do this by adding the `@RolesAllowed` annotation to the class like this:
+By default, Spring Security will grant access to all application services unless told otherwise. You should now protect [classname]`ChatService` so that only users with the `USER` role can invoke it. Do this by adding the `@RolesAllowed` annotation to the class like this:
 
 [source,java]
 ----
@@ -209,7 +209,7 @@ public class ChatService {
     // ...
 }
 ----
-<1> `@RolesAllowed` is a JSR-250 annotation that you enabled in `SecurityConfig`.
+<1> `@RolesAllowed` is a JSR-250 annotation that you enabled in [classname]`SecurityConfig`.
 
 As mentioned earlier, you only want users with the `ADMIN` role to be able to invoke the [methodname]`createChannel` method. To set this restriction, add the `@RolesAllowed` annotation to the method like this:
 
@@ -230,7 +230,7 @@ At this point, the application will still show the channel creation components t
 
 // RUSSELL: Can we elaborate on AccessDeniedException above, such as ", which includes an error message saying..."? It may be that nothing happens for the user, or it may be an error -- no message to user.
 
-It's a good practice to show only actions that the user is allowed to perform. In this case, the text field and button for creating new channels should only be visible to users that hold the `ADMIN` role. Vaadin provides a class called, `AuthenticationContext`. You can add it to your views to use for this purpose.
+It's a good practice to show only actions that the user is allowed to perform. In this case, the text field and button for creating new channels should only be visible to users that hold the `ADMIN` role. Vaadin provides a class called, [classname]`AuthenticationContext`. You can add it to your views to use for this purpose.
 
 Change the constructor of [classname]`LobbyView` as follows:
 
@@ -266,9 +266,9 @@ public LobbyView(ChatService chatService, AuthenticationContext authenticationCo
 
 == Add Logout Button
 
-When securing a web application, much focus is often put on the login functionality. However, it is just important to implement the logout functionality, properly. Otherwise, another user who later uses device get unintended access to the application.
+When securing a web application, much focus is often put on the login functionality. However, it is just as important to implement the logout functionality, properly. Otherwise, another user who later uses the same device get unintended access to the application.
 
-For a better user experience and better security, add a logout button to the navbar of the main layout. Open [classname]`MainLayout` and change the `addNavbarContent` method as follows:
+For a better user experience and better security, add a logout button to the navbar of the main layout. Open [classname]`MainLayout` and change the [methodname]`addNavbarContent` method as follows:
 
 [source,java]
 ----
@@ -291,11 +291,11 @@ private void addNavbarContent() {
     addToNavbar(false, header);
 }
 ----
-<1> `AuthenticationContext` can be used to get the name of the current user, not just the roles.
-<2> `AuthenticationContext` has a method for logging out.
+<1> [classname]`AuthenticationContext` can be used to get the name of the current user, not just the roles.
+<2> [classname]`AuthenticationContext` has a method for logging out.
 <3> Remember to add the logout button to the header.
 
-If you now try to compile the code, you'll get an error because `authenticationContext` isn't defined yet. Since the navbar is configured inside its own private method and not inside the constructor, you have to store a reference to `AuthenticationContext` in a private field like this:
+If you now try to compile the code, you'll get an error because `authenticationContext` isn't defined yet. Since the navbar is configured inside its own private method and not inside the constructor, you have to store a reference to [classname]`AuthenticationContext` in a private field like this:
 
 [source,java]
 ----
@@ -316,9 +316,9 @@ After making that change, the code should now compile.
 
 == User's Name as Message Author
 
-There remains one task for this part of the tutorial: replace "John Doe" as the author name with the user's actual username. Since you're using Spring Security, you can get this name from the current [interfacename]`SecurityContext``, which in turn can be retrieved from [classname]`SecurityContextHolder`.
+There remains one task for this part of the tutorial: replace "John Doe" as the author name with the user's actual username. Since you're using Spring Security, you can get this name from the current [interfacename]`SecurityContext`, which in turn can be retrieved from [classname]`SecurityContextHolder`.
 
-Open [classname]`ChatService` and change the [methodname]`postMessage` method as follows:
+Open [classname]`ChatService` and change the [methodname]`postMessage()` method as follows:
 
 [source,java]
 ----
@@ -340,27 +340,27 @@ public void postMessage(String channelId, String message) throws InvalidChannelE
 
 == Try It!
 
-Your application is now ready for you to try the new security features. As always, start the application by running `./mvnw spring-boot:run` and open your browser at `http://localhost:8080/`. 
+Your application is now ready for you to try the new security features. As always, start the application by running `./mvnw spring-boot:run` and open your browser at: `http://localhost:8080/`
 
 
-[discrete]
-==== Exercise 1
+//[discrete]
+//==== Exercise 1
 
-You should be redirected to the login screen. Log in wotj the username "admin" and password "password". When you do so, you should be taken to the lobby screen.
+You should be redirected to the login screen. Log in with the username "admin" and password "password". When you do so, you should be taken to the lobby screen.
 
-[discrete]
-==== Exercise 2
+//[discrete]
+//==== Exercise 2
 
 As admin, try to create a new channel. This should work as before. Go to the new channel and send a message. The message author should display as "admin".
 
 
-[discrete]
-==== Exercise 3
+//[discrete]
+//==== Exercise 3
 
-Logout as admin by clicking the logout button. You should be back at the login screen. Login with the username "bob" and the password "password". You should be taken to the lobby screen. The components for creating new channels should not be visible.
+Logout as admin by clicking the [guibutton]*Logout* button. You should be back at the login screen. Login with the username "bob" and the password "password". You should be taken to the lobby screen. The components for creating new channels should not be visible.
 
 
-[discrete]
-==== Exercise 4
+//[discrete]
+//==== Exercise 4
 
-Still logged in as bob, go to the channel you created as admin in Exercise 2. You should see the message sent by admin. Send another message. The author should show up as bob.
+Still logged in as bob, go to the channel you created as admin. You should see the message sent by admin. Send another message. The author should show up as "bob".
