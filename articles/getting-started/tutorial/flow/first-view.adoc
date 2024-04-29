@@ -31,9 +31,9 @@ You can make any Vaadin component a routing target by adding a `@Route("<path>")
 
 You can pass parameters into any Vaadin route. There are various ways of doing this, but the easiest is to implement the [interfacename]`HasUrlParameter` interface. This interface defines a single URL parameter that is appended to the path of the route. The type of the parameter can be `Long`, `Integer`, `String`, or `Boolean`.
 
-You can find more information about routing in the <<{articles}/flow/routing,Routing>> page of the Flow documentation.
+You can find more information about routing in the <<{articles}/flow/routing#,Routing>> page of the Flow documentation.
 
-Incidentally, adding `@Route("<path>")` annotation also makes it possible to inject Spring managed beans into the component through constructor parameter injection. However, the component won't become a Spring bean itself. The component cannot be injected into other components, and its lifecycle is still managed by Vaadin -- not by Spring.
+Incidentally, adding `@Route("<path>")` annotation also makes it possible to inject Spring beans into the component through constructor parameter injection. However, the component won't become a Spring bean itself. The component cannot be injected into other Spring beans, and its lifecycle is still managed by Vaadin -- not by Spring.
 
 // RUSSELL: I know we're assuming Java developer experience, but I'd like to have explanations of beans, managed beans, and Spring.
 
@@ -202,12 +202,12 @@ Once you've enabled server push, you can trigger it in various ways. The easiest
 
 Vaadin will make sure the session is properly locked while the user interface is being updated. Once the method has returned, Vaadin will automatically push the updates to the browser.
 
-You can find more information about server push in the <<{articles}/flow/advanced/server-push,Flow documentation>>.
+You can find more information about server push in the <<{articles}/flow/advanced/server-push#,Flow documentation>>.
 
 
 == Receive Messages
 
-Returning to the ChannelView, you need to make some additions. In order to receive messages from the server, you'll have to do a few things:
+Returning to the [classname]`ChannelView`, you need to make some additions. In order to receive messages from the server, you'll have to do a few things:
 
 1. Subscribe to a [classname]`Flux` returned by the [methodname]`liveMessages` method of [classname]`ChatService`;
 2. Update the [classname]`MessageList` component using server push whenever new messages arrive; and
@@ -250,8 +250,8 @@ private void receiveMessages(List<Message> incoming) { // <1>
 }
 ----
 <1> The server is providing messages in batches rather than one at a time. This is to improve performance in cases where a plenty of messages are being received in a short amount of time.
-<2> You have to use `UI.access()` whenever you update a Vaadin user interface from a thread other than the HTTP request thread. The method will make sure the session is locked properly during the update, and it'll push the changes to the browser once finished.
-<3> There's currently no way of adding individual items to a `MessageList`. You have to re-create all of them.
+<2> You have to use [methodname]`UI.access()` whenever you update a Vaadin user interface from a thread other than the HTTP request thread. The method will make sure the session is locked properly during the update, and it'll push the changes to the browser once finished.
+<3> There's currently no way of adding individual items to a [classname]`MessageList`. You have to re-create all of them.
 
 // RUSSELL: What are we doing next?  Why are we doing this?  How does this tie into the other steps or where we're heading.  I feel like we're just blindly adding stuff that I'm not always sure where and why. you're subscribing to receive messages, a flux objective which in turn is a stream.
 
@@ -266,18 +266,18 @@ private Disposable subscribe() {
     return subscription; // <2>
 }
 ----
-<1> Whenever the [classname]`Flux` emits a new batch of messages, the [methodname]`receiveMessages` method is called.
+<1> Whenever the [classname]`Flux` emits a new batch of messages, the [methodname]`receiveMessages()` method is called.
 <2> You need a reference to the subscription to be able to cancel it when you don't need it any longer.
 
 Finally, you have actually to call the newly created [methodname]`subscribe()` method. However, you only want to receive messages while the view is visible to the user. You can use component lifecycle callbacks to achieve this.
 
-You can think of a Flow user interface as a tree of components. All components get notified when they are added to this tree (attached) or removed from it (detached). A component can execute code when this happens by overriding the `onAttach(..)` and `onDetach(..)` methods provided by the `Component` class, which is the abstract base class for all components. 
+You can think of a Flow user interface as a tree of components. All components get notified when they are added to this tree (attached) or removed from it (detached). A component can execute code when this happens by overriding the [methodname]`onAttach(..)` and [methodname]`onDetach(..)` methods provided by the [classname]`Component` class, which is the abstract base class for all components. 
 
-In addition to overriding `onAttach(..)` and `onDetach(..)`, you can use the methods `addAttachListener(..)` and `addDetachListener(..)` to register listeners that will get notified whenever a component is attached or detached.
+In addition to overriding [methodname]`onAttach(..)` and [methodname]`onDetach(..)`, you can use the methods [methodname]`addAttachListener(..)` and [methodname]`addDetachListener(..)` to register listeners that will get notified whenever a component is attached or detached.
 
 When you want to register a listener with an object that will outlive the view itself, you should do this when the view is attached and unregister it when the view is detached. If you forget to unregister, you might end up with a memory leak that will slow your application down and eventually crash it.
 
-Next, override the `onAttach` method. Inside it, call the subscribe method and also register a detach listener that cancels the subscription:
+Next, override the [methodname]`onAttach` method. Inside it, call the subscribe method and also register a detach listener that cancels the subscription:
 
 [source,java]
 ----
@@ -290,25 +290,27 @@ protected void onAttach(AttachEvent attachEvent) {
 <1> When the view is attached to a UI and becomes visible, this says to subscribe to the backend service.
 <2> Whenever the view is detached from the UI, this line says to cancel the subscription.
 
-You can find more information about component lifecycle callbacks in the <<{articles}/flow/create-ui/lifecycle-callback,Life Cycle Callback>> page of the Flow documentation.
+You can find more information about component lifecycle callbacks in the <<{articles}/flow/create-ui/lifecycle-callback#,Life Cycle Callback>> page of the Flow documentation. For more information about what a `Flux` is, see the https://projectreactor.io/docs/core/release/reference/[Project Reactor reference documentation].
 
 
 == Try It!
 
 Assuming you followed along closely with the explanations and descriptions above, and you added the text as instructed to your development environment, you're ready to try the channel view. Start the application by running `./mvnw spring-boot:run` 
 
-[discrete]
-==== Exercise 1
+// PETTER: commented out the exercises. To me, in a tutorial, the exercises would be writing the code itself, not trying out the application.
+
+//[discrete]
+//==== Exercise 1
 
 The application will generate some channels for you during startup. Each channel gets a UUID as its ID. Check the log for the URLs, they should look something like `\http://localhost:8080/channel/28ca4624-81b6-48bd-8090-82efa26cfd02`.
 
-[discrete]
-==== Exercise 2
+//[discrete]
+//==== Exercise 2
 
 Now, open your browser with one of the URLs. You should see an interface for entering text. Send some messages. They should appear in the list.
 
-[discrete]
-==== Exercise 3
+//[discrete]
+//==== Exercise 3
 
 Open another browser window using the same URL and send some more messages from there. Those should appear in the list of both windows.
 
