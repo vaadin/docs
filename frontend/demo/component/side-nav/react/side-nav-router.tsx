@@ -2,7 +2,6 @@ import React from 'react';
 import { SideNav } from '@vaadin/react-components/SideNav.js';
 import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
 import { useNavigate, useLocation } from 'react-router';
-import '@vaadin/icons/';
 
 function Example() {
   // tag::snippet[]
