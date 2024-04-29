@@ -3,100 +3,46 @@ package com.vaadin.demo.fusion.crud;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 import com.vaadin.hilla.Nullable;
+import com.vaadin.hilla.crud.JpaFilterConverter;
 import com.vaadin.hilla.crud.ListService;
-import com.vaadin.hilla.crud.filter.AndFilter;
 import com.vaadin.hilla.crud.filter.Filter;
-import com.vaadin.hilla.crud.filter.OrFilter;
-import com.vaadin.hilla.crud.filter.PropertyStringFilter;
-import org.springframework.data.domain.PageRequest;
+import com.vaadin.hilla.crud.filter.FilterTransformer;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
 //tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
-public class ProductAdvancedDtoListService implements ListService<ProductAdvancedDto> {
+public class ProductAdvancedDtoListService
+        implements ListService<ProductAdvancedDto> {
     private final ProductRepository productRepository;
+    private final JpaFilterConverter jpaFilterConverter;
 
-    public ProductAdvancedDtoListService(ProductRepository productRepository) {
+    public ProductAdvancedDtoListService(ProductRepository productRepository,
+            JpaFilterConverter jpaFilterConverter) {
         this.productRepository = productRepository;
+        this.jpaFilterConverter = jpaFilterConverter;
     }
 
     @Override
-    public List<ProductAdvancedDto> list(Pageable pageable, @Nullable Filter filter) {
-        // Create page request with mapped sort properties
-        pageable = createPageRequest(pageable);
+    public List<ProductAdvancedDto> list(Pageable pageable,
+            @Nullable Filter filter) {
+        // Create filter transformer to map DTO fields to JPA fields
+        var transformer = new FilterTransformer()
+                .withMapping("productId", "id")
+                .withMapping("productName", "name")
+                .withMapping("productCategory", "category")
+                .withMapping("productPrice", "price")
+                .withMapping("supplierId", "supplier.id")
+                .withMapping("supplierInfo", "supplier.supplierName");
         // Create JPA specification from Hilla filter
-        Specification<Product> specification = createSpecification(filter);
+        var specification = jpaFilterConverter.toSpec(transformer.apply(filter),
+                Product.class);
         // Fetch data from JPA repository
-        return productRepository.findAll(specification, pageable)
-                .map(ProductAdvancedDto::fromEntity)
-                .toList();
-    }
-
-    private Pageable createPageRequest(Pageable pageable) {
-        List<Sort.Order> sortOrders = pageable.getSort().stream()
-                .map(order -> {
-                    // Map DTO property names to JPA property names
-                    // For the computed supplierInfo property, just use the supplier name
-                    String mappedProperty = switch (order.getProperty()) {
-                        case "productName" -> "name";
-                        case "productCategory" -> "category";
-                        case "productPrice" -> "price";
-                        case "supplierInfo" -> "supplier.supplierName";
-                        default -> throw new IllegalArgumentException("Unknown sort property " + order.getProperty());
-                    };
-                    return order.isAscending()
-                            ? Sort.Order.asc(mappedProperty)
-                            : Sort.Order.desc(mappedProperty);
-                }).toList();
-
-        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sortOrders));
-    }
-
-    private Specification<Product> createSpecification(Filter filter) {
-        if (filter == null) {
-            return Specification.anyOf();
-        }
-        if (filter instanceof AndFilter andFilter) {
-            return Specification.allOf(andFilter.getChildren().stream()
-                    .map(this::createSpecification).toList());
-        } else if (filter instanceof OrFilter orFilter) {
-            return Specification.anyOf(orFilter.getChildren().stream()
-                    .map(this::createSpecification).toList());
-        } else if (filter instanceof PropertyStringFilter propertyFilter) {
-            return filterProperty(propertyFilter);
-        } else {
-            throw new IllegalArgumentException("Unknown filter type " + filter.getClass().getName());
-        }
-    }
-
-    private static Specification<Product> filterProperty(PropertyStringFilter filter) {
-        String filterValue = filter.getFilterValue();
-
-        // Create filter criteria for each filterable property
-        // For the price property, handle the different matchers used by the default header filters
-        // For the computed supplier info property, search by supplier name or city
-        return (root, query, criteriaBuilder) -> {
-            return switch (filter.getPropertyId()) {
-                case "productName" -> criteriaBuilder.like(root.get("name"), "%" + filterValue + "%");
-                case "productCategory" -> criteriaBuilder.like(root.get("category"), "%" + filterValue + "%");
-                case "productPrice" -> switch (filter.getMatcher()) {
-                    case EQUALS -> criteriaBuilder.equal(root.get("price"), filterValue);
-                    case GREATER_THAN -> criteriaBuilder.greaterThan(root.get("price"), filterValue);
-                    case LESS_THAN -> criteriaBuilder.lessThan(root.get("price"), filterValue);
-                    default -> throw new IllegalArgumentException("Unsupported matcher: " + filter.getMatcher());
-                };
-                case "supplierInfo" -> criteriaBuilder.or(
-                        criteriaBuilder.like(root.get("supplier").get("supplierName"), "%" + filterValue + "%"),
-                        criteriaBuilder.like(root.get("supplier").get("headquarterCity"), "%" + filterValue + "%")
-                );
-                default -> throw new IllegalArgumentException("Unknown filter property " + filter.getPropertyId());
-            };
-        };
+        return productRepository
+                .findAll(specification, transformer.apply(pageable))
+                .map(ProductAdvancedDto::fromEntity).toList();
     }
 }
-//end::snippet[]
+// end::snippet[]
