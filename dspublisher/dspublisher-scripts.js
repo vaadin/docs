@@ -100,7 +100,7 @@ const SCRIPTS = {
     name: `dsp@${DSP_VERSION}:clean`,
     commands: [
       {
-        shell: `npx @vaadin/dspublisher@${DSP_VERSION} --clean`,
+        shell: `npx -y @vaadin/dspublisher@${DSP_VERSION} --clean`,
         phases: [
           {
             text: `Cleaning up dspublisher cache${firstLaunchMessage}`,
@@ -157,10 +157,11 @@ const SCRIPTS = {
       {
         shell: [
           'npx',
+          '-y',
           'concurrently',
           '--kill-others',
           '--raw',
-          `"npx @vaadin/dspublisher@${DSP_VERSION} --develop"`,
+          `"npx -y @vaadin/dspublisher@${DSP_VERSION} --develop"`,
           '"mvn -C"',
         ],
         phases: [
@@ -215,7 +216,7 @@ const SCRIPTS = {
         ],
       },
       {
-        shell: `npx @vaadin/dspublisher@${DSP_VERSION} --build`,
+        shell: `npx -y @vaadin/dspublisher@${DSP_VERSION} --build`,
         phases: [
           {
             text: 'Building static pages',
