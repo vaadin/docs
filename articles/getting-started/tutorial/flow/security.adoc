@@ -182,13 +182,17 @@ By default, Vaadin will deny access to all views unless instructed otherwise. Yo
 ----
 @Route(value = "", layout = MainLayout.class)
 @PageTitle("Lobby")
+// tag::snippet[]
 @PermitAll
+// end::snippet[]
 public class LobbyView extends VerticalLayout {
     //...
 }
 
 @Route(value = "channel", layout = MainLayout.class)
+// tag::snippet[]
 @PermitAll
+// end::snippet[]
 public class ChannelView extends VerticalLayout implements HasUrlParameter<String>, HasDynamicTitle {
     //...
 }
@@ -204,7 +208,9 @@ By default, Spring Security will grant access to all application services unless
 [source,java]
 ----
 @Service
+// tag::snippet[]
 @RolesAllowed(Roles.USER) // <1>
+// end::snippet[]
 public class ChatService {
     // ...
 }
@@ -215,7 +221,9 @@ As mentioned earlier, you only want users with the `ADMIN` role to be able to in
 
 [source,java]
 ----
+// tag::snippet[]
 @RolesAllowed(Roles.ADMIN)
+// end::snippet[]
 public Channel createChannel(String name) {
         // ...
 }
@@ -241,7 +249,6 @@ public LobbyView(ChatService chatService, AuthenticationContext authenticationCo
     setSizeFull();
 
     channels = new VirtualList<>();
-    channels.setRenderer(new ComponentRenderer<>(this::createChannelComponent));
     add(channels);
     expand(channels);
 
@@ -251,6 +258,7 @@ public LobbyView(ChatService chatService, AuthenticationContext authenticationCo
     addChannelButton = new Button("Add channel", event -> addChannel());
     addChannelButton.setDisableOnClick(true);
 
+// tag::snippet[]
     if (authenticationContext.hasRole(Roles.ADMIN)) { // <2>
         var toolbar = new HorizontalLayout(channelNameField,
                 addChannelButton);
@@ -258,6 +266,7 @@ public LobbyView(ChatService chatService, AuthenticationContext authenticationCo
         toolbar.expand(channelNameField);
         add(toolbar);
     }
+// end::snippet[]
 }
 ----
 <1> Use constructor injection to inject an instance of [classname]`AuthenticationContext`.
@@ -281,10 +290,12 @@ private void addNavbarContent() {
     viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE,
         LumoUtility.Flex.GROW);
 
+// tag::snippet[]
     var logout = new Button("Logout " + authenticationContext.getPrincipalName().orElse(""), // <1>
         event -> authenticationContext.logout()); // <2>
 
     var header = new Header(toggle, viewTitle, logout); // <3>
+// end::snippet[]   
     header.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX,
         LumoUtility.Padding.End.MEDIUM, LumoUtility.Width.FULL);
 
@@ -300,11 +311,15 @@ If you now try to compile the code, you'll get an error because `authenticationC
 [source,java]
 ----
 public class MainLayout extends AppLayout {
+// tag::snippet[]
     private final AuthenticationContext authenticationContext;
+// end::snippet[]
     // ...
 
+// tag::snippet[]
     public MainLayout(AuthenticationContext authenticationContext) {
         this.authenticationContext = authenticationContext;
+// end::snippet[]        
         // ...
     }
     // ...
@@ -326,8 +341,10 @@ public void postMessage(String channelId, String message) throws InvalidChannelE
     if (!channelRepository.exists(channelId)) {
         throw new InvalidChannelException();
     }
+// tag::snippet[]
     var author = SecurityContextHolder.getContext().getAuthentication().getName(); // <1>
-    var msg = messageRepository.save(new NewMessage(channelId, clock.instant(), author, message)); // <2>
+// end::snippet[]
+    var msg = messageRepository.save(new NewMessage(channelId, clock.instant(), author, message));
     var result = sink.tryEmitNext(msg);
     if (result.isFailure()) {
         log.error("Error posting message to channel {}: {}", channelId, result);
@@ -335,7 +352,6 @@ public void postMessage(String channelId, String message) throws InvalidChannelE
 }
 ----
 <1> Retrieve the current user's name. Since this method is protected by `@RolesAllowed`, the security context is guaranteed always to contain a valid authentication token.
-<2> Replace the "John Doe" string with the user's name.
 
 
 == Try It!
