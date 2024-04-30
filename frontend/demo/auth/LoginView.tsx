@@ -35,7 +35,7 @@ export default function LoginView() {
 
   if (state.user && url.value) {
     const path = new URL(url.value, document.baseURI).pathname;
-    return <NavigateAndReload to={path} replace />;
+    return <NavigateAndReload to={path} />;
   }
 
   return (
