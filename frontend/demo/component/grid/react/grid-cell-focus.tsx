@@ -20,7 +20,6 @@ function Example() {
     });
   }, []);
 
-  // tag::snippet[]
   const handleCellFocus = (event: GridCellFocusEvent<Person>) => {
     if (!gridRef.current) {
       return;
