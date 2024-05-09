@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Chart } from '@vaadin/react-components/Chart.js';
-import { ChartSeries } from '@vaadin/react-components/ChartSeries.js';
+import { Chart } from '@vaadin/react-components-pro/Chart.js';
+import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
 import { getViewEvents } from 'Frontend/demo/domain/DataService';
 import type ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
 
