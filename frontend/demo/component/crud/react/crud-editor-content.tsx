@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Crud, crudPath } from '@vaadin/react-components/Crud.js';
+import { Crud, crudPath } from '@vaadin/react-components-pro/Crud.js';
 import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
 import { EmailField } from '@vaadin/react-components/EmailField.js';
