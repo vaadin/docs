@@ -3,8 +3,8 @@ import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { DatePicker } from '@vaadin/react-components/DatePicker.js';
-import { GridPro } from '@vaadin/react-components/GridPro.js';
-import { GridProEditColumn } from '@vaadin/react-components/GridProEditColumn.js';
+import { GridPro } from '@vaadin/react-components-pro/GridPro.js';
+import { GridProEditColumn } from '@vaadin/react-components-pro/GridProEditColumn.js';
 import { format, parseISO } from 'date-fns';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
