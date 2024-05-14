@@ -79,7 +79,7 @@ For representing such object types in Java, an easy option is to define a Bean u
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/flow/integration/react/RgbaColor.java
+include::{root}/src/main/java/com/vaadin/demo/flow/integration/react/RgbaColor.java[tags=class]
 ----
 
 
@@ -92,7 +92,7 @@ The following example uses `ReactAdapterElement` to create the `<rgba-color-pick
 
 [source,typescriptjsx]
 ----
-include::{root}/frontend/demo/flow/integration/react/rgba-color-picker.tsx
+include::{root}/frontend/demo/flow/integration/react/rgba-color-picker.tsx[tags=class]
 ----
 <1> The main part of the Web Component is the [methodname]`render(RenderHooks)` callback, which defines the rendering using React JSX tags. You could also define state and events using the APIs provided with the `hooks` argument.
 <2> This example calls `hooks.useState<RgbaColor>("color")` to define that the `color` property of the adapter Web Component is going to be used for synchronizing the state with the server.
@@ -105,4 +105,44 @@ include::{root}/frontend/demo/flow/integration/react/rgba-color-picker.tsx
 The `RenderHooks` render callback argument provides the following methods:
 
 - [methodname]`useState<T>(string)` method defines and uses a named state JS property of the adapter Web Component; and
-- [methodname]`useCustomEvent<T | undefined>(string, CustomEventInit<T>)` method returns a simple to use callback that dispatches a Custom Event with the given name on the adapter Web Component. When the user action is not related with a state change, you could use this hook and subscribe to this event in Java.
+- [methodname]`useCustomEvent<T | undefined>(string, CustomEventInit<T>)` method returns a simple to use callback that dispatches a Custom Event with the given name on the adapter Web Component:
+
+.Firing a CustomEvent
+[source,typescriptjsx]
+----
+interface PersonData {
+    name: string,
+    age?: number
+}
+
+class PersonDataElement extends ReactAdapterElement {
+    protected override render(hooks: RenderHooks): ReactElement | null {
+        const fireUpdateEvent = hooks.useCustomEvent<PersonData>("update",
+            // optional event detail:
+            { detail: { name: "John", age: 42 } }
+        );
+        return (
+            <>
+                <VerticalLayout>
+                    <Button onClick={() => fireUpdateEvent({ name: "Mike" })}>
+                        Update
+                    </Button>
+                </VerticalLayout>
+            </>
+        );
+    }
+}
+----
+
+When the user action is not related with a state change, you could use this hook and subscribe to this event in Java:
+
+.Listening for a CustomEvent
+[source,java]
+----
+public void addPersonDataUpdateListener() {
+    getElement().addEventListener("update", event -> {
+        JsonObject person = event.getEventData();
+        // person update code goes here...
+    }).addEventData("event.detail");
+}
+----

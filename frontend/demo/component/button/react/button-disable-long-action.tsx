@@ -1,26 +1,38 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [progress, setProgress] = useState(-1);
+  const progress = useSignal(-1);
 
-  if (progress >= 1) {
-    setProgress(-1);
-  } else if (progress >= 0) {
-    setTimeout(() => setProgress(progress + 0.005), 25);
-  }
+  useEffect(() => {
+    if (progress.value >= 1) {
+      progress.value = -1;
+    } else if (progress.value >= 0) {
+      setTimeout(() => {
+        progress.value += 0.005;
+      }, 25);
+    }
+  }, [progress.value]);
 
   return (
     <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
-      <Button disabled={progress >= 0} onClick={() => setProgress(0)}>
+      <Button
+        disabled={progress.value >= 0}
+        onClick={() => {
+          progress.value = 0;
+        }}
+      >
         Perform Action
       </Button>
 
-      <ProgressBar value={progress} />
+      <ProgressBar value={progress.value}></ProgressBar>
     </HorizontalLayout>
   );
   // end::snippet[]

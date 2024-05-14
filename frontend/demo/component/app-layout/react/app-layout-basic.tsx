@@ -22,7 +22,7 @@ function Example() {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
     }
-  }, []);
+  }, [sideNavRef.current]);
 
   return (
     // tag::snippet[]

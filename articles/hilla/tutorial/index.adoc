@@ -3,6 +3,7 @@ title: Tutorial
 page-title: Spring Boot pass:[&] React Full-Stack Development Tutorial
 description: Hilla is a faster way to build full-stack React and Spring Boot applications. This tutorial shows you how to build a full-stack CRM application in 15 minutes.
 order: 12
+section-nav: hidden
 ---
 
 
@@ -192,25 +193,26 @@ With the backend completed, you can start building the UI. Change the contents o
 [source,tsx]
 ----
 import ContactRecord from 'Frontend/generated/com/example/application/services/CRMService/ContactRecord';
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
+import {useSignal} from "@vaadin/hilla-react-signals";
 import {CRMService} from "Frontend/generated/endpoints";
 import {Grid} from "@vaadin/react-components/Grid";
 import {GridColumn} from "@vaadin/react-components/GridColumn";
 
 export default function ContactsView() {
-    const [contacts, setContacts] = useState<ContactRecord[]>([]);
-    const [selected, setSelected] = useState<ContactRecord | null | undefined>();
+    const contacts = useSignal<ContactRecord[]>([]);
+    const selected = useSignal<ContactRecord | null | undefined>(undefined);
 
     useEffect(() => {
-        CRMService.findAllContacts().then(setContacts);
+        CRMService.findAllContacts().then(found => contacts.value = found);
     }, []);
 
     return (
         <div className="p-m flex gap-m">
             <Grid
-                items={contacts}
-                onActiveItemChanged={e => setSelected(e.detail.value)}
-                selectedItems={[selected]}>
+                items={contacts.value}
+                onActiveItemChanged={e => selected.value = e.detail}
+                selectedItems={[selected.value]}>
 
                 <GridColumn path="firstName"/>
                 <GridColumn path="lastName"/>
@@ -243,7 +245,8 @@ import {Button} from "@vaadin/react-components/Button";
 import {useForm} from "@vaadin/hilla-react-form";
 import ContactRecordModel from "Frontend/generated/com/example/application/services/CRMService/ContactRecordModel";
 import {CRMService} from "Frontend/generated/endpoints";
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
+import {useSignal} from "@vaadin/hilla-react-signals";
 import ContactRecord from "Frontend/generated/com/example/application/services/CRMService/ContactRecord";
 
 interface ContactFormProps {
@@ -253,7 +256,7 @@ interface ContactFormProps {
 
 export default function ContactForm({contact, onSubmit}: ContactFormProps) {
 
-    const [companies, setCompanies] = useState<SelectItem[]>([]);
+    const companies = useSignal<SelectItem[]>([]);
 
     const {field, model, submit, reset, read} = useForm(ContactRecordModel, { onSubmit } );
 
@@ -273,7 +276,7 @@ export default function ContactForm({contact, onSubmit}: ContactFormProps) {
                 value: company.id + ""
             };
         });
-        setCompanies(companyItems);
+        companies.value = companyItems;
     }
 
     return (
@@ -282,7 +285,7 @@ export default function ContactForm({contact, onSubmit}: ContactFormProps) {
             <TextField label="First name" {...field(model.firstName)} />
             <TextField label="Last name" {...field(model.lastName)} />
             <EmailField label="Email" {...field(model.email)} />
-            <Select label="Company" items={companies} {...field(model.company.id)} />
+            <Select label="Company" items={companies.value} {...field(model.company.id)} />
 
             <div className="flex gap-m">
                 <Button onClick={submit} theme="primary">Save</Button>
@@ -305,36 +308,37 @@ Change `ContactsView.tsx` with the following content:
 [source,tsx]
 ----
 import ContactRecord from 'Frontend/generated/com/example/application/services/CRMService/ContactRecord';
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
+import {useSignal} from "@vaadin/hilla-react-signals";
 import {CRMService} from "Frontend/generated/endpoints";
 import {Grid} from "@vaadin/react-components/Grid";
 import {GridColumn} from "@vaadin/react-components/GridColumn";
 import ContactForm from "Frontend/views/contacts/ContactForm";
 
 export default function ContactsView() {
-    const [contacts, setContacts] = useState<ContactRecord[]>([]);
-    const [selected, setSelected] = useState<ContactRecord | null | undefined>();
+    const contacts = useSignal<ContactRecord[]>([]);
+    const selected = useSignal<ContactRecord | null | undefined>(undefined);
 
     useEffect(() => {
-        CRMService.findAllContacts().then(setContacts);
+        CRMService.findAllContacts().then(found => contacts.value = found);
     }, []);
 
     async function onContactSaved(contact: ContactRecord) {
         const saved = await CRMService.save(contact)
         if (contact.id) {
-            setContacts(contacts => contacts.map(current => current.id === saved.id ? saved : current));
+            contacts.value = contacts.value.map(current => current.id === saved.id ? saved : current);
         } else {
-            setContacts(contacts => [...contacts, saved]);
+            contacts.value = [...contacts.value, saved];
         }
-        setSelected(saved);
+        selected.value = saved;
     }
 
     return (
         <div className="p-m flex gap-m">
             <Grid
-                items={contacts}
+                items={contacts.value}
                 onActiveItemChanged={e => setSelected(e.detail.value)}
-                selectedItems={[selected]}>
+                selectedItems={[selected.value]}>
 
                 <GridColumn path="firstName"/>
                 <GridColumn path="lastName"/>
@@ -342,8 +346,8 @@ export default function ContactsView() {
                 <GridColumn path="company.name" header="Company name"/>
             </Grid>
 
-            {selected &&
-                <ContactForm contact={selected} onSubmit={onContactSaved}/>
+            {selected.value &&
+                <ContactForm contact={selected.value} onSubmit={onContactSaved}/>
             }
         </div>
     );
