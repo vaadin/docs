@@ -1,0 +1,161 @@
+---
+title: Add Message History
+description: Learn how to protect applications from being overwhelmed with data.
+order: 40
+---
+
+
+= [since:com.vaadin:vaadin@V24.4]#Add Message History#
+
+The application you've been developing in this application is now able to post and receive messages in a channel. However, if you leave the channel, you lose all of the previous messages -- or rather, you won't see them. The backend is storing the messages, though. 
+
+The next step in this tutorial is to display them in the user interface when the channel view is opened. There are a few things to consider.  First, you'll need to ensure all messages are rendered. However, there may be too many messages: displaying them all may slow down the application.
+
+The second thing to consider is related to timing. You might receive messages while fetching the message history. You don't want to miss those. Similarly, albeit rare, you might receive a message twice: once in the message history and again as a part of the live stream. You'll need to prevent such duplicates.
+
+Always set an upper limit on all queries to the application layer. Unless you know a query will return one or zero items, assume it'll return an excessive amount. In this tutorial, you'll set the limit to only twenty messages to demonstrate how limits work.
+
+
+== Container for Received Messages
+
+The first step for being able to provide message history to the user is to create a new data type to hold all of the received messages. This list must always be sorted using a [interfacename]`Comparator`. It'll have a fixed size limit. If the list is full when you add a new item, the first item is removed automatically. The list can't allow duplicates, which are determined by comparing items using their [methodname]`equals()` method.
+
+Since a Flow user interface is written totally in Java, you have all JVM features at your disposal. Create a class named [classname]`LimitedSortedAppendOnlyList` inside the [packagename]`com.example.application.util` package, like this:
+
+.`LimitedSortedAppendOnlyList.java`
+[source,java]
+----
+package com.example.application.util;
+
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Optional;
+import java.util.TreeSet;
+import java.util.stream.Stream;
+
+public class LimitedSortedAppendOnlyList<T> {
+
+    private final int limit;
+    private final TreeSet<T> items; // <1>
+
+    public LimitedSortedAppendOnlyList(int limit, Comparator<T> comparator) {
+        this.limit = limit;
+        this.items = new TreeSet<>(comparator); // <2>
+    }
+
+    public void add(T item) {
+        items.add(item);
+        if (items.size() > limit) {
+            items.pollFirst(); // <3>
+        }
+    }
+
+    public void addAll(Collection<T> items) {
+        items.forEach(this::add);
+    }
+
+    public Stream<T> stream() {
+        return items.stream();
+    }
+
+    public Optional<T> getLast() {
+        if (items.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(items.getLast());
+    }
+}
+----
+<1> [classname]`TreeSet` is a built-in Java [interfacename]`Set` that's always sorted and ensures no duplicates.
+<2> [classname]`TreeSet` uses a [interfacename]`Comparator` to sort its items.
+<3> [methodname]`pollFirst()` is a built-in method for removing the first item in a [classname]`TreeSet`.
+
+
+== Change Channel View for New Container
+
+When you implemented the first version of [classname]`ChannelView`, you used an [classname]`ArrayList` as a container for received messages. Now replace that with the newly created [classname]`LimitedSortedAppendOnlyList`.
+
+To do that, open [classname]`ChannelView` and change the field definition of [fieldname]`receivedMessages` like this:
+
+[source,java]
+----
+private static final int HISTORY_SIZE = 20; // <1>
+private final LimitedSortedAppendOnlyList<Message> receivedMessages;
+----
+<1> We are only going to show the past 20 messages. This makes it easy to manually test that the feature is working properly.
+
+Next, change the constructor like this:
+
+[source,java]
+----
+public ChannelView(ChatService chatService) {
+    this.chatService = chatService;
+// tag::snippet[]
+    receivedMessages = new LimitedSortedAppendOnlyList<>(
+            HISTORY_SIZE, // <1>
+            Comparator.comparing(Message::sequenceNumber) // <2>
+    );
+// end::snippet[]
+
+    setSizeFull();
+
+    messageList = new MessageList();
+    messageList.setSizeFull();
+    add(messageList);
+
+    var messageInput = new MessageInput(event -> sendMessage(event.getValue()));
+    messageInput.setWidthFull();
+    add(messageInput);
+}
+----
+<1> The list will only contain twenty messages.
+<2> Messages will be sorted by their sequence number, which is the number in which they were received by the server.
+
+The [classname]`ChannelView` should now compile, as the methods [methodname]`addAll()` and [methodname]`stream()` are present in both [classname]`ArrayList` and [classname]`LimitedSortedAppendOnlyList`.
+
+
+== Retrieve Message History
+
+Now with the structure in place, all that remains is to fetch the message history from [classname]`ChatService`. There's a method called [methodname]`messageHistory()` that takes three parameters: the ID of the channel; the number of messages to retrieve; and the ID of the latest message that the client has received, if any.
+
+The [methodname]`messageHistory()` method will return at most the given number of messages that have been posted to the given channel after the given latest message.
+
+Change the [methodname]`subscribe()` method of [classname]`ChannelView` like this:
+
+[source,java]
+----
+private Disposable subscribe() {
+    var subscription = chatService
+            .liveMessages(channelId)
+            .subscribe(this::receiveMessages);
+// tag::snippet[]
+    var lastSeenMessageId = receivedMessages.getLast() // <1>
+        .map(Message::messageId).orElse(null); // <2>
+    receiveMessages(chatService.messageHistory(
+        channelId, // <3>
+        HISTORY_SIZE, // <4>
+        lastSeenMessageId
+    ));
+// end::snippet[]
+    return subscription;
+}
+----
+<1> The latest message that the client has received is the last message in the [fieldname]`receivedMessages` list.
+<2> If the list is empty, you should pass `null` as the latest message.
+<3> The channel ID is already available in a private field.
+<4> Retrieve a maximum of twenty messages.
+
+Please note that you're fetching the history after you've subscribed to the live message feed. Because the list of received messages is sorted by sequence number, it doesn't matter whether you add the messages to the list in the wrong order -- they'll still display correctly.
+
+You may be wondering what happens if a message comes in through the live stream in one thread while the history is being retrieved in another. Inside the [methodname]`receiveMessages()` method, all interactions with both the user interface and the [fieldname]`receivedMessages` list are occurring inside a call to [methodname]`UI.access()`. This acts as a thread synchronization mechanism, as Vaadin will make sure that only one thread at a time can access the same [classname]`UI` instance.
+
+
+== Try It!
+
+The new history feature is ready for you to try. Open your browser at http://localhost:8080/ (start the application if it is not already running) and pick a channel. Open another browser window and go to the same channel. Write some messages in the first browser window. They should appear in both browser windows.
+
+On the second browser window, go back to the lobby. Then back in the first browser window, enter some more messages.  When you finish, in the second browser window, return to the channel. You should see there all of the previous messages, as well as the new messages.
+
+Keep entering messages on one or both browser windows until you have twenty messages in the views. Then enter a few more to see if the oldest ones disappear automatically.
+
+

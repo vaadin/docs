@@ -1,8 +1,8 @@
-// tag::class[]
 import {type ReactElement} from 'react';
 import {type RgbaColor, RgbaColorPicker} from "react-colorful";
 import {ReactAdapterElement, type RenderHooks} from "Frontend/generated/flow/ReactAdapter";
 
+// tag::class[]
 class RgbaColorPickerElement extends ReactAdapterElement {
   protected override render(hooks: RenderHooks): ReactElement | null { // <1>
     const [color, setColor] =
