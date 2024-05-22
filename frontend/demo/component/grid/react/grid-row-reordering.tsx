@@ -51,7 +51,7 @@ function Example() {
     <Grid
       items={items.value}
       rowsDraggable
-      dropMode="between"
+      dropMode={draggedItem.value ? 'between' : undefined}
       onGridDragstart={handleDragStart}
       onGridDragend={handleDragEnd}
       onGridDrop={handleDrop}
