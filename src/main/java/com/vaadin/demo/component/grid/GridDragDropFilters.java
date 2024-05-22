@@ -41,16 +41,21 @@ public class GridDragDropFilters extends Div {
         TreeDataProvider<Person> treeDataProvider = new TreeDataProvider<>(
                 treeData);
         treeGrid.setDataProvider(treeDataProvider);
-
         treeGrid.setRowsDraggable(true);
-        treeGrid.setDropMode(GridDropMode.ON_TOP);
+        
         // Only allow dragging staff
         treeGrid.setDragFilter(person -> !person.isManager());
         // Only allow dropping on managers
         treeGrid.setDropFilter(person -> person.isManager());
 
         treeGrid.addDragStartListener(
-                e -> draggedItem = e.getDraggedItems().get(0));
+                e -> {
+                        treeGrid.setDropMode(GridDropMode.ON_TOP);
+                        draggedItem = e.getDraggedItems().get(0);
+                        // Workaound an issue with the filters not being applied
+                        // when the drop mode is changed dynamically
+                        treeGrid.getDataCommunicator().reset();
+                });
 
         treeGrid.addDropListener(e -> {
             Person newManager = e.getDropTargetItem().orElse(null);
@@ -66,7 +71,10 @@ public class GridDragDropFilters extends Div {
             treeDataProvider.refreshAll();
         });
 
-        treeGrid.addDragEndListener(e -> draggedItem = null);
+        treeGrid.addDragEndListener(e -> {
+                treeGrid.setDropMode(null);
+                draggedItem = null;
+        });
         // end::snippet[]
 
         add(treeGrid);

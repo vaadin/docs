@@ -57,7 +57,7 @@ function Example() {
         expandedItems.value = event.detail.value;
       }}
       rowsDraggable
-      dropMode="on-top"
+      dropMode={draggedItem.value ? 'on-top' : undefined}
       onGridDragstart={(event) => {
         draggedItem.value = event.detail.draggedItems[0];
       }}
