@@ -31,23 +31,37 @@ public class GridDragRowsBetweenGrids extends Div {
         GridListDataView<Person> dataView1 = grid1.setItems(people1);
         GridListDataView<Person> dataView2 = grid2.setItems(people2);
 
-        grid1.setDropMode(GridDropMode.ON_GRID);
         grid1.setRowsDraggable(true);
-        grid1.addDragStartListener(this::handleDragStart);
+        grid1.addDragStartListener(e -> {
+            draggedItem = e.getDraggedItems().get(0);
+            grid1.setDropMode(GridDropMode.ON_GRID);
+            grid2.setDropMode(GridDropMode.ON_GRID);
+        });
         grid1.addDropListener(e -> {
             dataView2.removeItem(draggedItem);
             dataView1.addItem(draggedItem);
         });
-        grid1.addDragEndListener(this::handleDragEnd);
+        grid1.addDragEndListener(e -> {
+            draggedItem = null;
+            grid1.setDropMode(null);
+            grid2.setDropMode(null);
+        });
 
-        grid2.setDropMode(GridDropMode.ON_GRID);
         grid2.setRowsDraggable(true);
-        grid2.addDragStartListener(this::handleDragStart);
+        grid2.addDragStartListener(e -> {
+            draggedItem = e.getDraggedItems().get(0);
+            grid1.setDropMode(GridDropMode.ON_GRID);
+            grid2.setDropMode(GridDropMode.ON_GRID);
+        });
         grid2.addDropListener(e -> {
             dataView1.removeItem(draggedItem);
             dataView2.addItem(draggedItem);
         });
-        grid2.addDragEndListener(this::handleDragEnd);
+        grid2.addDragEndListener(e -> {
+            draggedItem = null;
+            grid1.setDropMode(null);
+            grid2.setDropMode(null);
+        });
         // end::snippet[]
 
         Div container = new Div(grid1, grid2);
@@ -63,14 +77,6 @@ public class GridDragRowsBetweenGrids extends Div {
         setGridStyles(grid);
 
         return grid;
-    }
-
-    private void handleDragStart(GridDragStartEvent<Person> e) {
-        draggedItem = e.getDraggedItems().get(0);
-    }
-
-    private void handleDragEnd(GridDragEndEvent<Person> e) {
-        draggedItem = null;
     }
 
     private static void setGridStyles(Grid<Person> grid) {
