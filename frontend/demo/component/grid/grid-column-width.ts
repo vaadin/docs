@@ -34,7 +34,7 @@ export class Example extends LitElement {
       <vaadin-split-layout>
         <vaadin-grid .items="${this.items}" style="width: 100%;">
           <vaadin-grid-selection-column></vaadin-grid-selection-column>
-          <vaadin-grid-column path="firstName" width="7em" flex-grow="0"></vaadin-grid-column>
+          <vaadin-grid-column path="firstName" width="7rem" flex-grow="0"></vaadin-grid-column>
           <vaadin-grid-column path="profession" auto-width flex-grow="0"></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column
