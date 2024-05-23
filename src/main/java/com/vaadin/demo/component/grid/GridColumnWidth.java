@@ -23,7 +23,7 @@ public class GridColumnWidth extends Div {
                 .setAutoWidth(true).setFlexGrow(0);
         grid.addColumn(Person::getEmail).setHeader("Email");
         grid.addColumn(person -> person.isSubscriber() ? "Yes" : "No")
-                .setHeader("Has Sub").setWidth("6em").setFlexGrow(0);
+                .setHeader("Has Sub").setWidth("6rem").setFlexGrow(0);
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();

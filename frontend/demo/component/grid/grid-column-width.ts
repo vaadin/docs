@@ -38,7 +38,7 @@ export class Example extends LitElement {
           <vaadin-grid-column path="profession" auto-width flex-grow="0"></vaadin-grid-column>
           <vaadin-grid-column path="email"></vaadin-grid-column>
           <vaadin-grid-column
-            width="6em"
+            width="6rem"
             flex-grow="0"
             header="Has Sub"
             ${columnBodyRenderer<Person>((item) => html`${item.subscriber ? 'Yes' : 'No'}`, [])}
