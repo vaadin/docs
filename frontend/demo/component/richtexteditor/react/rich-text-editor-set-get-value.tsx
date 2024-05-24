@@ -2,12 +2,12 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useRef } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { RichTextEditor } from '@vaadin/react-components/RichTextEditor.js';
+import { RichTextEditor } from '@vaadin/react-components-pro/RichTextEditor.js';
 import { TextArea, type TextAreaChangeEvent } from '@vaadin/react-components/TextArea.js';
 import type {
   RichTextEditorElement,
   RichTextEditorValueChangedEvent,
-} from '@vaadin/react-components/RichTextEditor.js';
+} from '@vaadin/react-components-pro/RichTextEditor.js';
 
 function Example() {
   useSignals(); // hidden-source-line
