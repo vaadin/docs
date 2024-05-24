@@ -24,10 +24,10 @@ function Example() {
     <SplitLayout>
       <Grid items={items.value} style={{ width: '100%' }}>
         <GridSelectionColumn />
-        <GridColumn path="firstName" width="7em" flexGrow={0} />
+        <GridColumn path="firstName" width="7rem" flexGrow={0} />
         <GridColumn path="profession" autoWidth flexGrow={0} />
         <GridColumn path="email" />
-        <GridColumn width="6em" flexGrow={0} header="Has Sub">
+        <GridColumn width="6rem" flexGrow={0} header="Has Sub">
           {({ item }) => <>{item.subscriber ? 'Yes' : 'No'}</>}
         </GridColumn>
       </Grid>

@@ -55,7 +55,7 @@ export class Example extends LitElement {
   };
 
   private clearDraggedItem = () => {
-    delete this.draggedItem;
+    this.draggedItem = undefined;
   };
 
   protected override render() {
@@ -64,7 +64,7 @@ export class Example extends LitElement {
         <vaadin-grid
           .items="${this.grid1Items}"
           rows-draggable
-          drop-mode="on-grid"
+          .dropMode=${this.draggedItem ? 'on-grid' : undefined}
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
           @grid-drop="${() => {
@@ -93,7 +93,7 @@ export class Example extends LitElement {
         <vaadin-grid
           .items="${this.grid2Items}"
           rows-draggable
-          drop-mode="on-grid"
+          .dropMode=${this.draggedItem ? 'on-grid' : undefined}
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
           @grid-drop="${() => {
