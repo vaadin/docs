@@ -48,7 +48,7 @@ function Example() {
       <Grid
         items={grid1Items.value}
         rowsDraggable
-        dropMode="on-grid"
+        dropMode={draggedItem.value ? 'on-grid' : undefined}
         style={gridStyle}
         onGridDragstart={startDraggingItem}
         onGridDragend={clearDraggedItem}
@@ -74,7 +74,7 @@ function Example() {
       <Grid
         items={grid2Items.value}
         rowsDraggable
-        dropMode="on-grid"
+        dropMode={draggedItem.value ? 'on-grid' : undefined}
         style={gridStyle}
         onGridDragstart={startDraggingItem}
         onGridDragend={clearDraggedItem}
