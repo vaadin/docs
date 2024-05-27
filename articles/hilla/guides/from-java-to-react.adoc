@@ -10,7 +10,7 @@ order: 120
 
 React is a JavaScript library for building user interfaces, especially single-page applications that require efficient, dynamic updates. Developed by Facebook, it emphasizes a component-based architecture, allowing complex UIs to be constructed from small, reusable pieces.
 
-React is a declarative library, meaning you describe the desired state of your UI and React takes care of updating the DOM to match that state. This is in contrast to imperative programming, where you describe the steps to take to achieve a desired state.
+React is a declarative library, meaning the code you write will describe how the UI must change according to the application state. You don't have to deal with the details of updating the interface when some value changes: React will take care of it. This is in contrast to imperative programming, where you describe the steps to take to achieve a desired UI state.
 
 Let's explain that with an example. Here's how you update a text using a button in Java and Vaadin:
 
@@ -94,11 +94,27 @@ While this code is short and looks simple, it introduces some concepts that are 
 
 A React Component is a function that returns a fragment of the UI. Just like you create a View in Vaadin, you can create a Component in React and use it as a view, or as a building block for a more complex view. The example above is a component used as a view, although the same code could be used as a component in another view.
 
-A component can contain some state. There are many ways to implement it, the more recent being React Hooks. In the example above, we use a hook called `useSignal` to create a state variable. The `count` variable is a signal that will update the UI when its `value` changes. Another commonly used hook is `useState`, which is part of the core React library.
+A component can contain some state. There are many ways to implement it, the more recent being React Hooks.
+
+=== What are Hooks?
+
+Hooks are a feature in React that allow you to use state and other React features in function components. They are functions that let you "hook into" React state and lifecycle features, enabling you to manage state and side effects in your components.
+
+Side effects are operations such as data fetching, subscriptions, or manually changing the DOM that occur outside of the function scope and can affect other components or the state of the application.
+
+In the example above, we use a hook called `useSignal` to create a state variable. The `count` variable is a signal that will update the UI when its `value` changes. Another commonly used hook is `useState`, which is part of the core React library.
 
 At Vaadin, we chose signals as the default way to manage state in our React Components. Signals are similar to standard React Hooks, but they can easily share state between components, and are optimized for performance.
 
+=== What are Signals?
+
+Signals are a state management concept used in React programming. They are similar to standard React Hooks, but with some key differences. A signal is a function that returns a single value, and this value can be observed by multiple components. When the value of a signal changes, all components observing that signal will re-render with the new value.
+
+This makes signals a powerful tool for sharing state between components and managing complex state interactions. They are optimized for performance, ensuring that components only re-render when necessary.
+
 The basic usage of signals is to deal with its `value` property. When you update it, all places where the same signal is used will be updated.
+
+=== Conclusion
 
 To summarize, the main mindset change coming from Java to React is that you can't update the UI manually. You just update the state, and React will take care of updating the UI. While this is a great simplification, it requires giving up some habits that are common in imperative programming as is the case with Java.
 
@@ -132,24 +148,29 @@ When running the application, a TypeScript file is generated with functions that
 [source,typescript]
 ----
 async function getCounter(): Promise<number> { 
-    // call `getCounter` on the server
+    // call `getCounter` on the server and return the result
 }
 async function increment(): Promise<number> {
-    // call `increment` on the server
+    // call `increment` on the server and return the result
 }
 ----
 
-This way, you can call the server methods from the client, and the TypeScript compiler will check if the method exists and if the parameters are correct. We can rewrite the React component to use the generated TypeScript functions:
+This way, you can call the server methods from the client, and the TypeScript compiler will check if the method exists and if the parameters are correct.
+
+[NOTE]
+You can learn more about broser-callable services in the <<{articles}/hilla/guides/endpoints#browser-callable,corresponding section of the documentation>>.
+
+We can rewrite the React component to use the generated TypeScript functions:
 
 [source,tsx]
 ----
 export default function CounterView() {
-    const count = useSignal(0);
+    const count = useSignal(0); // <1>
 
-    // gets the initial value from the server
+    // Gets the initial value from the server
     useEffect(() => {
         CounterService.getCounter().then((value) => {
-            count.value = value;
+            count.value = value; // <2>
         });
     }, []);
 
@@ -168,6 +189,8 @@ export default function CounterView() {
     );
 }
 ----
+<1> This is a hook: a signal is created with an initial value of 0 and this initialization is done only once, even if the whole component function is executed every time the component is rendered.
+<2> This is a side effect: a service is called to get the initial value from the server. This is encapsulated in a `useEffect` hook to make sure it is executed only once.
 
 While this view looks the same as before, it interacts with the server and preserves the value when reloading the page. Note that this basic example shares the same counter between all connected clients.
 
@@ -264,4 +287,8 @@ export default function ParentComponent() {
 
 Vaadin uses the React Router by default. This is the most commonly used router in React applications. By default, this router is configured manually, but Vaadin is able to generate the routes based the filesystem structure. This way, you can create a new view by creating a new file in the `views` folder.
 
-The filesystem can be used to organize views logically, more or less like packages in Java. The main difference is that the structure is exposed to users in form of URLs.
+The filesystem can be used to organize views logically, more or less like packages in Java. The main difference is that the structure is exposed to 
+users in form of URLs.
+
+[NOTE]
+You can learn more about the file-based router in the <<{articles}/hilla/guides/routing#,corresponding section of the documentation>>.
