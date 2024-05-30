@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import './example-cleanup'; // hidden-source-line
-import { CookieConsent } from '@vaadin/react-components/CookieConsent.js';
+import { CookieConsent } from '@vaadin/react-components-pro/CookieConsent.js';
 
 function Example() {
   return (

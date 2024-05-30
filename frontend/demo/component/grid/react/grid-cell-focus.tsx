@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Grid, type GridCellFocusEvent, type GridElement } from '@vaadin/react-components/Grid.js';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -7,15 +9,17 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   const gridRef = useRef<GridElement>(null);
-  const [items, setItems] = useState<Person[]>([]);
-  const [eventSummary, setEventSummary] = useState('');
+  const items = useSignal<Person[]>([]);
+  const eventSummary = useSignal('');
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
-  // tag::snippet[]
   const handleCellFocus = (event: GridCellFocusEvent<Person>) => {
     if (!gridRef.current) {
       return;
@@ -30,14 +34,14 @@ function Example() {
         ? `${person.firstName} ${person.lastName}`
         : 'Not available';
 
-    setEventSummary(`Section: ${section}\nRow: ${row}\nColumn: ${column}\nPerson: ${fullName}`);
+    eventSummary.value = `Section: ${section}\nRow: ${row}\nColumn: ${column}\nPerson: ${fullName}`;
   };
 
   return (
     <>
       <Grid
         className="force-focus-outline"
-        items={items}
+        items={items.value}
         onCellFocus={handleCellFocus}
         ref={gridRef}
       >
@@ -51,13 +55,12 @@ function Example() {
         <TextArea
           label="Cell focus event information"
           readonly
-          value={eventSummary}
+          value={eventSummary.value}
           style={{ width: '100%' }}
         />
       </div>
     </>
   );
-  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

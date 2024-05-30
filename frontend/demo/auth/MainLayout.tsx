@@ -6,9 +6,8 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useRouteMetadata } from './routing';
 import { useAuth } from './auth';
 
-const navLinkClasses = ({ isActive }: any) => {
-  return `block rounded-m p-s ${isActive ? 'bg-primary-10 text-primary' : 'text-body'}`;
-};
+const navLinkClasses = ({ isActive }: any) =>
+  `block rounded-m p-s ${isActive ? 'bg-primary-10 text-primary' : 'text-body'}`;
 
 export default function MainLayout() {
   const currentTitle = useRouteMetadata()?.title ?? 'My App';

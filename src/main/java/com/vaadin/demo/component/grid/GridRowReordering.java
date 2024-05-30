@@ -28,11 +28,13 @@ public class GridRowReordering extends Div {
         List<Person> people = new ArrayList<>(DataService.getPeople());
         GridListDataView<Person> dataView = grid.setItems(people);
 
-        grid.setDropMode(GridDropMode.BETWEEN);
         grid.setRowsDraggable(true);
 
         grid.addDragStartListener(
-                e -> draggedItem = e.getDraggedItems().get(0));
+                e -> {
+                    draggedItem = e.getDraggedItems().get(0);
+                    grid.setDropMode(GridDropMode.BETWEEN);
+                });
 
         grid.addDropListener(e -> {
             Person targetPerson = e.getDropTargetItem().orElse(null);
@@ -53,7 +55,10 @@ public class GridRowReordering extends Div {
             }
         });
 
-        grid.addDragEndListener(e -> draggedItem = null);
+        grid.addDragEndListener(e -> {
+            draggedItem = null;
+            grid.setDropMode(null);
+        });
         // end::snippet[]
 
         add(grid);

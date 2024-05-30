@@ -393,6 +393,7 @@ Add the following code within the `html` template:
 .`todo-view.ts`
 [source,typescript]
 ----
+return html`
 <div class="form">
   <vaadin-text-field
     label="Task"
@@ -400,12 +401,12 @@ Add the following code within the `html` template:
   ></vaadin-text-field>
   <vaadin-button
     theme="primary"
-    @click=${this.createTodo/* <2> */}
-    ?disabled=${this.binder.invalid/* <3> */}
+    @click="${this.createTodo/* <2> */}"
+    ?disabled="${this.binder.invalid/* <3> */}"
   >
     Add
   </vaadin-button>
-</div>
+</div>`;
 ----
 <1> The Text Field component is bound to the `task` property of a `Todo` using `${field(this.binder.model.task)}`.
 You can read more about forms in <<{articles}/hilla/lit/guides/forms/binder#,Binding Data to Forms>>.
@@ -417,19 +418,19 @@ Right underneath the previous `<div>`, add the following code:
 .`todo-view.ts`
 [source,typescript]
 ----
-<div class="todos">
-  ${this.todos.map((todo) => /* <1> */html`
-      <div class="todo">
-        <vaadin-checkbox
-          ?checked=${todo.done/* <2> */}
-          @checked-changed=${(e: CustomEvent) => // <3>
-            this.updateTodoState(todo, e.detail.value)}
-        ></vaadin-checkbox>
-        <span>${todo.task}</span>
-      </div>
-    `
-  )}
-</div>
+return html`<div class="todos">
+    ${this.todos.map((todo) => /* <1> */html`
+        <div class="todo">
+          <vaadin-checkbox
+            ?checked=${todo.done/* <2> */}
+            @checked-changed=${(e: CustomEvent) => // <3>
+              this.updateTodoState(todo, e.detail.value)}
+          ></vaadin-checkbox>
+          <span>${todo.task}</span>
+        </div>
+      `
+    )}
+  </div>`;
 ----
 <1> The existing `todo` items are shown by mapping the `todos` array to Lit templates.
 The template for a single `Todo` contains a checkbox and the task text.
@@ -503,7 +504,8 @@ Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with t
 [source,typescript]
 ----
 import type Todo from 'Frontend/generated/com/example/application/Todo'; // <1>
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useSignal } from "@vaadin/hilla-react-signals";
 import { useForm } from '@vaadin/hilla-react-form';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
@@ -527,9 +529,9 @@ Inside the `TodoView` function, define the view state as follows:
 .`TodoView.tsx`
 [source,typescript]
 ----
-const [todos, setTodos] = useState(Array<Todo>()); // <1>
+const todos = useSignal<Array<Todo>>([]); // <1>
 ----
-<1> The list of `Todo` items is stored using a React Hook.
+<1> The list of `Todo` items is stored using the `useSignal` hook.
 
 // TODO: add styles like in the Lit version
 
@@ -541,7 +543,7 @@ const [todos, setTodos] = useState(Array<Todo>()); // <1>
 const { model, field, submit, reset, invalid } = useForm(TodoModel, {
   onSubmit: async (todo: Todo) => {
     const saved = await TodoEndpoint.save(todo) ?? todo;
-    setTodos([...todos, saved]);
+    todos.value = [...todos.value, saved];
     reset();
   }
 });
@@ -696,7 +698,8 @@ Open the `frontend/views/todo/TodoView.tsx` file and replace its contents with t
 ----
 import Todo from 'Frontend/generated/com/example/application/Todo';
 import TodoModel from "Frontend/generated/com/example/application/TodoModel";
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useSignal } from "@vaadin/hilla-react-signals";
 import { useForm } from '@vaadin/hilla-react-form';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
@@ -704,16 +707,16 @@ import { TextField } from '@vaadin/react-components/TextField.js';
 import { TodoEndpoint } from 'Frontend/generated/endpoints';
 
 export default function TodoView() {
-  const [todos, setTodos] = useState(Array<Todo>());
+  const todos = useSignal<Array<Todo>>([]);
 
   useEffect(() => {
-    TodoEndpoint.findAll().then(setTodos);
+    TodoEndpoint.findAll().then(all => todos.value = all);
   }, []);
 
   const { model, field, submit, reset, invalid } = useForm(TodoModel, {
     onSubmit: async (todo: Todo) => {
       const saved = await TodoEndpoint.save(todo) ?? todo;
-      setTodos([...todos, saved]);
+      todos.value = [...todos.value, saved];
       reset();
     }
   });

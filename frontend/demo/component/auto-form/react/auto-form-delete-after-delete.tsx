@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react'; // hidden-source-line
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
 import { AutoForm } from '@vaadin/hilla-react-crud';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
@@ -12,6 +14,7 @@ import { Button } from '@vaadin/react-components/Button.js';
 import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
   const existingItem: Employee = {
     firstName: 'Jennifer',
@@ -21,19 +24,19 @@ function Example() {
     active: true,
     description: 'Customer Service Manager',
   };
-  const [editedItem, setEditedItem] = useState<Employee | null>(null);
-  const [showDeleteButton, setShowDeleteButton] = useState<boolean>(false);
+  const editedItem = useSignal<Employee | null>(null);
+  const showDeleteButton = useSignal<boolean>(false);
 
   const handleEdit = () => {
-    setEditedItem(existingItem);
+    editedItem.value = existingItem;
   };
 
   const handleCreate = () => {
-    setEditedItem(null);
+    editedItem.value = null;
   };
 
   const toggleDeleteButtonVisibility = () => {
-    setShowDeleteButton(!showDeleteButton);
+    showDeleteButton.value = !showDeleteButton.value;
   };
 
   const handleDeleteSuccess = ({ item }: { item: Employee }) => {
@@ -47,14 +50,14 @@ function Example() {
         <Button onClick={handleEdit}>Edit item</Button>
         <Button onClick={handleCreate}>Create item</Button>
         <Button onClick={toggleDeleteButtonVisibility}>
-          {showDeleteButton ? 'Hide Delete Button' : 'Show Delete Button'}
+          {showDeleteButton.value ? 'Hide Delete Button' : 'Show Delete Button'}
         </Button>
       </HorizontalLayout>
       <AutoForm
         service={EmployeeService}
         model={EmployeeModel}
-        item={editedItem}
-        deleteButtonVisible={showDeleteButton}
+        item={editedItem.value}
+        deleteButtonVisible={showDeleteButton.value}
         onDeleteSuccess={handleDeleteSuccess}
       />
     </VerticalLayout>

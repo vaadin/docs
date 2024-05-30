@@ -1,25 +1,28 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
-  const [notificationOpened, setNotificationOpened] = useState(true);
+  useSignals(); // hidden-source-line
+  const notificationOpened = useSignal(true);
   const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
 
   const open = () => {
-    setNotificationOpened(true);
+    notificationOpened.value = true;
   };
 
   const close = () => {
-    setNotificationOpened(false);
+    notificationOpened.value = false;
   };
 
   // tag::snippet[]
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (notificationOpened && (event.metaKey || event.ctrlKey) && event.key === 'z') {
+      if (notificationOpened.value && (event.metaKey || event.ctrlKey) && event.key === 'z') {
         event.preventDefault();
         close();
       }
@@ -30,7 +33,7 @@ function Example() {
     return () => {
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [notificationOpened]);
+  }, [notificationOpened.value]);
 
   const renderer = () => (
     <HorizontalLayout style={{ alignItems: 'center' }}>
@@ -44,7 +47,7 @@ function Example() {
 
   return (
     <>
-      <Button disabled={notificationOpened} onClick={open}>
+      <Button disabled={notificationOpened.value} onClick={open}>
         Show notification
       </Button>
 
@@ -52,8 +55,10 @@ function Example() {
         theme="contrast"
         duration={10000}
         position="middle"
-        opened={notificationOpened}
-        onOpenedChanged={(e) => setNotificationOpened(e.detail.value)}
+        opened={notificationOpened.value}
+        onOpenedChanged={(e) => {
+          notificationOpened.value = e.detail.value;
+        }}
       >
         {renderer}
       </Notification>
