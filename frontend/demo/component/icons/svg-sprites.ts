@@ -5,7 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
-import solidSprite from '../../../../src/main/resources/icons/solid.svg';
+import solidSprite from '../../../../src/main/resources/icons/solid.svg?url';
 
 @customElement('svg-sprites')
 export class Example extends LitElement {

@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import spriteIcons from '../../../../../src/main/resources/icons/solid.svg';
+import spriteIcons from '../../../../../src/main/resources/icons/solid.svg?url';
 
 function Example() {
   return (
