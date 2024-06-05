@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Crud } from '@vaadin/react-components/Crud.js';
+import { Crud } from '@vaadin/react-components-pro/Crud.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 

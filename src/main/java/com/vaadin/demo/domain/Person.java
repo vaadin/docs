@@ -26,7 +26,7 @@ public class Person {
     private Integer id;
 
     @Nonnull
-    private boolean subscriber;
+    private Boolean subscriber;
 
     @Nonnull
     private String membership;
@@ -43,7 +43,7 @@ public class Person {
     private Integer managerId;
 
     @Nonnull
-    private boolean manager;
+    private Boolean manager;
 
     @Nonnull
     private String status;
