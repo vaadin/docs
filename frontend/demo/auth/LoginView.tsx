@@ -14,7 +14,7 @@ export const config: ViewConfig = {
 export default function LoginView() {
   useSignals(); // hidden-source-line
   const { login } = useAuth();
-  const hasError = useSignal<boolean>(false);
+  const hasError = useSignal(false);
 
   return (
     <LoginOverlay
