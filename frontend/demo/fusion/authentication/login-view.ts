@@ -1,8 +1,8 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { LoginResult } from '@vaadin/hilla-frontend';
+import type { LoginResult } from '@vaadin/hilla-frontend';
 import { login } from './auth';
-import { AfterEnterObserver, RouterLocation } from '@vaadin/router';
+import type { AfterEnterObserver, RouterLocation } from '@vaadin/router';
 import '@vaadin/login';
 
 @customElement('login-view')
@@ -12,14 +12,6 @@ export class LoginView extends LitElement implements AfterEnterObserver {
 
   // the url to redirect to after a successful login
   private returnUrl?: string;
-
-  private onSuccess = (result: LoginResult) => {
-    // If a login redirect was initiated by opening a protected URL, the server knows where to go (result.redirectUrl).
-    // If a login redirect was initiated by the client router, this.returnUrl knows where to go.
-    // If login was opened directly, use the default URL provided by the server.
-    // As we do not know if the target is a resource or a Hilla view or a Flow view, we cannot just use Router.go
-    window.location.href = result.redirectUrl || this.returnUrl || result.defaultUrl || '/';
-  };
 
   render() {
     return html`
@@ -32,12 +24,18 @@ export class LoginView extends LitElement implements AfterEnterObserver {
     this.error = false;
     // use the login helper method from auth.ts, which in turn uses
     // Vaadin provided login helper method to obtain the LoginResult
-    const result = await login(event.detail.username, event.detail.password);
-    this.error = result.error;
+    const result = await login(event.detail.username, event.detail.password, {
+      navigate: (toPath: string) => {
+        // Consider absolute path to be within the application context.
+        const serverUrl = toPath.startsWith('/') ? new URL(`.${toPath}`, document.baseURI) : toPath;
 
-    if (!result.error) {
-      this.onSuccess(result);
-    }
+        // If a login redirect was initiated by the client router, this.returnUrl contains the original destination.
+        // Otherwise, use the URL provided by the server.
+        // As we do not know if the target is a resource or a Hilla view or a Flow view, we cannot just use Router.go
+        window.location.replace(this.returnUrl ?? serverUrl);
+      },
+    });
+    this.error = result.error;
 
     return result;
   }

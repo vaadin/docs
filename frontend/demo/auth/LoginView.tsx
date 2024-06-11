@@ -10,33 +10,11 @@ export const config: ViewConfig = {
     menu: { exclude: true}
 }
 
-interface NavigateAndReloadProps {
-    to: string;
-}
-
-const NavigateAndReload : React.FC<NavigateAndReloadProps> = ({ to }) => {
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        navigate(to, { replace: true });
-        // reload a page on log in to update the menu items
-        window.location.reload();
-    }, [navigate, to]);
-
-    return null;
-}
-
 // tag::snippet[]
 export default function LoginView() {
   useSignals(); // hidden-source-line
-  const { state, login } = useAuth();
-  const hasError = useSignal<boolean>(false);
-  const url = useSignal<string>('');
-
-  if (state.user && url.value) {
-    const path = new URL(url.value, document.baseURI).pathname;
-    return <NavigateAndReload to={path} />;
-  }
+  const { login } = useAuth();
+  const hasError = useSignal(false);
 
   return (
     <LoginOverlay
@@ -44,13 +22,8 @@ export default function LoginView() {
       error={hasError.value}
       noForgotPassword
       onLogin={async ({ detail: { username, password } }) => {
-        const { defaultUrl, error, redirectUrl } = await login(username, password);
-
-        if (error) {
-          hasError.value = true;
-        } else {
-          url.value = redirectUrl ?? defaultUrl ?? '/';
-        }
+        const { error } = await login(username, password);
+        hasError.value = Boolean(error);
       }}
     />
   );
