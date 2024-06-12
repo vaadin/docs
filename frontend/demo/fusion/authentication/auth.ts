@@ -1,10 +1,16 @@
 // tag::impl[]
 // Uses the Vaadin provided login an logout helper methods
-import { login as loginImpl, LoginResult, logout as logoutImpl } from '@vaadin/hilla-frontend';
+import {
+  login as loginImpl,
+  type LoginOptions,
+  type LoginResult,
+  logout as logoutImpl,
+  type LogoutOptions,
+} from '@vaadin/hilla-frontend';
 // end::impl[]
 // tag::userinfo[]
 import { UserInfoService } from 'Frontend/generated/endpoints';
-import UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
+import type UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
 // end::userinfo[]
 // tag::basic[]
 
@@ -17,14 +23,29 @@ interface Authentication {
   // end::offline[]
 }
 
-let authentication: Authentication | undefined = undefined;
+let authentication: Authentication | undefined;
 
 // end::basic[]
-// tag::offline[]
 // tag::storage-defs[]
 const AUTHENTICATION_KEY = 'authentication';
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 // end::storage-defs[]
+/**
+ * Forces the session to expire and removes user information stored in
+ * `localStorage`.
+ */
+// tag::logout[]
+export function setSessionExpired() {
+  authentication = undefined;
+  // tag::offline[]
+
+  // Delete the authentication from the local storage
+  localStorage.removeItem(AUTHENTICATION_KEY);
+  // end::offline[]
+}
+
+// end::logout[]
+// tag::offline[]
 
 // tag::restore[]
 // Get authentication from local storage
@@ -46,49 +67,38 @@ if (storedAuthenticationJson !== null) {
 // end::restore[]
 // end::offline[]
 /**
- * Forces the session to expire and removes user information stored in
- * `localStorage`.
- */
-// tag::logout[]
-export function setSessionExpired() {
-  authentication = undefined;
-  // tag::offline[]
-
-  // Delete the authentication from the local storage
-  localStorage.removeItem(AUTHENTICATION_KEY);
-  // end::offline[]
-}
-
-// end::logout[]
-/**
  * Login wrapper method that retrieves user information.
  *
  * Uses `localStorage` for offline support.
  */
 // tag::login[]
-export async function login(username: string, password: string): Promise<LoginResult> {
-  const result = await loginImpl(username, password);
-  if (!result.error) {
-    // tag::userinfo[]
-    // Get user info from endpoint
-    const user = await UserInfoService.getUserInfo();
-    // end::userinfo[]
-    authentication = {
+export async function login(
+  username: string,
+  password: string,
+  options: LoginOptions = {}
+): Promise<LoginResult> {
+  return await loginImpl(username, password, {
+    ...options,
+    async onSuccess() {
       // tag::userinfo[]
-      user,
+      // Get user info from endpoint
+      const user = await UserInfoService.getUserInfo();
       // end::userinfo[]
+      authentication = {
+        // tag::userinfo[]
+        user,
+        // end::userinfo[]
+        // tag::offline[]
+        timestamp: new Date().getTime(),
+        // end::offline[]
+      };
       // tag::offline[]
-      timestamp: new Date().getTime(),
+
+      // Save the authentication to local storage
+      localStorage.setItem(AUTHENTICATION_KEY, JSON.stringify(authentication));
       // end::offline[]
-    };
-    // tag::offline[]
-
-    // Save the authentication to local storage
-    localStorage.setItem(AUTHENTICATION_KEY, JSON.stringify(authentication));
-    // end::offline[]
-  }
-
-  return result;
+    },
+  });
 }
 
 // end::login[]
@@ -98,9 +108,13 @@ export async function login(username: string, password: string): Promise<LoginRe
  * Uses `localStorage` for offline support.
  */
 // tag::logout[]
-export async function logout() {
-  setSessionExpired();
-  return await logoutImpl();
+export async function logout(options: LogoutOptions = {}) {
+  return await logoutImpl({
+    ...options,
+    onSuccess() {
+      setSessionExpired();
+    },
+  });
 }
 
 // end::logout[]

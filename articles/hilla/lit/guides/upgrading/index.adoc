@@ -257,6 +257,141 @@ In case you've used Hilla CRUD helpers (e.g., AutoCRUD, AutoGrid, and AutoForm),
 ----
 
 
+[discrete]
+==== Update Authentication Code
+
+Starting from Vaadin 24.4, the [methodname]`login()` and [methodname]`logout()` Hilla authentication methods automatically reload the page upon successful result from the server. Applications involving client-side handling of successful result, for example, for user info retrieval and offline storage, need to use the [methodname]`onSuccess()` callback instead of awaiting the [classname]`Promise` result.
+
+You can check if your application relies on the authentication result by searching for the ` [methodname]`login()` and [methodname]`logout()` in TypeScript source files. Move any code that depends on the successful result to the [methodname]`onSucces()` callback:
+
+[source,diff]
+.`frontend/auth.ts`
+----
+- import { login as loginImpl, LoginResult, logout as logoutImpl } from '@vaadin/hilla-frontend';
++ import { login as loginImpl, LoginOptions, LoginResult, logout as logoutImpl, LogoutOptions } from '@vaadin/hilla-frontend';
+import { appStore } from './stores/app-store';
+
+// ...
+
+/**
+ * Login wrapper method that retrieves user information.
+ */
+export async function login(username: string, password: string, options: LoginOptions = {}): Promise<LoginResult> {
+-   const result = await loginImpl(username, password);
+-   if (!result.error) {
+-     // Get user info from endpoint
+-     await appStore.fetchUserInfo();
+-   }
+-   return result;
++   return await loginImpl(username, password, {
++     ...options,
++     async onSuccess() {
++       // Get user info from endpoint
++       await appStore.fetchUserInfo();
++     },
++   });
+}
+
+/**
+ * Logout wrapper method that retrieves user information.
+ */
+export async function logout(options: LogoutOptions = {}) {
+-   await logoutImpl();
+-   appStore.clearUserInfo();
++   await logoutImpl({
++     ...options,
++     onSuccess() {
++       appStore.clearUserInfo();
++     },
++   });
+}
+----
+
+By default, the server location is used as the destination after login success.
+
+[discrete]
+==== Update the Login Form
+
+Applications that use custom navigation to proceed after the login success, such as the ones with Lit login form, need to use the `navigate` callback for customizing the default page reload. Update the login view in Lit applications as follows:
+
+[source,diff]
+.`frontend/views/login-form.ts`
+----
+// ...
+
+export class LoginView extends LitElement implements AfterEnterObserver {
+  // the url to redirect to after a successful login
+  private returnUrl?: string;
+
+-  private onSuccess = (result: LoginResult) => {
+-    window.location.href = result.redirectUrl || this.returnUrl || result.defaultUrl || '/';
+-  };
+-
+
+// ...
+
+  async login(event: CustomEvent): Promise<LoginResult> {
+    this.error = false;
+    // use the login helper method from auth.ts, which in turn uses
+    // Vaadin provided login helper method to obtain the LoginResult
+-    const result = await login(event.detail.username, event.detail.password);
++    const result = await login(event.detail.username, event.detail.password, {
++      navigate: (toPath: string) => {
++        // Consider absolute path to be within the application context.
++        const serverUrl = toPath.startsWith('/') ? new URL(`.${toPath}`, document.baseURI) : toPath;
++
++        // If a login redirect was initiated by the client router, this.returnUrl contains the original destination.
++        // Otherwise, use the URL provided by the server.
++        // As we do not know if the target is a resource or a Hilla view or a Flow view, we cannot just use Router.go
++        window.location.replace(this.returnUrl ?? serverUrl);
++      }
++    });
+    this.error = result.error;
+
+-    if (!result.error) {
+-      this.onSuccess(result);
+-    }
+-
+    return result;
+  }
+}
+----
+
+If the Hilla default page reload navigation is sufficient, the custom navigation in the login form could be removed. For example, applications with React login view could be updated as follows:
+
+[source,diff]
+.`frontend/views/LoginView.tsx`
+----
+export default function LoginView() {
+  const hasError = useSignal<boolean>(false);
+
+-  if (state.user && url.value) {
+-    const path = new URL(url.value, document.baseURI).pathname;
+-    return <NavigateAndReload to={path} />;
+-  }
+-
+  return (
+    <LoginOverlay
+      opened
+      error={hasError.value}
+      noForgotPassword
+      onLogin={async ({ detail: { username, password } }) => {
+-        const { defaultUrl, error, redirectUrl } = await login(username, password);
+-
+-        if (error) {
+-          hasError.value = true;
+-        } else {
+-          url.value = redirectUrl ?? defaultUrl ?? '/';
+-        }
++        const { error } = await login(username, password);
++        hasError.value = Boolean(error);
+      }}
+    />
+  );
+}
+----
+
+
 === Move `frontend` Directory to `src/main`
 
 In Vaadin 24.4.0, the `frontend` directory is moved to `src/main`, by default. If your project is not yet following this structure, you can move the `frontend` directory to `src/main` to align with the new Vaadin conventions. This change is recommended for consistency and compatibility with future Vaadin releases.
