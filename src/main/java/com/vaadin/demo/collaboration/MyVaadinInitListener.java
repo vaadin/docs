@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationEngineConfiguration;
-import com.vaadin.collaborationengine.LicenseEventHandler;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.VaadinServiceInitListener;
@@ -33,30 +32,7 @@ public class MyVaadinInitListener implements VaadinServiceInitListener {
         // tag::configuration[]
         VaadinService service = serviceEvent.getSource();
 
-        // tag::event-handler[]
-        LicenseEventHandler licenseEventHandler = licenseEvent -> {
-            // tag::event-handler-ref[]
-            // See <<ce.production.license-events>>
-            // end::event-handler-ref[]
-            // tag::event-handler-switch[]
-            switch (licenseEvent.getType()) {
-            case GRACE_PERIOD_STARTED:
-            case LICENSE_EXPIRES_SOON:
-                LOGGER.warn(licenseEvent.getMessage());
-                break;
-            case GRACE_PERIOD_ENDED:
-            case LICENSE_EXPIRED:
-                LOGGER.error(licenseEvent.getMessage());
-                break;
-            }
-            sendEmail("Vaadin Collaboration Kit license needs to be updated",
-                    licenseEvent.getMessage());
-            // end::event-handler-switch[]
-        };
-        // end::event-handler[]
-
-        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
-                licenseEventHandler);
+        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration();
         configuration.setDataDir("/Users/steve/vaadin/collaboration-engine/");
         CollaborationEngine.configure(service, configuration);
         // end::configuration[]
