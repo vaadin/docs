@@ -146,3 +146,65 @@ public void addPersonDataUpdateListener() {
     }).addEventData("event.detail");
 }
 ----
+
+== Adding Flow Components Into React Component
+
+It is possible to put Flow [classname]`Component` elements inside a React component implmented with [classname]`ReactAdapterElement`.
+
+One could for instance generate a simple [classname]`RouterLayout` (See <<../routing/layout#, RouterLayout Interface>> for more information) in React that has a navigation menu and the Flow route content on the right side.
+
+Create a [classname]`ReactAdapterComponent` that implements the [interfacename]`RouterLayout` interface so that the showRouterLayoutContent is appended into the content element from [methodname]`getContentElement(String)`.
+
+For the menu we create [classname]`RouterLinks` to our views and send the div they are in to the `menu` content element on the client.
+
+.Server RouteLayout
+[source,java]
+----
+@JsModule("./ReactRouterLayout.tsx")
+@Tag("react-router-layout")
+public class ReactRouterLayout extends ReactAdapterComponent implements RouterLayout {
+
+    public ReactRouterLayout() {
+        Div links = new Div(
+                new RouterLink("Main view", MainView.class),
+                new Div(),
+                new RouterLink("Information", InfoView.class)
+        );
+        links.getStyle().setMargin("10px");
+        getContentElement("menu").appendChild(links.getElement());
+    }
+
+    @Override
+    public void showRouterLayoutContent(HasElement content) {
+        if (content != null) {
+            // Bind the flow element to the 'flowContent' element on the client
+            getContentElement("flowContent")
+                    .appendChild(Objects.requireNonNull(content.getElement()));
+        }
+    }
+}
+
+----
+
+On the client we create 2 places for Flow components to bind.
+One for `menu` and one for `flowContent` using the [methodname]`userContent(string)`.
+
+.Client Layout
+[source, typescriptjsx]
+----
+class ReactRouterLayoutElement extends ReactAdapterElement {
+    protected render(hooks: RenderHooks): React.ReactElement | null {
+        // create content element for name attribute 'menu'
+        const menu = hooks.useContent('menu');
+        // create content element for name attribute 'flowContent'
+        const content = hooks.useContent('flowContent');
+
+        return §div style={{display: 'flex', flex: 1, flexDirection: 'row', height: '100%'}}>
+            <div style={{flex: 1}}>{menu}</div>
+            <div style={{flex: 5}}>{content}</div>
+        </div>;
+    }
+}
+
+customElements.define('react-router-layout', ReactRouterLayoutElement);
+----
