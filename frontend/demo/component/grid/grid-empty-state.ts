@@ -16,16 +16,16 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
+      <!-- tag::snippet[] -->
       <vaadin-grid>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="email"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>
 
-        <!-- tag::snippet[] -->
         <span slot="empty-state">No employees found.</span>
-        <!-- end::snippet[] -->
       </vaadin-grid>
+      <!-- end::snippet[] -->
     `;
   }
 }
