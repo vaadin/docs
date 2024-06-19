@@ -18,12 +18,12 @@ public class GridColumnWidth extends Div {
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addColumn(Person::getFirstName).setHeader("First name")
-                .setWidth("7em").setFlexGrow(0);
+                .setWidth("7rem").setFlexGrow(0);
         grid.addColumn(Person::getProfession).setHeader("Profession")
                 .setAutoWidth(true).setFlexGrow(0);
         grid.addColumn(Person::getEmail).setHeader("Email");
         grid.addColumn(person -> person.isSubscriber() ? "Yes" : "No")
-                .setHeader("Has Sub").setWidth("6em").setFlexGrow(0);
+                .setHeader("Has Sub").setWidth("6rem").setFlexGrow(0);
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();
