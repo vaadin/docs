@@ -18,10 +18,13 @@ import '@vaadin/vaadin-lumo-styles/style.js';
 // tag::utility-classes[]
 import '@vaadin/vaadin-lumo-styles/utility.js';
 // end::utility-classes[]
+import { utility } from '@vaadin/vaadin-lumo-styles/utility.js'; // hidden-source-line
 import { includeModule } from './include-module'; // hidden-source-line
 import { applyTheme } from 'Frontend/generated/theme'; // hidden-source-line
 // prettier-ignore
 includeModule(color, (css) => `[theme~="dark"] ${css.split("[theme~='dark']")[1].split('}')[0]} }`); // hidden-source-line
+// prettier-ignore
+includeModule(utility, css => css); // hidden-source-line
 applyTheme(document); // hidden-source-line
 window.dispatchEvent(new CustomEvent('custom-properties-changed')); // hidden-source-line
 export default class LumoTokens extends HTMLElement {} // hidden-source-line
