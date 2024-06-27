@@ -8,7 +8,7 @@ const customConfig: UserConfigFn = (env) => ({
     {
       name: 'filter-out-external-deps',
       transform(code, id) {
-        if (id.endsWith('target/frontend/generated-flow-imports.js')) {
+        if (id.endsWith('target/frontend/generated-flow-webcomponent-imports.js')) {
           return code
             .split('\n')
             .filter((row) => {
