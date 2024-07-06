@@ -14,7 +14,7 @@ import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import { Binder, field } from '@hilla/form';
+import { Binder, field } from '@vaadin/hilla-lit-form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -27,14 +27,14 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
 @customElement('accordion-summary')
 export class Example extends LitElement {
   @state()
-  private accessor countries: Country[] = [];
+  private countries: Country[] = [];
 
   private readonly personBinder = new Binder(this, PersonModel);
 
   private readonly cardBinder = new Binder(this, CardModel);
 
   @state()
-  private accessor openedPanelIndex: number | null = 0;
+  private openedPanelIndex: number | null = 0;
 
   protected override async firstUpdated() {
     this.countries = await getCountries();
@@ -117,12 +117,7 @@ export class Example extends LitElement {
                   ${this.personBinder.value.address?.zip} ${this.personBinder.value.address?.city}
                 </span>
 
-                <span>
-                  ${
-                    // @ts-expect-error Workaround a Binder issue
-                    this.personBinder.value.address?.country?.name
-                  }
-                </span>
+                <span> ${this.personBinder.value.address?.country} </span>
               </vaadin-vertical-layout>
             </vaadin-horizontal-layout>
           </vaadin-accordion-heading>
@@ -145,7 +140,7 @@ export class Example extends LitElement {
               label="Country"
               ${field(this.personBinder.model.address.country)}
               item-label-path="name"
-              item-value-path="id"
+              item-value-path="name"
               .items="${this.countries}"
             ></vaadin-combo-box>
           </vaadin-form-layout>

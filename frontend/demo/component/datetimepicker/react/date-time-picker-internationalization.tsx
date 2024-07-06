@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import {
   DateTimePicker,
   type DateTimePickerElement,
-} from '@hilla/react-components/DateTimePicker.js';
+} from '@vaadin/react-components/DateTimePicker.js';
 
 function Example() {
   // tag::snippet[]
@@ -35,7 +35,7 @@ function Example() {
         timeLabel: 'zeit',
       };
     }
-  }, []);
+  }, [dateTimePickerRef.current]);
 
   return <DateTimePicker ref={dateTimePickerRef} label="Sitzungsdatum" />;
   // end::snippet[]

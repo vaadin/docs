@@ -1,26 +1,29 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState, useRef } from 'react';
-import { RichTextEditor } from '@hilla/react-components/RichTextEditor.js';
-import { TextArea, type TextAreaChangeEvent } from '@hilla/react-components/TextArea.js';
+import React, { useRef } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { RichTextEditor } from '@vaadin/react-components-pro/RichTextEditor.js';
+import { TextArea, type TextAreaChangeEvent } from '@vaadin/react-components/TextArea.js';
 import type {
   RichTextEditorElement,
   RichTextEditorValueChangedEvent,
-} from '@hilla/react-components/RichTextEditor.js';
+} from '@vaadin/react-components-pro/RichTextEditor.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [htmlValue, setHtmlValue] = useState('');
-  const [deltaValue, setDeltaValue] = useState('');
+  const htmlValue = useSignal('');
+  const deltaValue = useSignal('');
 
   const richTextEditorRef = useRef<RichTextEditorElement>(null);
 
   const handleEditorChange = (event: RichTextEditorValueChangedEvent) => {
-    setDeltaValue(event.detail.value);
+    deltaValue.value = event.detail.value;
   };
 
   const handleHtmlChange = (event: TextAreaChangeEvent) => {
     const value = event.target.value;
-    setHtmlValue(value);
+    htmlValue.value = value;
     if (richTextEditorRef.current) {
       richTextEditorRef.current.dangerouslySetHtmlValue(value);
     }
@@ -30,9 +33,11 @@ function Example() {
     <>
       <RichTextEditor
         style={{ height: '400px' }}
-        value={deltaValue}
+        value={deltaValue.value}
         onValueChanged={handleEditorChange}
-        onHtmlValueChanged={(e) => setHtmlValue(e.detail.value)}
+        onHtmlValueChanged={(e) => {
+          htmlValue.value = e.detail.value;
+        }}
         ref={richTextEditorRef}
       />
 
@@ -40,7 +45,7 @@ function Example() {
         label="HTML Value"
         helperText="Shows the HTML representation of the edited document. You can also modify or paste HTML here to see the changes reflected in the editor above. Note that you have to leave (blur) this field in order for the editor to update."
         style={{ width: '100%' }}
-        value={htmlValue}
+        value={htmlValue.value}
         onChange={handleHtmlChange}
       />
 
@@ -48,8 +53,10 @@ function Example() {
         label="Delta Value"
         helperText="Shows the Delta representation of the edited document. You can also modify or paste the Delta JSON here to see the changes reflected in the editor above. Note that you have to leave (blur) this field in order for the editor to update."
         style={{ width: '100%' }}
-        value={deltaValue}
-        onChange={(e) => setDeltaValue(e.target.value)}
+        value={deltaValue.value}
+        onChange={(e) => {
+          deltaValue.value = e.target.value;
+        }}
       />
     </>
   );

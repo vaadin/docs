@@ -2,9 +2,9 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import exampleStyles from './side-nav-example-styles'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
 import { patchSideNavNavigation } from './side-nav-helper'; // hidden-source-line
-import { SideNav, type SideNavElement } from '@hilla/react-components/SideNav.js';
-import { SideNavItem } from '@hilla/react-components/SideNavItem.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { SideNav, type SideNavElement } from '@vaadin/react-components/SideNav.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons/';
 
 function Example() {
@@ -15,7 +15,7 @@ function Example() {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
     }
-  }, []);
+  }, [sideNavRef.current]);
 
   return (
     <div className="side-nav-sample">

@@ -17,10 +17,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor departureDate = '';
+  private departureDate = '';
 
   @state()
-  private accessor returnDate = '';
+  private returnDate = '';
 
   protected override render() {
     return html`

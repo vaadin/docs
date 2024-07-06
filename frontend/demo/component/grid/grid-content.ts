@@ -25,7 +25,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor items: Person[] | undefined;
+  private items: Person[] | undefined;
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -57,7 +57,6 @@ export class Example extends LitElement {
       <vaadin-avatar
         img="${person.pictureUrl}"
         name="${person.firstName} ${person.lastName}"
-        alt="User avatar"
       ></vaadin-avatar>
       <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
         <span>${person.firstName} ${person.lastName}</span>

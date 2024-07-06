@@ -1,17 +1,17 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { AppLayout } from '@hilla/react-components/AppLayout.js';
-import { DrawerToggle } from '@hilla/react-components/DrawerToggle.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { AppLayout } from '@vaadin/react-components/AppLayout.js';
+import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
-import { Scroller } from '@hilla/react-components/Scroller.js';
-import { SideNav, type SideNavElement } from '@hilla/react-components/SideNav.js';
+import { Scroller } from '@vaadin/react-components/Scroller.js';
+import { SideNav, type SideNavElement } from '@vaadin/react-components/SideNav.js';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
-import { SideNavItem } from '@hilla/react-components/SideNavItem.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
 import {
   HorizontalLayout,
   type HorizontalLayoutElement,
-} from '@hilla/react-components/HorizontalLayout.js';
+} from '@vaadin/react-components/HorizontalLayout.js';
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {
@@ -34,12 +34,15 @@ function Example() {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
     }
+  }, [sideNavRef.current]);
 
+  useEffect(() => {
     if (horizontalLayoutRef.current) {
       // Example-specific workaround
       patchAppLayoutNavigation(horizontalLayoutRef.current);
     }
-  }, []);
+  }, [horizontalLayoutRef.current]);
+
   return (
     // tag::snippet[]
     <AppLayout primarySection="drawer">

@@ -20,7 +20,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor sidebarCollapsed = false;
+  private sidebarCollapsed = false;
 
   protected override render() {
     const sidebarWidthPercentage = this.sidebarCollapsed ? 13 : 40;

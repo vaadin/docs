@@ -1,6 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { AvatarGroup, type AvatarGroupI18n } from '@hilla/react-components/AvatarGroup.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { AvatarGroup, type AvatarGroupI18n } from '@vaadin/react-components/AvatarGroup.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 // tag::snippet[]
@@ -16,7 +18,8 @@ const i18n: AvatarGroupI18n = {
 // end::snippet[]
 
 function Example() {
-  const [items, setItems] = useState<Array<{ name: string }>>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Array<{ name: string }>>([]);
 
   useEffect(() => {
     getPeople({ count: 2 }).then(({ people }) => {
@@ -42,16 +45,14 @@ function Example() {
         managerId: -1,
         status: '',
       });
-      setItems(
-        people.map((person) => ({
-          name: `${person.firstName} ${person.lastName}`,
-        }))
-      );
+      items.value = people.map((person) => ({
+        name: `${person.firstName} ${person.lastName}`,
+      }));
     });
   }, []);
 
   // tag::snippet[]
-  return <AvatarGroup i18n={i18n} items={items} />;
+  return <AvatarGroup i18n={i18n} items={items.value} />;
   // end::snippet[]
 }
 

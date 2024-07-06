@@ -1,13 +1,19 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { MultiSelectComboBox } from '@hilla/react-components/MultiSelectComboBox.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { MultiSelectComboBox } from '@vaadin/react-components/MultiSelectComboBox.js';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 
 function Example() {
-  const [items, setItems] = useState<Country[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Country[]>([]);
+
   useEffect(() => {
-    getCountries().then((countries) => setItems(countries));
+    getCountries().then((countries) => {
+      items.value = countries;
+    });
   }, []);
 
   // tag::snippet[]
@@ -24,7 +30,7 @@ function Example() {
       label="Länder"
       itemLabelPath="name"
       itemIdPath="id"
-      items={items}
+      items={items.value}
       i18n={i18n}
       style={{ width: '300px' }}
     />

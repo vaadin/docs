@@ -1,28 +1,31 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
-import { Tabs, type TabsSelectedChangedEvent } from '@hilla/react-components/Tabs.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { Tab } from '@hilla/react-components/Tab.js';
+import React from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Tabs, type TabsSelectedChangedEvent } from '@vaadin/react-components/Tabs.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { Tab } from '@vaadin/react-components/Tab.js';
 
 function Example() {
-  const [value, setValue] = useState(0);
+  useSignals(); // hidden-source-line
+  const value = useSignal(0);
   const pages = ['Dashboard', 'Payment', 'Shipping'];
 
   const selectedChanged = (e: TabsSelectedChangedEvent) => {
-    setValue(e.detail.value);
+    value.value = e.detail.value;
   };
 
   return (
     <>
       {/* tag::snippet[] */}
-      <Tabs selected={value} onSelectedChanged={selectedChanged}>
+      <Tabs selected={value.value} onSelectedChanged={selectedChanged}>
         <Tab>Dashboard</Tab>
         <Tab>Payment</Tab>
         <Tab>Shipping</Tab>
       </Tabs>
 
       <VerticalLayout theme="padding">
-        <p>{`This is the ${pages[value]} tab`}</p>
+        <p>{`This is the ${pages[value.value]} tab`}</p>
       </VerticalLayout>
       {/* end::snippet[] */}
     </>

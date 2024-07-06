@@ -11,7 +11,7 @@ This guide goes through the changes you'll need to make in your applications whe
 
 .Upgrading from Earlier Version
 [TIP]
-Use the link:/docs/v23/upgrading/essential-steps[Upgrade Guide Generator] if you're upgrading from a version earlier than Vaadin 23.
+See link:/docs/v23/upgrading/essential-steps[Vaadin 14 to 23 Upgrade Instructions] if you're upgrading from a version earlier than Vaadin 23.
 
 Many of the breaking changes are needed because of fundamental changes in the Java platform and the major dependencies on which Vaadin relies. This includes the following:
 
@@ -19,7 +19,7 @@ Servlet 6::
 Vaadin 24 is based on Servlet 6 specifications. It's compatible with Jakarta EE 10. Vaadin encapsulates the usage of the classes from `javax` and `jakarta` packages. Therefore, application code doesn't need to use servlets, directly. Nevertheless, this is still needed in various cases -- like accessing cookies, setting servlet parameters, etc.
 
 Spring Boot 3::
-Vaadin 24 uses the latest Spring Boot 3 and Spring Framework 6 versions. This leads to making breaking changes in Spring-based features, compared to earlier Spring-boot 2 and Spring Framework 5 versions.
+Vaadin 24 uses the latest Spring Boot 3 and Spring Framework 6 versions. This leads to making breaking changes in Spring-based features, compared to earlier Spring Boot 2 and Spring Framework 5 versions.
 
 Java 17::
 Vaadin 24 requires Java 17 or later. This is dictated by Spring Framework and newer versions of application servers.
@@ -123,6 +123,7 @@ To browse a full list of changes, see the https://github.com/spring-projects/spr
 
 Below is a general overview of the changes needed for Spring-based Vaadin applications:
 
+
 === Upgrade Spring to Latest
 
 You'll need to upgrade Spring to the latest versions, including the starter parent dependency:
@@ -137,6 +138,7 @@ You'll need to upgrade Spring to the latest versions, including the starter pare
 </parent>
 ----
 
+
 === Deprecation
 
 The deprecated `VaadinWebSecurityConfigurerAdapter` class was removed since Spring no longer has the `WebSecurityConfigurerAdapter` class. Use instead the `VaadinWebSecurity` base class for your security configuration. Below is an example of this:
@@ -149,17 +151,21 @@ public class SecurityConfig extends VaadinWebSecurity {
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
-        // Delegating the responsibility of general configurations
-        // of http security to the super class. It's configuring
-        // the followings: Vaadin's CSRF protection by ignoring
-        // framework's internal requests, default request cache,
-        // ignoring public views annotated with @AnonymousAllowed,
-        // restricting access to other views/endpoints, and enabling
-        // NavigationAccessControl authorization.
-        // You can add any possible extra configurations of your own
-        // here -- the following is just an example:
+        /**
+         * Delegating the responsibility of general configuration
+         * of HTTP security to the superclass.
+         *
+         * It's configuring the following:
+         * - Vaadin's CSRF protection by ignoring internal framework requests,
+         * - default request cache,
+         * - ignoring public views annotated with @AnonymousAllowed,
+         * - restricting access to other views/endpoints, and
+         * - enabling ViewAccessChecker authorization.
+         */
 
-        // http.rememberMe().alwaysRemember(false);
+        // You can add any possible extra configurations of your own
+        // here - the following is just an example:
+        http.rememberMe().alwaysRemember(false);
 
         // Configure your static resources with public access before calling
         // super.configure(HttpSecurity) as it adds final anyRequest matcher
@@ -190,7 +196,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     /**
      * Demo UserDetailsManager which only provides two hardcoded
      * in-memory users and their roles.
-     * This shouldn't be used in real world applications.
+     * This shouldn't be used in real-world applications.
      */
     @Bean
     public UserDetailsService userDetailsService(
@@ -266,9 +272,169 @@ To let the container scan and manage Vaadin components and views when the `bean-
 As an alternative, you can set `bean-discovery-mode=all` in the [filename]`beans.xml` file if it's applicable to your project. However, this is not recommended.
 
 
+[role="since:com.vaadin:vaadin@V24.4"]
+== Frontend Sources Directory
+Vaadin uses the [filename]`{project directory}/src/main/frontend/` directory as the default location for frontend sources. Legacy location [filename]`{project directory}/frontend/` is also supported and used if the [filename]`{project directory}/src/main/frontend/` directory doesn't exist. Although it's currently optional, if you're using the legacy location, you should move your files to a new location, as support for this may be removed in the future releases.
+
+
+[role="since:com.vaadin:vaadin@V24.4"]
+== Unification with Hilla & Integration with React
+
+Vaadin 24.4 and later versions unify the server and client development approaches known as Vaadin Flow and Hilla respectively. This makes it easier to create hybrid applications, including:
+
+- unified dependencies for Vaadin, making the project configuration simpler;
+- develop https://reactjs.org/[React]-based routes and components in Vaadin Flow applications;
+- export Flow components or entire views into frontend views implemented with React; and
+- use unified routing based on https://reactrouter.com/en/main[React Router].
+
+
+=== Hilla & React Dependencies
+
+Vaadin 24 includes React dependencies, such as https://www.npmjs.com/package/react[React], https://www.npmjs.com/package/react-router-dom[React Router], and https://github.com/vaadin/react-components[Vaadin React-based components] provided by Vaadin. These dependencies allow you to start developing immediately with React.
+
+Vaadin React components include free, core components and commercial (i.e., professional) components, which are shipped in the separate npm packages: `@vaadin/react-components`, which is only free; and `@vaadin/react-components-pro`, which is only commercial. Vaadin adds both of these packages to [filename]`package.json` if `com.vaadin:vaadin` artifact is in the project's configuration:
+
+[source,xml]
+.pom.xml
+----
+<dependency>
+	<groupId>com.vaadin</groupId>
+	<artifactId>vaadin</artifactId>
+</dependency>
+----
+
+It adds only `@vaadin/react-components` if `com.vaadin:vaadin-core` is used:
+
+[source,xml]
+.pom.xml
+----
+<dependency>
+	<groupId>com.vaadin</groupId>
+	<artifactId>vaadin-core</artifactId>
+</dependency>
+----
+
+Vaadin Flow applications don't need any changes regarding React or Hilla dependencies management, though the opt-out options are available if you have one of the following cases:
+
+- Lit is used for frontend development instead of React;
+- having Hilla or React dependencies is undesirable; and
+- you need the legacy `vaadin-router`, e.g. if your project uses an add-on that needs it.
+
+To opt-out, use the `reactEnable` configuration parameter. Disabling it excludes React completely from your project and fallbacks to `vaadin-router` and Lit:
+
+
+[source,xml]
+.pom.xml
+----
+<plugin>
+   <groupId>com.vaadin</groupId>
+   <artifactId>vaadin-maven-plugin</artifactId>
+   <configuration>
+       <reactEnable>false</reactEnable>
+   </configuration>
+</plugin>
+----
+
+[source,terminal]
+----
+-Dvaadin.react.enable=false
+----
+
+If you don't need Vaadin's https://github.com/vaadin/react-components[React components], you can opt-out by excluding the `flow-react` package in your dependencies. This replaces the `@vaadin/react-components` and `@vaadin/react-components-pro` packages in your [filename]`package.json` with `@vaadin/*` web components:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<dependency>
+	<groupId>com.vaadin</groupId>
+	<artifactId>vaadin</artifactId>
+	<exclusions>
+		<exclusion>
+			<groupId>com.vaadin</groupId>
+			<artifactId>flow-react</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+----
+[source,groovy]
+----
+<source-info group="Gradle"></source-info>
+dependencies {
+    implementation ("com.vaadin:vaadin") {
+        exclude group: 'com.vaadin', module: 'flow-react'
+    }
+}
+----
+--
+
+This example exclude Hilla from a project when using Maven:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+	<groupId>com.vaadin</groupId>
+	<artifactId>vaadin</artifactId>
+	<exclusions>
+		<exclusion>
+			<groupId>com.vaadin</groupId>
+			<artifactId>hilla</artifactId>
+		</exclusion>
+		<exclusion>
+			<groupId>com.vaadin</groupId>
+			<artifactId>hilla-dev</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+----
+
+This example is for when you're using Gradle:
+
+.build.gradle
+[source,groovy]
+----
+buildscript {
+    configurations.classpath {
+        exclude group: 'com.vaadin', module: 'hilla-engine-core'
+    }
+}
+
+dependencies {
+    implementation ("com.vaadin:vaadin") {
+        exclude group: 'com.vaadin', module: 'hilla-dev'
+    }
+}
+----
+
+.gradle.properties
+[source,properties]
+----
+<source-info group="Gradle (Groovy DSL)"></source-info>
+hilla.active=false
+----
+
+The following Hilla dependencies are included in Vaadin, and you don't need to include them explicitly:
+
+- `dev.hilla:hilla-bom`
+- `dev.hilla:hilla-react`
+- `dev.hilla:hilla`
+
+
+=== Frontend Bundles & Hot Deploy Modes
+
+Vaadin chooses using a pre-compiled frontend bundle, or re-building a new bundle, or starting a frontend development server. If it detects Hilla views in a project, it always uses development server -- unless one sets the configuration parameter `vaadin.frontend.hotdeploy=false`. Conversely, for Flow applications it uses frontend bundle -- unless one sets the configuration parameter `vaadin.frontend.hotdeploy=true`.
+
+
+=== Default Location for Client-Side Views
+
+Place your React client-side views into [filename]`src/main/frontend/views/` directory. Vaadin searches for any [filename]`.tsx` or [filename]`.jsx` React views and registers them as React routes if they are present in this directory or subdirectories. See <<{articles}/hilla/guides/routing#,Routing >> for more details about File-Based Routing.
+
+
 == Polymer Templates
 
-Polymer support has been deprecated since Vaadin 18 was released in November 2020, in favor of faster and simpler <<{articles}/create-ui/templates#,Lit templates>>. The built-in support for Polymer templates has been removed and is only available for Prime and Ultimate customers via an addon. However, a free conversion tool is also available to assist you in converting your Polymer templates to Lit.
+Polymer support has been deprecated since Vaadin 18 was released in November 2020, in favor of faster and simpler <<{articles}/flow/create-ui/templates#,Lit templates>>. The built-in support for Polymer templates has been removed and is only available for Prime and Ultimate customers via an addon. However, a free conversion tool is also available to assist you in converting your Polymer templates to Lit.
 
 
 === Commercial Polymer Template Addon
@@ -305,7 +471,7 @@ Regarding usage, run the converter in your project's root folder as follows:
 
 [.example]
 --
-[source,text]
+[source,terminal]
 ----
 <source-info group="Maven"></source-info>
 mvn vaadin:convert-polymer
@@ -321,7 +487,7 @@ To convert a project that is based on versions before Vaadin 24, use the followi
 
 [.example]
 --
-[source,text,subs="+attributes"]
+[source,terminal,subs="+attributes"]
 ----
 <source-info group="Maven"></source-info>
 mvn com.vaadin:vaadin-maven-plugin:{vaadin-version}:convert-polymer
@@ -350,12 +516,12 @@ To limit conversion to a specific file or directory, you can use the `vaadin.pat
 +
 [.example]
 --
-[source,text]
+[source,terminal]
 ----
 <source-info group="Maven"></source-info>
 mvn vaadin:convert-polymer -Dvaadin.path=path/to/your/file
 ----
-[source,text]
+[source,terminal]
 ----
 <source-info group="Groovy"></source-info>
 ./gradlew vaadinConvertPolymer -Dvaadin.path=path/to/your/file
@@ -373,12 +539,12 @@ If your project is using Lit 1 (i.e., before Vaadin 21), you can use the vaadin.
 +
 [.example]
 --
-[source,text]
+[source,terminal]
 ----
 <source-info group="Maven"></source-info>
 mvn vaadin:convert-polymer -Dvaadin.useLit1
 ----
-[source,text]
+[source,terminal]
 ----
 <source-info group="Groovy"></source-info>
 ./gradlew vaadinConvertPolymer -Dvaadin.useLit1
@@ -392,18 +558,17 @@ If your project is using the Vaadin webpack configuration, which doesn't support
 +
 [.example]
 --
-[source,text]
+[source,terminal]
 ----
 <source-info group="Maven"></source-info>
 mvn vaadin:convert-polymer -Dvaadin.disableOptionalChaining
 ----
-[source,text]
+[source,terminal]
 ----
 <source-info group="Groovy"></source-info>
 ./gradlew vaadinConvertPolymer -Dvaadin.disableOptionalChaining
 ----
 --
-
 
 
 == Multiplatform Runtime
@@ -437,18 +602,17 @@ Multiplatform Runtime allows the use of legacy Vaadin 7 or 8 framework component
 Other legacy framework dependencies have the same names, but transitive dependencies to `vaadin-server` artifacts must be detected and excluded. Consult <<{articles}/tools/mpr/introduction/1-maven-v8#exclude-incompatible-framework-8-dependency, Exclude Incompatible Framework 8 Dependency>> for further details.
 
 
-
 == Maven & Gradle Plugins
 
 Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 17. For example, the `nexus-staging-maven-plugin`` requires a minimum version of 1.6.13. Maven version 3.5 and later support Java 17, but avoid using 3.8.2 or 3.8.3. They break redeploy in Jetty.
 
-To run Gradle on top of Java 17, you'll need to use version 7.5 or later. See the https://docs.gradle.org/7.5/release-notes.html[Gradle release notes] for further details. If your project uses Spring Boot, upgrade the plugin `org.springframework.boot` to version 3.0.x.
+To run Gradle on top of Java 17 and latest Spring Boot 3 versions, you'll need to use version 8.4 or later. See the https://docs.gradle.org/8.6/release-notes.html[Gradle release notes] for further details. If your project uses Spring Boot, upgrade the plugin `org.springframework.boot` to version 3.2.x.
 
-If you're using a Gradle wrapper, update it to version 7.5 by executing the following from the command line:
+If you're using a Gradle wrapper, update it to version 8.6 by executing the following from the command line:
 
 [source,terminal]
 ----
-./gradlew wrapper --gradle-version 7.5
+./gradlew wrapper --gradle-version 8.6
 ----
 
 For Java 17 compatibility, you may need to update the `sourceCompatibility` setting in your project's build file to version 17. Check your project's build file and make any necessary changes.
@@ -461,37 +625,49 @@ Vaadin 24 and Spring-boot 3 use SLF4J library version 2.0, which has breaking ch
 
 == Line-Awesome Icons Set Library
 
-Vaadin 23 starter projects used https://icons8.com/line-awesome[`line-awesome`] icons set library. You may also need the `line-awesome` library in your project. If so, try using the Vaadin https://vaadin.com/directory/component/line-awesome-icons-for-vaadin[Line-Awesome] add-on with Vaadin 24. In Vaadin 24, this add-on doesn't require building a new bundle, so your application would then benefit from the pre-compiled bundle feature.
+Vaadin 23 starter projects used the https://icons8.com/line-awesome[Line Awesome] icon set. If you need those icons, you should use the https://vaadin.com/directory/component/line-awesome-icons-for-vaadin[Line Awesome add-on] with Vaadin 24. This add-on doesn't require building a new bundle, which means your application will benefit from the pre-compiled frontend bundle feature.
+
+
+== New Types Definition
+
+Vaadin might ask to add new types definitions to the [filename]`types.d.ts` file, if it detects customized content in it. If so, the first build after the upgrade will fail, and show instructions on how to correct it in the server logs.
 
 
 == Breaking Changes in Vaadin Components
 
 Vaadin components have several breaking changes related to upgrading to the latest version.
 
-Shrinking Badges::
+=== Shrinking Badges
+
 Badges no longer shrink by default. This can be overridden globally with CSS `[theme~="badge"] { flex-shrink:1; }`, or for specific instances with `badge.getStyle().set("flex-shrink", "1")`, or with `layout.setFlexShrink(badge, 1)`.
 
-Shrinking Buttons::
+=== Shrinking Buttons
+
 Buttons also no longer shrink by default. This also can be overridden globally, but with CSS `vaadin-button { flex-shrink:1; }`, or for specific instances with `btn.getStyle().set("flex-shrink", "1")` or with `layout.setFlexShrink(btn, 1)`.
 
-CheckboxGroup::
+=== CheckboxGroup
 The `CheckboxGroup::setItemLabelGenerator` no longer clears the current selection. The `CheckboxGroup.clear()` can be used to clear values, separately.
 
-BlurNotifier::
+=== BlurNotifier
+
 The `BlurNotifier<CustomField>` type signature was corrected to `BlurNotifier<CustomField<T>>`.
 
-Date Picker::
+=== Date Picker
+
 Date Picker now uses the ISO 8601 date format (i.e., `yyyy-mm-dd`) as fallback for unsupported locales -- instead of `mm-dd-yyyy`. Time Picker no longer automatically adjusts values to fit minimum and maximum constraints.
 
-Number Field::
+=== Number Field
+
 Number Field's default width now matches that of other text input components. The old default can be brought back with CSS `vaadin-number-field { width:8em; }`.
 
-RichTextEditor::
+=== RichTextEditor
+
 `RichTextEditor::setvalue` and `getValue` now use HTML format by default, instead of Delta. Applications using the Delta format must be refactored to use the `RichTextEditor.asDelta()` API (e.g. `rte.asDelta().getValue()` and `binder.forField(rte.asDelta())`). To help avoid using the wrong setter, `RichTextEditor.setValue(String)` now throws an exception if the value looks like it's in Delta format (i.e., it starts with a `[` or `{` bracket). To set an HTML value starting with the above characters, either wrap the value in an HTML tag, or use the `RichTextEditor.asHtml()` API, which doesn't check for them.
 
-Margins for Headings::
+=== Margins for Headings
+
 The default top and bottom margins of the `H1`...`H6` HTML elements have been removed. This change can be reverted by applying the following CSS:
-+
+
 .styles.css
 [source,css]
 ----
@@ -654,12 +830,3 @@ textField.addValueChangeListener(event -> {
 APIs that were deprecated earlier have now been removed. The following linked GitHub issue lists these removals:
 
 - https://github.com/vaadin/flow/issues/15665[Remove deprecated API and tools in Flow 24.0]
-
-
-[discussion-id]`24CE587D-26C4-4C8C-93F0-BCE5FA53D5A0`
-
-++++
-<style>
-[class^=PageHeader-module--descriptionContainer] {display: none;}
-</style>
-++++

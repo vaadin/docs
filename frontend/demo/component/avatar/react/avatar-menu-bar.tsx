@@ -1,32 +1,30 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { Avatar } from '@hilla/react-components/Avatar.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { MenuBar } from '@hilla/react-components/MenuBar.js';
-import { createRoot } from 'react-dom/client';
+import { MenuBar } from '@vaadin/react-components/MenuBar.js';
 
 function Example() {
-  const [person, setPerson] = useState<Person>();
+  useSignals(); // hidden-source-line
+  const person = useSignal<Person | undefined>(undefined);
 
   useEffect(() => {
     getPeople({ count: 1 }).then(({ people }) => {
-      setPerson(people[0]);
+      person.value = people[0];
     });
   }, []);
 
   // tag::snippet[]
-  // Workaround https://github.com/vaadin/react-components/issues/132
-  function menuComponent(component: React.ReactNode) {
-    const container = document.createElement('div');
-    createRoot(container).render(component);
-    return container;
-  }
-
   const menuBarItems = [
     {
-      component: menuComponent(
-        <Avatar name={`${person?.firstName} ${person?.lastName}`} img={person?.pictureUrl} />
+      component: (
+        <Avatar
+          name={`${person.value?.firstName} ${person.value?.lastName}`}
+          img={person.value?.pictureUrl}
+        />
       ),
       children: [
         {

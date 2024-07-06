@@ -1,23 +1,28 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   Grid,
   type GridDataProviderCallback,
   type GridDataProviderParams,
-} from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { GridTreeColumn } from '@hilla/react-components/GridTreeColumn.js';
+} from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { GridTreeColumn } from '@vaadin/react-components/GridTreeColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [draggedItem, setDraggedItem] = useState<Person>();
-  const [items, setItems] = useState<Person[]>([]);
-  const [expandedItems, setExpandedItems] = useState<Person[]>([]);
+  const draggedItem = useSignal<Person | undefined>(undefined);
+  const items = useSignal<Person[]>([]);
+  const expandedItems = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   const dataProvider = useMemo(
@@ -34,12 +39,12 @@ function Example() {
     here and avoid using grid.clearCache() whenever possible.
     */
       const result = parentItem
-        ? items.filter((item) => item.managerId === parentItem.id)
-        : items.filter((item) => item.manager).slice(startIndex, endIndex);
+        ? items.value.filter((item) => item.managerId === parentItem.id)
+        : items.value.filter((item) => item.manager).slice(startIndex, endIndex);
 
       callback(result, result.length);
     },
-    [items]
+    [items.value]
   );
 
   return (
@@ -47,23 +52,23 @@ function Example() {
       dataProvider={dataProvider}
       itemIdPath="id"
       itemHasChildrenPath="manager"
-      expandedItems={expandedItems}
+      expandedItems={expandedItems.value}
       onExpandedItemsChanged={(event) => {
-        setExpandedItems(event.detail.value);
+        expandedItems.value = event.detail.value;
       }}
       rowsDraggable
-      dropMode="on-top"
+      dropMode={draggedItem.value ? 'on-top' : undefined}
       onGridDragstart={(event) => {
-        setDraggedItem(event.detail.draggedItems[0]);
+        draggedItem.value = event.detail.draggedItems[0];
       }}
       onGridDragend={() => {
-        setDraggedItem(undefined);
+        draggedItem.value = undefined;
       }}
       onGridDrop={(event) => {
         const manager = event.detail.dropTargetItem;
-        if (draggedItem) {
-          draggedItem.managerId = manager.id;
-          setItems([...items]);
+        if (draggedItem.value) {
+          draggedItem.value.managerId = manager.id;
+          items.value = [...items.value];
         }
       }}
       dragFilter={(model) => {
@@ -72,7 +77,7 @@ function Example() {
       }}
       dropFilter={(model) => {
         const item = model.item;
-        return item.manager && item.id !== draggedItem?.managerId;
+        return item.manager && item.id !== draggedItem.value?.managerId;
       }}
     >
       <GridTreeColumn path="firstName" />

@@ -1,0 +1,225 @@
+---
+title: Hilla
+description: Create hybrid applications by combining Hilla or React views with Flow views.
+order: 10
+---
+
+
+= [since:com.vaadin:vaadin@V24.4]#Flow-Hilla Hybrid Applications#
+
+Hilla is part of Vaadin. It's used for building Reactive web applications on Java backends. It integrates seamlessly a https://reactjs.org/[React] TypeScript frontend with a https://spring.io/projects/spring-boot[Spring Boot] backend.
+
+You can develop hybrid applications that leverage Vaadin Flow and Hilla features. This allows you to combine in one application, Vaadin Flow routes written in pure Java with the Hilla ones written in React.
+
+This page shows how <<#hilla-to-flow, to add Hilla to an existing Vaadin Flow application>>. And it includes the reverse: how <<#flow-to-hilla, to add Vaadin Flow to an existing Hilla application>>.
+
+See the https://github.com/vaadin/flow-hilla-hybrid-example[source code for a complete Vaadin Flow-Hilla application].
+
+
+[[hilla-to-flow]]
+== Add Hilla to Flow Applications
+
+To add Hilla to a Vaadin Flow application, you could start with a Spring Boot-based Vaadin Flow application (e.g., https://github.com/vaadin/[skeleton-starter-flow-spring]). You would add Hilla to the project using the steps described in the sub-sections here.
+
+Project dependency adjustments aren't needed since Hilla is included in Vaadin.
+
+
+=== Add React Views
+
+Add a view file, [filename]`counter.tsx`, to the `src/main/frontend/views` sub-directory. It'll be accessible under the path, `/counter` in a browser. Here's an example of how that might look:
+
+.counter.tsx
+[source,javascript]
+----
+import React, { useState } from 'react';
+import { Button } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+
+export default function Counter() {
+  const [counter, setCounter] = useState(0);
+
+  return (
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
+      <Button onClick={() => setCounter(counter + 1)}>Button</Button>
+      <p>Clicked {counter} times</p>
+    </HorizontalLayout>
+  );
+}
+----
+
+The directory, `src/main/frontend/views` is a default location where Vaadin looks for frontend views and configures React Router, based on the file's structure.
+
+Use <</components/side-nav#,Side Navigation>> or <</flow/routing/retrieving-routes#standard-navigation-targets,Anchor>> components to navigate from a Flow view to a Hilla view:
+
+[source,java]
+----
+Anchor navigateToHilla = new Anchor("counter", "Navigate to a Hilla view");
+----
+
+
+=== Run the Application
+
+Run the application using `mvn spring-boot:run`. Then open `http://localhost:8080` in your browser.
+
+Once you add a frontend view, Vaadin starts the Vite development server on the next application run, enabling frontend hot deployment.
+
+
+[[flow-to-hilla]]
+== Add Flow to Hilla Applications
+
+If you already have a Hilla application, you can add Vaadin Flow to it. For example, starting from the Hilla https://github.com/vaadin/skeleton-starter-hilla-react[project starter]), you can add Vaadin Flow to the project using the steps in the sub-sections that follow.
+
+Vaadin includes Hilla dependencies, so no dependency adjustment is needed.
+
+=== Add Server-Side Routes
+
+Add a view file, [filename]`HelloView.java`, to the `src/main/java/org/vaadin/example/HelloView.java` sub-directory. It'll be accessible under the path, `/hello` in a browser. Here's an example of that:
+
+.HelloView.java
+[source,java]
+----
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+
+@Route("hello")
+public class HelloView extends VerticalLayout {
+    public HelloView() {
+        TextField textField = new TextField("Your name");
+        Button button = new Button("Say hello", e ->
+                add(new Paragraph("Hello, " + textField.getValue())));
+        add(textField, button);
+    }
+}
+----
+
+Use Vaadin's https://hilla.dev/docs/react/components/side-nav[Side Navigation] or React's https://hilla.dev/docs/react/guides/routing#adding-routes[NavLink] / https://reactrouter.com/en/main/components/link[Link] components to navigate from a Hilla view to a Flow view:
+
+[source,javascript]
+----
+import { NavLink } from 'react-router-dom';
+
+<NavLink to="/flow-route">Navigate to a Flow View</NavLink>
+----
+
+
+=== Include Route to Hilla Main Menu
+
+When using Hilla's `createMenuItems()` utility function to build the main menu in the main layout, use the `@Menu` annotation to include the server route in the returned menu items. This is described in <</hilla/guides/routing.adoc#creating-menu-from-routes,Creating Menu from Routes>>.
+
+The [annotationname]`@Menu` annotation should always be used together with the [annotationname]`@Route` annotation as in the following example:
+
+.HelloView.java
+[source,java]
+----
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Menu;
+import com.vaadin.flow.router.Route;
+
+@Menu
+@Route("hello")
+public class HelloView extends VerticalLayout {
+    public HelloView() {
+    }
+}
+----
+
+The `@Menu`` annotation has a `title`, an `order`, and an `icon` attribute. Values are passed to the client side and are available when using the `createMenuItems()` utility function to build the menu.
+
+With access-controlled routes, it's important not to send any information about them -- other than what the user has permission to see. To send a route to the client side, annotate it with [annotationname]`@Menu`. The route must be accessible by <</flow/security/advanced-topics/navigation-access-control.adoc#,Navigation Access Control>>.
+
+The value of `MenuAccessControl#getPopulateClientSideMenu` determines the accessibility of the route:
+
+- `AUTOMATIC`: Accessible route is sent to the client. This is the default.
+- `ALWAYS`: Always send accessible route.
+- `NEVER`: Never send a route.
+
+Only routes sent to the client can be shown in the main menu. In `AUTOMATIC` and `ALWAYS` modes, routes that reach the client are also filtered to include only received server routes if the root main layout exists when using <</hilla/guides/routing.adoc#,File Based Routing>>. It checks the existence of the main layout file in `src/main/frontend/views/` (e.g., `src/main/frontend/views/@layout.tsx`).
+
+Mode is configurable with [interfacename]`MenuAccessControl` interface with the `PopulateClientMenu` enumerated list.
+
+The following example changes the default mode to `NEVER` in a Spring Framework application:
+
+.Application.java
+[source,java]
+----
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import com.vaadin.flow.server.auth.DefaultMenuAccessControl;
+import com.vaadin.flow.server.auth.MenuAccessControl;
+
+@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @Bean
+    public MenuAccessControl customMenuAccessControl() {
+        DefaultMenuAccessControl menuAccessControl = new DefaultMenuAccessControl();
+        menuAccessControl.setPopulateClientSideMenu(
+                MenuAccessControl.PopulateClientMenu.NEVER);
+        return menuAccessControl;
+    }
+}
+----
+
+This next example changes the default mode to `NEVER` in a non-Spring application by using <<../configuration/properties.adoc#servlet-initialization-parameters,Servlet Initialization Parameters>> `menu.access.control` with value `org.vaadin.example.CustomMenuAccessControl`. [classname]`DefaultMenuAccessControl` implements [interfacename]`MenuAccessControl`:
+
+.org.vaadin.example.CustomMenuAccessControl.java
+[source,java]
+----
+import com.vaadin.flow.server.auth.DefaultMenuAccessControl;
+
+public class CustomMenuAccessControl extends DefaultMenuAccessControl {
+
+    public CustomMenuAccessControl() {
+        setPopulateClientSideMenu(PopulateClientMenu.NEVER);
+    }
+}
+----
+
+
+=== Flow Page Title in Hilla Main Menu
+
+As described in <<../routing/page-titles.adoc#,Updating Page Title during Navigation>>, the page title for a route can be updated with an annotation and with an interface. The page title can be visible anywhere in the Hilla main menu by using Signal: `window.Vaadin.documentTitleSignal`. As long as the signal is initialized on the client side, the server keeps the signal's value synchronized.
+
+The following example illustrates how to use `window.Vaadin.documentTitleSignal` to show a page title defined with the `PageTitle` annotation in a server-side route in the Hilla main menu. This example includes only the relevant parts that need to be added for the functionality:
+
+.@layout.tsx
+[source,javascript]
+----
+import { createMenuItems, useViewConfig } from '@vaadin/hilla-file-router/runtime.js';
+import { effect, Signal, signal } from "@vaadin/hilla-react-signals";
+
+// define Signal<string> type for the window.Vaadin
+const vaadin = window.Vaadin as {
+    documentTitleSignal: Signal<string>;
+};
+// initialize signal with empty string
+vaadin.documentTitleSignal = signal("");
+// keep document title in sync with the signal
+effect(() =>  document.title = vaadin.documentTitleSignal.value);
+
+export default function Layout() {
+    ...
+    // set signal value from the active view config
+    vaadin.documentTitleSignal.value = useViewConfig()?.title ?? '';
+    ...
+    return (
+        <AppLayout primarySection="drawer">
+            ...
+            <h2 slot="navbar" className="text-l m-0">
+                {vaadin.documentTitleSignal}
+            </h2>
+            ...
+        </AppLayout>
+    );
+}
+----
+
+[discussion-id]`9da82521-5074-42b6-82a5-88fc207987d0`

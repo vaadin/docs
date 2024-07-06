@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import {
   DateTimePicker,
   type DateTimePickerElement,
-} from '@hilla/react-components/DateTimePicker.js';
+} from '@vaadin/react-components/DateTimePicker.js';
 
 function Example() {
   // tag::snippet[]
@@ -16,7 +16,7 @@ function Example() {
         firstDayOfWeek: 1,
       };
     }
-  }, []);
+  }, [dateTimePicker.current]);
 
   return <DateTimePicker ref={dateTimePicker} label="Meeting date and time" showWeekNumbers />;
   // end::snippet[]

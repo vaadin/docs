@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { MenuBar } from '@hilla/react-components/MenuBar.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import { MenuBar } from '@vaadin/react-components/MenuBar.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
   return (

@@ -1,20 +1,25 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { MultiSelectComboBox } from '@hilla/react-components/MultiSelectComboBox.js';
-import { TextArea } from '@hilla/react-components/TextArea.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { MultiSelectComboBox } from '@vaadin/react-components/MultiSelectComboBox.js';
+import { TextArea } from '@vaadin/react-components/TextArea.js';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 function Example() {
-  const [items, setItems] = useState<Country[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Country[]>([]);
   useEffect(() => {
-    getCountries().then((countries) => setItems(countries));
+    getCountries().then((countries) => {
+      items.value = countries;
+    });
   }, []);
 
   // tag::snippet[]
-  const [selectedCountries, setSelectedCountries] = useState<Country[]>([]);
-  const selectedCountriesText = selectedCountries.map((country) => country.name).join(', ');
+  const selectedCountries = useSignal<Country[]>([]);
+  const selectedCountriesText = selectedCountries.value.map((country) => country.name).join(', ');
 
   return (
     <HorizontalLayout theme="spacing">
@@ -22,10 +27,10 @@ function Example() {
         label="Countries"
         itemLabelPath="name"
         itemIdPath="id"
-        items={items}
-        selectedItems={selectedCountries}
+        items={items.value}
+        selectedItems={selectedCountries.value}
         onSelectedItemsChanged={(event) => {
-          setSelectedCountries(event.detail.value);
+          selectedCountries.value = event.detail.value;
         }}
       />
 

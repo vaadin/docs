@@ -1,11 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   DatePicker,
   type DatePickerElement,
   type DatePickerDate,
-} from '@hilla/react-components/DatePicker.js';
-import { useState } from 'react';
+} from '@vaadin/react-components/DatePicker.js';
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
 
@@ -24,9 +25,8 @@ function parseDateIso8601(inputValue: string) {
 }
 
 function Example() {
-  const [selectedDateValue, setSelectedDateValue] = useState(
-    dateFnsFormat(new Date(), 'yyyy-MM-dd')
-  );
+  useSignals(); // hidden-source-line
+  const selectedDateValue = useSignal(dateFnsFormat(new Date(), 'yyyy-MM-dd'));
 
   const datePickerRef = useRef<DatePickerElement>(null);
   useEffect(() => {
@@ -38,15 +38,17 @@ function Example() {
         parseDate: parseDateIso8601,
       };
     }
-  }, [datePickerRef]);
+  }, [datePickerRef.current]);
 
   return (
     <DatePicker
       ref={datePickerRef}
       label="Select a date:"
-      value={selectedDateValue}
+      value={selectedDateValue.value}
       helperText="Date picker configured to use ISO 8601 format"
-      onValueChanged={(event) => setSelectedDateValue(event.detail.value)}
+      onValueChanged={(event) => {
+        selectedDateValue.value = event.detail.value;
+      }}
     />
   );
   // end::snippet[]

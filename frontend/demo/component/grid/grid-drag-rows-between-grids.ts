@@ -36,13 +36,13 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor draggedItem: Person | undefined;
+  private draggedItem: Person | undefined;
 
   @state()
-  private accessor grid1Items: Person[] = [];
+  private grid1Items: Person[] = [];
 
   @state()
-  private accessor grid2Items: Person[] = [];
+  private grid2Items: Person[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 10 });
@@ -55,7 +55,7 @@ export class Example extends LitElement {
   };
 
   private clearDraggedItem = () => {
-    delete this.draggedItem;
+    this.draggedItem = undefined;
   };
 
   protected override render() {
@@ -64,7 +64,7 @@ export class Example extends LitElement {
         <vaadin-grid
           .items="${this.grid1Items}"
           rows-draggable
-          drop-mode="on-grid"
+          .dropMode=${this.draggedItem ? 'on-grid' : undefined}
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
           @grid-drop="${() => {
@@ -93,7 +93,7 @@ export class Example extends LitElement {
         <vaadin-grid
           .items="${this.grid2Items}"
           rows-draggable
-          drop-mode="on-grid"
+          .dropMode=${this.draggedItem ? 'on-grid' : undefined}
           @grid-dragstart="${this.startDraggingItem}"
           @grid-dragend="${this.clearDraggedItem}"
           @grid-drop="${() => {

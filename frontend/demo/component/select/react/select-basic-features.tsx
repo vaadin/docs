@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Select } from '@hilla/react-components/Select.js';
-import { Tooltip } from '@hilla/react-components/Tooltip.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { Select } from '@vaadin/react-components/Select.js';
+import { Tooltip } from '@vaadin/react-components/Tooltip.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function Example() {
@@ -32,9 +32,8 @@ function Example() {
   return (
     // tag::snippet[]
     <Select label="Label" helperText="Helper text" placeholder="Placeholder" items={items}>
-      {/* Icon and Tooltip are currently disabled due to https://github.com/vaadin/react-components/issues/131 />}
-      {/* <Tooltip slot="tooltip" text="Tooltip text" />
-      <Icon slot="prefix" icon="vaadin:vaadin-h" /> */}
+      <Tooltip slot="tooltip" text="Tooltip text" />
+      <Icon slot="prefix" icon="vaadin:vaadin-h" />
     </Select>
     // end::snippet[]
   );

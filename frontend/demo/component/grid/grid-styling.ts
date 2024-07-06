@@ -5,7 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
-import type { GridColumn, GridItemModel } from '@vaadin/grid';
+import type { GridItemModel } from '@vaadin/grid';
+import type { GridColumn } from '@vaadin/grid/vaadin-grid-column.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -25,7 +26,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: PersonWithRating[] = [];
+  private items: PersonWithRating[] = [];
 
   private ratingFormatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,

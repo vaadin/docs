@@ -1,28 +1,31 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
-import { DatePicker } from '@hilla/react-components/DatePicker.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { DatePicker } from '@vaadin/react-components/DatePicker.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
-  const [departureDate, setDepartureDate] = useState('');
-  const [returnDate, setReturnDate] = useState('');
+  useSignals(); // hidden-source-line
+  const departureDate = useSignal('');
+  const returnDate = useSignal('');
 
   return (
     // tag::snippet[]
     <HorizontalLayout theme="spacing">
       <DatePicker
         label="Departure date"
-        max={returnDate}
+        max={returnDate.value}
         onValueChanged={(event) => {
-          setDepartureDate(event.detail.value);
+          departureDate.value = event.detail.value;
         }}
       />
 
       <DatePicker
         label="Return date"
-        min={departureDate}
+        min={departureDate.value}
         onValueChanged={(event) => {
-          setReturnDate(event.detail.value);
+          returnDate.value = event.detail.value;
         }}
       />
     </HorizontalLayout>

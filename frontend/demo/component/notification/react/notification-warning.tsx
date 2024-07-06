@@ -1,17 +1,25 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Notification } from '@hilla/react-components/Notification.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import React from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Button } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Notification } from '@vaadin/react-components/Notification.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 
 function Example() {
-  const [notificationOpened, setNotificationOpened] = useState(true);
+  useSignals(); // hidden-source-line
+  const notificationOpened = useSignal(true);
 
   return (
     <>
-      <Button disabled={notificationOpened} onClick={() => setNotificationOpened(true)}>
+      <Button
+        disabled={notificationOpened.value}
+        onClick={() => {
+          notificationOpened.value = true;
+        }}
+      >
         Show notification
       </Button>
 
@@ -21,9 +29,9 @@ function Example() {
         theme="warning"
         duration={0}
         position="middle"
-        opened={notificationOpened}
+        opened={notificationOpened.value}
         onOpenedChanged={(event) => {
-          setNotificationOpened(event.detail.value);
+          notificationOpened.value = event.detail.value;
         }}
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
@@ -33,7 +41,12 @@ function Example() {
             Close this warning to continue working.
           </div>
 
-          <Button theme="tertiary-inline" onClick={() => setNotificationOpened(false)}>
+          <Button
+            theme="tertiary-inline"
+            onClick={() => {
+              notificationOpened.value = false;
+            }}
+          >
             <Icon icon="lumo:cross" />
           </Button>
         </HorizontalLayout>

@@ -1,20 +1,23 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   Grid,
   type GridDataProviderCallback,
   type GridDataProviderParams,
-} from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { GridTreeColumn } from '@hilla/react-components/GridTreeColumn.js';
+} from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { GridTreeColumn } from '@vaadin/react-components/GridTreeColumn.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Button } from '@hilla/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Button } from '@vaadin/react-components/Button.js';
 
 function Example() {
-  const [managers, setManagers] = useState<Person[]>([]);
-  const [expandedItems, setExpandedItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const managers = useSignal<Person[]>([]);
+  const expandedItems = useSignal<Person[]>([]);
 
   const dataProvider = useMemo(
     () =>
@@ -28,8 +31,8 @@ function Example() {
           managerId: params.parentItem ? params.parentItem.id : null,
         });
 
-        if (!managers.length && !params.parentItem) {
-          setManagers(people);
+        if (!managers.value.length && !params.parentItem) {
+          managers.value = people;
         }
 
         callback(people, hierarchyLevelSize);
@@ -38,11 +41,11 @@ function Example() {
   );
 
   const expandAll = () => {
-    setExpandedItems([...managers]);
+    expandedItems.value = [...managers.value];
   };
 
   const collapseAll = () => {
-    setExpandedItems([]);
+    expandedItems.value = [];
   };
 
   return (
@@ -61,7 +64,7 @@ function Example() {
         dataProvider={dataProvider}
         itemIdPath="id"
         itemHasChildrenPath="manager"
-        expandedItems={expandedItems}
+        expandedItems={expandedItems.value}
       >
         <GridTreeColumn path="firstName" />
         <GridColumn path="lastName" />

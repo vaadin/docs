@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { Notification } from '@hilla/react-components/Notification.js';
+import { Notification } from '@vaadin/react-components/Notification.js';
 import React, { useEffect, useRef } from 'react';
-import { Upload } from '@hilla/react-components/Upload.js';
-import type { UploadFileRejectEvent } from '@hilla/react-components/Upload.js';
+import { Upload } from '@vaadin/react-components/Upload.js';
+import type { UploadFileRejectEvent } from '@vaadin/react-components/Upload.js';
 
 const fileRejectHandler = (event: UploadFileRejectEvent) => {
   Notification.show(event.detail.error);
@@ -20,7 +20,7 @@ function Example() {
         'The provided file does not have the correct format (PDF document).';
       uploadRef.current.i18n = { ...uploadRef.current.i18n };
     }
-  }, []);
+  }, [uploadRef.current]);
 
   return (
     <Upload

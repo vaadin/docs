@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { DatePicker, type DatePickerElement } from '@hilla/react-components/DatePicker.js';
+import { DatePicker, type DatePickerElement } from '@vaadin/react-components/DatePicker.js';
 
 function Example() {
   // tag::snippet[]
@@ -13,7 +13,7 @@ function Example() {
         firstDayOfWeek: 1,
       };
     }
-  }, []);
+  }, [datePickerRef.current]);
 
   return <DatePicker label="Vacation start date" showWeekNumbers ref={datePickerRef} />;
   // end::snippet[]

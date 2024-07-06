@@ -1,36 +1,39 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { Dialog } from '@hilla/react-components/Dialog.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Button } from '@vaadin/react-components/Button.js';
+import { Dialog } from '@vaadin/react-components/Dialog.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(false);
-  const [user, setUser] = useState<Person>();
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(false);
+  const user = useSignal<Person | undefined>(undefined);
 
   useEffect(() => {
     getPeople({ count: 1 }).then(({ people }) => {
-      setUser(people[0]);
+      user.value = people[0];
     });
   }, []);
 
   function open() {
-    setDialogOpened(true);
+    dialogOpened.value = true;
   }
 
   function close() {
-    setDialogOpened(false);
+    dialogOpened.value = false;
   }
 
   return (
     <>
       {/* tag::snippet[] */}
       <Dialog
-        headerTitle={`Delete user "${user?.firstName} ${user?.lastName}"?`}
-        opened={dialogOpened}
+        headerTitle={`Delete user "${user.value?.firstName} ${user.value?.lastName}"?`}
+        opened={dialogOpened.value}
         onOpenedChanged={(event) => {
-          setDialogOpened(event.detail.value);
+          dialogOpened.value = event.detail.value;
         }}
         footerRenderer={() => (
           <>

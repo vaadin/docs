@@ -1,0 +1,94 @@
+---
+title: Role-Based Access Control
+description: How to restrict access for selected Hilla views based on roles defined for the logged-in user.
+order: 100
+---
+// tag::content[]
+
+
+= Role-Based Access Control for Views
+
+// TODO I assume the --auth CLI parameter would be the natural starting point for this, instead of pointing to the full-blown article/tutorial
+It's possible to restrict access for selected Hilla views, based on roles defined for the logged-in user. This article explains how to do this.
+
+To follow the examples here, you'll need a Hilla application with authentication enabled. The  <<spring-login#, Authentication With Spring Security>> page will help you to get started.
+
+
+== Define Roles with Spring Security
+
+Roles are a set of string attributes representing the authorities that are assigned to a user. In Spring Security, the user details used for authentication also specify roles.
+
+Typically, roles are defined in authority strings prefixed with `ROLE_`. After successful authentication, these are accessible via the [classname]`GrantedAuthority` objects returned by [methodname]`Authentication.getAuthorities()`. See the <<spring-login#, Authentication With Spring Security>> page for examples of configuration.
+
+
+== Using Roles in TypeScript
+
+A convenient way to use roles for access control in TypeScript views is to add a Hilla endpoint that gets user information, including roles, from Java during authentication. To do this, first define a bean representing information about the user:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=snippet]
+----
+
+Next, add the endpoint to get a [classname]`UserInfo` containing authorities for the logged-in user on the client side:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfoService.java[tags=snippet]
+----
+
+Then, change the authentication implementation in TypeScript to get the user information from the endpoint. Change the [filename]`auth.ts` defined in <<spring-login#client-configuration, Authentication With Spring Security>> as follows:
+
+.`auth.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/auth.ts[tags=basic;login;userinfo;!offline]
+----
+
+Add an [methodname]`isUserInRole()` helper, which enables role-based access control checks for the UI.
+
+.`auth.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/auth.ts[tags=isUserInRole]
+----
+
+
+== Routes with Access Control
+
+To enable allowed roles to be specified on the view routes, define an extended type [classname]`ViewRoute`, that has a `rolesAllowed` string, like so:
+
+.`routes.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=ViewRoute]
+----
+
+Add a method to check access for the given route by iterating `rolesAllowed`, using [methodname]`isUserInRole()`, as follows:
+
+.`routes.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=isAuthorizedViewRoute]
+----
+
+Then use the method added in the route action to redirect on unauthorized access like this:
+
+.`routes.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/routes.ts[tags=routes]
+----
+
+
+== Hiding Unauthorized Menu Items
+
+Filter the route list using the [methodname]`isAuthorizedViewRoute()` helper defined earlier. Then use the filtered list of routes as menu items:
+
+.`main-view.ts`
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/authentication/main-view.ts[tags=menuRoutes]
+----
+
+// end::content[]

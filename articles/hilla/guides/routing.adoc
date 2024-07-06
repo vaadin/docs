@@ -1,0 +1,374 @@
+---
+title: Routing
+description: How to implement routing in Hilla React applications.
+order: 60
+---
+
+= [since:com.vaadin:vaadin@v24.4]#File-Based Routing#
+
+Since Vaadin 24.4, Hilla React applications are using the file router. This documentation can guide you through the basics of using routing in your application.
+
+
+== Adding Routes
+
+The file router is using the `.tsx` (and `.jsx`) files in the `src/main/frontend/views/` directory and its subdirectories as routes.
+
+[NOTE]
+[role="since:com.vaadin:vaadin@V24.4"]
+.The default frontend source directory
+====
+Since Vaadin 24.4, the default frontend source directory location is `src/main/frontend`. The documentation is using the new default.
+
+The old default location, the `frontend` directory in the root of the application project, is also supported.
+====
+
+To add a new route to an application, create a new component file that should be displayed when the route is active. For example, create a file called [filename]`example.tsx` in the `views` directory with the following content:
+
+[source,tsx]
+----
+export default function ExampleView() {
+  return <div>My first view</div>;
+}
+----
+
+Now, after saving the file, you should be able to navigate to `http://localhost:8080/example` and see the new component rendered in the browser.
+
+To add a simple navigation link that points to your new route, use the `<NavLink>` component from `react-router-dom`:
+
+[source,tsx]
+----
+import { NavLink } from 'react-router-dom';
+
+<NavLink to="/my-view">My View</NavLink>
+----
+
+This creates a clickable link in your application that navigates to the specified route.
+
+
+=== Filename Conventions
+
+Hilla file router supports the following file naming conventions for the `.tsx`/`.jsx` files in `views` and any nested subdirectories:
+
+`_` at the start — ignore the file::
+  The file-system router ignores any files named starting with the underscore character, for example, `_utils.tsx`.
+`@index.tsx` — directory index view::
+  Files named `@index.tsx` are mapped to the index of the directory. For example, the `views/@index.tsx` file will be mapped to the root URL of the application (`/`). Similarly, `views/some-dir/@index.tsx` file will be mapped to the `/some-dir/`.
+`@layout.tsx` — directory layout::
+  Files named `@layout.tsx` define the layout (view wrapping component) for the other views defined in the same directory or its subdirectories. The layouts are further described in the <<Adding Layout Routes>> section.
+`{parameterName}.tsx` — parameter mapping::
+  The file name part between the braces is mapped to a required route parameter, as described in <<Adding Routes with Parameters>> below.
+`{{optionalParameter}}.tsx` — optional parameter mapping::
+  Same as above, but the mapped route parameter is optional.
+`{pass:[...]wildcard}.tsx` — wildcard mapping::
+  Creates a route mapping for the wildcard parameter (`"*"`), which matches any characters.
+
+
+== Adding Routes with Parameters
+
+Sometimes, you may need to create routes that accept dynamic parameters, such as product IDs or names. This can be done by using one of the parameter filename conventions:
+`{parameter}.tsx`, `{{optionalParameter}}.tsx`, or `{pass:[...]wildcard}.tsx`.
+
+For example, create the file named `{productId}.tsx` in the `src/main/frontend/views/products/` directory with the following content:
+
+[source,tsx]
+----
+import { useParams } from 'react-router-dom';
+
+export default function ProductView() {
+  const { productId } = useParams();
+
+  // Fetch product details for the given ID
+  const product = useSignal<Product | undefined>(undefined);
+
+  useEffect(() => {
+    ProductEndpoint.getProduct(productId).then(p => product.value = p);
+  }, [productId]);}
+
+  // ...
+}
+----
+
+This creates the route with the path `/products/{productId}`, where `{productId}` acts as a placeholder for the actual product ID. To access the route parameter in the view, use the `useParams` hook from `react-router-dom` in your component, as shown in the example above. The view component fetches product data for the product ID in the route.
+
+To link to this route with a specific `productId`, you can use the `to` property of `NavLink` like this:
+
+[source,tsx]
+----
+<NavLink to="/products/123">Show product details</NavLink>
+----
+
+[NOTE]
+.The wildcard parameter name
+====
+Due to a limitation in React Router, the wildcard parameter is always named `*` in the `useParams()` result. Use a destructuring rename for convenience:
+
+.`{pass:[...]wildcard}.tsx`
+[source,tsx]
+----
+export default function WildcardView() {
+  const { "*": wildcard } = useParams();
+  // ...
+}
+----
+
+The file name part following the three dots (as in, for example, `{pass:[...]name}.tsx`) is ignored.
+====
+
+== Adding Layout Routes
+
+Layouts are special view components that wrap around other views. It is common for applications to have at least one layout: the main layout that renders the toolbar, the main manu, and similar functionality.
+
+For adding a layout, create a view file named `@layout.tsx` in the views directory, and render the `<Outlet/>` in the component. You can also use the <</components/app-layout#,`App Layout`>> component to add common application layout parts.
+
+The following example defines the main layout with the drawer and the main menu:
+
+[source,tsx]
+----
+import { AppLayout } from '@vaadin/react-components/AppLayout.js';
+import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
+import { SideNav } from '@vaadin/react-components/SideNav.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
+import { Suspense } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+
+export default function MainLayout() {
+  return (
+    <AppLayout primarySection="drawer">
+      <div slot="drawer" className="flex flex-col justify-between h-full p-m">
+        <header className="flex flex-col gap-m">
+          <h1 className="text-l m-0">My application</h1>
+          <SideNav onNavigate={({path}) => path && navigate(path)} location={location}>
+            <SideNavItem path="/example"></SideNavItem>
+          </SideNav>
+        </header>
+      </div>
+
+      <DrawerToggle slot="navbar" aria-label="Menu toggle"></DrawerToggle>
+
+      <Suspense fallback={<ProgressBar indeterminate={true} className="m-0" />}>
+        <Outlet />
+      </Suspense>
+    </AppLayout>
+  );
+}
+----
+
+
+== Creating Menu From Routes
+
+The structure of application routes is naturally closely related with navigation menus. The main menu often directly lists the same items as the routes define, thus it could be created from the routes.
+
+Hilla file router offers the `createMenuItems()` utility function to simplify populating the menu using routes data.
+
+The following example demonstrates creating the main menu `createMenuItems()`:
+
+[source,tsx]
+----
+import { createMenuItems } from '@vaadin/hilla-file-router/runtime.js';
+import { SideNav } from '@vaadin/react-components/SideNav.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+
+const navLinkClasses = ({ isActive }: any) => {
+  return `block rounded-m p-s ${isActive ? 'bg-primary-10 text-primary' : 'text-body'}`;
+};
+
+export default function MainMenu() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <SideNav onNavigate={({path}) => path && navigate(path)} location={location}>
+      {
+        createMenuItems().map(({ to, icon, title }) => (
+          <SideNavItem path={to} key={to}>
+            {icon && <Icon icon={icon} slot="prefix"/>}
+            {title}
+          </SideNavItem>
+        ))
+      }
+    </SideNav>
+  );
+}
+----
+
+
+== Customizing Routes
+
+In some cases, you may want to customize the configuration of a route on top of what is inferred from the file path. By customizing a route you can, for example, set a page title, a menu link title and icon, or override the route path.
+
+To customize the route to a route, in your view source file, export an object named `config` of `ViewConfig` type:
+
+[source,tsx]
+.`src/main/frontend/views/about.tsx`
+----
+import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+
+export default fuction AboutView() {
+  return (
+    /* ... */
+  );
+}
+
+export const config: ViewConfig = {
+  title: "About Us",
+};
+----
+
+In this example, a page title is added to the example route.
+
+To access this metadata from within a component, you can use the `useRouteMetadata` hook provided in the starter applications. In the following example, the page title is used to display it in the header of the main layout:
+
+[source,tsx]
+----
+import { useRouteMetadata } from "Frontend/util/routing";
+
+export default function MainLayout() {
+  const metadata = useRouteMetadata();
+  const currentTitle = metadata?.title ?? 'My App';
+
+  useEffect(() => {document.title = currentTitle;}, [currentTitle]);
+
+  // ...
+}
+
+----
+
+Now, when the `/about` route is active, the title `About us` is displayed in the header.
+
+.Extracting metadata using `useMatches`
+[NOTE]
+====
+Under the hood, the route metadata is passed through using the `.handle` React Router route object property. This allows getting the metadata from the `useMatches` hook:
+
+[source,ts]
+----
+import { useMatches } from "react-router-dom";
+
+export default function MainLayout() {
+  const matches = useMatches();
+  const currentHandle = matches[matches.length - 1]?.handle as any;
+  const currentTitle = currentHandle?.title ?? 'My App';
+
+  useEffect(() => {document.title = currentTitle;}, [currentTitle]);
+
+  // ...
+}
+----
+====
+
+=== ViewConfig Options Reference
+
+Here are the options currently supported in the `config: ViewConfig` object:
+
+`title: string`::
+  View title for use in the main layout header, in the browser window `document.title`, and as the default for the menu entry. If not defined, the component name will be taken, transformed from camelCase.
+
+`route: string`::
+Overrides the route path configuration. Uses the same syntax as the `path` property with React Router.
+
+`loginRequired: boolean`::
+For applications using authentication, requires user authentication for accessing the view.
+
+`rolesAllowed: readonly string[]`::
+  For applications using authentication, the array of user roles that are allowed to access the view.
+
+`menu: object`::
+  The menu item metadata object with the following options:
+
+  `title?: string`:::
+    Title to use in the menu item.
+
+  `icon?: string;`:::
+    Icon to use in the menu.
+
+  `order?: number`:::
+    The number used to determine the order in the menu. Ties are resolved based on the used title. Entries without explicitly defined ordering are put below entries with an order.
+
+  `exclude?: boolean`:::
+    Set to true to explicitly exclude a view from the automatically populated menu.
+
+
+== Programmatic Navigation
+
+In some cases, you may need to navigate programmatically between routes. For example, this may be needed in response to user interactions or application logic. For this you can use the `useNavigate` hook from `react-router-dom`. It provides a function that allows you to navigate to a specific route when called. Additionally, it offers options to control the navigation behavior, such as pushing to the history stack or replacing the current entry.
+
+For example, after saving a product, you might want to navigate back to the product list:
+
+[source,tsx]
+----
+import { useNavigate } from 'react-router-dom';
+
+function ProductDetailView() {
+  const navigate = useNavigate();
+
+  const handleSave = async () => {
+    await ProductEndpoint.save(product);
+    navigate('/products');
+  };
+
+  return (
+    <div>
+      ...
+      <button onClick={handleSave}>Save</button>
+    </div>
+  );
+}
+----
+
+By default, this pushes a new entry to the browser's navigation history. If you want to replace the current entry instead, you can pass `{ replace: true }` as the second argument like so:
+
+[source,tsx]
+----
+navigate('/products', { replace: true });
+----
+
+
+== Adding an Error Page
+
+Adding a custom error page to an application is essential for handling situations in which no other route matches the requested URL. This allows you to provide helpful feedback to the user, for example, by communicating the problem or providing links to other pages.
+
+To add an error page (e.g., for 404 not found), create a new route view file for your error page (e.g., `error.tsx`), set the route config to use a wildcard route, and exclude the route from the menu:
+
+[source,tsx]
+.`src/main/frontend/views/error.tsx`
+----
+export default function ErrorView() {
+  return <div>Page not found</div>;
+}
+
+export const config: ViewConfig = {
+  route: '*',
+  menu: {
+    exclude: true,
+  },
+};
+----
+
+This route matches any unknown routes and display the error page.
+
+Customize the `ErrorView` component to provide helpful information to the user.
+
+Now, your application is equipped with an error page that'll be shown when no other route matches a requested URL.
+
+
+== The `routes.tsx` Source File
+
+The contents of the `routes.tsx` source file determine whether the file based routing, the routes manually added for React Router, or the Flow server fallback are enabled.
+
+Starting from Vaadin 24.4, when the `routes.tsx` source file is missing, the file is automatically generated under `src/main/frontend/generated/routes.tsx`. You can copy it to `src/main/frontend/` and customize for your needs. By default, the generated file combines the file routes with the Flow fallback.
+
+[NOTE]
+.Existing `routes.tsx` from prior Hilla versions
+====
+The Hilla React applications created before version 24.4 typically have the `routes.tsx` source file that uses the React Router directly with manually listed routes. Such file effectively disables the file router.
+
+To enable the file router, remove the existing `routes.tsx` source file or replace it with a modified copy of the generated file.
+====
+
+
+== Further Information
+
+For more information about routing in Hilla React applications, see the <</hilla/reference/react-router#,File-system Router Reference>> article.

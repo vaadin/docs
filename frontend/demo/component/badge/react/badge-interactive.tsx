@@ -1,10 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { ComboBox, type ComboBoxChangeEvent } from '@hilla/react-components/ComboBox.js';
-import { Button, type ButtonElement } from '@hilla/react-components/Button.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { ComboBox, type ComboBoxChangeEvent } from '@vaadin/react-components/ComboBox.js';
+import { Button, type ButtonElement } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -12,13 +14,14 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 type Profession = string;
 
 function Example() {
-  const [items, setItems] = useState<Profession[]>([]);
-  const [selectedProfessions, setSelectedProfessions] = useState<Profession[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Profession[]>([]);
+  const selectedProfessions = useSignal<Profession[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
       const professions = [...new Set(people.map(({ profession }) => profession))];
-      setItems(professions);
+      items.value = professions;
     });
   }, []);
 
@@ -26,8 +29,8 @@ function Example() {
     const { value } = event.target;
 
     if (value) {
-      if (!selectedProfessions.includes(value)) {
-        setSelectedProfessions([...selectedProfessions, value]);
+      if (!selectedProfessions.value.includes(value)) {
+        selectedProfessions.value = [...selectedProfessions.value, value];
       }
     }
   };
@@ -36,17 +39,17 @@ function Example() {
     const profession = event.currentTarget.dataset.profession;
 
     if (profession) {
-      setSelectedProfessions(selectedProfessions.filter((p) => p !== profession));
+      selectedProfessions.value = selectedProfessions.value.filter((p) => p !== profession);
     }
   };
 
   // tag::snippet[]
   return (
     <VerticalLayout theme="spacing">
-      <ComboBox label="Profession" items={items} onChange={onChange} />
+      <ComboBox label="Profession" items={items.value} onChange={onChange} />
 
       <HorizontalLayout style={{ flexWrap: 'wrap' }} theme="spacing">
-        {selectedProfessions.map((profession) => (
+        {selectedProfessions.value.map((profession) => (
           <span key={profession} {...{ theme: 'badge pill contrast' }}>
             <span>{profession}</span>
             <Button

@@ -1,7 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
-import { Chart } from '@hilla/react-components/Chart.js';
-import { ChartSeries } from '@hilla/react-components/ChartSeries.js';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Chart } from '@vaadin/react-components-pro/Chart.js';
+import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
 import type { Options, PointOptionsObject, SeriesOptionsType } from 'highcharts';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -94,17 +96,18 @@ const seriesOptions: SeriesOptionsType = {
 };
 
 function Example() {
-  const [theme, setTheme] = useState('');
+  useSignals(); // hidden-source-line
+  const theme = useSignal('');
 
   function changeTheme(e: React.ChangeEvent<HTMLSelectElement>) {
-    setTheme(e.target.value);
+    theme.value = e.target.value;
   }
 
   return (
     <div style={hostStyle}>
       {/* tag::snippet[] */}
       <Chart
-        theme={theme}
+        theme={theme.value}
         style={chartStyle}
         type="column"
         categories={['Jan', 'Feb', 'Mar']}
@@ -118,7 +121,7 @@ function Example() {
       <Chart
         type="area"
         stacking="normal"
-        theme={theme}
+        theme={theme.value}
         style={chartStyle}
         categories={months}
         additionalOptions={areaOptions}
@@ -138,11 +141,17 @@ function Example() {
         />
       </Chart>
 
-      <Chart theme={theme} style={chartStyle} type="pie" tooltip additionalOptions={pieOptions}>
+      <Chart
+        theme={theme.value}
+        style={chartStyle}
+        type="pie"
+        tooltip
+        additionalOptions={pieOptions}
+      >
         <ChartSeries title="Brands" values={pieValues} />
       </Chart>
 
-      <Chart theme={theme} style={chartStyle} polar additionalOptions={polarOptions}>
+      <Chart theme={theme.value} style={chartStyle} polar additionalOptions={polarOptions}>
         <ChartSeries
           type="column"
           title="Column"

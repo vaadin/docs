@@ -1,20 +1,23 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
-import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { RadioGroup } from '@hilla/react-components/RadioGroup.js';
-import type { RadioGroupValueChangedEvent } from '@hilla/react-components/RadioGroup.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { RadioButton } from '@hilla/react-components/RadioButton.js';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Button } from '@vaadin/react-components/Button.js';
+import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
+import type { RadioGroupValueChangedEvent } from '@vaadin/react-components/RadioGroup.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { RadioButton } from '@vaadin/react-components/RadioButton.js';
 
 function Example() {
-  const [theme, setTheme] = useState('padding');
+  useSignals(); // hidden-source-line
+  const theme = useSignal('padding');
 
   return (
     <>
       {/* tag::snippet[] */}
       <VerticalLayout
-        theme={`${theme} spacing`}
+        theme={`${theme.value} spacing`}
         className="height-4xl"
         style={{ alignItems: 'stretch' }}
       >
@@ -25,9 +28,9 @@ function Example() {
 
       <RadioGroup
         label="Padding"
-        value={theme}
+        value={theme.value}
         onValueChanged={(event: RadioGroupValueChangedEvent) => {
-          setTheme(event.detail.value);
+          theme.value = event.detail.value;
         }}
       >
         <RadioButton value="padding" label="Enabled" />

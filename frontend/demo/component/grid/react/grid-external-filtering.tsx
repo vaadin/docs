@@ -1,14 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { TextField } from '@hilla/react-components/TextField.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 type PersonEnhanced = Person & { displayName: string };
@@ -17,15 +19,16 @@ type PersonEnhanced = Person & { displayName: string };
 function nameRenderer(person: PersonEnhanced) {
   return (
     <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
-      <Avatar img={person.pictureUrl} name={person.displayName}></Avatar>
+      <Avatar img={person.pictureUrl} name={person.displayName} />
       <span> {person.displayName} </span>
     </HorizontalLayout>
   );
 }
 
 function Example() {
-  const [filteredItems, setFilteredItems] = useState<PersonEnhanced[]>([]);
-  const [items, setItems] = useState<PersonEnhanced[]>([]);
+  useSignals(); // hidden-source-line
+  const filteredItems = useSignal<PersonEnhanced[]>([]);
+  const items = useSignal<PersonEnhanced[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -33,43 +36,39 @@ function Example() {
         ...person,
         displayName: `${person.firstName} ${person.lastName}`,
       }));
-      setItems(newItems);
-      setFilteredItems(newItems);
+      items.value = newItems;
+      filteredItems.value = newItems;
     });
   }, []);
 
   return (
-    <>
-      <VerticalLayout theme="spacing">
-        <TextField
-          placeholder="Search"
-          style={{ width: '50%' }}
-          onValueChanged={(e) => {
-            const searchTerm = (e.detail.value || '').trim().toLowerCase();
-            setFilteredItems(
-              items.filter(
-                ({ displayName, email, profession }) =>
-                  !searchTerm ||
-                  displayName.toLowerCase().includes(searchTerm) ||
-                  email.toLowerCase().includes(searchTerm) ||
-                  profession.toLowerCase().includes(searchTerm)
-              )
-            );
-          }}
-        >
-          <Icon slot="prefix" icon="vaadin:search"></Icon>
-        </TextField>
+    <VerticalLayout theme="spacing">
+      <TextField
+        placeholder="Search"
+        style={{ width: '50%' }}
+        onValueChanged={(e) => {
+          const searchTerm = (e.detail.value || '').trim().toLowerCase();
+          filteredItems.value = items.value.filter(
+            ({ displayName, email, profession }) =>
+              !searchTerm ||
+              displayName.toLowerCase().includes(searchTerm) ||
+              email.toLowerCase().includes(searchTerm) ||
+              profession.toLowerCase().includes(searchTerm)
+          );
+        }}
+      >
+        <Icon slot="prefix" icon="vaadin:search"></Icon>
+      </TextField>
 
-        <Grid items={filteredItems}>
-          <GridColumn header="Name" flexGrow={0} width="230px">
-            {({ item }) => nameRenderer(item)}
-          </GridColumn>
+      <Grid items={filteredItems.value}>
+        <GridColumn header="Name" flexGrow={0} width="230px">
+          {({ item }) => nameRenderer(item)}
+        </GridColumn>
 
-          <GridColumn path="email"></GridColumn>
-          <GridColumn path="profession"></GridColumn>
-        </Grid>
-      </VerticalLayout>
-    </>
+        <GridColumn path="email" />
+        <GridColumn path="profession" />
+      </Grid>
+    </VerticalLayout>
   );
 }
 

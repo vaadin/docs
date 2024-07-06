@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { ProgressBar } from '@hilla/react-components/ProgressBar.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
   return (

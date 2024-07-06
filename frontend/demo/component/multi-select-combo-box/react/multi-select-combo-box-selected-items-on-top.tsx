@@ -1,16 +1,23 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { MultiSelectComboBox } from '@hilla/react-components/MultiSelectComboBox.js';
+import React, { useEffect } from 'react';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { MultiSelectComboBox } from '@vaadin/react-components/MultiSelectComboBox.js';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [items, setItems] = useState<Country[]>([]);
+  const items = useSignal<Country[]>([]);
 
   useEffect(() => {
-    getCountries().then((countries) => setItems(countries));
+    getCountries().then((countries) => {
+      items.value = countries;
+    });
   }, []);
+
+  const selectedItems = useComputed(() => items.value.slice(20, 23));
 
   return (
     <MultiSelectComboBox
@@ -18,9 +25,9 @@ function Example() {
       itemLabelPath="name"
       itemIdPath="id"
       itemValuePath="id"
-      items={items}
+      items={items.value}
       selectedItemsOnTop
-      selectedItems={items.slice(20, 23)}
+      selectedItems={selectedItems.value}
     />
   );
   // end::snippet[]

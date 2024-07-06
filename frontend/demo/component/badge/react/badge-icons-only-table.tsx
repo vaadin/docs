@@ -1,17 +1,22 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridColumn, type GridColumnElement } from '@hilla/react-components/GridColumn.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridColumn, type GridColumnElement } from '@vaadin/react-components/GridColumn.js';
 import { getUserPermissions } from 'Frontend/demo/domain/DataService';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 import '@vaadin/icons';
 
 function Example() {
-  const [items, setItems] = useState<UserPermissions[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<UserPermissions[]>([]);
 
   useEffect(() => {
-    getUserPermissions().then((data) => setItems([...data]));
+    getUserPermissions().then((data) => {
+      items.value = [...data];
+    });
   }, []);
 
   // tag::snippet[]
@@ -48,7 +53,7 @@ function Example() {
   };
 
   return (
-    <Grid items={items}>
+    <Grid items={items.value}>
       <GridColumn path="name" header="Name" />
       <GridColumn id="view" header="View">
         {renderBoolean}

@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React from 'react';
-import { TextArea } from '@hilla/react-components/TextArea.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout';
+import { TextArea } from '@vaadin/react-components/TextArea.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout';
 
 function Example() {
   return (

@@ -1,15 +1,18 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Button } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
-  const [counter, setCounter] = useState(0);
+  useSignals(); // hidden-source-line
+  const counter = useSignal(0);
 
   return (
     // tag::snippet[]
     <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
-      <Button onClick={() => setCounter(counter + 1)}>Button</Button>
+      <Button onClick={() => counter.value++}>Button</Button>
       <p>Clicked {counter} times</p>
     </HorizontalLayout>
     // end::snippet[]

@@ -1,16 +1,21 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
-import { GridPro, type GridProItemPropertyChangedEvent } from '@hilla/react-components/GridPro.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { GridPro, type GridProItemPropertyChangedEvent } from '@vaadin/react-components-pro/GridPro.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { Notification } from '@vaadin/notification';
-import { GridProEditColumn } from '@hilla/react-components/GridProEditColumn.js';
+import { GridProEditColumn } from '@vaadin/react-components-pro/GridProEditColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 function Example() {
-  const [items, setItems] = React.useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const items = useSignal<Person[]>([]);
 
-  React.useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+  useEffect(() => {
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   const showErrorNotification = (msg: string) => {
@@ -43,7 +48,7 @@ function Example() {
 
   return (
     // tag::snippet[]
-    <GridPro items={items} onItemPropertyChanged={itemPropertyListener}>
+    <GridPro items={items.value} onItemPropertyChanged={itemPropertyListener}>
       <GridProEditColumn path="firstName" />
       <GridProEditColumn path="lastName" />
       <GridProEditColumn path="email" />

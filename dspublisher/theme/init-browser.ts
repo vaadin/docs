@@ -70,7 +70,7 @@ class Footer extends LitElement {
   }
 
   @state()
-  private accessor documentTitle = document.title;
+  private documentTitle = document.title;
 
   private __titleObserver = new MutationObserver(() => {
     this.documentTitle = document.title;
@@ -142,12 +142,7 @@ class Footer extends LitElement {
       </style>
       <section class="discussion-wrapper">
         <p>
-          <b>Was this page helpful?</b><br />Leave a comment or ask a question, or share your own
-          code examples. You can also join the
-          <a href="https://discord.gg/MYFq5RTbBn" rel="noopened">chat on Discord</a> or
-          <a href="https://stackoverflow.com/questions/tagged/vaadin" rel="noopened"
-            >ask questions on StackOverflow</a
-          >.
+          <b>Was this page helpful?</b><br />Leave a comment below or <a href="https://vaadin.com/forum/" rel="noopened">join our forum</a> for further discussions, questions, and sharing your code examples.
         </p>
         <iframe id="discussion-iframe" src="${iframeSrc}"></iframe>
       </section>

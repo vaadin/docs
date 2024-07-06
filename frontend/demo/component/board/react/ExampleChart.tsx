@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Chart } from '@hilla/react-components/Chart.js';
-import { ChartSeries } from '@hilla/react-components/ChartSeries.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Chart } from '@vaadin/react-components-pro/Chart.js';
+import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
 import { getViewEvents } from 'Frontend/demo/domain/DataService';
 import type ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
 
@@ -32,9 +34,12 @@ const chartOptions = {
 };
 
 function Example() {
-  const [events, setEvents] = useState<ViewEvent[]>([]);
+  useSignals(); // hidden-source-line
+  const events = useSignal<ViewEvent[]>([]);
   useEffect(() => {
-    getViewEvents().then((viewEvents) => setEvents(viewEvents));
+    getViewEvents().then((viewEvents) => {
+      events.value = viewEvents;
+    });
   }, []);
 
   return (
@@ -42,7 +47,7 @@ function Example() {
       <header style={titleStyle}>View events</header>
 
       <Chart additionalOptions={chartOptions} categories={monthNames} type="area">
-        {events.map(({ id, city, data }) => (
+        {events.value.map(({ id, city, data }) => (
           <ChartSeries title={city} values={data} key={id} />
         ))}
       </Chart>

@@ -1,13 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { EmailField } from '@hilla/react-components/EmailField.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Button } from '@vaadin/react-components/Button.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { EmailField } from '@vaadin/react-components/EmailField.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
-  const [primaryEmail, setPrimaryEmail] = useState('foo@example.com');
-  const [secondaryEmail, setSecondaryEmail] = useState('bar@example.com');
+  useSignals(); // hidden-source-line
+  const primaryEmail = useSignal('foo@example.com');
+  const secondaryEmail = useSignal('bar@example.com');
 
   return (
     <>
@@ -16,19 +19,35 @@ function Example() {
         <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
           <EmailField
             label="Primary email address"
-            value={primaryEmail}
-            onValueChanged={(event) => setPrimaryEmail(event.detail.value)}
+            value={primaryEmail.value}
+            onValueChanged={(event) => {
+              primaryEmail.value = event.detail.value;
+            }}
           />
-          <Button onClick={() => setPrimaryEmail('')}>Remove</Button>
+          <Button
+            onClick={() => {
+              primaryEmail.value = '';
+            }}
+          >
+            Remove
+          </Button>
         </HorizontalLayout>
 
         <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
           <EmailField
             label="Secondary email address"
-            value={secondaryEmail}
-            onValueChanged={(event) => setSecondaryEmail(event.detail.value)}
+            value={secondaryEmail.value}
+            onValueChanged={(event) => {
+              secondaryEmail.value = event.detail.value;
+            }}
           />
-          <Button onClick={() => setSecondaryEmail('')}>Remove</Button>
+          <Button
+            onClick={() => {
+              secondaryEmail.value = '';
+            }}
+          >
+            Remove
+          </Button>
         </HorizontalLayout>
       </VerticalLayout>
       {/* end::snippet[] */}

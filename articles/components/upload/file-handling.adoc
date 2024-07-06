@@ -1,0 +1,161 @@
+---
+title: File Handling
+description: Handling file uploads.
+order: 60
+---
+
+
+= File Handling
+
+The uploading of files may be handled either with Vaadin Flow using Java, or with Hilla using Lit and React. These are described in the two major sections here.
+
+
+== Handling Uploaded Files in Flow
+
+The Java Flow Upload component provides an API to handle directly uploaded file data, without having to set up an endpoint or a servlet. It uses a [classname]`Receiver` implementation to write the incoming file data into an [classname]`OutputStream`.
+
+The following built-in implementations of [classname]`Receiver` are available:
+
+- [classname]`MemoryBuffer`;
+- [classname]`MultiFileMemoryBuffer`;
+- [classname]`FileBuffer`; and 
+- [classname]`MultiFileBuffer`.
+
+These are described in the sub-sections that follow.
+
+
+=== MemoryBuffer
+
+The [classname]`MemoryBuffer` can handle a single file upload at once. It does so by writing the file data into an in-memory buffer.
+
+Using [classname]`MemoryBuffer` will configure the component so that only a single file can be selected.
+
+[source,java]
+----
+MemoryBuffer memoryBuffer = new MemoryBuffer();
+
+Upload upload = new Upload(memoryBuffer);
+upload.addSucceededListener(event -> {
+    // Read the data from the buffer.
+    InputStream fileData = memoryBuffer.getInputStream();
+
+    // Get other information about the file.
+    String fileName = event.getFileName();
+    String mimeType = event.getMIMEType();
+    long contentLength = event.getContentLength();
+
+    // Do something with the file data...
+});
+----
+
+
+=== MultiFileMemoryBuffer
+
+The [classname]`MultiFileMemoryBuffer` is the same as [classname]`MemoryBuffer`, but it can handle multiple file uploads at once. It writes the file data into a set of in-memory buffers.
+
+[source,java]
+----
+MultiFileMemoryBuffer multiFileMemoryBuffer = new MultiFileMemoryBuffer();
+
+Upload upload = new Upload(multiFileMemoryBuffer);
+upload.addSucceededListener(event -> {
+    // Determine which file was uploaded
+    String fileName = event.getFileName();
+
+    // Read the data for that specific file.
+    InputStream fileData = multiFileMemoryBuffer
+            .getInputStream(fileName);
+
+    // Get other information about the file.
+    String mimeType = event.getMIMEType();
+    long contentLength = event.getContentLength();
+
+    // Do something with the file data...
+});
+----
+
+
+=== FileBuffer
+
+The [classname]`FileBuffer` can handle a single file upload at once. It saves the file on the file system, in the current working directory of the Java application.
+
+Using [classname]`FileBuffer` will configure the component so that only a single file can be selected.
+
+[source,java]
+----
+FileBuffer fileBuffer = new FileBuffer();
+
+Upload upload = new Upload(fileBuffer);
+upload.addSucceededListener(event -> {
+    // Get information about the file that was 
+    // written to the file system.
+    FileData savedFileData = fileBuffer.getFileData();
+    String absolutePath = savedFileData.getFile().getAbsolutePath();
+
+    System.out.printf("File saved to: %s%n", absolutePath);
+});
+----
+
+
+=== MultiFileBuffer
+
+The [classname]`MultiFileBuffer` works the same as [classname]`FileBuffer`, except that it can handle multiple file uploads at once. For each file, it saves the file on the file system, in the current working directory of the Java application.
+
+[source,java]
+----
+MultiFileBuffer fileBuffer = new MultiFileBuffer();
+
+Upload upload = new Upload(fileBuffer);
+upload.addSucceededListener(event -> {
+    // Determine which file was uploaded successfully
+    String uploadFileName = event.getFileName();
+
+    // Get information for that specific file
+    FileData savedFileData = multiFileBuffer
+            .getFileData(uploadFileName);
+    String absolutePath = savedFileData.getFile().getAbsolutePath();
+
+    System.out.printf("File saved to: %s%n", absolutePath);
+});
+----
+
+
+=== Custom Receiver Implementations
+
+For more advanced use cases, you can provide custom implementations for [classname]`Receiver` or [classname]`MultiFileReceiver`. You might do this, for example, to save files into a specific directory, or to upload them to cloud storage.
+
+
+== Handling Upload Requests in Lit and React
+
+When using the Upload web component standalone, you'll need an upload file handler or endpoint in your backend to handle the file upload request. By default, the Upload component sends a request with the method type `POST`, the content type `multipart/form-data`, and the request URL (i.e., the current browser location).
+
+Use the `target` attribute to specify a different URL that should handle the upload request. It's also possible to customize other aspects of the request, such as the method or request headers.
+
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="TypeScript"></source-info>
+<vaadin-upload
+  method="PUT"
+  target="/api/upload-handler"
+  headers='{ "X-API-KEY": "7f4306cb-bb25-4064-9475-1254c4eff6e5" }'>
+</vaadin-upload>
+----
+endif::[]
+
+ifdef::react[]
+[source,jsx]
+----
+<source-info group="React"></source-info>
+<Upload
+  method="PUT"
+  target="/api/upload-handler"
+  headers='{ "X-API-KEY": "7f4306cb-bb25-4064-9475-1254c4eff6e5" }'>
+</Upload>
+----
+endif::[]
+--
+
+[discussion-id]`EB618652-4822-49DC-9A51-D71237EF100E`

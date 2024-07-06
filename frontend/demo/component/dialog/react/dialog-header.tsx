@@ -1,41 +1,50 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { Dialog } from '@hilla/react-components/Dialog.js';
-import { Button } from '@hilla/react-components/Button.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { EmailField } from '@hilla/react-components/EmailField.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import React, { useEffect } from 'react';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Dialog } from '@vaadin/react-components/Dialog.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { EmailField } from '@vaadin/react-components/EmailField.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import '@vaadin/icons';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(false);
-  const [user, setUser] = useState<Person>();
-  const open = () => setDialogOpened(true);
-  const close = () => setDialogOpened(false);
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(false);
+  const user = useSignal<Person | undefined>(undefined);
+  const open = () => {
+    dialogOpened.value = true;
+  };
+  const close = () => {
+    dialogOpened.value = false;
+  };
 
   useEffect(() => {
-    getPeople({ count: 1 }).then(({ people }) => setUser(people[0]));
+    getPeople({ count: 1 }).then(({ people }) => {
+      user.value = people[0];
+    });
   }, []);
 
-  const addressDescription = () => {
-    if (!user) {
+  const addressDescription = useComputed(() => {
+    if (!user.value) {
       return '';
     }
-    const { address } = user;
+    const { address } = user.value;
     return `${address.street}, ${address.city}, ${address.country}`;
-  };
+  });
 
   return (
     <>
       {/* tag::snippet[] */}
       <Dialog
         header-title="User details"
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={(event) => {
-          setDialogOpened(event.detail.value);
+          dialogOpened.value = event.detail.value;
         }}
         headerRenderer={() => (
           <Button theme="tertiary" onClick={close}>
@@ -50,12 +59,12 @@ function Example() {
           <VerticalLayout style={{ alignItems: 'stretch' }}>
             <TextField
               label="Name"
-              value={`${user?.firstName} ${user?.lastName}`}
+              value={`${user.value?.firstName} ${user.value?.lastName}`}
               readonly
               style={{ paddingTop: 0 }}
             />
-            <EmailField label="Email" value={user?.email} readonly />
-            <TextField label="Address" value={addressDescription()} readonly />
+            <EmailField label="Email" value={user.value?.email} readonly />
+            <TextField label="Address" value={addressDescription.value} readonly />
           </VerticalLayout>
         </VerticalLayout>
       </Dialog>

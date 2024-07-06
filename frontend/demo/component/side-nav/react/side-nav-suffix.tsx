@@ -1,9 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { patchSideNavNavigation } from './side-nav-helper'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { SideNav, type SideNavElement } from '@hilla/react-components/SideNav.js';
-import { SideNavItem } from '@hilla/react-components/SideNavItem.js';
-import { Icon } from '@hilla/react-components/Icon.js';
+import { SideNav, type SideNavElement } from '@vaadin/react-components/SideNav.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
 
 function Example() {
@@ -14,7 +14,7 @@ function Example() {
       // Example-specific workaround
       patchSideNavNavigation(sideNavRef.current);
     }
-  }, []);
+  }, [sideNavRef.current]);
 
   return (
     <div className="side-nav-sample">
@@ -41,7 +41,7 @@ function Example() {
               style={{ padding: 'var(--lumo-space-xs)' }}
               aria-label="Upcoming appointment"
               slot="suffix"
-            ></Icon>
+            />
           </SideNavItem>
         </SideNav>
         {/* end::snippet[] */}

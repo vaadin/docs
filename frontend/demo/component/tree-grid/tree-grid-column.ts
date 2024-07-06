@@ -41,7 +41,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private accessor expandedItems: unknown[] = [];
+  private expandedItems: unknown[] = [];
 
   protected override render() {
     return html`

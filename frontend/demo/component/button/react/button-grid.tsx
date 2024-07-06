@@ -1,22 +1,26 @@
-import { Button } from '@hilla/react-components/Button.js'; // hidden-source-line
-import React from 'react';
-import { Grid } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
-import { GridSelectionColumn } from '@hilla/react-components/GridSelectionColumn.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Button } from '@vaadin/react-components/Button.js'; // hidden-source-line
+import { Grid } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { GridSelectionColumn } from '@vaadin/react-components/GridSelectionColumn.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { reactExample } from 'Frontend/demo/react-example';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { useEffect, useState } from 'react';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [items, setItems] = useState<Person[]>([]);
-  const [selectedItems, setSelectedItems] = useState<Person[]>([]);
+  const items = useSignal<Person[]>([]);
+  const selectedItems = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople().then(({ people }) => setItems(people));
+    getPeople().then(({ people }) => {
+      items.value = people;
+    });
   }, []);
 
   return (
@@ -26,9 +30,11 @@ function Example() {
         <Button>Add user</Button>
       </HorizontalLayout>
       <Grid
-        items={items}
-        selectedItems={selectedItems}
-        onSelectedItemsChanged={({ detail: { value } }) => setSelectedItems(value)}
+        items={items.value}
+        selectedItems={selectedItems.value}
+        onSelectedItemsChanged={({ detail: { value } }) => {
+          selectedItems.value = value;
+        }}
       >
         <GridSelectionColumn />
         <GridColumn path="firstName" />
@@ -37,12 +43,12 @@ function Example() {
       </Grid>
 
       <HorizontalLayout theme="spacing">
-        <Button disabled={selectedItems.length !== 1}>Edit profile</Button>
-        <Button disabled={selectedItems.length !== 1}>Manage permissions</Button>
-        <Button disabled={selectedItems.length !== 1}>Reset password</Button>
+        <Button disabled={selectedItems.value.length !== 1}>Edit profile</Button>
+        <Button disabled={selectedItems.value.length !== 1}>Manage permissions</Button>
+        <Button disabled={selectedItems.value.length !== 1}>Reset password</Button>
         <Button
           theme="error"
-          disabled={selectedItems.length === 0}
+          disabled={selectedItems.value.length === 0}
           style={{ marginInlineStart: 'auto' }}
         >
           Delete

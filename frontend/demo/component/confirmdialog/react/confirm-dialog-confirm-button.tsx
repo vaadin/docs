@@ -1,25 +1,28 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
-import { Button } from '@hilla/react-components/Button.js';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Button } from '@vaadin/react-components/Button.js';
 import {
   ConfirmDialog,
   type ConfirmDialogOpenedChangedEvent,
-} from '@hilla/react-components/ConfirmDialog.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+} from '@vaadin/react-components/ConfirmDialog.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(false);
-  const [status, setStatus] = useState('');
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(false);
+  const status = useSignal('');
 
   function openedChanged(e: ConfirmDialogOpenedChangedEvent) {
-    setDialogOpened(e.detail.value);
+    dialogOpened.value = e.detail.value;
     if (e.detail.value) {
-      setStatus('');
+      status.value = '';
     }
   }
 
   function open() {
-    setDialogOpened(true);
+    dialogOpened.value = true;
   }
 
   return (
@@ -30,10 +33,10 @@ function Example() {
       <ConfirmDialog
         header="Export failed"
         confirmText="OK"
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={openedChanged}
         onConfirm={() => {
-          setStatus('Acknowledged');
+          status.value = 'Acknowledged';
         }}
       >
         An error occurred while exporting <b>Report Q4</b>. Please try again. If the problem
@@ -41,7 +44,7 @@ function Example() {
       </ConfirmDialog>
       {/* end::snippet[] */}
 
-      <span hidden={status === ''}>Status: {status}</span>
+      <span hidden={status.value === ''}>Status: {status.value}</span>
     </HorizontalLayout>
   );
 }

@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { ContextMenu } from '@hilla/react-components/ContextMenu.js';
-import { Grid, type GridElement } from '@hilla/react-components/Grid.js';
-import { GridColumn } from '@hilla/react-components/GridColumn.js';
+import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
+import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 
 interface FileItem {
   name: string;
@@ -23,7 +23,7 @@ function Example() {
         }
       });
     }
-  }, []);
+  }, [gridRef.current]);
 
   // tag::snippet[]
   const items = [

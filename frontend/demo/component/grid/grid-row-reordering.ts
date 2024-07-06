@@ -22,10 +22,10 @@ export class Example extends LitElement {
   }
 
   @state()
-  private accessor items: Person[] = [];
+  private items: Person[] = [];
 
   @state()
-  private accessor draggedItem: Person | undefined;
+  private draggedItem: Person | undefined;
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -38,12 +38,12 @@ export class Example extends LitElement {
       <vaadin-grid
         .items="${this.items}"
         rows-draggable
-        drop-mode="between"
+        .dropMode=${this.draggedItem ? 'between' : undefined}
         @grid-dragstart="${(event: GridDragStartEvent<Person>) => {
           this.draggedItem = event.detail.draggedItems[0];
         }}"
         @grid-dragend="${() => {
-          delete this.draggedItem;
+          this.draggedItem = undefined;
         }}"
         @grid-drop="${(event: GridDropEvent<Person>) => {
           const { dropTargetItem, dropLocation } = event.detail;
@@ -79,7 +79,6 @@ export class Example extends LitElement {
     <vaadin-avatar
       img="${person.pictureUrl}"
       name="${person.firstName} ${person.lastName}"
-      alt="User avatar"
     ></vaadin-avatar>
   `;
 }

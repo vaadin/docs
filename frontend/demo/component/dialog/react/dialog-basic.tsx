@@ -1,27 +1,41 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
-import { Dialog } from '@hilla/react-components/Dialog.js';
-import { Button } from '@hilla/react-components/Button.js';
-import { TextField } from '@hilla/react-components/TextField.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
+import React from 'react'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { Dialog } from '@vaadin/react-components/Dialog.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import dialogBasicStyles from './dialog-basic-styles';
 
 function Example() {
-  const [dialogOpened, setDialogOpened] = useState(true);
+  useSignals(); // hidden-source-line
+  const dialogOpened = useSignal(true);
 
   return (
     <>
       {/* tag::snippet[] */}
       <Dialog
         headerTitle="New employee"
-        opened={dialogOpened}
+        opened={dialogOpened.value}
         onOpenedChanged={({ detail }) => {
-          setDialogOpened(detail.value);
+          dialogOpened.value = detail.value;
         }}
         footerRenderer={() => (
           <>
-            <Button onClick={() => setDialogOpened(false)}>Cancel</Button>
-            <Button theme="primary" onClick={() => setDialogOpened(false)}>
+            <Button
+              onClick={() => {
+                dialogOpened.value = false;
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              theme="primary"
+              onClick={() => {
+                dialogOpened.value = false;
+              }}
+            >
               Add
             </Button>
           </>
@@ -33,7 +47,13 @@ function Example() {
         </VerticalLayout>
       </Dialog>
 
-      <Button onClick={() => setDialogOpened(true)}>Show dialog</Button>
+      <Button
+        onClick={() => {
+          dialogOpened.value = true;
+        }}
+      >
+        Show dialog
+      </Button>
       {/* end::snippet[] */}
     </>
   );

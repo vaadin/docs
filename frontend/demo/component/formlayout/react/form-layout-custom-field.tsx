@@ -1,22 +1,28 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useRef, useEffect } from 'react';
-import { FormLayout } from '@hilla/react-components/FormLayout.js';
-import { FormItem } from '@hilla/react-components/FormItem.js';
-import { Select, type SelectElement } from '@hilla/react-components/Select.js';
-import { CustomField } from '@hilla/react-components/CustomField.js';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
+import React from 'react';
+import { useComputed } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
+import { FormItem } from '@vaadin/react-components/FormItem.js';
+import { Select } from '@vaadin/react-components/Select.js';
+import { CustomField } from '@vaadin/react-components/CustomField.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const monthFieldRef = useRef<SelectElement>(null);
-  const yearFieldRef = useRef<SelectElement>(null);
-  const months = Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0'));
-  const years = Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`);
-
-  useEffect(() => {
-    monthFieldRef.current?.focusElement?.setAttribute('title', 'Month');
-    yearFieldRef.current?.focusElement?.setAttribute('title', 'Year');
-  }, []);
+  const monthItems = useComputed(() =>
+    Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map((month) => ({
+      label: month,
+      value: month,
+    }))
+  );
+  const yearItems = useComputed(() =>
+    Array.from({ length: 11 }, (_, i) => `${i + new Date().getFullYear()}`).map((year) => ({
+      label: year,
+      value: year,
+    }))
+  );
 
   return (
     <FormLayout>
@@ -27,16 +33,8 @@ function Example() {
           formatValue={(values: unknown[]) => (values[0] && values[1] ? values.join('/') : '')}
         >
           <HorizontalLayout theme="spacing-xs">
-            <Select
-              ref={monthFieldRef}
-              placeholder="Month"
-              items={months.map((month) => ({ label: month, value: month }))}
-            />
-            <Select
-              ref={yearFieldRef}
-              placeholder="Year"
-              items={years.map((year) => ({ label: year, value: year }))}
-            />
+            <Select accessibleName="Month" placeholder="Month" items={monthItems.value} />
+            <Select accessibleName="Year" placeholder="Year" items={yearItems.value} />
           </HorizontalLayout>
         </CustomField>
       </FormItem>

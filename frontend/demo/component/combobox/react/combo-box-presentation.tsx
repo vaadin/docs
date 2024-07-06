@@ -1,13 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { ComboBox } from '@hilla/react-components/ComboBox.js';
-import type { ComboBoxFilterChangedEvent } from '@hilla/react-components/ComboBox.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { ComboBox } from '@vaadin/react-components/ComboBox.js';
+import type { ComboBoxFilterChangedEvent } from '@vaadin/react-components/ComboBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
-  const [allItems, setAllItems] = useState<Person[]>([]);
-  const [filteredItems, setFilteredItems] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const allItems = useSignal<Person[]>([]);
+  const filteredItems = useSignal<Person[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -15,17 +18,15 @@ function Example() {
         ...person,
         displayName: `${person.firstName} ${person.lastName}`,
       }));
-      setAllItems(items);
-      setFilteredItems(items);
+      allItems.value = items;
+      filteredItems.value = items;
     });
   }, []);
 
   const filterChanged = (e: ComboBoxFilterChangedEvent) => {
     const filter = e.detail.value;
-    setFilteredItems(
-      allItems.filter(({ firstName, lastName, profession }) =>
-        `${firstName} ${lastName} ${profession}`.toLowerCase().includes(filter.toLowerCase())
-      )
+    filteredItems.value = allItems.value.filter(({ firstName, lastName, profession }) =>
+      `${firstName} ${lastName} ${profession}`.toLowerCase().includes(filter.toLowerCase())
     );
   };
 
@@ -34,7 +35,7 @@ function Example() {
     <ComboBox
       label="Choose doctor"
       itemLabelPath="displayName"
-      filteredItems={filteredItems}
+      filteredItems={filteredItems.value}
       style={{ '--vaadin-combo-box-overlay-width': '16em' } as React.CSSProperties}
       onFilterChanged={filterChanged}
       renderer={({ item: person }) => (
@@ -57,7 +58,7 @@ function Example() {
           </div>
         </div>
       )}
-    ></ComboBox>
+    />
     // end::snippet[]
   );
 }

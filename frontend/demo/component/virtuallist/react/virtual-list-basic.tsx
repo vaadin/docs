@@ -1,12 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
-import { VirtualList } from '@hilla/react-components/VirtualList.js';
+import React, { useEffect } from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { VirtualList } from '@vaadin/react-components/VirtualList.js';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { HorizontalLayout } from '@hilla/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@hilla/react-components/VerticalLayout.js';
-import { Details } from '@hilla/react-components/Details.js';
-import { Avatar } from '@hilla/react-components/Avatar.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { Details } from '@vaadin/react-components/Details.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 
 const avatarStyle = {
   height: '64px',
@@ -14,11 +16,14 @@ const avatarStyle = {
 };
 
 function Example() {
-  const [people, setPeople] = useState<Person[]>([]);
-  const [expandedPeople, setExpandedPeople] = useState<Person[]>([]);
+  useSignals(); // hidden-source-line
+  const people = useSignal<Person[]>([]);
+  const expandedPeople = useSignal<Person[]>([]);
 
   useEffect(() => {
-    getPeople().then(({ people: items }) => setPeople(items));
+    getPeople().then(({ people: items }) => {
+      people.value = items;
+    });
   }, []);
 
   const personCardRenderer = ({ item: person }: { item: Person }) => (
@@ -37,12 +42,12 @@ function Example() {
 
         <Details
           summary="Contact information"
-          opened={expandedPeople.includes(person)}
+          opened={expandedPeople.value.includes(person)}
           onClick={({ currentTarget: details }) => {
             if (details.opened) {
-              setExpandedPeople([...expandedPeople, person]);
+              expandedPeople.value = [...expandedPeople.value, person];
             } else {
-              setExpandedPeople(expandedPeople.filter((p) => p !== person));
+              expandedPeople.value = expandedPeople.value.filter((p) => p !== person);
             }
           }}
         >
@@ -57,7 +62,7 @@ function Example() {
 
   return (
     // tag::snippet[]
-    <VirtualList items={people}>{personCardRenderer}</VirtualList>
+    <VirtualList items={people.value}>{personCardRenderer}</VirtualList>
     // end::snippet[]
   );
 }
