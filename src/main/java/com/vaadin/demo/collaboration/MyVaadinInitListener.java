@@ -40,14 +40,14 @@ public class MyVaadinInitListener implements VaadinServiceInitListener {
             // end::event-handler-ref[]
             // tag::event-handler-switch[]
             switch (licenseEvent.getType()) {
-                case GRACE_PERIOD_STARTED:
-                case LICENSE_EXPIRES_SOON:
-                    LOGGER.warn(licenseEvent.getMessage());
-                    break;
-                case GRACE_PERIOD_ENDED:
-                case LICENSE_EXPIRED:
-                    LOGGER.error(licenseEvent.getMessage());
-                    break;
+            case GRACE_PERIOD_STARTED:
+            case LICENSE_EXPIRES_SOON:
+                LOGGER.warn(licenseEvent.getMessage());
+                break;
+            case GRACE_PERIOD_ENDED:
+            case LICENSE_EXPIRED:
+                LOGGER.error(licenseEvent.getMessage());
+                break;
             }
             sendEmail("Vaadin Collaboration Kit license needs to be updated",
                     licenseEvent.getMessage());
