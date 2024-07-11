@@ -1,0 +1,367 @@
+---
+title: React for Java Developers
+description: How React differs from Java, and how it's used in Vaadin.
+order: 120
+---
+
+= React Introduction for Java Developers
+
+React is a JavaScript library for building user interfaces, mainly single-page applications that require efficient, dynamic updates. Developed by Facebook, it emphasizes a component-based architecture, allowing complex UIs to be constructed from small, reusable pieces.
+
+React is a declarative library. This means the code you write describes how the UI must change according to the application state. You don't have to handle the details of updating the interface when a value changes: React takes care of it. This is in contrast to imperative programming in which you describe the steps to take to achieve a desired UI state.
+
+Here's an example of imperative programming that shows how to update a text using a button in Java and Vaadin:
+
+[source,java]
+----
+public class CounterView extends VerticalLayout {
+    private int counter = 0;
+
+    public CounterView() {
+        var counterField = new TextField("Counter");
+        counterField.setValue(String.valueOf(counter));
+        counterField.setReadOnly(true);
+
+        var button = new Button("Increment", e -> {
+            counterField.setValue(String.valueOf(++counter));
+        });
+
+        add(counterField, button);
+    }
+}
+----
+
+The idea is to store the value in a field. The value is incremented and the field is updated each time the button is pressed. Again, this is an imperative approach. A server call is also needed to update the counter and the UI each time the button is pressed.
+
+A similar interface can be implemented on the client, using JavaScript:
+
+[source,html]
+----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Counter Example</title>
+</head>
+<body>
+    <div>
+        <label for="counter">Counter: </label>
+        <input type="text" id="counter" value="0" readonly>
+    </div>
+    <button onclick="incrementCounter()">Increment</button>
+
+    <script>
+        let counter = 0;
+
+        function incrementCounter() {
+            counter++;
+            document.getElementById('counter').value = counter;
+        }
+    </script>
+</body>
+</html>
+----
+
+While everything is done on the client, it works the same as the Java example: the value is stored in a variable and, each time the button is pressed, the value is incremented and the field is updated.
+
+By contrast, React uses a declarative approach. This means that the UI changes when the state changes.
+
+In React, you can write code as simple as this:
+
+.TSX
+[source,jsx]
+----
+export default function CounterView() {
+    const count = useSignal(0);
+
+    return (
+        <>
+            <p>Count: {count.value}</p>
+            <button onClick={() => count.value++}>Increment</button>
+        </>
+    );
+}
+----
+
+In this example, there's a `count` variable that's updated when the button is pressed. The UI is updated to reflect the new value. Not only is the code shorter, but React optimizes UI updates, improving performance significantly.
+
+While this code is short and looks simple, it introduces some concepts that aren't present in Java or plain JavaScript. They are illustrated in the following section.
+
+
+== Anatomy of a React Component
+
+A React Component is a function that returns a fragment of the UI. The same way as you create a View in Vaadin, you can create a Component in React and use it as a view, or as a building block for a more complex view. The example above is a component used as a view, although the same code could be used as a component in another view.
+
+A component can contain some state, which can be implemented in many ways, the more recent being React Hooks.
+
+
+=== Hooks
+
+Hooks is a feature in React that allows you to use state and other React features in function components. They are functions that let you hook into React state and lifecycle features, enabling you to manage state and side effects in your components.
+
+Side effects are operations such as data fetching, subscriptions, or changing manually the DOM that occur outside of the function scope and can affect other components or the state of the application.
+
+In the previous example, a hook called `useSignal` is used to create a state variable. The `count` variable is a signal that updates the UI when its `value` changes. Another commonly used hook is `useState`, which is part of the core React library.
+
+At Vaadin, signals are the default way to manage state in React components. Signals are similar to standard React Hooks, but they can easily share a state between components and are optimized for performance.
+
+
+=== Signals
+
+Signals are a state management concept used in React programming. They are similar to standard React Hooks but with some key differences. A signal is a function that returns a single value, and this value can be observed by multiple components. When the value of a signal changes, all components observing that signal are rendered again with the new value.
+
+This makes signals a powerful tool for sharing a state between components and managing complex state interactions. They are optimized for performance, ensuring that components only re-render when necessary.
+
+The basic usage of signals is to deal with its `value` property. When you update it, all places where the same signal is used are updated.
+
+
+=== React UI Updates
+
+The structure of an HTML page is called DOM (i.e., Document Object Model). When a change happens in an interactive page, the DOM is updated to reflect the new state. This process is quite expensive, as the browser needs to recalculate the layout and repaint the screen.
+
+React uses a virtual DOM to optimize this process. When a component updates its state, React creates a new virtual DOM and compares it with the previous one. It then calculates the minimum number of changes needed to update the real DOM and applies them.
+
+
+== TypeScript
+
+All Vaadin's React-based tools are implemented using TypeScript, which is a superset of JavaScript that adds static typing.
+
+React components are written in a format called TSX, which is a mix of regular TypeScript and JSX, a syntax extension for JavaScript that allows you to write HTML-like code in your JavaScript files. The previous example is written in TSX and returns the code component, directly.
+
+In Vaadin, React components can access server-side services written in Java and, thanks to code generation, retain the types and methods of these services.
+
+To see how this works, replicate the original Java example, where the `counter` value is stored on the server. Create a Spring Service annotated with `@BrowserCallable` that allows you to interact with the server from the client like so:
+
+[source,java]
+----
+@BrowserCallable
+@AnonymousAllowed
+public class CounterService {
+    private int counter;
+
+    public int getCounter() {
+        return counter;
+    }
+
+    public int increment() {
+        return ++counter;
+    }
+}
+----
+
+When running the application, a TypeScript file is generated with functions that map public methods. It will look similar to this:
+
+[source,typescript]
+----
+async function getCounter(): Promise<number> {
+    // call `getCounter` on the server and return the result
+}
+async function increment(): Promise<number> {
+    // call `increment` on the server and return the result
+}
+----
+
+This way, you can call the server methods from the client, and the TypeScript compiler checks if the method exists and if the parameters are correct.
+
+Learn more about <<endpoints#browser-callable,browser-callable services>>.
+
+You can rewrite the React component to use the generated TypeScript functions:
+
+.TSX
+[source,jsx]
+----
+export default function CounterView() {
+    const count = useSignal(0); // <1>
+
+    // Gets the initial value from the server
+    useEffect(() => {
+        CounterService.getCounter().then((value) => {
+            count.value = value; // <2>
+        });
+    }, []);
+
+    // calls the server to perform the increment and get the updated value
+    function increment() {
+        CounterService.increment().then((newValue) => {
+            count.value = newValue;
+        });
+    }
+
+    return (
+        <>
+            <p>Count: {count}</p>
+            <button onClick={increment}>Increment</button>
+        </>
+    );
+}
+----
+<1> This is a hook: a signal is created with an initial value of 0 and this initialization is done only once, even if the whole component function is executed every time the component is rendered.
+<2> This is a side effect: a service is called to get the initial value from the server. This is encapsulated in a `useEffect` hook to make sure it is executed only once.
+
+While this view looks the same as before, it interacts with the server and preserves the value when reloading the page. This basic example shares the same counter between all connected clients.
+
+React views in Vaadin can use the same Web Components as in Java: change `button` to `Button` in the example above, import it and you'll get a Vaadin button. You can try using a `TextField` and a `VerticalLayout` to achieve the same result as in the Java example.
+
+`useEffect` is a standard React Hook that allows you to run side effects in your components. In this case, you'd use it to fetch the counter value from the server when the component is mounted. Calling the function directly would execute it every time the component is rendered. This would happen because React runs the component function each time it needs to render it. Hooks are a way to avoid running the same code more than necessary.
+
+
+== References in Java and React
+
+In Java, passing references to objects is a fundamental concept. You can pass an object reference to methods or constructors, allowing direct manipulation of the object.
+
+[source,java]
+----
+public class Example {
+    public void modifyObject(MyObject obj) {
+        obj.setValue("new value");
+    }
+}
+
+MyObject obj = new MyObject();
+Example example = new Example();
+example.modifyObject(obj);
+----
+
+In React, data is passed to components via properties. Properties are immutable within the child component. This means that you can't change the value of a property inside a component. If you need to change the value, you should pass a function that updates the value in the parent component. In Java, you might use methods and constructors to pass data into objects and retrieve data via getters, while React components receive data through properties and use callbacks to communicate with parent components.
+
+.TSX
+[source,jsx]
+----
+type ChildComponentProps = {
+  count: number;
+  increment: () => void;
+};
+
+function ChildComponent({ count, increment }: ChildComponentProps) {
+  return (
+      <>
+          <p>Count: {count}</p>
+          <Button onClick={increment}>Increment</Button>
+      </>
+  );
+};
+
+export default function ParentComponent() {
+  const count = useSignal(0);
+
+  // a callback function passed to the child component
+  const increment = () => {
+    count.value++;
+  }
+
+  return <ChildComponent count={count.value} increment={increment} />;
+};
+----
+
+
+== Hierarchy in Java and React
+
+In Java, interfaces define a contract that classes can implement, ensuring certain methods are present.
+
+[source,java]
+----
+public interface MyInterface {
+    void performAction();
+}
+
+public class MyComponent implements MyInterface {
+    public void performAction() {
+        // Implementation
+    }
+}
+----
+
+React doesn't support interfaces in the same way. Instead, it relies on the structure of properties and the functional nature of components to enforce contracts, implicitly.
+
+.TSX
+[source,jsx]
+----
+type ChildComponentProps = {
+    action: () => void;
+};
+
+function ChildComponent({ action }: ChildComponentProps) {
+    useEffect(() => {
+        action();
+    }, [action]);
+
+    return <div>Child component content</div>;
+};
+
+export default function ParentComponent() {
+  return <ChildComponent action={() => console.log("Action performed")} />;
+};
+----
+
+
+== Routing
+
+Vaadin uses the React Router, by default. This is the most commonly used router in React applications. By default, this router is configured manually, but Vaadin can generate the routes based on the filesystem structure. This way, you can create a new view by creating a new file in the `views` folder.
+
+The filesystem can be used to organize views logically, similar to packages in Java. The main difference is that the structure is exposed to users in the form of URLs.
+
+
+=== Useful Routing Hooks
+
+Below are some useful routing hooks with explanations and examples of how to use each.
+
+==== `useParams`
+
+File Router supports parameters in URLs. You can define a parameter in the file name by creating a file or folder with the name enclosed in curly braces. For example, a file named [filename]`views/user/{userId}.tsx` or [filename]`views/user/{userId}/@index.tsx` matches the URL `/user/123`, and the `userId` parameter is available in the component props.
+
+The parameter is accessible using the `useParams` hook from the `react-router-dom` package.
+
+.TSX
+[source,jsx]
+----
+import { useParams } from 'react-router-dom';
+
+export default function UserView() {
+    const { userId } = useParams<{ userId: string }>();
+
+    return <p>User ID: {userId}</p>;
+}
+----
+
+
+==== `useNavigate`
+
+The `useNavigate` hook is used to navigate programmatically. It returns a function that can be called with a string to navigate to a new location.
+
+.TSX
+[source,jsx]
+----
+import { useNavigate } from 'react-router-dom';
+
+export default function HomeView() {
+    const navigate = useNavigate();
+
+    return <Button onClick={() => navigate('/user/123')}>Go to user 123</Button>;
+}
+----
+
+
+==== `useLocation`
+
+The `useLocation` hook returns the current location object. You can use it to react to location changes.
+
+.TSX
+[source,jsx]
+----
+import { useLocation } from 'react-router-dom';
+
+export default function LocationView() {
+    const location = useLocation();
+
+    return <p>Current location: {location.pathname}</p>;
+}
+----
+
+Learn more about <<{articles}/hilla/guides/routing#,the file-based router>>.
+
+
+=== Conclusion
+
+To summarize, the main mindset change coming from Java to React is that you can't update the UI, manually. You update the state, and React updates the UI. While this is a great simplification, it requires giving up some habits that are common in imperative programming as is the case with Java.
+
+Using React instead of Java allows for better performance and flexibility, as you get access to the full power of JavaScript and the browser APIs. That power comes at the expense of losing the automatic server-side updates that Vaadin provides.
