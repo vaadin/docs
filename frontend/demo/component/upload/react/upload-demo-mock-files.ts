@@ -3,7 +3,7 @@ import { Upload } from '@vaadin/upload';
 
 declare module '@vaadin/upload' {
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  class Upload {
+  interface Upload {
     createFakeFilesUploadBasic(): void;
     createFakeFilesUploadAutoUploadDisabled(): void;
     createFakeFilesUploadAllFiles(): void;
