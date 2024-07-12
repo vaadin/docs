@@ -1,6 +1,6 @@
 ---
 title: Live Reload with HotswapAgent
-description: Live reload with JetBrains Runtime and HotswapAgent.
+description: Hotswapping Java changes in a running JVM with JetBrains Runtime and HotswapAgent.
 tab-title: HotswapAgent
 order: 30
 ---
@@ -8,7 +8,7 @@ order: 30
 
 = Live Reload with JetBrains Runtime & HotswapAgent
 
-JetBrains Runtime offers hotswapping of any type of Java changes into a running JVM through the debug connection, 	typically established by the IDE, to the running JVM. With other JDKs there's limited support for only some types of Java changes.
+JetBrains Runtime offers hotswapping of any type of Java changes into a running JVM through the debug connection, typically established by the IDE, to the running JVM. With other JDKs there's limited support for only some types of Java changes.
 
 In addition to getting the Java changes into the running JVM, most frameworks have some global data that needs to be updated when a class changes -- or some caches that need to be cleared for the new class to take effect. HotswapAgent is a collection of plugins for various frameworks, which offers these kinds of global updates and cache clearing when needed.
 
@@ -46,7 +46,7 @@ In the same dialog you need to click menu:Modify options[Add VM options] to be a
 If you have another type of application, you'll need to pass the JVM options in the appropriate way.
 
 
-== Verifying It Works
+== Testing
 
 With the settings in place, when you start the application in debug mode, you'll see the following type of log output:
 
@@ -57,27 +57,29 @@ HOTSWAP AGENT: 10:19:02.065 INFO (org.hotswap.agent.config.PluginRegistry) - Dis
 
 This indicates that HotswapAgent is loaded. Now, when you navigate to a view in your application, open the corresponding Java file in your project and make some changes -- remember to compile and not only save the class if using IntelliJ IDEA. When you make changes, your view is reloaded in the browser and the changes are shown.
 
-.Use "debug" & Not `spring-boot:run`
+.Use "debug", Not `spring-boot:run`
 [CAUTION]
+====
 Don't start the application in "run" mode. The debug connection to the JVM running the application is needed for hotswapping to work.
 
 Don't launch the Maven `spring-boot:run` target as that forks another JVM process. The debug connection is then established only to the Maven process and not the actual application. Therefore, hotswapping won't work.
+====
 
 
-== Working Efficiently
+== Efficiency
 
 By default, any change in the Java code causes the application to reload in the browser. This is convenient when you make changes to the initial layout, constructors, post construct methods or similar. However, if you're modifying the logic inside a listener, there's no need to do a page reload for the change to take effect. 
 
-You can turn off reloading in the Vaadin Copilot within the [guilabel]*Info* panel. It can be more efficient to disable live reload, and manually reload the browser when needed. This is especially recommended when editing code related to a dialog or some other UI part which isn't mapped directly to a URL.
+You can turn off reloading in the Vaadin Copilot in the [guilabel]*Info* panel. It can be more efficient to disable live reload, and manually reload the browser when needed. This is especially recommended when editing code related to a dialog or some other UI part which isn't mapped directly to a URL.
 
-IntelliJ doesn't compile by default a Java file when you save it. If your habit is to press the compile shortcut, hotswapping works fine. Otherwise, you might want to set IntelliJ to build the project when you save. You can do that through menu:Settings[Build, Execution, Deployment > Compiler > Build project automatically]. You'll also need to ensure that the build takes place when the application is running in debug mode. This is done through menu:Advanced Settings[Allow auto-make to start even if developed application is currently running]. Finally, through menu:Settings[Build, Execution, Deployment > Debugger > HotSwap], [guilabel]*Reload classes after compilation* should be set to [guilabel]*Always*.
+IntelliJ doesn't by default compile a Java file when you save it. If your habit is to press the compile shortcut, hotswapping works fine. Otherwise, you might want to set IntelliJ to build the project when you save. You can do that through menu:Settings[Build, Execution, Deployment > Compiler > Build project automatically]. You'll also need to ensure that the build takes place when the application is running in debug mode. This is done through menu:Advanced Settings[Allow auto-make to start even if developed application is currently running]. Finally, through menu:Settings[Build, Execution, Deployment > Debugger > HotSwap], [guilabel]*Reload classes after compilation* should be set to [guilabel]*Always*.
 
 
 == Additional Considerations
 
 You should disable other reloading or hot swapping solutions. For example, disable the automatic restart in the Jetty Maven plugin if you're using that. Omit or set `<scanIntervalSeconds>` to a value of `0` or less.
 
-The live reload “quiet time” -- which is in milliseconds since last Java change before refreshing the browser -- can be adjusted with the parameter `vaadin.liveReloadQuietTime` in the [filename]`hotswap-agent.properties` file. Increase this value if you notice the browser refreshing before modified Java files have been fully compiled. The default is 1000 ms.
+The live reload "quiet time" -- which is in milliseconds since the last Java change before refreshing the browser -- can be adjusted with the parameter `vaadin.liveReloadQuietTime` in the [filename]`hotswap-agent.properties` file. The default is 1000 ms. Increase this value if you notice the browser refreshing before modified Java files have been fully compiled. 
 
 Changes to some parts of the Java code, such application startup listeners, won't have any effect until the server is restarted and the startup listeners run again. For these you need to restart the server.
 
