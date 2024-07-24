@@ -3,13 +3,13 @@ import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { Button } from '@vaadin/react-components/Button.js';
 import {
+  Button,
+  RadioButton,
   RadioGroup,
+  VerticalLayout,
   type RadioGroupValueChangedEvent,
-} from '@vaadin/react-components/RadioGroup.js';
-import { RadioButton } from '@vaadin/react-components/RadioButton.js';
+} from '@vaadin/react-components';
 
 function Example() {
   useSignals(); // hidden-source-line

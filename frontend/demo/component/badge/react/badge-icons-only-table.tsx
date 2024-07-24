@@ -2,10 +2,8 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Grid } from '@vaadin/react-components/Grid.js';
-import { GridColumn, type GridColumnElement } from '@vaadin/react-components/GridColumn.js';
+import { Grid, GridColumn, Icon, type GridColumnElement } from '@vaadin/react-components';
 import { getUserPermissions } from 'Frontend/demo/domain/DataService';
-import { Icon } from '@vaadin/react-components/Icon.js';
 import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 import '@vaadin/icons';
 
