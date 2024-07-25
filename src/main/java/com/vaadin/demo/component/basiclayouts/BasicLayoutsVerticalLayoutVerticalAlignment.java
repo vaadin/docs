@@ -23,8 +23,8 @@ public class BasicLayoutsVerticalLayoutVerticalAlignment extends Div {
         layout.setClassName("height-4xl");
         this.add(layout);
     }
-    
+
     public static class Exporter extends // hidden-source-line
-        DemoExporter<BasicLayoutsVerticalLayoutVerticalAlignment> { // hidden-source-line
+            DemoExporter<BasicLayoutsVerticalLayoutVerticalAlignment> { // hidden-source-line
     } // hidden-source-line
 }

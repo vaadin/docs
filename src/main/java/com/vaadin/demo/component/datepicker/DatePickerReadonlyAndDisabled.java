@@ -27,6 +27,7 @@ public class DatePickerReadonlyAndDisabled extends HorizontalLayout {
         add(readonlyField, disabledField);
     }
 
-    public static class Exporter extends DemoExporter<DatePickerReadonlyAndDisabled> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DatePickerReadonlyAndDisabled> { // hidden-source-line
     } // hidden-source-line
 }

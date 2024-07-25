@@ -27,6 +27,7 @@ public class TimePickerReadonlyAndDisabled extends HorizontalLayout {
         add(readonlyField, disabledField);
     }
 
-    public static class Exporter extends DemoExporter<TimePickerReadonlyAndDisabled> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<TimePickerReadonlyAndDisabled> { // hidden-source-line
     } // hidden-source-line
 }
