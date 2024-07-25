@@ -25,6 +25,7 @@ public class ComboBoxReadonlyAndDisabled extends HorizontalLayout {
         add(readonlyField, disabledField);
     }
 
-    public static class Exporter extends DemoExporter<ComboBoxReadonlyAndDisabled> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<ComboBoxReadonlyAndDisabled> { // hidden-source-line
     } // hidden-source-line
 }

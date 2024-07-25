@@ -268,6 +268,7 @@ public class ChartTypeAreaSplineRange extends Div {
                 { 1262221200000d, -12.2, -6.5 } };
     }
 
-    public static class Exporter extends DemoExporter<ChartTypeAreaSplineRange> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<ChartTypeAreaSplineRange> { // hidden-source-line
     } // hidden-source-line
 }

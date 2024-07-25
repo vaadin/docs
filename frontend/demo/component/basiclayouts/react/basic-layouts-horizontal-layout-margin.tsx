@@ -3,10 +3,7 @@ import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Button } from '@vaadin/react-components/Button.js';
-import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
-import { RadioButton } from '@vaadin/react-components/RadioButton.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Button, HorizontalLayout, RadioButton, RadioGroup } from '@vaadin/react-components';
 
 function Example() {
   useSignals(); // hidden-source-line

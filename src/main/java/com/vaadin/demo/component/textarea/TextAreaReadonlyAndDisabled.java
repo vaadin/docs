@@ -26,6 +26,7 @@ public class TextAreaReadonlyAndDisabled extends HorizontalLayout {
         add(readonlyArea, disabledArea);
     }
 
-    public static class Exporter extends DemoExporter<TextAreaReadonlyAndDisabled> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<TextAreaReadonlyAndDisabled> { // hidden-source-line
     } // hidden-source-line
 }
