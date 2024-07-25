@@ -29,8 +29,7 @@ public class ProductAdvancedDtoListService
     public List<ProductAdvancedDto> list(Pageable pageable,
             @Nullable Filter filter) {
         // Create filter transformer to map DTO fields to JPA fields
-        var transformer = new FilterTransformer()
-                .withMapping("productId", "id")
+        var transformer = new FilterTransformer().withMapping("productId", "id")
                 .withMapping("productName", "name")
                 .withMapping("productCategory", "category")
                 .withMapping("productPrice", "price")
@@ -45,4 +44,4 @@ public class ProductAdvancedDtoListService
                 .map(ProductAdvancedDto::fromEntity).toList();
     }
 }
-//end::snippet[]
+// end::snippet[]

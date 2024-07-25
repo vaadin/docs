@@ -32,4 +32,4 @@ public class ProductDtoFormService implements FormService<ProductDto, Long> {
         productRepository.deleteById(id);
     }
 }
-//end::snippet[]
+// end::snippet[]

@@ -30,11 +30,10 @@ public class GridRowReordering extends Div {
 
         grid.setRowsDraggable(true);
 
-        grid.addDragStartListener(
-                e -> {
-                    draggedItem = e.getDraggedItems().get(0);
-                    grid.setDropMode(GridDropMode.BETWEEN);
-                });
+        grid.addDragStartListener(e -> {
+            draggedItem = e.getDraggedItems().get(0);
+            grid.setDropMode(GridDropMode.BETWEEN);
+        });
 
         grid.addDropListener(e -> {
             Person targetPerson = e.getDropTargetItem().orElse(null);

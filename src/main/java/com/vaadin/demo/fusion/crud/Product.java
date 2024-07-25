@@ -22,7 +22,7 @@ public class Product {
     private Supplier supplier;
 
     // getters and setters omitted for brevity
-    //end::snippet[]
+    // end::snippet[]
 
     public Long getId() {
         return id;
@@ -72,6 +72,6 @@ public class Product {
         this.supplier = supplier;
     }
 
-    //tag::snippet[]
+    // tag::snippet[]
 }
-//end::snippet[]
+// end::snippet[]

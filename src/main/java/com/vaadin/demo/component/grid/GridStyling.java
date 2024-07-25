@@ -20,7 +20,7 @@ public class GridStyling extends Div {
         grid.addColumn(PersonWithRating::getProfession).setHeader("Profession");
         grid.addColumn(PersonWithRating::getFormattedRating)
                 .setHeader("Customer rating (0-10)")
-                .setPartNameGenerator(person->"font-weight-bold");
+                .setPartNameGenerator(person -> "font-weight-bold");
 
         grid.setPartNameGenerator(person -> {
             if (person.getRating() >= 8)

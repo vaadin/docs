@@ -20,11 +20,14 @@ public class ProgressBarCompletionTime extends Div {
         progressBarLabel.setId("pblbl");
         progressBarLabel.addClassName(LumoUtility.TextColor.SECONDARY);
 
-        Span progressBarSubLabel = new Span("Process can take upwards of 10 minutes");
+        Span progressBarSubLabel = new Span(
+                "Process can take upwards of 10 minutes");
         progressBarSubLabel.setId("sublbl");
-        progressBarSubLabel.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.XSMALL);
+        progressBarSubLabel.addClassNames(LumoUtility.TextColor.SECONDARY,
+                LumoUtility.FontSize.XSMALL);
 
-        // Associates the labels with the bar programmatically, for screen readers:
+        // Associates the labels with the bar programmatically, for screen
+        // readers:
         progressBar.getElement().setAttribute("aria-labelledby", "pblbl");
         progressBar.getElement().setAttribute("aria-describedby", "sublbl");
 

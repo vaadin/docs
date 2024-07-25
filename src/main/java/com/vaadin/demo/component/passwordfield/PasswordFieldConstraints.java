@@ -18,7 +18,8 @@ public class PasswordFieldConstraints extends HorizontalLayout {
         field.setMinLength(6);
         field.setMaxLength(12);
         // end::snippet[]
-        field.setHelperText("6 to 12 characters. Only letters A-Z and numbers supported.");
+        field.setHelperText(
+                "6 to 12 characters. Only letters A-Z and numbers supported.");
 
         add(field);
     }

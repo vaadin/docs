@@ -31,7 +31,8 @@ public class MapMarkerText extends Div {
         textStyle.setTextAlign(TextStyle.TextAlign.LEFT);
         textStyle.setOffset(22, -18);
 
-        MarkerFeature customizedMarker = new MarkerFeature(new Coordinate(25, 0));
+        MarkerFeature customizedMarker = new MarkerFeature(
+                new Coordinate(25, 0));
         customizedMarker.setText("Customized text");
         customizedMarker.setTextStyle(textStyle);
         map.getFeatureLayer().addFeature(customizedMarker);

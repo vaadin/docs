@@ -27,14 +27,13 @@ public class ChartTypeBullet extends Div {
         YAxis yAxis = conf.getyAxis();
         yAxis.setGridLineWidth(0);
         yAxis.setTitle("");
-        yAxis.addPlotBand(new PlotBand(0, 150,
-                new SolidColor("#666666")));
-        yAxis.addPlotBand(new PlotBand(150, 225,
-                new SolidColor("#999999")));
-        yAxis.addPlotBand(new PlotBand(225, 9e9,
-                new SolidColor("#bbbbbb")));
-        conf.getxAxis().addCategory("<span style=\"font-size: 13px; font-weight: bold;\">Revenue</span><br/>U.S. $ (1,000s)");
-        conf.getTooltip().setPointFormat("<b>{point.y}</b> (with target at {point.target})");
+        yAxis.addPlotBand(new PlotBand(0, 150, new SolidColor("#666666")));
+        yAxis.addPlotBand(new PlotBand(150, 225, new SolidColor("#999999")));
+        yAxis.addPlotBand(new PlotBand(225, 9e9, new SolidColor("#bbbbbb")));
+        conf.getxAxis().addCategory(
+                "<span style=\"font-size: 13px; font-weight: bold;\">Revenue</span><br/>U.S. $ (1,000s)");
+        conf.getTooltip().setPointFormat(
+                "<b>{point.y}</b> (with target at {point.target})");
         PlotOptionsBullet options = new PlotOptionsBullet();
         options.setPointPadding(0.25);
         options.setBorderWidth(0);

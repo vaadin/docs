@@ -26,9 +26,12 @@ public class ContextMenuBestPractices extends Div {
         grid.addComponentColumn(file -> {
             MenuBar menuBar = new MenuBar();
             menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
-            menuBar.addItem("Preview", event -> {});
-            menuBar.addItem("Edit", event -> {});
-            menuBar.addItem("Delete", event -> {});
+            menuBar.addItem("Preview", event -> {
+            });
+            menuBar.addItem("Edit", event -> {
+            });
+            menuBar.addItem("Delete", event -> {
+            });
             return menuBar;
         }).setWidth("70px").setFlexGrow(0);
 
