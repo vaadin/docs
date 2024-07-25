@@ -23,6 +23,7 @@ public class DateTimePickerBasicFeatures extends HorizontalLayout {
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerBasicFeatures> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DateTimePickerBasicFeatures> { // hidden-source-line
     } // hidden-source-line
 }

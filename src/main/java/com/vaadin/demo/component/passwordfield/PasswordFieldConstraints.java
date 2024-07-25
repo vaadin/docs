@@ -23,6 +23,7 @@ public class PasswordFieldConstraints extends HorizontalLayout {
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<PasswordFieldConstraints> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<PasswordFieldConstraints> { // hidden-source-line
     } // hidden-source-line
 }

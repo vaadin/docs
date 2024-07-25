@@ -27,6 +27,7 @@ public class CheckboxGroupBasicFeatures extends VerticalLayout {
         add(checkbox, field);
     }
 
-    public static class Exporter extends DemoExporter<CheckboxGroupBasicFeatures> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<CheckboxGroupBasicFeatures> { // hidden-source-line
     } // hidden-source-line
 }

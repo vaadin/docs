@@ -23,6 +23,7 @@ public class LoginOverlayCustomFormArea extends Div {
         loginOverlay.getElement().setAttribute("no-autofocus", "");
     }
 
-    public static class Exporter extends DemoExporter<LoginOverlayCustomFormArea> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<LoginOverlayCustomFormArea> { // hidden-source-line
     } // hidden-source-line
 }
