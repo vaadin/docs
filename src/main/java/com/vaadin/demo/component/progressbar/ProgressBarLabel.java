@@ -19,13 +19,15 @@ public class ProgressBarLabel extends Div {
         ProgressBar progressBar = new ProgressBar();
         progressBar.setValue(0.5);
 
-        NativeLabel progressBarLabelText = new NativeLabel("Processing Financials.xlsx");
+        NativeLabel progressBarLabelText = new NativeLabel(
+                "Processing Financials.xlsx");
         progressBarLabelText.setId("pblabel");
         // Associates the label with the progressbar for screen readers:
         progressBar.getElement().setAttribute("aria-labelledby", "pblabel");
 
         Span progressBarLabelValue = new Span("50%");
-        HorizontalLayout progressBarLabel = new HorizontalLayout(progressBarLabelText, progressBarLabelValue);
+        HorizontalLayout progressBarLabel = new HorizontalLayout(
+                progressBarLabelText, progressBarLabelValue);
         progressBarLabel.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
         add(progressBarLabel, progressBar);

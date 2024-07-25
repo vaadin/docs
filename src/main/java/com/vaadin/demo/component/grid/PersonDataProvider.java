@@ -14,18 +14,21 @@ import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
 
 // tag::snippet[]
-public class PersonDataProvider extends AbstractBackEndDataProvider<Person, PersonFilter> {
+public class PersonDataProvider
+        extends AbstractBackEndDataProvider<Person, PersonFilter> {
     final List<Person> DATABASE = new ArrayList<>(DataService.getPeople());
 
     @Override
-    protected Stream<Person> fetchFromBackEnd(Query<Person, PersonFilter> query) {
+    protected Stream<Person> fetchFromBackEnd(
+            Query<Person, PersonFilter> query) {
         // A real app should use a real database or a service
         // to fetch, filter and sort data.
         Stream<Person> stream = DATABASE.stream();
 
         // Filtering
         if (query.getFilter().isPresent()) {
-            stream = stream.filter(person -> query.getFilter().get().test(person));
+            stream = stream
+                    .filter(person -> query.getFilter().get().test(person));
         }
 
         // Sorting
@@ -42,9 +45,11 @@ public class PersonDataProvider extends AbstractBackEndDataProvider<Person, Pers
         return (int) fetchFromBackEnd(query).count();
     }
 
-    private static Comparator<Person> sortComparator(List<QuerySortOrder> sortOrders) {
+    private static Comparator<Person> sortComparator(
+            List<QuerySortOrder> sortOrders) {
         return sortOrders.stream().map(sortOrder -> {
-            Comparator<Person> comparator = personFieldComparator(sortOrder.getSorted());
+            Comparator<Person> comparator = personFieldComparator(
+                    sortOrder.getSorted());
 
             if (sortOrder.getDirection() == SortDirection.DESCENDING) {
                 comparator = comparator.reversed();

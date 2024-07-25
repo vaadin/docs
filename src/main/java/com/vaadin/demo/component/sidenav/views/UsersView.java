@@ -5,5 +5,6 @@ import com.vaadin.flow.router.Route;
 
 @Route("users")
 public class UsersView extends Div {
-    public UsersView() {}
+    public UsersView() {
+    }
 }

@@ -11,23 +11,23 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("vaadin-icons")
 public class VaadinIcons extends Div {
 
-  public VaadinIcons() {
-    HorizontalLayout layout = new HorizontalLayout();
-    layout.setSpacing(true);
-    layout.addClassName("items-center");
+    public VaadinIcons() {
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setSpacing(true);
+        layout.addClassName("items-center");
 
-    // tag::snippet[]
-    Icon phoneIcon = VaadinIcon.PHONE.create();
-    Icon calendarIcon = VaadinIcon.CALENDAR.create();
-    Icon alarmIcon = VaadinIcon.ALARM.create();
-    Button button = new Button(VaadinIcon.BELL.create());
+        // tag::snippet[]
+        Icon phoneIcon = VaadinIcon.PHONE.create();
+        Icon calendarIcon = VaadinIcon.CALENDAR.create();
+        Icon alarmIcon = VaadinIcon.ALARM.create();
+        Button button = new Button(VaadinIcon.BELL.create());
 
-    layout.add(phoneIcon, calendarIcon, alarmIcon, button);
-    // end::snippet[]
+        layout.add(phoneIcon, calendarIcon, alarmIcon, button);
+        // end::snippet[]
 
-    add(layout);
-  }
+        add(layout);
+    }
 
-  public static class Exporter extends DemoExporter<VaadinIcons> { // hidden-source-line
-  }
+    public static class Exporter extends DemoExporter<VaadinIcons> { // hidden-source-line
+    } // hidden-source-line
 }

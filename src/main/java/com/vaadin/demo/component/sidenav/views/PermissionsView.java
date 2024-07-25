@@ -5,5 +5,6 @@ import com.vaadin.flow.router.Route;
 
 @Route("permissions")
 public class PermissionsView extends Div {
-    public PermissionsView() {}
+    public PermissionsView() {
+    }
 }

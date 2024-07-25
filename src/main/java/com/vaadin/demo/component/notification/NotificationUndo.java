@@ -42,8 +42,8 @@ public class NotificationUndo extends Div {
             notification.close();
         });
 
-        var layout = new HorizontalLayout(new Text("5 tasks deleted"), undoButton,
-                new CloseButton());
+        var layout = new HorizontalLayout(new Text("5 tasks deleted"),
+                undoButton, new CloseButton());
         layout.setAlignItems(Alignment.CENTER);
         notification.add(layout);
 
@@ -59,8 +59,7 @@ public class NotificationUndo extends Div {
         public UndoButton() {
             super("Undo");
             addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            getElement().getStyle().set("margin-left",
-                    "var(--lumo-space-xl)");
+            getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
         }
     }
 

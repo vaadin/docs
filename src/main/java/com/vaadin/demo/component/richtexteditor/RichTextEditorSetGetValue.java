@@ -18,7 +18,8 @@ public class RichTextEditorSetGetValue extends Div {
 
         // HTML value
         TextArea htmlTextArea = new TextArea("HTML Value");
-        htmlTextArea.setHelperText("Shows the HTML representation of the edited document. You can also modify or paste HTML here to see the changes reflected in the editor above. Note that you have to leave (blur) this field in order for the editor to update.");
+        htmlTextArea.setHelperText(
+                "Shows the HTML representation of the edited document. You can also modify or paste HTML here to see the changes reflected in the editor above. Note that you have to leave (blur) this field in order for the editor to update.");
         htmlTextArea.setWidthFull();
         rte.addValueChangeListener(e -> htmlTextArea.setValue(e.getValue()));
         htmlTextArea.addValueChangeListener(e -> {
@@ -29,7 +30,8 @@ public class RichTextEditorSetGetValue extends Div {
 
         // Delta value
         TextArea deltaTextArea = new TextArea("Delta Value");
-        deltaTextArea.setHelperText("Shows the Delta representation of the edited document. You can also modify or paste the Delta JSON here to see the changes reflected in the editor above. Note that you have to leave (blur) this field in order for the editor to update.");
+        deltaTextArea.setHelperText(
+                "Shows the Delta representation of the edited document. You can also modify or paste the Delta JSON here to see the changes reflected in the editor above. Note that you have to leave (blur) this field in order for the editor to update.");
         deltaTextArea.setWidthFull();
         rte.asDelta().addValueChangeListener(
                 e -> deltaTextArea.setValue(e.getValue()));

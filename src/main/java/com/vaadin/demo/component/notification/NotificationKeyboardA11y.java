@@ -38,7 +38,8 @@ public class NotificationKeyboardA11y extends Div {
 
         Div statusText = new Div(new Text("5 tasks deleted"));
 
-        var layout = new HorizontalLayout(statusText, new CloseButtonWithShortcutHint());
+        var layout = new HorizontalLayout(statusText,
+                new CloseButtonWithShortcutHint());
         layout.setAlignItems(Alignment.CENTER);
 
         notification.add(layout);
@@ -57,17 +58,17 @@ public class NotificationKeyboardA11y extends Div {
 
         public CloseButtonWithShortcutHint() {
             addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-            getStyle().set("margin-left","var(--lumo-space-xl)");
-            getElement().executeJs("""
-                const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
-                this.textContent = `Undo ${isMac ? '⌘' : 'Ctrl-'}Z`;
-                            """);
+            getStyle().set("margin-left", "var(--lumo-space-xl)");
+            getElement().executeJs(
+                    """
+                            const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
+                            this.textContent = `Undo ${isMac ? '⌘' : 'Ctrl-'}Z`;
+                                        """);
             addClickListener(event -> findAncestor(Notification.class).close());
         }
     }
 
     // end::closeBtn[]
-
 
     // tag::setupUndoShortcut[]
     public void setupUndoShortcut(Notification notification) {
