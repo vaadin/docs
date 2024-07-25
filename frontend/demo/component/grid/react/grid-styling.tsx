@@ -53,7 +53,7 @@ function Example() {
   }, []);
 
   return (
-    <Grid items={items.value} cellPartNameGenerator={cellPartNameGenerator} className="styling">
+    <Grid items={items.value} cellPartNameGenerator={cellPartNameGenerator}>
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="profession" />
