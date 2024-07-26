@@ -24,6 +24,7 @@ public class EmailFieldReadonlyAndDisabled extends HorizontalLayout {
         add(readonlyField, disabledField);
     }
 
-    public static class Exporter extends DemoExporter<EmailFieldReadonlyAndDisabled> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<EmailFieldReadonlyAndDisabled> { // hidden-source-line
     } // hidden-source-line
 }

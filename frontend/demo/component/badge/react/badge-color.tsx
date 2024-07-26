@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { HorizontalLayout, VerticalLayout } from '@vaadin/react-components';
 
 function Example() {
   return (

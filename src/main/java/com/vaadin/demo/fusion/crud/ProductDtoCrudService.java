@@ -23,7 +23,8 @@ public class ProductDtoCrudService implements CrudService<ProductDto, Long> {
 
     @Override
     @Nonnull
-    public List<@Nonnull ProductDto> list(Pageable pageable, @Nullable Filter filter) {
+    public List<@Nonnull ProductDto> list(Pageable pageable,
+            @Nullable Filter filter) {
         // Basic list implementation that only covers pagination,
         // but not sorting or filtering
         Page<Product> products = productRepository.findAll(pageable);
@@ -47,4 +48,4 @@ public class ProductDtoCrudService implements CrudService<ProductDto, Long> {
         productRepository.deleteById(id);
     }
 }
-//end::snippet[]
+// end::snippet[]

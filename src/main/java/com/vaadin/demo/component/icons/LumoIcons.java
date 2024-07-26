@@ -11,23 +11,23 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("lumo-icons")
 public class LumoIcons extends Div {
 
-  public LumoIcons() {
-    HorizontalLayout layout = new HorizontalLayout();
-    layout.setSpacing(true);
-    layout.addClassName("items-center");
+    public LumoIcons() {
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setSpacing(true);
+        layout.addClassName("items-center");
 
-    // tag::snippet[]
-    Icon phoneIcon = LumoIcon.PHOTO.create();
-    Icon calendarIcon = LumoIcon.CALENDAR.create();
-    Icon alarmIcon = LumoIcon.CLOCK.create();
-    Button button = new Button(LumoIcon.BELL.create());
+        // tag::snippet[]
+        Icon phoneIcon = LumoIcon.PHOTO.create();
+        Icon calendarIcon = LumoIcon.CALENDAR.create();
+        Icon alarmIcon = LumoIcon.CLOCK.create();
+        Button button = new Button(LumoIcon.BELL.create());
 
-    layout.add(phoneIcon, calendarIcon, alarmIcon, button);
-    // end::snippet[]
+        layout.add(phoneIcon, calendarIcon, alarmIcon, button);
+        // end::snippet[]
 
-    add(layout);
-  }
+        add(layout);
+    }
 
-  public static class Exporter extends DemoExporter<LumoIcons> { // hidden-source-line
-  }
+    public static class Exporter extends DemoExporter<LumoIcons> { // hidden-source-line
+    } // hidden-source-line
 }

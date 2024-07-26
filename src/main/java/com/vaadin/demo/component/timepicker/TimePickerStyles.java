@@ -17,11 +17,9 @@ public class TimePickerStyles extends HorizontalLayout {
 
         // tag::snippet[]
         TimePicker field = new TimePicker();
-        field.addThemeVariants(
-            TimePickerVariant.LUMO_SMALL,
-            TimePickerVariant.LUMO_ALIGN_RIGHT,
-            TimePickerVariant.LUMO_HELPER_ABOVE_FIELD
-        );
+        field.addThemeVariants(TimePickerVariant.LUMO_SMALL,
+                TimePickerVariant.LUMO_ALIGN_RIGHT,
+                TimePickerVariant.LUMO_HELPER_ABOVE_FIELD);
         field.getStyle().set("--vaadin-input-field-border-width", "1px");
         // end::snippet[]
         field.setLabel("Label");

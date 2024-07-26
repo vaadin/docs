@@ -7,7 +7,8 @@ import com.vaadin.observability.ObservabilityClientConfiguration;
 import com.vaadin.observability.ObservabilityClientConfigurer;
 
 // tag::full-class[]
-public class UserBasedFrontendObservability implements ObservabilityClientConfigurer {
+public class UserBasedFrontendObservability
+        implements ObservabilityClientConfigurer {
     @Override
     public void configure(ObservabilityClientConfiguration config) {
         var request = VaadinRequest.getCurrent();
@@ -24,7 +25,8 @@ public class UserBasedFrontendObservability implements ObservabilityClientConfig
     private UserObservabilityConfig fetchConfiguration(Principal user) {
         if (user != null) {
             // fetch the configuration for the given user from some storage
-            // e.g. in-memory data structure, database table, properties file, ...
+            // e.g. in-memory data structure, database table, properties file,
+            // ...
             UserObservabilityConfig config = new UserObservabilityConfig();
             config.setXmlHttpRequest(false);
 

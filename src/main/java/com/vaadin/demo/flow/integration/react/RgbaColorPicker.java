@@ -34,7 +34,8 @@ public class RgbaColorPicker extends ReactAdapterComponent {
     // end::accessors[]
 
     // tag::event[]
-    public void addColorChangeListener(SerializableConsumer<RgbaColor> listener) {
+    public void addColorChangeListener(
+            SerializableConsumer<RgbaColor> listener) {
         addStateChangeListener("color", RgbaColor.class, listener);
     }
     // tag::annotations[]

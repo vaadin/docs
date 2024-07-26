@@ -15,13 +15,12 @@ public class GridStyling extends Div {
     public GridStyling() {
         // tag::snippet[]
         Grid<PersonWithRating> grid = new Grid<>(PersonWithRating.class, false);
-        grid.addClassName("styling");
         grid.addColumn(PersonWithRating::getFirstName).setHeader("First name");
         grid.addColumn(PersonWithRating::getLastName).setHeader("Last name");
         grid.addColumn(PersonWithRating::getProfession).setHeader("Profession");
         grid.addColumn(PersonWithRating::getFormattedRating)
                 .setHeader("Customer rating (0-10)")
-                .setPartNameGenerator(person->"font-weight-bold");
+                .setPartNameGenerator(person -> "font-weight-bold");
 
         grid.setPartNameGenerator(person -> {
             if (person.getRating() >= 8)

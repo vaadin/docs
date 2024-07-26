@@ -5,5 +5,6 @@ import com.vaadin.flow.router.Route;
 
 @Route("trash")
 public class TrashView extends Div {
-    public TrashView() {}
+    public TrashView() {
+    }
 }

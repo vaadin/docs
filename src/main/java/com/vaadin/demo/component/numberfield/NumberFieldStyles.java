@@ -14,11 +14,9 @@ public class NumberFieldStyles extends HorizontalLayout {
 
         // tag::snippet[]
         NumberField field = new NumberField();
-        field.addThemeVariants(
-            TextFieldVariant.LUMO_SMALL,
-            TextFieldVariant.LUMO_ALIGN_RIGHT,
-            TextFieldVariant.LUMO_HELPER_ABOVE_FIELD
-        );
+        field.addThemeVariants(TextFieldVariant.LUMO_SMALL,
+                TextFieldVariant.LUMO_ALIGN_RIGHT,
+                TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
         field.getStyle().set("--vaadin-input-field-border-width", "1px");
         // end::snippet[]
         field.setLabel("Label");

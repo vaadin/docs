@@ -3,9 +3,7 @@ import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { css } from 'lit'; // hidden-source-line
-import { AppLayout } from '@vaadin/react-components/AppLayout.js';
-import { Grid } from '@vaadin/react-components/Grid.js';
-import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { AppLayout, Grid, GridColumn } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 

@@ -27,6 +27,7 @@ public class DateTimePickerReadonlyAndDisabled extends VerticalLayout {
         add(readonlyField, disabledField);
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerReadonlyAndDisabled> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<DateTimePickerReadonlyAndDisabled> { // hidden-source-line
     } // hidden-source-line
 }
