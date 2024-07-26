@@ -10,23 +10,23 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("svg-sprites")
 public class SvgSprites extends Div {
 
-  public SvgSprites() {
-    HorizontalLayout layout = new HorizontalLayout();
-    layout.setSpacing(true);
-    layout.addClassName("items-center");
+    public SvgSprites() {
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setSpacing(true);
+        layout.addClassName("items-center");
 
-    // tag::snippet[]
-    StreamResource iconResource = new StreamResource("solid.svg",
-        () -> getClass().getResourceAsStream("/icons/solid.svg"));
+        // tag::snippet[]
+        StreamResource iconResource = new StreamResource("solid.svg",
+                () -> getClass().getResourceAsStream("/icons/solid.svg"));
 
-    SvgIcon codeBranchIcon = new SvgIcon(iconResource, "code-branch");
-    SvgIcon userIcon = new SvgIcon(iconResource, "user");
-    // end::snippet[]
+        SvgIcon codeBranchIcon = new SvgIcon(iconResource, "code-branch");
+        SvgIcon userIcon = new SvgIcon(iconResource, "user");
+        // end::snippet[]
 
-    layout.add(codeBranchIcon, userIcon);
-    add(layout);
-  }
+        layout.add(codeBranchIcon, userIcon);
+        add(layout);
+    }
 
-  public static class Exporter extends DemoExporter<SvgSprites> { // hidden-source-line
-  }
+    public static class Exporter extends DemoExporter<SvgSprites> { // hidden-source-line
+    } // hidden-source-line
 }

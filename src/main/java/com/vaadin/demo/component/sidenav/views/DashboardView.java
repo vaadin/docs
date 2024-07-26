@@ -5,5 +5,6 @@ import com.vaadin.flow.router.Route;
 
 @Route("dashboard")
 public class DashboardView extends Div {
-    public DashboardView() {}
+    public DashboardView() {
+    }
 }

@@ -14,13 +14,13 @@ import java.util.Date;
 @Endpoint
 public class ReactiveEndpoint {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveEndpoint.class);
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(ReactiveEndpoint.class);
 
     // tag::snippet[]
     @AnonymousAllowed
     public Flux<@Nonnull String> getClock() {
-        return Flux.interval(Duration.ofSeconds(1))
-                .onBackpressureDrop()
+        return Flux.interval(Duration.ofSeconds(1)).onBackpressureDrop()
                 .map(_interval -> new Date().toString());
     }
 

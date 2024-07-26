@@ -39,11 +39,11 @@ public class SecurityConfig extends VaadinWebSecurity {
 
         // Configure your static resources with public access before calling
         // super.configure(HttpSecurity) as it adds final anyRequest matcher
-        http.authorizeHttpRequests().requestMatchers(
-                        new AntPathRequestMatcher("/admin-only/**"))
+        http.authorizeHttpRequests()
+                .requestMatchers(new AntPathRequestMatcher("/admin-only/**"))
                 .hasAnyRole("admin");
-        http.authorizeHttpRequests().requestMatchers(
-                        new AntPathRequestMatcher("/public/**"))
+        http.authorizeHttpRequests()
+                .requestMatchers(new AntPathRequestMatcher("/public/**"))
                 .permitAll();
 
         // tag::stateless-configure[]

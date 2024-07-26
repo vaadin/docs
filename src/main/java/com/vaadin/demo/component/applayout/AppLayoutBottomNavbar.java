@@ -40,33 +40,33 @@ public class AppLayoutBottomNavbar extends AppLayout {
     // end::snippet[]
 
     private HorizontalLayout getNavigation() {
-            HorizontalLayout navigation = new HorizontalLayout();
-            navigation.addClassNames(LumoUtility.Width.FULL,
-                            LumoUtility.JustifyContent.EVENLY,
-                            LumoUtility.AlignSelf.STRETCH);
-            navigation.setPadding(false);
-            navigation.setSpacing(false);
-            navigation.add(createLink(VaadinIcon.DASHBOARD, "Dashboard"),
-                            createLink(VaadinIcon.CART, "Orders"),
-                            createLink(VaadinIcon.USER_HEART, "Customers"),
-                            createLink(VaadinIcon.PACKAGE, "Products"));
+        HorizontalLayout navigation = new HorizontalLayout();
+        navigation.addClassNames(LumoUtility.Width.FULL,
+                LumoUtility.JustifyContent.EVENLY,
+                LumoUtility.AlignSelf.STRETCH);
+        navigation.setPadding(false);
+        navigation.setSpacing(false);
+        navigation.add(createLink(VaadinIcon.DASHBOARD, "Dashboard"),
+                createLink(VaadinIcon.CART, "Orders"),
+                createLink(VaadinIcon.USER_HEART, "Customers"),
+                createLink(VaadinIcon.PACKAGE, "Products"));
 
-            return navigation;
+        return navigation;
     }
 
     private RouterLink createLink(VaadinIcon icon, String viewName) {
-            RouterLink link = new RouterLink();
-            // Demo has no routes
-            // link.setRoute(viewClass.java);
-            link.addClassNames(LumoUtility.Display.FLEX,
-                            LumoUtility.AlignItems.CENTER,
-                            LumoUtility.Padding.Horizontal.LARGE,
-                            LumoUtility.TextColor.SECONDARY);
-            link.add(icon.create());
-            // hidden-source-line: workaround to make text color work
-            link.getElement().setAttribute("href", viewName); // hidden-source-line
-            link.getElement().setAttribute("aria-label", viewName);
-            return link;
+        RouterLink link = new RouterLink();
+        // Demo has no routes
+        // link.setRoute(viewClass.java);
+        link.addClassNames(LumoUtility.Display.FLEX,
+                LumoUtility.AlignItems.CENTER,
+                LumoUtility.Padding.Horizontal.LARGE,
+                LumoUtility.TextColor.SECONDARY);
+        link.add(icon.create());
+        // hidden-source-line: workaround to make text color work
+        link.getElement().setAttribute("href", viewName); // hidden-source-line
+        link.getElement().setAttribute("aria-label", viewName);
+        return link;
     }
 
     public static class Exporter extends DemoExporter<AppLayoutBottomNavbar> { // hidden-source-line

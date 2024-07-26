@@ -26,7 +26,8 @@ public class GridDataProvider extends Div {
     public GridDataProvider() {
         Grid<Person> grid = new Grid<>();
         grid.addColumn(Person::getFullName, "name").setHeader("Name");
-        grid.addColumn(Person::getProfession, "profession").setHeader("Profession");
+        grid.addColumn(Person::getProfession, "profession")
+                .setHeader("Profession");
         grid.setItems(filterDataProvider);
 
         TextField searchField = new TextField();

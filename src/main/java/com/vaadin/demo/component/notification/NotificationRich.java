@@ -69,7 +69,8 @@ public class NotificationRich extends HorizontalLayout {
         Button viewBtn = new Button("View", clickEvent -> notification.close());
         viewBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
 
-        var layout = new HorizontalLayout(icon, new Text("Application submitted!"), viewBtn,
+        var layout = new HorizontalLayout(icon,
+                new Text("Application submitted!"), viewBtn,
                 createCloseBtn(notification));
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
@@ -87,7 +88,8 @@ public class NotificationRich extends HorizontalLayout {
                 clickEvent -> notification.close());
         retryBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
 
-        var layout = new HorizontalLayout(icon, new Text("Failed to generate report!"), retryBtn,
+        var layout = new HorizontalLayout(icon,
+                new Text("Failed to generate report!"), retryBtn,
                 createCloseBtn(notification));
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
@@ -123,21 +125,18 @@ public class NotificationRich extends HorizontalLayout {
         icon.setColor("var(--lumo-success-color)");
 
         Div uploadSuccessful = new Div(new Text("Upload successful"));
-        uploadSuccessful.getStyle()
-                .set("font-weight", "600")
+        uploadSuccessful.getStyle().set("font-weight", "600")
                 .setColor("var(--lumo-success-text-color)");
 
         Span fileName = new Span("Financials.xlsx");
-        fileName.getStyle()
-                .set("font-size", "var(--lumo-font-size-s)")
+        fileName.getStyle().set("font-size", "var(--lumo-font-size-s)")
                 .set("font-weight", "600");
 
         Div info = new Div(uploadSuccessful,
                 new Div(fileName, new Text(" is now available in "),
                         new Anchor("#", "Documents")));
 
-        info.getStyle()
-                .set("font-size", "var(--lumo-font-size-s)")
+        info.getStyle().set("font-size", "var(--lumo-font-size-s)")
                 .setColor("var(--lumo-secondary-text-color)");
 
         var layout = new HorizontalLayout(icon, info,

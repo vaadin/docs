@@ -5,5 +5,6 @@ import com.vaadin.flow.router.Route;
 
 @Route("inbox")
 public class InboxView extends Div {
-    public InboxView() {}
+    public InboxView() {
+    }
 }

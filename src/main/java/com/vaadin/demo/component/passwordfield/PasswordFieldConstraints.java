@@ -18,11 +18,13 @@ public class PasswordFieldConstraints extends HorizontalLayout {
         field.setMinLength(6);
         field.setMaxLength(12);
         // end::snippet[]
-        field.setHelperText("6 to 12 characters. Only letters A-Z and numbers supported.");
+        field.setHelperText(
+                "6 to 12 characters. Only letters A-Z and numbers supported.");
 
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<PasswordFieldConstraints> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<PasswordFieldConstraints> { // hidden-source-line
     } // hidden-source-line
 }

@@ -14,11 +14,9 @@ public class EmailFieldStyles extends HorizontalLayout {
 
         // tag::snippet[]
         EmailField field = new EmailField();
-        field.addThemeVariants(
-            TextFieldVariant.LUMO_SMALL,
-            TextFieldVariant.LUMO_ALIGN_RIGHT,
-            TextFieldVariant.LUMO_HELPER_ABOVE_FIELD
-        );
+        field.addThemeVariants(TextFieldVariant.LUMO_SMALL,
+                TextFieldVariant.LUMO_ALIGN_RIGHT,
+                TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
         field.getStyle().set("--vaadin-input-field-border-width", "1px");
         // end::snippet[]
         field.setLabel("Label");
