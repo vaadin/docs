@@ -10,6 +10,10 @@ function Example() {
       <Button theme="primary error">Primary</Button>
       <Button theme="secondary error">Secondary</Button>
       <Button theme="tertiary error">Tertiary</Button>
+
+      <Button theme="primary warning">Primary</Button>
+      <Button theme="secondary warning">Secondary</Button>
+      <Button theme="tertiary warning">Tertiary</Button>
       {/* end::snippet[] */}
     </HorizontalLayout>
   );

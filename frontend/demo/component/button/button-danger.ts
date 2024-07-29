@@ -6,7 +6,7 @@ import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('button-error')
+@customElement('button-danger')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -22,6 +22,10 @@ export class Example extends LitElement {
         <vaadin-button theme="primary error">Primary</vaadin-button>
         <vaadin-button theme="secondary error">Secondary</vaadin-button>
         <vaadin-button theme="tertiary error">Tertiary</vaadin-button>
+
+        <vaadin-button theme="primary warning">Primary</vaadin-button>
+        <vaadin-button theme="secondary warning">Secondary</vaadin-button>
+        <vaadin-button theme="tertiary warning">Tertiary</vaadin-button>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
