@@ -36,6 +36,6 @@ public class BasicLayoutsHorizontalLayoutSpacing extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsSpacing> { // hidden-source-line
+            extends DemoExporter<BasicLayoutsHorizontalLayoutSpacing> { // hidden-source-line
     } // hidden-source-line
 }
