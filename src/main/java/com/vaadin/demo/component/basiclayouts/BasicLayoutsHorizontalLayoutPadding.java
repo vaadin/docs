@@ -36,6 +36,6 @@ public class BasicLayoutsHorizontalLayoutPadding extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsPadding> { // hidden-source-line
+            extends DemoExporter<BasicLayoutsHorizontalLayoutPadding> { // hidden-source-line
     } // hidden-source-line
 }
