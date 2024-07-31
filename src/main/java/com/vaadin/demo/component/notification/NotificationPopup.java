@@ -44,15 +44,15 @@ public class NotificationPopup extends Div {
             numberOfNotifications.getStyle()
                     .setPosition(Style.Position.ABSOLUTE)
                     .setTransform("translate(-40%, -85%)");
-            numberOfNotifications.getThemeList().addAll(
-                    Arrays.asList("badge", "error", "primary", "small", "pill"));
+            numberOfNotifications.getThemeList().addAll(Arrays.asList("badge",
+                    "error", "primary", "small", "pill"));
         }
 
         public void setUnreadMessages(int unread) {
             numberOfNotifications.setText(unread + "");
-            if(unread > 0 && numberOfNotifications.getParent() == null) {
+            if (unread > 0 && numberOfNotifications.getParent() == null) {
                 getElement().appendChild(numberOfNotifications);
-            } else if(numberOfNotifications.getNode().isAttached()) {
+            } else if (numberOfNotifications.getNode().isAttached()) {
                 numberOfNotifications.removeFromParent();
             }
         }

@@ -43,6 +43,6 @@ public class BasicLayoutsHorizontalLayoutMargin extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsMargin> { // hidden-source-line
+            extends DemoExporter<BasicLayoutsHorizontalLayoutMargin> { // hidden-source-line
     } // hidden-source-line
 }

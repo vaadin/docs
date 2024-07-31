@@ -15,7 +15,7 @@ public class NotificationPrimary extends Div {
         // the duration is 5-sec by default.
         Notification notification = Notification
                 .show("New project plan available");
-                notification.addThemeVariants(NotificationVariant.LUMO_PRIMARY);
+        notification.addThemeVariants(NotificationVariant.LUMO_PRIMARY);
         // end::snippet[]
         notification.setPosition(Notification.Position.MIDDLE);
         notification.setDuration(0);

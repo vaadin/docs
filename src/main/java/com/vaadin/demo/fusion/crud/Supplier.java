@@ -15,7 +15,7 @@ public class Supplier {
     private String headquarterCity;
 
     // getters and setters omitted for brevity
-    //end::snippet[]
+    // end::snippet[]
 
     public Long getId() {
         return id;
@@ -41,6 +41,6 @@ public class Supplier {
         this.headquarterCity = headquarterCity;
     }
 
-    //tag::snippet[]
+    // tag::snippet[]
 }
-//end::snippet[]
+// end::snippet[]

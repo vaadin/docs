@@ -7,7 +7,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
-
 @Route("basic-layouts/vertical-layout-horizontal-alignment")
 public class BasicLayoutsVerticalLayoutHorizontalAlignment extends Div {
 
