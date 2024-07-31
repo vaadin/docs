@@ -16,7 +16,7 @@ public class BasicLayoutsHorizontalLayoutSpacing extends Div {
 
     public BasicLayoutsHorizontalLayoutSpacing() {
         // tag::snippet[]
-       HorizontalLayout layout = new HorizontalLayout();
+        HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
         layout.setAlignItems(FlexComponent.Alignment.STRETCH);
         layout.add(new Button("Button 1"));
@@ -36,6 +36,6 @@ public class BasicLayoutsHorizontalLayoutSpacing extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsSpacing> { // hidden-source-line
+            extends DemoExporter<BasicLayoutsHorizontalLayoutSpacing> { // hidden-source-line
     } // hidden-source-line
 }

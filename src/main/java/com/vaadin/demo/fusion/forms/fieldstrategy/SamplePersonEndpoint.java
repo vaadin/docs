@@ -4,9 +4,9 @@ import com.vaadin.hilla.Endpoint;
 
 @Endpoint
 public class SamplePersonEndpoint {
-  // other endpoint methods: read, delete, ...
+    // other endpoint methods: read, delete, ...
 
-  public void savePerson(SamplePerson person) {
-    // persistently store the contact
-  }
+    public void savePerson(SamplePerson person) {
+        // persistently store the contact
+    }
 }

@@ -43,6 +43,6 @@ public class BasicLayoutsHorizontalLayoutSpacingVariants extends Div {
     }
 
     public static class Exporter extends // hidden-source-line
-            DemoExporter<BasicLayoutsSpacingVariants> { // hidden-source-line
+            DemoExporter<BasicLayoutsHorizontalLayoutSpacingVariants> { // hidden-source-line
     } // hidden-source-line
 }

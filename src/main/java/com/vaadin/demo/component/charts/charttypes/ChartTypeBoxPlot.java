@@ -66,7 +66,8 @@ public class ChartTypeBoxPlot extends Div {
         observations.add(new BoxPlotItem(834, 836, 864, 882, 910));
         PlotOptionsBoxplot plotOptions = new PlotOptionsBoxplot();
         SeriesTooltip observationsTooltip = new SeriesTooltip();
-        observationsTooltip.setHeaderFormat("<em>Experiment No {point.key}</em><br/>");
+        observationsTooltip
+                .setHeaderFormat("<em>Experiment No {point.key}</em><br/>");
         plotOptions.setTooltip(observationsTooltip);
         observations.setPlotOptions(plotOptions);
         chart.getConfiguration().addSeries(observations);

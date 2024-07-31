@@ -39,8 +39,8 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
                 .set("margin", "0");
 
         HorizontalLayout subViews = getSecondaryNavigation();
-        subViews.getElement()
-                        .executeJs("window.patchAppLayoutNavigation(this);"); // hidden-source-line
+        subViews.getElement() // hidden-source-line
+                .executeJs("window.patchAppLayoutNavigation(this);"); // hidden-source-line
 
         HorizontalLayout wrapper = new HorizontalLayout(toggle, viewTitle);
         wrapper.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -58,49 +58,47 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
     // end::snippet[]
 
     private SideNav getPrimaryNavigation() {
-            SideNav sideNav = new SideNav();
-            sideNav.addItem(new SideNavItem("Dashboard", "/dashboard",
-                            VaadinIcon.DASHBOARD.create()),
-                            new SideNavItem("Orders", "/orders",
-                                            VaadinIcon.CART.create()),
-                            new SideNavItem("Customers", "/customers",
-                                            VaadinIcon.USER_HEART.create()),
-                            new SideNavItem("Products", "/products",
-                                            VaadinIcon.PACKAGE.create()),
-                            new SideNavItem("Documents", "/documents",
-                                            VaadinIcon.RECORDS.create()),
-                            new SideNavItem("Tasks", "/tasks",
-                                            VaadinIcon.LIST.create()),
-                            new SideNavItem("Analytics", "/analytics",
-                                            VaadinIcon.CHART.create()));
-            return sideNav;
+        SideNav sideNav = new SideNav();
+        sideNav.addItem(
+                new SideNavItem("Dashboard", "/dashboard",
+                        VaadinIcon.DASHBOARD.create()),
+                new SideNavItem("Orders", "/orders", VaadinIcon.CART.create()),
+                new SideNavItem("Customers", "/customers",
+                        VaadinIcon.USER_HEART.create()),
+                new SideNavItem("Products", "/products",
+                        VaadinIcon.PACKAGE.create()),
+                new SideNavItem("Documents", "/documents",
+                        VaadinIcon.RECORDS.create()),
+                new SideNavItem("Tasks", "/tasks", VaadinIcon.LIST.create()),
+                new SideNavItem("Analytics", "/analytics",
+                        VaadinIcon.CHART.create()));
+        return sideNav;
     }
 
     private HorizontalLayout getSecondaryNavigation() {
-            HorizontalLayout navigation = new HorizontalLayout();
-            navigation.addClassNames(LumoUtility.JustifyContent.CENTER,
-                            LumoUtility.Gap.SMALL, LumoUtility.Height.MEDIUM);
-            navigation.add(createLink("All"), createLink("Open"),
-                            createLink("Completed"), createLink("Cancelled"));
-            return navigation;
+        HorizontalLayout navigation = new HorizontalLayout();
+        navigation.addClassNames(LumoUtility.JustifyContent.CENTER,
+                LumoUtility.Gap.SMALL, LumoUtility.Height.MEDIUM);
+        navigation.add(createLink("All"), createLink("Open"),
+                createLink("Completed"), createLink("Cancelled"));
+        return navigation;
     }
 
     private RouterLink createLink(String viewName) {
-            RouterLink link = new RouterLink();
-            link.add(viewName);
-            // Demo has no routes
-            // link.setRoute(viewClass.java);
+        RouterLink link = new RouterLink();
+        link.add(viewName);
+        // Demo has no routes
+        // link.setRoute(viewClass.java);
 
-            link.addClassNames(LumoUtility.Display.FLEX,
-                            LumoUtility.AlignItems.CENTER,
-                            LumoUtility.Padding.Horizontal.MEDIUM,
-                            LumoUtility.TextColor.SECONDARY,
-                            LumoUtility.FontWeight.MEDIUM);
-            link.getStyle().set("text-decoration", "none");
-            // hidden-source-line: workaround to make text color work
-            link.getElement().setAttribute("href", viewName); // hidden-source-line
+        link.addClassNames(LumoUtility.Display.FLEX,
+                LumoUtility.AlignItems.CENTER,
+                LumoUtility.Padding.Horizontal.MEDIUM,
+                LumoUtility.TextColor.SECONDARY, LumoUtility.FontWeight.MEDIUM);
+        link.getStyle().set("text-decoration", "none");
+        // hidden-source-line: workaround to make text color work
+        link.getElement().setAttribute("href", viewName); // hidden-source-line
 
-            return link;
+        return link;
     }
 
     public static class Exporter extends // hidden-source-line

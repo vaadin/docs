@@ -5,5 +5,6 @@ import com.vaadin.flow.router.Route;
 
 @Route("calendar")
 public class CalendarView extends Div {
-    public CalendarView() {}
+    public CalendarView() {
+    }
 }

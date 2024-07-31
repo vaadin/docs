@@ -7,7 +7,7 @@ import '@vaadin/radio-group';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import '@vaadin/horizontal-layout';
 
-@customElement('basic-layouts-spacing-variants')
+@customElement('basic-layouts-horizontal-layout-spacing-variants')
 export class Example extends LitElement {
   connectedCallback() {
     super.connectedCallback();

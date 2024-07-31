@@ -5,5 +5,6 @@ import com.vaadin.flow.router.Route;
 
 @Route("messages")
 public class MessagesView extends Div {
-    public MessagesView() {}
+    public MessagesView() {
+    }
 }

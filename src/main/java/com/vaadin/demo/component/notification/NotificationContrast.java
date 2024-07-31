@@ -13,8 +13,7 @@ public class NotificationContrast extends Div {
         // tag::snippet[]
         // When creating a notification using the `show` static method,
         // the duration is 5-sec by default.
-        Notification notification = Notification
-                .show("5 tasks deleted");
+        Notification notification = Notification.show("5 tasks deleted");
         notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
         // end::snippet[]
         notification.setPosition(Notification.Position.MIDDLE);

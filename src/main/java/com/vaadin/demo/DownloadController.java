@@ -15,13 +15,15 @@ import java.util.Map;
 @RequestMapping("/connect/_download")
 public class DownloadController {
 
-    // Keep it simple security-wise and only allow downloading specific files by assigning them a name
+    // Keep it simple security-wise and only allow downloading specific files by
+    // assigning them a name
     private static final Map<String, FileInfo> ALLOWED_FILES = Map.of(
-            "product-data.sql", new FileInfo("files/product-data.sql", "data.sql")
-    );
+            "product-data.sql",
+            new FileInfo("files/product-data.sql", "data.sql"));
 
     @GetMapping
-    public ResponseEntity<Resource> downloadFile(@RequestParam("file") String fileName) {
+    public ResponseEntity<Resource> downloadFile(
+            @RequestParam("file") String fileName) {
         FileInfo fileInfo = ALLOWED_FILES.get(fileName);
         if (fileInfo == null) {
             return ResponseEntity.notFound().build();
@@ -30,15 +32,15 @@ public class DownloadController {
         Resource resource = new ClassPathResource(fileInfo.resourcePath);
         if (resource.exists()) {
             HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileInfo.fileName);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=" + fileInfo.fileName);
 
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(resource);
+            return ResponseEntity.ok().headers(headers).body(resource);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
-    private record FileInfo(String resourcePath, String fileName) {}
+    private record FileInfo(String resourcePath, String fileName) {
+    }
 }

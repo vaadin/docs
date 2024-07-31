@@ -2,8 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Avatar } from '@vaadin/react-components/Avatar.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Avatar, HorizontalLayout } from '@vaadin/react-components';
 import companyLogo from '../../../../../src/main/resources/images/company-logo.png';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';

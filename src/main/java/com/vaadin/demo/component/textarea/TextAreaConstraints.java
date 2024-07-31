@@ -19,7 +19,8 @@ public class TextAreaConstraints extends HorizontalLayout {
         field.setMinLength(5);
         field.setMaxLength(50);
         // end::snippet[]
-        field.setHelperText("Must be one complete sentence ending in a period, between 5 and 50 characters long");
+        field.setHelperText(
+                "Must be one complete sentence ending in a period, between 5 and 50 characters long");
         field.setWidthFull();
         add(field);
     }

@@ -19,8 +19,7 @@ public class CheckboxRequired extends HorizontalLayout {
         checkbox.setRequiredIndicatorVisible(true);
 
         Binder<UserPermissions> binder = new Binder<>(UserPermissions.class);
-        binder.forField(checkbox)
-                .asRequired("This field is required")
+        binder.forField(checkbox).asRequired("This field is required")
                 .bind(UserPermissions::getView, UserPermissions::setView);
         // end::snippet[]
 

@@ -38,11 +38,10 @@ public class NotificationWarning extends Div {
         Notification notification = new Notification();
         notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
 
-        Div text = new Div(
-            new Text("Your session will expire in 5 minutes due to inactivity."),
-            new HtmlComponent("br"),
-            new Text("Close this warning to continue working.")
-        );
+        Div text = new Div(new Text(
+                "Your session will expire in 5 minutes due to inactivity."),
+                new HtmlComponent("br"),
+                new Text("Close this warning to continue working."));
 
         Button closeButton = new Button(new Icon("lumo", "cross"));
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);

@@ -43,8 +43,8 @@ public class NotificationRetry extends Div {
         Button retryButton = new RetryButton();
         Button closeButton = new CloseButton();
 
-        var layout = new HorizontalLayout(new Text("Failed to generate report"), retryButton,
-                closeButton);
+        var layout = new HorizontalLayout(new Text("Failed to generate report"),
+                retryButton, closeButton);
         notification.add(layout);
 
         notification.open();
@@ -59,8 +59,7 @@ public class NotificationRetry extends Div {
         public RetryButton() {
             super("Retry");
             addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            getElement().getStyle().set("margin-left",
-                    "var(--lumo-space-xl)");
+            getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
             addClickListener(e -> findAncestor(Notification.class).close());
         }
     }
