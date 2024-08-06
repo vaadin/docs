@@ -47,7 +47,7 @@ public class Employee {
     private long version;
 
     // getters and setters omitted for brevity
-    //end::snippet[]
+    // end::snippet[]
 
     public Employee() {
     }
@@ -124,6 +124,6 @@ public class Employee {
         this.version = version;
     }
 
-    //tag::snippet[]
+    // tag::snippet[]
 }
-//end::snippet[]
+// end::snippet[]

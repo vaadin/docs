@@ -20,7 +20,7 @@ public class SelectReadonlyAndDisabled extends HorizontalLayout {
                 "Rating: low to high", "Price: high to low",
                 "Price: low to high");
         readonlyField.setValue("Most recent first");
-        
+
         // tag::snippet[]
         Select<String> disabledField = new Select<>();
         disabledField.setEnabled(false);
@@ -29,6 +29,7 @@ public class SelectReadonlyAndDisabled extends HorizontalLayout {
         add(readonlyField, disabledField);
     }
 
-    public static class Exporter extends DemoExporter<SelectReadonlyAndDisabled> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<SelectReadonlyAndDisabled> { // hidden-source-line
     } // hidden-source-line
 }

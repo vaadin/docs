@@ -3,8 +3,9 @@ package com.vaadin.demo.component.map;
 import com.vaadin.flow.component.map.configuration.style.Icon;
 
 /**
- * DS publisher can not resolve default marker image, nor is there a way to host static images with a deterministic URL.
- * For now duplicate all required icons with base64 encoded URL
+ * DS publisher can not resolve default marker image, nor is there a way to host
+ * static images with a deterministic URL. For now duplicate all required icons
+ * with base64 encoded URL
  */
 class Icons {
     public static Icon createDefaultIcon() {

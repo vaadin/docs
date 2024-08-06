@@ -25,7 +25,7 @@ public class ChartTypeSolidGauge extends Div {
         Configuration configuration = chart.getConfiguration();
 
         Pane pane = configuration.getPane();
-        pane.setCenter(new String[] {"50%", "50%"});
+        pane.setCenter(new String[] { "50%", "50%" });
         pane.setStartAngle(-90);
         pane.setEndAngle(90);
 
@@ -44,7 +44,6 @@ public class ChartTypeSolidGauge extends Div {
         yAxis.setMin(0);
         yAxis.setMax(200);
 
-
         PlotOptionsSolidgauge plotOptionsSolidgauge = new PlotOptionsSolidgauge();
 
         DataLabels dataLabels = plotOptionsSolidgauge.getDataLabels();
@@ -58,9 +57,10 @@ public class ChartTypeSolidGauge extends Div {
         DataSeriesItem item = new DataSeriesItem();
         item.setY(80);
         DataLabels dataLabelsSeries = new DataLabels();
-        dataLabelsSeries.setFormat("<div style=\"text-align:center\"><span style=\"font-size:25px;"
-                + "color:black' + '\">{y}</span><br/>"
-                + "<span style=\"font-size:12px;color:silver\">km/h</span></div>");
+        dataLabelsSeries.setFormat(
+                "<div style=\"text-align:center\"><span style=\"font-size:25px;"
+                        + "color:black' + '\">{y}</span><br/>"
+                        + "<span style=\"font-size:12px;color:silver\">km/h</span></div>");
 
         item.setDataLabels(dataLabelsSeries);
 

@@ -2,8 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Grid } from '@vaadin/react-components/Grid.js';
-import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { Grid, GridColumn } from '@vaadin/react-components';
 import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService';
 import type Report from 'Frontend/generated/com/vaadin/demo/domain/Report';
 

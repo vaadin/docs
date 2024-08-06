@@ -44,7 +44,8 @@ public class ChartTypeAreaSpline extends Div {
         XAxis xAxis = new XAxis();
         xAxis.setCategories(new String[] { "Monday", "Tuesday", "Wednesday",
                 "Thursday", "Friday", "Saturday", "Sunday" });
-        PlotBand plotBand = new PlotBand(4.5, 6.5, new SolidColor(0, 0, 0, 0.05));
+        PlotBand plotBand = new PlotBand(4.5, 6.5,
+                new SolidColor(0, 0, 0, 0.05));
         plotBand.setZIndex(1);
         xAxis.setPlotBands(plotBand);
         conf.addxAxis(xAxis);
@@ -69,7 +70,7 @@ public class ChartTypeAreaSpline extends Div {
         conf.addSeries(new ListSeries("Jane", 1, 3, 4, 3, 3, 5, 4));
         // end::snippet[]
 
-      add(new VerticalLayout(chart));
+        add(new VerticalLayout(chart));
     }
 
     public static class Exporter extends DemoExporter<ChartTypeAreaSpline> { // hidden-source-line

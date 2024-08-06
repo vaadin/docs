@@ -29,7 +29,9 @@ public class MapMarkerDragDrop extends Div {
             Coordinate startCoordinates = event.getStartCoordinate();
             Coordinate endCoordinates = event.getCoordinate();
 
-            Notification.show("Marker \"" + droppedMarker.getId() + "\" dragged from " + startCoordinates + " to " + endCoordinates);
+            Notification.show(
+                    "Marker \"" + droppedMarker.getId() + "\" dragged from "
+                            + startCoordinates + " to " + endCoordinates);
         });
         // end::snippet[]
         // Override marker icon to use inline images // hidden-source-line

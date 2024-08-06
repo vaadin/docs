@@ -1,8 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Accordion } from '@vaadin/react-components/Accordion.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { AccordionPanel } from '@vaadin/react-components/AccordionPanel.js';
+import { Accordion, AccordionPanel, VerticalLayout } from '@vaadin/react-components';
 
 function Example() {
   return (
