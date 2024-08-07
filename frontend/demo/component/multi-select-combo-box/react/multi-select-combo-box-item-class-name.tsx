@@ -1,36 +1,32 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
-import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import React from 'react';
 import { MultiSelectComboBox } from '@vaadin/react-components/MultiSelectComboBox.js';
-import { getCountries } from 'Frontend/demo/domain/DataService';
-import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 function Example() {
-  useSignals(); // hidden-source-line
-  const items = useSignal<Country[]>([]);
-
-  useEffect(() => {
-    getCountries().then((countries) => {
-      items.value = countries;
-    });
-  }, []);
-
-  const selectedItems = useComputed(() => items.value.slice(0, 3));
-
   // tag::snippet[]
-  const classNameGenerator = (item: Country) => {
-    const index = items.value.indexOf(item);
-    return index % 2 === 0 ? 'even' : 'odd';
+  const items = ['Apple', 'Banana', 'Orange', 'Pear'];
+  const selectedItems = items.slice(0, 2);
+
+  const classNameGenerator = (item: string) => {
+    switch (item) {
+      case 'Apple':
+        return 'coral';
+      case 'Banana':
+        return 'gold';
+      case 'Orange':
+        return 'orange';
+      case 'Pear':
+        return 'yellowgreen';
+      default:
+        return '';
+    }
   };
 
   return (
     <MultiSelectComboBox
-      label="Countries"
-      itemLabelPath="name"
-      itemIdPath="id"
-      items={items.value}
-      selectedItems={selectedItems.value}
+      label="Fruit"
+      items={items}
+      selectedItems={selectedItems}
       style={{ width: '300px' }}
       itemClassNameGenerator={classNameGenerator}
     />

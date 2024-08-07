@@ -3,8 +3,6 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/combo-box';
-import { getCountries } from 'Frontend/demo/domain/DataService';
-import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-item-class-name')
@@ -17,28 +15,32 @@ export class Example extends LitElement {
   }
 
   @state()
-  private items: Country[] = [];
-
-  protected override async firstUpdated() {
-    this.items = await getCountries();
-  }
+  private items = ['Apple', 'Banana', 'Orange', 'Pear'];
 
   // tag::snippet[]
   protected override render() {
     return html`
       <vaadin-combo-box
-        label="Country"
-        item-label-path="name"
-        item-value-path="id"
+        label="Fruit"
         .items="${this.items}"
         .itemClassNameGenerator="${this.classNameGenerator}"
       ></vaadin-combo-box>
     `;
   }
 
-  protected classNameGenerator(item: Country): string {
-    const index = this.items.indexOf(item);
-    return index % 2 === 0 ? 'even' : 'odd';
+  protected classNameGenerator(item: string): string {
+    switch (item) {
+      case 'Apple':
+        return 'coral';
+      case 'Banana':
+        return 'gold';
+      case 'Orange':
+        return 'orange';
+      case 'Pear':
+        return 'yellowgreen';
+      default:
+        return '';
+    }
   }
   // end::snippet[]
 }

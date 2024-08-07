@@ -3,8 +3,6 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/multi-select-combo-box';
-import { getCountries } from 'Frontend/demo/domain/DataService';
-import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('multi-select-combo-box-item-class-name')
@@ -24,28 +22,32 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items: Country[] = [];
-
-  protected override async firstUpdated() {
-    this.items = await getCountries();
-  }
+  private items = ['Apple', 'Banana', 'Orange', 'Pear'];
 
   protected override render() {
     return html`
       <vaadin-multi-select-combo-box
-        label="Countries"
-        item-label-path="name"
-        item-id-path="id"
+        label="Fruit"
         .items="${this.items}"
-        .selectedItems="${this.items.slice(0, 3)}"
+        .selectedItems="${this.items.slice(0, 2)}"
         .itemClassNameGenerator="${this.classNameGenerator}"
       ></vaadin-multi-select-combo-box>
     `;
   }
 
-  protected classNameGenerator(item: Country): string {
-    const index = this.items.indexOf(item);
-    return index % 2 === 0 ? 'even' : 'odd';
+  protected classNameGenerator(item: string): string {
+    switch (item) {
+      case 'Apple':
+        return 'coral';
+      case 'Banana':
+        return 'gold';
+      case 'Orange':
+        return 'orange';
+      case 'Pear':
+        return 'yellowgreen';
+      default:
+        return '';
+    }
   }
   // end::snippet[]
 }

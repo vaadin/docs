@@ -3,8 +3,6 @@ package com.vaadin.demo.component.multiselectcombobox;
 import java.util.List;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.demo.domain.Country;
-import com.vaadin.demo.domain.DataService;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
@@ -14,19 +12,28 @@ public class MultiSelectComboBoxItemClassName extends Div {
 
     public MultiSelectComboBoxItemClassName() {
         // tag::snippet[]
-        MultiSelectComboBox<Country> comboBox = new MultiSelectComboBox<>(
-                "Countries");
-        List<Country> countries = DataService.getCountries();
-        comboBox.setItems(countries);
+        MultiSelectComboBox<String> comboBox = new MultiSelectComboBox<>(
+                "Fruit");
+        List<String> items = List.of("Apple", "Banana", "Orange", "Pear");
+        comboBox.setItems(items);
         comboBox.setClassNameGenerator((item) -> {
-            int index = countries.indexOf(item);
-            return index % 2 == 0 ? "even" : "odd";
+            switch (item) {
+            case "Apple":
+                return "coral";
+            case "Banana":
+                return "gold";
+            case "Orange":
+                return "orange";
+            case "Pear":
+                return "yellowgreen";
+            default:
+                return "";
+            }
         });
         // end::snippet[]
-        comboBox.setItemLabelGenerator(Country::getName);
-        comboBox.select(countries.subList(0, 3));
-        add(comboBox);
+        comboBox.select(items.subList(0, 2));
         comboBox.setWidth("300px");
+        add(comboBox);
     }
 
     public static class Exporter extends // hidden-source-line
