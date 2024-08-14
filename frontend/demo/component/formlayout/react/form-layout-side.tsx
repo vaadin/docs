@@ -7,7 +7,7 @@ import { TextField } from '@vaadin/react-components/TextField.js';
 function Example() {
   return (
     // tag::snippet[]
-    <FormLayout>
+    <FormLayout style={{ '--vaadin-form-item-label-width': '60px' }}>
       {/* Wrap fields into form items, which displays labels on the side by default */}
       <FormItem>
         <label slot="label">Revenue</label>
