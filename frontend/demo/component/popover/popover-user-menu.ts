@@ -3,6 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
+import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/popover';
 import '@vaadin/vertical-layout';
@@ -31,12 +32,18 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-horizontal-layout style="background: var(--lumo-contrast-5pct);">
-        <vaadin-avatar
+        <vaadin-button
           id="avatar"
-          .img="${this.person?.pictureUrl}"
-          .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
-          style="margin: var(--lumo-space-s); margin-inline-start: auto"
-        ></vaadin-avatar>
+          theme="icon tertiary-inline"
+          style="margin: var(--lumo-space-s); margin-inline-start: auto; border-radius: 50%"
+        >
+          <vaadin-avatar
+            tabindex="-1"
+            style="display: block"
+            .img="${this.person?.pictureUrl}"
+            .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
+          ></vaadin-avatar>
+        </vaadin-button>
       </vaadin-horizontal-layout>
       <!-- tag::snippet[] -->
       <vaadin-popover
@@ -65,6 +72,7 @@ export class Example extends LitElement {
         style="background: var(--lumo-contrast-5pct); padding: var(--lumo-space-s); margin: calc(var(--lumo-space-s) * -1)"
       >
         <vaadin-avatar
+          tabindex="-1"
           .img="${pictureUrl}"
           .name="${`${firstName} ${lastName}`}"
           style="align-self: center"

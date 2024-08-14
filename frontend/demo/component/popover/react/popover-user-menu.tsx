@@ -2,7 +2,13 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Avatar, HorizontalLayout, Popover, VerticalLayout } from '@vaadin/react-components';
+import {
+  Avatar,
+  Button,
+  HorizontalLayout,
+  Popover,
+  VerticalLayout,
+} from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -22,12 +28,18 @@ function Example() {
   return (
     <>
       <HorizontalLayout style={{ background: 'var(--lumo-contrast-5pct)' }}>
-        <Avatar
+        <Button
           id="avatar"
-          img={pictureUrl}
-          name={`${firstName} ${lastName}`}
-          style={{ margin: 'var(--lumo-space-s)', marginInlineStart: 'auto' }}
-        />
+          theme="icon tertiary-inline"
+          style={{ margin: 'var(--lumo-space-s)', marginInlineStart: 'auto', borderRadius: '50%' }}
+        >
+          <Avatar
+            tabIndex={-1}
+            style={{ display: 'block' }}
+            img={pictureUrl}
+            name={`${firstName} ${lastName}`}
+          />
+        </Button>
       </HorizontalLayout>
       {/* tag::snippet[] */}
       <Popover
@@ -46,6 +58,7 @@ function Example() {
           }}
         >
           <Avatar
+            tabIndex={-1}
             img={pictureUrl}
             name={`${firstName} ${lastName}`}
             style={{ alignSelf: 'center' }}

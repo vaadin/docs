@@ -3,9 +3,11 @@ package com.vaadin.demo.component.popover;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
@@ -26,14 +28,21 @@ public class PopoverUserMenu extends HorizontalLayout {
 
         Avatar avatar = new Avatar(name);
         avatar.setImage(pictureUrl);
-        avatar.getStyle().set("margin", "var(--lumo-space-s)");
-        avatar.getStyle().set("margin-inline-start", "auto");
+        avatar.getStyle().set("display", "block");
+        avatar.getElement().setAttribute("tabindex", "-1");
+
+        Button button = new Button(avatar);
+        button.addThemeVariants(ButtonVariant.LUMO_ICON,
+                ButtonVariant.LUMO_TERTIARY_INLINE);
+        button.getStyle().set("margin", "var(--lumo-space-s)");
+        button.getStyle().set("margin-inline-start", "auto");
+        button.getStyle().set("border-radius", "50%");
 
         Popover popover = new Popover();
         popover.setModal(true);
         popover.setOverlayRole("menu");
         popover.setAriaLabel("User menu");
-        popover.setTarget(avatar);
+        popover.setTarget(button);
         // end::snippet[]
 
         HorizontalLayout userInfo = new HorizontalLayout();
@@ -44,6 +53,7 @@ public class PopoverUserMenu extends HorizontalLayout {
         Avatar userAvatar = new Avatar(name);
         userAvatar.setImage(pictureUrl);
         userAvatar.getStyle().set("align-self", "center");
+        userAvatar.getElement().setAttribute("tabindex", "-1");
 
         VerticalLayout nameLayout = new VerticalLayout();
         nameLayout.setSpacing(false);
@@ -84,7 +94,7 @@ public class PopoverUserMenu extends HorizontalLayout {
 
         popover.add(userInfo, linksLayout);
 
-        add(avatar, popover);
+        add(button, popover);
     }
 
     public static class Exporter extends DemoExporter<PopoverUserMenu> { // hidden-source-line
