@@ -208,3 +208,80 @@ class ReactRouterLayoutElement extends ReactAdapterElement {
 
 customElements.define('react-router-layout', ReactRouterLayoutElement);
 ----
+
+[[wrap-react-component]]
+== Wrapping a React component into Flow component
+
+When integrating React components into Vaadin applications, one common requirement is to enable these components to participate in Vaadin's data binding and form handling. This can be accomplished by wrapping the React component in a Vaadin component that extends `AbstractSinglePropertyField`. This setup allows the React component to be used just like any other field in Vaadin, making it compatible with `Binder` API.
+
+This integration process involves two main parts: creating a Java class for the server-side adapter component, and developing a client-side adapter using TypeScript and React. Below, we demonstrate this process using a simple React text input component as an example.
+
+=== Example Implementation:
+
+=== Create the Client-Side React Component
+First, define your React component. For this example, assume a simple text input component.
+[source,jsx]
+----
+// File: frontend/react-text-input.tsx
+
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
+import { ReactAdapterElement, RenderHooks } from '@vaadin/flow-frontend/ReactAdapterElement';
+
+class ReactTextInputElement extends ReactAdapterElement {
+constructor() {
+super();
+}
+
+    protected override render(hooks: RenderHooks): React.ReactElement | null {
+        const [value, setValue] = hooks.useState<string>("value");
+
+        const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            setValue(event.target.value);
+            this.dispatchEvent(new CustomEvent('value-changed', { detail: { value: event.target.value } }));
+        };
+
+        return (
+            <div>
+                <input type="text" value={value} onChange={handleChange} />
+                <span>{value.length} characters</span>
+            </div>
+        );
+    }
+}
+----
+
+=== Server-Side Vaadin Component Wrapping the React Component
+Next, create a Vaadin component that wraps the React component and extends `AbstractSinglePropertyField`.
+
+[source,java]
+----
+// Package: com.example.application.ui
+
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.textfield.AbstractSinglePropertyField;
+
+@Tag("react-text-input")
+@JsModule("./src/react-text-input.js")
+public class ReactTextField extends AbstractSinglePropertyField<ReactTextField, String> {
+public ReactTextField() {
+super("value", "", false);
+// Synchronize the "value" property on the React side with the Java side whenever the "value-changed" event is fired
+getElement().synchronizeProperty("value", "value-changed");
+}
+}
+----
+
+=== Using the React Component in a Vaadin Form
+Now, you can use `ReactTextField` just like any other Vaadin component within a form:
+
+[source,java]
+----
+Binder<Person> binder = new Binder<>(Person.class);
+ReactTextField reactTextField = new ReactTextField();
+
+binder.forField(reactTextField).bind(Person::getName, Person::setName);
+
+add(reactTextField);
+----
