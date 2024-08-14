@@ -63,6 +63,7 @@ export class Example extends LitElement {
         modal
         content-width="325px"
         position="bottom-start"
+        accessible-name="Select a date range"
         .opened="${this.opened}"
         @opened-changed="${this.onOpenedChanged}"
         ${popoverRenderer(this.popoverRenderer, [this.from, this.to])}

@@ -37,6 +37,7 @@ public class PopoverDropdownField extends Div {
         popover = new Popover();
         popover.setModal(true);
         popover.setWidth("325px");
+        popover.setAriaLabel("Select a date range");
         popover.setTarget(field);
         // end::snippet[]
 
