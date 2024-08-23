@@ -6,37 +6,180 @@ order: 10
 
 # Single-Module Projects
 
-The simplest type of project for a Vaadin application is a single-module Spring Boot project. https://maven.apache.org/:[Maven] is the recommended build and dependency management system.
+The simplest type of project for a Vaadin application is a single-module https://spring.io/projects/spring-boot:[Spring Boot] project. https://maven.apache.org/:[Maven] is the recommended build and dependency management system. 
+
+If Spring Boot or Maven are new to you, you should stop reading now and familiarize yourself with them before proceeding. Maven has a https://maven.apache.org/guides/getting-started/index.html:[Getting Started Guide]. Spring Boot has an extensive https://docs.spring.io/spring-boot/index.html:[reference manual] that includes a https://docs.spring.io/spring-boot/tutorial/first-application/index.html:[tutorial].
 
 ## Package Type
 
-As all Spring Boot web applications, a Vaadin project can be packaged either as an executable JAR-file or as a WAR-file. Both approaches have their own pros and cons.
+Whenever you build a web application with Spring Boot, you have to decide whether to package it as a JAR-file or as a WAR-file. This also applies to Vaadin applications. Both approaches have their own pros and cons:
 
 ### Packaging as a JAR File
 
-When a Spring Boot application is packaged as a JAR-file, it contains everything it needs to run except for the Java Virtual Machine itself. The web server, like Tomcat, Jetty, or Undertow, is also included and you can start your application by running this command: `java -jar <your-app>.jar`
+When a Vaadin application is packaged as a JAR-file, it contains everything it needs to run, except for the Java Virtual Machine itself. The web server, like https://tomcat.apache.org/:[Tomcat], https://jetty.org/index.html:[Jetty], or https://undertow.io/:[Undertow], is embedded and you can start your application by running this command: `java -jar <your-app>.jar`
 
 This makes the deployment simple. If you want to deploy your application to a containerized environment, you can https://docs.spring.io/spring-boot/reference/packaging/container-images/index.html:[turn your application into a container image]. If you want to deploy your application to a virtual or bare metal Linux server, you can https://docs.spring.io/spring-boot/how-to/deployment/installing.html:[run it as a service] using either `init.d` or `systemd`. If you want to deploy your application to a Windows server, you can use https://github.com/kohsuke/winsw:[WinSW] to run it as a Windows service.
 
 // TODO Mention GraalVM
 
-Another advantage is that your application runs inside its own Java Virtual Machine. You can configure  and restart it without affecting any other applications. The application also starts up faster compared to a traditional web application server hosting many applications. However, this comes with a cost. If you are running multiple applications on the same physical server, they consume more memory and disk space compared to a traditional web application server. This is because every application contains and runs its own web server.
+Another advantage is that your application runs inside its own Java Virtual Machine, and therefore its own operating system process. You can configure  and restart it without affecting other applications. If the application is compromised, or crashes, other applications running on the same physical server are better protected since they run in their own processes. This comes with a cost. Since every application runs an embedded web server, they consume more memory and more disk space, compared to a traditional Java web application. However, given that memory and disk space is quite cheap today, the cost is well worth the benefits.
 
-Unless you have a good reason to package as a WAR file, packaging your Vaadin application as a JAR file is the recommended choice. This is also the package format of projects generated using *Vaadin Start* (start.vaadin.com).
+Unless you have a good reason to package as a WAR file, *packaging your Vaadin application as a JAR file is the recommended choice*.
 
 ### Packaging as a WAR File
 
-Spring Boot applications can also be packaged as https://docs.spring.io/spring-boot/how-to/deployment/traditional-deployment.html:[traditional Java web applications]. In this case, the resulting WAR-file must be deployed to an external web application server, such as Tomcat, JBoss or WebLogic. 
+Vaadin applications can also be packaged as https://docs.spring.io/spring-boot/how-to/deployment/traditional-deployment.html:[traditional Java web applications]. In this case, the resulting WAR-file must be deployed to an external web application server. You can use an open source server, such as https://tomcat.apache.org/:[Tomcat], https://jetty.org/index.html:[Jetty], or https://undertow.io/:[Undertow], or a commercial server such as JBoss or WebLogic.
 
-A WAR-file only contains the application itself and any dependencies not provided by the web application server. Its size is therefore smaller than a self-contained JAR-file. Multiple WAR-files can be deployed to the same web application server. As the application run inside the same JVM, the memory overhead is smaller compared to running each application inside its own JVM. The drawback of this approach is that if something happens to the JVM process, such as a memory or thread leak, all applications are affected.
+A WAR-file only contains the application itself and any dependencies not provided by the web application server. Its size is therefore smaller than a self-contained JAR-file. Multiple WAR-files can be deployed to the same web application server. As the applications run inside the same JVM, the memory overhead is smaller compared to running each application inside its own JVM. The drawback of this approach is that if something happens to the JVM process, such as a memory or thread leak, all applications are affected.
 
 You should consider WAR packaging if you already have a web application server, or if you need advanced features that are only available from a specific web application server. In all other cases, packaging as a JAR file is a better choice.
 
 ## Project Configuration
 
-As a Java developer, you are probably already at least somewhat familiar with Maven. If not, have a look at Maven's https://maven.apache.org/guides/getting-started/index.html:|[Getting Started Guide] before you continue.
+You can use various starters to create new single-module Vaadin projects (see <<{articles}/getting-started/project#,Getting Started>> for more information). You can also create the project manually, starting with a basic Maven POM-file and adding the necessary sections.
 
-You can use various starters to create new single-module Vaadin projects. See <<{articles}/getting-started/project#,Getting Started>> for more information. You can also create the project manually, starting with a basic Maven POM-file and adding the necessary sections. In either way, you should end up with a POM-file that looks like this:
+As for all Spring Boot projects, a lot of the configuration is imported through the `spring-boot-starter-parent`:
+
+[source,xml]
+----
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>INSERT LATEST SPRING BOOT VERSION HERE</version> <!--1-->
+    <relativePath/>
+</parent>
+----
+<1> You can check the latest version https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent:[here].
+
+The parent imports all the Spring Boot dependencies and configures the most common Maven plugins - such as the compiler - using sensible defaults. 
+
+The parent configuration is the only part of the project configuration where you need to refer to the dependency version explicitly. Declare all other dependency versions as project properties, like this:
+
+[source,xml]
+----
+<properties>
+    <java.version>21</java.version> <!--1-->
+    <vaadin.version>INSERT LATEST VAADIN VERSION HERE</vaadin.version> <!--2-->
+</properties>
+----
+<1> This property is used by `spring-boot-starter-parent` to configure the Java compiler plugin.
+<2> You can check the latest version https://mvnrepository.com/artifact/com.vaadin/vaadin-bom:[here].
+
+Having the dependency versions declared as properties makes them easier to upgrade. It also makes it easier to get an overview of which dependencies your application has, other than the Spring Boot dependencies.
+
+As Spring Boot, Vaadin comes with its own set of dependencies. These are imported through a Bill of Materials (BOM) like this:
+
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <version>${vaadin.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+
+Importing the Bill of Materials makes the dependencies known to your project. This means that when you use them, you don't have to declare their versions explicitly. To use the dependencies, you have to add them to your project like this:
+
+[source,xml]
+----
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-spring-boot-starter</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-devtools</artifactId>
+        <optional>true</optional>
+    </dependency>
+</dependencies>
+----
+
+The only dependency you need to build a simple Vaadin application is `vaadin-spring-boot-starter`. The `spring-boot-devtools` dependency enables <<{articles}/flow/configuration/live-reload/spring-boot#,Spring Boot Developer Tools>> to make development a little easier. In a real application, you would also add dependencies for at least persistence and database access, and for running tests.
+
+// TODO Add links to application layer documentation, once it has been written.
+
+Next, to build your project, you need to add two more Maven plugins:
+
+[source,xml]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>prepare-frontend</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+The `spring-boot-maven-plugin` does at lot of things, but for now, you can think of it as the plugin that packages your project into a single, executable JAR file. For more information about this plugin, see the https://docs.spring.io/spring-boot/maven-plugin:[Spring Boot documentation].
+
+The `vaadin-maven-plugin` also does a lot of things. The `prepare-frontend` goal checks that you have sufficiently recent versions of the `node` and `npm` tools, and installs them if they are missing. It also reviews all the resources used by your application, generates some missing source files and moves them into their correct places. Depending on how much work the plugin has to do, the first execution of this goal may take some time. However, later executions are often fast and therefore it makes sense to include this goal in every build. For more information about this plugin, see <<{articles}/flow/production/production-build#,Production Build>> and <<{articles}/flow/configuration/maven#,Maven Configuration Properties>>.
+
+After you have executed `prepare-frontend`, you are ready to run your application in <<{articles/flow/configuration/development-mode#,development mode>>. To make a production build, you also have to run the `build-frontend` goal. This goal takes a lot longer to complete, which is why it is often configured inside its own `production` Maven profile, like this:
+
+[source,xml]
+----
+<profiles>
+    <profile>
+        <id>production</id>
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-core</artifactId>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.vaadin</groupId>
+                        <artifactId>vaadin-dev</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-maven-plugin</artifactId>
+                    <version>${vaadin.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>build-frontend</goal>
+                            </goals>
+                            <phase>compile</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+    </profile>
+</profiles>
+----
+
+This means that the `build-frontend` goal only runs when the `production` profile is active. This profile also excludes the `vaadin-dev` dependency, as it is only needed in development.
+
+A fully configured POM-file for a single-module Vaadin application looks like this:
 
 .pom.xml
 [source,xml]
@@ -147,151 +290,6 @@ You can use various starters to create new single-module Vaadin projects. See <<
     </profiles>
 </project>
 ----
-
-In the following, you are going to learn what the different configuration sections do and why they are needed. You can also use this as a guide if you are setting up your project manually and don't want to copy-paste from the complete POM-file above.
-
-As for all Spring Boot projects, a lot of the configuration is imported through the `spring-boot-starter-parent` at the top of the file:
-
-[source,xml]
-----
-<parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>INSERT LATEST SPRING BOOT VERSION HERE</version> <!--1-->
-    <relativePath/>
-</parent>
-----
-<1> You can check the latest version https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent:[here].
-
-The parent imports all the Spring Boot dependencies and configures the most common Maven plugins - such as the compiler - using sensible defaults. 
-
-The parent configuration is the only part of the project configuration where you need to refer to the version explicitly. Declare all other dependency versions as project properties, like this:
-
-[source,xml]
-----
-<properties>
-    <java.version>21</java.version> <!--1-->
-    <vaadin.version>INSERT LATEST VAADIN VERSION HERE</vaadin.version> <!--2-->
-</properties>
-----
-<1> This property is used by `spring-boot-starter-parent` to configure the Java compiler plugin.
-<2> You can check the latest version https://mvnrepository.com/artifact/com.vaadin/vaadin-bom:[here].
-
-Having the dependency versions declared as properties makes them easier to upgrade, such as when new security fixes are released. It also makes it easier to get an overview of which dependencies your application has, other than the Spring Boot dependencies.
-
-As Spring Boot, Vaadin comes with its own set of dependencies. These are imported through a Bill of Materials (BOM) like this:
-
-[source,xml]
-----
-<dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-bom</artifactId>
-            <version>${vaadin.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-    </dependencies>
-</dependencyManagement>
-----
-
-Importing the Bill of Materials makes the dependencies known to your project. This means that when you use them, you don't have to declare their versions. To use the dependencies, you have to add them like this:
-
-[source,xml]
-----
-<dependencies>
-    <dependency>
-        <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-spring-boot-starter</artifactId>
-    </dependency>
-
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-devtools</artifactId>
-        <optional>true</optional>
-    </dependency>
-</dependencies>
-----
-
-The only dependency you need to build a simple Vaadin application is `vaadin-spring-boot-starter`. If you want to make the development work a little easier, you can enable <<{articles}/flow/configuration/live-reload/spring-boot#,Spring Boot Developer Tools>>. In a real application, you would also add dependencies for at least persistence and database access, and for running tests.
-
-// TODO Add links to application layer documentation, once it has been written.
-
-At this point, you have everything you need to start writing and compiling code. However, to package your project, you need to add two Maven plugins:
-
-[source,xml]
-----
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-        </plugin>
-
-        <plugin>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-maven-plugin</artifactId>
-            <version>${vaadin.version}</version>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>prepare-frontend</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-    </plugins>
-</build>
-----
-
-The `spring-boot-maven-plugin` does at lot of things, but for now, you can think of it as the plugin that packages your project into a single, executable JAR file. For more information about this plugin, see the https://docs.spring.io/spring-boot/maven-plugin:[Spring Boot documentation].
-
-The `vaadin-maven-plugin` also does a lot of things. The `prepare-frontend` goal checks that you have sufficiently recent versions of the `node` and `npm` tools, and installs them if they are missing. It also reviews all the resources used by your application, generates some missing source files and moves them into their correct places. Depending on how much work the plugin has to do, the first execution of this goal may take some time. However, later executions are often fast and therefore it makes sense to include this goal in every build.
-
-After you have executed `prepare-frontend`, you are ready to run your application in <<{articles/flow/configuration/development-mode#,development mode>>. To make a production build, you also have to run the `build-frontend` goal. This goal takes a lot longer to complete, which is why it is often configured inside its own `production` Maven profile, like this:
-
-[source,xml]
-----
-<profiles>
-    <profile>
-        <id>production</id>
-        <dependencies>
-            <dependency>
-                <groupId>com.vaadin</groupId>
-                <artifactId>vaadin-core</artifactId>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.vaadin</groupId>
-                        <artifactId>vaadin-dev</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-        </dependencies>
-        <build>
-            <plugins>
-                <plugin>
-                    <groupId>com.vaadin</groupId>
-                    <artifactId>vaadin-maven-plugin</artifactId>
-                    <version>${vaadin.version}</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>build-frontend</goal>
-                            </goals>
-                            <phase>compile</phase>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </build>
-    </profile>
-</profiles>
-----
-
-This means that the `build-frontend` goal only runs when the `production` profile is active. This profile also excludes the `vaadin-dev` dependency, as it is only needed in development.
-
-For more information about the Vaadin Maven plugin, see <<{articles}/flow/production/production-build#,Production Build>> and <<{articles}/flow/configuration/maven#,Maven Configuration Properties>>.
 
 ## Code Structure
 
