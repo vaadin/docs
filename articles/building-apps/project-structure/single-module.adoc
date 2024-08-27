@@ -4,37 +4,11 @@ description: Learn how and when to use single-module projects for your Vaadin ap
 order: 10
 ---
 
+include::{articles}/_vaadin-version.adoc[]
+
 # Single-Module Projects
 
-The simplest type of project for a Vaadin application is a single-module https://spring.io/projects/spring-boot:[Spring Boot] project. https://maven.apache.org/:[Maven] is the recommended build and dependency management system. 
-
-If Spring Boot or Maven are new to you, you should stop reading now and familiarize yourself with them before proceeding. Maven has a https://maven.apache.org/guides/getting-started/index.html:[Getting Started Guide]. Spring Boot has an extensive https://docs.spring.io/spring-boot/index.html:[reference manual] that includes a https://docs.spring.io/spring-boot/tutorial/first-application/index.html:[tutorial].
-
-## Package Type
-
-Whenever you build a web application with Spring Boot, you have to decide whether to package it as a JAR-file or as a WAR-file. This also applies to Vaadin applications. Both approaches have their own pros and cons:
-
-### Packaging as a JAR File
-
-When a Vaadin application is packaged as a JAR-file, it contains everything it needs to run, except for the Java Virtual Machine itself. The web server, like https://tomcat.apache.org/:[Tomcat], https://jetty.org/index.html:[Jetty], or https://undertow.io/:[Undertow], is embedded and you can start your application by running this command: `java -jar <your-app>.jar`
-
-This makes the deployment simple. If you want to deploy your application to a containerized environment, you can https://docs.spring.io/spring-boot/reference/packaging/container-images/index.html:[turn your application into a container image]. If you want to deploy your application to a virtual or bare metal Linux server, you can https://docs.spring.io/spring-boot/how-to/deployment/installing.html:[run it as a service] using either `init.d` or `systemd`. If you want to deploy your application to a Windows server, you can use https://github.com/kohsuke/winsw:[WinSW] to run it as a Windows service.
-
-// TODO Mention GraalVM
-
-Another advantage is that your application runs inside its own Java Virtual Machine, and therefore its own operating system process. You can configure  and restart it without affecting other applications. If the application is compromised, or crashes, other applications running on the same physical server are better protected since they run in their own processes. This comes with a cost. Since every application runs an embedded web server, they consume more memory and more disk space, compared to a traditional Java web application. However, given that memory and disk space is quite cheap today, the cost is well worth the benefits.
-
-Unless you have a good reason to package as a WAR file, *packaging your Vaadin application as a JAR file is the recommended choice*.
-
-### Packaging as a WAR File
-
-Vaadin applications can also be packaged as https://docs.spring.io/spring-boot/how-to/deployment/traditional-deployment.html:[traditional Java web applications]. In this case, the resulting WAR-file must be deployed to an external web application server. You can use an open source server, such as https://tomcat.apache.org/:[Tomcat], https://jetty.org/index.html:[Jetty], or https://undertow.io/:[Undertow], or a commercial server such as JBoss or WebLogic.
-
-A WAR-file only contains the application itself and any dependencies not provided by the web application server. Its size is therefore smaller than a self-contained JAR-file. Multiple WAR-files can be deployed to the same web application server. As the applications run inside the same JVM, the memory overhead is smaller compared to running each application inside its own JVM. The drawback of this approach is that if something happens to the JVM process, such as a memory or thread leak, all applications are affected.
-
-You should consider WAR packaging if you already have a web application server, or if you need advanced features that are only available from a specific web application server. In all other cases, packaging as a JAR file is a better choice.
-
-## Project Configuration
+A single-module project consists of a single directory, with a single POM-file and a single source directory. During the build, Maven packages the module into either a self-contained, executable JAR-file, or a WAR-file.
 
 You can use various starters to create new single-module Vaadin projects (see <<{articles}/getting-started/project#,Getting Started>> for more information). You can also create the project manually, starting with a basic Maven POM-file and adding the necessary sections.
 
@@ -45,25 +19,25 @@ As for all Spring Boot projects, a lot of the configuration is imported through 
 <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>INSERT LATEST SPRING BOOT VERSION HERE</version> <!--1-->
+    <version>3.3.3</version> <!--1-->
     <relativePath/>
 </parent>
 ----
-<1> You can check the latest version https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent:[here].
+<1> You can check the latest version https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent[here].
 
 The parent imports all the Spring Boot dependencies and configures the most common Maven plugins - such as the compiler - using sensible defaults. 
 
 The parent configuration is the only part of the project configuration where you need to refer to the dependency version explicitly. Declare all other dependency versions as project properties, like this:
 
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <properties>
     <java.version>21</java.version> <!--1-->
-    <vaadin.version>INSERT LATEST VAADIN VERSION HERE</vaadin.version> <!--2-->
+    <vaadin.version>{vaadin-version}</vaadin.version> <!--2-->
 </properties>
 ----
 <1> This property is used by `spring-boot-starter-parent` to configure the Java compiler plugin.
-<2> You can check the latest version https://mvnrepository.com/artifact/com.vaadin/vaadin-bom:[here].
+<2> You can check the latest version https://mvnrepository.com/artifact/com.vaadin/vaadin-bom[here].
 
 Having the dependency versions declared as properties makes them easier to upgrade. It also makes it easier to get an overview of which dependencies your application has, other than the Spring Boot dependencies.
 
@@ -84,7 +58,7 @@ As Spring Boot, Vaadin comes with its own set of dependencies. These are importe
 </dependencyManagement>
 ----
 
-Importing the Bill of Materials makes the dependencies known to your project. This means that when you use them, you don't have to declare their versions explicitly. To use the dependencies, you have to add them to your project like this:
+Importing the BOM makes the dependencies known to your project. This means that when you use them, you don't have to declare their versions explicitly. To use the dependencies, you have to add them to your project like this:
 
 [source,xml]
 ----
@@ -182,7 +156,7 @@ This means that the `build-frontend` goal only runs when the `production` profil
 A fully configured POM-file for a single-module Vaadin application looks like this:
 
 .pom.xml
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -198,13 +172,13 @@ A fully configured POM-file for a single-module Vaadin application looks like th
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>INSERT LATEST SPRING BOOT VERSION HERE</version>
+        <version>3.3.3</version>
         <relativePath/>
     </parent>
 
     <properties>
         <java.version>21</java.version>
-        <vaadin.version>INSERT LATEST VAADIN VERSION HERE</vaadin.version>
+        <vaadin.version>{vaadin-version}</vaadin.version>
     </properties>
 
     <dependencyManagement>
@@ -293,69 +267,79 @@ A fully configured POM-file for a single-module Vaadin application looks like th
 
 ## Code Structure
 
-The code structure of your Vaadin application should resemble its <<{articles}/building-apps/architecture/components,architecture>>. Regardless of which system components you end up with in your application, the following code structure is a good starting point:
+The code structure of your Vaadin application should resemble its <<{articles}/building-apps/architecture/components#,architecture>>. Here is an example of a Vaadin application with three components:
 
-// TODO Is this a good way of visualizing a directory structure?
-// TODO Simplify the explanations
-// TODO Add system component diagram 
+[[three-system-components]]
+[.fill]
+[link=../architecture/images/three-components.png]
+image::../architecture/images/three-components.png[A diagram of three system components and a database]
 
-[source, subs="+quotes"]
+The _Views_ component is the user interface of the application. It communicates with the _Services_ component. Since the views are built with <<{articles}/flow#,Flow>>, Spring is able to directly inject instances of the services into the views, and no remote invocation is needed.
+
+The _Services_ component contains the business logic of the application. It also enforces security and manages transactions using Spring. It may be returning entities directly to the _Views_-component, or use dedicated Data Transfer Objects (DTO).
+
+The _Entities_ component contains the data of the application, in the form of JPA entities. It also contains repositories or data access objects that allow the _Services_ component to fetch data from, and store data to, a relational database.
+
+.Note
+[IMPORTANT]
+This example is a _data-driven_ application. A _domain-driven_ application would use a different set of components.
+
+// TODO Add links to articles about data driven and domain driven applications once they have been written
+
+As mentioned in <<../architecture/components#,System Components>>, this architecture corresponds to the following Java packages:
+
+* `com.example.application`
+* `com.example.application.views`
+* `com.example.application.services`
+* `com.example.application.entities`
+
+However, in many Vaadin applications, there is code that does not fit into any particular system component. This code is often cross cutting, meaning it is used by many different system components. This could can be placed in _utility packages_. You should keep these packages as scarce as possible. If you find yourself adding more and more classes to utility packages, there may be a problem with the separation of concerns in your application. If that happens, you may have to introduce a new system component, split an existing component into smaller components, or merge multiple components into one.
+
+In most Vaadin applications, you should start with two utility packages: `security` and `utils`.
+
+The `security` package contains all the code that relates to security. It contains the <<{articles}/flow/security/enabling-security#,Security Configuration class>> and any custom security utilities you may need.
+
+The `utils` package is for miscellaneous classes. For example, if your project needed a custom `StringUtils` class, you would put it in this package.
+
+With these packages, and an <<{articles}/styling/application-theme#,application theme>>, you end up with a code structure that looks like this:
+
+[source]
 ----
 src/main/
 ├─ frontend/
-│  ├─ components/      _- React user interface components_
-│  ├─ themes/          _- CSS and theme configuration files_
-|  |  ├─ my-theme/     _- Name of your application's theme_
-|  |  |  ├─ *styles.css* _- Theme styles_
-|  |  |  ├─ *theme.json* _- Lumo theme configuration file_
-│  ├─ utils/           _- Frontend utility classes and functions_
-│  ├─ views/           _- React views_
+│  ├─ themes/
+│  │  ├─ my-theme/
+│  │  │  ├─ styles.css
+│  │  │  ├─ theme.json
 ├─ java/
 │  ├─ com/example/application/
-│  │  ├─ domain/          _- Entities and other domain objects_
-│  │  ├─ security/        _- Spring Security configuration and other security related classes_
-│  │  ├─ services/        _- Application layer services_
-│  │  ├─ utils/           _- Backend utility classes_
-│  │  ├─ views/           _- Flow views and user interface components_
-│  │  ├─ *Application.java* _- Main class_
+│  │  ├─ entities/
+│  │  │  ├─ ...
+│  │  ├─ security/
+│  │  │  ├─ SecurityConfiguration.java
+│  │  ├─ services/
+│  │  │  ├─ ...
+│  │  ├─ utils/
+│  │  │  ├─ ...
+│  │  ├─ views/
+│  │  │  ├─ ...
+│  │  ├─ Application.java
 ├─ resources/
 │  ├─ META-INF/
 │  │  ├─ resources/
-│  │  │  ├─ images/ _- Image files_ 
-│  ├─ *application.properties* _- Configuration properties for your application_
+│  │  │  ├─ images/
+│  │  │  │  ├─ ...
+│  ├─ application.properties
 ----
 
 Note the somewhat strange location of image files. You can find more information about this <<{articles}/flow/application/resources#,here>>.
 
-### Application Layer
-
-With a code structure like this, the <<{articles}/building-apps/architecture/layers#,conceptual application layer>> consists of the following system components:
-
-* A `domain` system component that contains your entities, repositories, and other domain objects.
-* A `services` system component that contains services and Data Transfer Objects that your presentation layer needs to interact with the application layer.
-
-The application layer also contains two _cross-cutting packages_:
-
-* A `security` package that contains the configuration files for Spring Security, and other security related classes. For example, you could have a `Roles` class that contains string constants for every user role in the system.
-* A `utils` package that contains various utility classes that don't fit anywhere else. You should keep this package as scarce as possible. If you find yourself adding more and more classes to this package, there may be a problem with the separation of concerns in your application.
-
-The main class of your application is `Application`. This class holds the `@SpringBootApplication` and <<{articles}/styling/application-theme#,`@Theme`>> annotations, and implements the <<{articles}/flow/advanced/modifying-the-bootstrap-page#application-shell-configurator,`AppShellConfigurator`>> interface. 
-
-If your application is packaged as a JAR-file, this class contains the https://docs.spring.io/spring-boot/tutorial/first-application/index.html#getting-started.first-application.code.main-method:[`main()`] method. If your application is packaged as a WAR-file, this class extends the https://docs.spring.io/spring-boot/how-to/deployment/traditional-deployment.html:[`SpringBootServletInitializer`] class.
-
-A detailed chapter on how to build your application layer for various types of applications is planned, but not yet written.
-
-### Presentation Layer
-
-// TODO Continue here
-
-
-// TODO Add links to presentation layer and application layer once they have been written
-
-## Enforcing Your Architecture
-
-// TODO Write about ArchUnit
-
 ## When to Use
 
-// TODO Explain when to use this project structure
+Single-module projects are simple and easy to understand. They are best suited for smaller applications, and applications that are maintained by small development teams. They are also suitable for new projects, since it is quite easy to migrate from a single-module project to a multi-module project, if or when the need arises.
+
+Single-module projects have one drawback that you should be aware of. When you designed your architecture, you also defined constraints on how the components depend on each other. For example, the user interface might not be allowed to talk to a data repository directly. 
+
+// Another drawback is that bigger modules take longer to build, but I don't know how big of a deal this actually is. In practice, you end up building the entire thing in a multi-module project as well and there, it may be even slower.
+
+In a single-module project, all the code is in the same place. Only your discipline prevents you from accidentally - or intentionally - breaking these constraints. The risk of this happening grows as the codebase, or the number of people touching it, grows. This, in turn, increases the risk of your code degrading into an unmaintainable http://www.laputan.org/mud/mud.html#BigBallOfMud[Big Ball of Mud]. If this is a concern to you, you should consider adding https://www.archunit.org/[ArchUnit] tests to your project, or converting to a <<multi-module#,multi-module>> project.
