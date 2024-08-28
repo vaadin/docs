@@ -64,13 +64,15 @@ function Example() {
       </Button>
       <Popover
         for="show-notifications"
-        theme="arrow"
+        theme="arrow no-padding"
         modal
         position="bottom"
         contentWidth="300px"
         accessibleNameRef="notifications-heading"
       >
-        <HorizontalLayout style={{ alignItems: 'baseline' }}>
+        <HorizontalLayout
+          style={{ alignItems: 'baseline', padding: 'var(--lumo-space-s) var(--lumo-space-s) 0' }}
+        >
           <h4 style={{ margin: 0 }} id="notifications-heading">
             Notifications
           </h4>

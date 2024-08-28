@@ -72,7 +72,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-popover
         for="show-notifications"
-        theme="arrow"
+        theme="arrow no-padding"
         modal
         accessible-name-ref="notifications-heading"
         content-width="300px"
@@ -88,7 +88,9 @@ export class Example extends LitElement {
 
   notificationsRenderer() {
     return html`
-      <vaadin-horizontal-layout style="align-items: baseline">
+      <vaadin-horizontal-layout
+        style="align-items: baseline; padding: var(--lumo-space-s) var(--lumo-space-s) 0"
+      >
         <h4 style="margin: 0" id="notifications-heading">Notifications</h4>
         <vaadin-button style="margin-inline-start: auto" @click="${this.markAllRead}">
           Mark all read

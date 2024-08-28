@@ -75,6 +75,7 @@ function Example() {
       {/* tag::snippet[] */}
       <Popover
         for="range-field"
+        trigger={['click', 'focus']}
         modal
         contentWidth="325px"
         position="bottom-start"

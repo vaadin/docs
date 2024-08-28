@@ -10,7 +10,7 @@ import '@vaadin/select';
 import '@vaadin/text-field';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import type { DatePickerChangeEvent } from '@vaadin/date-picker';
-import type { PopoverOpenedChangedEvent } from '@vaadin/popover';
+import type { PopoverOpenedChangedEvent, PopoverTrigger } from '@vaadin/popover';
 import type { SelectChangeEvent } from '@vaadin/select';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -38,6 +38,9 @@ export class Example extends LitElement {
   opened = false;
 
   @state()
+  trigger: PopoverTrigger[] = ['click', 'focus'];
+
+  @state()
   presets = [
     { label: 'Today', value: 'today' },
     { label: 'Last week', value: 'last-week' },
@@ -60,6 +63,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-popover
         for="range-field"
+        .trigger="${this.trigger}"
         modal
         content-width="325px"
         position="bottom-start"

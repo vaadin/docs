@@ -37,7 +37,8 @@ public class PopoverNotificationPanel extends Div {
         Popover popover = new Popover();
         popover.setTarget(button);
         popover.setWidth("300px");
-        popover.addThemeVariants(PopoverVariant.ARROW);
+        popover.addThemeVariants(PopoverVariant.ARROW,
+                PopoverVariant.LUMO_NO_PADDING);
         popover.setPosition(PopoverPosition.BOTTOM);
         popover.setAriaLabelledBy("notifications-heading");
         // end::snippet[]
@@ -95,6 +96,8 @@ public class PopoverNotificationPanel extends Div {
         HorizontalLayout layout = new HorizontalLayout(heading, markRead);
         layout.setSpacing(false);
         layout.setAlignItems(FlexComponent.Alignment.BASELINE);
+        layout.getStyle().set("padding",
+                "var(--lumo-space-s) var(--lumo-space-s) 0");
 
         popover.add(layout, tabSheet);
 
