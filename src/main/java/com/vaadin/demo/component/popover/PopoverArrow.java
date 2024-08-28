@@ -5,6 +5,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverVariant;
 import com.vaadin.flow.theme.lumo.LumoIcon;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -20,7 +21,7 @@ public class PopoverArrow extends Div {
 
         // tag::snippet[]
         Popover popover = new Popover();
-        popover.getElement().setAttribute("theme", "arrow");
+        popover.addThemeVariants(PopoverVariant.ARROW);
         // end::snippet[]
 
         popover.setTarget(button);

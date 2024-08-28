@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
+import com.vaadin.flow.component.popover.PopoverVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -20,7 +21,7 @@ public class PopoverInteractiveTooltip extends Div {
         cvv.setWidth("60px");
 
         Popover popover = new Popover();
-        popover.getElement().setAttribute("theme", "arrow");
+        popover.addThemeVariants(PopoverVariant.ARROW);
         popover.setPosition(PopoverPosition.TOP);
         popover.setOpenOnClick(false);
         popover.setOpenOnHover(true);

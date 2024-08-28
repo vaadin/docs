@@ -19,6 +19,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
+import com.vaadin.flow.component.popover.PopoverVariant;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.theme.lumo.LumoIcon;
@@ -36,7 +37,7 @@ public class PopoverNotificationPanel extends Div {
         Popover popover = new Popover();
         popover.setTarget(button);
         popover.setWidth("300px");
-        popover.getElement().setAttribute("theme", "arrow");
+        popover.addThemeVariants(PopoverVariant.ARROW);
         popover.setPosition(PopoverPosition.BOTTOM);
         popover.setAriaLabelledBy("notifications-heading");
         // end::snippet[]
