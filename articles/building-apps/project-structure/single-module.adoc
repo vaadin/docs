@@ -1,6 +1,6 @@
 ---
 title: Single-module Projects
-description: Learn how and when to use single-module projects for your Vaadin apps.
+description: How and when to use single-module projects for your Vaadin applications.
 order: 10
 ---
 
@@ -9,14 +9,23 @@ include::{articles}/_vaadin-version.adoc[]
 
 = Single-Module Projects
 
-A single-module project consists of a single directory, with a single POM-file and a single source directory. During the build, Maven packages the module into either a self-contained, executable JAR-file, or a WAR-file.
+A single-module project consists of a single directory, with a single POM-file and a single source directory. During the build, Maven packages the module either into a self-contained executable JAR-file, or into a WAR-file.
 
-You can use various starters to create new single-module Vaadin projects (see <<{articles}/getting-started/project#,Getting Started>> for more information). You can also create the project manually, starting with a basic Maven POM-file and adding the necessary sections.
+Single-module projects are simple and easy to understand. They are best suited for smaller applications, and applications that are maintained by small development teams. They're also suitable for new projects, since it is quite easy to migrate from a single-module project to a multi-module project, if or when the need arises.
+
+Single-module projects have one drawback. When you designed your architecture, you also defined constraints on how the components depend on each other. For example, the user interface might not be allowed to talk directly to a data repository. 
+
+// Another drawback is that bigger modules take longer to build, but I don't know how big of a deal this actually is. In practice, you end up building the entire thing in a multi-module project as well and there, it may be even slower.
+
+[CAUTION]
+In a single-module project, all of the code is in the same place. Only you can prevent yourself from breaking these constraints -- intentionally or otherwise. The risk of this happening grows as the codebase or the number of people involved increases. This lead to your code being an unmaintainable http://www.laputan.org/mud/mud.html#BigBallOfMud[Big Ball of Mud]. If this is a concern to you, you should consider adding https://www.archunit.org/[ArchUnit] tests to your project, or converting to a <<multi-module#,multi-module>> project.
+
+You can use various starters to create new single-module Vaadin projects (see <<{articles}/getting-started/project#,Getting Started>>). Or you can create a new project without starters, by using a basic Maven POM file and adding the necessary sections to it.
 
 
 == POM Structure
 
-As for all Spring Boot projects, a lot of the configuration is imported through the `spring-boot-starter-parent`:
+For all Spring Boot projects, much of the configuration is imported through the `spring-boot-starter-parent`:
 
 [source,xml]
 ----
@@ -27,11 +36,11 @@ As for all Spring Boot projects, a lot of the configuration is imported through 
     <relativePath/>
 </parent>
 ----
-<1> You can check the latest version https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent[here].
+<1> You can check for the latest version on the https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent[MVN Repository].
 
-The parent imports all the Spring Boot dependencies and configures the most common Maven plugins - such as the compiler - using sensible defaults. 
+The parent imports all of the Spring Boot dependencies and configures the most common Maven plugins (e.g., the compiler) using sensible defaults. The parent configuration is the only part of the project configuration where you need to refer to the dependency version, explicitly. 
 
-The parent configuration is the only part of the project configuration where you need to refer to the dependency version explicitly. Declare all other dependency versions as project properties, like this:
+Declare all other dependency versions as project properties, like this:
 
 [source,xml,subs="+attributes"]
 ----
@@ -41,11 +50,11 @@ The parent configuration is the only part of the project configuration where you
 </properties>
 ----
 <1> This property is used by `spring-boot-starter-parent` to configure the Java compiler plugin.
-<2> You can check the latest version https://mvnrepository.com/artifact/com.vaadin/vaadin-bom[here].
+<2> You can check for the latest version on the https://mvnrepository.com/artifact/com.vaadin/vaadin-bom[MVN Repository].
 
-Having the dependency versions declared as properties makes them easier to upgrade. It also makes it easier to get an overview of which dependencies your application has, other than the Spring Boot dependencies.
+Declaring the dependency versions as properties makes them easier to upgrade. It also makes it easier to get an overview of which dependencies your application has -- other than the Spring Boot dependencies.
 
-As Spring Boot, Vaadin comes with its own set of dependencies. These are imported through a Bill of Materials (BOM) like this:
+Like Spring Boot, Vaadin comes with its own set of dependencies. These are imported through a Bill of Materials (BOM) like this:
 
 [source,xml]
 ----
@@ -62,7 +71,7 @@ As Spring Boot, Vaadin comes with its own set of dependencies. These are importe
 </dependencyManagement>
 ----
 
-Importing the BOM makes the dependencies known to your project. This means that when you use them, you don't have to declare their versions explicitly. To use the dependencies, you have to add them to your project like this:
+Importing the BOM makes the dependencies known to your project. When you use them, you don't have to declare their versions, explicitly. To use the dependencies, you have to add them to your project like so:
 
 [source,xml]
 ----
@@ -80,11 +89,11 @@ Importing the BOM makes the dependencies known to your project. This means that 
 </dependencies>
 ----
 
-The only dependency you need to build a simple Vaadin application is `vaadin-spring-boot-starter`. The `spring-boot-devtools` dependency enables <<{articles}/flow/configuration/live-reload/spring-boot#,Spring Boot Developer Tools>> to make development a little easier. In a real application, you would also add dependencies for at least persistence and database access, and for running tests.
+The only dependency you need for building a simple Vaadin application is `vaadin-spring-boot-starter`. The `spring-boot-devtools` dependency enables <<{articles}/flow/configuration/live-reload/spring-boot#,Spring Boot Developer Tools>> to make development a little easier. In a real application, you would also add dependencies for at least persistence and database access, and for running tests.
 
 // TODO Add links to application layer documentation, once it has been written.
 
-Next, to build your project, you need to add two more Maven plugins:
+Next, to build your project, you'll need to add two more Maven plugins:
 
 [source,xml]
 ----
@@ -111,11 +120,11 @@ Next, to build your project, you need to add two more Maven plugins:
 </build>
 ----
 
-The `spring-boot-maven-plugin` does at lot of things, but for now, you can think of it as the plugin that packages your project into a single, executable JAR file. For more information about this plugin, see the https://docs.spring.io/spring-boot/maven-plugin:[Spring Boot documentation].
+The `spring-boot-maven-plugin` does plenty of things, but for now you can think of it as the plugin that packages your project into a single, executable JAR file. For more information about this plugin, see the https://docs.spring.io/spring-boot/maven-plugin:[Spring Boot documentation].
 
-The `vaadin-maven-plugin` also does a lot of things. The `prepare-frontend` goal checks that you have sufficiently recent versions of the `node` and `npm` tools, and installs them if they are missing. It also reviews all the resources used by your application, generates some missing source files and moves them into their correct places. Depending on how much work the plugin has to do, the first execution of this goal may take some time. However, later executions are often fast and therefore it makes sense to include this goal in every build. For more information about this plugin, see <<{articles}/flow/production/production-build#,Production Build>> and <<{articles}/flow/configuration/maven#,Maven Configuration Properties>>.
+The `vaadin-maven-plugin` also does plenty. The `prepare-frontend` goal checks that you have sufficiently recent versions of the `node` and `npm` tools, and it installs them if they're missing. It also reviews all of the resources used by the application, generates some missing source files, and moves them into their correct locations. Depending on how much work the plugin has to do, the first execution of this goal may take some time. However, later executions are often fast. Therefore, it makes sense to include this goal in every build. For more information about this plugin, see <<{articles}/flow/production/production-build#,Production Build>> and <<{articles}/flow/configuration/maven#,Maven Configuration Properties>>.
 
-After you have executed `prepare-frontend`, you are ready to run your application in <<{articles/flow/configuration/development-mode#,development mode>>. To make a production build, you also have to run the `build-frontend` goal. This goal takes a lot longer to complete, which is why it is often configured inside its own `production` Maven profile, like this:
+After you've executed `prepare-frontend`, you're ready to run your application in <<{articles/flow/configuration/development-mode#,development mode>>. To make a production build, you also have to run the `build-frontend` goal. This goal takes much longer to complete, which is why it's often configured inside its own `production` Maven profile, like this:
 
 [source,xml]
 ----
@@ -155,7 +164,7 @@ After you have executed `prepare-frontend`, you are ready to run your applicatio
 </profiles>
 ----
 
-This means that the `build-frontend` goal only runs when the `production` profile is active. This profile also excludes the `vaadin-dev` dependency, as it is only needed in development.
+With this, the `build-frontend` goal runs only when the `production` profile is active. This profile also excludes the `vaadin-dev` dependency, as it's only needed in development.
 
 A fully configured POM-file for a single-module Vaadin application looks like this:
 
@@ -272,39 +281,35 @@ A fully configured POM-file for a single-module Vaadin application looks like th
 
 == Code Structure
 
-The code structure of your Vaadin application should resemble its <<{articles}/building-apps/architecture/components#,architecture>>. Here is an example of a Vaadin application with three components:
+The code structure of your Vaadin application should resemble its <<{articles}/building-apps/architecture/components#,architecture>>. It should have a _Views_ component, a _Services_ component, and an _Entities_ component.
 
 [[three-system-components]]
 [.fill]
 [link=../architecture/images/three-components.png]
-image::../architecture/images/three-components.png[A diagram of three system components and a database]
+image::../architecture/images/three-components.png[Diagram of Three System Components and a Database]
 
-The _Views_ component is the user interface of the application. It communicates with the _Services_ component. Since the views are built with <<{articles}/flow#,Flow>>, Spring is able to directly inject instances of the services into the views. No remote invocation, like a REST API, is needed.
-
-The _Services_ component contains the business logic of the application. It also enforces security and manages transactions using Spring. It may be returning entities directly to the _Views_-component, or use dedicated Data Transfer Objects (DTO).
-
-The _Entities_ component contains the data of the application, in the form of JPA entities. It also contains repositories or data access objects that allow the _Services_ component to fetch data from, and store data to, a relational database.
-
-.Note
-[NOTE]
 This example is a _data-driven_ application. A _domain-driven_ application would use a different set of components.
+
+- The _Views_ component is the user interface of the application. It communicates with the _Services_ component. Since the views are built with <<{articles}/flow#,Flow>>, Spring is able to inject directly instances of the services into the views. No remote invocation, like a REST API, is needed.
+
+- The _Services_ component contains the business logic of the application. It also enforces security and manages transactions using Spring. It may be returning entities directly to the _Views_ component, or it may use dedicated Data Transfer Objects (DTO).
+
+- The _Entities_ component contains the data of the application in the form of JPA entities. It also contains repositories or data access objects that allow the _Services_ component to fetch data from a relational database and store data there.
 
 // TODO Add links to articles about data driven and domain driven applications once they have been written
 
-As mentioned in <<../architecture/components#,System Components>>, this architecture corresponds to the following Java packages:
+As mentioned in <<../architecture/components#,System Components>>, this architecture corresponds to the following Java packages: `com.example.application`; `com.example.application.views`; `com.example.application.services`; and `com.example.application.entities`.
 
-- `com.example.application`
-- `com.example.application.views`
-- `com.example.application.services`
-- `com.example.application.entities`
+However, in many Vaadin applications, there's code that doesn't fit into any particular system component. This code is often cross cutting: it's used by many system components. This could can be placed in _utility packages_. You should keep these packages to a minimum. If you're adding more and more classes to utility packages, there may be a problem with the separation of concerns in the application. If that happens, you may have to introduce a new system component, split an existing component into smaller components, or merge multiple components into one.
 
-However, in many Vaadin applications, there is code that does not fit into any particular system component. This code is often cross cutting, meaning it is used by many different system components. This could can be placed in _utility packages_. You should keep these packages as scarce as possible. If you find yourself adding more and more classes to utility packages, there may be a problem with the separation of concerns in your application. If that happens, you may have to introduce a new system component, split an existing component into smaller components, or merge multiple components into one.
 
-In most Vaadin applications, you should start with two utility packages: `security` and `utils`.
+=== Utility Packages
 
-The `security` package contains all the code that relates to security. It contains the <<{articles}/flow/security/enabling-security#,Security Configuration class>> and any custom security utilities you may need.
+In most Vaadin applications, you should start with two utility packages: `security`; and `utils`:
 
-The `utils` package is for miscellaneous classes. For example, if your project needed a custom `StringUtils` class, you would put it in this package.
+- The `security` package contains all of the code that relates to security. It contains the <<{articles}/flow/security/enabling-security#,Security Configuration class>> and any custom security utilities you may need.
+
+- The `utils` package is for miscellaneous classes. For example, if your project needed a custom `StringUtils` class, you would put it in this package.
 
 With these packages, and an <<{articles}/styling/application-theme#,application theme>>, you end up with a code structure that looks like this:
 
@@ -337,15 +342,5 @@ src/main/
     └── application.properties
 ----
 
-Note the somewhat strange location of image files (1). You can find more information about this <<{articles}/flow/application/resources#,here>>.
+Note the somewhat strange location of image files (1). You can find more information about this on the  <<{articles}/flow/application/resources#,Images & Icons>> documentation page.
 
-
-== When to Use
-
-Single-module projects are simple and easy to understand. They are best suited for smaller applications, and applications that are maintained by small development teams. They are also suitable for new projects, since it is quite easy to migrate from a single-module project to a multi-module project, if or when the need arises.
-
-Single-module projects have one drawback that you should be aware of. When you designed your architecture, you also defined constraints on how the components depend on each other. For example, the user interface might not be allowed to talk to a data repository directly. 
-
-// Another drawback is that bigger modules take longer to build, but I don't know how big of a deal this actually is. In practice, you end up building the entire thing in a multi-module project as well and there, it may be even slower.
-
-In a single-module project, all the code is in the same place. Only your discipline prevents you from accidentally - or intentionally - breaking these constraints. The risk of this happening grows as the codebase, or the number of people touching it, grows. This, in turn, increases the risk of your code degrading into an unmaintainable http://www.laputan.org/mud/mud.html#BigBallOfMud[Big Ball of Mud]. If this is a concern to you, you should consider adding https://www.archunit.org/[ArchUnit] tests to your project, or converting to a <<multi-module#,multi-module>> project.
