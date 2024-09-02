@@ -64,6 +64,7 @@ export class Example extends LitElement {
       <vaadin-popover
         for="range-field"
         .trigger="${this.trigger}"
+        focus-delay="0"
         modal
         content-width="325px"
         position="bottom-start"

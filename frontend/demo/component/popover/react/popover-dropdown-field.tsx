@@ -76,6 +76,7 @@ function Example() {
       <Popover
         for="range-field"
         trigger={['click', 'focus']}
+        focusDelay={0}
         modal
         contentWidth="325px"
         position="bottom-start"
