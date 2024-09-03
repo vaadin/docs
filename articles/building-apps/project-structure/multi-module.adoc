@@ -11,7 +11,9 @@ include::{articles}/_vaadin-version.adoc[]
 
 A multi-module project consists of multiple directories, each with its own POM file and source directory. During the build, Maven packages each module into a JAR file, or a WAR file. The modules can depend on each other; Maven builds them in the correct order. 
 
-Unlike <<single-module#,single-module projects>>, there is no starter for creating a multi-module Maven project for a Vaadin application. Instead, you have to set up your project without a starter, beginning with the parent POM file.
+Multi-module projects are more complex than <<single-module#,single-module projects>>, but offer a stricter separation of concerns in return. This makes them useful for large codebases, and projects with large teams. By splitting the code up into smaller modules and controlling the dependencies between them, you reduce the risk of code misuse. Instead of relying on developer discipline alone, the compiler complains if you try to use a class in the wrong place.
+
+Unlike single-module projects, there is no starter for creating a multi-module Maven project for a Vaadin application. Instead, you have to set up your project without a starter, beginning with the parent POM file.
 
 [NOTE]
 If you've never used multi-module Maven projects, you should at least read the https://maven.apache.org/guides/mini/guide-multiple-modules.html[Guide to Working with Multiple Modules] before continuing.
@@ -21,7 +23,7 @@ If you've never used multi-module Maven projects, you should at least read the h
 
 == Parent POM-Structure
 
-The parent POM file resides in the root directory of your project. In a Vaadin project, it serves two roles. First, it acts as the parent to all of the other modules, allowing them to inherit dependencies and other configuration from it. Second, it acts as the _reactor_ of the entire project, responsible for building the individual modules in the correct order. The parent module doesn't contain any source code, nor should it be packaged into a JAR file.
+The parent POM file resides in the root directory of your project. In a Vaadin project, it serves two roles. First, it acts as the parent to all the other modules, allowing them to inherit dependencies and other configuration from it. Second, it acts as the _reactor_ of the entire project, responsible for building the individual modules in the correct order. The parent module doesn't contain any source code, nor should it be packaged into a JAR file.
 
 To turn a basic Maven POM file into a parent POM, start by changing its packaging to `pom`, like this:
 
@@ -35,7 +37,7 @@ To turn a basic Maven POM file into a parent POM, start by changing its packagin
 <!-- end::snippet[] -->
 ----
 
-The next steps are similar to the ones needed in <<single-module#,single-module projects>>. Import the `spring-boot-starter-parent` project like this:
+The next steps are similar to the ones needed in single-module projects. Import the `spring-boot-starter-parent` project like this:
 
 [source,xml]
 ----
@@ -75,6 +77,18 @@ Then import the Vaadin BOM, like this:
         </dependency>
     </dependencies>
 </dependencyManagement>
+----
+
+To be able to use basic Spring features such as dependency injection, all modules in the project have to import the `spring-context` dependency. To avoid having to explicitly declare it in every module, add it to the parent POM, like this:
+
+[source,xml]
+----
+<dependencies>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+    </dependency>   
+<dependencies>
 ----
 
 Unlike the single-module project, this POM file doesn't contain any plugins. Instead, it contains a section that lists all of the modules that should be included in the project build. Since at this point you won't have created any modules, add an empty section:
@@ -125,6 +139,13 @@ Below is how a fully configured POM file for an empty multi-module Vaadin applic
         </dependencies>
     </dependencyManagement>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>   
+    <dependencies>
+
     <modules>
     </modules>
 </project>
@@ -135,26 +156,25 @@ Below is how a fully configured POM file for an empty multi-module Vaadin applic
 
 The code structure of the project should resemble the <<{articles}/building-apps/architecture/components#,architecture>> of the application. For multi-module projects, the _project structure_ should also resemble the architecture of the application. Therefore, you'll need to have an idea of what the architecture is going to look like before you start setting up a multi-module Vaadin project.
 
-The code structure of a Vaadin application should have a _Views_ component, a _Services_ component, and an _Entities_ component.
+Consider a fictional Vaadin application with a _Views_ component, a _Services_ component, and an _Entities_ component.
 
 [[three-system-components]]
 [.fill]
 [link=../architecture/images/three-components.png]
 image::../architecture/images/three-components.png[Diagram of Three System Components and a Database]
 
-This architecture corresponded to the following Java packages:
+These components correspond to the following Java packages:
 
-- `com.example.application`
 - `com.example.application.views`
 - `com.example.application.services`
 - `com.example.application.entities`
 
-In addition, the following utility packages were added:
+In addition, you often end up with the following utility packages:
 
 - `com.example.application.utils`
 - `com.example.application.security`
 
-To split these packages into separate Maven modules, you'll need to look at their dependencies, depicted by the arrows in the diagram. The main reason for using a multi-module project is to separate concerns. Each module forms its own compilation unit and has its own classpath. By packaging each system component into its own Maven module, you can control its dependencies in a way that is impossible in a single-module project. 
+To split these packages into separate Maven modules, you'll need to look at their dependencies, depicted by the arrows in the diagram. Each module forms its own compilation unit and has its own classpath.
 
 Following this principle, you might have a project structure that looks like this:
 
@@ -162,19 +182,19 @@ Following this principle, you might have a project structure that looks like thi
 ----
 (root)
 ├── entities/
-│   ├── src/main/java/
+│   ├── src/main/java/com/example/application/entities/
 │   │   └── ...
 │   └── pom.xml
 ├── services/
-│   ├── src/main/java/
+│   ├── src/main/java/com/example/application/services/
 │   │   └── ...
 │   └── pom.xml
 ├── utils/
-│   ├── src/main/java/
+│   ├── src/main/java/com/example/application/utils/
 │   │   └── ...
 │   └── pom.xml
 ├── views/
-│   ├── src/main/java/
+│   ├── src/main/java/com/example/application/views/
 │   │   └── ...
 │   └── pom.xml
 └── pom.xml
@@ -196,11 +216,13 @@ Every Maven module has its own POM file and they are all quite similar. They all
 </parent>
 ----
 
-Since all of the modules are part of the same application, they should have the same `groupId` and `version`. These are inherited from the parent POM, unless declared explicitly in the POM file. Because of this, you should leave out the `<groupId>` and `<version>` elements from your module POM files.
+Since all the modules are part of the same application, they should have the same `groupId` and `version`. These are inherited from the parent POM, unless declared explicitly in the POM file. Because of this, you should leave out the `<groupId>` and `<version>` elements from your module POM files.
 
 Each module still needs an `artifactId`. Use the same name for both the directory of a module and its `artifactId`.
 
-After this, you'll need to declare the dependencies of the modules. This is where the first differences start to appear. The `entities` module depends on `utils`, and any external dependencies it needs to access the database. This means that any code in the `entities` module is unable to call code in the `views` or the `services` modules. If you tried to do that, you would get a compiler error. The complete POM file looks like this:
+After this, you'll need to declare the dependencies of the modules. This is where the first differences start to appear.
+
+The `entities` module only depends on `utils`, and any external dependencies it needs to access the database. The complete POM file looks like this:
 
 .Entities pom.xml
 [source,xml]
@@ -233,8 +255,6 @@ After this, you'll need to declare the dependencies of the modules. This is wher
 <3> This is where you would add dependencies to Spring Data, Hibernate, JPA, JOOQ, the JDBC driver and so on.
 
 The `services` module depends on `entities` and `utils`. Because `entities` already depends on `utils`, `services` gets it as a _transitive dependency_ by only depending on `entities`. The complete POM file looks like this:
-
-// TODO Add spring-context dependency as well and explain why
 
 .Services pom.xml
 [source,xml]
@@ -282,9 +302,7 @@ The `utils` module doesn't have any dependencies at the beginning. Its POM file 
 </project>
 ----
 
-The `views` module depends on Vaadin, the `services` module and the `utils` module. This means that both the `entities` and the `utils` modules are included as transitive dependencies. The complete POM file looks like this:
-
-// TODO Add vaadin plugin as well and explain why
+The `views` module depends on Vaadin, the `services` module and the `utils` module. This means that both the `entities` and the `utils` modules are included as transitive dependencies. In addition, the `views` module includes the Vaadin Maven plugin. The complete POM file looks like this:
 
 .Views pom.xml
 [source,xml]
@@ -313,6 +331,58 @@ The `views` module depends on Vaadin, the `services` module and the `utils` modu
             <version>${project.version}</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-frontend</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>production</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-core</artifactId>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.vaadin</groupId>
+                            <artifactId>vaadin-dev</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.vaadin</groupId>
+                        <artifactId>vaadin-maven-plugin</artifactId>
+                        <version>${vaadin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>build-frontend</goal>
+                                </goals>
+                                <phase>compile</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>    
 </project>
 ----
 
@@ -333,16 +403,183 @@ Whenever you add a new module to your project, remember also to declare it in th
 ...
 ----
 
-// TODO Continue here with the need for a deployment unit module, as an intro to the next section
+At this point, the project contains modules for all the system components. It compiles, but you can't actually run the application. This is because you haven't yet added an `Application` class, nor have you set up the Spring Boot Maven plugin. To do this, you'll need to create another Maven module: the _application module_.
 
-== Deployment Unit POM-Structure
+== Application Module POM-Structure
 
-..
+The application module acts as the _aggregator_ of your project. It brings all the modules together and builds them into a self-contained executable JAR-file that you can deploy to production. Because of this, the application module is also sometimes referred to as the _deployment unit_ of the project.
+
+The application module is an ordinary Maven module that contains at least the `Application` class, and the application's configuration files. It imports all the other modules, either explicitly or transitively, and adds the Spring Boot Maven plugin. The complete POM-file looks like this:
+
+.Application pom.xml
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.example.application</groupId>
+        <artifactId>parent-pom</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>app</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>views</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+----
+
+Including the application module, the entire project structure would now look like this:
+
+[source]
+----
+(root)
+├── app/
+│   ├── src/main/java/com/example/application/
+│   │   └── ...
+│   └── pom.xml
+├── entities/
+│   ├── src/main/java/com/example/application/entities/
+│   │   └── ...
+│   └── pom.xml
+├── services/
+│   ├── src/main/java/com/example/application/services/
+│   │   └── ...
+│   └── pom.xml
+├── utils/
+│   ├── src/main/java/com/example/application/utils/
+│   │   └── ...
+│   └── pom.xml
+├── views/
+│   ├── src/main/java/com/example/application/views/
+│   │   └── ...
+│   └── pom.xml
+└── pom.xml
+----
+
+Recall, that the `com.example.application.security` utility package still didn't have a Maven module of its own. If this package only contains code that is not intended to be used by other modules, such as the Spring Security configuration, you can put it into the application module. You would then end up with a module structure like this:
+
+[source]
+----
+app/
+├── src/main/
+│   ├── java/
+│   │   └── com/example/application/
+│   │       ├── security/
+│   │       │   └── SecurityConfiguration.java
+│   │       └── Application.java 
+│   └── resources/
+│       └── application.properties
+└── pom.xml
+----
+
+However, if your `security` package also includes code that is intended to be used by other modules, you should create a separate _Security_ module and put everything there.
+
+== Priming Build
+
+The first-ever build of a Maven project is called the _priming build_. During this build, all the dependencies are downloaded and the plugins are executed for the first time. When you work with a Vaadin multi-module project, it is important to run the priming build either before, or directly after importing the project into your IDE. To perform a priming build, run this command in the root of your project:
+
+[source,terminal]
+----
+$ mvn package
+----
+
+During the priming build, the Vaadin Maven plugin generates a bunch of frontend files that are needed when the application runs. Because the plugin is configured in the `views` module, the files are also generated into that module, as they should. When you start the application, Vaadin finds these files and loads them, and any other frontend files you may have created, from the `views` module.
+
+Without the priming build, Vaadin would generate the missing files when the application starts for the first time. However, these files would end up in the `app` module and not in the `views` module. Vaadin would also look for any other frontend files, like the theme, in the `app` module. As a result, the application would not work right.
 
 == Going Deeper
 
-..
+Mapping system components and utility packages to Maven modules is only one way of structuring a multi-module Vaadin project. Depending on what concerns you want to separate, you can go deeper and split your application into even more Maven modules. Here are some examples of common scenarios:
 
-== When to Use
+=== Hiding the Entities From the Presentation Layer
 
-..
+Sometimes you don't want your presentation layer to interact with your entities directly. Instead, you want to use Data Transfer Objects (DTO) to communicate with your application layer. To do this, split the _Services_ component into two Maven modules: `services-api` and `services-impl`.
+
+[[services-api]]
+[.fill]
+[link=images/services-api.png]
+image::images/services-api.png[Diagram of Four Maven Modules]
+
+Put the service interfaces and DTO:s in the `services-api` module, and add it as a dependency to your `views` module. The `services-api` module should _not_ depend on the `entities` module. Otherwise, you'd end up having `entities` as a transitive dependency of `views`, which is what you want to avoid in this case.
+
+Next, put the classes that implement your service interfaces in the `service-impl` module. Annotate these classes with `@Service`, or declare them as Spring beans in some other way. This module should depend on both the `service-api` and the `entities` module.
+
+At last, add both `service-api` and `services-impl` as dependencies to your application module. When the application starts up, Spring instantiates the service classes and injects their instances into your views.
+
+=== Supporting Pluggable Implementations
+
+Sometimes you want to be able to plug in different implementations of a Service Provider Interface (SPI). For example, you may want to store and retrieve your entities from a local database, or from a remote REST service. To do this, create one Maven module for the SPI and one Maven module for each implementation:
+
+[[spi]]
+[.fill]
+[link=images/spi.png]
+image::images/spi.png[Diagram of one SPI module and two implementation modules]
+
+Each module that implements the SPI should have a dependency on the SPI module. All the modules that use the SPI should also have a dependency on it. The big difference here is in the Java code: the client modules _call_ the SPI, whereas the implementation modules _implement_ the SPI. Annotate the implementation classes with `@Service`, or declare them as Spring beans in some other way.
+
+Even though you have multiple implementations of the same SPI, you can only use one of them at a time while the application is running. One way of doing this is to add a Maven profile for each implementation to your application module. Each profile would then include a dependency on the corresponding implementation module, like this:
+
+[source,xml]
+----
+<profiles>
+    <profile>
+        <id>app-with-first-implementation</id>
+        <dependencies>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>first-implementation</artifactId>
+                <version>${project.version}
+            </dependency>
+        </dependencies>
+    </profile>
+    <profile>
+        <id>app-with-second-implementation</id>
+        <dependencies>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>second-implementation</artifactId>
+                <version>${project.version}
+            </dependency>
+        </dependencies>
+    </profile>    
+</profiles>
+----
+
+You can now build different versions of your application. To build a package that contains the first implementation, you would run this command:
+
+[source,terminal]
+----
+$ mvn package -P app-with-first-implementation
+----
+
+Likewise, to build a package that contains the second implementation, you would run this command:
+
+[source,terminal]
+----
+$ mvn package -P app-with-second-implementation
+----
+
+When the application starts up, Spring instantiates the classes of the included implementation module, and injects their instances wherever they are needed.
