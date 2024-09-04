@@ -2,10 +2,13 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import '@vaadin/button';
+import '@vaadin/popover';
 import '@vaadin/text-field';
+import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('text-field-constraints')
+@customElement('popover-modal')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -16,17 +19,22 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
+      <vaadin-button id="target">Discount</vaadin-button>
       <!-- tag::snippet[] -->
-      <vaadin-text-field
-        required
-        min-length="5"
-        max-length="18"
-        pattern="^[+]?[\\(]?[0-9]{3}[\\)]?[\\-]?[0-9]{3}[\\-]?[0-9]{4,6}$"
-        allowed-char-pattern="[0-9()+-]"
-        label="Phone number"
-        helper-text="Format: +(123)456-7890"
-      ></vaadin-text-field>
+      <vaadin-popover
+        for="target"
+        modal
+        with-backdrop
+        ${popoverRenderer(this.popoverRenderer)}
+      ></vaadin-popover>
       <!-- end::snippet[] -->
+    `;
+  }
+
+  popoverRenderer() {
+    return html`
+      <vaadin-text-field label="Discount code"></vaadin-text-field>
+      <vaadin-button>Apply</vaadin-button>
     `;
   }
 }
