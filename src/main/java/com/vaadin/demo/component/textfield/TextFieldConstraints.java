@@ -15,7 +15,7 @@ public class TextFieldConstraints extends HorizontalLayout {
         TextField field = new TextField("Phone number");
         field.setRequiredIndicatorVisible(true);
         field.setPattern(
-                "^[+]?[(]?[0-9]{3}[)]?[-s.]?[0-9]{3}[-s.]?[0-9]{4,6}$");
+                "^[+]?[\\(]?[0-9]{3}[\\)]?[\\-]?[0-9]{3}[\\-]?[0-9]{4,6}$");
         field.setAllowedCharPattern("[0-9()+-]");
         field.setMinLength(5);
         field.setMaxLength(18);
