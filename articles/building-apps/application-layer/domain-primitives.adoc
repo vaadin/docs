@@ -1,0 +1,187 @@
+---
+title: Domain Primitives
+description: Learn what domain primitives are and how to use them in your applications.
+order: 10
+---
+
+= Domain Primitives
+
+In programming, _primitive data types_ are the basic data types from which all the other data types are constructed. In Java, the primitive types are the integer types `byte`, `short`, `int`, `long`, and `char`; the floating-point number types `float` and `double`; and `boolean`. Java also provides several other data types that are useful when constructing other data types, such as `String`, `BigDecimal`, and all the date-time types.
+
+All primitive data types have constraints on what you can store in them. For example, an `int` can hold integers between -2147483648 and 2147483647. When used for attributes in a domain model, more constraints are imposed. For example, even though the "item quantity" attribute in an order may be an integer, not all integers are valid quantities. It should not be possible to order a negative number of items. There should also be an upper limit on how many items a user can order without having to contact sales.
+
+== The Problem with Traditional Constraint Enforcement
+  
+Traditionally, these domain constraints have been enforced in various ways. For example, you may have created a validator utility like this:
+
+[source,java]
+----
+public final class QuantityUtils {
+
+    public static final int MIN_QTY = 1;
+    public static final int MAX_QTY = 100;
+
+    public static boolean isValid(int quantity) {
+        return (quantity >= MIN_QTY) && (quantity <= MAX_QTY);
+    }
+
+    public static int validate(int quantity) {
+        if (!isValid(quantity)) {
+            throw new IllegalArgumentException("Invalid quantity");
+        }
+        return quantity;
+    }
+}
+----
+
+Next, you may have used the validator whenever a quantity is passed as a method or constructor argument, like this:
+
+[source,java]
+----
+public class OrderItem {
+
+    private int quantity;
+    ...
+
+    public OrderItem(int quantity) {
+        this.quantity = QuantityUtils.validate(quantity);
+    }
+}
+----
+
+Or, you may have used Java Bean Validation annotations, like this:
+
+[source,java]
+----
+public class OrderItem {
+
+    @Min(QuantityUtils.MIN_QTY)
+    @Max(QuantityUtils.MAX_QTY)
+    private int quantity;
+    ...
+    
+    public OrderItem(int quantity) {
+        this.quantity = quantity;
+    }
+}
+----
+
+In this case, you have to remember to call the `Validator` at some point.
+
+Both of these examples work, but they suffer from the same problem: the attributes don't carry any domain meaning by themselves. A string is a string, regardless of whether it happens to contain a person's first name, or a SQL-query. An integer is an integer, regardless of whether it contains the quantity of items in an order, or the primary key of a database record.
+
+This means, that you have to remember to validate the attribute values wherever you use them. If you forget to do this, the best case scenario is that you end up with unexpected errors during runtime. For example, trying to store a 101 character string in a 100 character `VARCHAR` database column would throw an exception.
+
+A worse case scenario is that you end up with bad data in your database. This is a data integrity problem that may spread to other parts of the system and have unintended consequences. For example, if a customer is able to enter negative item quantities, they may be able to give themselves a hefty discount. The customer could start by adding the items they want, followed by negative quantities of other items until the net price of the order is zero, or even negative. What if there was another system somewhere that automatically issued refunds whenever an order with a negative net price was detected? This would mean that a customer could abuse the system to actually get paid to order items.
+
+The worst case scenario is that you end up with a security hole that can be used to attack you system in various ways. Strings are notorious for being used as attack vectors, because they can contain code. String input that has not been validated or escaped is the root cause of all injection attacks. Injection attacks are on place 3 on the https://owasp.org/www-project-top-ten/[OWASP Top Ten 2021] list of critical security risks to web applications.
+
+== Introducing Domain Primitives
+
+All data structures in the domain model have domain meaning. For example, a `Customer` class corresponds to an actual _customer_ in the real world. However, instead of only attaching domain meaning to the top-level types, you should go deeper and also attach domain meaning to the individual _attributes_. For example, instead of using a string for the username, and an integer for the quantity, you should create a `Username` class and a `Quantity` class. Then, wherever you need a username or a quantity, you should use these _domain primitives_.footnote:[The concept of _domain primitives_ was introduced in https://www.manning.com/books/secure-by-design[Secure by Design] by Dan Bergh Johnsson, Daniel Deogun, and Daniel Sawano.]
+
+A domain primitive is a Java class that has some specific qualities. First, it is a _value object_, meaning that it is immutable, and that two objects with the same value are considered interchangeable.
+
+Second, it wraps one or more objects of other types. For example, a `Quantity` domain primitive could wrap an integer, and a `Username` domain primitive could wrap a string. Domain primitives can wrap more than one object, and can also wrap other domain primitives. For example, to represent a monetary amount, you need both the currency and the numeric amount. You may end up with a `CurrencyUnit` domain primitive, and a `MonetaryAmount` domain primitive that wraps a `BigDecimal` and a `CurrencyUnit`.
+
+Third, it validates all its input data in the constructor. Because it is also immutable, this means that a domain primitive is guaranteed to always be valid.
+// TODO Write an article about validation, and link to it from here.
+
+Here is what the quantity from the example above could look like as a domain primitive:
+
+[source,java]
+----
+public final class Quantity {
+    public static final int MIN_QTY = 1;
+    public static final int MAX_QTY = 100;
+
+    private final int value; // <1>
+
+    public Quantity(int value) {
+        if (value < MIN_QTY || value > MAX_QTY) { // <2>
+            throw new IllegalArgumentException("Invalid quantity");
+        }
+        this.value = value;
+    }
+
+    public int value() { // <3>
+        return value;
+    }
+
+    @Override
+    public String toString() { // <4>
+        return Integer.toString(value);
+    }
+
+    @Override
+    public boolean equals(Object o) { // <5>
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Quantity that = (Quantity) o;
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
+    }
+}
+----
+<1> Because `Quantity` is immutable, make the variable storing the wrapped integer `final`.
+<2> Validate the wrapped integer in the constructor.
+<3> Make the wrapped integer available through an accessor.
+<4> To make debug logging easier, override `toString()`.
+<5> Because `Quantity` is a value object, override `equals()` and `hashCode()`.
+
+With the new domain primitive in place, the `OrderItem` class becomes:
+
+[source,java]
+----
+public class OrderItem {
+
+    private Quantity quantity;
+    ...
+
+    public OrderItem(Quantity quantity) {
+        this.quantity = quantity;
+    }
+}
+----
+
+== Avoiding Mix-Ups
+
+Domain primitives offer another benefit. They reduce the risk of mixing attributes that have different domain meaning, but are represented by the same primitive data type. For example, a trivial `StreetAddress` object may look like this:
+
+[source,java]
+----
+public record StreetAddress(
+    String number, 
+    String name
+) {}
+----
+
+When creating a new instance of this object, a U.S. developer may write `new StreetAddress("123-4", "Main Street")`. However, a European developer may write `new StreetAddress("Main Street", "123-4")`. Both are valid Java code, but the latter is semantically wrong. The bug is difficult to spot in a code review because it looks right.
+
+With domain primitives, the `StreetAddress` object now looks like this:
+
+[source,java]
+----
+public record StreetAddress(
+    StreetNumber number, 
+    StreetName streetName
+) {}
+----
+
+When creating a new instance of this object, a developer now has to write `new StreetAddress(StreetNumber.of("123-4"), StreetName.of("Main Street"))`. It is a bit more verbose, but now the compiler would complain if you tried to swap the parameters.
+
+== Business Logic
+
+// TODO Write this
+
+== Vaadin Flow
+
+// TODO Write this
+
+== Vaadin Hilla
+
+// TODO Write this
