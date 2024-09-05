@@ -33,7 +33,6 @@ export class Example extends LitElement {
     return root;
   }
 
-  // tag::snippet[]
   @state()
   private items: Person[] = [];
 
