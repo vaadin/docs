@@ -1,5 +1,6 @@
 ---
 title: Daily Active Users
+layout: tabbed-page
 description: Short description
 order: 10
 ---
@@ -12,3 +13,137 @@ Introduction to Daily Active Users ....
 == Customizations
 
 You can customize the Daily Active Users feature in your Vaadin application using the [interfacename]`DAUCustomizer` interface. This customization is crucial for tracking unique users across multiple devices and tailoring the enforcement notification messages displayed to them.
+
+The [interfacename]`DAUCustomizer` interface allows you to implement two key customizations:
+
+* User Identity Supplier: This allows the system to identify and count a user as a single entity, even when they access the application from multiple devices.
+* Enforcement Notification Messages: This allows you to provide custom messages and, optionally, a landing page for the enforcement notification popup that users might encounter.
+
+=== Implementing DAUCustomizer
+
+To apply the available customizations, you need to create a class that implements the [interfacename]`DAUCustomizer` interface. 
+Only one implementation of this interface is permitted per application, and it is discovered through the Vaadin [interfacename]`Instantiator`.
+Making the [interfacename]`DAUCustomizer` implementation available to your application depends on the architecture you are using.
+For a plain Java servlet application, you need to register the implementation using the Java ServiceLoader mechanism. To do this, create a [filename]`META-INF/services/com.vaadin.flow.server.dau.DAUCustomizer` file that lists the fully qualified name of your customizer class.
+For Spring, CDI, and Quarkus applications, it is sufficient to expose your [interfacename]`DAUCustomizer` implementation as a [annotationname]`@Singleton` or [annotationname]`@ApplicationScoped` bean, which will be automatically picked up by the framework.
+Quarkus developers should also add the [annotationname]`@Unremovable` annotation to the implementation class, to prevent Quarkus to consider the bean unused and therefore removed at build time.
+
+
+*Example*: Registering DAUCustomizer implementation for Spring, CDI, and Quarkus
+
+[.example]
+--
+[source,java]
+.`Spring`
+----
+package com.yourpackage;
+
+@Component
+public class MyDAUCustomizer implements DAUCustomizer {
+    // Implementation omitted for brevity
+}
+----
+
+[source,java]
+.`CDI`
+----
+package com.yourpackage;
+
+@Singleton
+public class MyDAUCustomizer implements DAUCustomizer {
+    // Implementation omitted for brevity
+}
+----
+
+[source,java]
+.`Quarkus`
+----
+package com.yourpackage;
+
+@Singleton
+@Unremovable
+public class MyDAUCustomizer implements DAUCustomizer {
+    // Implementation omitted for brevity
+}
+----
+
+--
+
+*Example*: Registering DAUCustomizer implementation for Plain Java Servlet Application
+
+[source,java]
+----
+package com.yourpackage;
+
+public class MyDAUCustomizer implements DAUCustomizer {
+    // Implementation omitted for brevity
+}
+----
+[source,text]
+.`META-INF/services/com.vaadin.flow.server.dau.DAUCustomizer`
+----
+com.yourpackage.MyDAUCustomizer
+----
+
+
+=== Customizing User Identity Supplier
+
+The user identity supplier is a function that defines how the system identifies a unique user. By default, this feature is not enabled. However, you can provide a custom implementation to count a user only once, regardless of how many devices they use to access your application.
+The function must always return the same value for a given user of the application, or an empty [classname]`Optional` if it is not possible to determine the user identity for the current request.
+
+*Example*: Customize DAU User Identity Supplier.
+
+[source,java]
+----
+@Singleton
+public class MyDAUCustomizer implements DAUCustomizer {
+
+    @Override
+    public UserIdentitySupplier getUserIdentitySupplier() {
+        return userIdentityContext -> Optional.ofNullable(
+            // In this example a session attribute is supposed to be saved
+            // upon aithentication and then used to provide the user identity
+            (String) userIdentityContext.session().getAttribute("userId")
+        );
+    }
+}
+----
+
+=== Customizing Enforcement Notification Messages
+
+The enforcement notification messages are used to notify users about application usage restrictions caused by exceeding the DAU limit.
+An enforcement message object has four properties: a short caption, a message, an optional detailed text such as technical details or further explanation, and a URL to where to redirect after displaying the notification to the user. If the URL is not specified, the current page is reloaded.
+
+The [methodname]`getEnforcementNotificationMessages()` method receives a [classname]`SystemMessagesInfo` parameter to allows access to the UI locale, so that messages can be translated in the current user language.
+
+The default values of the properties are shown below:
+
+* `caption`: Service Unavailable
+* `message`: Please notify the administrator. Take note of any unsaved data, and click here or press ESC to continue.
+* `details`: null
+* `url`: null
+
+*Example*: Customize enforcemente notification messages.
+
+[source,java]
+----
+public class MyDAUCustomizer implements DAUCustomizer {
+
+    @Override
+    public EnforcementNotificationMessages getEnforcementNotificationMessages(SystemMessagesInfo systemMessagesInfo) {
+        return new EnforcementNotificationMessages(
+            "DAU Limit Reached",                                 // caption
+            "The allowed number of users has been exceeded.",    // message
+            "Please contact customer service.",                  // details
+            "/device-management"                                 // url
+        );
+    }
+}
+----
+
+[NOTE]
+====
+The URL parameter should reference either a static page or a dynanmic page that is not built with Vaadin.
+A Vaadin view would not be shown because of DAU restriction.
+====
+
