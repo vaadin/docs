@@ -1,0 +1,132 @@
+---
+title: Repositories
+description: Learn what repositories are.
+order: 10
+---
+
+= Repositories
+
+The _repository_ was originally introduced as one of the building blocks of Domain-Driven Design, but has since then become common in all business applications, mainly thanks to https://spring.io/projects/spring-data[Spring Data]. A repository is a persistent container of entities that attempts to abstract away the underlying data storage mechanism. At its minimum, it provides methods for basic CRUD operations: Creating, Retrieving, Updating, and Deleting entities.
+
+== Collection Oriented
+
+Collection oriented repositories try to mimic an in-memory collection, such as `Map` or `List`. Once an entity has been added to the repository, any changes made to it are automatically persisted until it has been deleted from the repository. In other words, there is no need for a `save` or `update` method.
+
+A collection oriented, generic repository interface could look like this:
+
+[source,java]
+----
+public interface Repository<ID, E> {
+    Optional<E> get(ID id); // <1>
+    void put(E entity); // <2>
+    void remove(ID id); // <3>
+}
+----
+<1> You can retrieve entities by their IDs.
+<2> You can store entities in the repository.
+<3> You can remove entities from the repository.
+
+Creating and storing new entities could look like this:
+
+[source,java]
+----
+var customer = new Customer();
+customer.setName("Acme Incorporated");
+repository.put(customer);
+----
+
+Retrieving and updating an entity could look like this:
+
+[source,java]
+----
+repository.get(CustomerId.of("XRxY2r9P")).ifPresent(customer -> {
+    customer.setEmail("info@acme.com");
+    customer.setPhoneNumber("123-456-789");
+});
+----
+
+Deleting an entity could look like this:
+
+[source,java]
+----
+repository.remove(CustomerId.of("XRxY2r9P"));
+----
+
+Collection oriented repositories can be quite difficult to implement. The repository implementation would have to know when an entity has been changed, so that it can write it to the underlying storage. Handling transactions and errors would also be non-trivial. This is a telling example of the underlying storage mechanism leaking into the repository abstraction.
+
+== Persistence Oriented
+
+Persistence oriented repositories do not try to hide the fact that the data has to be written to, and read from, some kind of external storage. They have separate methods for inserting, updating, and deleting the entity. If the repository is able to deduce whether any given entity has been persisted or not, the `insert` and `update` methods can be combined into a single `save` method. No changes to an entity are ever written to the storage without an explicit call to `save`.
+
+A persistence oriented, generic repository interface could look like this:
+
+[source,java]
+----
+public interface Repository<ID, E> {
+    Optional<E> findById(ID id); // <1>
+    E save(E entity); // <2>
+    void delete(ID id); // <3>
+}
+----
+<1> You can retrieve entities by their IDs.
+<2> You can save entities in the repository.
+<3> You can delete entities from the repository.
+
+Note how the method names resemble database operations, than in-memory collection operations.
+
+Creating and storing new entities could look like this:
+
+[source,java]
+----
+var customer = new Customer();
+customer.setName("Acme Incorporated");
+customer = repository.save(customer);
+----
+
+The `save` method returns an entity, which can be the same instance as the one that was passed to the method, or a new one. This makes it easier to implement the repository, as some persistence frameworks, such as <<jpa#,JPA>>, work in this way. This is another example of the underlying technology leaking into the repository abstraction.
+
+Retrieving and updating an entity could look like this:
+
+[source,java]
+----
+repository.get(CustomerId.of("XRxY2r9P")).ifPresent(customer -> {
+    customer.setEmail("info@acme.com");
+    customer.setPhoneNumber("123-456-789");
+    repository.save(customer);
+});
+----
+
+Deleting an entity could look like this:
+
+[source,java]
+----
+repository.delete(CustomerId.of("XRxY2r9P"));
+----
+
+Persistence oriented repositories are easier to implement than collection oriented repositories, because their API aligns with the read and write operations of the underlying storage. Regardless of whether you are using a relational database, a flat file, or some external web service, you can write persistence oriented repositories for them all.
+
+*Unless you have a good reason for choosing collection-based repositories, you should use persistence oriented repositories in your Vaadin applications.*
+
+== Queries
+
+Although retrieving an entity by its ID is an important operation, it is not enough in most business applications. You need to be able to retrieve more than one entity at the same time, based on different criteria. If the dataset is big, you need to be able to split it into smaller pages and load them one at a time.
+
+You can add query methods to your repositories. For example, here is a repository with two query methods:
+
+[source,java]
+----
+public interface CustomerRepository extends Repository<CustomerId, Customer> {
+    List<Customer> findByName(String searchTerm, int maxResult);
+    Page<Customer> findAll(PageRequest pageRequest);
+}
+----
+
+The first method finds all customers whose names match the given search term. It is good practice to always limit the size of your query results, which is why the method also has a `maxResult` parameter. If too many customers are returned, the user has to tweak the search term and try again.
+
+The second method finds all the customers in the data storage, but splits it up into pages. The `PageRequest` object contains information about where to start retrieving data, how many customers to retrieve, how to sort them, and so on.
+
+// TODO Continue here...
+
+However, if you need many different types of queries, your repository interface can become big and confusing. One way of solving this problem is to introduce _query specifications_
+
+A query specification is an object that explains which entities should be included in the query result. 
