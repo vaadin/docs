@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Grid } from '@vaadin/react-components/Grid.js';
-import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridFilterColumn } from '@vaadin/react-components/GridFilterColumn.js';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
