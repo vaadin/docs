@@ -60,7 +60,7 @@ export class Example extends LitElement {
     people.forEach((person, idx) => {
       const index = startIndex + idx;
       const parentIndexes = params.parentItem
-        ? this.idToIndexes.get(params.parentItem.id) ?? []
+        ? (this.idToIndexes.get(params.parentItem.id) ?? [])
         : [];
       const indexes = [...parentIndexes, index];
       this.idToIndexes = new Map(this.idToIndexes).set(person.id, indexes);
