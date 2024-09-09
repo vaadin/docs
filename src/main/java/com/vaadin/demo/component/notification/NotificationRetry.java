@@ -35,7 +35,7 @@ public class NotificationRetry extends Div {
         Notification notification = new Notification();
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        // this is the default, 0 or negative means the Notificaiton
+        // this is the default, 0 or negative means the Notification
         // is not closed automatically
         notification.setDuration(0);
 
