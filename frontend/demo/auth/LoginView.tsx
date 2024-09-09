@@ -1,14 +1,13 @@
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { useAuth } from './auth';
-import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
 
 export const config: ViewConfig = {
-    menu: { exclude: true}
-}
+  menu: { exclude: true },
+};
 
 // tag::snippet[]
 export default function LoginView() {

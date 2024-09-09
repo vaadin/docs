@@ -9,7 +9,6 @@ import '@vaadin/custom-field';
 import '@vaadin/horizontal-layout';
 
 import { applyTheme } from 'Frontend/generated/theme';
-import type { Select } from '@vaadin/select';
 
 @customElement('form-layout-custom-field')
 export class Example extends LitElement {
