@@ -107,7 +107,7 @@ Persistence oriented repositories are easier to implement than collection orient
 
 *Unless you have a good reason for choosing collection-based repositories, you should use persistence oriented repositories in your Vaadin applications.*
 
-== Queries
+== Query Methods
 
 Although retrieving an entity by its ID is an important operation, it is not enough in most business applications. You need to be able to retrieve more than one entity at the same time, based on different criteria. If the dataset is big, you need to be able to split it into smaller pages and load them one at a time.
 
@@ -125,8 +125,76 @@ The first method finds all customers whose names match the given search term. It
 
 The second method finds all the customers in the data storage, but splits it up into pages. The `PageRequest` object contains information about where to start retrieving data, how many customers to retrieve, how to sort them, and so on.
 
-// TODO Continue here...
+As long as you only have a handful of query methods, keeping them in the repository is fine. However, once the number of query methods starts to grow, you may run into problems. As the query methods become more specific, they also become more difficult to reuse. Over time, your repository may be full of query methods that are almost similar, but not quite. When a new, similar use case shows up, it is easier to add a new query method than figure out which of the old ones to reuse.
 
-However, if you need many different types of queries, your repository interface can become big and confusing. One way of solving this problem is to introduce _query specifications_
+One way of solving this problem is to introduce _query specifications_. A query specification is an object that explains which entities should be included in the query result. In the earlier example, you can replace all the query methods with a single one:
 
-A query specification is an object that explains which entities should be included in the query result. 
+[source,java]
+----
+public interface CustomerRepository extends Repository<CustomerId, Customer> {
+    Page<Customer> findBySpecification(CustomerSpecification specification, 
+        PageRequest pageRequest);
+}
+----
+
+You would then use the query method like this:
+
+[source,java]
+----
+var result = customerRepository.findBySpecification(
+    CustomerSpecification.byName("ACME")
+        .and(CustomerSpecification.byCountry(Country.US)
+            .or(CustomerSpecificaiton.byCountry(Country.FI))
+        ), 
+    PageRequest.ofSize(10)
+);
+...
+----
+
+This query method would return the 10 first customers whose names match the "ACME" query string and who are located in either the U.S. or Finland.
+
+The challenge with this approach is that it is difficult, but not impossible, to build specification objects that are not coupled to the technology used to implement the repository. However, most business applications do not change their databases or have to support multiple repository implementations. Since the repositories are already a leaky abstraction, you can just as well embrace it and make the specifications implementation specific. After all, the specifications themselves still hide the implementation from the code that uses them. 
+
+You can find examples of how to implement specification queries on the <<jpa#,JPA>> and <<jooq#,jOOQ>> documentation pages.
+
+== Query Objects
+
+Query specifications are useful when you are interested in fetching whole entities. However, you often need to write queries that only include a small part of the entity. For example, if you are building a customer list view that only shows the customers' names and email addresses, there is no point in fetching the complete Customer-entity. The repository now looks like this:
+
+[source,java]
+----
+public interface CustomerRepository extends Repository<CustomerId, Customer> {
+    Page<Customer> findBySpecification(CustomerSpecification specification, 
+        PageRequest pageRequest);
+    
+// tag::snippet[]
+    Page<CustomerListItem> findListItemsBySpecification(
+        CustomerSpecification specification,
+        PageRequest pageRequest);
+
+    record CustomerListItem(CustomerId id, String name, EmailAddress email) {}
+// end::snippet[]
+}
+----
+
+Again, if you only have a handful of these queries, you can add them to the repository interface. However, if you have many different views, and every view needs its own query, the repository interface again risks becoming unstructured and difficult to maintain.
+
+To address this issue, you should move all query methods that don't return entities to their own _query objects_. Query objects read from the same data source as the repositories, but are decoupled from them. After moving the query method from the example above to its own query object, you end up with something like this:
+
+[source,java]
+----
+public interface CustomerListQuery {
+    Page<CustomerListItem> findBySpecification(
+        CustomerSpecification specification,
+        PageRequest pageRequest);
+
+    public record CustomerListItem(CustomerId id, String name, EmailAddress email) {}
+}
+----
+
+You can create as many query objects as you need without cluttering your repositories. The query objects do not have to be tied to a particular entity. Summary views, for example, often need complex queries that join data from different types of entities together. Putting queries like that in repositories can be difficult. Either you can't find a single repository that feels like a good candidate, or you have multiple candidates to choose from. Creating a separate query object solves this problem.
+
+[NOTE]
+If you know the Command Query Responsibility Segregation (CQRS) architectural pattern, the idea of query objects may sound familiar. However, there is a big difference: Whereas CQRS uses different data models for writing and reading, query objects and repositories operate on the same data model, using the same data source. 
+
+// TODO Add link to using CQRS in Vaadin app, when that page has been written sometime in the future.
