@@ -22,14 +22,14 @@ function Example() {
         <HorizontalLayout theme="spacing-s">
           <input
             aria-label="Cardholder name"
-            pattern="[\\p{L} \\-]+"
+            pattern="[\p{L} \-]+"
             placeholder="Cardholder name"
             required
             type="text"
           />
           <input
             aria-label="Card number"
-            pattern="[\\d ]{12,23}"
+            pattern="[\d ]{12,23}"
             placeholder="Card number"
             required
             type="text"
