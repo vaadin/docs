@@ -4,15 +4,17 @@ description: Learn what domain primitives are and how to use them in your applic
 order: 10
 ---
 
+
 = Domain Primitives
 
-In programming, _primitive data types_ are the basic data types from which all the other data types are constructed. In Java, the primitive types are the integer types `byte`, `short`, `int`, `long`, and `char`; the floating-point number types `float` and `double`; and `boolean`. Java also provides several other data types that are useful when constructing other data types, such as `String`, `BigDecimal`, and all the date-time types.
+In programming, _primitive data types_ are the basis from which all other data types are constructed. In Java, the primitive types are the integer types: `byte`, `short`, `int`, `long`, and `char`; the floating-point number types `float` and `double`; and `boolean`. Java also provides several other data types that are useful when constructing other data types, such as `String`, `BigDecimal`, and all date-time ones.
 
-All primitive data types have constraints on what you can store in them. For example, an `int` can hold integers between -2147483648 and 2147483647. When used for attributes in a domain model, more constraints are imposed. For example, even though the "item quantity" attribute in an order may be an integer, not all integers are valid quantities. It should not be possible to order a negative number of items. There should also be an upper limit on how many items a user can order without having to contact sales.
+Primitive data types have constraints on what you can store in them. For example, an `int` can hold integers between -2147483648 and 2147483647. When used for attributes in a domain model, more constraints are imposed. Even though the "item quantity" attribute, for instance, in an order for a store's merchandise may be an integer, not all integers are valid quantities. It shouldn't be possible for a customer to order a negative number of items. There should also be an upper limit on how many items a user can order without having to contact sales.
 
-== The Problem with Traditional Constraint Enforcement
+
+== Constraint Enforcement Problem
   
-Traditionally, these domain constraints have been enforced in various ways. For example, you may have created a validator utility like this:
+Traditionally, these domain constraints have been enforced in various ways. For example, a typical way to create a validator utility might like this:
 
 [source,java]
 ----
@@ -34,7 +36,7 @@ public final class QuantityUtils {
 }
 ----
 
-Next, you may have used the validator whenever a quantity is passed as a method or constructor argument, like this:
+Next, you may have seen the validator used whenever a quantity is passed as a method or constructor argument, like this:
 
 [source,java]
 ----
@@ -49,7 +51,7 @@ public class OrderItem {
 }
 ----
 
-Or, you may have used Java Bean Validation annotations, like this:
+You may have also seen Java Bean Validation annotations like this:
 
 [source,java]
 ----
@@ -68,13 +70,14 @@ public class OrderItem {
 
 In this case, you have to remember to call the `Validator` at some point.
 
-Both of these examples work, but they suffer from the same problem: the attributes don't carry any domain meaning by themselves. A string is a string, regardless of whether it happens to contain a person's first name, or a SQL-query. An integer is an integer, regardless of whether it contains the quantity of items in an order, or the primary key of a database record.
+Both of these examples work, but they have the same problem: the attributes don't carry any domain meaning by themselves. A string is no different whether it contains a person's first name, or it's an SQL query. An integer can contain the quantity of an item ordered, or the primary key of a database record.
 
-This means, that you have to remember to validate the attribute values wherever you use them. If you forget to do this, the best case scenario is that you end up with unexpected errors during runtime. For example, trying to store a 101 character string in a 100 character `VARCHAR` database column would throw an exception.
+You have to validate the attribute values wherever you use them. If not, you might get unexpected errors during runtime. For instance, trying to store a 101-character string in a `VARCHAR` database column with a 100-character limit would throw an exception. Or worse, the database stores bad data (i.e., truncated data). 
 
-A worse case scenario is that you end up with bad data in your database. This is a data integrity problem that may spread to other parts of the system and have unintended consequences. For example, if a customer is able to enter negative item quantities, they may be able to give themselves a hefty discount. The customer could start by adding the items they want, followed by negative quantities of other items until the net price of the order is zero, or even negative. What if there was another system somewhere that automatically issued refunds whenever an order with a negative net price was detected? This would mean that a customer could abuse the system to actually get paid to order items.
+Data integrity problems could spread to other parts of the system and have unintended consequences. For example, if a customer is able to enter negative item quantities, they may be able to give themselves a hefty discount: they could add items they want, then enter negative quantities of other items causing the net total is zero -- or less. Suppose further the system issues refunds when an order with a negative net cost is detected. A customer could be paid to order items.
 
-The worst case scenario is that you end up with a security hole that can be used to attack you system in various ways. Strings are notorious for being used as attack vectors, because they can contain code. String input that has not been validated or escaped is the root cause of all injection attacks. Injection attacks are on place 3 on the https://owasp.org/www-project-top-ten/[OWASP Top Ten 2021] list of critical security risks to web applications.
+Strings are notorious for being used as attack vectors, because they can contain code. String input that hasn't been validated or escaped is the root cause of all injection attacks. Injection attacks are third on the https://owasp.org/www-project-top-ten/[OWASP Top Ten 2021] list of critical security risks to web applications.
+
 
 == Introducing Domain Primitives
 
@@ -148,6 +151,7 @@ public class OrderItem {
 }
 ----
 
+
 == Avoiding Mix-Ups
 
 Domain primitives offer another benefit. They reduce the risk of mixing attributes that have different domain meaning, but are represented by the same primitive data type. For example, a trivial `StreetAddress` object may look like this:
@@ -173,6 +177,7 @@ public record StreetAddress(
 ----
 
 When creating a new instance of this object, a developer now has to write `new StreetAddress(StreetNumber.of("123-4"), StreetName.of("Main Street"))`. It is a bit more verbose, but now the compiler would complain if you tried to swap the parameters.
+
 
 == Behavior
 
@@ -221,6 +226,7 @@ public final class Discount {
 ----
 
 Whenever you fetch the wrapped value from a domain primitive, you should ask what you need that value for. Unless you need it for displaying or formatting, you should probably add a new method to the domain primitive instead.
+
 
 == Usage in Flow
 
@@ -338,6 +344,7 @@ public class MonetaryAmountField extends CustomField<MonetaryAmount> {
 ----
 
 For more information about creating custom fields, see <<{articles}/components/custom-field#,Custom Field>>.
+
 
 == Usage in Hilla
 
