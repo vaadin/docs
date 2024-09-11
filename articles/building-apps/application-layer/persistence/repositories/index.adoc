@@ -72,7 +72,7 @@ public interface Repository<ID, E> {
 <2> You can save entities in the repository.
 <3> You can delete entities from the repository.
 
-Note how the method names resemble database operations, than in-memory collection operations.
+Note how the method names resemble database operations, instead of in-memory collection operations.
 
 Creating and storing new entities could look like this:
 
@@ -121,11 +121,11 @@ public interface CustomerRepository extends Repository<CustomerId, Customer> {
 }
 ----
 
-The first method finds all customers whose names match the given search term. It is good practice to always limit the size of your query results, which is why the method also has a `maxResult` parameter. If too many customers are returned, the user has to tweak the search term and try again.
+The first method finds all customers whose names match the given search term. It is good practice to always limit the size of your query results, which is why the method also has a `maxResult` parameter. This protects your application from running out of memory in case the query result turns out to be much larger than anticipated. If too many customers are returned, the user has to tweak the search term and try again.
 
 The second method finds all the customers in the data storage, but splits it up into pages. The `PageRequest` object contains information about where to start retrieving data, how many customers to retrieve, how to sort them, and so on.
 
-As long as you only have a handful of query methods, keeping them in the repository is fine. However, once the number of query methods starts to grow, you may run into problems. As the query methods become more specific, they also become more difficult to reuse. Over time, your repository may be full of query methods that are almost similar, but not quite. When a new, similar use case shows up, it is easier to add a new query method than figure out which of the old ones to reuse.
+As long as you only have a handful of query methods, keeping them in the repository is fine. However, once the number of query methods starts to grow, you may run into problems. As the query methods become more specific, they also become more difficult to reuse. Over time, your repository may be full of query methods that are _almost_ similar. When a new, similar use case shows up, it is easier to add a new query method than figure out which of the old ones to reuse.
 
 One way of solving this problem is to introduce _query specifications_. A query specification is an object that explains which entities should be included in the query result. In the earlier example, you can replace all the query methods with a single one:
 
@@ -142,9 +142,9 @@ You would then use the query method like this:
 [source,java]
 ----
 var result = customerRepository.findBySpecification(
-    CustomerSpecification.byName("ACME")
-        .and(CustomerSpecification.byCountry(Country.US)
-            .or(CustomerSpecificaiton.byCountry(Country.FI))
+    CustomerSpecification.nameEquals("ACME")
+        .and(CustomerSpecification.countryEquals(Country.US)
+            .or(CustomerSpecificaiton.countryEquals(Country.FI))
         ), 
     PageRequest.ofSize(10)
 );
@@ -153,7 +153,7 @@ var result = customerRepository.findBySpecification(
 
 This query method would return the 10 first customers whose names match the "ACME" query string and who are located in either the U.S. or Finland.
 
-The challenge with this approach is that it is difficult, but not impossible, to build specification objects that are not coupled to the technology used to implement the repository. However, most business applications do not change their databases or have to support multiple repository implementations. Since the repositories are already a leaky abstraction, you can just as well embrace it and make the specifications implementation specific. After all, the specifications themselves still hide the implementation from the code that uses them. 
+The challenge with this approach is that it is difficult, but not impossible, to build specification objects that are not coupled to the technology used to implement the repository. However, most business applications do not change their databases, nor do they have to support multiple repository implementations. Since the repositories are already a leaky abstraction, you can make the specifications implementation specific to make things easier.
 
 You can find examples of how to implement specification queries on the <<jpa#,JPA>> and <<jooq#,jOOQ>> documentation pages.
 
@@ -179,7 +179,7 @@ public interface CustomerRepository extends Repository<CustomerId, Customer> {
 
 Again, if you only have a handful of these queries, you can add them to the repository interface. However, if you have many different views, and every view needs its own query, the repository interface again risks becoming unstructured and difficult to maintain.
 
-To address this issue, you should move all query methods that don't return entities to their own _query objects_. Query objects read from the same data source as the repositories, but are decoupled from them. After moving the query method from the example above to its own query object, you end up with something like this:
+To address this issue, you should move all query methods that don't return entities to their own _query objects_. After moving the query method from the example above to its own query object, you end up with something like this:
 
 [source,java]
 ----
@@ -192,7 +192,9 @@ public interface CustomerListQuery {
 }
 ----
 
-You can create as many query objects as you need without cluttering your repositories. The query objects do not have to be tied to a particular entity. Summary views, for example, often need complex queries that join data from different types of entities together. Putting queries like that in repositories can be difficult. Either you can't find a single repository that feels like a good candidate, or you have multiple candidates to choose from. Creating a separate query object solves this problem.
+Query objects read from the same data source as the repositories. You can create as many query objects as you need without cluttering your repositories. 
+
+The query objects do not have to be tied to a particular entity. Summary views, for example, often need complex queries that join data from different types of entities together. Putting queries like that in repositories can be difficult. Either you can't find a single repository that feels like a good candidate, or you have multiple candidates to choose from. Creating a separate query object solves this problem.
 
 [NOTE]
 If you know the Command Query Responsibility Segregation (CQRS) architectural pattern, the idea of query objects may sound familiar. However, there is a big difference: Whereas CQRS uses different data models for writing and reading, query objects and repositories operate on the same data model, using the same data source. 
