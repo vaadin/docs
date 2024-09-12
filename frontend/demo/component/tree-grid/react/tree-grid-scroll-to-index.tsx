@@ -51,7 +51,7 @@ function Example() {
         people.forEach((person, idx) => {
           const index = startIndex + idx;
           const parentIndexes = params.parentItem
-            ? idToIndexes.get(params.parentItem.id) ?? []
+            ? (idToIndexes.get(params.parentItem.id) ?? [])
             : [];
           const indexAddress = [...parentIndexes, index];
           idToIndexes.set(person.id, indexAddress);
