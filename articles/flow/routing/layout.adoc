@@ -7,14 +7,41 @@ order: 40
 
 = Router Layouts & Nested Router Targets
 
+All parent layouts of a navigation target component have to implement the [interfacename]`RouterLayout` interface. You can define a parent layout by adding the [annotationname]`@Layout` annotation to the class, or by using the optional element `layout` from the `@Route` annotation.
 
-== RouterLayout Interface
 
-All parent layouts of a navigation target component must implement the [interfacename]`RouterLayout` interface.
+=== Automatic Layout Using `@Layout`
 
-You can define a parent layout using the optional element `layout` from the `@Route` annotation.
+The value for the [annotationName]`@Layout` annotation path has to be unique for the project. Otherwise, the resolver won't be able to determine which layout component should be used. Having multiple [annotationName]`@Layout` annotations with the same path throws an exception.
 
-*Example*: Render `CompanyComponent` inside `MainLayout`:
+The example below renders all routes inside [classname]`MainLayout`:
+
+[source,java]
+----
+@Layout
+public class MainLayout extends Div
+        implements RouterLayout {
+}
+----
+
+[annotationname]`@Route` and [annotationname]`@RouteAlias` each contain an annotation attribute called, `autoLayout`. Setting that attribute to false will stop automatic layout; it will ignore any [annotationname]`@Layout` matching the route. Giving a class for the `layout` method in [annotationname]`@Route` also disables automatic layout and uses the one given.
+
+.Ignore Automatic Layout
+[source,java]
+----
+@Route(autoLayout = false)
+public class NoLayoutView extends Div {
+}
+
+@Route(layout = MyLayout.class)
+public class DefinedLayoutView extends Div {
+}
+----
+
+
+=== Defining a Layout in `@Route`
+
+This next example renders [classname]`CompanyComponent` inside [classname]`MainLayout` by defining the layout for the route:
 
 [source,java]
 ----
@@ -24,25 +51,35 @@ public class CompanyComponent extends Component {
 }
 ----
 
-.Default render location when using @Route("path")
-[NOTE]
-When using the <<route#,`@Route("path")`>> annotation to define a route, the component by default renders in the `<body>` tag on the page.
-This is because the element returned by [methodname]`HasElement.getElement()` is attached to the `<body>` tag.
+When using the <<route#,`@Route("path")`>> annotation to define a route, the component renders by default in the `<body>` tag on the page when there is no `@Layout` for `RouterLayout`. This is because the element returned by [methodname]`HasElement.getElement()` is attached to the `<body>` tag.
+
+
+=== Layout Matching Routes
+
+To configure which routes a [annotationname]`@Layout` annotated [classname]`RouterLayout` handles, the prefix of the route's path can be given for the value. 
+
+The example below gives a value of `/user`, which would match the routes `/user` and `/user/info`:
+
+[source,java]
+----
+@Layout(value="/user")
+----
+
+The default value is `/`, which matches all paths.
 
 
 === Multiple Router Target Components
 
 Where multiple router target components use the same parent layout, the parent layout instances remain the same when the user navigates between the child components.
 
-See <<page-titles#,Updating Page Title on Navigation>> for more.
+See <<page-titles#,Updating Page Title on Navigation>> for more information on this.
+
 
 === Multiple Parent Layouts
 
-Use the `@ParentLayout` annotation to define a parent layout for components in the routing hierarchy.
+Use the `@ParentLayout` annotation to define a parent layout for components in the routing hierarchy. Where necessary, a parent can have its own parent layout.
 
-You can create a parent layout for a parent layout, where necessary.
-
-*Example*: `MainLayout` used for everything and `MenuBar` reused for views:
+In the example below, `MainLayout` is used for everything, which `MenuBar` is reused for views:
 
 [source,java]
 ----
@@ -50,6 +87,7 @@ public class MainLayout extends Div
         implements RouterLayout {
 }
 
+@Layout
 @ParentLayout(MainLayout.class)
 public class MenuBar extends Div
         implements RouterLayout {
@@ -64,24 +102,23 @@ public class MenuBar extends Div
     }
 }
 
-@Route(value = "tutorial", layout = MenuBar.class)
+@Route(value = "tutorial")
 public class TutorialView extends Div {
 }
 
-@Route(value = "icons", layout = MenuBar.class)
+@Route(value = "icons")
 public class IconsView extends Div {
 }
 ----
 
-* `MainLayout` encapsulates `MenuBar`, which in turn encapsulates
-`TutorialView` or `IconsView`, depending on where the user has navigated to.
+`MainLayout` encapsulates `MenuBar`, which in turn encapsulates `TutorialView` or `IconsView` -- depending on where the user has navigated.
 
 
 == ParentLayout Route Control
 
 Annotating a parent layout with `@RoutePrefix("prefix_to_add")` adds a prefix to its children's route.
 
-*Example*: `PathComponent` receives the `some` prefix from its parent, resulting in `some/path` as its final route.
+In the example here, `PathComponent` receives the `some` prefix from its parent, resulting in `some/path` as its final route:
 
 [source,java]
 ----
@@ -100,9 +137,9 @@ public class SomeParent extends Div
 
 === Absolute Routes
 
-A child component can bypass the parent's route _prefix_ by adding `absolute = true` to its own `@Route` or `@RoutePrefix` annotations.
+A child component can bypass the parent's route prefix by adding `absolute = true` to its own `@Route` or `@RoutePrefix` annotations.
 
-*Example*: Building a [classname]`MyContent` class to add "something" to multiple places in the `SomeParent` layout, without adding the route prefix to the navigation path:
+This example builds a [classname]`MyContent` class to add "something" to multiple places in the `SomeParent` layout, without adding the route prefix to the navigation path:
 
 [source,java]
 ----
@@ -113,10 +150,9 @@ public class MyContent extends Div {
 }
 ----
 
-* Even though the full path would typically be `some/content`, the result is actually only `content`, because it has been defined as "absolute".
+Even though the full path would typically be `some/content`, the result is only `content`, because it has been defined as "absolute".
 
-
-*Example*: Defining `absolute = true` in the middle of the chain.
+The example here defines `absolute = true` in the middle of the chain:
 
 [source,java]
 ----
@@ -133,10 +169,8 @@ public class Tutorials extends Div {
 }
 ----
 
-* The bound route is `framework/tutorial`, even though the full chain is `some/framework/tutorial`.
+The bound route is `framework/tutorial`, although the full chain is `some/framework/tutorial`.
 
-* If a parent layout defines a `@RoutePrefix`, the "default" child could have its route defined as `@Route("")` and be mapped to the parent layout route.
-For example, `Tutorials` with route `""` would be mapped as `framework/`.
-
+If a parent layout defines a `@RoutePrefix`, the "default" child could have its route defined as `@Route("")` and be mapped to the parent layout route. For example, `Tutorials` with route `""` would be mapped as `framework/`.
 
 [discussion-id]`7A96749F-CD19-4422-A2A2-B4ACD719C9FA`
