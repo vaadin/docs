@@ -1,0 +1,374 @@
+---
+title: Domain Primitives
+description: Learn what domain primitives are and how to use them in your applications.
+order: 10
+---
+
+
+= Domain Primitives
+
+In programming, _primitive data types_ are the basis from which all other data types are constructed. In Java, the primitive types are the integer types: `byte`, `short`, `int`, `long`, and `char`; the floating-point number types `float` and `double`; and `boolean`. Java also provides several other data types that are useful when constructing other data types, such as `String`, `BigDecimal`, and all date-time ones.
+
+Primitive data types have constraints on what you can store in them. For example, an `int` can hold integers between -2147483648 and 2147483647. When used for attributes in a domain model, more constraints are imposed. Even though the "item quantity" attribute, for instance, in an order for a store's merchandise may be an integer, not all integers are valid quantities. It shouldn't be possible for a customer to order a negative number of items. There should also be an upper limit on how many items a user can order without having to contact sales.
+
+
+== Constraint Enforcement Problem
+  
+Traditionally, these domain constraints have been enforced in various ways. For example, a typical way to create a validator utility might look like this:
+
+[source,java]
+----
+public final class QuantityUtils {
+
+    public static final int MIN_QTY = 1;
+    public static final int MAX_QTY = 100;
+
+    public static boolean isValid(int quantity) {
+        return (quantity >= MIN_QTY) && (quantity <= MAX_QTY);
+    }
+
+    public static int validate(int quantity) {
+        if (!isValid(quantity)) {
+            throw new IllegalArgumentException("Invalid quantity");
+        }
+        return quantity;
+    }
+}
+----
+
+Next, you may have seen the validator used whenever a quantity is passed as a method or constructor argument, like this:
+
+[source,java]
+----
+public class OrderItem {
+
+    private int quantity;
+    ...
+
+    public OrderItem(int quantity) {
+        this.quantity = QuantityUtils.validate(quantity);
+    }
+}
+----
+
+You may have also seen Jakarta Bean Validation annotations like this:
+
+[source,java]
+----
+public class OrderItem {
+
+    @Min(QuantityUtils.MIN_QTY)
+    @Max(QuantityUtils.MAX_QTY)
+    private int quantity;
+    ...
+    
+    public OrderItem(int quantity) {
+        this.quantity = quantity;
+    }
+}
+----
+
+In this case, you have to remember to call the `Validator` at some point.
+
+Both of these examples work, but they have the same problem: the attributes don't carry any domain meaning by themselves. A string is no different whether it contains a person's first name, or it's an SQL query. An integer can contain the quantity of an item ordered, or the primary key of a database record.
+
+You have to validate the attribute values wherever you use them. If not, you might get unexpected errors during runtime. For instance, trying to store a 101-character string in a `VARCHAR` database column with a 100-character limit would throw an exception. Or worse, the database stores bad data (i.e., truncated data). 
+
+Data integrity problems could spread to other parts of the system and have unintended consequences. For example, if a customer is able to enter negative item quantities, they may be able to give themselves a hefty discount: they could add items they want, then enter negative quantities of other items until the net total is zero -- or less. Suppose further the system issues refunds when an order with a negative net cost is detected. A customer could be paid to order items.
+
+Strings are notorious for being used as attack vectors, because they can contain code. String input that hasn't been validated or escaped is the root cause of all injection attacks. Injection attacks are third on the https://owasp.org/www-project-top-ten/[OWASP Top Ten 2021] list of critical security risks to web applications.
+
+
+== Introducing Domain Primitives
+
+All data structures in the domain model have domain meaning. For example, a `Customer` class corresponds to an actual _customer_ in the real world. However, instead of only attaching domain meaning to the top-level types, you should also attach domain meaning to the individual _attributes_. For example, instead of using a string for the username, and an integer for the quantity, you should create a `Username` class and a `Quantity` class. Then, wherever you need a username or a quantity, you can use these _domain primitives_.footnote:[The concept of _domain primitives_ was introduced in https://www.manning.com/books/secure-by-design[Secure by Design] by Dan Bergh Johnsson, Daniel Deogun, and Daniel Sawano.]
+
+A domain primitive is a Java class that has some specific qualities. First, it's a _value object_, meaning that it is immutable. Also, two objects with the same value are considered interchangeable.
+
+Second, it wraps one or more objects of other types. For example, a `Quantity` domain primitive could wrap an integer, and a `Username` domain primitive could wrap a string. Domain primitives can wrap more than one object, and can also wrap other domain primitives. To represent a monetary amount, you need both the currency and the numeric amount. You may end up with a `CurrencyUnit` domain primitive, and also a `MonetaryAmount` domain primitive that wraps a `BigDecimal` and a `CurrencyUnit`.
+
+Third, a domain primitive validates all of its input data in the constructor. Because it's also immutable, this means that it's guaranteed to always be valid.
+// TODO Write an article about validation, and link to it from here.
+
+Here's how the quantity domain primitive from the example above could look:
+
+[source,java]
+----
+public final class Quantity {
+    public static final int MIN_QTY = 1;
+    public static final int MAX_QTY = 100;
+
+    private final int value; // <1>
+
+    public Quantity(int value) {
+        if (value < MIN_QTY || value > MAX_QTY) { // <2>
+            throw new IllegalArgumentException("Invalid quantity");
+        }
+        this.value = value;
+    }
+
+    public int value() { // <3>
+        return value;
+    }
+
+    @Override
+    public String toString() { // <4>
+        return Integer.toString(value);
+    }
+
+    @Override
+    public boolean equals(Object o) { // <5>
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Quantity that = (Quantity) o;
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
+    }
+}
+----
+<1> Because `Quantity` is immutable, make the variable storing the wrapped integer `final`.
+<2> Validate the wrapped integer in the constructor.
+<3> Make the wrapped integer available through an accessor.
+<4> To make debug logging easier, override `toString()`.
+<5> Because `Quantity` is a value object, override `equals()` and `hashCode()`.
+
+With the new domain primitive in place, the `OrderItem` class becomes this:
+
+[source,java]
+----
+public class OrderItem {
+
+    private Quantity quantity;
+    ...
+
+    public OrderItem(Quantity quantity) {
+        this.quantity = quantity;
+    }
+}
+----
+
+
+== Avoiding Mix-Ups
+
+Domain primitives offer another benefit. They reduce the risk of mixing attributes that have different domain meaning, but are represented by the same primitive data type. For example, a trivial `StreetAddress` object may look like this:
+
+[source,java]
+----
+public record StreetAddress(
+    String number, 
+    String name
+) {}
+----
+
+When creating a new instance of this object, a U.S. developer may write `new StreetAddress("123-4", "Main Street")`. However, a European developer may write `new StreetAddress("Main Street", "123-4")`. Both are valid Java code, but the latter is semantically wrong. The bug is difficult to spot in a code review because it looks correct.
+
+With domain primitives, the `StreetAddress` object now looks like this:
+
+[source,java]
+----
+public record StreetAddress(
+    StreetNumber number, 
+    StreetName streetName
+) {}
+----
+
+When creating a new instance of this object, a developer now has to write `new StreetAddress(StreetNumber.of("123-4"), StreetName.of("Main Street"))`. It's a bit more verbose, but with this the compiler would complain if you tried to swap the parameters.
+
+
+== Behavior
+
+Domain primitives are not only about containing and validating data. They can also contain behavior, such as calculation methods, transformation methods, or even business logic. This is because the constraints that control which values are valid also constrain what operations you can perform on them. 
+
+For example, you can't divide or multiply two amounts of money. You can add and subtract amounts of money, but only if they have the same currency. You can make these constraints explicit by declaring `add` and `subtract` methods on the `MonetaryAmount` domain primitive, like this:
+
+[source,java]
+----
+public final class MonetaryAmount {
+    private final CurrencyUnit currency;
+    private final BigDecimal value;
+    ...
+
+    public MonetaryAmount add(MonetaryAmount amount) {
+        requireSameCurrency(amount);
+        return new MonetaryAmount(currency, value.add(amount.value));
+    }
+
+    public MonetaryAmount subtract(MonetaryAmount amount) {
+        requireSameCurrency(amount);
+        return new MonetaryAmount(currency, value.subtract(amount.value));
+    }
+
+    private void requireSameCurrency(MonetaryAmount amount) {
+        if (!currency.equals(amount.currency)) {
+            throw new IllegalArgumentException("Must have same currency");
+        }
+    }
+}
+----
+
+Multiplication and division are still possible, but only in certain business cases. For example, if you need to apply a discount, you can create a `Discount` domain primitive like this:
+
+[source,java]
+----
+public final class Discount {
+    private final BigDecimal discountFactor; // = 1 - discount percentage
+    ...
+
+    public MonetaryAmount applyTo(MonetaryAmount regularPrice) {
+        return new MonetaryAmount(currency, 
+            discountFactor.multiply(regularPrice.value()));
+    }
+}
+----
+
+Whenever you fetch the wrapped value from a domain primitive, you should ask why you need that value. Unless you need it for displaying or formatting, you should probably instead add a new method to the domain primitive.
+
+
+== Usage in Flow
+
+To use a single-value domain primitive in a Vaadin Flow user interface, you have to create a custom `Converter` for it. Because conversion errors are treated as validation errors by the `Binder`, there's no need to create a separate `Validator` to validate the input. For example, the converter of an `EmailAddress` domain primitive could look like this:
+
+[source,java]
+----
+public class EmailAddressConverter implements Converter<String, EmailAddress> {
+
+    public static final EmailAddressConverter INSTANCE = new EmailAddressConverter();
+
+    @Override
+    public Result<EmailAddress> convertToModel(String value, ValueContext context) {
+        if (value == null) {
+            return Result.ok(null);
+        }
+        try {
+            return Result.ok(new EmailAddress(value));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public String convertToPresentation(EmailAddress email, ValueContext context) {
+        return email == null ? null : email.toString();
+    }
+}
+----
+
+You can then use the converter with `Binder` like this:
+
+[source,java]
+----
+var emailField = new EmailField();
+...
+binder.forField(emailField)
+    .withConverter(EmailAddressConverter.INSTANCE)
+    .bind(MyBean::getEmail, MyBean::setEmail);
+----
+
+For more information about converters, see <<{articles}/flow/binding-data/components-binder-validation#,Validating & Converting User Input>>.
+
+To use a multi-value domain primitive, you have two options. If you can fix all but one of the values, you can also use a `Converter` here. For example, if the currency is fixed, the converter of a `MonetaryAmount` domain primitive could look like this:
+
+[source,java]
+----
+public class MonetaryAmountConverter implements Converter<BigDecimal, MonetaryAmount> {
+
+    private final CurrencyUnit currency;
+
+    public MonetaryAmountConverter(CurrencyUnit currency) {
+        this.currency = currency;
+    }
+
+    @Override
+    public Result<MonetaryAmount> convertToModel(BigDecimal value, 
+            ValueContext valueContext) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Result.ok(new MonetaryAmount(currency, value));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public BigDecimal convertToPresentation(MonetaryAmount monetaryAmount, 
+            ValueContext valueContext) {
+        return monetaryAmount == null ? null : monetaryAmount.amount();
+    }
+}
+----
+
+However, if you need to be able to edit both the currency and the numeric amount, you have to create a `CustomField`. It could look like this:
+
+[source,java]
+----
+public class MonetaryAmountField extends CustomField<MonetaryAmount> {
+
+    private final Select<CurrencyUnit> currencyField;
+    private final BigDecimalField amountField;
+
+    public MonetaryAmountField(List<CurrencyUnit> currencyUnits) {
+        currencyField = new Select<>();
+        currencyField.setItems(currencyUnits);
+        amountField = new BigDecimalField();
+        add(currencyField, amountField);
+    }
+    
+    @Override
+    protected MonetaryAmount generateModelValue() {
+        var currency = currencyField.getValue();
+        var amount = amountField.getValue();
+        if (currency == null || amount == null) {
+            return null;
+        } else {
+            return new MonetaryAmount(currency, amount);
+        }
+    }
+
+    @Override
+    protected void setPresentationValue(MonetaryAmount monetaryAmount) {
+        if (monetaryAmount == null) {
+            currencyField.clear();
+            amountField.clear();
+        } else {
+            currencyField.setValue(monetaryAmount.currency());
+            amountField.setValue(monetaryAmount.amount());
+        }
+    }
+}
+----
+
+For more information about creating custom fields, see <<{articles}/components/custom-field#,Custom Field>>.
+
+
+== Usage in Hilla
+
+To use domain primitives in Hilla, you have to make sure that they can be serialized to and from JSON using https://github.com/FasterXML/jackson-databind[Jackson]. For single-value domain primitives, this involves adding `@JsonValue` and `@JsonCreator` annotations, like this:
+
+[source,java]
+----
+public final class Quantity {
+    ...
+
+    @JsonCreate
+    public Quantity(int value) {
+        ...
+    }
+
+    @JsonValue
+    public int value() {
+        ...
+    }
+}
+----
+
+If you now use the `Quantity` domain primitive in a <<{articles}/hilla/guides/endpoints#,Hilla endpoint>>, it's treated as a `number` in TypeScript. No `Quantity` type is created in TypeScript.
+
+Multi-value domain primitives are converted into their own TypeScript types, as long as they meet the requirements of <<{articles}/hilla/guides/endpoints#objects,Hilla endpoint objects>>.
+
+The input is validated on the server side by the domain primitive constructors, during JSON deserialization. However, an `IllegalArgumentException` thrown here becomes a `400 Bad Request` on the client side. Hilla is able to deduce that this is a validation error, but not from which field. Your system remains safe from bad data, but the user experience is bad. To improve it, you have to <<{articles}/hilla/guides/forms/binder-validation#defining-custom-client-side-validators,define custom client-side validators>> on your fields.
