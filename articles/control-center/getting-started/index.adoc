@@ -7,16 +7,14 @@ order: 10
 
 = Getting Started
 
-Control Center simplifies the management of Vaadin applications on Kubernetes clusters. This guide walks you through deploying Control Center and getting it up and running smoothly.
+Control Center simplifies the management of Vaadin applications on Kubernetes clusters. This page explains how deploy Control Center and getting it running smoothly.
 
 
 == Prerequisites
 
-Before you begin, ensure you have the following:
+Before you begin, make sure you have a Kubernetes cluster. This can be a cloud-based service like https://cloud.google.com/kubernetes-engine[Google Kubernetes Engine (GKE)], https://aws.amazon.com/eks[Amazon EKS], or https://azure.microsoft.com/en-us/products/kubernetes-service[Azure AKS]. Alternatively, use a local cluster with tools like https://www.docker.com/products/docker-desktop[Docker Desktop] or https://minikube.sigs.k8s.io/[minikube], depending on your project needs.
 
-* **A Kubernetes Cluster**: This can be a cloud-based service like https://cloud.google.com/kubernetes-engine[Google Kubernetes Engine (GKE)], https://aws.amazon.com/eks[Amazon EKS], or https://azure.microsoft.com/en-us/products/kubernetes-service[Azure AKS]. Alternatively, use a local cluster with tools like https://www.docker.com/products/docker-desktop[Docker Desktop] or https://minikube.sigs.k8s.io/[minikube], depending on your project needs.
-
-* **Helm Package Manager**: Install https://helm.sh/[Helm], a Kubernetes package manager that simplifies application deployment and management. Ensure it's configured to interact with your cluster.
+Also, you'll need to install https://helm.sh/[Helm Package Manager]. It's a Kubernetes package manager that simplifies application deployment and management. Ensure it's configured to interact with your cluster.
 
 
 == Deploying Control Center
@@ -25,40 +23,27 @@ To deploy Control Center to your Kubernetes cluster, run the following Helm comm
 
 [source,bash]
 ----
-helm install control-center oci://docker.io/vaadin/control-center \
-    -n control-center --create-namespace \
-    --set serviceAccount.clusterAdmin=true \
-    --set service.type=LoadBalancer --set service.port=8000 \
-    --wait
+helm install control-center oci://docker.io/vaadin/control-center \  // <1>
+    -n control-center --create-namespace \  // <2>
+    --set serviceAccount.clusterAdmin=true \  // <3>
+    --set service.type=LoadBalancer --set service.port=8000 \  // <4>
+    --wait  // <5>
 ----
 
-This command performs several actions:
+<1> This installs Control Center.
+<2> This creates a dedicated namespace to isolate Control Center from other applications.
+<3> Grants administrative privileges that allow Control Center to manage cluster resources.
+<4> Configures service settings for a load balancer on port `8000`. Change the port if necessary for your environment.
+<5> This says for Helm to wait until Control Center is fully deployed.
 
-* **Installs Control Center**: `helm install control-center oci://docker.io/vaadin/control-center`
-* **Creates a Dedicated Namespace**: `-n control-center --create-namespace` isolates Control Center from other applications.
-* **Grants Administrative Privileges**: `--set serviceAccount.clusterAdmin=true` allows Control Center to manage cluster resources automatically.
-* **Configures Service Settings**: `--set service.type=LoadBalancer --set service.port=8000` sets up a load balancer on port `8000`. Adjust the port as needed for your environment.
-* **Waits for Deployment Completion**: `--wait` ensures Helm waits until Control Center is fully deployed.
-
-[NOTE]
-====
 Granting administrative privileges (`--set serviceAccount.clusterAdmin=true`) enables automatic installation of required dependencies. If you choose not to grant these privileges, you'll need to install necessary resources manually.
-====
 
 
 == Accessing Control Center
 
-Once deployed, access Control Center through your web browser.
+Once deployed, access Control Center through your web browser. For a local cluster, navigate to `http://localhost:8000`. For a cloud clusters, use the external IP or domain assigned by your cloud provider.
 
-* **Local Clusters**: Navigate to `http://localhost:8000`.
-* **Cloud Clusters**: Use the external IP or domain assigned by your cloud provider.
-
-You'll see the **Startup Configuration Wizard**, which guides you through the initial setup.
-
-
-== Startup Configuration Wizard
-
-The wizard helps you configure authentication and essential settings using https://openid.net/connect/[OpenID Connect].
+You'll see the *Startup Configuration Wizard*. It'll help you configure authentication and essential settings using https://openid.net/connect/[OpenID Connect].
 
 
 === Retrieve Passkey
@@ -70,100 +55,70 @@ The wizard requires a passkey to proceed. Run the following command to retrieve 
 kubectl -n control-center get secret control-center-passkey -o jsonpath='{.data.passkey}' | base64 --decode
 ----
 
-[NOTE]
-====
 On Windows, you might need to remove `| base64 --decode` and use a separate tool to decode the base64 output.
-====
 
 image::images/welcome-step.png[Welcome Step]
 
 
 === Configure Keycloak Hostname
 
-In this step, you'll configure the hostname for Keycloak, the identity provider used by Control Center.
+Keycloak is the identity provider used by Control Center. You'll therefore need to configure the hostname for it.
 
-[IMPORTANT]
-====
-Keycloak needs a hostname that is accessible both from within the Kubernetes cluster and from your web browser running outside the cluster. This hostname allows your applications and users to securely authenticate via Keycloak.
-====
+Keycloak needs a hostname that is accessible both from within the Kubernetes cluster and from your web browser running outside the cluster. This hostname allows your applications and users to securely authenticate via Keycloak. 
 
-**Why Is This Necessary?**
+This is necessary for secure authetnication and for browser accessibility. Applications in the cluster need to access Keycloak to authenticate users securely. At the same time, since authentication often involves redirects to Keycloak's login page, your browser must be able to reach Keycloak using a resolvable hostname.
 
-* **Secure Authentication**: Applications in the cluster need to access Keycloak to authenticate users securely.
-* **Browser Accessibility**: Since authentication often involves redirects to Keycloak's login page, your browser must be able to reach Keycloak using a resolvable hostname.
-
-**Requirements:**
-
-* The hostname must resolve to an IP address reachable by both the cluster and external clients (like your browser).
-* Proper DNS configuration ensures secure and reliable communication.
+Therefore, the hostname must resolve to an IP address reachable by both the cluster and external clients (e.g., your browser). Proper DNS configuration ensures secure and reliable communication.
 
 
 ==== Cloud Environments
 
-In cloud deployments:
+In cloud deployments, first create a DNS Record. Point it to your cluster's public IP address provided by your cloud provider. For example, if your domain is `mydomain.com`, you might create `keycloak.mydomain.com` pointing to the cluster's external IP.
 
-* **Create a DNS Record**: Set up a DNS record pointing to your cluster's public IP address provided by your cloud provider.
-* **Example**: If your domain is `mydomain.com`, you might create `keycloak.mydomain.com` pointing to the cluster's external IP.
+You can find the external IP address in your cloud provider's dashboard. Make sure that your network security settings allow traffic to this IP on the necessary ports.
 
-[NOTE]
-====
-You can find the external IP address in your cloud provider's dashboard. Ensure that your network security settings allow traffic to this IP on the necessary ports.
-====
 
 ==== Local Development & Testing
 
-For local clusters:
+For local clusters, modify the `hosts` file. Add an entry to your operating system's `hosts` file to map the hostname to your local machine's IP address. Which file will depend on your operating system (see below).
 
-* **Modify Hosts File**: Add an entry to your operating system's hosts file to map the hostname to your local machine's IP address.
+===== Linux & MacOS
 
-**On Unix-based systems (Linux, macOS):**
-
-1. Open the hosts file with administrative privileges:
+When using a Unix based system like Linux or MacOS, you'll need to open the `hosts` file with administrative privileges like so:
 
    [source,bash]
    ----
    sudo nano /etc/hosts
    ----
 
-2. Add the following line at the end of the file:
+There you'll have to add the following line at the end of the file:
 
    [source,plain]
    ----
    127.0.0.1   keycloak.local
    ----
 
-**On Windows systems:**
+====  Windows
 
-1. Open Notepad as an administrator.
-2. Open the hosts file located at:
+If you're using a Windows system, you'll instead need to start Notepad as an administrator. Open with it the `hosts` file located at `C:\Windows\System32\drivers\etc\hosts`. Be careful when modifying system files, while logged in as administrator, to avoid unintended issues.
 
-   `C:\Windows\System32\drivers\etc\hosts`
-
-3. Add the following line at the end of the file:
+Add the following line to the end of that file:
 
    [source,plain]
    ----
    127.0.0.1   keycloak.local
    ----
-
-[CAUTION]
-====
-Editing the hosts file requires administrative rights. Be careful when modifying system files to avoid unintended issues.
-====
 
 By adding this entry, `keycloak.local` resolves to `127.0.0.1`, allowing your browser and applications to access Keycloak running on your local machine.
 
-[TIP]
-====
-Consistently use the same hostname (`keycloak.local` in this example) throughout your development environment to prevent configuration mismatches.
-====
+Consistently use the same hostname (i.e., `keycloak.local` in this example) throughout your development environment to prevent configuration mismatches.
 
 image::images/hostname-step.png[Configure Hostnames]
 
 
 === Create Administrator Account
 
-Provide a name, email address, and password to set up an administrator account with full access to Control Center's features.
+Next you'll need to create an administrator account with full access to Control Center's features. Provide a name, email address, and password for the account.
 
 image::images/user-step.png[Configure Administrator Account]
 
@@ -177,17 +132,11 @@ image::images/install-step.png[Finalizing Setup]
 
 === Log into Control Center
 
-After the installation completes, click the **Go to Dashboard** button. You'll be redirected to the Keycloak login page.
+After the installation is completed, click the [guibutton]*Go to Dashboard* button. You'll be redirected to the Keycloak login page.
 
 image::images/login-view.png[Login to Control Center]
 
-* **Enter Your Credentials**: Use the administrator account credentials you created earlier.
-* **Authenticate**: Click **Sign In** to access Control Center.
-
-[NOTE]
-====
-If you encounter any login issues, ensure that cookies and JavaScript are enabled in your browser.
-====
+Once there, enter the administrator account credentials you created. Then click [guibutton]*Sign In* to access Control Center. If you encounter any login issues, check that cookies and JavaScript are enabled in your browser.
 
 
 === Accessing Dashboard
@@ -196,16 +145,7 @@ Upon successful authentication, you'll be taken to the Control Center dashboard.
 
 image::images/dashboard-view.png[Control Center Dashboard]
 
-At this point, the dashboard notifies you that no applications are available.
-
-[IMPORTANT]
-====
-Since no applications are deployed yet, the dashboard indicates that there are no applications to manage.
-====
+At this point, the dashboard should notify you that no applications are available.
+This is because no applications are deployed yet.
 
 To start deploying your Vaadin applications and take full advantage of Control Center's features, proceed to <<../application-deployment#,Application Deployment>>.
-
-
-== Conclusion
-
-You have successfully set up Control Center on your Kubernetes cluster. You're now ready to deploy, manage, and monitor your Vaadin applications efficiently.
