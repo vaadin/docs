@@ -1,44 +1,46 @@
 ---
-title: Development Mode
+title: Local Development with Telepresence
 description: Running an Application in Development Mode with Control Center.
 order: 20
 ---
 
-Control Center is designed to run applications in a production environment, providing access to all necessary cluster resources such as databases and identity providers. However, testing new code often requires access to these resources, which can be challenging to replicate locally. To streamline the development process, you can use https://www.telepresence.io/[Telepresence], an open-source tool that allows you to run your application in development mode on your local machine while seamlessly accessing cluster resources.
+= Local Development with Telepresence
+
+Control Center is designed to run applications in a production environment, providing access to all necessary cluster resources such as databases and identity providers. However, testing new code often requires access to these resources. This can be challenging to replicate locally. 
+
+To streamline the development process, you can use https://www.telepresence.io/[Telepresence], an open-source tool for running an application in development mode on a local machine, while seamlessly accessing cluster resources.
 
 This guide explains how to set up Telepresence to intercept traffic from your cluster and forward it to your local development environment. By doing so, you can use development tools like debuggers, Spring DevTools, JRebel, and Vaadin Copilot while your application interacts with real cluster resources.
 
 
-== How Telepresence Works
+== Understanding Telepresence
 
-Telepresence creates a bidirectional network proxy between your local machine and the Kubernetes cluster. It intercepts traffic intended for your application's pod and redirects it to your local development environment. This setup allows you to:
+Telepresence creates a bidirectional network proxy between your local machine and the Kubernetes cluster. It intercepts traffic intended for your application's pod and redirects it to your local development environment. 
 
-- Run your application locally while it communicates with other services in the cluster as if it were running inside the cluster.
-- Use local development tools to debug and hot-reload your application.
-- Avoid the overhead of building and deploying your application to the cluster after every change.
+This use of Telepresence allows you to run your application locally, while it communicates with other services in the cluster as if it were running inside the cluster. It also lets you use local development tools to debug and hot-reload your application -- while avoiding the overhead of building and deploying your application to the cluster after every change.
 
 [WARNING]
 ====
-Using Telepresence modifies the network behavior of your cluster by replacing your application's deployment with a proxy. This can affect other users and services in the cluster. Therefore, it is recommended to use Telepresence with a local or development cluster rather than a production cluster.
+Using Telepresence modifies the network behavior of your cluster by replacing your application's deployment with a proxy. This can affect other users and services in the cluster. Therefore, use Telepresence with a local or development cluster, not with a production cluster.
 ====
 
 
 == Prerequisites
 
-There are a few requirements running an application in development mode with control center. The first and most obvious requirement is that Control Center is running. Your application needs to be deployed as a production build in the cluster. 
+There are a few requirements to run an application in development mode with control center. The first and most obvious requirement is that Control Center should be running. Also, your application needs to be deployed as a production build in the cluster. 
 
 Make sure you have access to the cluster where Control Center is running. Finally, a local development environment should set up for your application.
 
 
-== Setting Up a Local Cluster
+== Local Cluster
 
-For development purposes, it's advisable to use a local Kubernetes cluster to prevent any unintended side effects on a production environment. You can set up a local cluster using tools like:
+For development purposes, it's advisable to use a local Kubernetes cluster to prevent any unintended side effects on a production environment. You can set up a local cluster using tools like these:
 
 - https://kind.sigs.k8s.io/[Kind] (Kubernetes IN Docker)
 - https://minikube.sigs.k8s.io/docs/[Minikube]
 - https://docs.docker.com/desktop/kubernetes/[Docker Desktop's Kubernetes]
 
-These tools allow you to run a Kubernetes cluster locally on your machine, providing a safe environment for testing and development.
+These tools allow you to run a Kubernetes cluster on your local machine, providing a safe environment for testing and development.
 
 
 == Installing Telepresence
@@ -50,29 +52,26 @@ Telepresence needs to be installed both locally and in your cluster. The next se
 
 Follow the https://www.telepresence.io/docs/latest/install/client[official Telepresence installation guide] to install Telepresence on your development machine.
 
-[IMPORTANT]
-====
-On macOS versions starting from macOS Catalina (10.15) and above, additional configuration might be required due to increased security restrictions. Refer to the https://www.telepresence.io/docs/latest/troubleshooting/#macos[Telepresence macOS troubleshooting guide] for detailed instructions.
-====
+On macOS, starting with version 10.15 (i.e., Catalina), additional configuration might be required due to increased security restrictions. Refer to the https://www.telepresence.io/docs/latest/troubleshooting/#macos[Telepresence macOS troubleshooting guide] for detailed instructions.
 
 
 === Install in the Cluster
 
-Install the Telepresence Traffic Manager in your cluster using Helm:
+Install the Telepresence Traffic Manager in your cluster using Helm like this:
 
 [source,bash]
 ----
 telepresence helm install
 ----
 
-For detailed installation options, refer to the https://www.telepresence.io/docs/latest/install/manager[Telepresence Traffic Manager documentation].
+For detailed installation options, refer to the https://www.telepresence.io/docs/latest/install/manager[Telepresence Traffic Manager] documentation.
 
 
 == Preparing Application
 
 To ensure your application can access cluster resources while running locally, update your application's configuration.
 
-Create or modify the `application.yaml` file in `src/main/resources/` with the following content:
+Create or modify the [filename]`application.yaml` file in `src/main/resources/` with the following content:
 
 [source,yaml,subs="+quotes,verbatim"]
 ----
@@ -89,10 +88,7 @@ spring:
 
 Replace `'my-vaadin-app'` with the actual name of your application and `'control-center'` with the namespace where Control Center is deployed.
 
-[NOTE]
-====
 The `spring.cloud.kubernetes.client.namespace` property specifies the namespace for Kubernetes client interactions. Setting `spring.main.cloud-platform` to `'KUBERNETES'` enables Kubernetes-specific features in Spring.
-====
 
 
 == Intercepting Traffic
@@ -116,12 +112,12 @@ Telepresence replaces your application's deployment in the cluster with a proxy 
 
 == Using Development Tools
 
-With Telepresence set up, you can now run your application from your IDE and leverage development tools such as debuggers, Spring DevTools, JRebel, and Vaadin Copilot. This setup allows for rapid development and testing against real cluster resources without the overhead of deploying to the cluster after every change.
+With Telepresence installed and configured, you can now run your application from your IDE and leverage development tools such as debuggers, Spring DevTools, JRebel, and Vaadin Copilot. This setup allows for rapid development and testing against real cluster resources without the overhead of deploying to the cluster after every change.
 
 
 == Cleaning Up
 
-After you have finished testing, it's important to restore the cluster to its original state. Always clean Telepresence sessions to avoid unintended traffic redirection and to restore your application's deployment in the cluster.
+After you've finished testing, it's important to restore the cluster to its original state. Always clean Telepresence sessions to avoid unintended traffic redirection and to restore your application's deployment in the cluster.
 
 First, leave the interception, which stops redirecting traffic:
 
@@ -140,11 +136,11 @@ telepresence quit
 
 == Troubleshooting & More Resources
 
-Using Telepresence in a production cluster can disrupt services if not managed carefully. It's recommended to use a dedicated development or staging cluster to avoid impacting production workloads.
+Using Telepresence in a production cluster can disrupt services if not managed carefully. Use a dedicated development or staging cluster to avoid impacting production workloads.
 
-If you encounter issues while setting up or running Telepresence, refer to the https://www.telepresence.io/docs/latest/troubleshooting/[Telepresence Troubleshooting Guide] for solutions to common problems.
+If you encounter issues with Telepresence, refer to the https://www.telepresence.io/docs/latest/troubleshooting/[Telepresence Troubleshooting Guide] for solutions to common problems.
 
-For macOS users, especially on the latest versions, additional network and security configurations may be necessary. See the https://www.telepresence.io/docs/latest/troubleshooting/#macos[macOS-specific troubleshooting section] for guidance.
+For macOS users, especially for the latest versions, additional network and security configurations may be necessary. See the https://www.telepresence.io/docs/latest/troubleshooting/#macos[macOS-specific troubleshooting section] for guidance.
 
 Below is a list of additional resources you may find helpful:
 
