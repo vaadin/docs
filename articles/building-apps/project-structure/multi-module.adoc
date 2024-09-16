@@ -9,7 +9,10 @@ include::{articles}/_vaadin-version.adoc[]
 
 = Multi-Module Projects
 
-A multi-module project consists of multiple directories, each with its own POM file and source directory. During the build, Maven packages each module into a JAR file or a WAR file. The modules can depend on each other; Maven builds them in the correct order. 
+A multi-module project consists of multiple directories, each with its own POM file and source directory. The modules can depend on each other; Maven builds them in the correct order. 
+
+[IMPORTANT]
+Even though the project consists of many modules, it is still a single application and is packaged into a single JAR file or WAR file.
 
 Multi-module projects are more complex than <<single-module#,single-module projects>>, but offer a stricter separation of concerns in return. This makes them useful for large codebases, and projects with large teams. By splitting the code into smaller modules and controlling the dependencies among them, you reduce the risk of code misuse. Instead of relying on developer discipline alone, the compiler complains if you try to use a class in the wrong place.
 
@@ -44,7 +47,7 @@ The next steps are similar to the ones needed in single-module projects. Import 
 <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.3.3</version> // <1>
+    <version>3.3.3</version> <!--1-->
     <relativePath/>
 </parent>
 ----
@@ -55,8 +58,8 @@ Declare all other dependency versions as project properties, like so:
 [source,xml,subs="+attributes"]
 ----
 <properties>
-    <java.version>21</java.version> // <1>
-    <vaadin.version>{vaadin-version}</vaadin.version> // <2>
+    <java.version>21</java.version> <!--1-->
+    <vaadin.version>{vaadin-version}</vaadin.version> <!--2-->
 </properties>
 ----
 <1> This property is used by `spring-boot-starter-parent` to configure the Java compiler plugin.
@@ -242,11 +245,11 @@ The `entities` module only depends on `utils`, and any external dependencies it 
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>  // <1>
+            <groupId>${project.groupId}</groupId>  <!--1-->
             <artifactId>utils</artifactId>
-            <version>${project.version}</version>  // <2>
+            <version>${project.version}</version>  <!--2-->
         </dependency>
-        ...  // <3>
+        ...  <!--3-->
     </dependencies>
 </project>
 ----
@@ -254,7 +257,7 @@ The `entities` module only depends on `utils`, and any external dependencies it 
 <2> Instead of writing `1.0-SNAPSHOT`, you can use the Maven built-in property `project.version`.
 <3> This is where you would add dependencies to Spring Data, Hibernate, JPA, JOOQ, the JDBC driver and so on.
 
-The `services` module depends on `entities` and `utils`. Because `entities` already depends on `utils`, `services` gets it as a _transitive dependency_ by only depending on `entities`. The complete POM file looks like this:
+The `services` module depends on `entities` and `utils`. Because `entities` already depends on `utils`, `services` gets it as a _transitive dependency_ by only depending on `entities`. However, for clarity, it is recommended to include the `utils` dependency anyway. The complete POM file looks like this:
 
 .Services pom.xml
 [source,xml]
@@ -278,6 +281,11 @@ The `services` module depends on `entities` and `utils`. Because `entities` alre
             <artifactId>entities</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>    
     </dependencies>
 </project>
 ----
@@ -302,7 +310,7 @@ The `utils` module doesn't have any dependencies at the beginning. Its POM file 
 </project>
 ----
 
-The `views` module depends on Vaadin, the `services` module and the `utils` module. This means that both the `entities` and the `utils` modules are included as transitive dependencies. In addition, the `views` module includes the Vaadin Maven plugin. The complete POM file looks like this:
+The `views` module depends on Vaadin, the `services` module and the `utils` module. In addition, the `views` module includes the Vaadin Maven plugin. The complete POM file looks like this:
 
 .Views pom.xml
 [source,xml]
@@ -328,6 +336,11 @@ The `views` module depends on Vaadin, the `services` module and the `utils` modu
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>services</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>utils</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -527,7 +540,7 @@ Sometimes you might not want the presentation layer to interact directly with th
 [link=images/services-api.png]
 image::images/services-api.png[Diagram of Four Maven Modules]
 
-Put the service interfaces and DTOs in the `services-api` module, and add it as a dependency to the `views` module. The `services-api` module shouldn't depend on the `entities` module. Otherwise, the `entities` become a transitive dependency of `views` -- something to avoid in this case.
+Put the service interfaces and DTOs in the `services-api` module, and add it as a dependency to the `views` module. The `services-api` module shouldn't depend on the `entities` module. Otherwise, the `entities` module becomes a transitive dependency of `views` -- something to avoid in this case.
 
 Next, put the classes that implement the service interfaces in the `service-impl` module. Annotate these classes with `@Service`, or declare them as Spring beans in some other way. This module should depend on both the `service-api` and the `entities` module.
 
@@ -543,7 +556,7 @@ Sometimes you want to be able to plug in different implementations of a Service 
 [link=images/spi.png]
 image::images/spi.png[Diagram of one SPI module and two implementation modules]
 
-Each module that implements the SPI should have a dependency on the SPI module. All of the modules that use the SPI should also have a dependency on it. The main difference is in the Java code: the client modules call the SPI, whereas the implementation modules implements the SPI. Annotate the implementation classes with `@Service`, or declare them as Spring beans in some other way.
+Each module that implements the SPI should have a dependency on the SPI module. All of the modules that use the SPI should also have a dependency on it. The main difference is in the Java code: the client modules call the SPI, whereas the implementation modules implement the SPI. Annotate the implementation classes with `@Service`, or declare them as Spring beans in some other way.
 
 Even though you have multiple implementations of the same SPI, you can use only one of them at a time while the application is running. An alternative is to add a Maven profile for each implementation to your application module. Each profile would then include a dependency on the corresponding implementation module, like this:
 
