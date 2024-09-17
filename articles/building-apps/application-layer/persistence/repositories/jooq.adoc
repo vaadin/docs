@@ -1,9 +1,162 @@
 ---
 title: jOOQ Repositories
-description: TODO
+description: How to implement repositories with jOOQ.
 order: 30
 ---
 
+// TODO Define the jOOQ version as a variable and use it in links.
+
 = jOOQ Repositories
 
-ToDo
+https://www.jooq.org/[jOOQ] is a framework that allows you to write SQL queries in Java. It analyzes your database, and generates Java code that you use to build type safe SQL queries using a fluent API. This gives you a lot of degrees of freedom, but also requires more work and more skills.
+
+[NOTE]
+This page describes how to build repositories with jOOQ in Vaadin applications. It assumes you have read the <<index#,Repositories>> documentation page. It also assumes you are already familiar with jOOQ. If you have not used it before, you should at least go through the https://www.jooq.org/learn/[jOOQ tutorial] before continuing.
+
+When you build repositories with jOOQ, you need to know what you want. You need to know what kind of repository you want, what kind of entities you want, and how you want to map these entities to database tables. You have to implement more from scratch, compared to JPA and Spring Data.
+
+You'll be trading development time and effort for more control and flexibility. If you are not comfortable with this, you should consider building your repositories with <<jpa#,JPA>> instead. You can also combine JPA and jOOQ so that you use JPA for your repositories, and jOOQ for your query objects. This combination has been successful in real-world Vaadin applications.
+
+
+== Project Setup
+
+jOOQ is a database-first technology. This means that the database must already exist before you can run the jOOQ code generator. Because of this, you have to use <<../flyway#,Flyway migrations>> from the start.
+
+Once you have configured your project to use Flyway, the next step is to set up the jOOQ code generator. jOOQ has a Maven plugin for this, but it requires JDBC access to your database. You'll instead use a Maven plugin from https://java.testcontainers.org/[Testcontainers]. It uses Docker to start a new database, runs your Flyway migrations, and then runs the jOOQ code generator.
+
+First, you declare the version of the plugin in your POM-file, like this:
+
+[source,xml]
+----
+<properties>
+    ...
+    <testcontainers-jooq-codegen-maven-plugin.version>0.0.4</testcontainers-jooq-codegen-maven-plugin.version> <!--1-->
+</properties>
+----
+<1> You can check for the latest version on the https://mvnrepository.com/artifact/org.testcontainers/testcontainers-jooq-codegen-maven-plugin[MVN Repository].
+
+Next, you configure the plugin itself, like this:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>testcontainers-jooq-codegen-maven-plugin</artifactId>
+    <version>${testcontainers-jooq-codegen-maven-plugin.version}</version>
+    <dependencies> <!--1-->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${testcontainers.version}</version> <!--2-->
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.version}</version> <!--3-->
+        </dependency>
+    </dependencies>
+    <executions>
+        <execution>
+            <id>generate-jooq-sources</id>
+            <goals>
+                <goal>generate</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+                <database> <!--4-->
+                    <type>POSTGRES</type>
+                    <containerImage>postgres:16-alpine</containerImage>
+                </database>
+                <flyway> <!--5-->
+                    <locations> 
+                        filesystem:${pom.basedir}/src/main/resources/db/migration
+                    </locations>
+                </flyway>
+                <jooq> <!--6-->
+                    <generator>
+                        <database> 
+                            <includes>.*</includes>
+                            <excludes>flyway_schema_history</excludes> <!--7-->
+                            <inputSchema>public</inputSchema>
+                        </database>
+                        <target>
+                            <packageName>com.example.application.jooq</packageName> <!--8-->
+                            <directory>target/generated-sources/jooq</directory>
+                        </target>
+                    </generator>
+                </jooq>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+<1> This example uses a PostgreSQL database. See the https://java.testcontainers.org/modules/databases/[Testcontainers documentation] for a list of other supported databases.
+<2> The `testcontainers.version` property is inherited from the Spring Boot starter parent.
+<3> The `postgresql.version` property is inherited from the Spring Boot starter parent.
+<4> Here, you configure which database Docker image to use. This example uses https://hub.docker.com/_/postgres[`postgres:16-alpine`].
+<5> Here, you configure how the plugin should use Flyway.
+<6> Here, you configure how the plugin should run the jOOQ code generator.
+<7> You don't need to generate Java classes for the Flyway table.
+<8> This is the package that the jOOQ classes are generated into.
+
+Finally, you have to add the Spring Boot jOOQ starter to your project, like this:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jooq</artifactId>
+</dependency>
+----
+
+This starter automatically configures jOOQ to use the primary data source of your application. It also configures jOOQ to work with the Spring transaction manager. This means that you can control database <<../transactions#,transactions>> in the same way regardless of whether you are using jOOQ or <<jpa#,JPA>>.
+
+If you are using a <<{articles}/building-apps/project-structure/multi-module#,multi-module project>>, you need to configure the plugin in the module that contains the Flyway migrations. Add the dependency to the module that contains your repositories.
+
+== Entities
+
+jOOQ deals with database tables, and so has no concept of entities. This means that you get to decide how you implement your entities. The entire Java toolbox is at your disposal: you can use records, sealed classes, mutable Java beans, `final` fields, initializing constructors, and so on.
+
+Regardless of how you design your entities, you need a way of accessing the data you want to save. The simplest way of doing this is to make sure all the information you need is accessible via getter methods. If you are using Java records, you get this for free. Otherwise, you have to implement it yourself.
+
+Likewise, you need a way of re-creating the entities from data retrieved from the database. The simplest way of doing this is to use an initializing constructor that initializes all the fields of your entity. If you are using Java records, you get this for free. Otherwise, you have to implement it yourself, use setter methods, or the builder pattern.
+
+// TODO Link to the builder pattern
+
+// TODO We should have some examples here, but it is difficult to pick one because you can do this in so many different ways.
+
+Manually mapping entities to records is both boring and error-prone. You might forget a field, copy the wrong column value to another field, or forget to handle `null` values. jOOQ provides different mappers that help with this, but they require your entities to be designed in a specific way. 
+
+If you are going to build your repositories with jOOQ, you should familiarize yourself with https://www.jooq.org/doc/3.19/manual/sql-execution/fetching/pojos/[POJO:s] and https://www.jooq.org/doc/3.19/manual/sql-execution/fetching/recordmapper/[RecordMapper]. This allows you to design your entities so that they are easier to use with jOOQ.
+
+// TODO Add an example of manually moving vs. using something that is provided by jOOQ.
+
+=== Generated Plain Old Java Objects
+
+If you are only interested in working directly with the database tables, you don't have to write separate entities. Instead, you can configure the jOOQ code generator to generate POJO:s for you. That means that every table and view in your database gets a POJO with the corresponding fields. 
+
+You can generate mutable POJO:s, immutable POJO:s, Java records, interfaces, and even JPA annotated entity classes. These POJO:s are easy to fetch and store with jOOQ. You can also use them across your Vaadin application, even in the presentation layer.
+
+See the https://www.jooq.org/doc/3.19/manual/code-generation/codegen-pojos/[jOOQ documentation] for more information.
+
+== Domain Primitives
+
+=== Mappers
+
+=== Accessor Methods
+
+=== Converters
+
+== Repositories
+
+When you work with jOOQ, you should design _persistence oriented_ repositories. 
+
+
+You can use jOOQ to write `INSERT` and `UPDATE` statements. However, it is often easier to work with `UpdatableRecord`. This is an API that makes it easy to implement CRUD. See the https://www.jooq.org/doc/3.19/manual/sql-execution/crud-with-updatablerecords/[jOOQ documentation] for more information.
+
+== Query Methods
+
+== Query Specifications
+
+== Query Objects
+

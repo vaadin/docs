@@ -1,6 +1,6 @@
 ---
 title: JPA Repositories
-description: TODO
+description: How to implement repositories with JPA and Spring Data.
 order: 20
 ---
 
@@ -50,47 +50,6 @@ If you are using a <<{articles}/building-apps/project-structure/multi-module#,mu
 
 You should also add the JDBC-driver of the database you are using.
 
-== Repository Interfaces
-
-When using Spring Data JPA, your repository interfaces should extend the Spring Data `JpaRepository` interface directly. For example, a repository for a `Customer` entity looks like this:
-
-[source,java]
-----
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface CustomerRepository extends JpaRepository<Customer, Long> { // <1>
-
-}
-----
-<1> The `Long` parameter is the type of the ID, or the primary key, used to identify a single customer.
-
-You don't have to write a class that implements the interface. Spring Data implements the repository for you during runtime, and makes the repository available for injection. For example, a customer service can use it like this:
-
-[source,java]
-----
-@Service
-public class CustomerService {
-
-    private final CustomerRepository customerRepository;
-
-    CustomerService(CustomerRepository customerRepository) {
-        this.customerRepository = customerRepository;
-    }
-    ...
-}
-----
-
-Spring Data repositories are _persistence oriented_ repositories, but do on some occasions behave like _collection oriented_ ones. This has to do with how JPA works. While an entity is _managed_ by a _persistence context_, any changes made to it are automatically saved to the database when the transaction is committed. This happens regardless of whether you have called the `save` method or not.
-
-When the transaction is committed or rolled back, the entities become _detached_. After this, any changes made to them are no longer saved to the database. For more information about entity states, see the https://docs.jboss.org/hibernate/orm/6.6/introduction/html_single/Hibernate_Introduction.html#persistence-contexts[Hibernate documentation].
-
-Calling the `save` method works regardless of whether the entity is managed or detached. Therefore, you should always call the `save` method if you intend to save the changes. This also makes the code easier to read. 
-
-[CAUTION]
-To avoid strange side effects, you should not make any changes to entities inside a transaction if you don't intend to save them. The only way you should cancel or revert changes is by rolling back the transaction.
-
-// TODO Add links to transaction management
-
 == Entities
 
 JPA imposes some restrictions on your entities. The classes themselves cannot be `final`, nor can they contain any `final` fields. Also, they are required to have a default constructor, but this can be package private or protected.
@@ -111,7 +70,7 @@ import org.springframework.data.domain.Persistable;
 ...
 
 @Entity
-@Table(name = "customers")
+@Table(name = "customer")
 public class Customer implements Persistable<Long> {
 
     @Id
@@ -142,7 +101,7 @@ import org.springframework.data.util.ProxyUtils;
 ...
 
 @Entity
-@Table(name = "customers")
+@Table(name = "customer")
 public class Customer implements Persistable<Long> {
     ...
 
@@ -178,7 +137,7 @@ The most straight-forward way of using domain primitives is to use the unwrapped
 [source,java]
 ----
 @Entity
-@Table(name = "customers")
+@Table(name = "customer")
 public class Customer implements Persistable<Long> {
     ...
 
@@ -200,7 +159,7 @@ This approach also works with multi-value domain primitives. For example, if you
 [source,java]
 ----
 @Entity
-@Table(name = "offers")
+@Table(name = "offer")
 public class Offer implements Persistable<Long> {
     ...
 
@@ -255,7 +214,7 @@ In your entities, you could then use the converter like this:
 [source,java]
 ----
 @Entity
-@Table(name = "customers")
+@Table(name = "customer")
 public class Customer implements Persistable<Long> {
     ...
 
@@ -283,6 +242,45 @@ Furthermore, attribute converters don't work with primary keys. If you are worki
 // TODO Add links to DDD page once written
 
 Attribute converters are a good alternative for single-value domain primitives that are not used as identifiers, and only need to be queried by equality. In all other cases, accessor methods is a better choice.
+
+== Repositories
+
+When using Spring Data JPA, your repository interfaces should extend the Spring Data `JpaRepository` interface directly. For example, a repository for a `Customer` entity looks like this:
+
+[source,java]
+----
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CustomerRepository extends JpaRepository<Customer, Long> { // <1>
+
+}
+----
+<1> The `Long` parameter is the type of the ID, or the primary key, used to identify a single customer.
+
+You don't have to write a class that implements the interface. Spring Data implements the repository for you during runtime, and makes the repository available for injection. For example, a customer service can use it like this:
+
+[source,java]
+----
+@Service
+public class CustomerService {
+
+    private final CustomerRepository customerRepository;
+
+    CustomerService(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
+    }
+    ...
+}
+----
+
+Spring Data repositories are _persistence oriented_ repositories, but do on some occasions behave like _collection oriented_ ones. This has to do with how JPA works. While an entity is _managed_ by a _persistence context_, any changes made to it are automatically saved to the database when the <<../transactions#,transaction>> is committed. This happens regardless of whether you have called the `save` method or not.
+
+When the transaction is committed or rolled back, the entities become _detached_. After this, any changes made to them are no longer saved to the database. For more information about entity states, see the https://docs.jboss.org/hibernate/orm/6.6/introduction/html_single/Hibernate_Introduction.html#persistence-contexts[Hibernate documentation].
+
+Calling the `save` method works regardless of whether the entity is managed or detached. Therefore, you should always call the `save` method if you intend to save the changes. This also makes the code easier to read. 
+
+[CAUTION]
+To avoid strange side effects, you should not make any changes to entities inside a transaction if you don't intend to save them. The only way you should cancel or revert changes is by rolling back the transaction.
 
 == Query Methods
 
