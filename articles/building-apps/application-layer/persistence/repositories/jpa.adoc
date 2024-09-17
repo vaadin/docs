@@ -8,7 +8,7 @@ order: 20
 
 Jakarta Persistence used to be called Java Persistence API, and is still often abbreviated JPA. It is a Java API for managing relational data in Java applications. Since it is an API, you can't do much with JPA alone - you also need a JPA implementation. https://hibernate.org/[Hibernate] is supported by Spring Boot out of the box and is therefore the implementation recommended for Vaadin applications.
 
-The recommended way to implement JPA repositories is with https://spring.io/projects/spring-data-jpa[Spring Data JPA]. Spring Data JPA is a framework that aims to reduce the amount of boilerplate code needed to write JPA queries.
+The recommended way to implement JPA repositories is with https://spring.io/projects/spring-data-jpa[Spring Data JPA]. Spring Data JPA is a framework that aims to reduce the amount of boilerplate code needed to write JPA queries. It supports repositories out of the box. As long as you stick to the conventions, you don't have to write any infrastructure code yourself.
 
 [NOTE]
 This page describes how to build repositories with JPA in Vaadin applications. It assumes you have read the <<index#,Repositories>> documentation page. It also assumes you are already familiar with both JPA and Spring Data. If you have not used them before, you should at least read the https://spring.io/guides/gs/accessing-data-jpa[Accessing Data with JPA] guide, and have a quick look at the https://docs.spring.io/spring-data/jpa/reference/index.html[Spring Data JPA documentation] before continuing.
@@ -169,8 +169,7 @@ Hibernate can return proxied versions of the entities. Because of this, you cann
 
 == Domain Primitives
 
-If you have domain primitives in your entities, you can handle them in two ways. Both ways have their own advantages and disadvantages.
-// TODO Link to domain primitives once that page has been reviewed and merged.
+If you have <<{articles}/building-apps/application-layer/domain-primitives#,domain primitives>> in your entities, you can handle them in two ways. Both ways have their own advantages and disadvantages.
 
 === Accessor Methods
 
@@ -317,6 +316,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
 This allows you to specify both the limit and the sorting at runtime.
 
+=== Lazy Loading
+
 If you are going to use lazy loading in your Vaadin user interface, you should use slicing or pagination.
 
 If you only need the entities and not the total number of entities, return a `Slice`, like this:
@@ -405,9 +406,55 @@ var result = customerRepository.findAll(
 ...
 ----
 
+Spring Data has support for dynamic projections, where you specify the return type as a method parameter.
+
+Returning only the name and ID instead of the complete entity, the earlier example would look like this:
+
+[source,java]
+----
+public interface NameAndId {
+    Long getId();
+    String getName();
+}
+...
+var result = customerRepository.findBy(
+        CustomerSpecification.emailContaining("acme.com")
+                .and(CustomerSpecification.firstOrderDateBetween(
+                        LocalDate.of(2023, 1, 31),
+                        LocalDate.of(2023, 12, 31))),
+        query -> query.as(NameAndId.class)
+                .page(PageRequest.ofSize(10))        
+);
+----
+
+You have to use interface projections with specification queries. If you want to use Java records as projections, you have to create a custom query method.
+
 For more information about query specifications, see the https://docs.spring.io/spring-data/jpa/reference/jpa/specifications.html[Spring Data JPA documentation].
 
 == Query Objects
+
+Spring Data query objects are interfaces that extend the Spring Data `Repository` interface. This is the base interface of all the other repository interfaces, and it contains no methods at all.
+
+You write query methods for your query objects in the same way you would write query methods for your repositories. You can use projections, pagination, custom queries, and so on. However, specification queries do not work.
+
+If you use projections, pay attention to the query method names. For example, a method named `findAll` always returns entities, regardless of which return type you have declared. To create a query object that returns all entities, projected onto some other type, you have to do something like this:
+
+[source,java]
+----
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.Repository;
+
+public interface ProductListItemQuery extends Repository<Product, Long> {
+
+    Page<ProductListItem> findAllProjectedBy(Pageable pageable);
+
+    record ProductListItem(Long productId, String name) {
+    }
+}
+----
+
+
 
 // Read-only repositories. Write a test application, with an integration test, that verifies that this works.
 
