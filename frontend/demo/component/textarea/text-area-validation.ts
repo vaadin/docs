@@ -18,8 +18,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-text-area
         required
-        min-length="5"
-        max-length="50"
+        minlength="5"
+        maxlength="50"
         pattern="^[A-Z]([A-Za-z0-9,-\\s])*\\.$"
         allowed-char-pattern="[A-Za-z0-9,.\\-\\s]"
         label="Sentence"

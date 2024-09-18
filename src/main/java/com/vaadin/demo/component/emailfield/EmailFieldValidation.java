@@ -15,11 +15,13 @@ public class EmailFieldValidation extends HorizontalLayout {
         // tag::snippet[]
         EmailField field = new EmailField("Email address");
         field.setRequiredIndicatorVisible(true);
-        field.setPattern("^[a-zA-Z0-9_\\-+]+(?:\\.[a-zA-Z0-9_\\-+]+)*@example\\.com$");
+        field.setPattern(
+                "^[a-zA-Z0-9_\\-+]+(?:\\.[a-zA-Z0-9_\\-+]+)*@example\\.com$");
 
         field.setI18n(new EmailFieldI18n()
-            .setRequiredErrorMessage("Field is required")
-            .setPatternErrorMessage("Enter a valid example.com email address"));
+                .setRequiredErrorMessage("Field is required")
+                .setPatternErrorMessage(
+                        "Enter a valid example.com email address"));
         // end::snippet[]
         field.setHelperText("Only example.com addresses allowed");
 

@@ -22,14 +22,14 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-text-field
         required
-        min-length="5"
-        max-length="18"
+        minlength="5"
+        maxlength="18"
         pattern="^[+]?[\\(]?[0-9]{3}[\\)]?[\\-]?[0-9]{3}[\\-]?[0-9]{4,6}$"
         allowed-char-pattern="[0-9()+-]"
         label="Phone number"
         helper-text="Format: +(123)456-7890"
         .errorMessage="${this.errorMessage}"
-        @validated=${(event: TextFieldValidatedEvent) => {
+        @validated="${(event: TextFieldValidatedEvent) => {
           const field = event.target as TextField;
           const value = field.value;
           if (!value) {
@@ -43,7 +43,7 @@ export class Example extends LitElement {
           } else {
             this.errorMessage = '';
           }
-        }}
+        }}"
       ></vaadin-text-field>
       <!-- end::snippet[] -->
     `;

@@ -26,7 +26,7 @@ export class Example extends LitElement {
         label="Email address"
         helper-text="Only example.com addresses allowed"
         .errorMessage="${this.errorMessage}"
-        @validated=${(event: EmailFieldValidatedEvent) => {
+        @validated="${(event: EmailFieldValidatedEvent) => {
           const field = event.target as EmailField;
           if (!field.value) {
             this.errorMessage = 'Field is required';
@@ -35,7 +35,7 @@ export class Example extends LitElement {
           } else {
             this.errorMessage = '';
           }
-        }}
+        }}"
       ></vaadin-email-field>
       <!-- end::snippet[] -->
     `;
