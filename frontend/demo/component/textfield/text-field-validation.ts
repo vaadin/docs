@@ -1,7 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/text-field';
 import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
+import type { TextField, TextFieldValidatedEvent } from '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-validation')
@@ -12,6 +13,9 @@ export class Example extends LitElement {
     applyTheme(root);
     return root;
   }
+
+  @state()
+  private errorMessage = '';
 
   protected override render() {
     return html`
@@ -24,6 +28,22 @@ export class Example extends LitElement {
         allowed-char-pattern="[0-9()+-]"
         label="Phone number"
         helper-text="Format: +(123)456-7890"
+        .errorMessage="${this.errorMessage}"
+        @validated=${(event: TextFieldValidatedEvent) => {
+          const field = event.target as TextField;
+          const value = field.value;
+          if (!value) {
+            this.errorMessage = 'Field is required';
+          } else if (value.length < field.minlength!) {
+            this.errorMessage = `Minimum length is ${field.minlength} characters`;
+          } else if (value.length > field.maxlength!) {
+            this.errorMessage = `Maximum length is ${field.maxlength} characters`;
+          } else if (!new RegExp(field.pattern).test(value)) {
+            this.errorMessage = 'Invalid phone number format';
+          } else {
+            this.errorMessage = '';
+          }
+        }}
       ></vaadin-text-field>
       <!-- end::snippet[] -->
     `;
