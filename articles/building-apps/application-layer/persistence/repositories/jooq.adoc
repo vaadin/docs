@@ -4,6 +4,8 @@ description: How to implement repositories with jOOQ.
 order: 30
 ---
 
+:jooq-version: 3.19
+
 // TODO Define the jOOQ version as a variable and use it in links.
 
 = jOOQ Repositories
@@ -125,9 +127,9 @@ Likewise, you need a way of re-creating the entities from data retrieved from th
 
 // TODO We should have some examples here, but it is difficult to pick one because you can do this in so many different ways.
 
-Manually mapping entities to records is both boring and error-prone. You might forget a field, copy the wrong column value to another field, or forget to handle `null` values. jOOQ provides different mappers that help with this, but they require your entities to be designed in a specific way. 
+Manually mapping entities to database records is both boring and error-prone. You might forget a field, copy the wrong column value to another field, or forget to handle `null` values. jOOQ provides different mappers that help with this, but they require your entities to be designed in a specific way. 
 
-If you are going to build your repositories with jOOQ, you should familiarize yourself with https://www.jooq.org/doc/3.19/manual/sql-execution/fetching/pojos/[POJO:s] and https://www.jooq.org/doc/3.19/manual/sql-execution/fetching/recordmapper/[RecordMapper]. This allows you to design your entities so that they are easier to use with jOOQ.
+If you are going to build your repositories with jOOQ, you should familiarize yourself with https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/fetching/pojos/[POJO:s] and https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/fetching/recordmapper/[RecordMapper]. This allows you to design your entities so that they are easier to use with jOOQ.
 
 // TODO Add an example of manually moving vs. using something that is provided by jOOQ.
 
@@ -137,22 +139,188 @@ If you are only interested in working directly with the database tables, you don
 
 You can generate mutable POJO:s, immutable POJO:s, Java records, interfaces, and even JPA annotated entity classes. These POJO:s are easy to fetch and store with jOOQ. You can also use them across your Vaadin application, even in the presentation layer.
 
-See the https://www.jooq.org/doc/3.19/manual/code-generation/codegen-pojos/[jOOQ documentation] for more information.
+See the https://www.jooq.org/doc/{jooq-version}/manual/code-generation/codegen-pojos/[jOOQ documentation] for more information.
 
 == Domain Primitives
 
-=== Mappers
-
-=== Accessor Methods
+If you have <<{articles}/building-apps/application-layer/domain-primitives#,domain primitives>> in your entities, you can handle them in different ways, depending on how you choose to map your database records to your entities.
 
 === Converters
 
+If you are mapping a single database column to a single domain primitive, you should create a `Converter`. You can either implement the `Converter` interface directly, or extend the `AbstractConverter` class. For example, a converter for an `EmailAddress` domain primitive could look like this:
+
+[source,java]
+----
+import org.jooq.impl.AbstractConverter;
+
+public class EmailAddressConverter extends AbstractConverter<String, EmailAddress> {
+
+    public EmailAddressConverter() {
+        super(String.class, EmailAddress.class);
+    }
+
+    @Override
+    public EmailAddress from(String databaseObject) {
+        return databaseObject == null ? null : new EmailAddress(databaseObject);
+    }
+
+    @Override
+    public String to(EmailAddress userObject) {
+        return userObject == null ? null : userObject.value();
+    }
+}
+----
+
+Converters can be applied in two ways: ad-hoc, and as fixed types.
+
+==== Ad-Hoc Converters
+
+When you only need to apply the converter for a single query, you can do it directly in code. For example, in this query, the `email` string column is converted to an `EmailAddress` domain primitive in the result:
+
+[source,java]
+----
+var result = create
+    .select(CUSTOMER.ID, 
+            CUSTOMER.NAME, 
+            CUSTOMER.EMAIL.convert(new EmailAddressConverter()))
+    .from(CUSTOMER)
+    .fetch();
+----
+
+You can also use ad-hoc converters on nested collections, and when storing data in the database. See the https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/fetching/ad-hoc-converter/[jOOQ documentation] for more information.
+
+==== Forced Types
+
+When you always map the same columns to the same domain primitive, you can configure the jOOQ code generator to apply the generator for you. For example, to always map all columns whose names end with `email` to the `EmailAddress` domain primitive, make this change to your POM-file:
+
+[source,xml]
+----
+<jooq>
+    <generator>
+        <database>
+            ...
+            <forcedTypes>
+                <forcedType>
+                    <userType>com.example.application.domain.primitives.EmailAddress</userType>
+                    <converter>
+                        com.example.application.domain.primitives.jooq.EmailAddressConverter
+                    </converter>
+                    <includeExpression>.*email</includeExpression>
+                </forcedType>
+            </forcedTypes>
+        </database>
+    </generator>
+</jooq>
+----
+
+See the https://www.jooq.org/doc/{jooq-version}/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-forced-types/[jOOQ documentation] for more information about forced types.
+
+When you are using forced types, you may have to cast them to their database types for certain queries to work. For example, if you want to perform a `contains` query on an email field, you could write something like this:
+
+[source,java]
+----
+var result = create
+    .select(CUSTOMER.ID, 
+            CUSTOMER.NAME, 
+            CUSTOMER.EMAIL)
+    .from(CUSTOMER)
+    .where(CUSTOMER.EMAIL.cast(SQLDataType.VARCHAR).contains(searchTerm))
+    .fetch();
+----
+
+The reason for this is that the `CUSTOMER.EMAIL.containts(..)` method accepts not a string, but an `EmailAddress`. And `EmailAddress` is a domain primitive that can only contain complete email addresses, not parts of them. By casting the column back to a VARCHAR, you can work with ordinary strings.
+
+=== Embeddable Types
+
+If you are using multi-value domain primitives, you can configure jOOQ to generate embeddable types for certain column groups. This is such a complex feature that it won't be covered here. See the https://www.jooq.org/doc/{jooq-version}/manual/code-generation/codegen-embeddable-types/[jOOQ documentation] for more information.
+
+=== Manual Mapping
+
+Because you are in charge of how you map your entities to your database tables, you can choose to do everything manually. For example, to fetch a `MonetaryAmount` domain primitive that consists of a `BigDecimal` and a `CurrencyUnit` enum, you could do something this:
+
+[source,java]
+----
+public class Offer {
+    private OfferId offerId;
+    private MonetaryAmount price;
+
+    // Constructors, getters and setters omitted.
+}
+...
+
+public Optional<Offer> findById(OfferId offerId) {
+    return create.fetchOptional(OFFER, OFFER.OFFER_ID.eq(offerId)).map(record -> {
+        var offer = new Offer(offerId);
+        offer.setPrice(new MonetaryAmount(record.getCurrency(), record.getPrice())));
+        return offer;
+    });
+}
+----
+
+Likewise, to write the monetary amount back to the database, you could do something like this:
+
+[source,java]
+----
+public void update(Offer offer) {
+    var record = create.fetchOne(OFFER, OFFER.OFFER_ID.eq(offer.getOfferId()));
+    if (record == null) {
+        throw new IllegalArgumentException("Offer does not exist");
+    }
+    record.setCurrency(offer.getPrice().currency());
+    record.setPrice(offer.getPrice().value());
+    record.update();
+}
+----
+
 == Repositories
 
-When you work with jOOQ, you should design _persistence oriented_ repositories. 
+jOOQ has no repository interface for you to extend. Instead, you get to design your own from scratch. To make things simpler, you should use a _persistence oriented_ design, like this:
 
+[source,java]
+----
+public interface Repository<ID, E> {
+    Optional<E> findById(ID id);
+    E save(E entity);
+    void delete(ID id);
+}
+----
 
-You can use jOOQ to write `INSERT` and `UPDATE` statements. However, it is often easier to work with `UpdatableRecord`. This is an API that makes it easy to implement CRUD. See the https://www.jooq.org/doc/3.19/manual/sql-execution/crud-with-updatablerecords/[jOOQ documentation] for more information.
+If you want to, you can split up the `save` method into separate `insert` and `update` methods.
+
+If you don't need to support multiple repository implementations, you can skip the interfaces and instead create an abstract base class, like this:
+
+[source,java]
+----
+public abstract class AbstractRepository<ID, E> {
+    protected final DSLContext create;
+
+    protected AbstractRepository(DSLContext create) {
+        this.create = create;
+    }
+
+    public abstract Optional<T> findById(ID id);
+
+    public abstract T save(T entity);
+
+    public abstract void delete(ID id);
+}
+----
+
+How you implement the different methods depends on how your database is structured, and what kind of entity classes you use. You may be tempted to generalize as much functionality as possible into the base class. If you do this, you should make sure that the functionality is, in fact, generic, such as audit logging. Otherwise, you risk painting yourself into a corner in the future. For example, if you assume that an entity is always mapped to one table, you run into problems when you need to map an entity to multiple tables.
+
+=== Fetching Entities
+
+// TODO continue here...
+
+=== Storing Entities
+
+// TODO continue here...
+
+You can use jOOQ to write `INSERT` and `UPDATE` statements. However, it is often easier to work with `UpdatableRecord`. This is an API that makes it easy to implement CRUD. See the https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/crud-with-updatablerecords/[jOOQ documentation] for more information.
+
+=== Deleting Entities
+
+// TODO continue here...
 
 == Query Methods
 
