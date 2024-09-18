@@ -9,7 +9,7 @@ import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
 
 const dateTimeFormat = `yyyy-MM-dd'T'HH:00:00`;
 
-@customElement('date-time-picker-min-max')
+@customElement('date-time-picker-validation')
 export class Example extends LitElement {
   @state()
   private errorMessage = '';

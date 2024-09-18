@@ -8,10 +8,10 @@ import com.vaadin.flow.router.Route;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
-@Route("date-picker-min-max")
-public class DatePickerMinMax extends Div {
+@Route("date-picker-validation")
+public class DatePickerValidation extends Div {
 
-    public DatePickerMinMax() {
+    public DatePickerValidation() {
         DatePicker datePicker = new DatePicker("Appointment date");
         // tag::snippet[]
         LocalDate now = LocalDate.now(ZoneId.systemDefault());
@@ -36,6 +36,6 @@ public class DatePickerMinMax extends Div {
         add(datePicker);
     }
 
-    public static class Exporter extends DemoExporter<DatePickerMinMax> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DatePickerValidation> { // hidden-source-line
     } // hidden-source-line
 }

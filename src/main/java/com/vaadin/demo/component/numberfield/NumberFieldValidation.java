@@ -5,7 +5,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("number-field-min-max")
+@Route("number-field-validation")
 public class NumberFieldMinMax extends Div {
 
     public NumberFieldMinMax() {
