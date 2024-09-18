@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("date-time-picker-min-max")
-public class DateTimePickerMinMax extends Div {
+@Route("date-time-picker-validation")
+public class DateTimePickerValidation extends Div {
 
-    public DateTimePickerMinMax() {
+    public DateTimePickerValidation() {
         // tag::snippet[]
         DateTimePicker dateTimePicker = new DateTimePicker();
         dateTimePicker.setLabel("Appointment date and time");
@@ -36,6 +36,6 @@ public class DateTimePickerMinMax extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<DateTimePickerMinMax> { // hidden-source-line
+    public static class Exporter extends DemoExporter<DateTimePickerValidation> { // hidden-source-line
     } // hidden-source-line
 }

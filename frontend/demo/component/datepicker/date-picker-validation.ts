@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 import { addDays, formatISO, isAfter, isBefore } from 'date-fns';
 import dateFnsParse from 'date-fns/parse';
 
-@customElement('date-picker-min-max')
+@customElement('date-picker-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();

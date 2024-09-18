@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/combo-box';
+import '@vaadin/integer-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('combo-box-constraints')
+@customElement('number-field-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,14 +17,14 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-combo-box
-        required
-        allowed-char-pattern="[A-Z]"
-        label="Country code"
-        helper-text="2-letter uppercase ISO country code"
-        allow-custom-value
-        .items="${['DE', 'FI', 'US']}"
-      ></vaadin-combo-box>
+      <vaadin-integer-field
+        label="Quantity"
+        helper-text="Max 10 items"
+        min="0"
+        max="10"
+        value="2"
+        step-buttons-visible
+      ></vaadin-integer-field>
       <!-- end::snippet[] -->
     `;
   }
