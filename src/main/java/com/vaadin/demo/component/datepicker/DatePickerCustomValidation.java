@@ -3,6 +3,7 @@ package com.vaadin.demo.component.datepicker;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.Appointment;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
@@ -14,6 +15,8 @@ public class DatePickerCustomValidation extends Div {
         // tag::snippet[]
         DatePicker datePicker = new DatePicker("Meeting date");
         datePicker.setHelperText("Mondays – Fridays only");
+        datePicker.setI18n(new DatePickerI18n()
+                .setBadInputErrorMessage("Invalid date format"));
 
         Binder<Appointment> binder = new Binder<>(Appointment.class);
         binder.forField(datePicker).withValidator(localDate -> {
