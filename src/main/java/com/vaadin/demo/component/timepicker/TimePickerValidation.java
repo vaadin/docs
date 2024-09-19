@@ -9,10 +9,10 @@ import java.time.LocalTime;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("time-picker-min-max")
-public class TimePickerMinMax extends Div {
+@Route("time-picker-validation")
+public class TimePickerValidation extends Div {
 
-    public TimePickerMinMax() {
+    public TimePickerValidation() {
         // tag::snippet[]
         TimePicker timePicker = new TimePicker();
         timePicker.setLabel("Appointment time");
@@ -37,6 +37,6 @@ public class TimePickerMinMax extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<TimePickerMinMax> { // hidden-source-line
+    public static class Exporter extends DemoExporter<TimePickerValidation> { // hidden-source-line
     } // hidden-source-line
 }

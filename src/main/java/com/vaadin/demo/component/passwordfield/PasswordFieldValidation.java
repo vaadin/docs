@@ -5,10 +5,10 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("password-field-constraints")
-public class PasswordFieldConstraints extends HorizontalLayout {
+@Route("password-field-validation")
+public class PasswordFieldValidation extends HorizontalLayout {
 
-    public PasswordFieldConstraints() {
+    public PasswordFieldValidation() {
         setPadding(false);
 
         // tag::snippet[]
@@ -25,6 +25,6 @@ public class PasswordFieldConstraints extends HorizontalLayout {
     }
 
     public static class Exporter extends // hidden-source-line
-            DemoExporter<PasswordFieldConstraints> { // hidden-source-line
+            DemoExporter<PasswordFieldValidation> { // hidden-source-line
     } // hidden-source-line
 }
