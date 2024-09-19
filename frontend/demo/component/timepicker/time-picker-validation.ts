@@ -2,20 +2,20 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/time-picker';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { TimePickerChangeEvent } from '@vaadin/time-picker';
+import type { TimePicker, TimePickerValidatedEvent } from '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('time-picker-validation')
 export class Example extends LitElement {
-  @state()
-  protected errorMessage = '';
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
+
+  @state()
+  protected errorMessage = '';
 
   protected override render() {
     return html`
@@ -24,15 +24,21 @@ export class Example extends LitElement {
         label="Appointment time"
         helper-text="Open 8:00-16:00"
         value="08:30"
+        required
         min="08:00"
         max="16:00"
         .step="${60 * 30}"
-        error-message="${this.errorMessage}"
-        @change="${(event: TimePickerChangeEvent) => {
-          const { min, max, value } = event.target;
-          if (value < min) {
+        .errorMessage="${this.errorMessage}"
+        @validated="${(event: TimePickerValidatedEvent) => {
+          const field = event.target as TimePicker;
+          const inputElement = field.inputElement as HTMLInputElement;
+          if (!field.value && inputElement.value) {
+            this.errorMessage = 'Invalid time format';
+          } else if (!field.value) {
+            this.errorMessage = 'Field is required';
+          } else if (field.value < field.min) {
             this.errorMessage = 'Too early, choose another time';
-          } else if (value > max) {
+          } else if (field.value > field.max) {
             this.errorMessage = 'Too late, choose another time';
           } else {
             this.errorMessage = '';

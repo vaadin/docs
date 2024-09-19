@@ -2,8 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import type { TimePickerChangeEvent } from '@vaadin/react-components/TimePicker.js';
-import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { TimePicker, type TimePickerElement } from '@vaadin/react-components';
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -16,6 +15,7 @@ function Example() {
       label="Appointment time"
       helper-text="Open 8:00-16:00"
       value={currentValue.value}
+      required
       min="08:00"
       max="16:00"
       step={60 * 30}
@@ -23,11 +23,16 @@ function Example() {
       onValueChanged={(event) => {
         currentValue.value = event.detail.value;
       }}
-      onChange={(event: TimePickerChangeEvent) => {
-        const { min, max, value } = event.target;
-        if (value < min) {
+      onValidated={(event) => {
+        const field = event.target as TimePickerElement;
+        const inputElement = field.inputElement as HTMLInputElement;
+        if (!field.value && inputElement.value) {
+          errorMessage.value = 'Invalid time format';
+        } else if (!field.value) {
+          errorMessage.value = 'Field is required';
+        } else if (field.value < field.min) {
           errorMessage.value = 'Too early, choose another time';
-        } else if (value > max) {
+        } else if (field.value > field.max) {
           errorMessage.value = 'Too late, choose another time';
         } else {
           errorMessage.value = '';
