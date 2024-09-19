@@ -2,6 +2,7 @@ package com.vaadin.demo.component.textarea;
 
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextArea.TextAreaI18n;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -18,6 +19,12 @@ public class TextAreaValidation extends HorizontalLayout {
         field.setAllowedCharPattern("[A-Za-z0-9,.\\-\\s]");
         field.setMinLength(5);
         field.setMaxLength(50);
+
+        field.setI18n(new TextAreaI18n()
+            .setRequiredErrorMessage("Field is required")
+            .setMinLengthErrorMessage("Minimum length is 5 characters")
+            .setMaxLengthErrorMessage("Maximum length is 50 characters")
+            .setPatternErrorMessage("Must be one complete sentence ending in a period"));
         // end::snippet[]
         field.setHelperText(
                 "Must be one complete sentence ending in a period, between 5 and 50 characters long");

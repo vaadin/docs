@@ -4,8 +4,13 @@ import {
   PasswordField,
   type PasswordFieldElement,
 } from '@vaadin/react-components/PasswordField.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 
 function Example() {
+  useSignals(); // hidden-source-line
+  const errorMessage = useSignal('');
+
   return (
     // tag::snippet[]
     <PasswordField
@@ -15,19 +20,20 @@ function Example() {
       maxlength={12}
       label="Password"
       helperText="6 to 12 characters. Only letters A-Z and numbers supported."
+      errorMessage={errorMessage.value}
       onValidated={(event) => {
         const field = event.target as PasswordFieldElement;
         const value = field.value;
         if (!value) {
-          field.errorMessage = 'Field is required';
+          errorMessage.value = 'Field is required';
         } else if (value.length < field.minlength!) {
-          field.errorMessage = `Minimum length is ${field.minlength} characters`;
+          errorMessage.value = `Minimum length is ${field.minlength} characters`;
         } else if (value.length > field.maxlength!) {
-          field.errorMessage = `Maximum length is ${field.maxlength} characters`;
+          errorMessage.value = `Maximum length is ${field.maxlength} characters`;
         } else if (!new RegExp(field.pattern).test(value)) {
-          field.errorMessage = 'Only letters A-Z and numbers are allowed';
+          errorMessage.value = 'Only letters A-Z and numbers are allowed';
         } else {
-          field.errorMessage = '';
+          errorMessage.value = '';
         }
       }}
     />
