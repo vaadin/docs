@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/icon';
+import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import '@vaadin/icon';
-import '@vaadin/horizontal-layout';
 import codeBranch from '../../../../src/main/resources/icons/code-branch.svg';
 
 @customElement('icons-sizing')

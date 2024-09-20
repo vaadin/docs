@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/number-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/number-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('number-field-step')

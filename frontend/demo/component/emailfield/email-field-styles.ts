@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/email-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/email-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('email-field-styles')

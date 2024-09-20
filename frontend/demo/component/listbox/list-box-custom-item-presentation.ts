@@ -1,15 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/item';
 import '@vaadin/list-box';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vaadin-lumo-styles/typography';
 import '@vaadin/vertical-layout';
-import { applyTheme } from 'Frontend/generated/theme';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('list-box-custom-item-presentation')
 export class Example extends LitElement {

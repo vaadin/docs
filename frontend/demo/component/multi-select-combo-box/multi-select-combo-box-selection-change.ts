@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/multi-select-combo-box';
-import type { MultiSelectComboBoxSelectedItemsChangedEvent } from '@vaadin/multi-select-combo-box';
 import '@vaadin/text-area';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import type { MultiSelectComboBoxSelectedItemsChangedEvent } from '@vaadin/multi-select-combo-box';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';

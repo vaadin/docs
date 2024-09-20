@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/integer-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/integer-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('number-field-validation')

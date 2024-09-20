@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/tabs';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/tabs';
 import { badge } from '@vaadin/vaadin-lumo-styles/badge.js';
 
 @customElement('tabs-badges')

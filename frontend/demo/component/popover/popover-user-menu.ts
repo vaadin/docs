@@ -1,16 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/popover';
 import '@vaadin/vertical-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
-import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('popover-user-menu')
 export class Example extends LitElement {

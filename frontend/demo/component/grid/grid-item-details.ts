@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid';
-import { gridRowDetailsRenderer } from '@vaadin/grid/lit.js';
-import type { GridActiveItemChangedEvent } from '@vaadin/grid';
 import '@vaadin/form-layout';
 import '@vaadin/text-field';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import type { GridActiveItemChangedEvent } from '@vaadin/grid';
+import { gridRowDetailsRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

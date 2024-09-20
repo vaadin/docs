@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
+import '@vaadin/button';
+import '@vaadin/upload';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import '@vaadin/button';
 import { Notification } from '@vaadin/notification';
-import '@vaadin/upload';
 import type {
   Upload,
   UploadFileRejectEvent,

@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/context-menu';
-import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
 import '@vaadin/grid';
 import '@vaadin/horizontal-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

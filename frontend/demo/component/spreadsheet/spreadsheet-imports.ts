@@ -1,5 +1,4 @@
 import 'Frontend/demo/init';
-
 import '@vaadin/charts';
 import '@vaadin/icon';
 import '@vaadin/icons';

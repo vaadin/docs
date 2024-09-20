@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/text-area';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/text-area';
 import type { TextAreaValueChangedEvent } from '@vaadin/text-area';
-import templates from '../../../../src/main/resources/data/templates.json';
 import { applyTheme } from 'Frontend/generated/theme';
+import templates from '../../../../src/main/resources/data/templates.json';
 
 @customElement('text-area-helper-2')
 export class Example extends LitElement {
