@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/combo-box';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/combo-box';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-item-class-name')

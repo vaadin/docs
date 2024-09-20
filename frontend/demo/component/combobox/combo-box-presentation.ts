@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/combo-box';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/combo-box';
-import { comboBoxRenderer } from '@vaadin/combo-box/lit.js';
-import type { ComboBoxLitRenderer } from '@vaadin/combo-box/lit.js';
 import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
+import type { ComboBoxLitRenderer } from '@vaadin/combo-box/lit.js';
+import { comboBoxRenderer } from '@vaadin/combo-box/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

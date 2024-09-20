@@ -1,16 +1,16 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement, render } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/context-menu';
-import type { ContextMenuItem } from '@vaadin/context-menu';
 import '@vaadin/grid';
-import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { Grid } from '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
+import { html, LitElement, render } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import type { ContextMenuItem } from '@vaadin/context-menu';
+import type { Grid } from '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
