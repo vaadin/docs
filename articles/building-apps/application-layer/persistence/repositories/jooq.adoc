@@ -6,8 +6,6 @@ order: 30
 
 :jooq-version: 3.19
 
-// TODO Define the jOOQ version as a variable and use it in links.
-
 = jOOQ Repositories
 
 https://www.jooq.org/[jOOQ] is a framework that allows you to write SQL queries in Java. It analyzes your database, and generates Java code that you use to build type safe SQL queries using a fluent API. This gives you a lot of degrees of freedom, but also requires more work and more skills.
@@ -117,21 +115,15 @@ If you are using a <<{articles}/building-apps/project-structure/multi-module#,mu
 
 == Entities
 
-jOOQ deals with database tables, and so has no concept of entities. This means that you get to decide how you implement your entities. The entire Java toolbox is at your disposal: you can use records, sealed classes, mutable Java beans, `final` fields, initializing constructors, and so on.
+jOOQ deals with database tables, and so has no concept of entities. This means that you get to decide how you implement your entities. The entire Java toolbox is at your disposal: you can use records, sealed classes, mutable Java beans, `final` fields, initializing constructors, and so on. When using jOOQ, it is impossible to recommend a single Vaadin Way of designing entities, because it depends on so many things. 
 
-Regardless of how you design your entities, you need a way of accessing the data you want to save. The simplest way of doing this is to make sure all the information you need is accessible via getter methods. If you are using Java records, you get this for free. Otherwise, you have to implement it yourself.
+// TODO Write a deep-dive that shows one way of doing this.
 
-Likewise, you need a way of re-creating the entities from data retrieved from the database. The simplest way of doing this is to use an initializing constructor that initializes all the fields of your entity. If you are using Java records, you get this for free. Otherwise, you have to implement it yourself, use setter methods, or the builder pattern.
+Regardless of how you design your entities, you need a way of mapping them to your database tables. If your entities are small, manually copying data between database records and entities is not a big deal. 
 
-// TODO Link to the builder pattern
-
-// TODO We should have some examples here, but it is difficult to pick one because you can do this in so many different ways.
-
-Manually mapping entities to database records is both boring and error-prone. You might forget a field, copy the wrong column value to another field, or forget to handle `null` values. jOOQ provides different mappers that help with this, but they require your entities to be designed in a specific way. 
+However, as your entities grow, this becomes both boring and error prone. You might forget a field, copy the wrong column value to another field, or forget to handle `null` values. jOOQ provides different mappers that help with this, but they require your entities to be designed in a specific way. 
 
 If you are going to build your repositories with jOOQ, you should familiarize yourself with https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/fetching/pojos/[POJO:s] and https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/fetching/recordmapper/[RecordMapper]. This allows you to design your entities so that they are easier to use with jOOQ.
-
-// TODO Add an example of manually moving vs. using something that is provided by jOOQ.
 
 === Generated Plain Old Java Objects
 
@@ -147,7 +139,7 @@ If you have <<{articles}/building-apps/application-layer/domain-primitives#,doma
 
 === Converters
 
-If you are mapping a single database column to a single domain primitive, you should create a `Converter`. You can either implement the `Converter` interface directly, or extend the `AbstractConverter` class. For example, a converter for an `EmailAddress` domain primitive could look like this:
+If you are mapping a single database column to a single domain primitive, you should create a `Converter`. You can either implement the `org.jooq.Converter` interface directly, or extend the `AbstractConverter` class. For example, a converter for an `EmailAddress` domain primitive could look like this:
 
 [source,java]
 ----
@@ -213,6 +205,8 @@ When you always map the same columns to the same domain primitive, you can confi
 </jooq>
 ----
 
+To make the configuration easier, you should name your columns consistently. For example, if you have a `ProductId` domain primitive that is used to identify records in the `PRODUCT` table, you should name the primary key column `product_id`. Then, if you have an `OrderItem` that refers to a `Product`, you should name the foreign key column `product_id` as well. Now you can use a single forced type definition to convert both columns. 
+
 See the https://www.jooq.org/doc/{jooq-version}/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-forced-types/[jOOQ documentation] for more information about forced types.
 
 When you are using forced types, you may have to cast them to their database types for certain queries to work. For example, if you want to perform a `contains` query on an email field, you could write something like this:
@@ -228,7 +222,7 @@ var result = create
     .fetch();
 ----
 
-The reason for this is that the `CUSTOMER.EMAIL.containts(..)` method accepts not a string, but an `EmailAddress`. And `EmailAddress` is a domain primitive that can only contain complete email addresses, not parts of them. By casting the column back to a VARCHAR, you can work with ordinary strings.
+The reason for this is that the `CUSTOMER.EMAIL.contains(..)` method accepts not a string, but an `EmailAddress`. And `EmailAddress` is a domain primitive that can only contain complete email addresses, not parts of them. By casting the column back to a VARCHAR, you can work with ordinary strings.
 
 === Embeddable Types
 
@@ -243,7 +237,7 @@ Because you are in charge of how you map your entities to your database tables, 
 public class Offer {
     private OfferId offerId;
     private MonetaryAmount price;
-
+    ...
     // Constructors, getters and setters omitted.
 }
 ...
@@ -252,6 +246,7 @@ public Optional<Offer> findById(OfferId offerId) {
     return create.fetchOptional(OFFER, OFFER.OFFER_ID.eq(offerId)).map(record -> {
         var offer = new Offer(offerId);
         offer.setPrice(new MonetaryAmount(record.getCurrency(), record.getPrice())));
+        // Calls to other setter methods omitted.
         return offer;
     });
 }
@@ -268,13 +263,14 @@ public void update(Offer offer) {
     }
     record.setCurrency(offer.getPrice().currency());
     record.setPrice(offer.getPrice().value());
+    // Calls to other setter methods omitted.
     record.update();
 }
 ----
 
 == Repositories
 
-jOOQ has no repository interface for you to extend. Instead, you get to design your own from scratch. To make things simpler, you should use a _persistence oriented_ design, like this:
+jOOQ has no repository interface for you to extend. Instead, you get to design your own from scratch. To keep things simple, you should design _persistence oriented_ repositories, like this:
 
 [source,java]
 ----
@@ -285,7 +281,7 @@ public interface Repository<ID, E> {
 }
 ----
 
-If you want to, you can split up the `save` method into separate `insert` and `update` methods.
+If you want to, you can split up the `save` method into separate `insert` and `update` methods. Whether these methods should return an entity or not depends on how you implement them. When you insert a new entity, you often want to return its generated ID in some way. When you update an existing entity, and use optimistic locking, you often want to return the new version number in some way. If your entities are mutable, you can update them directly. Then, there is no need to return a new instance. If your entities are immutable, you have to return a new, updated instance.
 
 If you don't need to support multiple repository implementations, you can skip the interfaces and instead create an abstract base class, like this:
 
@@ -308,23 +304,267 @@ public abstract class AbstractRepository<ID, E> {
 
 How you implement the different methods depends on how your database is structured, and what kind of entity classes you use. You may be tempted to generalize as much functionality as possible into the base class. If you do this, you should make sure that the functionality is, in fact, generic, such as audit logging. Otherwise, you risk painting yourself into a corner in the future. For example, if you assume that an entity is always mapped to one table, you run into problems when you need to map an entity to multiple tables.
 
-=== Fetching Entities
-
-// TODO continue here...
-
 === Storing Entities
 
-// TODO continue here...
+Before you start implementing your store method, you need to make some decisions. First, you need to decide how to deduce whether to insert or update the entity. Second, you need to decide how the entity receives its ID. The easiest solution is to use identity columns in the database for your primary keys. That way, an entity without an ID must be inserted, and an entity with an ID updated.
 
-You can use jOOQ to write `INSERT` and `UPDATE` statements. However, it is often easier to work with `UpdatableRecord`. This is an API that makes it easy to implement CRUD. See the https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/crud-with-updatablerecords/[jOOQ documentation] for more information.
+You also need to decide whether you are going to use optimistic locking or not. If you choose to use optimistic locking, you can either implement it yourself, or use jOOQ's built-in support for it.
+
+To use built-in optimistic locking, you have to make sure all tables, that should use optimistic locking, have a column for the version number. This column should have the same name in all tables. For example, you could call this column `opt_lock_ver`.
+
+Next, you have to configure the jOOQ code generator to use this column for optimistic locking. Make the following change to your POM-file:
+
+[source,xml]
+----
+<jooq>
+    <generator>
+        <database>
+            ...
+            <recordVersionFields>opt_lock_ver</recordVersionFields>
+        </database>
+    </generator>
+</jooq>
+----
+
+Optimistic locking is turned off by default. To use it, you have to enable it in your repositories. If you use an abstract base class, you can do it there, like this:
+
+[source,java]
+----
+public abstract class AbstractRepository<ID, E> {
+    protected final DSLContext create;
+
+    protected AbstractRepository(DSLContext create) {
+        this.create = create
+            .configuration()
+            .deriveSettings(settings -> settings.withExecuteWithOptimisticLocking(true))
+            .dsl();
+    }
+
+    ...
+}
+----
+
+To use built-in optimistic locking, you have to use `org.jooq.UpdatableRecord` instead of creating your `INSERT` and `UPDATE` statements yourself. This is an API that makes it easy to implement CRUD. You can use it like this:
+
+[source,java]
+----
+@Override
+public Product save(Product entity) {
+    var record = getRecordFor(entity);
+    record.setDescription(entity.description());
+    record.setQuantityUnit(entity.quantityUnit());
+    ...
+    record.store(); // <1>
+    return new Product(record.getProductId(), record.getOptLockVersion(), record.getDescription(), record.getQuantityUnit(), ...);
+}
+
+private ProductRecord getRecordFor(Product entity) {
+    var productId = entity.productId();
+    if (productId == null) {
+        return create.newRecord(PRODUCT);
+    } else {
+        var record = create.fetchOne(PRODUCT, PRODUCT.PRODUCT_ID.eq(entity.productId()));
+        if (record == null) {
+            throw new DataChangedException("Product does not exist");
+        }
+        record.setOptLockVersion(entity.version());
+        return record;
+    }
+}
+----
+<1> The `store` method knows whether to issue an `INSERT` or `UPDATE`, depending on whether the record was created using `newRecord` or `fetchOne`.
+
+See the https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/crud-with-updatablerecords/[jOOQ documentation] for more information.
 
 === Deleting Entities
 
-// TODO continue here...
+The easiest way of deleting an entity is to write a `DELETE...FROM` query, like this:
+
+[source,java]
+----
+public void delete(ProductId productId) {
+    create.deleteFrom(PRODUCT)
+        .where(PRODUCT.PRODUCT_ID.eq(productId))
+        .execute();
+}
+----
+
+If your entity is mapped to multiple tables, you delete them all, one at a time, like this:
+
+[source,java]
+----
+public void delete(OrderId orderId) {
+    create.deleteFrom(ORDER_ITEM)
+        .where(ORDER_ITEM.ORDER_ID.eq(orderId))
+        .execute();
+    create.deleteFrom(ORDER)
+        .where(ORDER.ORDER_ID.eq(orderId))
+        .execute();
+}
+----
+
+Remember the order so that you don't break any foreign key constraints. Also remember to run the delete method inside a single <<../transactions#,transaction>>.
 
 == Query Methods
 
+When you write query methods, you often want to specify things like ordering, limits and offsets. If the ordering is always fixed, you can implement something simple, like this:
+
+[source,java]
+----
+public List<Product> findByDescriptionContaining(String searchTerm, int fetchMax) {
+    return create.selectFrom(PRODUCT)
+        .where(PRODUCT.DESCRIPTION.contains(searchTerm))
+        .orderBy(PRODUCT.DESCRIPTION.asc())
+        .limit(fetchMax)
+        .fetch(Records.mapping(Product::new)); // <1>
+}
+----
+<1> This assumes there is a Java record called `Product` that has the same fields as the `PRODUCT` table.
+
+If you want to specify the ordering as a method parameter, the easiest way is to re-use `org.springframework.data.domain.Sort` from Spring Data. Then, you can implement something like this:
+
+[source,java]
+----
+public List<Product> findByDescriptionContaining(String searchTerm, int fetchMax, Sort sort) {
+    var query = create.selectFrom(PRODUCT)
+        .where(PRODUCT.DESCRIPTION.contains(searchTerm));
+    if (sort != null && sort.isSorted()) {
+        query.orderBy(sort.stream().map(this::toOrderField).toList());
+    }
+    return query.limit(fetchMax).fetch(Records.mapping(Product::new));
+}
+
+private OrderField<?> toOrderField(Sort.Order sortOrder) {
+    var field = PRODUCT.field(sortOrder.getProperty()); // <1>
+    if (field == null) {
+        throw new IllegalArgumentException("Unknown field: " + sortOrder.getProperty());
+    }
+    return sortOrder.isAscending() ? field.asc() : field.desc();
+}
+----
+<1> You can also look up the corresponding field in some other way, in case the sort properties are not matching the database column names.
+
+If you want to use pagination, you can reuse `org.springframework.data.domain.Pageable` from Spring Data, like this:
+
+[source,java]
+----
+public List<Product> findByDescriptionContaining(String searchTerm, Pageable pageable) {
+    var query = create.selectFrom(PRODUCT)
+        .where(PRODUCT.DESCRIPTION.contains(searchTerm));
+    if (pageable.getSort().isSorted()) {
+        query.orderBy(pageable.getSort().stream().map(this::toOrderField).toList());
+    }
+    return query.limit(pageable.getOffset(), pageable.getPageSize()).fetch(Records.mapping(Product::new));
+}
+----
+
 == Query Specifications
+
+A query specification in jOOQ is a `org.jooq.Condition`. You can use the conditions directly, like this:
+
+[source,java]
+----
+public List<Product> findBySpecification(Condition condition) {
+    return create.selectFrom(PRODUCT)
+        .where(condition)
+        .fetch(Records.mapping(Product::new));
+}
+----
+
+You would write specifications like this:
+
+[source,java]
+----
+public final class ProductSpecifications {
+
+    public static Condition descriptionContains(String searchTerm) {
+        return PRODUCT.DESCRIPTION.contains(searchTerm);
+    }
+
+    private ProductSpecifications() {        
+    }
+}
+----
+
+However, if you do not want your repositories to expose jOOQ in their public API, you can define a `Specification` interface like this:
+
+[source,java]
+----
+import org.jooq.Condition;
+
+public interface Specification<T> {
+
+    Condition toCondition();
+
+    static <T> Specification<T> not(Specification<T> other) {
+        return () -> other.toCondition().not();
+    }
+
+    default Specification<T> and(Specification<T> other) {
+        return () -> toCondition().and(other.toCondition());
+    }
+
+    default Specification<T> or(Specification<T> other) {
+        return () -> toCondition().or(other.toCondition());
+    }
+}
+----
+
+Your repository then becomes something like this:
+
+[source,java]
+----
+public List<Product> findBySpecification(Specification<Product> specification) {
+    return create.selectFrom(PRODUCT)
+        .where(specification.toCondition())
+        .fetch(Records.mapping(Product::new));
+}
+----
+
+You would write specifications like this:
+
+[source,java]
+----
+public final class ProductSpecifications {
+
+    public static Specification<Product> descriptionContains(String searchTerm) {
+        return () -> PRODUCT.DESCRIPTION.contains(searchTerm);
+    }
+
+    private ProductSpecifications() {        
+    }
+}
+----
+
+Although `Condition` is still a part of the specification API, it is not meant for public use. As long as clients don't call the `toCondition()` method, they can use and combine specifications without depending directly on the jOOQ API.
 
 == Query Objects
 
+Query objects in jOOQ are implemented in the same way as repositories. In other words, you get to decide what they look like.
+
+However, to keep things simple, you should use Java records for the result, and have their fields match the fields selected in your query. That way, you can use `Records.mapping` to convert the result into your Java record in a type safe way. 
+
+Here is an example of a query object that returns only the product ID and the product name:
+
+[source,java]
+----
+@Component
+public class ProductListItemQuery {
+
+    private final DSLContext create;
+
+    ProductListItemQuery(DSLContext create) {
+        this.create = create;
+    }
+
+    public List<ProductListItem> findAll() { // Pagination and sorting omitted for clarity
+        return create.select(PRODUCT.PRODUCT_ID, PRODUCT.NAME)
+                .from(PRODUCT)
+                .fetch(Records.mapping(ListItem::new));        
+    }
+
+    record ProductListItem(Long productId, String name) {}
+}
+----
+
+In you query objects, you should of course also pay attention to sorting and pagination.

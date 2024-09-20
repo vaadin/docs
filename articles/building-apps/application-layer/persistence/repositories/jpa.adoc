@@ -4,6 +4,8 @@ description: How to implement repositories with JPA and Spring Data.
 order: 20
 ---
 
+:hibernate-version: 6.6
+
 = JPA Repositories
 
 Jakarta Persistence used to be called Java Persistence API, and is still often abbreviated JPA. It is a Java API for managing relational data in Java applications. Since it is an API, you can't do much with JPA alone - you also need a JPA implementation. https://hibernate.org/[Hibernate] is supported by Spring Boot out of the box and is therefore the implementation recommended for Vaadin applications.
@@ -124,7 +126,33 @@ public class Customer implements Persistable<Long> {
 
 Hibernate can return proxied versions of the entities. Because of this, you cannot directly compare the classes inside `equals`, as a proxied entity would not have the same class as a non-proxied one. To fix this, you can use the `ProxyUtils.getUserClass` utility method provided by Spring (`AbstractPersistable` does this as well).
 
-// TODO Write something about business keys, but that should probably be introduced on its own page first
+To avoid accidental overwrites of data, it is recommended to use optimistic locking on all entities, like this:
+
+[source,java]
+----
+import org.springframework.data.domain.Persistable;
+...
+
+@Entity
+@Table(name = "customer")
+public class Customer implements Persistable<Long> {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "customer_id")
+    private Long id;
+
+// tag::snippet[]
+    @Version
+    @Column(name = "opt_lock_version")
+    private Long optLockVersion;
+// end::snippet[]
+
+    ...
+}
+----
+
+See the https://docs.jboss.org/hibernate/orm/{hibernate-version}/introduction/html_single/Hibernate_Introduction.html#optimistic-and-pessimistic-locking[Hibernate documentation] for more information.
 
 == Domain Primitives
 
@@ -276,7 +304,7 @@ public class CustomerService {
 
 Spring Data repositories are _persistence oriented_ repositories, but do on some occasions behave like _collection oriented_ ones. This has to do with how JPA works. While an entity is _managed_ by a _persistence context_, any changes made to it are automatically saved to the database when the <<../transactions#,transaction>> is committed. This happens regardless of whether you have called the `save` method or not.
 
-When the transaction is committed or rolled back, the entities become _detached_. After this, any changes made to them are no longer saved to the database. For more information about entity states, see the https://docs.jboss.org/hibernate/orm/6.6/introduction/html_single/Hibernate_Introduction.html#persistence-contexts[Hibernate documentation].
+When the transaction is committed or rolled back, the entities become _detached_. After this, any changes made to them are no longer saved to the database. For more information about entity states, see the https://docs.jboss.org/hibernate/orm/{hibernate-version}/introduction/html_single/Hibernate_Introduction.html#persistence-contexts[Hibernate documentation].
 
 Calling the `save` method works regardless of whether the entity is managed or detached. Therefore, you should always call the `save` method if you intend to save the changes. This also makes the code easier to read. 
 
