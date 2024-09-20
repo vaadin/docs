@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/text-area';
+import '@vaadin/email-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('text-area-constraints')
+@customElement('email-field-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,16 +17,13 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-text-area
+      <vaadin-email-field
+        pattern="^.+@example\\.com$"
         required
-        min-length="5"
-        max-length="50"
-        pattern="^[A-Z]([A-Za-z0-9,-\\s])*\\.$"
-        allowed-char-pattern="[A-Za-z0-9,.\\-\\s]"
-        label="Sentence"
-        helper-text="Must be one complete sentence ending in a period, between 5 and 50 characters long"
-        style="width:100%"
-      ></vaadin-text-area>
+        label="Email address"
+        error-message="Enter a valid example.com email address"
+        helper-text="Only example.com addresses allowed"
+      ></vaadin-email-field>
       <!-- end::snippet[] -->
     `;
   }

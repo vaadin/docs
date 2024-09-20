@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/password-field';
+import '@vaadin/combo-box';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('password-field-constraints')
+@customElement('combo-box-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,14 +17,14 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-password-field
-        allowed-char-pattern="[A-Za-z0-9]"
+      <vaadin-combo-box
         required
-        min-length="6"
-        max-length="12"
-        label="Password"
-        helper-text="6 to 12 characters. Only letters A-Z and numbers supported."
-      ></vaadin-password-field>
+        allowed-char-pattern="[A-Z]"
+        label="Country code"
+        helper-text="2-letter uppercase ISO country code"
+        allow-custom-value
+        .items="${['DE', 'FI', 'US']}"
+      ></vaadin-combo-box>
       <!-- end::snippet[] -->
     `;
   }
