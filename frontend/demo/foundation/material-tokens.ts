@@ -1,10 +1,10 @@
 // Import all Material CSS custom properties into the global style scope
 // tag::color[]
 import '@vaadin/vaadin-material-styles/color';
-// end::color[]
-import { colorDark } from '@vaadin/vaadin-material-styles/color'; // hidden-source-line
 // tag::typography[]
 import '@vaadin/vaadin-material-styles/typography';
+// end::color[]
+import { colorDark } from '@vaadin/vaadin-material-styles/color'; // hidden-source-line
 // end::typography[]
 import { includeModule } from './include-module'; // hidden-source-line
 // prettier-ignore

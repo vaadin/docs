@@ -1,6 +1,6 @@
+import '@vaadin/button';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/button';
 
 @customElement('routing-registration')
 export class RegistrationView extends LitElement {

@@ -1,5 +1,4 @@
 import { EndpointValidationError } from '@vaadin/hilla-frontend';
-
 import { DateEndpoint } from 'Frontend/generated/endpoints';
 
 export async function callEndpoint() {
@@ -10,12 +9,10 @@ export async function callEndpoint() {
     // handle result...
   } catch (error) {
     if (error instanceof EndpointValidationError) {
-      (error as EndpointValidationError).validationErrorData.forEach(
-        ({ parameterName, message }) => {
-          console.warn(parameterName); // "date"
-          console.warn(message); // "Unable to deserialize an endpoint method parameter into type 'java.time.LocalDate'"
-        }
-      );
+      error.validationErrorData.forEach(({ parameterName, message }) => {
+        console.warn(parameterName); // "date"
+        console.warn(message); // "Unable to deserialize an endpoint method parameter into type 'java.time.LocalDate'"
+      });
     } else {
       // handle other error types...
     }

@@ -1,10 +1,10 @@
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/form-layout';
 import '@vaadin/password-field';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 
 @customElement('routing-login')
 export class LoginView extends LitElement {

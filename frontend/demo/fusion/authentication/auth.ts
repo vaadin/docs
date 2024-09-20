@@ -7,10 +7,10 @@ import {
   logout as logoutImpl,
   type LogoutOptions,
 } from '@vaadin/hilla-frontend';
+import type UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
 // end::impl[]
 // tag::userinfo[]
 import { UserInfoService } from 'Frontend/generated/endpoints';
-import type UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
 // end::userinfo[]
 // tag::basic[]
 
