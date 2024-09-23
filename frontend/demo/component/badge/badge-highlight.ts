@@ -5,8 +5,8 @@ import '@vaadin/icons';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService'; // hidden-source-line
-import type Report from 'Frontend/generated/com/vaadin/demo/domain/Report'; // hidden-source-line
+import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService';
+import type Report from 'Frontend/generated/com/vaadin/demo/domain/Report';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
