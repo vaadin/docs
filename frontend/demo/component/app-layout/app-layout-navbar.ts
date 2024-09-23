@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/app-layout';
 import '@vaadin/app-layout/vaadin-drawer-toggle';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/horizontal-layout';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source-line
 

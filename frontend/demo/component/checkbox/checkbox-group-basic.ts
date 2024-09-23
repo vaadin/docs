@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/checkbox';
 import '@vaadin/checkbox-group';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { applyTheme } from 'Frontend/generated/theme';
 
