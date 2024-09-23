@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/board';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/board';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('board-column-span')

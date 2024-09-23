@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/email-field';
 import '@vaadin/form-layout';
 import '@vaadin/horizontal-layout';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-dialog')
