@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/date-time-picker';
+import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/date-time-picker';
 import type { DateTimePickerChangeEvent } from '@vaadin/date-time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
-import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
 
 const dateTimeFormat = `yyyy-MM-dd'T'HH:00:00`;
 
