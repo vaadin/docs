@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/email-field';
+import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('email-field-constraints')
+@customElement('text-field-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,13 +17,15 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-email-field
-        pattern="^.+@example\\.com$"
+      <vaadin-text-field
         required
-        label="Email address"
-        error-message="Enter a valid example.com email address"
-        helper-text="Only example.com addresses allowed"
-      ></vaadin-email-field>
+        min-length="5"
+        max-length="18"
+        pattern="^[+]?[\\(]?[0-9]{3}[\\)]?[\\-]?[0-9]{3}[\\-]?[0-9]{4,6}$"
+        allowed-char-pattern="[0-9()+-]"
+        label="Phone number"
+        helper-text="Format: +(123)456-7890"
+      ></vaadin-text-field>
       <!-- end::snippet[] -->
     `;
   }

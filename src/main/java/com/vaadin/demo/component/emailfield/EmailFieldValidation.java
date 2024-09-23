@@ -5,10 +5,10 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("email-field-constraints")
-public class EmailFieldConstraints extends HorizontalLayout {
+@Route("email-field-validation")
+public class EmailFieldValidation extends HorizontalLayout {
 
-    public EmailFieldConstraints() {
+    public EmailFieldValidation() {
         setPadding(false);
 
         // tag::snippet[]
@@ -21,6 +21,6 @@ public class EmailFieldConstraints extends HorizontalLayout {
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<EmailFieldConstraints> { // hidden-source-line
+    public static class Exporter extends DemoExporter<EmailFieldValidation> { // hidden-source-line
     } // hidden-source-line
 }

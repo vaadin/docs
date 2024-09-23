@@ -6,7 +6,7 @@ import '@vaadin/time-picker';
 import type { TimePickerChangeEvent } from '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('time-picker-min-max')
+@customElement('time-picker-validation')
 export class Example extends LitElement {
   @state()
   protected errorMessage = '';
