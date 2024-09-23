@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/integer-field';
 import '@vaadin/popover';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { PopoverTrigger } from '@vaadin/popover';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';

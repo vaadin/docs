@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/button';
 import { LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/button';
 import { Notification } from '@vaadin/notification';
 
 @customElement('notification-primary')
