@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/date-time-picker';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/date-time-picker';
 import type { DateTimePickerValueChangedEvent } from '@vaadin/date-time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
