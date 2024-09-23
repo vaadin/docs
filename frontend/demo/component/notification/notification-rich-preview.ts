@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-rich-preview')

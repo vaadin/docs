@@ -1,8 +1,8 @@
+import '@vaadin/login/vaadin-login-form.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
-import '@vaadin/login/vaadin-login-form.js';
 import type { LoginI18n } from '@vaadin/login';
+import { applyTheme } from 'Frontend/generated/theme';
 import img from '../../../../src/main/resources/images/starry-sky.png';
 
 @customElement('login-overlay-mockup')

@@ -1,7 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/checkbox-group';
 import '@vaadin/grid';
@@ -9,6 +6,8 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/popover';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { CheckboxChangeEvent } from '@vaadin/checkbox';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
