@@ -11,7 +11,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import type { Button } from '@vaadin/button';
 import type { ComboBoxChangeEvent } from '@vaadin/combo-box';
-import { getPeople } from 'Frontend/demo/domain/DataService'; // hidden-source-line
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/generated/theme';
 
 type Profession = string;
