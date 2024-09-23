@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/button';
 import '@vaadin/radio-group';
-import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import '@vaadin/vertical-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('basic-layouts-spacing-variants')
 export class Example extends LitElement {

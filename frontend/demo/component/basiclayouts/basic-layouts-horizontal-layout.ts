@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/button';
+import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import '@vaadin/button';
-import '@vaadin/horizontal-layout';
 
 @customElement('basic-layouts-horizontal-layout')
 export class Example extends LitElement {

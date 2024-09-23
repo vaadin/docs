@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/custom-field';
+import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/custom-field';
 import type { CustomFieldChangeEvent } from '@vaadin/custom-field';
-import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('custom-field-native-input')
