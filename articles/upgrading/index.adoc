@@ -333,11 +333,11 @@ Vaadin Flow applications don't need any changes regarding React or Hilla depende
 - having Hilla or React dependencies is undesirable; and
 - you need the legacy `vaadin-router` (e.g. if your project uses an add-on that needs it).
 
-To opt-out, use always the `reactEnable` plugin configuration parameter. Disabling it excludes React completely from your project in production mode and fallbacks to `vaadin-router` and Lit. Use also `vaadin.react.enable` configuration property always when running the application in development mode without Maven or Gradle (E.g. with `java` command or with IDE's Run option --which ignores Maven plugin configurations).
+==== Opting-Out the React
 
-Both, `reactEnable` plugin configuration parameter and `vaadin.react.enable` configuration property should always have the same value to avoid confusion over which one is effective. In development mode, `vaadin.react.enable` configuration property has priority.
+To opt-out, change both `reactEnable` plugin configuration parameter and `vaadin.react.enable` configuration property to `false`.
 
-Set `reactEnable` plugin configuration parameter in the `vaadin-maven-plugin`. It's effective for builds and in development runtime when run with Maven:
+Maven plugin configuration parameter in the `vaadin-maven-plugin`:
 
 [source,xml]
 .pom.xml
@@ -351,18 +351,28 @@ Set `reactEnable` plugin configuration parameter in the `vaadin-maven-plugin`. I
 </plugin>
 ----
 
-Set `vaadin.react.enable` application property in the `application.properties` file when using Spring. It's effective in runtime in development mode. It's also effective in production mode, but only for runtime features. It's not affecting already build production bundle content:
-
+Configuration property with Spring Boot application properties:
 [source,terminal]
 .application.properties
 ----
 vaadin.react.enable=false
 ----
 
-Alternatively, set `vaadin.react.enable` <<../flow/configuration/properties#system-properties, system property>> or `react.enable` <<../flow/configuration/properties#servlet-initialization-parameters, initialization parameter>> for example when Spring is not used. Notice that system property has priority over application property. Also notice that running Spring application with Maven, you may need to wrap system property in `-Dspring-boot.run.jvmArguments=vaadin.react.enable=false"`.
+Disabling it excludes React completely from your project and fallbacks to `vaadin-router` and Lit.
+
+===== Why are there two places for the same property?
+
+There are two properties mainly to support the development and production modes. `reactEnable` is effective for both and `vaadin.react.enable` only for development.
+
+Production package is build by running the Vaadin Maven / Gradle plugin with `build-frontend` goal. Package contains the `reactEnable` plugin configuration parameter value in the build info file inside the package, which is used as a default value in runtime.
+
+Configuration property `vaadin.react.enable` overrides the default value in production package in runtime. However, it doesn't change the production bundle content.
+
+Running with the `vaadin.react.enable` in production mode means running possibly with a different value than production package was build with. Both properties should always have the same value to avoid confusion over which one is effective.
+
+===== Simplify maintenance with Automatic Property Expansion
 
 To make it easier to keep both properties same, Spring supports https://docs.spring.io/spring-boot/how-to/properties-and-configuration.html#howto.properties-and-configuration.expand-properties.maven[Automatic Property Expansion with Maven] and https://docs.spring.io/spring-boot/how-to/properties-and-configuration.html#howto.properties-and-configuration.expand-properties.gradle[with Gradle]. Please follow the instructions in the Spring documentation to enable this feature.
-
 
 When running with Maven and using `spring-boot-starter-parent`, property value can have `@reactEnable@` which is replaced with the value of the `reactEnable` Maven project property. Otherwise, please follow the https://docs.spring.io/spring-boot/how-to/properties-and-configuration.html#howto.properties-and-configuration.expand-properties.maven[Spring documentation] to learn how to enable `resources` filtering and set `maven-resources-plugin` configurations.
 
@@ -390,6 +400,12 @@ vaadin.react.enable=@reactEnable@
    </configuration>
 </plugin>
 ----
+
+===== Opting-Out the React without Spring
+
+When Spring is not used, set `vaadin.react.enable` <<../flow/configuration/properties#system-properties, system property>> or `react.enable` <<../flow/configuration/properties#servlet-initialization-parameters, initialization parameter>>. Notice that system property has priority over application property. Also notice that running Spring application with Maven, you may need to wrap system property in `-Dspring-boot.run.jvmArguments=vaadin.react.enable=false"`.
+
+==== Opting-Out the React Components
 
 If you don't need Vaadin's https://github.com/vaadin/react-components[React components], you can opt-out by excluding the `flow-react` package in your dependencies. This replaces the `@vaadin/react-components` and `@vaadin/react-components-pro` packages in your [filename]`package.json` with `@vaadin/*` web components:
 
