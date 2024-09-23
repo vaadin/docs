@@ -1,4 +1,4 @@
-import { Route, Router } from '@vaadin/router';
+import type { Route, Router } from '@vaadin/router';
 import { isUserInRole } from './auth';
 
 // Enable declaring additional data on the routes

@@ -1,4 +1,4 @@
-import { html, LitElement, TemplateResult } from 'lit';
+import { html, LitElement, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('data-binding-view')

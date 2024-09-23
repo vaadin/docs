@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/text-field';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('text-field-basic')

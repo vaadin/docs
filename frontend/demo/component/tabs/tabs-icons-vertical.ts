@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/tabs';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 
 @customElement('tabs-icons-vertical')
 export class Example extends LitElement {

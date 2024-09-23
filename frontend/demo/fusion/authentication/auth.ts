@@ -9,8 +9,8 @@ import {
 } from '@vaadin/hilla-frontend';
 // end::impl[]
 // tag::userinfo[]
-import { UserInfoService } from 'Frontend/generated/endpoints';
 import type UserInfo from 'Frontend/generated/com/vaadin/demo/fusion/security/authentication/UserInfo';
+import { UserInfoService } from 'Frontend/generated/endpoints';
 // end::userinfo[]
 // tag::basic[]
 

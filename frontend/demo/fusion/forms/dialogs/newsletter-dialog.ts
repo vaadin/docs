@@ -1,20 +1,19 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { Binder, field, ObjectModel } from '@vaadin/hilla-lit-form';
-import NewsletterSubscriptionModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/dialogs/NewsletterSubscriptionModel';
-import { NewsletterEndpoint } from 'Frontend/generated/endpoints';
-import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/checkbox';
 import '@vaadin/dialog';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
-import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
+import { html, LitElement } from 'lit';
+import { customElement, query, state } from 'lit/decorators.js';
 import type { Dialog, DialogOpenedChangedEvent } from '@vaadin/dialog';
+import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
+import { Binder, field, ObjectModel } from '@vaadin/hilla-lit-form';
 import { Notification } from '@vaadin/notification';
+import NewsletterSubscriptionModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/dialogs/NewsletterSubscriptionModel';
+import { NewsletterEndpoint } from 'Frontend/generated/endpoints';
 
-// @ts-ignore // hidden-source-line
+// @ts-expect-error // hidden-source-line
 NewsletterSubscriptionModel.createEmptyValue = ObjectModel.createEmptyValue; // hidden-source-line
 
 @customElement('newsletter-dialog')
