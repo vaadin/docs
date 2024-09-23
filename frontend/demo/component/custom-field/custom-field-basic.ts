@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/custom-field';
 import '@vaadin/date-picker';
-import { applyTheme } from 'Frontend/generated/theme';
+import { differenceInDays, isAfter, parseISO } from 'date-fns';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { Binder, field } from '@vaadin/hilla-lit-form';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
-import { differenceInDays, parseISO, isAfter } from 'date-fns';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('custom-field-basic')
 export class Example extends LitElement {
