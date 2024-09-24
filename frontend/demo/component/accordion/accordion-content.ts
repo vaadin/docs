@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/accordion';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('accordion-content')

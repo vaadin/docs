@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/context-menu';
-import { contextMenuRenderer } from '@vaadin/context-menu/lit.js';
 import '@vaadin/icon';
-import { badge } from '@vaadin/vaadin-lumo-styles/badge.js';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { contextMenuRenderer } from '@vaadin/context-menu/lit.js';
+import { badge } from '@vaadin/vaadin-lumo-styles/badge.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('notification-popup')

@@ -1,17 +1,16 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { GridSelectedItemsChangedEvent } from '@vaadin/grid';
 import type { GridSelectionColumnSelectAllChangedEvent } from '@vaadin/grid/vaadin-grid-selection-column';
-import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-grid')
 export class Example extends LitElement {

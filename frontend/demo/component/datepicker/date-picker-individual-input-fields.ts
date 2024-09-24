@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/combo-box';
+import '@vaadin/horizontal-layout';
+import getDaysInMonth from 'date-fns/getDaysInMonth';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/combo-box';
 import type { ComboBoxSelectedItemChangedEvent } from '@vaadin/combo-box';
-import '@vaadin/horizontal-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-import getDaysInMonth from 'date-fns/getDaysInMonth';
 
 @customElement('date-picker-individual-input-fields')
 export class Example extends LitElement {

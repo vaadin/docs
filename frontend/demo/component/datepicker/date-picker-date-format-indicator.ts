@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/date-picker';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-date-format-indicator')

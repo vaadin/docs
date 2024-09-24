@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/confirm-dialog';
 import '@vaadin/horizontal-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { ConfirmDialogOpenedChangedEvent } from '@vaadin/confirm-dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 

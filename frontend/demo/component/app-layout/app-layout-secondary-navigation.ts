@@ -1,6 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/app-layout';
 import '@vaadin/app-layout/vaadin-drawer-toggle';
 import '@vaadin/horizontal-layout';
@@ -9,8 +7,10 @@ import '@vaadin/icons';
 import '@vaadin/scroller';
 import '@vaadin/side-nav';
 import '@vaadin/vertical-layout';
-import { applyTheme } from 'Frontend/generated/theme';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
+import { applyTheme } from 'Frontend/generated/theme';
 import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source-line
 
 @customElement('app-layout-secondary-navigation')
