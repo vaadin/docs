@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/board';
-import { applyTheme } from 'Frontend/generated/theme';
 import './example-indicator';
 import './example-statistics';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('board-nested')
 export class Example extends LitElement {

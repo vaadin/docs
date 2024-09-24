@@ -1,6 +1,6 @@
+import '@vaadin/progress-bar';
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import '@vaadin/progress-bar';
 
 @customElement('fake-progress-bar')
 export class FakeProgressBar extends LitElement {

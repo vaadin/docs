@@ -1,5 +1,5 @@
-import { css, html, LitElement, render } from 'lit';
 import type { TemplateResult } from 'lit';
+import { css, html, LitElement, render } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import { convertToEnumName, generateVaadinIconset } from './iconset-helpers';
 

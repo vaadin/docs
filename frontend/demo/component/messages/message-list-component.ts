@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/message-list';
+import { format, subDays, subMinutes } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/message-list';
-import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { format, subDays, subMinutes } from 'date-fns';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('message-list-component')
 export class Example extends LitElement {

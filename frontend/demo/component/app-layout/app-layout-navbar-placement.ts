@@ -1,14 +1,14 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/app-layout';
 import '@vaadin/app-layout/vaadin-drawer-toggle';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/scroller';
 import '@vaadin/side-nav';
-import { applyTheme } from 'Frontend/generated/theme';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-navbar-placement')
 export class Example extends LitElement {

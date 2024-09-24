@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/message-input';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/message-input';
 import type { MessageInputSubmitEvent } from '@vaadin/message-input';
 import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/generated/theme';
