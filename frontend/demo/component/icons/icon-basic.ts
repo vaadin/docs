@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import '@vaadin/icons';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
