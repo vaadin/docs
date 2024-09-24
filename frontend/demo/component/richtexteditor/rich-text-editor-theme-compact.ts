@@ -1,11 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/rich-text-editor';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/rich-text-editor';
-
-import templates from '../../../../src/main/resources/data/templates.json';
 import { applyTheme } from 'Frontend/generated/theme';
+import templates from '../../../../src/main/resources/data/templates.json';
 
 @customElement('rich-text-editor-theme-compact')
 export class Example extends LitElement {

@@ -1,7 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/date-picker';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
@@ -9,12 +6,14 @@ import '@vaadin/popover';
 import '@vaadin/select';
 import '@vaadin/text-field';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
+import { formatISO, subMonths, subWeeks, subYears } from 'date-fns';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { DatePickerChangeEvent } from '@vaadin/date-picker';
 import type { PopoverOpenedChangedEvent, PopoverTrigger } from '@vaadin/popover';
-import type { SelectChangeEvent } from '@vaadin/select';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
+import type { SelectChangeEvent } from '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
-import { formatISO, subMonths, subWeeks, subYears } from 'date-fns';
 
 @customElement('popover-dropdown-field')
 export class Example extends LitElement {

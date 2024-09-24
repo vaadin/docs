@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/email-field';
 import '@vaadin/form-layout';
-import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import '@vaadin/split-layout';
 import '@vaadin/text-field';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('form-layout-custom-layout')
