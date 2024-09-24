@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/horizontal-layout';
 import '@vaadin/combo-box';
+import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';

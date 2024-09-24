@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/integer-field';
 import '@vaadin/form-layout';
 import '@vaadin/form-layout/vaadin-form-item.js';
+import '@vaadin/integer-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
