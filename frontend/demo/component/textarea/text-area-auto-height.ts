@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/text-area';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/text-area';
-import templates from '../../../../src/main/resources/data/templates.json';
 import { applyTheme } from 'Frontend/generated/theme';
+import templates from '../../../../src/main/resources/data/templates.json';
 
 @customElement('text-area-auto-height')
 export class Example extends LitElement {

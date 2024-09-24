@@ -2,10 +2,10 @@
 // tag::color[]
 import '@vaadin/vaadin-material-styles/color';
 // end::color[]
-import { colorDark } from '@vaadin/vaadin-material-styles/color'; // hidden-source-line
 // tag::typography[]
 import '@vaadin/vaadin-material-styles/typography';
 // end::typography[]
+import { colorDark } from '@vaadin/vaadin-material-styles/color'; // hidden-source-line
 import { includeModule } from './include-module'; // hidden-source-line
 // prettier-ignore
 includeModule(colorDark, (css) => css.replace(':host', 'html[theme~="dark"]').replace('background-color: var(--material-background-color);', '').replace('color: var(--material-body-text-color);', '')); // hidden-source-line

@@ -1,13 +1,13 @@
 import { LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import type { LoginResult } from '@vaadin/hilla-frontend';
 import { Router } from '@vaadin/router';
-import { LoginResult } from '@vaadin/hilla-frontend';
 
 @customElement('login-view')
 export class LoginView extends LitElement {
   private returnUrl = '/';
 
-  // @ts-ignore
+  // @ts-expect-error
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private onSuccess = (_: LoginResult) => {
     Router.go(this.returnUrl);

@@ -1,8 +1,8 @@
+import 'Frontend/demo/init';
+import type { CSSResult } from 'lit';
 import React, { type ComponentClass, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { CSSResult } from 'lit';
-import 'Frontend/demo/init';
 
 export function reactExample(
   Example: ComponentClass<any> | FunctionComponent<any>,
