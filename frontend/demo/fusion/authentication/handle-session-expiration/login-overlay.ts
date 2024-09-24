@@ -7,7 +7,6 @@ import { Router } from '@vaadin/router';
 export class LoginView extends LitElement {
   private returnUrl = '/';
 
-  // @ts-expect-error
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private onSuccess = (_: LoginResult) => {
     Router.go(this.returnUrl);
