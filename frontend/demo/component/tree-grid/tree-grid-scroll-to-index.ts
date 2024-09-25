@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/grid';
 import '@vaadin/button';
-import '@vaadin/integer-field';
-import '@vaadin/horizontal-layout';
+import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-tree-column.js';
+import '@vaadin/horizontal-layout';
+import '@vaadin/integer-field';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import type {
