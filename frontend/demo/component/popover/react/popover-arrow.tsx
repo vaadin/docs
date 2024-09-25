@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import React from 'react';
 import { Button, Icon, Popover } from '@vaadin/react-components';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   // tag::snippet[]

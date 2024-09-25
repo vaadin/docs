@@ -1,6 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   return (

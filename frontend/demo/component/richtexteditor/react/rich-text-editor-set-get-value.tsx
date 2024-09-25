@@ -1,13 +1,13 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React, { useRef } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { RichTextEditor } from '@vaadin/react-components-pro/RichTextEditor.js';
 import { TextArea, type TextAreaChangeEvent } from '@vaadin/react-components/TextArea.js';
 import type {
   RichTextEditorElement,
   RichTextEditorValueChangedEvent,
 } from '@vaadin/react-components-pro/RichTextEditor.js';
+import { RichTextEditor } from '@vaadin/react-components-pro/RichTextEditor.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

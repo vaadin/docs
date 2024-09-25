@@ -1,8 +1,8 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
 import { FormItem } from '@vaadin/react-components/FormItem.js';
+import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
 import { IntegerField } from '@vaadin/react-components/IntegerField';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   {

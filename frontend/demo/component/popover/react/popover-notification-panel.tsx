@@ -1,20 +1,20 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { format, subMinutes } from 'date-fns';
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   Button,
   HorizontalLayout,
   Icon,
   MessageList,
+  type MessageListItem,
   Popover,
   TabSheet,
   TabSheetTab,
-  type MessageListItem,
 } from '@vaadin/react-components';
-import { format, subMinutes } from 'date-fns';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   return (

@@ -1,13 +1,13 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import '@vaadin/icons';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Notification } from '@vaadin/react-components/Notification.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import { Button } from '@vaadin/react-components/Button.js';
-import { Avatar } from '@vaadin/react-components/Avatar.js';
-import '@vaadin/icons';
+import { Notification } from '@vaadin/react-components/Notification.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

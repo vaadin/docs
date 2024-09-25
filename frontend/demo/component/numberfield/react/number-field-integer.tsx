@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { IntegerField } from '@vaadin/react-components/IntegerField.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   return (
