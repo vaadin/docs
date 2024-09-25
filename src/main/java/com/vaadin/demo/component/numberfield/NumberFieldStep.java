@@ -17,8 +17,8 @@ public class NumberFieldStep extends Div {
         numberField.setValue(12.5);
         numberField.setStepButtonsVisible(true);
         numberField.setI18n(new NumberFieldI18n()
-            .setBadInputErrorMessage("Invalid number format")
-            .setStepErrorMessage("Duration must be a multiple of 0.5"));
+                .setBadInputErrorMessage("Invalid number format")
+                .setStepErrorMessage("Duration must be a multiple of 0.5"));
         add(numberField);
         // end::snippet[]
     }

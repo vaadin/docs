@@ -21,10 +21,10 @@ public class NumberFieldValidation extends Div {
         integerField.setStepButtonsVisible(true);
 
         integerField.setI18n(new IntegerFieldI18n()
-            .setRequiredErrorMessage("Field is required")
-            .setBadInputErrorMessage("Invalid number format")
-            .setMinErrorMessage("Quantity must be at least 1")
-            .setMaxErrorMessage("Maximum 10 items available"));
+                .setRequiredErrorMessage("Field is required")
+                .setBadInputErrorMessage("Invalid number format")
+                .setMinErrorMessage("Quantity must be at least 1")
+                .setMaxErrorMessage("Maximum 10 items available"));
 
         add(integerField);
         // end::snippet[]

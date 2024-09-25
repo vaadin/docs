@@ -23,7 +23,8 @@ public class PasswordFieldValidation extends HorizontalLayout {
                 .setRequiredErrorMessage("Field is required")
                 .setMinLengthErrorMessage("Minimum length is 6 characters")
                 .setMaxLengthErrorMessage("Maximum length is 12 characters")
-                .setPatternErrorMessage("Only letters A-Z and numbers are allowed"));
+                .setPatternErrorMessage(
+                        "Only letters A-Z and numbers are allowed"));
         // end::snippet[]
         field.setHelperText(
                 "6 to 12 characters. Only letters A-Z and numbers supported.");

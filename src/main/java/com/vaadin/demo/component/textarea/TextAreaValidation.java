@@ -21,10 +21,11 @@ public class TextAreaValidation extends HorizontalLayout {
         field.setMaxLength(50);
 
         field.setI18n(new TextAreaI18n()
-            .setRequiredErrorMessage("Field is required")
-            .setMinLengthErrorMessage("Minimum length is 5 characters")
-            .setMaxLengthErrorMessage("Maximum length is 50 characters")
-            .setPatternErrorMessage("Must be one complete sentence ending in a period"));
+                .setRequiredErrorMessage("Field is required")
+                .setMinLengthErrorMessage("Minimum length is 5 characters")
+                .setMaxLengthErrorMessage("Maximum length is 50 characters")
+                .setPatternErrorMessage(
+                        "Must be one complete sentence ending in a period"));
         // end::snippet[]
         field.setHelperText(
                 "Must be one complete sentence ending in a period, between 5 and 50 characters long");
