@@ -21,6 +21,7 @@ export class Example extends LitElement {
         allowed-char-pattern="[A-Z]"
         label="Country code"
         helper-text="2-letter uppercase ISO country code"
+        error-message="Field is required"
         allow-custom-value
         .items="${['DE', 'FI', 'US']}"
       ></vaadin-combo-box>
