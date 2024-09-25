@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
 import '@vaadin/icons';
+import React, { useMemo } from 'react';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 // tag::snippet[]
 function ExampleIndicator({ title = 'Unknown', current = '0', change = 0 }) {

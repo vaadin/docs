@@ -1,16 +1,16 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
-import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Dialog } from '@vaadin/react-components/Dialog.js';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
+import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { EmailField } from '@vaadin/react-components/EmailField.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import '@vaadin/icons';
 
 function Example() {
   useSignals(); // hidden-source-line

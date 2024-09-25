@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { DateTimePicker } from '@vaadin/react-components/DateTimePicker.js';
 
 const initialStartValue = '2020-08-25T20:00';

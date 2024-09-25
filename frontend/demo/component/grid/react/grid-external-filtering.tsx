@@ -1,17 +1,17 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { Avatar } from '@vaadin/react-components/Avatar.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { Icon } from '@vaadin/react-components/Icon.js';
-import '@vaadin/icons';
 
 type PersonEnhanced = Person & { displayName: string };
 

@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
 import templates from '../../../../../src/main/resources/data/templates.json';
 

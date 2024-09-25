@@ -1,9 +1,9 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Button } from '@vaadin/react-components/Button.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
 import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
-import '@vaadin/icons';
+import { Icon } from '@vaadin/react-components/Icon.js';
 
 function Example() {
   return (

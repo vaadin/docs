@@ -1,14 +1,14 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import exampleStyles from './scroller-basic-styles'; // hidden-source-line
 import React from 'react';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { Button } from '@vaadin/react-components/Button.js';
+import { DatePicker } from '@vaadin/react-components/DatePicker.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { Scroller } from '@vaadin/react-components/Scroller.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { DatePicker } from '@vaadin/react-components/DatePicker.js';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
-import { Button } from '@vaadin/react-components/Button.js';
-import '@vaadin/icons';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import exampleStyles from './scroller-basic-styles'; // hidden-source-line
 
 function Example() {
   return (

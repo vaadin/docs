@@ -1,9 +1,9 @@
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 import React from 'react';
-import { useAuth } from './auth';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
+import { useAuth } from './auth';
 
 export const config: ViewConfig = {
   menu: { exclude: true },

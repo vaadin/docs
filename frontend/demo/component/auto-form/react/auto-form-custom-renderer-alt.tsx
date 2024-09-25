@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
-import { type AutoFormLayoutRendererProps, AutoForm } from '@vaadin/hilla-react-crud';
-import { EmployeeService } from 'Frontend/generated/endpoints.js';
-import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { AutoForm, type AutoFormLayoutRendererProps } from '@vaadin/hilla-react-crud';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
+import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
+import { EmployeeService } from 'Frontend/generated/endpoints.js';
 
 // tag::snippet[]
 function GroupingLayoutRenderer({ children }: AutoFormLayoutRendererProps<EmployeeModel>) {
