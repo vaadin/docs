@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Chart } from '@vaadin/react-components-pro/Chart.js';
 import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   return (

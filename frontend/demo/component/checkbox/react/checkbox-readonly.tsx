@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
-import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
+import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   const [value] = useState(['0', '2']);

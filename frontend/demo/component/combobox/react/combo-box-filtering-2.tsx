@@ -1,9 +1,9 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { ComboBox, type ComboBoxFilterChangedEvent } from '@vaadin/react-components/ComboBox.js';
 import { getCountries } from 'Frontend/demo/domain/DataService';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 function Example() {

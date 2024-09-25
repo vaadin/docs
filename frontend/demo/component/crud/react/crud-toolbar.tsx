@@ -1,14 +1,14 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import '@vaadin/icons';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { Button } from '@vaadin/react-components/Button.js';
-import { Crud } from '@vaadin/react-components-pro/Crud.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
+import { Crud } from '@vaadin/react-components-pro/Crud.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import '@vaadin/icons';
 
 function Example() {
   useSignals(); // hidden-source-line
