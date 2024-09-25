@@ -1,8 +1,8 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useRef, useEffect } from 'react';
-import { useComputed } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import React, { useEffect, useRef } from 'react';
+import { useComputed } from '@vaadin/hilla-react-signals';
 import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { createFakeFilesUploadAutoUploadDisabled } from './upload-demo-mock-files';
 
 function Example() {

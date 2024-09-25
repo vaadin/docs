@@ -1,12 +1,12 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import '@vaadin/icons';
 import React from 'react';
 import { AppLayout } from '@vaadin/react-components/AppLayout.js';
 import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
-import { Tooltip } from '@vaadin/react-components/Tooltip.js';
-import { Tabs } from '@vaadin/react-components/Tabs.js';
-import { Tab } from '@vaadin/react-components/Tab.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import '@vaadin/icons';
+import { Tab } from '@vaadin/react-components/Tab.js';
+import { Tabs } from '@vaadin/react-components/Tabs.js';
+import { Tooltip } from '@vaadin/react-components/Tooltip.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   return (

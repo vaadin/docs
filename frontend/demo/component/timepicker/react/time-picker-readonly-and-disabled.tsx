@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   return (

@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import codeBranchIcon from '../../../../../src/main/resources/icons/code-branch.svg';
 import { Icon } from '@vaadin/react-components/Icon.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import codeBranchIcon from '../../../../../src/main/resources/icons/code-branch.svg';
 
 function Example() {
   return (

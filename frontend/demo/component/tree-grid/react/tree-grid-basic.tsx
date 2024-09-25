@@ -1,4 +1,3 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import {
   Grid,
@@ -8,6 +7,7 @@ import {
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridTreeColumn } from '@vaadin/react-components/GridTreeColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]

@@ -1,20 +1,20 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React, { useMemo, useRef } from 'react';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
+import { Button } from '@vaadin/react-components/Button.js';
 import {
   Grid,
-  type GridElement,
   type GridDataProviderCallback,
   type GridDataProviderParams,
+  type GridElement,
 } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridTreeColumn } from '@vaadin/react-components/GridTreeColumn.js';
-import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { IntegerField } from '@vaadin/react-components/IntegerField.js';
-import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { useSignal, useComputed } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { IntegerField } from '@vaadin/react-components/IntegerField.js';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 type PersonOrId =
   | Person

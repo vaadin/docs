@@ -1,11 +1,11 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { MessageList } from '@vaadin/react-components/MessageList.js';
-import { MessageInput } from '@vaadin/react-components/MessageInput.js';
 import type { MessageListItem } from '@vaadin/message-list';
+import { MessageInput } from '@vaadin/react-components/MessageInput.js';
+import { MessageList } from '@vaadin/react-components/MessageList.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line
