@@ -33,11 +33,13 @@ Another way of reasoning about the cohesion of services is that any single servi
 
 In a situation like this, you should create a new `PaymentSummaryService`, and implement the method there. You now have two services with only a single reason to change. In other words, they are highly cohesive.
 
+// TODO I want to write something about service methods being atomic and stand-alone, and that a service method should never call another, but I don't know how to formulate it. Maybe under its own section.
+
 == Interfaces or Classes?
 
 In the early days of Spring, services consisted of both an interface, and an implementation class. The reason for this is that Spring uses proxies to handle various cross-cutting concerns. At that time, you could only create proxies of Java interfaces, not classes. Furthermore, when writing tests, you could only mock interfaces, not classes.
 
-Nowadays, this limitation is gone. As long as your service classes aren't final, and don't contain any final methods, Spring can make proxies of them. You can also mock them during tests.
+Nowadays, this limitation is gone. As long as your service classes are not `final`, and do not contain any `final` methods, Spring can make proxies of them. You can also mock them during tests.
 
 Because of this, creating interfaces for application services is a matter of personal taste. If you like to create interfaces, you can continue to do so. In that case, you should make the implementation class package protected, like this:
 
@@ -59,7 +61,7 @@ public class PaymentService {
 }
 ----
 
-The advantage with this approach is that you have one Java file less to maintain. Both approaches work  fine with Vaadin.
+The advantage with this approach is that you have one Java file less to maintain. Both approaches are suitable for Vaadin.
 
 == Input and Output
 
@@ -97,15 +99,15 @@ Using entities in your application service is a good idea when your user interfa
 
 It is also a good idea when your entities are _anemic_, which means that they only contain data and little to no business logic.
 
-In both of these cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it both to the user interface and the entity.
+In both of these cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it both to the user interface, and the entity.
 
 === Data Transfer Objects
 
-Some times, it is not a good idea for the application services to return the entities themselves. 
+Sometimes, it is not a good idea for the application services to return the entities themselves. 
 
 For instance, the domain model may contain business logic that must be called within some context that is not available in the presentation layer. It might require access to other services, or run inside a transaction.
 
-In other cases, the user interface may need only a subset of the data stored inside a single entity, or a combination of data from multiple entities. Fetching and returning the full entities would be a waste of computing resources.
+In other cases, the user interface may need only a subset of the data stored inside a single entity, or a combination of data from multiple entities. Fetching and returning the full entities would be a waste of resources.
 
 You may also have a situation where the domain model and user interface are changing independently of each other. For example, the domain model may have to be adjusted every year due to government regulations while the user interface remains more or less the same.
 
@@ -154,16 +156,53 @@ If you are using <<{articles}/building-apps/application-layer/domain-primitives#
 
 == Cross-Cutting Concerns
 
-Application services act as the main entry point into the application from the user interface. Because of this, they have other responsibilities than handling the business activities. The most important ones are security, transaction management, and observability.
+Application services act as the main entry point into the application from the user interface. Because of this, they have some extra responsibilities in addition to handling the business activities. The most important ones are security, transaction management, and observability.
 
 image::images/cross-cutting-concerns.png[A call from the presentation layer goes through three boundaries]
+
+You can implement cross-cutting concerns in two ways. You can use Aspect Oriented Programming (AOP), which is what Spring uses for its cross-cutting concerns. For instance, this is how you would run the `save` method inside a transaction using AOP: 
+
+[source,java]
+----
+@Service
+public class CustomerCrudService {
+    ...
+    @Transactional
+    public CustomerForm save(CustomerForm customerForm) {
+        ...
+    }
+}
+----
+
+During application startup, Spring detects the `@Transactional` annotation and turns the service into a proxy. When a client calls the `save` method, the calls gets routed through a _method interceptor_. The interceptor starts the transaction, calls the actual method, and then commits the transaction when the method returns.
+
+You can also implement the cross-cutting concerns inside every service method. For instance, this is how you would run the `save` method inside a transaction explicitly:
+
+[source,java]
+----
+@Service
+public class CustomerCrudService {
+    private final TransactionTemplate transactionTemplate;
+    ...
+
+    public CustomerForm save(CustomerForm customerForm) {
+        return transactionTemplate.execute(tx -> {
+            ...
+        });
+    }
+}
+----
+
+If you use AOP, you should write integration tests that also test the cross-cutting concerns. If there is a problem with your application context, and your aspect ends up not being applied, you may not notice it until it is too late.
+
+See the https://docs.spring.io/spring-framework/reference/core/aop.html[Spring Documentation] for more information about AOP.
 
 [NOTE]
 Each cross-cutting concern deserves a documentation page of its own. This section will be updated as new pages are written.
 
 === Security
 
-All application services in your Vaadin application should be protected by Spring Security. You should do this regardless of how your views are protected. Even methods that do not require authentication should be explicitly annotated to permit all users.
+All application services in your Vaadin application should be protected by Spring Security. You should do this regardless of how your user interface views are protected. Even methods that do not require authentication should be explicitly declared to permit anonymous users.
 
 To protect application services, you have to enable _method security_. To do that, you need to add the `@EnableMethodSecurity` annotation to your security class. After that, you can use annotations to secure your application services. Spring Boot recommends the use of the `@PreAuthorize` annotation.
 
@@ -173,7 +212,7 @@ See the https://docs.spring.io/spring-security/reference/servlet/authorization/m
 
 === Transactions
 
-All application service methods that touch the database should always run inside their own transactions. You can use either declarative, or programmatic transaction management.
+All application service methods that touch the database should always run inside their own transactions. You should use the `REQUIRES_NEW` transaction propagation.
 
 See the https://docs.spring.io/spring-framework/reference/data-access/transaction.html[Spring Documentation] for more information about transaction management.
 
@@ -181,11 +220,42 @@ See the https://docs.spring.io/spring-framework/reference/data-access/transactio
 
 === Observability
 
-// TODO
+If you want to observe what your application services are doing from the outside, you can use https://micrometer.io/[Micrometer Observation].
+
+See the https://docs.spring.io/spring-boot/reference/actuator/observability.html[Spring Boot Documentation] for more information about observability.
+
+// TODO Add a link to a separate page about observability
 
 == Vaadin Integration
 
-// TODO
+For Flow user interfaces, you inject the application services directly into your views, like this:
+
+[source,java]
+----
+@Route("payment")
+public class PaymentView extends VerticalLayout {
+
+    private final PaymentService paymentService;
+
+    public PaymentView(PaymentService paymentService) {
+        this.paymentService = paymentService;
+        ...
+    }
+}
+----
+
+For Hilla, you should make the application services _browser callable_. You do this by adding the `@BrowserCallable` annotation to your service, like this:
+
+[source,java]
+----
+@Service
+@BrowserCallable
+public class PaymentService {
+    ...
+}
+----
+
+See the <<{articles}/hilla/guides/endpoints#,Hilla endpoints documentation page>> for more information.
 
 == Scaling
 
@@ -199,6 +269,14 @@ For example, on this diagram, the presentation layer interacts with three differ
 
 image::images/domain-application-services.png[The presentation calls three different application service components]
 
-Bounded contexts are often associated with <<{articles}/building-apps/architecture/microservices#,microservices>>, but in Vaadin applications, it is easier to implement them as a <<{articles}/building-apps/architecture/monolith#,modular monlith>>.
+Bounded contexts are often associated with <<{articles}/building-apps/architecture/microservices#,microservices>>. However, you can also use them when you're building <<{articles}/building-apps/architecture/monoliths#,modular monliths>>. This is the recommended approach in Vaadin applications.
 
-// TODO continue here
+In <<{articles}/building-apps/project-structure/single-module#,single-module projects>>, you should place the bounded contexts into their own packages. The three contexts from the example above would correspond to the following Java packages:
+
+* `com.example.application.qm.services` (Quotation Management)
+* `com.example.application.om.services` (Order Management)
+* `com.example.application.crm.services` (Customer Relations Management)
+
+In <<{articles}/building-apps/project-structure/multi-module#,multi-module projects>>, you should place the bounded contexts into their own Maven modules. 
+
+You may even want to split a single bounded context into multiple Maven modules. For instance, you might want to have the application services and the domain model in two separate modules.
