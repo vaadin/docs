@@ -1,7 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React, { useEffect, useMemo } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import {
   Grid,
   type GridDataProviderCallback,
@@ -10,6 +9,7 @@ import {
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridTreeColumn } from '@vaadin/react-components/GridTreeColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {

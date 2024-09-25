@@ -1,10 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
-import { useSignal, useComputed } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import getDaysInMonth from 'date-fns/getDaysInMonth';
+import React from 'react';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import getDaysInMonth from 'date-fns/getDaysInMonth';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

@@ -1,12 +1,12 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { Button } from '@vaadin/react-components/Button.js';
+import { Dialog } from '@vaadin/react-components/Dialog.js';
+import { TextArea } from '@vaadin/react-components/TextArea.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { TextArea } from '@vaadin/react-components/TextArea.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

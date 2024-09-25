@@ -1,9 +1,9 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
 import React from 'react'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { DateTimePicker } from '@vaadin/react-components/DateTimePicker.js';
-import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 // tag::snippet[]
 function Example() {

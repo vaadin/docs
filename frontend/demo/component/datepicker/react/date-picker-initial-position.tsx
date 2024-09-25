@@ -1,9 +1,9 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { formatISO, lastDayOfYear } from 'date-fns';
 import React from 'react';
 import { useComputed } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { DatePicker } from '@vaadin/react-components/DatePicker.js';
-import { formatISO, lastDayOfYear } from 'date-fns';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

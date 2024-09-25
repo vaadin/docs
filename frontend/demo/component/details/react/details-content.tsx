@@ -1,7 +1,7 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Details } from '@vaadin/react-components/Details.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 const anchorStyle = {
   textDecoration: 'none',

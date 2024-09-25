@@ -1,6 +1,6 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
 import { DatePicker, type DatePickerElement } from '@vaadin/react-components/DatePicker.js';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 
 function Example() {
   // tag::snippet[]

@@ -1,17 +1,17 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import '@vaadin/icons';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { Details } from '@vaadin/react-components/Details.js';
 import { DetailsSummary } from '@vaadin/react-components/DetailsSummary.js';
 import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import { TextField } from '@vaadin/react-components/TextField.js';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import '@vaadin/icons';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },
