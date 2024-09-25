@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
 import '@vaadin/button';
 import '@vaadin/icon';
 import '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
+import { html, LitElement } from 'lit';
 import { applyTheme } from 'Frontend/generated/theme';
 
 export class Example extends LitElement {

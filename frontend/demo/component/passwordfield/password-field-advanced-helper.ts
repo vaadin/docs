@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/password-field';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { PasswordFieldValueChangedEvent } from '@vaadin/password-field';
 import { applyTheme } from 'Frontend/generated/theme';
 

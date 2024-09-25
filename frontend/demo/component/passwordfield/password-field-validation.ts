@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/password-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/password-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('password-field-validation')

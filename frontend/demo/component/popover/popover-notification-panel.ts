@@ -1,7 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
@@ -9,11 +6,13 @@ import '@vaadin/message-list';
 import '@vaadin/popover';
 import '@vaadin/tabsheet';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
+import { format, subMinutes } from 'date-fns';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { MessageListItem } from '@vaadin/message-list';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
-import { format, subMinutes } from 'date-fns';
-import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('popover-notifications-panel')
 export class Example extends LitElement {

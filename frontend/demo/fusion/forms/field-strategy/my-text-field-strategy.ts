@@ -3,9 +3,9 @@ import type { FieldStrategy } from '@vaadin/hilla-lit-form';
 import type { MyTextField } from './my-text-field';
 
 export class MyTextFieldStrategy implements FieldStrategy {
-  public element: MyTextField;
+  element: MyTextField;
 
-  public constructor(element: MyTextField) {
+  constructor(element: MyTextField) {
     this.element = element;
   }
 
@@ -20,6 +20,7 @@ export class MyTextFieldStrategy implements FieldStrategy {
   set errorMessage(errorMessage: string) {
     this.element.error = errorMessage;
   }
+
   // ...
   // end::snippet[]
   validate = async () => [];
@@ -40,15 +41,15 @@ export class MyTextFieldStrategy implements FieldStrategy {
     }
   }
 
-  public get validity() {
+  get validity() {
     return new ValidityState();
   }
 
-  public checkValidity() {
+  checkValidity() {
     return true;
   }
 
-  public removeEventListeners() {}
+  removeEventListeners() {}
   // tag::snippet[]
 }
 // end::snippet[]

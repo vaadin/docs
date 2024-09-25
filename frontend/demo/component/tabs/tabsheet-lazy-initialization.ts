@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/tabs';
 import '@vaadin/tabsheet';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { TabSheetSelectedChangedEvent } from '@vaadin/tabsheet';
 import { applyTheme } from 'Frontend/generated/theme';
 

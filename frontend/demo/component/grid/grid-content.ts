@@ -1,15 +1,14 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
-import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

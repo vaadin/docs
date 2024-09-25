@@ -1,14 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/rich-text-editor';
+import '@vaadin/text-area';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import '@vaadin/rich-text-editor';
 import type {
   RichTextEditor,
   RichTextEditorHtmlValueChangedEvent,
   RichTextEditorValueChangedEvent,
 } from '@vaadin/rich-text-editor';
-import '@vaadin/text-area';
 import type { TextAreaChangeEvent } from '@vaadin/text-area';
 import { applyTheme } from 'Frontend/generated/theme';
 

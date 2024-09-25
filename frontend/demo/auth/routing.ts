@@ -1,8 +1,6 @@
 import { useMatches } from 'react-router-dom';
 
-type RouteMetadata = {
-  [key: string]: any;
-};
+type RouteMetadata = Record<string, any>;
 
 /**
  * Returns the `handle` object containing the metadata for the current route,

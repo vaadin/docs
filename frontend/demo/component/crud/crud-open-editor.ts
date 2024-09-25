@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/crud';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/crud';
 import type { CrudEditedItemChangedEvent } from '@vaadin/crud';
 import type { Grid } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
